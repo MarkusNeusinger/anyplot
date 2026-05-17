@@ -1,152 +1,184 @@
 library: bokeh
+language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:18:20Z'
-updated: '2026-01-09T13:21:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20853039950
+updated: '2026-05-17T16:33:41Z'
+generated_by: claude-haiku
+workflow_run: 25996331432
 issue: 3418
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/bokeh/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/bokeh/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of frequency polygon with all spec requirements met
-  - Clean, readable code with proper KISS structure
-  - Good color palette that is colorblind-accessible
-  - Proper use of semi-transparent fills allowing distribution overlap visibility
-  - Correct title format and axis labels with units
-  - Lines properly extend to zero at both ends to close polygon shape
+  - 'Perfect visual quality: all text explicitly sized and readable in both themes
+    with no overlap'
+  - 'Excellent theme implementation: chrome properly adapted while data colors remain
+    constant across themes'
+  - Strong design with semi-transparent fills, custom legend styling, and scatter
+    markers
+  - 'Perfect spec compliance: correct plot type, all required features, proper data
+    mapping and title format'
+  - 'Excellent data quality: three distinct distributions (normal, spread, bimodal)
+    showcase frequency polygon capability'
+  - Clean, reproducible code with explicit seed and appropriate complexity
+  - Strong bokeh idiomatic usage with ColumnDataSource pattern and theme-adaptive
+    tokens
   weaknesses:
-  - Legend shows duplicate entries for each session (line and scatter are added separately
-    with same legend_label)
-  image_description: 'The plot displays three frequency polygons comparing test score
-    distributions across three sessions. The Morning Session (Python blue, #306998)
-    is centered around 65-70 with moderate spread. The Afternoon Session (yellow,
-    #FFD43B) is centered around 75-80 with the widest spread, extending from about
-    50 to 120. The Evening Session (teal, #17A589) shows a bimodal-like pattern centered
-    around 50-60. Each polygon has semi-transparent fill beneath the lines, allowing
-    overlapping distributions to be clearly visible. Circular markers are placed at
-    bin midpoints. The legend is positioned in the top-left corner with a white background
-    and border. Axes are clearly labeled with units: "Test Score (points)" and "Frequency
-    (count)". Grid lines are subtle (dashed, alpha=0.3). The title follows the correct
-    format: "frequency-polygon-basic · bokeh · pyplots.ai".'
+  - 'DE-01 at 6/8: well-designed but not publication-ready (add more visual sophistication
+    for 7+)'
+  - 'DE-02 at 4/6: good refinement visible but could enhance polish further (e.g.,
+    more refined grid styling, spine removal consideration)'
+  - 'DE-03 at 4/6: clear visual hierarchy but no special emphasis or annotations beyond
+    inherent distribution shapes'
+  - 'LM-02 at 3/5: uses bokeh-specific patterns but could leverage more distinctive
+    library features like interactive tools or custom extensions'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), excellent contrast for all elements
+      Chrome: Title "frequency-polygon-basic · bokeh · anyplot.ai" (28pt) clearly visible in dark text; axis labels "Test Score (points)" and "Frequency (count)" (22pt) are crisp; tick labels (18pt) are readable; legend in top-right with light background
+      Data: Three overlapping frequency polygons with semi-transparent fills (alpha 0.25): Morning Session (#009E73 at ~65), Afternoon Session (#D55E00 at ~75 with wider spread), Evening Session (#0072B2 bimodal around 50/60); scatter markers at bin centers clearly visible; Okabe-Ito colors exact
+      Grid: Subtle grid lines (alpha 0.10) visible but not dominant
+      Legibility verdict: PASS — all elements perfectly readable; no text collisions; excellent contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), maintains good contrast
+      Chrome: Title clearly visible in light text (INK token #F0EFE8); axis labels in light text (28pt/22pt); tick labels in INK_SOFT token (#B8B7B0); legend has dark background (#242420) with light text — no dark-on-dark failures
+      Data: Three frequency polygons maintain identical data colors to light render (#009E73, #D55E00, #0072B2); scatter markers match light render exactly; semi-transparent fills visible and distinguishable
+      Grid: Subtle grid lines (alpha 0.10) visible in dark theme
+      Legibility verdict: PASS — all text light-colored and readable against dark background; brand green (#009E73) remains visible; both renders theme-consistent
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; legend does not cover data
+        comment: 'All fonts explicitly set: title 28pt, labels 22pt, ticks 18pt; perfectly
+          readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text properly spaced; no collisions; legend positioned clearly
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines at 5px and markers at size 18 visible; markers could be slightly
-          larger
+        comment: Markers (size 15) and lines (width 3) optimally adapted to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, teal palette is colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas appropriately with good margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; excellent contrast between all three
+          series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-75% of canvas; balanced margins; legend naturally positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend has duplicate entries due to separate line/scatter calls with
-          same legend_label
+        passed: true
+        comment: Descriptive with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds #FAF8F1/#1A1A17,
+          chrome properly themed in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom palette application, semi-transparent fills, scatter markers,
+          explicit font sizing; above generic defaults with thoughtful design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha 0.10), customized legend with background/border/padding/spacing,
+          outline styling visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three distributions tell clear story through visual hierarchy and
+          color contrast; data choice meaningful
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct frequency polygon connecting bin midpoints
+        comment: Correct frequency polygon with closed shape
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows test scores, Y-axis shows frequency
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: colors, legend, markers, extended lines,
-          fill'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: distinct colors, legend, markers, fills, multi-group
+          comparison'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full data range visible with padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: bin centers; Y: frequency counts; all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify each group
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: frequency-polygon-basic · bokeh · pyplots.ai'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows distributions with different centers, spreads, and bimodality
+        comment: Three distinct distributions showcase full frequency polygon capability
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Test scores across exam sessions is realistic educational scenario
+        comment: Test scores across exam sessions is realistic, neutral, and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Test scores range plausible; some scores exceed 100
+        comment: Factually correct proportions and plausible distribution parameters
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -154,49 +186,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Linear flow without functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: All Bokeh APIs are current
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Legend duplication is a code quality issue
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource pattern, high-level API methods, proper bokeh
+          conventions
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource and patch; could have used HoverTool for interactivity
-  verdict: APPROVED
+        comment: Uses ColumnDataSource pattern and theme-adaptive tokens; could leverage
+          more unique bokeh features
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - html-export
   patterns:
   - data-generation
-  - columndatasource
+  - iteration-over-groups
   dataprep:
   - binning
   styling:
