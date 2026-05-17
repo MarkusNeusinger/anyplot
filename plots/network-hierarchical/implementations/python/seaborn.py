@@ -1,85 +1,115 @@
-""" pyplots.ai
+""" anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-08
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-17
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 
-# Set seaborn style for enhanced aesthetics
-sns.set_style("whitegrid")
-sns.set_context("talk", font_scale=1.2)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-np.random.seed(42)
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = [
+    "#009E73",  # bluish green (brand)
+    "#D55E00",  # vermillion
+    "#0072B2",  # blue
+    "#CC79A7",  # reddish purple
+    "#E69F00",  # orange
+]
 
-# Data: Software project team hierarchy (24 employees, 4 levels)
+# Apply seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+    },
+)
+
+# Data: File system directory structure
+# Root: /project with subdirectories for src, config, tests, docs, build
 nodes = [
-    # Level 0 - CEO
-    {"id": 0, "label": "CEO", "level": 0},
-    # Level 1 - VPs
-    {"id": 1, "label": "VP Engineering", "level": 1},
-    {"id": 2, "label": "VP Product", "level": 1},
-    {"id": 3, "label": "VP Operations", "level": 1},
-    # Level 2 - Directors/Managers
-    {"id": 4, "label": "Frontend Dir.", "level": 2},
-    {"id": 5, "label": "Backend Dir.", "level": 2},
-    {"id": 6, "label": "PM Lead", "level": 2},
-    {"id": 7, "label": "UX Lead", "level": 2},
-    {"id": 8, "label": "IT Manager", "level": 2},
-    {"id": 9, "label": "HR Manager", "level": 2},
-    # Level 3 - Team Members
-    {"id": 10, "label": "FE Dev 1", "level": 3},
-    {"id": 11, "label": "FE Dev 2", "level": 3},
-    {"id": 12, "label": "BE Dev 1", "level": 3},
-    {"id": 13, "label": "BE Dev 2", "level": 3},
-    {"id": 14, "label": "BE Dev 3", "level": 3},
-    {"id": 15, "label": "PM 1", "level": 3},
-    {"id": 16, "label": "PM 2", "level": 3},
-    {"id": 17, "label": "Designer 1", "level": 3},
-    {"id": 18, "label": "Designer 2", "level": 3},
-    {"id": 19, "label": "IT Support 1", "level": 3},
-    {"id": 20, "label": "IT Support 2", "level": 3},
-    {"id": 21, "label": "HR Spec 1", "level": 3},
-    {"id": 22, "label": "HR Spec 2", "level": 3},
-    {"id": 23, "label": "Recruiter", "level": 3},
+    # Level 0 - Root
+    {"id": 0, "label": "project/", "level": 0, "type": "dir"},
+    # Level 1 - Main directories
+    {"id": 1, "label": "src/", "level": 1, "type": "dir"},
+    {"id": 2, "label": "config/", "level": 1, "type": "dir"},
+    {"id": 3, "label": "tests/", "level": 1, "type": "dir"},
+    {"id": 4, "label": "docs/", "level": 1, "type": "dir"},
+    {"id": 5, "label": "build/", "level": 1, "type": "dir"},
+    # Level 2 - Source subdirectories
+    {"id": 6, "label": "components/", "level": 2, "type": "dir"},
+    {"id": 7, "label": "utils/", "level": 2, "type": "dir"},
+    {"id": 8, "label": "models/", "level": 2, "type": "dir"},
+    # Level 2 - Config files
+    {"id": 9, "label": "settings.yaml", "level": 2, "type": "file"},
+    {"id": 10, "label": "env.json", "level": 2, "type": "file"},
+    # Level 2 - Test subdirectories
+    {"id": 11, "label": "unit/", "level": 2, "type": "dir"},
+    {"id": 12, "label": "integration/", "level": 2, "type": "dir"},
+    # Level 2 - Docs files
+    {"id": 13, "label": "api/", "level": 2, "type": "dir"},
+    {"id": 14, "label": "guide.md", "level": 2, "type": "file"},
+    # Level 3 - Component files
+    {"id": 15, "label": "button.py", "level": 3, "type": "file"},
+    {"id": 16, "label": "input.py", "level": 3, "type": "file"},
+    {"id": 17, "label": "form.py", "level": 3, "type": "file"},
+    # Level 3 - Utility files
+    {"id": 18, "label": "helpers.py", "level": 3, "type": "file"},
+    {"id": 19, "label": "validators.py", "level": 3, "type": "file"},
+    # Level 3 - Model files
+    {"id": 20, "label": "user.py", "level": 3, "type": "file"},
+    {"id": 21, "label": "data.py", "level": 3, "type": "file"},
 ]
 
 edges = [
-    # CEO to VPs
+    # Root to Level 1
     (0, 1),
     (0, 2),
     (0, 3),
-    # VP Engineering to Directors
-    (1, 4),
-    (1, 5),
-    # VP Product to Leads
-    (2, 6),
-    (2, 7),
-    # VP Operations to Managers
-    (3, 8),
-    (3, 9),
-    # Directors to Team Members
-    (4, 10),
-    (4, 11),
-    (5, 12),
-    (5, 13),
-    (5, 14),
+    (0, 4),
+    (0, 5),
+    # src to subdirectories
+    (1, 6),
+    (1, 7),
+    (1, 8),
+    # config to files
+    (2, 9),
+    (2, 10),
+    # tests to subdirectories
+    (3, 11),
+    (3, 12),
+    # docs to contents
+    (4, 13),
+    (4, 14),
+    # components to files
     (6, 15),
     (6, 16),
-    (7, 17),
+    (6, 17),
+    # utils to files
     (7, 18),
-    (8, 19),
+    (7, 19),
+    # models to files
     (8, 20),
-    (9, 21),
-    (9, 22),
-    (9, 23),
+    (8, 21),
 ]
 
 # Compute hierarchical layout positions
-# Group nodes by level
 levels = {}
 for node in nodes:
     lvl = node["level"]
@@ -93,7 +123,7 @@ y_spacing = 2.0
 for lvl in sorted(levels.keys()):
     nodes_at_level = levels[lvl]
     n = len(nodes_at_level)
-    spread = max(n * 1.4, 6)
+    spread = max(n * 1.5, 6)
     x_positions = np.linspace(-spread / 2, spread / 2, n)
     y_pos = -lvl * y_spacing
     for i, node in enumerate(nodes_at_level):
@@ -104,69 +134,59 @@ node_x = [positions[n["id"]][0] for n in nodes]
 node_y = [positions[n["id"]][1] for n in nodes]
 node_labels = [n["label"] for n in nodes]
 node_levels = [n["level"] for n in nodes]
+node_types = [n["type"] for n in nodes]
 
-# Color palette by level using seaborn - Python Blue and Yellow as primary
-level_colors = ["#306998", "#FFD43B", "#4B8BBE", "#8BC34A"]
-level_names = ["CEO", "VPs", "Directors", "Team Members"]
+# Color mapping: directories vs files
+colors_by_type = {
+    "dir": OKABE_ITO[0],  # Brand green for directories
+    "file": OKABE_ITO[1],  # Vermillion for files
+}
+node_colors = [colors_by_type[nt] for nt in node_types]
 
 # Node sizes based on level
-size_map = {0: 800, 1: 600, 2: 450, 3: 350}
+size_map = {0: 1200, 1: 900, 2: 600, 3: 450}
 node_sizes = [size_map[lvl] for lvl in node_levels]
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Draw edges first (underneath nodes)
 for parent, child in edges:
     x0, y0 = positions[parent]
     x1, y1 = positions[child]
-    ax.plot([x0, x1], [y0, y1], color="#555555", linewidth=2.5, alpha=0.7, zorder=1)
+    ax.plot([x0, x1], [y0, y1], color=INK_SOFT, linewidth=2.0, alpha=0.4, zorder=1)
 
-# Draw nodes by level using seaborn scatterplot for styling and legend
-for lvl in range(4):
-    lvl_indices = [i for i, n in enumerate(nodes) if n["level"] == lvl]
-    lvl_x = [node_x[i] for i in lvl_indices]
-    lvl_y = [node_y[i] for i in lvl_indices]
-    lvl_sizes = [node_sizes[i] for i in lvl_indices]
-
-    sns.scatterplot(
-        x=lvl_x,
-        y=lvl_y,
-        s=lvl_sizes,
-        color=level_colors[lvl],
-        edgecolor="#333333",
-        linewidth=2,
-        label=f"Level {lvl}: {level_names[lvl]}",
-        ax=ax,
-        zorder=2,
-    )
+# Draw all nodes as a single scatter plot with colors
+ax.scatter(node_x, node_y, s=node_sizes, c=node_colors, edgecolors=INK_SOFT, linewidth=2.0, alpha=0.85, zorder=2)
 
 # Add node labels
 for node in nodes:
     x, y = positions[node["id"]]
     lvl = node["level"]
-    fontsize = 12 if lvl <= 1 else 10 if lvl == 2 else 9
+    fontsize = 18 if lvl == 0 else 16 if lvl == 1 else 13 if lvl == 2 else 11
     fontweight = "bold" if lvl == 0 else "normal"
     ax.annotate(
         node["label"],
         (x, y),
         textcoords="offset points",
-        xytext=(0, -22),
+        xytext=(0, -28),
         ha="center",
         va="top",
         fontsize=fontsize,
         fontweight=fontweight,
-        color="#222222",
+        color=INK,
     )
 
 # Style the plot
-ax.set_title("network-hierarchical · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+ax.set_title("network-hierarchical · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
 
-# Hide axis ticks but add descriptive labels
-ax.set_xlabel("Organization Width", fontsize=20)
-ax.set_ylabel("Hierarchy Level (Top to Bottom)", fontsize=20)
+# Set axis properties
+ax.set_xlabel("Directory/File Distribution", fontsize=20, color=INK)
+ax.set_ylabel("Directory Depth (Level)", fontsize=20, color=INK)
 ax.set_xticks([])
 ax.set_yticks([])
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
 # Set axis limits with padding
 x_padding = 1.5
@@ -174,12 +194,14 @@ y_padding = 1.0
 ax.set_xlim(min(node_x) - x_padding, max(node_x) + x_padding)
 ax.set_ylim(min(node_y) - y_padding, max(node_y) + y_padding)
 
-# Configure legend
-ax.legend(title="Hierarchy", title_fontsize=16, fontsize=14, loc="upper right", framealpha=0.9, markerscale=0.8)
+# Remove spines for cleaner network visualization
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# Remove grid for cleaner network visualization
+# Disable grid for network visualization
 ax.grid(False)
-ax.set_facecolor("#f8f9fa")
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

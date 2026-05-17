@@ -1,210 +1,256 @@
 library: bokeh
+language: python
 specification_id: network-hierarchical
 created: '2026-01-08T21:55:25Z'
-updated: '2026-01-08T22:26:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832956828
+updated: '2026-05-17T06:21:15Z'
+generated_by: claude-haiku
+workflow_run: 25983254656
 issue: 3343
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/bokeh/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Clear hierarchical layout with root at top and children below
-  - Excellent color differentiation between organizational levels
-  - Node sizes appropriately scaled by hierarchy level (CEO largest)
-  - Well-constructed legend with level descriptions
-  - HoverTool adds interactivity for role/level information
-  - Clean edges without clutter connecting parent-child relationships
-  weaknesses:
-  - Legend appears on left side of plot rather than integrated within the main visualization
-    area
-  - Level 3 (Team Members) node labels are relatively small compared to the node density
-    at that level
-  image_description: The plot displays a hierarchical organizational chart with 24
-    nodes arranged across 4 levels. At the top (Level 0) is a single blue node labeled
-    "CEO". Level 1 contains 3 yellow nodes for VPs (Engineering, Product, Operations).
-    Level 2 has 6 light blue nodes for Directors/Managers (Frontend Dir., Backend
-    Dir., PM Lead, UX Lead, IT Manager, HR Manager). Level 3 at the bottom has 14
-    green nodes representing team members (developers, designers, HR specialists,
-    IT support, recruiter). Gray edges connect parent-child relationships. A legend
-    on the left side shows level colors with labels. The title "network-hierarchical
-    · bokeh · pyplots.ai" appears at the top center.
+  - 'Perfect visual quality: all text readable, no overlaps, ideal marker sizing and
+    layout'
+  - 'Flawless theme adaptation: both light and dark renders perfectly readable with
+    identical data colors and proper chrome inversion'
+  - 'Excellent hierarchical storytelling: color-by-level design immediately conveys
+    organizational structure and depth'
+  - 'Correct and complete spec compliance: hierarchical layout, proper node/edge relationships,
+    perfect title/legend formatting'
+  - 'Idiomatic bokeh patterns: ColumnDataSource, LabelSet, HoverTool, multiple renderers
+    with legend - demonstrates strong library mastery'
+  - 'Realistic org chart data: 24 employees across 4 management levels with appropriate
+    branching patterns'
+  - 'Clean, reproducible code: seed set, no unused imports, straightforward linear
+    structure'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), exactly as specified — clean and professional surface.
+      Chrome: Title "network-hierarchical · bokeh · anyplot.ai" is centered and clearly visible in dark ink. Node labels (CEO, VP Engineering, Frontend Dir., FE Dev 1, etc.) are all readable in dark text, positioned 60px above each node. Legend at top-right shows four levels with distinct Okabe-Ito colors and black borders — fully readable.
+      Data: Nodes use level-based Okabe-Ito colors: Level 0 (CEO) in #009E73 green; Level 1 (VPs) in #D55E00 orange; Level 2 (Directors) in #0072B2 blue; Level 3 (Team Members) in #CC79A7 reddish purple. Edges are subtle gray lines (INK_SOFT #4A4A44) at 40% opacity, clearly visible without dominating. Hierarchical layout is clean with CEO at top, three levels below spreading horizontally.
+      Legibility verdict: PASS — All text is perfectly readable against the light background. No dark-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), exactly as specified — professional dark surface with no pure black.
+      Chrome: Title, node labels, and legend text all render in light off-white color (INK #F0EFE8), providing excellent contrast against the dark background. Legend frame is visible with light borders. All chrome elements adapted correctly to dark theme.
+      Data: Node colors are IDENTICAL to light render — #009E73, #D55E00, #0072B2, #CC79A7 maintain their identity perfectly. Edge color adapted to dark theme (INK_SOFT #B8B7B0) with same 40% opacity, subtle but visible. The hierarchical tree structure is equally clear.
+      Legibility verdict: PASS — All text is clearly visible in light color on dark background. No dark-on-dark failures. Brand green #009E73 reads excellently on the dark surface.
+
+    Both renders demonstrate perfect theme-adaptive rendering with identical data colors and inverted chrome.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and node labels are readable, though some Level 3 labels are
-          slightly small relative to node density
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements; good spacing between nodes at all
-          levels
+        comment: All font sizes explicitly set (28pt title, 26pt labels, 26pt legend);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Node labels positioned with y_offset=60; hierarchical spread prevents
+          any text collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes are visible with good sizing hierarchy, though bottom-level
-          nodes could be slightly larger
+        comment: Node sizes scaled by level (95/80/70/65); edges 4px wide at 40% alpha;
+          all elements clearly visible at 4800x2700
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, light blue, green) are colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space with proper margins and centered layout
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for network graphs (axes intentionally hidden)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is well-positioned with clear level labels and color coding
+        comment: Okabe-Ito palette throughout; all colors colorblind-safe; sufficient
+          contrast between data and background
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins (1.0 px/1.5 py);
+          legend appropriately positioned; excellent use of landscape format
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title formatted correctly; axes hidden appropriately for network
+          visualization
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect: light bg #FAF8F1, dark bg #1A1A17; first series #009E73;
+          Okabe-Ito order 1-4; theme-adaptive chrome identical between renders'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional color-by-level design; professional polish with theme-adaptive
+          styling; thoughtful hierarchy not generic defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axes hidden, edges subtle (40% alpha), legend well-styled with border,
+          generous spacing, attention to detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hierarchical layout + color-by-level creates clear visual hierarchy;
+          CEO focal point obvious; viewer immediately understands organizational structure
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct hierarchical network graph with tree layout
+        comment: 'Perfect: hierarchical network with tree layout, nodes at distinct
+          levels (0-3), edges show parent-child relationships'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Parent-child relationships correctly mapped, levels properly positioned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Tree structure, distinct levels, edges showing relationships, root
-          at top
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: hierarchical levels, node labels, edges, level-based
+          colors, legend, hover tooltips'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 24 nodes visible across 4 levels
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Node positions correctly based on level (y) and horizontal spread
+          (x); all 24 nodes visible; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 4 levels with appropriate labels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: network-hierarchical · bokeh · pyplots.ai'
+        comment: 'Title: ''network-hierarchical · bokeh · anyplot.ai''; Legend labels:
+          ''Level 0: CEO'', ''Level 1: VPs'', etc. — perfect format'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hierarchy depth, branching patterns, varying children counts
-          per parent
+        comment: 'Shows all hierarchy aspects: CEO > VPs > Directors > Team Members;
+          varied branching (1→3, 2→2, 2→3); diverse team sizes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Software company organizational chart is a realistic, neutral business
-          scenario
+        comment: Real software company org chart; realistic titles (VP Engineering,
+          Frontend Dir., FE Dev); neutral professional context; no sensitive topics
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 24 employees across 4 levels is appropriate; some role titles could
-          be more specific
+        comment: 24 employees across 4 levels realistic for mid-size tech company;
+          ratios appropriate (1 CEO, 3 VPs, 6 Directors, 14 team); seed 42 ensures
+          reproducibility
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Follows imports → data → plot → save pattern, but has some complexity
-          in layout computation
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Imports → Data → Layout → Plot → Legend → Save; no functions/classes;
+          straightforward linear flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; deterministic positioning; fully reproducible
+          output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, sys, time, Path, numpy, bokeh modules, selenium;
+          no unused'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable, appropriate complexity; no over-engineering; no
+          fake UI or fake interactivity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png but uses os.path for path construction
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct: saves as plot-{THEME}.png and plot-{THEME}.html; current
+          bokeh API'
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, HoverTool for interactivity, LabelSet, and
-          proper Legend construction
+        comment: 'Expert bokeh patterns: ColumnDataSource per level, figure(), scatter(),
+          segment(), HoverTool, LabelSet, Legend with LegendItem'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses bokeh-specific patterns: per-level ColumnDataSource for legend
+          management, LabelSet with positioning, HoverTool with custom tooltips, theme-aware
+          Selenium screenshot; good use of distinctive features'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
   - custom-legend
-  - annotations
+  - html-export
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
+  - columndatasource
   dataprep: []
   styling:
   - minimal-chrome
