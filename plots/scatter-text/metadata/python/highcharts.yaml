@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: scatter-text
 created: '2026-01-09T14:28:29Z'
-updated: '2026-05-17T23:39:55Z'
+updated: '2026-05-17T23:43:46Z'
 generated_by: claude-haiku
 workflow_run: 26005947992
 issue: 3482
@@ -12,36 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/highcharts/plot-dark.html
-quality_score: 88
+quality_score: 94
 review:
   strengths:
-  - Perfect visual quality with excellent text legibility in both light and dark themes
-  - Perfect spec compliance with correct plot type and all required features
-  - Excellent theme-adaptive implementation using all required light/dark tokens properly
-  - Clean code structure with proper reproducibility and deterministic data generation
-  - Thoughtful color use with Okabe-Ito palette correctly applied across categories
-  - Good visual hierarchy through color grouping and spatial clustering
+  - 'Flawless theme adaptation: data colors stay identical, chrome correctly swaps
+    between light/dark tokens'
+  - Text outline styling (2px PAGE_BG) elegantly solves overlap in dense regions while
+    maintaining readability
+  - Professional color palette and clear semantic clustering with meaningful domain
+    groupings
+  - 'Idiomatic Highcharts usage: ScatterSeries, dataLabels, and marker disabling correctly
+    implemented'
+  - Clean, reproducible data generation with meaningful category structure
   weaknesses:
-  - Design polish could be improved by removing top/right spines and refining axis
-    styling
-  - Limited use of distinctive Highcharts interactive features like tooltips and click
-    handlers
-  - Standard visual refinement with default grid and axis styling could be more polished
+  - Minor text overlap in lower-left cluster (MongoDB, Cassandra, Redis) acceptable
+    but could be reduced with label rotation or smaller font
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 ✓
-      Chrome: Title (dark INK), axis labels (dark INK), tick labels (medium INK_SOFT), grid (subtle light). All readable.
-      Data: 4 category groups using Okabe-Ito colors: Programming (green #009E73), Data Science (orange #D55E00), Web (blue #0072B2), Databases (pink #CC79A7). Text labels have white outlines for contrast. Legend has light background with border. All 30 data points visible and readable.
-      Legibility verdict: PASS - All elements clearly readable on light background
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "scatter-text · Python · highcharts · anyplot.ai" in dark text (INK), axis labels "Dimension 1"/"Dimension 2" in INK, tick labels in INK_SOFT — all clearly readable against light background
+      Data: Four categories in Okabe-Ito order — Programming Languages #009E73 (upper-left), Data Science #D55E00 (upper-right), Web Frameworks #0072B2 (lower-right), Databases #CC79A7 (lower). All labels rendered at 24px with 2px white outline for clarity. No unreadable elements.
+      Legend: Right-aligned with category names and color indicators
+      Legibility verdict: PASS — all text clearly visible, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 ✓
-      Chrome: Title (light INK), axis labels (light INK), tick labels (medium INK_SOFT), grid (subtle light). All readable. No dark-on-dark failures.
-      Data: Data colors identical to light (#009E73, #D55E00, #0072B2, #CC79A7). Text labels have dark background outlines. Legend has dark background with light text and border. All 30 data points visible.
-      Legibility verdict: PASS - All elements clearly readable on dark background, no dark-on-dark issues
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and axis labels now in light text (INK #F0EFE8), tick labels in INK_SOFT #B8B7B0, legend background in ELEVATED_BG #242420 — all clearly readable against dark background
+      Data: All four category colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7) — confirming theme-correct color preservation (only chrome changes)
+      Grid: Subtle lines visible with ~10% opacity
+      Legibility verdict: PASS — all text clearly visible, no dark-on-dark failures, no legibility issues
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -49,71 +51,66 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: 28px title, 22px labels, 18px ticks,
-          24px data labels. Perfect readability in both themes.'
+        comment: All text at appropriate sizes; readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Text labels well-distributed across plot with no overlaps
+        comment: Minor overlap in dense regions mitigated by text outline; still readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements (labels, axes, legend, grid) clearly visible and distinct
+        comment: All text labels clearly distinguishable from background
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with good contrast and CVD-safe colors
+        comment: Okabe-Ito palette is CVD-safe; strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Well-balanced layout with generous margins (250/300/200/300), nothing
-          cut off
+        comment: Proper proportions; generous margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels (Dimension 1/2) with correct title format
+        comment: Descriptive axis labels; complete title
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito colors correct (#009E73 first), backgrounds correct (#FAF8F1
-          light, #1A1A17 dark), all chrome tokens properly themed'
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds; colors
+          identical between themes'
     design_excellence:
-      score: 12
+      score: 16
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Thoughtful palette use and text outline styling show design consideration,
-          but lacks polish of publication-ready work
+        passed: true
+        comment: Professional Okabe-Ito usage; intentional text outline; clear hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Legend has styling, but could improve with spine removal and grid
-          refinement
+        passed: true
+        comment: Clean grid styling; generous whitespace; polished legend
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Color grouping and spatial clustering create visual hierarchy that
-          guides viewer, but could be more sophisticated
+        passed: true
+        comment: Clear semantic clustering; spatial grouping creates visual narrative
     spec_compliance:
       score: 15
       max: 15
@@ -123,27 +120,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with text labels as specified
+        comment: Scatter plot with text labels correctly implemented
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: text labels, X/Y coordinates, color encoding,
-          legend'
+        comment: All spec features present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates correctly mapped and labels positioned at proper
-          points
+        comment: X/Y axes correctly mapped; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels match category names
+        comment: Title format correct; legend labels match
     data_quality:
       score: 15
       max: 15
@@ -153,21 +148,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 2D positioning, clustering, 4 categories, 30
-          data points'
+        comment: Complete scatter-text visualization with realistic clustering
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real tech ecosystem (programming languages, data tools, frameworks,
-          databases) - neutral and educational
+        comment: Simulated word embeddings; neutral, plausible tech domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Axis ranges -3.5 to 3.5 are sensible, data spread is good
+        comment: Embedding-appropriate dimensions; balanced density
     code_quality:
       score: 10
       max: 10
@@ -177,59 +170,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → chart → export, no functions/classes'
+        comment: No functions or classes; direct script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: Seed set; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no unnecessary dependencies
+        comment: All imports used; no redundant
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality, appropriate complexity for task
+        comment: Appropriate complexity; clean category structure
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html correctly
+        comment: Saves as plot-{THEME}.png and .html
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: High-level Chart API; correct ScatterSeries pattern
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper use of ScatterSeries, HighchartsOptions, dataLabels. Correct
-          theme token mapping.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses dataLabels and textOutline (Highcharts-specific), but doesn't
-          leverage interactive capabilities
+        comment: Leverages dataLabels with textOutline; series.color for categorical
+          coloring
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - theme-adaptive-chrome
+  - publication-ready
