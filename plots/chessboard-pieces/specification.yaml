@@ -6,7 +6,7 @@ title: Chess Board with Pieces for Position Diagrams
 
 # Specification tracking
 created: 2026-01-08T21:45:47Z
-updated: null
+updated: 2026-05-17T03:02:21Z
 issue: 3350
 suggested: MarkusNeusinger
 
@@ -14,8 +14,7 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - grid
-    - diagram
+    - heatmap
   data_type:
     - categorical
     - discrete
