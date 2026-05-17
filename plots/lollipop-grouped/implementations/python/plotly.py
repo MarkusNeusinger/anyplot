@@ -1,18 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 lollipop-grouped: Grouped Lollipop Chart
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series is always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data - Quarterly revenue by product line across regions (in millions $)
 np.random.seed(42)
 categories = ["North America", "Europe", "Asia Pacific", "Latin America", "Middle East"]
 series_names = ["Electronics", "Apparel", "Home Goods"]
-colors = ["#306998", "#FFD43B", "#8B4513"]  # Python Blue, Python Yellow, Brown
 
 # Generate realistic revenue data
 revenue_data = {
@@ -32,7 +44,7 @@ bar_width = group_width / n_series
 x_base = np.arange(n_categories)
 
 # Add stems and markers for each series
-for i, (series, color) in enumerate(zip(series_names, colors, strict=False)):
+for i, (series, color) in enumerate(zip(series_names, OKABE_ITO, strict=False)):
     # Calculate x positions with offset for grouping
     offset = (i - (n_series - 1) / 2) * bar_width
     x_positions = x_base + offset
@@ -45,7 +57,7 @@ for i, (series, color) in enumerate(zip(series_names, colors, strict=False)):
                 x=[x_pos, x_pos],
                 y=[0, val],
                 mode="lines",
-                line={"color": color, "width": 4},
+                line={"color": color, "width": 3},
                 showlegend=False,
                 hoverinfo="skip",
             )
@@ -57,7 +69,7 @@ for i, (series, color) in enumerate(zip(series_names, colors, strict=False)):
             x=x_positions,
             y=values,
             mode="markers",
-            marker={"size": 22, "color": color, "line": {"color": "white", "width": 2}},
+            marker={"size": 16, "color": color, "line": {"color": PAGE_BG, "width": 2}},
             name=series,
             hovertemplate="%{text}<br>%{y:.1f}M $<extra></extra>",
             text=[f"{series} - {cat}" for cat in categories],
@@ -66,28 +78,49 @@ for i, (series, color) in enumerate(zip(series_names, colors, strict=False)):
 
 # Update layout
 fig.update_layout(
-    title={"text": "lollipop-grouped · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "lollipop-grouped · Python · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Region", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Region", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "tickvals": x_base,
         "ticktext": categories,
         "showgrid": False,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Quarterly Revenue (Million $)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Quarterly Revenue (Million $)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": True,
-        "zerolinecolor": "rgba(0,0,0,0.3)",
+        "zerolinecolor": INK_SOFT,
         "zerolinewidth": 2,
+        "linecolor": INK_SOFT,
     },
-    template="plotly_white",
-    legend={"font": {"size": 18}, "orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "center", "x": 0.5},
-    margin={"l": 80, "r": 40, "t": 120, "b": 80},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    legend={
+        "font": {"size": 16, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "orientation": "h",
+        "yanchor": "bottom",
+        "y": 1.05,
+        "xanchor": "center",
+        "x": 0.5,
+    },
+    margin={"l": 100, "r": 40, "t": 140, "b": 100},
+    hovermode="closest",
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

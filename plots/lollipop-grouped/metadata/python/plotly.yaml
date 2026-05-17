@@ -1,153 +1,177 @@
 library: plotly
+language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:26:30Z'
-updated: '2026-01-09T14:29:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854877104
+updated: '2026-05-17T22:34:27Z'
+generated_by: claude-haiku
+workflow_run: 26004426661
 issue: 3485
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent visual clarity with well-sized markers (22px) and stems (width 4)
-  - Clean implementation using go.Scatter for both stems and markers
-  - Good use of hovertemplate for informative tooltips
-  - Proper grouping offset calculation for side-by-side positioning
-  - White edge on markers provides good visual separation
-  - Appropriate business context (quarterly revenue by region and product line)
+  - Perfect visual quality with proper theme adaptation across light and dark renders
+  - Correct Okabe-Ito palette implementation with identical data colors in both themes
+  - 'All specification requirements fully met: stems, markers, grouping, legend'
+  - Clean, reproducible code with proper seed management
+  - Grouped lollipop layout is clear and well-organized with no overlap
+  - Proper canvas sizing (4800×2700px) and element scaling for large format
+  - Marker edges provide visual definition and polish
+  - Realistic, neutral data context (quarterly revenue) with sensible scale
   weaknesses:
-  - Legend shows line+marker instead of just marker dots (minor visual inconsistency)
-  - Color palette functional but not from a standard colorblind-safe palette
-  image_description: 'The plot displays a grouped lollipop chart showing quarterly
-    revenue (in millions of dollars) across 5 regions (North America, Europe, Asia
-    Pacific, Latin America, Middle East) for 3 product lines (Electronics, Apparel,
-    Home Goods). Each lollipop consists of a vertical stem extending from the baseline
-    (0) to a circular marker at the data value. The three series are positioned side-by-side
-    within each category group. Colors used are: blue (#306998) for Electronics, yellow
-    (#FFD43B) for Apparel, and brown (#8B4513) for Home Goods. The title "lollipop-grouped
-    · plotly · pyplots.ai" is centered at the top. A horizontal legend below the title
-    identifies the three series. The y-axis shows "Quarterly Revenue (Million $)"
-    ranging from 0 to ~55, and the x-axis shows "Region" with all 5 category labels
-    clearly visible. The plot uses a clean white template with subtle gridlines.'
+  - Design could be more sophisticated - consider removing top/right spines for minimal
+    aesthetic
+  - Limited use of Plotly's distinctive interactive features beyond basic hover
+  - Standard styling without custom visual hierarchy techniques beyond positioning
+  - Legend styling is basic - could be more refined
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text (#1A1A17)
+      Data: 3 series in Okabe-Ito order - Electronics (#009E73), Apparel (#D55E00), Home Goods (#0072B2). Grouped lollipops with thin stems and circular markers with white edges. 5 categories (North America, Europe, Asia Pacific, Latin America, Middle East) clearly labeled.
+      Grid: Subtle y-axis grid visible
+      Legend: Positioned above plot, light background with dark border, readable text
+      Legibility verdict: PASS - All text clearly readable in light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, tick labels all clearly visible in light text (#F0EFE8)
+      Data: Data colors identical to light render (only chrome flipped) - Electronics (#009E73), Apparel (#D55E00), Home Goods (#0072B2) maintain their identity. Grouped positioning and marker styling identical.
+      Grid: Subtle y-axis grid visible
+      Legend: Positioned above plot, elevated dark background with light border, readable text
+      Legibility verdict: PASS - All text clearly readable in dark theme. No dark-on-dark failures. Brand green visible and legible.
+
+    Both renders demonstrate excellent theme adaptation with data colors constant and chrome properly adapted. Layout, spacing, and data representation are identical and professional in both themes.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, ticks at 18pt - all perfectly
-          readable
+        comment: All text explicitly sized and colored; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean spacing between groups
+        comment: No text collisions; grouped lollipops positioned clearly
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size 22 with white edge, stems width 4 - perfectly visible
+        comment: All markers and stems visible at canvas scale
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, brown palette is distinguishable but not ideal colorblind
-          palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, balanced margins, plot fills appropriate space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Quarterly Revenue (Million $) and Region'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape; proper margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid subtle at alpha 0.1, but legend markers show lines instead of
-          just dots
+        passed: true
+        comment: Title formatted correctly; axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds; both
+          renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, professional. Marker edges add refinement. Standard layout
+          without custom flourishes.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines present (L-shaped); subtle grid; adequate whitespace; marker
+          edges improve appearance
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear comparative narrative; visual hierarchy through grouping; obvious
+          focal points
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped lollipop chart with stems and circular markers
+        comment: Correct grouped lollipop chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis, series distinguished by color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, side-by-side grouping, legend present
-      - id: SC-04
-        name: Data Range
+        comment: Stems, markers, grouping, legend all present; 3 series, 5 categories
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows 0 to ~55, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=categories, Y=values; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: lollipop-grouped · plotly · pyplots.ai'
+        comment: Title correct format; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and series, different magnitudes visible
+        comment: Shows full multi-series, multi-category comparison
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly revenue by product line across regions - real business
-          scenario
+        comment: Quarterly revenue data is plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Revenue values 8.9M to 51.3M are realistic for quarterly regional
-          revenue
+        comment: Y-axis 0-52M is sensible; zero-baseline appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,53 +179,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: Linear code; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set (though data is actually hardcoded)
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only os, numpy, plotly.graph_objects; all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic Plotly; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern Plotly API used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html (correct but seed unused with hardcoded
-          data)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and .html correctly
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter for custom lollipop construction, hovertemplate for
-          tooltips, but could leverage more Plotly interactivity features
+        comment: Uses graph_objects with proper trace management; manual stem construction
+          is correct
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Hover tooltips and HTML export present; no advanced interactivity
+          or callbacks
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
-  - grid-styling
+  - theme-adaptive-chrome
