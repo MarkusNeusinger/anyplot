@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 kagi-basic: Basic Kagi Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 36/100 | Updated: 2026-05-17
@@ -139,14 +139,14 @@ def build_kagi_data(prices, reversal_pct=0.04):
 # Build Kagi data with 4% reversal threshold
 kagi_df = build_kagi_data(df_prices["close"].values, reversal_pct=0.04)
 
-# Create plot
+# Create plot with trend layers and legend
 plot = (
     ggplot(kagi_df, aes(x="x", xend="x_end", y="y", yend="y_end", color="trend", size="trend"))
     + geom_segment(lineend="round")
     + scale_color_manual(
         values={"yang": YANG_COLOR, "yin": YIN_COLOR}, labels={"yang": "Yang (Bullish)", "yin": "Yin (Bearish)"}
     )
-    + scale_size_manual(values={"yang": 3.5, "yin": 1.2}, labels={"yang": "Yang (Bullish)", "yin": "Yin (Bearish)"})
+    + scale_size_manual(values={"yang": 2, "yin": 0.7})
     + labs(x="Kagi Line Index", y="Price ($)", title="kagi-basic · plotnine · anyplot.ai", color="Trend")
     + theme_minimal()
     + theme(
