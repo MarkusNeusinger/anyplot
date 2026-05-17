@@ -1,194 +1,217 @@
 library: matplotlib
+language: python
 specification_id: renko-basic
 created: '2026-01-08T16:01:24Z'
-updated: '2026-01-08T16:04:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20823036627
+updated: '2026-05-17T11:39:14Z'
+generated_by: claude-haiku
+workflow_run: 25989552018
 issue: 3294
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/renko-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent visual representation of Renko chart with clear brick structure
-  - Good use of matplotlib patches for drawing uniform bricks with edge highlighting
-  - Realistic synthetic price data demonstrating various market conditions (trends,
-    reversals, consolidation)
-  - Proper implementation of Renko algorithm respecting brick size
-  - Well-balanced layout with readable fonts and appropriate spacing
+  - 'Excellent theme adaptation: chrome flips correctly between light and dark, data
+    colors remain identical'
+  - All text legible in both renders; no contrast or readability failures
+  - 'Perfect Okabe-Ito palette compliance (#009E73 bullish, #D55E00 bearish)'
+  - Clean, reproducible code with explicit font sizing (24/20/16pt)
+  - Correct Renko brick calculation and visualization
+  - 'Professional visual design with thoughtful details: edge colors, subtle grid,
+    theme-aware legend frame'
   weaknesses:
-  - Code uses a helper function calculate_renko_bricks() instead of inline code (violates
-    KISS structure requirement)
-  - Red/green color scheme, while traditional for finance, is not colorblind-safe
-  image_description: The plot displays a Renko chart with approximately 70 bricks
-    showing price movements over time. Green bricks (#22c55e) represent bullish (price
-    up) movements while red bricks (#ef4444) represent bearish (price down) movements.
-    The chart begins around $100, rises to approximately $108, then shows a significant
-    downtrend to around $84, followed by periods of consolidation and recovery back
-    toward $108. The title "renko-basic · matplotlib · pyplots.ai" is positioned at
-    the top in large font. The X-axis is labeled "Brick Number" (ranging 0-70) and
-    the Y-axis shows "Price ($)" (ranging ~$82-$112). A legend in the upper left corner
-    clearly identifies "Bullish (Price Up)" and "Bearish (Price Down)". A subtle horizontal
-    dashed grid (alpha=0.3) aids in reading price levels. Bricks are uniform in size
-    ($2 each) with small gaps between them, and each brick has a darker edge color
-    for definition.
+  - Design could be more sophisticated; lacks signature FiveThirtyEight-level polish
+    (DE-01 = 5/8)
+  - Data storytelling is functional but not compelling; synthetic random walk doesn't
+    reveal specific insight (DE-03 = 3/6)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — proper tone, not pure white
+      Chrome: Title "renko-basic · matplotlib · anyplot.ai" in dark text, clearly readable; axis labels "Brick Number" and "Price ($)" with units; tick labels visible at all positions; legend "Bullish (Price Up)" and "Bearish (Price Down)" in upper left with white background, all readable
+      Data: Bullish bricks in #009E73 (teal/green), bearish bricks in #D55E00 (orange/vermillion); bricks uniformly sized with clear separation gaps; ~71 bricks spanning price range $85–$110; grid subtle on y-axis only
+      Legibility verdict: PASS — all text dark on light background with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — proper tone, not pure black
+      Chrome: Title, axis labels, tick labels all in light text (clearly visible against dark); legend with dark frame (#242420) and light text, fully readable; grid visible
+      Data: Bullish (#009E73) and bearish (#D55E00) colors remain IDENTICAL to light render; brick structure unchanged
+      Legibility verdict: PASS — all text light on dark background; no dark-on-dark failures; brand green #009E73 remains visible and maintains identity across themes
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
+        comment: All fonts explicitly set (24/20/16pt); perfectly readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping elements; all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bricks are optimally sized and clearly visible with edge highlighting
+        comment: Bricks optimally sized and visible; density well-managed
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Green/red is traditional for financial charts but not ideal for colorblind
-          users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price ($) includes units, Brick Number is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions; plot fills ~60% of canvas; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), legend well-placed but only y-grid shown
+        comment: Descriptive with units (Price [$]); correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00 (Okabe-Ito 1–2); backgrounds
+          #FAF8F1/#1A1A17; chrome theme-correct both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional but not exceptional; lacks signature polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed appropriately; subtle grid; polished legend frame
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Visualizes technique clearly but synthetic data doesn't convey insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Renko chart implementation
+        comment: Correct Renko chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Price correctly mapped to Y, brick index to X
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Uniform bricks, gaps, green/red colors, grid all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: bullish/bearish bricks, uniform sizing,
+          gaps, grid, brick index'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible with appropriate margins
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=brick index, Y=price; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies bullish/bearish
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format {spec-id} · {library} · pyplots.ai
+        comment: Title format correct; legend labels match spec
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish trends, reversals, consolidation
+        comment: 'Shows all Renko aspects: bullish, bearish, reversals, varied sequences'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Synthetic stock price data with realistic drift and volatility
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: $100 starting price, $2 brick size, realistic price range
+        comment: Stock price simulation plausible and neutral; realistic domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range $85–$110 realistic; $2 brick size sensible
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses a helper function calculate_renko_bricks() - violates KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Clean flow, minimal helpers
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated functions
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output naming and DPI
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses matplotlib.patches.Rectangle effectively, custom legend with
-          patches
+        comment: Correct Axes methods, theme-token pattern, proper API
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Rectangle patches and theme-aware legend show some matplotlib knowledge
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -197,10 +220,7 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
   - grid-styling
+  - edge-highlighting
