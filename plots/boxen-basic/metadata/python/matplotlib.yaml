@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:10:13Z'
-updated: '2026-05-17T08:49:16Z'
+updated: '2026-05-17T08:55:30Z'
 generated_by: claude-haiku
 workflow_run: 25986191041
 issue: 3414
@@ -12,97 +12,82 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Creative implementation of boxen plots using matplotlib's patching system with
-    smooth nested box visualization
-  - 'Excellent data quality: realistic API endpoint scenario with varied distributions
-    showing different performance characteristics'
-  - All specification requirements present and working (nested quantile boxes, outliers,
-    median lines, legend)
-  - Professional presentation with descriptive axis labels, proper legend organization,
-    and clear title formatting
-  - Font sizes explicitly set and readable in both light and dark themes at full resolution
+  - Correct boxen plot implementation with all nested quantile boxes
+  - Realistic API response time distributions showing natural variance
+  - Proper theme adaptation in output with readable light and dark renders
+  - Clear legend and axis labels with descriptive quantile ranges
+  - Smart outlier sampling limiting markers to ~80 for readability
   weaknesses:
-  - Missing ANYPLOT_THEME environment variable handling - code doesn't adapt chrome
-    colors to themes
-  - Output file saved as 'plot.png' instead of 'plot-{THEME}.png' as required by spec
-  - Hard-coded edge colors (#1a3d5c) don't use theme-adaptive tokens (INK_SOFT, INK,
-    etc.)
-  - Design sophistication is solid but not exceptional - custom color gradient is
-    functional rather than publication-ready
+  - 'Code uses custom Python Blue shades instead of Okabe-Ito brand green #009E73'
+  - Missing theme-adaptive code - no ANYPLOT_THEME environment variable handling
+  - Output saved to plot.png instead of plot-{THEME}.png
+  - Title says pyplots.ai instead of anyplot.ai
+  - No spine removal for visual refinement - could remove top/right spines
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) with clean appearance
-      Chrome: Title "boxen-basic · matplotlib · anyplot.ai" in dark text, clearly readable. Axis labels ("API Endpoint", "Response Time (ms)") descriptive with units. Tick labels and category names all legible in dark text against light background.
-      Data: Four API endpoint categories showing nested blue-to-dark-blue boxes representing quantile levels (IQR through 0.78-99.22%). Yellow-green median lines provide excellent contrast. Outliers shown as semi-transparent gray dots. Different distribution shapes clearly visible across endpoints.
-      Grid: Subtle y-axis grid with light dashing, non-intrusive
-      Legibility verdict: PASS - All text perfectly readable, excellent contrast, no dark-on-light failures
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text
+      Data: Teal/green nested boxes, yellow median line, gray outlier dots - all distinguishable
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Very dark near-black surface (#1A1A17-like), proper warm tone
-      Chrome: Title and axis labels appear in light text color (light gray/off-white), clearly legible against dark background. Tick labels and legend text all readable. No dark-on-dark failures detected.
-      Data: Identical color gradient for nested quantile boxes as light render (blue to dark blue progression maintained). Yellow-green median lines identical to light render. Gray outlier dots still visible and distinct. All data elements clearly distinguishable from dark background.
-      Grid: Subtle y-axis grid still visible on dark surface
-      Legibility verdict: PASS - All text readable, no dark-on-dark failures, data colors correctly preserved from light render
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, tick labels all clearly visible in light text
+      Data: Data colors identical to light render (teal/green boxes, yellow median line)
+      Legibility verdict: PASS - No dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
-          Perfectly readable in both renders.
+        comment: Font sizes explicit; all readable in both themes; could be more prominent
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Category labels, axis labels, legend all clearly
-          separated.
+        comment: No overlapping text; axis labels well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nested boxes clearly visible, marker sizes optimal for density, outlier
-          sampling handles large dataset well.
+        comment: Nested boxes and outliers perfectly sized and visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between elements and background. Color choices are
-          CVD-safe and distinguishable.
+        comment: Adequate contrast; outliers distinguishable
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent layout. Plot fills ~60% of canvas with balanced margins.
-          Legend well-positioned. No wasted space.
+        comment: Plot fills 65% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Response Time (ms)''. Title follows
-          correct format.'
+        comment: Descriptive with units (Response Time ms)
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Images appear theme-correct in both renders, but code lacks ANYPLOT_THEME
-          environment variable handling and theme-adaptive color tokens. Theme adaptation
-          logic is completely missing from implementation.
+        comment: 'Code uses Python Blue not Okabe-Ito #009E73; images show correct
+          colors suggesting code-output mismatch; hardcoded colors not theme-adaptive'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -110,26 +95,23 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Creative nested-box design with thoughtful color gradient showing
-          quantile depth. Solid design but relies on functional rather than sophisticated
-          aesthetics. Not FiveThirtyEight-level polish.
+        comment: Elegant nested-box approach but uses custom palette instead of design
+          system
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: false
+        comment: Subtle grid present; could enhance with spine removal
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: 'Good refinement: L-shaped frame (no top/right spines), subtle grid,
-          adequate whitespace, legend with frame. Could be more refined.'
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: false
-        comment: Displays distribution shapes and outliers effectively, but primarily
-          shows the plot type rather than creating compelling narrative about API
-          performance differences.
+        comment: Shows distribution comparison and reveals tail behavior; lacks dramatic
+          emphasis
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -137,28 +119,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct boxen/letter-value plot with all nested box subtypes present.
+        comment: Correct boxen plot with nested quantiles decreasing in width
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features from spec: nested boxes for letter values, outliers,
-          median indicators, clear quantile labeling.'
+        comment: 'All features present: nested boxes, outliers, quantile legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories correctly on X-axis, values on Y-axis. All data visible.
-          Axes show full data range.
+        comment: X/Y correctly assigned; 0-8000ms range properly displayed
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title is 'boxen-basic · matplotlib · anyplot.ai' (correct format).
-          Legend clearly explains all quantile levels and outliers.
+        passed: false
+        comment: Title has pyplots.ai not anyplot.ai; legend correct
     data_quality:
       score: 15
       max: 15
@@ -168,24 +147,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: different distribution shapes (fast API tight
-          vs report_gen wide), outliers present, full quantile range demonstrated.'
+        comment: Shows all boxen features across multiple groups
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real scenario: server response times across different API endpoints.
-          Neutral, comprehensible, plausible data.'
+        comment: Realistic API response times by endpoint
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Response times in ms (0-8000 range) are realistic. Proportions align
-          with real-world API characteristics.
+        comment: Values and distributions factually plausible for server data
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -193,64 +169,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data generation → plot creation → save.
-          No unnecessary functions or classes.'
+        comment: 'Linear structure: imports → seed → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at start. Deterministic output.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (matplotlib.patches, matplotlib.pyplot, numpy).
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Well-structured, readable, appropriate complexity for custom boxen
-          visualization. No fake UI or over-engineering.
+        passed: false
+        comment: Hardcoded colors and no environment-based theme handling
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as ''plot.png'' instead of ''plot-{THEME}.png''.
-          Missing ANYPLOT_THEME handling. No theme-adaptive chrome colors implemented.'
+        comment: Saves to plot.png instead of plot-{THEME}.png
     library_mastery:
       score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses axes methods correctly; manual color generation verbose
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses matplotlib APIs correctly (Axes methods, patches, scatter),
-          but manually draws boxes rather than using a higher-level approach or helper.
-      - id: LM-02
-        name: Distinctive Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Creative use of FancyBboxPatch and manual quantile computation to
-          build custom boxen plots. This technique is distinctive to matplotlib and
-          hard to replicate in other libraries.
+        comment: Uses FancyBboxPatch and custom legend; could explore more library
+          features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - patches
-  - manual-ticks
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
-  - edge-highlighting
+  - publication-ready
+  - alpha-blending
