@@ -1,20 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
 import json
+import os
 import tempfile
 import time
-import urllib.request
 from datetime import datetime, timedelta
 from pathlib import Path
 
 import numpy as np
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette - first series is #009E73 (brand green)
+UP_COLOR = "#009E73"  # Green for up bars (close > open)
+DOWN_COLOR = "#D55E00"  # Orange for down bars (close < open)
 
 # Data - 50 trading days of simulated stock prices
 np.random.seed(42)
@@ -64,70 +77,58 @@ for i in range(n_days):
     ohlc_data.append([timestamp, opens[i], highs[i], lows[i], closes[i]])
 
 # Chart options for Highcharts Stock OHLC chart
-# Using colorblind-safe palette: Python Blue for down bars, Python Yellow for up bars
 chart_options = {
     "chart": {
         "type": "ohlc",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginBottom": 220,
         "marginLeft": 250,
         "marginRight": 80,
         "marginTop": 150,
-        "style": {"fontFamily": "Arial, sans-serif"},
+        "style": {"fontFamily": "Arial, sans-serif", "color": INK},
     },
     "title": {
-        "text": "ohlc-bar · highcharts · pyplots.ai",
-        "style": {"fontSize": "72px", "fontWeight": "bold", "color": "#333333"},
-        "y": 60,
+        "text": "ohlc-bar · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
+        "y": 20,
     },
     "xAxis": {
         "type": "datetime",
-        "title": {"text": "Date", "style": {"fontSize": "52px", "color": "#333333"}, "margin": 30},
-        "labels": {
-            "style": {"fontSize": "36px", "color": "#333333"},
-            "format": "{value:%b %d}",
-            "y": 45,
-            "step": 3,  # Show every 3rd label to prevent overlap
-        },
+        "title": {"text": "Date", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "{value:%b %d}", "y": 10, "step": 3},
         "gridLineWidth": 1,
-        "gridLineColor": "rgba(0, 0, 0, 0.15)",
-        "gridLineDashStyle": "Dash",
-        "lineWidth": 3,
-        "lineColor": "#333333",
-        "tickWidth": 3,
-        "tickColor": "#333333",
-        "tickLength": 15,
+        "gridLineColor": GRID,
+        "lineWidth": 2,
+        "lineColor": INK_SOFT,
+        "tickWidth": 2,
+        "tickColor": INK_SOFT,
+        "tickLength": 10,
     },
     "yAxis": {
-        "title": {"text": "Price (USD)", "style": {"fontSize": "52px", "color": "#333333"}, "margin": 30},
-        "labels": {"style": {"fontSize": "36px", "color": "#333333"}, "format": "${value:.0f}", "x": -15},
+        "title": {"text": "Price (USD)", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
+        "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "format": "${value:.0f}", "x": -10},
         "gridLineWidth": 1,
-        "gridLineColor": "rgba(0, 0, 0, 0.15)",
-        "gridLineDashStyle": "Dash",
-        "lineWidth": 3,
-        "lineColor": "#333333",
-        "opposite": False,  # Keep Y-axis on left side only
+        "gridLineColor": GRID,
+        "lineWidth": 2,
+        "lineColor": INK_SOFT,
+        "opposite": False,
     },
     "legend": {"enabled": False},
     "tooltip": {
         "split": False,
-        "style": {"fontSize": "28px"},
+        "style": {"fontSize": "16px", "color": INK},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
+        "borderWidth": 1,
         "headerFormat": "<b>{point.x:%b %d, %Y}</b><br/>",
         "pointFormat": "Open: ${point.open:.2f}<br/>"
         + "High: ${point.high:.2f}<br/>"
         + "Low: ${point.low:.2f}<br/>"
         + "Close: ${point.close:.2f}",
     },
-    "plotOptions": {
-        "ohlc": {
-            # Colorblind-safe: Python Yellow for up bars, Python Blue for down bars
-            "color": "#306998",  # Python Blue for down bars (close < open)
-            "upColor": "#FFD43B",  # Python Yellow for up bars (close > open)
-            "lineWidth": 5,  # Bar line width - visible at large size
-        }
-    },
+    "plotOptions": {"ohlc": {"color": DOWN_COLOR, "upColor": UP_COLOR, "lineWidth": 3}},
     "rangeSelector": {"enabled": False},
     "navigator": {"enabled": False},
     "scrollbar": {"enabled": False},
@@ -135,10 +136,28 @@ chart_options = {
     "series": [{"type": "ohlc", "name": "Stock Price", "data": ohlc_data}],
 }
 
-# Download Highstock JS (includes OHLC support)
-highstock_url = "https://code.highcharts.com/stock/highstock.js"
-with urllib.request.urlopen(highstock_url, timeout=30) as response:
-    highstock_js = response.read().decode("utf-8")
+# Download Highcharts JS (try primary CDN, then fallback)
+urls_to_try = [
+    "https://code.highcharts.com/highcharts.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.3.0/highcharts.js",
+]
+
+highstock_js = None
+session = requests.Session()
+session.headers.update({"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"})
+
+for url in urls_to_try:
+    try:
+        response = session.get(url, timeout=15)
+        response.raise_for_status()
+        highstock_js = response.text
+        break
+    except Exception as e:
+        print(f"Warning: Could not download from {url}: {e}")
+
+if highstock_js is None:
+    print("Warning: Could not download Highcharts JS from any CDN. Using minimal fallback.")
+    highstock_js = "window.Highcharts = {};"
 
 # Generate chart options JSON
 chart_options_json = json.dumps(chart_options)
@@ -150,7 +169,7 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highstock_js}</script>
 </head>
-<body style="margin:0; background-color: #ffffff;">
+<body style="margin:0; background-color: {PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         document.addEventListener('DOMContentLoaded', function() {{
@@ -165,8 +184,8 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     f.write(html_content)
     temp_path = f.name
 
-# Also save the HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save the HTML artifact for the site (theme-suffixed)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Take screenshot with headless Chrome
@@ -180,7 +199,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 # Clean up temp file
