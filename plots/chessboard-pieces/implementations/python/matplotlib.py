@@ -1,27 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 94/100 | Created: 2026-01-08
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
-import matplotlib.patches as patches
-import matplotlib.pyplot as plt
+import os
+import sys
 
+
+# Workaround for module name conflict: ensure we import the actual matplotlib package
+# by removing the current directory from sys.path temporarily
+_original_path = sys.path[:]
+_remove_items = ["", ".", os.path.dirname(__file__)]
+sys.path = [p for p in sys.path if p not in _remove_items]
+
+import matplotlib.patches as patches  # noqa: E402
+import matplotlib.pyplot as plt  # noqa: E402
+
+sys.path = _original_path
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Unicode chess symbols
 PIECE_SYMBOLS = {
-    "K": "\u2654",  # White King
-    "Q": "\u2655",  # White Queen
-    "R": "\u2656",  # White Rook
-    "B": "\u2657",  # White Bishop
-    "N": "\u2658",  # White Knight
-    "P": "\u2659",  # White Pawn
-    "k": "\u265a",  # Black King
-    "q": "\u265b",  # Black Queen
-    "r": "\u265c",  # Black Rook
-    "b": "\u265d",  # Black Bishop
-    "n": "\u265e",  # Black Knight
-    "p": "\u265f",  # Black Pawn
+    "K": "♔",  # White King
+    "Q": "♕",  # White Queen
+    "R": "♖",  # White Rook
+    "B": "♗",  # White Bishop
+    "N": "♘",  # White Knight
+    "P": "♙",  # White Pawn
+    "k": "♚",  # Black King
+    "q": "♛",  # Black Queen
+    "r": "♜",  # Black Rook
+    "b": "♝",  # Black Bishop
+    "n": "♞",  # Black Knight
+    "p": "♟",  # Black Pawn
 }
 
 # Scholar's Mate position - a famous quick checkmate
@@ -62,7 +79,8 @@ pieces = {
 }
 
 # Create figure (square format for chessboard)
-fig, ax = plt.subplots(figsize=(12, 12))
+fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Board colors (classic wooden board)
 light_color = "#F0D9B5"  # Light squares
@@ -90,12 +108,12 @@ rank_labels = "12345678"
 
 for i in range(8):
     # File labels (a-h) at bottom
-    ax.text(i + 0.5, -0.35, file_labels[i], fontsize=20, ha="center", va="center", fontweight="bold", color="#306998")
+    ax.text(i + 0.5, -0.35, file_labels[i], fontsize=20, ha="center", va="center", fontweight="bold", color=INK)
     # Rank labels (1-8) on left
-    ax.text(-0.35, i + 0.5, rank_labels[i], fontsize=20, ha="center", va="center", fontweight="bold", color="#306998")
+    ax.text(-0.35, i + 0.5, rank_labels[i], fontsize=20, ha="center", va="center", fontweight="bold", color=INK)
 
 # Board border
-border = patches.Rectangle((0, 0), 8, 8, linewidth=4, edgecolor="#306998", facecolor="none")
+border = patches.Rectangle((0, 0), 8, 8, linewidth=4, edgecolor=INK_SOFT, facecolor="none")
 ax.add_patch(border)
 
 # Styling
@@ -105,13 +123,7 @@ ax.set_aspect("equal")
 ax.axis("off")
 
 # Title
-ax.set_title(
-    "Scholar's Mate · chessboard-pieces · matplotlib · pyplots.ai",
-    fontsize=24,
-    fontweight="bold",
-    pad=20,
-    color="#306998",
-)
+ax.set_title("chessboard-pieces · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", pad=20, color=INK)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
