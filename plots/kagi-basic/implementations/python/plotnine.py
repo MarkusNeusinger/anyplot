@@ -1,14 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 kagi-basic: Basic Kagi Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_segment,
     ggplot,
@@ -19,6 +23,18 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (green for yang/bullish, orange-red for yin/bearish)
+YANG_COLOR = "#009E73"
+YIN_COLOR = "#D55E00"
 
 # Generate synthetic stock price data
 np.random.seed(42)
@@ -48,18 +64,16 @@ def build_kagi_data(prices, reversal_pct=0.04):
     segment_start_price = prices[0]
 
     # Track yang/yin state (thick/thin)
-    is_yang = direction == 1  # Start based on initial direction
+    is_yang = direction == 1
 
     for i in range(1, len(prices)):
         price = prices[i]
 
-        if direction == 1:  # Currently trending up
+        if direction == 1:
             if price > high:
                 high = price
-                # Check if we exceeded previous high (switch to yang)
                 is_yang = True
             elif price < high * (1 - reversal_pct):
-                # Reversal down - add vertical segment
                 kagi_segments.append(
                     {
                         "x": x_idx,
@@ -69,7 +83,6 @@ def build_kagi_data(prices, reversal_pct=0.04):
                         "trend": "yang" if is_yang else "yin",
                     }
                 )
-                # Add horizontal shoulder
                 kagi_segments.append(
                     {"x": x_idx, "x_end": x_idx + 1, "y": high, "y_end": high, "trend": "yang" if is_yang else "yin"}
                 )
@@ -79,13 +92,11 @@ def build_kagi_data(prices, reversal_pct=0.04):
                 low = price
                 high = price
 
-        else:  # Currently trending down
+        else:
             if price < low:
                 low = price
-                # Check if we fell below previous low (switch to yin)
                 is_yang = False
             elif price > low * (1 + reversal_pct):
-                # Reversal up - add vertical segment
                 kagi_segments.append(
                     {
                         "x": x_idx,
@@ -95,7 +106,6 @@ def build_kagi_data(prices, reversal_pct=0.04):
                         "trend": "yin" if not is_yang else "yang",
                     }
                 )
-                # Add horizontal waist
                 kagi_segments.append(
                     {"x": x_idx, "x_end": x_idx + 1, "y": low, "y_end": low, "trend": "yin" if not is_yang else "yang"}
                 )
@@ -129,28 +139,34 @@ def build_kagi_data(prices, reversal_pct=0.04):
 # Build Kagi data with 4% reversal threshold
 kagi_df = build_kagi_data(df_prices["close"].values, reversal_pct=0.04)
 
-# Create the plot
+# Create plot with trend layers and legend
 plot = (
     ggplot(kagi_df, aes(x="x", xend="x_end", y="y", yend="y_end", color="trend", size="trend"))
-    + geom_segment()
+    + geom_segment(lineend="round")
     + scale_color_manual(
-        values={"yang": "#2E7D32", "yin": "#C62828"}, labels={"yang": "Yang (Bullish)", "yin": "Yin (Bearish)"}
+        values={"yang": YANG_COLOR, "yin": YIN_COLOR}, labels={"yang": "Yang (Bullish)", "yin": "Yin (Bearish)"}
     )
-    + scale_size_manual(values={"yang": 3.5, "yin": 1.0}, labels={"yang": "Yang (Bullish)", "yin": "Yin (Bearish)"})
-    + labs(x="Kagi Line Index", y="Price ($)", title="kagi-basic · plotnine · pyplots.ai", color="Trend", size="Trend")
+    + scale_size_manual(values={"yang": 2, "yin": 0.7})
+    + labs(x="Kagi Line Index", y="Price ($)", title="kagi-basic · plotnine · anyplot.ai", color="Trend")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_position="right",
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_blank(),
+        panel_border=element_line(color=INK_SOFT),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_position="right",
+        text=element_text(size=14),
     )
 )
 
-# Save the plot
-plot.save("plot.png", dpi=300, verbose=False)
+# Save plot
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
