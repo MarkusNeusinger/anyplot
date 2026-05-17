@@ -1,3 +1,8 @@
+""" anyplot.ai
+indicator-bollinger: Bollinger Bands Indicator Chart
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-17
+"""
 # ruff: noqa: F403, F405
 """anyplot.ai
 indicator-bollinger: Bollinger Bands Indicator Chart
