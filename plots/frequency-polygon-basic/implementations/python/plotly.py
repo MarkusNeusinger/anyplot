@@ -1,12 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.2)" if THEME == "light" else "rgba(240,239,232,0.2)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
+OKABE_VERMILLION = "#D55E00"  # Okabe-Ito position 2
+OKABE_BLUE = "#0072B2"  # Okabe-Ito position 3
 
 # Data - Reaction times (ms) for three experimental conditions
 np.random.seed(42)
@@ -45,10 +60,10 @@ fig.add_trace(
         y=control_extended,
         mode="lines+markers",
         name="Control",
-        line={"color": "#306998", "width": 4},
-        marker={"size": 10, "color": "#306998"},
+        line={"color": BRAND, "width": 4},
+        marker={"size": 10, "color": BRAND},
         fill="tozeroy",
-        fillcolor="rgba(48, 105, 152, 0.2)",
+        fillcolor="rgba(0, 158, 115, 0.2)",
     )
 )
 
@@ -58,10 +73,10 @@ fig.add_trace(
         y=caffeine_extended,
         mode="lines+markers",
         name="Caffeine",
-        line={"color": "#FFD43B", "width": 4},
-        marker={"size": 10, "color": "#FFD43B"},
+        line={"color": OKABE_VERMILLION, "width": 4},
+        marker={"size": 10, "color": OKABE_VERMILLION},
         fill="tozeroy",
-        fillcolor="rgba(255, 212, 59, 0.2)",
+        fillcolor="rgba(213, 94, 0, 0.2)",
     )
 )
 
@@ -71,50 +86,55 @@ fig.add_trace(
         y=sleep_deprived_extended,
         mode="lines+markers",
         name="Sleep Deprived",
-        line={"color": "#E55934", "width": 4, "dash": "dash"},
-        marker={"size": 10, "color": "#E55934"},
+        line={"color": OKABE_BLUE, "width": 4, "dash": "dash"},
+        marker={"size": 10, "color": OKABE_BLUE},
         fill="tozeroy",
-        fillcolor="rgba(229, 89, 52, 0.2)",
+        fillcolor="rgba(0, 114, 178, 0.2)",
     )
 )
 
-# Update layout
+# Update layout with theme-adaptive colors
 fig.update_layout(
     title={
-        "text": "frequency-polygon-basic · plotly · pyplots.ai",
-        "font": {"size": 32},
+        "text": "frequency-polygon-basic · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Reaction Time (ms)", "font": {"size": 24}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Reaction Time (ms)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "showgrid": True,
-        "gridcolor": "rgba(0, 0, 0, 0.1)",
+        "gridcolor": GRID,
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
         "range": [80, 720],
     },
     yaxis={
-        "title": {"text": "Frequency", "font": {"size": 24}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Frequency", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "showgrid": True,
-        "gridcolor": "rgba(0, 0, 0, 0.1)",
+        "gridcolor": GRID,
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     legend={
-        "font": {"size": 20},
+        "font": {"size": 16, "color": INK_SOFT},
         "x": 0.98,
         "y": 0.98,
         "xanchor": "right",
         "yanchor": "top",
-        "bgcolor": "rgba(255, 255, 255, 0.8)",
-        "bordercolor": "rgba(0, 0, 0, 0.2)",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     margin={"l": 80, "r": 60, "t": 100, "b": 80},
 )
 
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save as PNG and HTML with theme suffix
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
