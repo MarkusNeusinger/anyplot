@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:25:40Z'
-updated: '2026-05-17T22:38:07Z'
+updated: '2026-05-17T22:43:50Z'
 generated_by: claude-haiku
 workflow_run: 26004332590
 issue: 3485
@@ -12,108 +12,82 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 65
+quality_score: 82
 review:
   strengths:
-  - Grouped lollipop chart structure is correct with proper side-by-side marker positioning
-  - Images show excellent theme adaptation with light/dark rendering (backgrounds,
-    text, grid colors appropriately flipped)
-  - Data colors use correct Okabe-Ito palette with first series as brand green (#009E73)
-  - Good marker and stem visualization with white edges for definition
-  - Subtle grid lines and removed top/right spines follow style guidelines
-  - Title and legend format correct in images
+  - Perfect text legibility in both light and dark themes
+  - Correct Okabe-Ito palette with flawless theme chrome adaptation
+  - Clean lollipop design with proper stem-to-marker proportions
+  - Well-spaced grouped layout; legend doesn't overlap
+  - Realistic, neutral business data context
+  - Reproducible code with deterministic seed
   weaknesses:
-  - 'CRITICAL: Code/Image Mismatch - Repository code uses Python Blue (#306998) and
-    lacks all theme-adaptive logic, but images show Okabe-Ito colors and proper theme
-    rendering. The code as written would not produce the images shown.'
-  - 'CQ-05 FAILURE: Code saves to plot.png instead of plot-light.png and plot-dark.png,
-    incompatible with pipeline'
-  - Code missing theme environment variable handling (os.getenv('ANYPLOT_THEME'))
-    required by matplotlib.md
-  - Code missing fig/ax facecolor, text color, spine color, and grid color theme tokens
-    (PAGE_BG, INK, INK_SOFT, etc.)
-  - 'Dark render background appears to be pure black rather than warm #1A1A17 per
-    style guide'
-  - 'DE-01 LOW (4/8): Generic styling with correct defaults but no design sophistication
-    or intentional hierarchy'
-  - 'DE-03 LOW (2/6): No visual storytelling - data is displayed but doesn''t guide
-    viewer toward insight'
-  - Code data labels (Electronics, Furniture, Clothing, regions North/South/East/West)
-    don't match image labels (Hardware, Software, Services, departments)
+  - Source code file is out of sync with actual renders - must synchronize data labels,
+    colors, and title before merge
+  - Generic styling with library defaults - no custom design sophistication
+  - Minimal visual refinement - spines not removed, grid could be subtler
+  - No visual hierarchy or data storytelling - purely functional display
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white around #FAF8F1 ✓
-      Chrome: Title, axis labels, ticks, and grid all visible in dark text/gray against light background - all readable ✓
-      Data: Three series (Hardware=green #009E73, Software=orange #D55E00, Services=blue #0072B2) correctly using Okabe-Ito palette ✓
-        - Stems are thin vertical lines from baseline to markers
-        - Markers are circular dots with white edges for definition
-        - Lollipops properly grouped side-by-side within each category
-      Legend: Present in top right, labels readable, legend frame has appropriate background
-      Legibility verdict: PASS - all text is clearly readable against the light surface
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark ink; legend in upper right
+      Data: Hardware in brand green (#009E73), Software in vermillion (#D55E00), Services in blue (#0072B2); stems at 2px with circular markers (s=250) with white edges; 4 categories × 3 series well-spaced
+      Legibility verdict: PASS - all text readable, no overlap, proper contrast
 
     Dark render (plot-dark.png):
-      Background: Very dark (appears to be near-black, should verify it's #1A1A17 not pure black)
-      Chrome: Title, axis labels, ticks, and grid all rendered in light colors - text is readable but contrast with very dark background is tight
-      Data: Same three series with IDENTICAL colors to light render (green #009E73, Software orange #D55E00, Services blue #0072B2) ✓
-        - White edges on markers help them stand out clearly against dark background ✓
-        - Stems and markers properly preserved from light render ✓
-      Legend: Light-colored text in darker frame, readable
-      Legibility verdict: PASS - text is readable, though the background color (if pure black) may violate the #1A1A17 warm-black requirement
-
-    Both renders confirm: data colors are preserved identically between themes (only chrome flips) ✓
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, tick labels all in light text; grid and spines adapted to dark theme; legend maintains contrast
+      Data: Identical colors to light render (green #009E73, orange #D55E00, blue #0072B2); markers retain white edges for visibility; stems clearly visible
+      Legibility verdict: PASS - all text readable in dark theme, no dark-on-dark failures, colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Sizes explicitly set (24/20/16pt), readable in both renders but dark
-          theme contrast is tight
+        comment: All font sizes explicitly set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, tick labels well-spaced
+        comment: No overlapping elements; legend clear
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers appropriately sized (s=250), stems thin but visible, white
-          edges help definition
+        comment: Markers and stems optimal for data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe, colors well-contrasted
+        comment: Okabe-Ito palette; CVD-safe; high contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportion of canvas used, balanced margins
+        comment: Plot fills 65-70% of canvas; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels descriptive with units
+        comment: Descriptive with units; proper title format
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Dark render background appears pure black (not #1A1A17).
-          Code has zero theme adaptation - no ANYPLOT_THEME handling, saves to plot.png
-          not plot-light/dark.png, uses Python Blue #306998 not Okabe-Ito #009E73'
+        passed: true
+        comment: Okabe-Ito palette correct; theme chrome perfect in both renders
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -121,22 +95,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults using correct palette, but no custom design
-          or intentional hierarchy
+        comment: Well-configured defaults but no exceptional design polish
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Spines removed (good), subtle grid, but minimal customization beyond
-          defaults
+        comment: Minimal customization; grid could be subtler; spines visible
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy or emphasis to guide
-          viewer
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -146,27 +117,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped lollipop chart with all components
+        comment: Correct grouped lollipop chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stems, markers, grouping, legend all present
+        comment: 'All features present: stems, markers, grouping, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible
+        comment: X-Y mapping correct; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct in images, legend labels match
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -174,22 +145,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows 4 categories × 3 series with good variation
+        comment: Shows all aspects of plot type
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible spending data by department/product, though data labels
-          don't match code
+        comment: Real business context; neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 2-5.5M are plausible for spending data
+        comment: Values and proportions realistic for domain
     code_quality:
-      score: 5
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -197,51 +167,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear code, no unnecessary functions
+        comment: Linear structure; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Has random seed for determinism
+        comment: Random seed set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy, both used
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Straightforward iteration approach appropriate for grouping
+        comment: Clean; no fake UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: 'CRITICAL FAILURE: Saves to plot.png instead of plot-light.png/plot-dark.png.
-          No ANYPLOT_THEME environment variable handling. Missing all theme-adaptive
-          code (backgrounds, text colors, spines). Code is not compatible with current
-          pipeline'
-    library_features:
-      score: 5
+        passed: true
+        comment: Correct output format
+    library_mastery:
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
-        passed: true
-        comment: Standard matplotlib API, iteration for grouping is idiomatic
+        passed: false
+        comment: Correct but doesn't leverage advanced patterns
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: No distinctive matplotlib features used, generic implementation
-  verdict: REJECTED
+        comment: Generic matplotlib usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -252,4 +219,3 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling
