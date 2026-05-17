@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: bar-permutation-importance
 created: '2025-12-31T10:57:04Z'
-updated: '2026-05-17T12:35:12Z'
+updated: '2026-05-17T12:40:48Z'
 generated_by: claude-haiku
 workflow_run: 25990866661
 issue: 2998
@@ -15,38 +15,37 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permu
 quality_score: 79
 review:
   strengths:
-  - Excellent theme adaptation with correct token usage (foreground, foreground_subtle,
-    backgrounds)
-  - Viridis gradient for continuous data is well-chosen and colorblind-safe
-  - Clean, reproducible code with proper seeding and no text legibility failures in
-    either theme
-  - Correct use of Style object with theme-adaptive colors and appropriate font sizing
+  - 'Excellent theme adaptation with correct backgrounds (#FAF8F1 light, #1A1A17 dark)
+    and readable text in both renders'
+  - Clean professional design with viridis gradient creating clear visual hierarchy
+    by importance
+  - All data clearly visible and well-positioned with generous margins
+  - Proper use of pygal's Style system for comprehensive theme customization
+  - Reproducible data generation with seed; code is elegant and straightforward
   weaknesses:
-  - Horizontal error bars missing - spec requires 'Include horizontal error bars to
-    show importance variability across shuffles' but importance_std data is not rendered
-  - Vertical reference line at x=0 missing - spec requires this to distinguish positive
-    from negative importance values
-  - Minimal design refinement - generic layout without visual hierarchy or emphasis
-    beyond the gradient
-  - No annotations or emphasis techniques to guide viewer interpretation of key insights
+  - Error bars not implemented - spec requires 'horizontal error bars to show importance
+    variability across shuffles'; std deviation data exists but is unused
+  - Reference line at x=0 not shown - spec requires 'vertical reference line at x=0
+    to distinguish positive from negative importance values'
+  - Viridis gradient alone cannot communicate uncertainty; error bars are essential
+    for permutation importance visualization
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title "bar-permutation-importance · pygal · anyplot.ai" clearly visible in dark ink. X-axis label "Mean Decrease in R² Score" and feature names on y-axis all readable. Grid lines subtle but visible.
-      Data: Horizontal bars color-coded with viridis gradient (purple to yellow). Features sorted by importance (lowest at bottom: Year Built, highest at top: Overall Quality). Values range 0.002 to 0.185. All bars clearly distinguishable from background.
-      Missing elements: No horizontal error bars visible despite importance_std data in code. No vertical reference line at x=0.
-      Legibility verdict: PASS - all text readable, no light-on-light failures
+      Background: Warm off-white #FAF8F1 as specified ✓
+      Chrome: Title, axis labels, tick labels all clearly readable in dark text against light surface ✓
+      Data: Viridis gradient bars from purple/blue (low importance) through green to yellow (high importance), sorted descending
+      Grid: Subtle vertical gridlines visible, not dominant
+      Legibility verdict: PASS - all elements readable and properly themed
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme surface
-      Chrome: Title and axis labels clearly visible in light text (#F0EFE8 approximately). Feature names readable. Grid subtle but present.
-      Data: Viridis gradient colors are identical to light render (purple to yellow maintained). Printed values appear at bar ends in light text. Bars clearly distinguishable from dark background.
-      Color consistency: Data colors match light render perfectly - only chrome (background, text, grid) has flipped. Okabe-Ito-like gradient is theme-independent.
-      Missing elements: Same as light render - no error bars, no x=0 reference line.
-      Legibility verdict: PASS - no dark-on-dark failures, all text readable against #1A1A17 background
+      Background: Warm near-black #1A1A17 as specified ✓
+      Chrome: Title, axis labels, tick labels all clearly readable in light text against dark surface ✓; no dark-on-dark failures
+      Data: Viridis gradient colors identical to light render (only chrome flipped as expected) ✓
+      Grid: Subtle gridlines visible and appropriate
+      Legibility verdict: PASS - all elements readable and properly themed; no dark-on-dark problems
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -54,75 +53,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title, axis labels, tick labels clearly readable in both light and
-          dark themes at appropriate font sizes
+        comment: All titles, labels, ticks readable in both renders; explicit font
+          sizes 28→14
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout with no overlapping text or colliding elements
+        comment: Feature names and values clearly readable, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: 'Bars visible and distinguish from background, but critical issue:
-          error bars not rendered despite importance_std data available. Reference
-          line at x=0 also missing.'
+        comment: Bars visible but MISSING error bars (spec requirement) to show importance
+          std deviation
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe with good contrast across the gradient
+        comment: Viridis is CVD-safe; good contrast throughout
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proportions appropriate, margins sensible, nothing cut off
+        comment: Good proportions, generous margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled with units 'Mean Decrease in R² Score'; title properly
-          formatted
+        comment: Title format correct; axis label 'Mean Decrease in R² Score' descriptive
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis for continuous data correct; backgrounds match #FAF8F1 (light)
-          and #1A1A17 (dark); both renders theme-correct'
+        comment: Backgrounds correct; viridis for continuous data; theme-adaptive
+          chrome throughout
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Viridis gradient elevates above generic defaults, showing design
-          intent. However, lacks intentional hierarchy and custom refinements. Default:
-          4.'
+        passed: true
+        comment: Viridis gradient is intentional design choice creating visual emphasis;
+          custom Style system
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: 'Minimal customization. Grid displayed; no explicit spine removal
-          or subtle styling choices observed. Default: 2.'
+        passed: true
+        comment: Clean minimal design; subtle grid; generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: 'Gradient naturally guides attention to top features (yellow), but
-          no additional annotations or emphasis to reinforce key insights. Default:
-          2.'
+        passed: true
+        comment: Color gradient creates visual hierarchy; features sorted descending
+          by importance
     spec_compliance:
       score: 11
       max: 15
@@ -132,29 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Horizontal bar chart correct for permutation importance visualization
+        comment: Correct horizontal bar chart for permutation importance
       - id: SC-02
         name: Required Features
         score: 0
         max: 4
         passed: false
-        comment: 'CRITICAL FAILURES: (1) No horizontal error bars - spec requires
-          ''Include horizontal error bars to show importance variability across shuffles''
-          (2) No x=0 reference line - spec requires ''Add a vertical reference line
-          at x=0 to distinguish positive from negative importance values'''
+        comment: 'CRITICAL: Error bars missing (spec: ''horizontal error bars to show
+          importance variability''); reference line at x=0 missing (spec: ''vertical
+          reference line to distinguish positive/negative'')'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Features on y-axis, importance on x-axis, correctly sorted descending
+        comment: X-axis shows importance values; Y-axis shows features; correctly
+          sorted
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correctly formatted; legend appropriately hidden for single
-          series
+        comment: Title format correct; no legend needed for single series
     data_quality:
       score: 15
       max: 15
@@ -164,20 +158,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 10 housing features shown with complete importance and variability
-          data
+        comment: 10 features covering full importance range with realistic variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price prediction scenario is realistic and neutral
+        comment: House pricing model with domain-appropriate features; neutral and
+          realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Importance values range 0.002-0.185, sensible for R² score decreases
+        comment: R² changes 0.002–0.185 realistic; std deviations proportional
     code_quality:
       score: 10
       max: 10
@@ -187,35 +181,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward implementation with no unnecessary functions
-          or classes
+        comment: Straightforward procedural code; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set with np.random.seed(42)
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys path manipulation is necessary for pygal module
-          naming
+        comment: Only necessary imports; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; color gradient generation is verbose inline but functional
+        comment: Inline viridis interpolation clear; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with correct naming
+        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -223,25 +215,21 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct Style object usage and HorizontalBar chart type. xlink href
-          hack is unnecessary.
+        comment: HorizontalBar and Style used correctly; interactive HTML output is
+          distinctive
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: false
-        comment: 'Uses theme-adaptive Style and viridis gradient generation; shows
-          pygal-specific customization. Default: 1. Elevated to 3 for demonstrating
-          style features.'
+        passed: true
+        comment: Style customization and custom gradient generation show library mastery
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
+  - custom-legend
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
   - custom-colormap
-  - dark-theme
