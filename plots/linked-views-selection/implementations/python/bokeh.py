@@ -1,24 +1,38 @@
-""" pyplots.ai
+""" anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-17
 """
+
+import os
+import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.layouts import column, gridplot, row
 from bokeh.models import Button, ColumnDataSource, CustomJS, Div
 from bokeh.plotting import figure
-from bokeh.resources import CDN
 from bokeh.transform import factor_cmap
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data - using iris-like multivariate data
 np.random.seed(42)
 n_points = 150
 
-# Create three distinct clusters
 categories = ["Species A", "Species B", "Species C"]
 category_list = []
 x_data = []
@@ -36,74 +50,64 @@ df = pd.DataFrame({"x": x_data, "y": y_data, "category": category_list, "value":
 
 # Create ColumnDataSource - the key to linked views in Bokeh
 source = ColumnDataSource(
-    data={
-        "x": df["x"].values,
-        "y": df["y"].values,
-        "category": df["category"].values,
-        "value": df["value"].values,
-        "original_alpha": [0.8] * len(df),
-        "alpha": [0.8] * len(df),
-    }
+    data={"x": df["x"].values, "y": df["y"].values, "category": df["category"].values, "value": df["value"].values}
 )
 
-# Color mapping for categories
-colors = ["#306998", "#FFD43B", "#7CB342"]  # Python Blue, Python Yellow, Green
-color_mapper = factor_cmap("category", palette=colors, factors=categories)
+# Color mapping for categories using Okabe-Ito
+color_palette = OKABE_ITO[:3]
+color_mapper = factor_cmap("category", palette=color_palette, factors=categories)
 
 # Create scatter plot (main selection view)
 scatter = figure(
     width=2400,
-    height=1300,
+    height=1350,
     title="Scatter Plot - Use Box Select or Lasso to Select Points",
     x_axis_label="Sepal Length (cm)",
     y_axis_label="Sepal Width (cm)",
     tools="pan,wheel_zoom,reset,box_select,lasso_select,tap",
 )
 
-# Create scatter glyphs per category for legend
-scatter_renderers = []
-for i, cat in enumerate(categories):
-    indices = [j for j, c in enumerate(df["category"]) if c == cat]
-    cat_source = ColumnDataSource(data={"x": df["x"].iloc[indices].values, "y": df["y"].iloc[indices].values})
-    r = scatter.scatter("x", "y", source=cat_source, size=25, color=colors[i], alpha=0.8, legend_label=cat)
-    scatter_renderers.append(r)
-
-# Main scatter renderer with shared source for linked selection
 scatter_renderer = scatter.scatter(
     "x",
     "y",
     source=source,
-    size=25,
+    size=15,
     color=color_mapper,
-    alpha="alpha",
-    selection_color="red",
+    alpha=0.8,
+    selection_color=OKABE_ITO[1],
     selection_alpha=1.0,
     nonselection_alpha=0.15,
-    nonselection_color="gray",
+    nonselection_color=INK_SOFT,
 )
-scatter_renderer.visible = True
 
 # Style scatter plot
+scatter.background_fill_color = PAGE_BG
+scatter.border_fill_color = PAGE_BG
+scatter.outline_line_color = INK_SOFT
 scatter.title.text_font_size = "28pt"
-scatter.xaxis.axis_label_text_font_size = "24pt"
-scatter.yaxis.axis_label_text_font_size = "24pt"
-scatter.xaxis.major_label_text_font_size = "20pt"
-scatter.yaxis.major_label_text_font_size = "20pt"
-scatter.grid.grid_line_alpha = 0.3
-scatter.legend.label_text_font_size = "18pt"
-scatter.legend.location = "top_left"
-scatter.legend.click_policy = "hide"
+scatter.title.text_color = INK
+scatter.xaxis.axis_label_text_font_size = "22pt"
+scatter.yaxis.axis_label_text_font_size = "22pt"
+scatter.xaxis.axis_label_text_color = INK
+scatter.yaxis.axis_label_text_color = INK
+scatter.xaxis.major_label_text_font_size = "18pt"
+scatter.yaxis.major_label_text_font_size = "18pt"
+scatter.xaxis.major_label_text_color = INK_SOFT
+scatter.yaxis.major_label_text_color = INK_SOFT
+scatter.xaxis.axis_line_color = INK_SOFT
+scatter.yaxis.axis_line_color = INK_SOFT
+scatter.xgrid.grid_line_color = INK
+scatter.xgrid.grid_line_alpha = 0.10
+scatter.ygrid.grid_line_color = INK
+scatter.ygrid.grid_line_alpha = 0.10
 
 # Create histogram of values
 hist_values, hist_edges = np.histogram(df["value"], bins=20)
-
-hist_source = ColumnDataSource(
-    data={"top": hist_values, "left": hist_edges[:-1], "right": hist_edges[1:], "alpha": [0.8] * len(hist_values)}
-)
+hist_source = ColumnDataSource(data={"top": hist_values, "left": hist_edges[:-1], "right": hist_edges[1:]})
 
 histogram = figure(
     width=2400,
-    height=1300,
+    height=1350,
     title="Value Distribution - Updates with Selection",
     x_axis_label="Value (units)",
     y_axis_label="Count",
@@ -116,65 +120,83 @@ histogram.quad(
     left="left",
     right="right",
     source=hist_source,
-    fill_color="#306998",
-    line_color="white",
-    alpha="alpha",
+    fill_color=OKABE_ITO[0],
+    line_color=PAGE_BG,
+    alpha=0.8,
 )
 
 # Style histogram
+histogram.background_fill_color = PAGE_BG
+histogram.border_fill_color = PAGE_BG
+histogram.outline_line_color = INK_SOFT
 histogram.title.text_font_size = "28pt"
-histogram.xaxis.axis_label_text_font_size = "24pt"
-histogram.yaxis.axis_label_text_font_size = "24pt"
-histogram.xaxis.major_label_text_font_size = "20pt"
-histogram.yaxis.major_label_text_font_size = "20pt"
-histogram.grid.grid_line_alpha = 0.3
+histogram.title.text_color = INK
+histogram.xaxis.axis_label_text_font_size = "22pt"
+histogram.yaxis.axis_label_text_font_size = "22pt"
+histogram.xaxis.axis_label_text_color = INK
+histogram.yaxis.axis_label_text_color = INK
+histogram.xaxis.major_label_text_font_size = "18pt"
+histogram.yaxis.major_label_text_font_size = "18pt"
+histogram.xaxis.major_label_text_color = INK_SOFT
+histogram.yaxis.major_label_text_color = INK_SOFT
+histogram.xaxis.axis_line_color = INK_SOFT
+histogram.yaxis.axis_line_color = INK_SOFT
+histogram.xgrid.grid_line_color = INK
+histogram.xgrid.grid_line_alpha = 0.10
+histogram.ygrid.grid_line_color = INK
+histogram.ygrid.grid_line_alpha = 0.10
 
 # Create bar chart by category
 category_counts = df["category"].value_counts()
 bar_source = ColumnDataSource(
-    data={
-        "categories": categories,
-        "counts": [category_counts.get(c, 0) for c in categories],
-        "colors": colors,
-        "alpha": [0.8] * len(categories),
-    }
+    data={"categories": categories, "counts": [category_counts.get(c, 0) for c in categories], "colors": color_palette}
 )
 
 bar_chart = figure(
     width=2400,
-    height=1300,
+    height=1350,
     x_range=categories,
     title="Category Distribution - Updates with Selection",
     x_axis_label="Category",
     y_axis_label="Count",
-    tools="pan,wheel_zoom,reset,tap",
+    tools="pan,wheel_zoom,reset",
 )
 
 bar_chart.vbar(
     x="categories",
     top="counts",
-    width=0.7,
+    width=0.6,
     source=bar_source,
     color="colors",
-    alpha="alpha",
-    line_color="white",
+    alpha=0.8,
+    line_color=PAGE_BG,
     line_width=2,
 )
 
 # Style bar chart
+bar_chart.background_fill_color = PAGE_BG
+bar_chart.border_fill_color = PAGE_BG
+bar_chart.outline_line_color = INK_SOFT
 bar_chart.title.text_font_size = "28pt"
-bar_chart.xaxis.axis_label_text_font_size = "24pt"
-bar_chart.yaxis.axis_label_text_font_size = "24pt"
-bar_chart.xaxis.major_label_text_font_size = "20pt"
-bar_chart.yaxis.major_label_text_font_size = "20pt"
+bar_chart.title.text_color = INK
+bar_chart.xaxis.axis_label_text_font_size = "22pt"
+bar_chart.yaxis.axis_label_text_font_size = "22pt"
+bar_chart.xaxis.axis_label_text_color = INK
+bar_chart.yaxis.axis_label_text_color = INK
+bar_chart.xaxis.major_label_text_font_size = "18pt"
+bar_chart.yaxis.major_label_text_font_size = "18pt"
+bar_chart.xaxis.major_label_text_color = INK_SOFT
+bar_chart.yaxis.major_label_text_color = INK_SOFT
+bar_chart.xaxis.axis_line_color = INK_SOFT
+bar_chart.yaxis.axis_line_color = INK_SOFT
 bar_chart.xgrid.grid_line_color = None
-bar_chart.y_range.start = 0
-bar_chart.grid.grid_line_alpha = 0.3
+bar_chart.ygrid.grid_line_color = INK
+bar_chart.ygrid.grid_line_alpha = 0.10
 
-# Create a second scatter plot (value vs y) to show cross-view linking
+# Create second scatter plot (value vs y)
 scatter2 = figure(
     width=2400,
-    height=1300,
+    height=1350,
     title="Value vs Sepal Width - Linked Selection",
     x_axis_label="Value (units)",
     y_axis_label="Sepal Width (cm)",
@@ -184,23 +206,36 @@ scatter2 = figure(
 scatter2.scatter(
     "value",
     "y",
-    source=source,  # Same source = automatic linking!
-    size=25,
+    source=source,
+    size=15,
     color=color_mapper,
-    alpha="alpha",
-    selection_color="red",
+    alpha=0.8,
+    selection_color=OKABE_ITO[1],
     selection_alpha=1.0,
     nonselection_alpha=0.15,
-    nonselection_color="gray",
+    nonselection_color=INK_SOFT,
 )
 
 # Style second scatter
+scatter2.background_fill_color = PAGE_BG
+scatter2.border_fill_color = PAGE_BG
+scatter2.outline_line_color = INK_SOFT
 scatter2.title.text_font_size = "28pt"
-scatter2.xaxis.axis_label_text_font_size = "24pt"
-scatter2.yaxis.axis_label_text_font_size = "24pt"
-scatter2.xaxis.major_label_text_font_size = "20pt"
-scatter2.yaxis.major_label_text_font_size = "20pt"
-scatter2.grid.grid_line_alpha = 0.3
+scatter2.title.text_color = INK
+scatter2.xaxis.axis_label_text_font_size = "22pt"
+scatter2.yaxis.axis_label_text_font_size = "22pt"
+scatter2.xaxis.axis_label_text_color = INK
+scatter2.yaxis.axis_label_text_color = INK
+scatter2.xaxis.major_label_text_font_size = "18pt"
+scatter2.yaxis.major_label_text_font_size = "18pt"
+scatter2.xaxis.major_label_text_color = INK_SOFT
+scatter2.yaxis.major_label_text_color = INK_SOFT
+scatter2.xaxis.axis_line_color = INK_SOFT
+scatter2.yaxis.axis_line_color = INK_SOFT
+scatter2.xgrid.grid_line_color = INK
+scatter2.xgrid.grid_line_alpha = 0.10
+scatter2.ygrid.grid_line_color = INK
+scatter2.ygrid.grid_line_alpha = 0.10
 
 # JavaScript callback to update histogram and bar chart on selection
 callback = CustomJS(
@@ -236,7 +271,6 @@ callback = CustomJS(
         hist_data['top'] = counts;
         hist_data['left'] = left;
         hist_data['right'] = right;
-        hist_data['alpha'] = new Array(n_bins).fill(0.8);
 
         // Reset bar chart
         const categories = ['Species A', 'Species B', 'Species C'];
@@ -246,7 +280,6 @@ callback = CustomJS(
             if (cat_idx >= 0) cat_counts[cat_idx]++;
         }
         bar_data['counts'] = cat_counts;
-        bar_data['alpha'] = new Array(categories.length).fill(0.8);
     } else {
         // Update histogram with selected values
         const selected_values = indices.map(i => data['value'][i]);
@@ -272,7 +305,6 @@ callback = CustomJS(
         hist_data['top'] = counts;
         hist_data['left'] = left;
         hist_data['right'] = right;
-        hist_data['alpha'] = new Array(n_bins).fill(0.8);
 
         // Update bar chart with selected categories
         const categories = ['Species A', 'Species B', 'Species C'];
@@ -282,7 +314,6 @@ callback = CustomJS(
             if (cat_idx >= 0) cat_counts[cat_idx]++;
         }
         bar_data['counts'] = cat_counts;
-        bar_data['alpha'] = new Array(categories.length).fill(0.8);
     }
 
     hist_source.change.emit();
@@ -340,10 +371,10 @@ clear_callback = CustomJS(
 )
 clear_button.js_on_click(clear_callback)
 
-# Title as Div element (avoids missing renderers warning)
+# Title as Div element
 title_div = Div(
-    text="<h1 style='font-size: 40pt; text-align: center; margin: 20px 0; "
-    "font-family: sans-serif;'>linked-views-selection · bokeh · pyplots.ai</h1>",
+    text=f"<h1 style='font-size: 40pt; text-align: center; margin: 20px 0; "
+    f"font-family: sans-serif; color: {INK};'>linked-views-selection · bokeh · anyplot.ai</h1>",
     width=4800,
 )
 
@@ -356,8 +387,26 @@ grid = gridplot([[scatter, scatter2], [histogram, bar_chart]], merge_tools=True)
 
 layout = column(title_div, button_row, grid)
 
-# Save as HTML for interactivity
-save(layout, filename="plot.html", title="Linked Views Selection", resources=CDN)
+# Save as HTML (interactive)
+output_file(f"plot-{THEME}.html")
+save(layout)
 
-# Export PNG for static preview
-export_png(layout, filename="plot.png")
+# Screenshot with Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
