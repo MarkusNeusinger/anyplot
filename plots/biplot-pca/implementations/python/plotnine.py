@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-17
@@ -134,7 +134,7 @@ plot = (
     + labs(
         x=f"PC1 ({var_explained[0]:.1f}%)",
         y=f"PC2 ({var_explained[1]:.1f}%)",
-        title="biplot-pca · plotnine · pyplots.ai",
+        title="biplot-pca · plotnine · anyplot.ai",
         color="Species",
     )
     # Theme
