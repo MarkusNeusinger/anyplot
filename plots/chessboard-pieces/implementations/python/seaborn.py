@@ -1,40 +1,60 @@
-""" pyplots.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-08
+Quality: pending | Created: 2026-05-17
 """
 
-import matplotlib.patheffects as pe
-import matplotlib.pyplot as plt
-import numpy as np
-import seaborn as sns
+import os
+import sys
+from pathlib import Path
 
+
+# Avoid module shadowing: remove the script's directory from sys.path before importing
+script_dir = Path(__file__).parent.resolve()
+original_path = sys.path.copy()
+sys.path = [p for p in sys.path if Path(p).resolve() != script_dir and p not in ("", ".")]
+
+import matplotlib.patheffects as pe  # noqa: E402
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+import seaborn as sns  # noqa: E402
+
+
+sys.path = original_path
+del original_path
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Chess piece Unicode symbols
 PIECE_SYMBOLS = {
-    "K": "\u2654",
-    "Q": "\u2655",
-    "R": "\u2656",
-    "B": "\u2657",
-    "N": "\u2658",
-    "P": "\u2659",  # White pieces
-    "k": "\u265a",
-    "q": "\u265b",
-    "r": "\u265c",
-    "b": "\u265d",
-    "n": "\u265e",
-    "p": "\u265f",  # Black pieces
+    "K": "♔",
+    "Q": "♕",
+    "R": "♖",
+    "B": "♗",
+    "N": "♘",
+    "P": "♙",  # White pieces
+    "k": "♚",
+    "q": "♛",
+    "r": "♜",
+    "b": "♝",
+    "n": "♞",
+    "p": "♟",  # Black pieces
 }
 
-# Example position: Scholar's Mate (4-move checkmate)
-# Position after 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#
+# Italian Game position: After 1.e4 e5 2.Nf3 Nc6 3.Bc4 Nf6 4.Ng5 d5 5.exd5 Nxd5
+# This is the Fried Liver starting position - famous and educational
 pieces = {
     # White pieces
     "a1": "R",
     "b1": "N",
     "c1": "B",
+    "d1": "Q",
     "e1": "K",
-    "f1": "B",
     "h1": "R",
     "a2": "P",
     "b2": "P",
@@ -43,25 +63,27 @@ pieces = {
     "f2": "P",
     "g2": "P",
     "h2": "P",
-    "e4": "P",
-    "f7": "Q",  # Checkmate position!
+    "c4": "B",
+    "f3": "N",
+    "g5": "N",
     # Black pieces
     "a8": "r",
     "b8": "n",
     "c8": "b",
     "d8": "q",
+    "e8": "k",
     "f8": "b",
     "h8": "r",
     "a7": "p",
     "b7": "p",
     "c7": "p",
-    "d7": "p",
+    "e7": "p",
+    "f7": "p",
     "g7": "p",
     "h7": "p",
-    "e8": "k",  # King in checkmate
-    "e5": "p",
-    "c6": "n",
+    "d5": "n",
     "f6": "n",
+    "c6": "n",
 }
 
 # Create board data for heatmap
@@ -72,8 +94,23 @@ for row in range(8):
         # Checkerboard pattern: h1 (row=7, col=7) should be light (0)
         board_colors[row, col] = (row + col + 1) % 2
 
+# Set up seaborn theme with theme-adaptive colors
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+    },
+)
+
 # Create figure with square aspect ratio for chessboard
-fig, ax = plt.subplots(figsize=(12, 12))
+fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Use seaborn heatmap for the board squares
 sns.heatmap(
@@ -88,7 +125,7 @@ sns.heatmap(
     yticklabels=list("87654321"),
 )
 
-# Style tick labels
+# Style tick labels with theme-adaptive colors
 ax.tick_params(
     axis="both",
     which="both",
@@ -98,9 +135,10 @@ ax.tick_params(
     labeltop=False,
     labelleft=True,
     labelright=False,
+    colors=INK_SOFT,
 )
-ax.set_xticklabels(list("abcdefgh"), fontsize=20, fontweight="bold")
-ax.set_yticklabels(list("87654321"), fontsize=20, fontweight="bold")
+ax.set_xticklabels(list("abcdefgh"), fontsize=20, fontweight="bold", color=INK_SOFT)
+ax.set_yticklabels(list("87654321"), fontsize=20, fontweight="bold", color=INK_SOFT)
 
 # Place pieces on the board
 for square, piece in pieces.items():
@@ -108,9 +146,11 @@ for square, piece in pieces.items():
     row = 8 - int(square[1])  # 8=0, 7=1, ..., 1=7
 
     symbol = PIECE_SYMBOLS.get(piece, "")
-    # White pieces in white, black pieces in black
-    color = "#1a1a1a" if piece.islower() else "#ffffff"
-    # Add slight shadow/outline for visibility on both light and dark squares
+    # White pieces in white, black pieces in dark
+    piece_color = INK if piece.islower() else "#ffffff"
+    # Outline color adjusted for theme
+    outline_color = INK_SOFT if THEME == "light" else "#4A4A44"
+    # Add path effect for visibility
     ax.text(
         col + 0.5,
         row + 0.5,
@@ -118,17 +158,19 @@ for square, piece in pieces.items():
         fontsize=48,
         ha="center",
         va="center",
-        color=color,
+        color=piece_color,
         fontweight="bold",
-        path_effects=[pe.withStroke(linewidth=2, foreground="#666666")],
+        path_effects=[pe.withStroke(linewidth=2, foreground=outline_color)],
     )
 
-# Title
-ax.set_title("Scholar's Mate · chessboard-pieces · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+# Title with theme-adaptive color
+ax.set_title(
+    "Italian Game · chessboard-pieces · seaborn · anyplot.ai", fontsize=24, fontweight="bold", pad=20, color=INK
+)
 
 # Remove axis labels
 ax.set_xlabel("")
 ax.set_ylabel("")
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
