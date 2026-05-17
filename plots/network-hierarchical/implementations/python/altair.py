@@ -1,19 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-17
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for levels
+LEVEL_COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data - Organizational chart with 25 employees across 4 levels
 np.random.seed(42)
 
 # Define hierarchical structure: CEO -> VPs -> Directors -> Managers
-# Reduced to 25 nodes for better label spacing at bottom level
 nodes = [
     # Level 0 - CEO
     {"id": 0, "label": "CEO", "level": 0, "parent": None},
@@ -107,26 +118,23 @@ for n in nodes:
         edge_id += 1
 edges_df = pd.DataFrame(edges_data)
 
-# Color scheme based on level (Python Blue primary, Yellow accent)
-level_colors = ["#306998", "#4B8BBE", "#FFD43B", "#646464"]
-
 # Create edge layer - lines connecting nodes using mark_line with detail encoding
 edge_layer = (
     alt.Chart(edges_df)
-    .mark_line(strokeWidth=3, opacity=0.4, color="#888888")
+    .mark_line(strokeWidth=3, opacity=0.4, color=INK_SOFT)
     .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None), detail="edge_id:N")
 )
 
 # Create node layer - circles for each employee
 node_layer = (
     alt.Chart(nodes_df)
-    .mark_circle(size=1200, stroke="#ffffff", strokeWidth=3)
+    .mark_circle(size=1200, stroke=INK, strokeWidth=3)
     .encode(
         x=alt.X("x:Q", axis=None),
         y=alt.Y("y:Q", axis=None),
         color=alt.Color(
             "level:N",
-            scale=alt.Scale(domain=[0, 1, 2, 3], range=level_colors),
+            scale=alt.Scale(domain=[0, 1, 2, 3], range=LEVEL_COLORS),
             legend=alt.Legend(
                 title="Level",
                 labelFontSize=16,
@@ -139,11 +147,11 @@ node_layer = (
     )
 )
 
-# Create label layer - text labels for nodes
+# Create label layer - text labels for nodes (adjusted vertical spacing to prevent overlap)
 label_layer = (
     alt.Chart(nodes_df)
-    .mark_text(dy=-30, fontSize=16, fontWeight="bold")
-    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N", color=alt.value("#333333"))
+    .mark_text(dy=-35, fontSize=18, fontWeight="bold")
+    .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="label:N", color=alt.value(INK))
 )
 
 # Combine layers
@@ -153,17 +161,21 @@ chart = (
         width=1600,
         height=900,
         title=alt.Title(
-            "network-hierarchical · altair · pyplots.ai",
+            "network-hierarchical · altair · anyplot.ai",
             fontSize=28,
             anchor="middle",
             subtitle="Organizational Chart: 25 employees across 4 management levels",
             subtitleFontSize=18,
-            subtitleColor="#666666",
+            subtitleColor=INK_SOFT,
         ),
+        background=PAGE_BG,
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(orient="right", padding=20)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(
+        orient="right", padding=20, fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK
+    )
 )
 
-# Save as PNG
-chart.save("plot.png", scale_factor=3.0)
+# Save as PNG and HTML
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
