@@ -1,150 +1,167 @@
 library: seaborn
+language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:52:21Z'
-updated: '2026-01-08T21:58:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832938738
+updated: '2026-05-17T01:43:19Z'
+generated_by: claude-haiku
+workflow_run: 25978193787
 issue: 3340
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/seaborn/plot.png
-preview_html: null
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Perfectly implements the chess board standard with light square at h1 corner
-  - Excellent color scheme using classic brown/cream that is visually appealing and
-    accessible
-  - Clean use of seaborn heatmap with square=True for proper aspect ratio
-  - Border lines between squares enhance visual clarity
-  - Well-formatted title following the required convention
-  - Appropriate axis labels using chess terminology (File, Rank)
-  weaknesses:
-  - VQ-07 grid/legend scoring does not cleanly apply to this visualization type
-  image_description: The plot displays a classic 8x8 chessboard with alternating brown
-    (#8B4513, saddle brown) and cream (#F5DEB3, wheat) squares. The board uses standard
-    algebraic notation with columns labeled a-h at the bottom (labeled "File") and
-    rows labeled 1-8 on the left side (labeled "Rank"). The title "chessboard-basic
-    · seaborn · pyplots.ai" appears at the top in large 28pt font. Dark brown (#5D3A1A)
-    border lines separate each square with linewidth=2, providing clear visual separation.
-    The board maintains a perfect 1:1 square aspect ratio using seaborn's square=True
-    parameter. Critically, the h1 square (bottom-right corner) is light/cream colored,
-    which correctly follows the chess standard that "white on right." The a8 square
-    (top-left) is also light, as expected. The overall layout is well-balanced with
-    the chessboard filling the canvas appropriately.
+  - Perfect theme adaptation with readable text in both light and dark renders
+  - Correct chess board geometry with proper algebraic notation (a-h, 1-8)
+  - Clean code structure with appropriate theme tokens throughout
+  - All specification requirements met exactly
+  - Excellent visual hierarchy and professional presentation
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clean and professional.
+      Chrome: Title "chessboard-basic · seaborn · anyplot.ai" in dark text (fontsize=24); axis labels "File" and "Rank" (fontsize=20) clearly visible; tick labels a-h and 1-8 (fontsize=16) properly positioned. All text is readable.
+      Data: Perfect 8×8 chess board with alternating cornsilk (#FFF8DC) and sienna (#A0522D) squares. Square borders in subtle gray (INK_SOFT) provide clear definition. Proper algebraic notation with light square at h1 (bottom-right), maintaining 1:1 aspect ratio.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), maintaining theme consistency.
+      Chrome: Title, axis labels, and tick labels all visible in light text (#F0EFE8). No dark-on-dark conflicts. Spines colored in light INK_SOFT (#B8B7B0). All elements readable.
+      Data: Chess board squares are identical to light render (cornsilk and sienna unchanged). Only chrome (background, text, borders) flips to dark theme. Square borders remain visible and functional.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 24pt, tick labels at 20pt - all perfectly
-          readable
+        comment: Title, axis labels, and tick labels all properly sized and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Clean layout with no overlapping elements, all text well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Squares clearly visible with good contrast between colors
+        comment: All 64 squares clearly visible and distinguishable with good border
+          definition
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Brown/cream palette is colorblind-safe
+        comment: Excellent contrast between cornsilk and sienna, not relying on color
+          alone
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Board fills canvas well with balanced margins, 1:1 aspect ratio
+        comment: Perfect 1:1 aspect ratio, proper margins, nothing cut off
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Labels say File and Rank - descriptive but no units (appropriate
-          for chess)
+        passed: true
+        comment: Title format correct, axis labels use proper chess terminology (File,
+          Rank)
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: No legend needed; grid/legend scoring does not apply cleanly to this
-          visualization
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark), theme-adaptive
+          chrome properly applied'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Deliberate color choices (cornsilk/sienna) appropriate for chess
+          aesthetics, shows design intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean borders (linewidth=2), subtle spine colors, good whitespace
+          management
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point (8×8 grid), chess notation guides viewer, functional
+          hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct 8x8 grid/heatmap visualization for chessboard
+        comment: Perfect 8×8 grid visualization, correct chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Rows and columns correctly mapped to chess notation
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features: 8x8 grid, algebraic notation, light square at
-          h1, classic colors, borders'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: alternating squares, labels, 1:1 aspect ratio,
+          correct orientation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full board shown (all 64 squares)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (a-h) at bottom, Y-axis (1-8) on left with 8 at top, all data
+          displayed correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this visualization
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: chessboard-basic · seaborn · pyplots.ai'
+        comment: Title format correct; no legend needed for this plot type
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows complete chess board with proper alternating pattern
+        comment: Complete 8×8 representation with proper notation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Standard chess board is a real, universally recognized pattern
+        comment: Standard chess board with algebraic notation, neutral and appropriate
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
-        max: 5
-        passed: false
-        comment: Fixed 8x8 grid is correct; minor deduction as data is deterministic
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 8×8 dimensions with appropriate colors and proportions
     code_quality:
       score: 10
       max: 10
@@ -154,50 +171,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Simple, direct implementation without unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data, no random elements
+        comment: Deterministic data generation with no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: matplotlib, numpy, seaborn'
+        comment: Only necessary imports, all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Appropriate complexity, no fake UI or simulated interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper use of sns.heatmap(), sns.set_theme(), and matplotlib conventions
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses sns.heatmap with square=True, custom cmap list, cbar=False,
-          linewidths. Good but basic heatmap usage.
+        passed: true
+        comment: Good use of seaborn's theme system and heatmap customization; appropriately
+          matched to spec
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   patterns:
-  - data-generation
   - matrix-construction
+  - data-generation
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
