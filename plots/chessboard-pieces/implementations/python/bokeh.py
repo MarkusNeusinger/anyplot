@@ -1,7 +1,7 @@
 """ anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-17
+Quality: 86/100 | Updated: 2026-05-17
 """
 
 import os
