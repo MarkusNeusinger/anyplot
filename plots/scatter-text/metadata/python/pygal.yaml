@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-text
 created: '2026-05-17T23:33:26Z'
-updated: '2026-05-17T23:36:18Z'
+updated: '2026-05-17T23:43:39Z'
 generated_by: claude-haiku
 workflow_run: 26005903448
 issue: 3482
@@ -12,89 +12,92 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/pygal/plot-dark.html
-quality_score: 40
+quality_score: 32
 review:
   strengths:
-  - Clean, simple code structure with proper KISS principle
-  - Correct Okabe-Ito palette and theme-adaptive chrome (backgrounds and text colors
-    render correctly in both light and dark themes)
-  - Realistic product positioning scenario with plausible data values
-  - Proper pygal API usage for basic chart configuration
+  - Text labels are clearly readable in both light and dark themes
+  - Theme-adaptive chrome is correctly implemented (correct backgrounds, text colors,
+    grid styling)
+  - Brand green color (#009E73) is correctly applied to all data elements
+  - Both renders use consistent colors and styling across themes
   weaknesses:
-  - 'CRITICAL: Wrong plot type — code renders a line chart instead of a scatter plot
-    with text labels; pygal''s XY chart connects points with lines rather than replacing
-    them with text'
-  - 'CRITICAL: No text labels visible at any data position; the specification''s core
-    feature (text labels instead of markers) is completely missing — product names
-    should appear at coordinates, not on axes'
-  - 'Library limitation: Pygal''s label parameter on XY data doesn''t render as text
-    at positions; a different approach (annotations) or different library may be needed'
-  - Generic design with no visual hierarchy, styling choices, or emphasis beyond theme
-    tokens
+  - 'SC-01 CRITICAL: Wrong plot type - implementation uses a line plot with connecting
+    lines instead of a scatter plot. Text labels should be positioned at x,y coordinates
+    WITHOUT connecting lines between points.'
+  - 'VQ-02: Text label overlap in dense regions - some labels are difficult to read
+    due to proximity (Growth Package, Standard Pro area)'
+  - 'DE-01 LOW: Generic styling using library defaults - no custom color palette or
+    design sophistication beyond theme compliance'
+  - 'DE-02 LOW: Minimal visual refinement - no spine removal, basic grid styling,
+    no whitespace optimization'
+  - 'DE-03 LOW: No data storytelling - plot simply displays product positions without
+    visual hierarchy or emphasis'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "scatter-text · Python · pygal · anyplot.ai" and axis labels "Price Competitiveness" and "Feature Completeness" are clearly readable in dark text
-      Data: Renders 10 teal/green lines (#009E73) connecting points in an XY line-chart pattern; NO TEXT LABELS visible at any coordinate position
-      Legibility verdict: FAIL — the specification's core feature (text labels at data positions) is completely absent; visualization shows lines instead of text labels
+      Background: Warm off-white (#FAF8F1) - CORRECT
+      Chrome: Title "scatter-text · Python · pygal · anyplot.ai", X-axis label "Price Competitiveness", Y-axis label "Feature Completeness" - all readable
+      Data: Text labels (Budget Start-up Kit, Standard Pro, Premium Suite, etc.) positioned at coordinates and rendered in brand green (#009E73). HOWEVER, the labels are connected by lines, creating a line plot rather than a scatter plot.
+      Layout: Y-axis grid present (subtle), L-shaped frame
+      Legibility verdict: FAIL - Chart type mismatch. While text is readable, the line plot structure contradicts the "scatter plot with text labels" specification.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title and axis labels are clearly readable in light text (#F0EFE8); grid lines are subtle
-      Data: Same teal/green lines (#009E73) as light render (data colors correctly identical across themes); NO TEXT LABELS at any position
-      Legibility verdict: FAIL — same critical issue as light render: text labels (the entire plot concept) are missing; only lines are visible. Chrome correctly adapted to dark theme, but the visualization itself is wrong.
+      Background: Warm near-black (#1A1A17) - CORRECT
+      Chrome: Title, axis labels, and tick labels are light-colored and readable against dark background. No dark-on-dark failures detected.
+      Data: Same text labels and brand green color as light render (consistent). Data colors identical to light render - CORRECT. Again, labels are connected by lines.
+      Layout: Y-axis grid present (subtle), theme-adaptive chrome
+      Legibility verdict: FAIL - Same chart type issue. Text is readable but chart structure is wrong.
+
+    CRITICAL ISSUE: Both renders show connecting lines between text labels, creating a line plot visualization instead of a scatter plot. The specification requires a scatter plot where text labels replace markers at coordinate positions, with NO connecting lines between points.
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 16
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 5
         max: 8
         passed: false
-        comment: No text labels visible at data positions—the spec's core feature
-          is completely missing
+        comment: Text is readable but relying on library defaults, not explicitly
+          set sizes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: Lines render clearly with no overlapping elements
+        passed: false
+        comment: Some text overlap in dense regions reduces readability
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines are clearly visible and well-sized
+        comment: Text labels are visible and well-positioned
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast; teal color (#009E73) is distinct and readable
+        comment: Good contrast, CVD-safe palette
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Good use of space, balanced margins, plot fills appropriate portion
-          of canvas
+        passed: false
+        comment: Plot fills ~50% of canvas but unoptimized layout
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units implied; clear title
+        comment: Descriptive labels with context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct Okabe-Ito palette, correct backgrounds (#FAF8F1 light, #1A1A17
-          dark), theme-adaptive chrome works in both renders'
+        comment: Perfect Okabe-Ito compliance, theme-correct chrome
     design_excellence:
-      score: 6
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -102,21 +105,21 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic line chart styling with no intentional design choices
+        comment: Generic styling with defaults, no design thought
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Default pygal styling with no custom refinement beyond theme tokens
+        comment: Default settings, no visual polish
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Lines displayed but no visual hierarchy, emphasis, or storytelling
+        comment: No visual hierarchy or emphasis, raw data display
     spec_compliance:
-      score: 5
+      score: 8
       max: 15
       items:
       - id: SC-01
@@ -124,52 +127,52 @@ review:
         score: 0
         max: 5
         passed: false
-        comment: 'WRONG TYPE: Renders as line chart, not scatter plot with text labels'
+        comment: 'CRITICAL: Implementation is a line plot, not a scatter plot. Should
+          show text labels at coordinates without connecting lines'
       - id: SC-02
         name: Required Features
-        score: 0
+        score: 3
         max: 4
         passed: false
-        comment: 'TEXT LABELS MISSING: Core feature (text labels at coordinates) completely
-          absent'
+        comment: Text labels present but plot structure doesn't match scatter-plot
+          requirement
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates correctly plotted within range (0-5.5)
+        comment: X and Y coordinates mapped correctly
       - id: SC-04
         name: Title & Legend
         score: 2
         max: 3
-        passed: true
-        comment: Title format correct (spec-id · Language · library · anyplot.ai);
-          no legend (appropriate)
+        passed: false
+        comment: Title format correct but legend not shown (acceptable for single
+          series, but original shows as line plot legend)
     data_quality:
       score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Shows positioning but not the label feature; incomplete coverage
-          of spec requirements
+        comment: Shows product positioning but limited context for scatter-plot demonstration
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Product positioning is realistic, neutral, and plausible
+        comment: Product positioning scenario is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values (1-5 range) are sensible for competitive positioning metrics
+        comment: Data values are plausible for price/feature metrics
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -177,33 +180,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple, linear structure: imports → constants → data → chart → save'
+        comment: Clean linear structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data (no randomness)
+        comment: Deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pygal, and Style imported; all used
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code; no over-engineering or fake functionality
+        passed: false
+        comment: Does not use show_lines=False or equivalent to remove connecting
+          lines - critical oversight
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-light.png, plot-dark.png, plus HTML files'
+        comment: Correct PNG/HTML output
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -211,14 +215,15 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct pygal API usage but fails to achieve the visualization goal
+        comment: Correct pygal.XY usage but doesn't properly configure for text-only
+          scatter plot
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic usage; doesn't leverage pygal's capabilities for text-scatter
-          visualization
+        comment: Uses Style customization but doesn't leverage library features for
+          proper visualization
   verdict: REJECTED
 impl_tags:
   dependencies: []
