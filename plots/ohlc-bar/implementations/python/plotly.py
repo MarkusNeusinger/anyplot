@@ -1,7 +1,7 @@
 """ anyplot.ai
 ohlc-bar: OHLC Bar Chart
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-17
+Quality: 88/100 | Updated: 2026-05-17
 """
 
 import os
