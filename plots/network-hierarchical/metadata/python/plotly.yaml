@@ -1,159 +1,192 @@
 library: plotly
+language: python
 specification_id: network-hierarchical
 created: '2026-01-08T21:55:53Z'
-updated: '2026-01-08T22:10:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832953660
+updated: '2026-05-17T06:19:39Z'
+generated_by: claude-haiku
+workflow_run: 25983216939
 issue: 3343
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent hierarchical layout algorithm with proper parent centering over children
-  - Clean orthogonal edge routing creates professional org-chart appearance
-  - Level annotations on the left side provide clear context without cluttering the
-    visualization
-  - Color coding by hierarchy level makes structure immediately apparent
-  - Both PNG and interactive HTML outputs generated
+  - Perfect visual quality and theme compliance in both light and dark renders
+  - Elegant hierarchical layout with asymmetric tree structure handled beautifully
+  - Proper Okabe-Ito color scheme with clear color-coding for hierarchy levels (brand
+    green for CEO, then vermillion/blue/purple for deeper levels)
+  - Full spec compliance — all required features implemented (tree layout, parent-child
+    edges, root at top, orthogonal routing)
+  - Deterministic, reproducible code with clean structure and proper theme-adaptive
+    styling throughout
+  - Interactive hover text showing node labels and hierarchy level information
   weaknesses:
-  - Edge line width (2.5px) could be slightly thicker for better visibility at full
-    resolution
-  - Hover tooltips only show node labels; could include level or reporting chain information
-  - Tree structure is symmetric (each parent has equal children) - more asymmetric
-    branching would better demonstrate the algorithm
-  image_description: 'The plot displays a hierarchical organizational chart with 16
-    nodes arranged across 4 distinct vertical levels. At the top (Level 0) is a single
-    dark blue (Python Blue #306998) CEO node. Level 1 shows three yellow (#FFD43B)
-    VP nodes (VP Engineering, VP Sales, VP Operations) connected to the CEO via orthogonal
-    gray lines. Level 2 contains six light blue (#4B8BBE) Director nodes (Frontend,
-    Backend, Americas, Europe, HR, Finance), each connected to their respective VP.
-    Level 3 at the bottom has six gray (#646464) Lead nodes (React, API, East, UK,
-    Recruit, Acct). The edges use orthogonal routing (right-angle connections) with
-    a mid-point horizontal segment. Level labels appear on the left side (Level 0:
-    Executive, Level 1: VPs, Level 2: Directors, Level 3: Leads). The title "Organizational
-    Chart · network-hierarchical · plotly · pyplots.ai" is centered at the top. The
-    background is clean white with no grid lines or axes visible.'
+  - Design excellence scores moderate (6/8 and 4/6) — could enhance with curved edges
+    or more sophisticated visual refinement rather than orthogonal routing alone
+  - Library mastery for distinctive features is low (2/5) — could showcase more Plotly-specific
+    interactive capabilities beyond basic hover text
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle warmth — clean, readable surface.
+      Chrome: Title "network-hierarchical · plotly · anyplot.ai" is dark text (INK), clearly visible at top center.
+        Axis lines removed (appropriate for network viz). All text elements use dark INK color against light background.
+      Data: Hierarchical organizational chart with 22 nodes across 4 levels, using Okabe-Ito color scheme:
+        - Level 0 (CEO): Brand green (#009E73)
+        - Level 1 (VPs): Vermillion (#D55E00)
+        - Level 2 (Directors): Blue (#0072B2)
+        - Level 3 (Leads): Reddish purple (#CC79A7)
+        Nodes have white borders for edge definition. Text labels positioned below nodes (14pt font).
+        Edges use orthogonal routing (gray lines, INK_SOFT color) with clear parent-child connections.
+      Layout: Asymmetric tree structure beautifully handled — leaf nodes spaced sequentially at bottom,
+        parent nodes centered above children. Clear hierarchical depth and branching visible.
+      Legibility verdict: PASS — all text readable, nodes well-spaced, edges don't clutter the view.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — dark, comfortable for evening viewing.
+      Chrome: Title uses light text (INK #F0EFE8), clearly visible against dark background.
+        All UI elements properly theme-adapted. No dark-on-dark failures detected.
+      Data: Identical data colors to light render (positions 1-4 of Okabe-Ito palette unchanged):
+        - Level 0: Same brand green (#009E73)
+        - Level 1: Same vermillion (#D55E00)
+        - Level 2: Same blue (#0072B2)
+        - Level 3: Same reddish purple (#CC79A7)
+        Node text is light (INK #F0EFE8) and readable against dark background.
+        Edges use light gray (INK_SOFT #B8B7B0) and are clearly visible.
+        White node borders visible against dark background.
+      Layout: Identical to light render — only chrome (background, text colors) flipped.
+      Legibility verdict: PASS — all text readable, excellent contrast, no dark-on-dark issues.
+        Brand green and all data colors maintain excellent visibility on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, node labels at 16pt, level annotations at 16pt - all
-          clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements; nodes well-spaced
+        comment: Title 28px, labels 16px, all readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Orthogonal routing, centered parents, no label collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes sized at 45px with clear visibility; edges at 2.5px width are
-          visible but could be slightly thicker
+        comment: Markers 48px, edges 3.5px, all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, light blue, gray palette is colorblind-safe with good
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space; hierarchy centered with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for network graphs (no axes), but level annotations serve this
-          purpose well
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed; level annotations serve as effective legend
+        comment: Okabe-Ito palette is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px renders well, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: network-hierarchical · plotly · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light bg #FAF8F1, dark bg #1A1A17, first series #009E73, both renders
+          theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional polish with elegant hierarchical structure, asymmetric
+          handling, theme adaptation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Node borders add definition, orthogonal routing is structured but
+          could be softer (bezier curves)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear color-based hierarchy, level-based visual ordering guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct hierarchical network graph with tree layout
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Parent-child relationships correctly mapped; levels properly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: distinct levels, parent-child edges,
-          root at top, orthogonal routing'
-      - id: SC-04
-        name: Data Range
+        comment: Hierarchical levels, parent-child edges, root at top, orthogonal
+          routing
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 16 nodes visible within the plot area
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 22 nodes positioned correctly, all edges shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Level annotations accurately describe each tier
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses {spec-id} · {library} · pyplots.ai format
+        comment: Title format correct, labels on nodes eliminate need for legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 levels, varying branching (1→3→6→6), different subtree sizes;
-          could show more asymmetric branching
+        comment: Shows asymmetric branching, multiple reporting lines, full organizational
+          structure
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Organizational chart is a classic, neutral, real-world hierarchical
-          data example
+        comment: Realistic org chart with plausible titles, neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 16 nodes is appropriate; values/structure realistic for a small org
+        comment: 22 nodes within 10-50 range, 4 levels depth is reasonable, proportional
+          spacing
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,52 +194,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: data → positions → edges → nodes → figure → save'
+        comment: Straightforward procedural code, no unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded), but no explicit seed comment
+        comment: Deterministic, hardcoded data, same output every run
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported, which is used
+        comment: Only os and plotly.graph_objects, both used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: No fake UI, no AR-08 violations
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html correctly
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Plotly's go.Scatter, annotations, HTML export; could leverage
-          more interactivity features like hover callbacks or custom hover templates
+        comment: Standard Plotly patterns with go.Figure and Scatter traces, theme-adaptive
+          approach
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: HTML export with CDN, hover tooltips, but could showcase more interactive
+          Plotly capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - minimal-chrome
-  - edge-highlighting
+  styling: []
