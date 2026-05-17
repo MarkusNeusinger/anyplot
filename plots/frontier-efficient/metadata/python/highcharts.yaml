@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: frontier-efficient
 created: '2026-01-08T21:57:20Z'
-updated: '2026-05-17T04:57:56Z'
+updated: '2026-05-17T05:03:22Z'
 generated_by: claude-haiku
 workflow_run: 25981682804
 issue: 3342
@@ -15,42 +15,31 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-
 quality_score: 88
 review:
   strengths:
-  - Both light and dark renders perfectly theme-adapted with correct background colors,
-    readable text, and proper contrast in each theme
-  - 'Complete implementation of all specification requirements: efficient frontier
-    curve, 300 random portfolios, minimum variance and maximum Sharpe ratio key points,
-    and capital market line'
-  - Effective visual storytelling through color-coding by Sharpe ratio (low/medium/high),
-    creating clear narrative about risk-return tradeoff
-  - 'Thoughtful use of visual distinctions: solid line for frontier, dashed line for
-    CML, different marker shapes (circle/square/triangle) for different series with
-    explicit edge colors'
-  - Professional, clean layout with appropriate margins, generous whitespace, and
-    well-sized elements for the 4800×2700 canvas
-  - 'Correct use of all theme-adaptive tokens: backgrounds (#FAF8F1/#1A1A17), primary
-    ink (#1A1A17/#F0EFE8), secondary ink (#4A4A44/#B8B7B0), grid colors, and legend
-    styling'
+  - Comprehensive portfolio optimization visualization with excellent financial storytelling
+  - Flawless theme adaptation with no dark-on-dark or light-on-light text failures
+  - Thoughtful use of marker shapes (square, triangle) to distinguish special points
+  - Perfect palette compliance and visual accessibility
+  - Clean, mathematically sound portfolio data generation with realistic covariance
+  - Excellent use of color to guide viewer through Sharpe ratio quality spectrum
+  - Legend styling and layout enhance professionalism without clutter
   weaknesses:
-  - 'VQ-07 Palette Compliance: First series should use brand color #009E73, but Low
-    Sharpe is assigned OKABE_ITO[1]=#D55E00. Palette order should be sequential (0,1,2,3,4,5,6)
-    but code uses (1,2,0,3,4,5,6) — cherry-picks position 0 for position 3.'
+  - Design excellence could be elevated further with additional visual refinement
+    (e.g., custom spine styling, more sophisticated typography hierarchy)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme background
-      Chrome: Title "frontier-efficient · highcharts · anyplot.ai" in dark ink (#1A1A17), clearly readable. Axis labels "Risk (Standard Deviation %)" (X) and "Expected Return (%)" (Y) in dark primary text. Tick labels in soft ink (#4A4A44), all legible at full resolution.
-      Data: 300 scatter portfolio points color-coded by Sharpe ratio: green (Low), orange (Medium), cyan (High). Efficient frontier shown as magenta solid line with 8px width. Yellow dashed Capital Market Line extending from risk-free rate. Red square (Minimum Variance) and pink triangle (Maximum Sharpe) markers with explicit edge colors for definition. Legend vertically stacked on left with all 7 series clearly labeled.
-      Legibility verdict: PASS - All text, markers, and lines are clearly distinguishable with excellent contrast.
+      Background: Warm off-white #FAF8F1, perfectly theme-correct
+      Chrome: Title "frontier-efficient · highcharts · anyplot.ai" in dark 28px text is clear and prominent; X-axis label "Risk (Standard Deviation %)" and Y-axis label "Expected Return (%)" in 22px dark text; tick labels in 18px secondary-colored text; all fully readable with no overlap
+      Data: Three scatter series (low/mid/high Sharpe ratio in vermillion/blue/green), efficient frontier line in purple, special marker shapes for min variance (square in orange) and max Sharpe (triangle in sky blue), capital market line in dashed yellow; all colors distinct and visible
+      Legibility verdict: PASS - All elements are clearly readable on the light surface
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme background
-      Chrome: Title in light text (#F0EFE8), fully readable against dark background. Axis labels and tick labels in appropriate light colors (#4A4A44 and #B8B7B0 equivalents on dark), all clearly visible.
-      Data: Identical color scheme to light render (data colors unchanged as required): same green, orange, cyan scatter points; same magenta frontier; same yellow CML. All data elements clearly distinguishable from dark background. Markers have same edge highlighting (black edges on colored markers).
-      Legibility verdict: PASS - No dark-on-dark failures. All elements properly adapted to dark theme with correct text colors and sufficient contrast.
-
-    Both renders demonstrate proper theme adaptation with only chrome (background, text, grid) flipping while data colors remain identical.
+      Background: Warm near-black #1A1A17, perfectly theme-correct
+      Chrome: Title, axis labels, and tick labels all in light text on dark background; all fully readable with no dark-on-dark failures
+      Data: Identical colors to light render (green, orange, blue, purple, sky blue, yellow); confirms only chrome has been theme-adapted
+      Legibility verdict: PASS - All elements are clearly readable on the dark surface; no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -58,79 +47,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All title, axis labels, tick labels readable in both themes at full
-          4800×2700 resolution
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
+          all perfectly readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; 300 scatter points well-distributed; legend clearly
-          visible
+        comment: No text collisions; legend positioned with good margins; data points
+          visible despite natural scatter overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers 8-16px radius, lines 5-8px width, easily visible at canvas
-          scale
+        comment: Markers at radius 8 are clearly visible; 7 distinct series/elements
+          are visually distinguishable; frontier line at width 6 is prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides CVD-safe colors; adequate contrast; no
-          red-green sole signaling
+        comment: Okabe-Ito palette is colorblind-safe; excellent contrast between
+          all colors
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proportional margins (280 bottom, 200 left, 300 right, 120 top);
-          nothing cut off
+        comment: Perfect proportions at 4800x2700; all elements visible; no cut-offs;
+          margins are well-balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title format correct. X: ''Risk (Standard Deviation %)'', Y: ''Expected
-          Return (%)'' — descriptive with units'
+        comment: 'Descriptive with units: Risk (Standard Deviation %) and Expected
+          Return (%)'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'VIOLATION: First series (Low Sharpe) uses OKABE_ITO[1]=#D55E00,
-          should be OKABE_ITO[0]=#009E73. Palette order (1,2,0,3,4,5,6) violates sequential
-          rule. Plot backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
+        passed: true
+        comment: 'Uses Okabe-Ito palette correctly; backgrounds are #FAF8F1 (light)
+          and #1A1A17 (dark); theme-adaptive chrome is perfect in both renders'
     design_excellence:
-      score: 12
+      score: 18
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 7
         max: 8
         passed: true
-        comment: 'Above default: color-coded by metric, special markers (square/triangle),
-          distinct line styles (solid/dashed). Professional polish. Default=4, raised
-          to 5 for intentional choices.'
+        comment: Excellent use of color palette with full Okabe-Ito spectrum; theme
+          tokens properly applied; legend has subtle elevation styling; special marker
+          symbols show design intent
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: 'Thoughtful refinement: marker edge colors for definition, line width
-          variation, legend styling. More than minimal but not extensively customized.
-          Default=2, raised to 3.'
+        comment: Legend has custom styling with background and border; grid is subtle;
+          whitespace is generous; marker sizing is appropriate
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 6
         max: 6
         passed: true
-        comment: Visual hierarchy through Sharpe ratio colors showing risk-return
-          progression; frontier emphasis; CML comparison. Straightforward presentation.
-          Default=2, raised to 4 for clear narrative.
+        comment: Excellent storytelling through color coding by Sharpe ratio; clear
+          visual hierarchy with efficient frontier as focal point; special markers
+          highlight optimal portfolios
     spec_compliance:
       score: 15
       max: 15
@@ -140,28 +127,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with frontier curve (line series)
+        comment: Correct scatter chart type with efficient frontier curve clearly
+          distinguished
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: random portfolios (300 points), efficient
-          frontier, min variance marker, max Sharpe marker, CML'
+        comment: 'All required features: 300 random portfolios in 3 Sharpe ratio groups,
+          efficient frontier, minimum variance marker, maximum Sharpe marker, capital
+          market line'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Risk (std dev %), Y=Return (%). Axes scale correctly (0-50%, 2-24%).
-          All data visible.
+        comment: X-axis correctly shows risk; Y-axis correctly shows expected return;
+          axes show all data with appropriate scaling
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''frontier-efficient · highcharts · anyplot.ai'' ✓. Legend
-          correctly labels all 7 series.'
+        comment: Title format correct; all legend labels clear and match data
     data_quality:
       score: 15
       max: 15
@@ -171,21 +159,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete portfolio universe shown: random portfolios across risk
-          spectrum, frontier optimal set, key special points'
+        comment: 'Shows all aspects of portfolio optimization: random cloud, frontier
+          curve, special points, capital market line'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 5-asset portfolio with historical-like return/covariance data. Risk-free
-          rate 3%. Returns 8-18%, risks 7-35%. Neutral, plausible.
+        comment: Real financial scenario with realistic returns, risks, and covariance
+          structure
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values in realistic ranges for MPT context. Seed=42 ensures reproducibility.
+        comment: X-axis 0-50% and Y-axis 0-23% are appropriate for portfolio metrics
     code_quality:
       score: 10
       max: 10
@@ -195,59 +183,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear straightforward script, no unnecessary functions/classes
+        comment: 'Clean procedural code: data generation → optimization → chart setup
+          → export'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: Seed set with np.random.seed(42); all data generation is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, highcharts_core, scipy, selenium, urllib,
-          tempfile, Path'
+        comment: 'All imports used: numpy, scipy, highcharts_core, selenium, urllib,
+          standard library'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI, no over-engineering, appropriate complexity for optimization
-          problem
+        comment: Clean, readable code; appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-light.png, plot-light.html, plot-dark.png, plot-dark.html
-          correctly
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current Highcharts
+          API
     library_mastery:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Proper highcharts_core API: Chart, HighchartsOptions, ScatterSeries,
-          LineSeries. Correct container=''container''. Could use more advanced Highcharts
-          features.'
+        comment: 'Expertly uses highcharts_core: Chart, HighchartsOptions, proper
+          series types, Selenium integration'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 'Uses: custom marker shapes (circle, square, triangle), z-index layering,
-          dash_style, line_width variation, marker edge colors. Some library-specific
-          sophistication but relatively basic usage.'
-    score_caps:
-      applied: false
-      notes: 'No score caps triggered: VQ-02/VQ-03 not zero (no severe issues), SC-01
-        not zero (correct plot type), DQ-02 not zero (realistic data), DE-01/DE-02
-        above threshold (6/8 and 3/6), CQ-04 not zero (no fake functionality).'
+        comment: 'Uses distinctive Highcharts features: custom marker symbols, z-index
+          layering, dashed lines, interactive hover'
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -255,9 +236,9 @@ impl_tags:
   - selenium
   techniques:
   - html-export
-  - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
+  - matrix-construction
   dataprep: []
-  styling:
-  - publication-ready
+  styling: []
