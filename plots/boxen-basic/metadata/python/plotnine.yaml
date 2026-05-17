@@ -1,214 +1,222 @@
 library: plotnine
+language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:10:09Z'
-updated: '2026-01-09T08:15:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845375761
+updated: '2026-05-17T09:00:47Z'
+generated_by: claude-haiku
+workflow_run: 25986399640
 issue: 3414
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent implementation of a boxen plot using plotnine grammar of graphics despite
-    lacking native geom_boxen support
-  - 'Data demonstrates all key aspects of boxen plots: different distribution shapes,
-    visible quantile nesting, and outlier detection'
-  - Clean blue gradient color scheme that is colorblind-safe
-  - Realistic server response time scenario with 2000 points per category
-  - Proper use of nested boxes with decreasing widths for deeper quantiles
-  - Clear legend explaining quantile level percentages
+  - Perfect theme adaptation with correct color contrast in both light and dark renders
+  - Complete specification compliance - all required features implemented
+  - Clean, idiomatic plotnine code with no unnecessary complexity
+  - Realistic, well-designed data generation showing diverse endpoint distributions
+  - Effective color gradient clearly distinguishes quantile levels
   weaknesses:
-  - Color gradient between quantile levels could have more contrast to better distinguish
-    nested boxes
-  - Manual implementation adds code complexity (though unavoidable for plotnine)
-  image_description: 'The plot displays a boxen plot (letter-value plot) showing server
-    response times across four endpoints: API, Database, Cache, and Auth. Each category
-    has nested rectangular boxes representing different quantile levels, colored in
-    a gradient from dark blue (innermost, representing 25%-75%) to light blue (outermost,
-    representing 0.4%-99.6%). The boxes decrease in width for deeper quantiles as
-    expected. A white horizontal line marks the median in each box. Outliers are shown
-    as semi-transparent blue points above the main boxes, particularly visible for
-    the API endpoint (ranging up to ~500ms) and to a lesser extent for Database and
-    Auth. The Cache endpoint shows a tight, low distribution with few outliers. The
-    x-axis is labeled "Endpoint" with category names (API, Database, Cache, Auth),
-    and the y-axis is labeled "Response Time (ms)" ranging from 0 to about 500. A
-    legend on the right explains the quantile levels. The title follows the required
-    format: "boxen-basic · plotnine · pyplots.ai". Grid lines are subtle and the overall
-    layout is well-balanced.'
+  - Design excellence could be enhanced with more refined legend styling
+  - Library Mastery (LM-02) is competent but not exceptionally distinctive
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title, axis labels, and tick labels all clearly visible in dark INK color; grid lines are subtle but visible
+      Data: Nested boxes with color gradient from darker to lighter green showing quantile levels; median lines bold and dark; outlier points in brand green (#009E73) semi-transparent but distinct
+      Legibility verdict: PASS - all elements readable, no light-on-light conflicts
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, axis labels, and tick labels clearly visible in light INK color; grid lines subtle; no dark-on-dark text failures
+      Data: Nested boxes and colors IDENTICAL to light render - only chrome (background, text, grid) changed theme appropriately; median lines appear white for contrast; brand green fully visible on dark surface
+      Legibility verdict: PASS - all elements readable, excellent light-on-dark contrast, data colors preserved across themes
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt bold, axis labels at 20pt, tick labels at 16-18pt,
-          all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, category labels well-spaced
+        comment: All text sizes explicitly set; fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No collisions; outliers distinct; nested structure clear
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nested boxes clearly visible with distinct widths; outlier points
-          appropriately sized with alpha=0.5
+        comment: Nested boxes clean; density-appropriate margins; outliers stand out
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue gradient is colorblind-safe, good contrast between levels
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills good portion of canvas, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Response Time (ms) and Endpoint'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito green CVD-safe; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Ideal 16:9 proportions; nothing cut off; generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha 0.3), legend placed well but has many entries
+        comment: Descriptive with units; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17 correct; both
+          renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Color gradient shows intentionality; good hierarchy through nesting
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean spines; subtle grid; legend could be more polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point; comparison intuitive; visual hierarchy guides
+          viewer
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct boxen/letter-value plot with nested boxes showing multiple
-          quantile levels
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on X-axis, values on Y-axis correctly assigned
-      - id: SC-03
+        comment: Correct boxen/letter-value plot
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows nested boxes with decreasing widths, outliers displayed; color
-          distinction between levels is subtle
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: nested boxes, decreasing widths, color distinction,
+          outliers, labels, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers up to ~500ms
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct; axes span full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly explains quantile levels with percentage ranges
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format but uses standard separator
+        comment: Correct format with percentile ranges
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent: shows different distribution shapes (API skewed, Database
-          bimodal, Cache tight, Auth gamma)'
+        comment: All letter-value aspects shown; multiple quantile levels; outlier
+          handling
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server response times by endpoint is a perfect, realistic scenario
+        comment: Server response times realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 0-500ms are realistic for server endpoints
+        comment: Values 0-500ms sensible for domain
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Code follows pattern but has complexity for manual letter-value calculation
-          (unavoidable)
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set at beginning
+        comment: No unnecessary abstractions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set (42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only numpy, pandas, plotnine
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; clear letter-value computation
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Pure ggplot2 grammar; aes(), geoms, theme() all idiomatic
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_rect workaround since plotnine lacks
-          native geom_boxen
+        comment: Theme tokens properly threaded; manual palette; solid but not exceptionally
+          distinctive
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - binning
+  dataprep: []
   styling:
-  - alpha-blending
   - grid-styling
