@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: highcharts unknown | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-08
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,20 +16,27 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 # Unicode chess symbols (white pieces are outline, black pieces are filled)
 PIECES = {
-    "K": "\u2654",  # White King
-    "Q": "\u2655",  # White Queen
-    "R": "\u2656",  # White Rook
-    "B": "\u2657",  # White Bishop
-    "N": "\u2658",  # White Knight
-    "P": "\u2659",  # White Pawn
-    "k": "\u265a",  # Black King
-    "q": "\u265b",  # Black Queen
-    "r": "\u265c",  # Black Rook
-    "b": "\u265d",  # Black Bishop
-    "n": "\u265e",  # Black Knight
-    "p": "\u265f",  # Black Pawn
+    "K": "♔",  # White King
+    "Q": "♕",  # White Queen
+    "R": "♖",  # White Rook
+    "B": "♗",  # White Bishop
+    "N": "♘",  # White Knight
+    "P": "♙",  # White Pawn
+    "k": "♚",  # Black King
+    "q": "♛",  # Black Queen
+    "r": "♜",  # Black Rook
+    "b": "♝",  # Black Bishop
+    "n": "♞",  # Black Knight
+    "p": "♟",  # Black Pawn
 }
 
 # Chess position: Scholar's Mate (after 1.e4 e5 2.Bc4 Nc6 3.Qh5 Nf6?? 4.Qxf7#)
@@ -103,7 +111,7 @@ for square, piece in pieces.items():
             "allowOverlap": True,
             "backgroundColor": "transparent",
             "borderWidth": 0,
-            "style": {"fontSize": "72px", "fontFamily": "DejaVu Sans, Arial Unicode MS, sans-serif"},
+            "style": {"fontSize": "72px", "fontFamily": "DejaVu Sans, Arial Unicode MS, sans-serif", "color": INK},
             "verticalAlign": "middle",
             "align": "center",
             "y": 0,
@@ -119,7 +127,7 @@ chart.options.chart = {
     "type": "heatmap",
     "width": 3600,
     "height": 3600,
-    "backgroundColor": "#FFFFFF",
+    "backgroundColor": PAGE_BG,
     "marginTop": 120,
     "marginBottom": 150,
     "marginLeft": 120,
@@ -129,8 +137,8 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "Scholar's Mate · chessboard-pieces · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "Scholar's Mate · chessboard-pieces · highcharts · anyplot.ai",
+    "style": {"fontSize": "48px", "fontWeight": "bold", "color": INK},
     "y": 50,
 }
 
@@ -141,9 +149,9 @@ chart.options.color_axis = {"min": 0, "max": 1, "stops": [[0, DARK_SQUARE], [1, 
 chart.options.x_axis = {
     "categories": list("abcdefgh"),
     "title": {"text": None},
-    "labels": {"style": {"fontSize": "40px", "fontWeight": "bold"}, "y": 40, "enabled": True},
+    "labels": {"style": {"fontSize": "40px", "fontWeight": "bold", "color": INK_SOFT}, "y": 40, "enabled": True},
     "lineWidth": 3,
-    "lineColor": "#333333",
+    "lineColor": INK_SOFT,
     "tickWidth": 0,
     "opposite": False,
     "tickLength": 0,
@@ -153,9 +161,9 @@ chart.options.x_axis = {
 chart.options.y_axis = {
     "categories": ["1", "2", "3", "4", "5", "6", "7", "8"],
     "title": {"text": None},
-    "labels": {"style": {"fontSize": "40px", "fontWeight": "bold"}, "x": -15},
+    "labels": {"style": {"fontSize": "40px", "fontWeight": "bold", "color": INK_SOFT}, "x": -15},
     "lineWidth": 3,
-    "lineColor": "#333333",
+    "lineColor": INK_SOFT,
     "tickWidth": 0,
     "reversed": False,
     "startOnTick": False,
@@ -175,7 +183,7 @@ chart.options.series = [
         "name": "Board",
         "data": board_data,
         "borderWidth": 2,
-        "borderColor": "#333333",
+        "borderColor": INK_SOFT,
         "dataLabels": {"enabled": False},
         "colsize": 1,
         "rowsize": 1,
@@ -191,18 +199,29 @@ chart.options.tooltip = {"enabled": False}
 # Credits
 chart.options.credits = {"enabled": False}
 
-# Download Highcharts JS and heatmap module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
 
-heatmap_url = "https://code.highcharts.com/modules/heatmap.js"
-with urllib.request.urlopen(heatmap_url, timeout=30) as response:
-    heatmap_js = response.read().decode("utf-8")
+# Download Highcharts JS and required modules
+def download_script(url, timeout=30, retries=3):
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url)
+            req.add_header("User-Agent", "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36")
+            with urllib.request.urlopen(req, timeout=timeout) as response:
+                return response.read().decode("utf-8")
+        except Exception:
+            if attempt == retries - 1:
+                raise
+            time.sleep(2**attempt)
 
-annotations_url = "https://code.highcharts.com/modules/annotations.js"
-with urllib.request.urlopen(annotations_url, timeout=30) as response:
-    annotations_js = response.read().decode("utf-8")
+
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts/highcharts.js"
+highcharts_js = download_script(highcharts_url, timeout=60)
+
+heatmap_url = "https://cdn.jsdelivr.net/npm/highcharts/modules/heatmap.js"
+heatmap_js = download_script(heatmap_url, timeout=60)
+
+annotations_url = "https://cdn.jsdelivr.net/npm/highcharts/modules/annotations.js"
+annotations_js = download_script(annotations_url, timeout=60)
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -214,7 +233,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{heatmap_js}</script>
     <script>{annotations_js}</script>
 </head>
-<body style="margin:0; background-color: #FFFFFF;">
+<body style="margin:0; background-color: {PAGE_BG};">
     <div id="container" style="width: 3600px; height: 3600px;"></div>
     <script>{html_str}</script>
 </body>
@@ -225,23 +244,9 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     f.write(html_content)
     temp_path = f.name
 
-# Save HTML output
-with open("plot.html", "w", encoding="utf-8") as f:
-    # For the HTML file, use CDN links for easier viewing
-    html_output = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
-    <script src="https://code.highcharts.com/modules/annotations.js"></script>
-</head>
-<body style="margin:0; background-color: #FFFFFF;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(html_output)
+# Save HTML output with theme suffix
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
@@ -253,7 +258,7 @@ chrome_options.add_argument("--window-size=3600,3700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
