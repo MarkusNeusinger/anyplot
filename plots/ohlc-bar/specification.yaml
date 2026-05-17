@@ -6,7 +6,7 @@ title: OHLC Bar Chart
 
 # Specification tracking
 created: 2026-01-08T15:54:27Z
-updated: null
+updated: 2026-05-17T10:28:55Z
 issue: 3293
 suggested: MarkusNeusinger
 
@@ -14,9 +14,9 @@ suggested: MarkusNeusinger
 # See docs/reference/tagging-system.md for detailed guidelines
 tags:
   plot_type:
-    - ohlc
     - bar
   data_type:
+    - ohlc
     - timeseries
     - numeric
   domain:
