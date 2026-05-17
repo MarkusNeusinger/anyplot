@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:05:09Z'
-updated: '2026-05-17T10:46:52Z'
+updated: '2026-05-17T10:51:20Z'
 generated_by: claude-haiku
 workflow_run: 25988596874
 issue: 3293
@@ -12,43 +12,31 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 91
 review:
   strengths:
-  - Perfect spec compliance - all OHLC features correctly implemented with proper
-    bar structure
-  - Excellent visual quality in both themes - all text readable, proper contrast,
-    no theme-readability failures
-  - 'Correct Okabe-Ito palette usage (green #009E73 for up, orange #D55E00 for down)'
-  - Theme tokens properly threaded through all chrome elements (backgrounds, text,
-    grid)
-  - Clean, reproducible code with deterministic seed and realistic synthetic data
-  - Proper date formatting and 50-day sample provides clear visualization of price
-    movements
-  - Idiomatic plotnine usage with proper geom composition
+  - Perfect theme adaptation with correct token usage (INK, INK_SOFT changing per
+    theme)
+  - Correct OHLC structure with proper color distinction (up/down)
+  - All text fully legible in both light and dark renders
+  - 'Proper Okabe-Ito palette (green #009E73, orange #D55E00)'
+  - Clean, idiomatic plotnine code using geom_segment layers
+  - Excellent specification compliance - all required features present
   weaknesses:
-  - Design Excellence below median - relies on theme_minimal() defaults without additional
-    visual sophistication
-  - Generic styling lacks distinctive design thinking or visual refinement
-  - Could benefit from more intentional visual hierarchy or aesthetic polish
+  - Design could be slightly more sophisticated (custom spine styling, refined typography
+    variations could elevate polish)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "ohlc-bar · plotnine · anyplot.ai" in dark text (24px), axis labels "Date" and "Price (USD)" in dark text (20px), tick labels in soft dark text (16px) - all clearly readable
-      Data: Green bars (#009E73) for up days, orange bars (#D55E00) for down days, vertical lines for high-low range with horizontal ticks for open/close, 50 days of stock data
-      Grid: Subtle horizontal grid lines with alpha=0.10
-      Legend: Right-aligned legend with clear labels "Up (Close > Open)" and "Down (Close < Open)"
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) with subtle grid lines (alpha=0.10)
+      Chrome: Title "ohlc-bar · plotnine · anyplot.ai" in bold dark INK (#1A1A17); axis labels "Date" and "Price (USD)" clearly readable; tick labels for dates (Jun 03, Jun 17, etc.) and prices (130-170 USD) all rendered in secondary INK_SOFT (#4A4A44); legend positioned right with "Direction" title and two categories
+      Data: 50 trading days of OHLC bars - vertical lines representing high-low range, with left tick for open price and right tick for close price; green (#009E73) bars indicate up movement (close > open), orange (#D55E00) bars indicate down movement (close < open); price action shows clear downtrend from ~170 to ~125
+      Legibility verdict: PASS - all elements fully readable and well-contrasted against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title in light text (#F0EFE8), axis labels in light text, tick labels in soft light text (#B8B7B0) - all clearly readable against dark background, no dark-on-dark failures
-      Data: Same green (#009E73) and orange (#D55E00) colors as light render - data colors identical, only chrome has flipped to dark theme
-      Grid: Subtle grid lines visible
-      Legend: Background adapted to dark theme (#242420) with light text
-      Legibility verdict: PASS
-
-    Both renders pass theme-readability checks with proper color contrast and readable text in both light and dark themes.
+      Background: Warm near-black (#1A1A17) with subtle grid lines using light RULE color
+      Chrome: Title rendered in light INK (#F0EFE8) - clearly visible against dark background; axis labels and tick labels all in appropriate light INK_SOFT (#B8B7B0) - no dark-on-dark failures; legend box has dark ELEVATED_BG (#242420) with light text borders
+      Data: Identical OHLC structure as light render - same green (#009E73) for up bars, same orange (#D55E00) for down bars, confirming data colors remain constant; all price levels and date markers equally visible
+      Legibility verdict: PASS - perfect dark theme adaptation with all text readable and no chrome legibility issues
   criteria_checklist:
     visual_quality:
       score: 30
@@ -59,67 +47,79 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes 24/20/16px all readable in both light and dark themes
+        comment: Title, axis labels, tick labels, legend all explicitly sized and
+          colored (INK/INK_SOFT tokens) - fully readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements well-spaced with no collisions
+        comment: No overlapping text elements; OHLC bars well-spaced (day_num positions);
+          legend positioned right without collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All OHLC bars clearly distinguishable and well-separated
+        comment: Geom segments sized at 1.2 (thick bars); colors distinct (green vs
+          orange); all OHLC components (high-low line, open tick, close tick) clearly
+          visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe with good green-orange contrast
+        comment: Okabe-Ito palette (positions 1 and 2) - CVD-safe; green and orange
+          have sufficient contrast on both light and dark backgrounds
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good 16:9 proportions with generous whitespace
+        comment: Figure size 16x9 (4800x2700px); generous margins; nothing cut off;
+          proportions excellent
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title informative, axis labels descriptive with units
+        comment: Title includes spec-id, library, domain; Y-axis labeled with unit
+          (USD); X-axis dates formatted appropriately
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Okabe-Ito colors and backgrounds, both renders theme-correct
+        comment: 'First series #009E73 (Okabe-Ito pos 1), second #D55E00 (pos 2);
+          backgrounds #FAF8F1 light / #1A1A17 dark; theme tokens (INK, INK_SOFT, ELEVATED_BG)
+          correctly applied; data colors identical between renders'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Competent use of theme tokens but minimal design sophistication beyond
-          defaults
+        passed: true
+        comment: Professional polish with correct color palette, intentional OHLC
+          structure, custom date tick configuration, appropriate use of theme_minimal()
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Uses theme_minimal() with some refinement but adequate rather than
-          polished
+        passed: true
+        comment: Subtle grid (alpha=0.10), generous whitespace, proper panel background,
+          legend box styling; could benefit from explicit spine removal or additional
+          typographic hierarchy
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Up/down color distinction guides understanding but generic approach
+        passed: true
+        comment: OHLC bars naturally convey price movement narrative; up/down color
+          distinction creates visual hierarchy; clear focal point on data; time-series
+          progression guides viewer
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct OHLC bar chart with vertical bars and ticks
+        comment: Correct OHLC bar chart with vertical high-low lines and horizontal
+          open/close ticks
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: high-low lines, open/close ticks, up/down
-          colors, date formatting, grid'
+        comment: 'All features present: thin vertical lines for high-low, left ticks
+          for open, right ticks for close, up/down color distinction'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis dates and Y-axis prices properly scaled
+        comment: X=date, Y=price; vertical segment spans low-high; left x=open-tick_width
+          to open, right x=close to close+tick_width; color=direction
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend labels clear and descriptive
+        comment: 'Title format correct; legend shows Direction with clear labels (Up:
+          Close > Open, Down: Close < Open)'
     data_quality:
       score: 15
       max: 15
@@ -158,19 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All OHLC aspects shown for each of 50 trading days
+        comment: 50 trading days of realistic OHLC data; all aspects visible (open,
+          high, low, close); both up and down movements represented
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic random walk model with proper volatility, price range $125-$170
+        comment: Stock price data (150-170 USD) with realistic random walk; business
+          day calendar; no controversial content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 50 days within spec range, price values sensible for stock analysis
+        comment: Price range 120-170 USD sensible for domain; 50 days ideal for OHLC;
+          daily volatility realistic
     code_quality:
       score: 10
       max: 10
@@ -180,33 +186,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes
+        comment: No functions, no classes; linear flow (setup -> data generation ->
+          plot creation -> save)
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports (os, numpy, pandas, plotnine); no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI
+        comment: Appropriate complexity; no fake UI or simulated interactivity (AR-08
+          compliant); clean variable naming
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: Saves as plot-{THEME}.png; current plotnine API; no bare plot.png
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -214,21 +222,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot() + geom_*() pattern with proper geom_segment usage
+        comment: Uses geom_segment (idiomatic for OHLC in ggplot2/plotnine); proper
+          aes() mapping; scale_color_manual for palette; theme_minimal() + custom
+          theme (plotnine pattern)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses geom_segment composition but fairly standard implementation
+        passed: true
+        comment: Three geom_segment layers creatively combined to build OHLC structure;
+          demonstrates grammar of graphics mastery
+    score_caps_applied: []
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - manual-ticks
   patterns:
   - data-generation
-  dataprep: []
+  dataprep:
+  - time-series
   styling:
-  - publication-ready
+  - grid-styling
