@@ -1,13 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+UP_COLOR = "#009E73"  # Okabe-Ito position 1 (brand green)
+DOWN_COLOR = "#D55E00"  # Okabe-Ito position 2 (vermillion)
 
 # Data - Generate 50 trading days of OHLC data
 np.random.seed(42)
@@ -16,7 +29,7 @@ dates = pd.date_range("2024-01-02", periods=n_days, freq="B")  # Business days
 
 # Start price and random walk
 start_price = 150.0
-returns = np.random.normal(0.001, 0.02, n_days)  # Daily returns
+returns = np.random.normal(0.001, 0.02, n_days)
 
 # Generate OHLC data
 prices = [start_price]
@@ -44,14 +57,9 @@ for base_price in prices:
 
 df = pd.DataFrame({"date": dates, "open": opens, "high": highs, "low": lows, "close": closes})
 
-# Add color indicator for up/down bars
+# Add direction indicator
 df["direction"] = ["Up" if c >= o else "Down" for o, c in zip(df["open"], df["close"], strict=True)]
 
-# Color scheme
-up_color = "#306998"  # Python Blue for up bars
-down_color = "#FFD43B"  # Python Yellow for down bars
-
-# Create OHLC bar chart using layered approach
 # High-Low vertical lines
 hl_lines = (
     alt.Chart(df)
@@ -64,13 +72,13 @@ hl_lines = (
         y2="high:Q",
         color=alt.Color(
             "direction:N",
-            scale=alt.Scale(domain=["Up", "Down"], range=[up_color, down_color]),
+            scale=alt.Scale(domain=["Up", "Down"], range=[UP_COLOR, DOWN_COLOR]),
             legend=alt.Legend(title="Direction", titleFontSize=18, labelFontSize=16),
         ),
     )
 )
 
-# Open ticks as short horizontal rules (left side)
+# Open ticks (left side)
 open_rules = (
     alt.Chart(df)
     .transform_calculate(
@@ -82,12 +90,12 @@ open_rules = (
         x2="date:T",
         y="open:Q",
         color=alt.Color(
-            "direction:N", scale=alt.Scale(domain=["Up", "Down"], range=[up_color, down_color]), legend=None
+            "direction:N", scale=alt.Scale(domain=["Up", "Down"], range=[UP_COLOR, DOWN_COLOR]), legend=None
         ),
     )
 )
 
-# Create close ticks as short horizontal rules
+# Close ticks (right side)
 close_rules = (
     alt.Chart(df)
     .transform_calculate(
@@ -99,26 +107,34 @@ close_rules = (
         x2="close_end:T",
         y="close:Q",
         color=alt.Color(
-            "direction:N", scale=alt.Scale(domain=["Up", "Down"], range=[up_color, down_color]), legend=None
+            "direction:N", scale=alt.Scale(domain=["Up", "Down"], range=[UP_COLOR, DOWN_COLOR]), legend=None
         ),
     )
 )
 
-# Layer all components
+# Layer all components and apply theme-adaptive styling
 chart = (
     alt.layer(hl_lines, open_rules, close_rules)
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("ohlc-bar \u00b7 altair \u00b7 pyplots.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title("ohlc-bar · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridColor="#cccccc", gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
-    .configure_legend(titleFontSize=18, labelFontSize=16)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK_SOFT,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_title(color=INK)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .interactive()
 )
 
-# Save as PNG (4800 x 2700 px with scale_factor=3)
-chart.save("plot.png", scale_factor=3.0)
-
-# Save interactive HTML version
-chart.save("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
