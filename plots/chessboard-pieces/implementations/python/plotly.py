@@ -1,11 +1,19 @@
-""" pyplots.ai
+""" anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-08
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-17
 """
+
+import os
 
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Chess piece Unicode symbols
 PIECE_SYMBOLS = {
@@ -58,7 +66,7 @@ pieces = {
     "h1": "R",
 }
 
-# Board colors
+# Board colors (traditional chess)
 LIGHT_SQUARE = "#F0D9B5"
 DARK_SQUARE = "#B58863"
 
@@ -82,7 +90,7 @@ for square, piece in pieces.items():
         x=col + 0.5,
         y=row + 0.5,
         text=symbol,
-        font={"size": 70, "color": "#000000", "family": "Arial"},
+        font={"size": 70, "color": INK, "family": "Arial"},
         showarrow=False,
         xanchor="center",
         yanchor="middle",
@@ -94,7 +102,7 @@ for col, file_letter in enumerate("abcdefgh"):
         x=col + 0.5,
         y=-0.25,
         text=file_letter,
-        font={"size": 32, "color": "#333333"},
+        font={"size": 32, "color": INK_SOFT},
         showarrow=False,
         xanchor="center",
         yanchor="top",
@@ -106,7 +114,7 @@ for row in range(8):
         x=-0.25,
         y=row + 0.5,
         text=str(row + 1),
-        font={"size": 32, "color": "#333333"},
+        font={"size": 32, "color": INK_SOFT},
         showarrow=False,
         xanchor="right",
         yanchor="middle",
@@ -115,8 +123,8 @@ for row in range(8):
 # Layout
 fig.update_layout(
     title={
-        "text": "Scholar's Mate · chessboard-pieces · plotly · pyplots.ai",
-        "font": {"size": 36, "color": "#333333"},
+        "text": "Scholar's Mate · chessboard-pieces · plotly · anyplot.ai",
+        "font": {"size": 36, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
@@ -130,17 +138,15 @@ fig.update_layout(
         "scaleratio": 1,
     },
     yaxis={"range": [-0.6, 8], "showgrid": False, "zeroline": False, "showticklabels": False, "fixedrange": True},
-    plot_bgcolor="white",
-    paper_bgcolor="white",
+    plot_bgcolor=PAGE_BG,
+    paper_bgcolor=PAGE_BG,
     margin={"l": 60, "r": 60, "t": 100, "b": 60},
     showlegend=False,
 )
 
 # Add board border
-fig.add_shape(type="rect", x0=0, y0=0, x1=8, y1=8, line={"color": "#333333", "width": 3}, fillcolor="rgba(0,0,0,0)")
+fig.add_shape(type="rect", x0=0, y0=0, x1=8, y1=8, line={"color": INK_SOFT, "width": 3}, fillcolor="rgba(0,0,0,0)")
 
-# Save as PNG (square format for chess board)
-fig.write_image("plot.png", width=1200, height=1200, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html")
+# Save as PNG (square format for chess board) and HTML
+fig.write_image(f"plot-{THEME}.png", width=1200, height=1200, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
