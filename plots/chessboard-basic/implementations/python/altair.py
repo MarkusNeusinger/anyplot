@@ -1,12 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 chessboard-basic: Chess Board Grid Visualization
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 95/100 | Created: 2026-01-08
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
-import altair as alt
-import pandas as pd
+import os
+import sys
 
+
+# Change to script directory before importing to allow proper imports
+script_dir = os.path.dirname(os.path.abspath(__file__))
+os.chdir(script_dir)
+
+# Remove current directory from import path temporarily
+saved_path = sys.path[:]
+sys.path = [p for p in sys.path if p not in ("", ".", script_dir)]
+
+try:
+    import pandas as pd
+    from altair import Axis, Chart, Color, Scale, Title, X, Y
+finally:
+    sys.path = saved_path
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Create 8x8 chess board
 columns = list("abcdefgh")
@@ -24,23 +45,28 @@ for col_idx, col in enumerate(columns):
 df = pd.DataFrame(data)
 
 # Create chart with rect marks for squares
+# Chess square colors work on both light and dark backgrounds
 chart = (
-    alt.Chart(df)
-    .mark_rect(stroke="#5D4037", strokeWidth=1)
+    Chart(df)
+    .mark_rect(stroke=INK_SOFT, strokeWidth=2)
     .encode(
-        x=alt.X(
+        x=X(
             "column:O",
-            axis=alt.Axis(title=None, labelFontSize=24, labelAngle=0, orient="bottom", labelPadding=10),
+            axis=Axis(
+                title=None, labelFontSize=24, labelAngle=0, orient="bottom", labelPadding=10, labelColor=INK_SOFT
+            ),
             sort=columns,
         ),
-        y=alt.Y(
-            "row:O", axis=alt.Axis(title=None, labelFontSize=24, labelPadding=10), sort=list(range(8, 0, -1))
-        ),  # 8 at top, 1 at bottom
-        color=alt.Color(
+        y=Y(
+            "row:O",
+            axis=Axis(title=None, labelFontSize=24, labelPadding=10, labelColor=INK_SOFT),
+            sort=list(range(8, 0, -1)),  # 8 at top, 1 at bottom
+        ),
+        color=Color(
             "color:N",
-            scale=alt.Scale(
+            scale=Scale(
                 domain=["light", "dark"],
-                range=["#F5DEB3", "#8B4513"],  # Wheat / Saddle Brown
+                range=["#F5DEB3", "#A0704F"],  # Wheat / Medium brown (visible on both themes)
             ),
             legend=None,
         ),
@@ -48,12 +74,13 @@ chart = (
     .properties(
         width=900,
         height=900,
-        title=alt.Title("chessboard-basic · altair · pyplots.ai", fontSize=32, anchor="middle", offset=20),
+        background=PAGE_BG,
+        title=Title("chessboard-basic · altair · anyplot.ai", fontSize=32, anchor="middle", offset=20, color=INK),
     )
-    .configure_view(strokeWidth=2, stroke="#3E2723")
-    .configure_axis(labelColor="#333333", tickColor="#333333")
+    .configure_view(strokeWidth=2, stroke=INK_SOFT, fill=PAGE_BG)
+    .configure_axis(domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK_SOFT, gridOpacity=0.0)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=4.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
