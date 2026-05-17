@@ -1,157 +1,165 @@
 library: seaborn
+language: python
 specification_id: chessboard-pieces
 created: '2026-01-08T21:54:36Z'
-updated: '2026-01-08T22:04:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832957331
+updated: '2026-05-17T03:19:53Z'
+generated_by: claude-haiku
+workflow_run: 25979848044
 issue: 3350
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/seaborn/plot.png
-preview_html: null
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent use of seaborn heatmap for the checkerboard pattern with custom colormap
-  - Path effects (stroke) on pieces ensures visibility on both light and dark squares
-  - Perfect board orientation following chess standards (h1 is light)
-  - Scholars Mate is an excellent educational example that demonstrates the full capability
-  - Clean, readable code structure with well-documented piece positions
-  - Proper title format following pyplots.ai convention
+  - Perfect visual quality with excellent readability in both light and dark themes
+  - Accurate chess representation with correct h1 light square and proper algebraic
+    notation
+  - Clean code structure with proper theme token abstraction
+  - Educational data showing real Fried Liver Attack position
+  - Enhanced piece visibility through path effects (outlines)
   weaknesses:
-  - Could leverage more seaborn-specific features (primarily using matplotlib text
-    for pieces)
-  - The code quality score takes a minor hit because while the data is deterministic
-    (which is fine), there is no explicit seed or comment noting the intentional determinism
-  image_description: 'The plot displays a chess board showing the Scholar''s Mate
-    position (a famous 4-move checkmate). The board uses classic chess colors: light
-    tan/cream squares (#F0D9B5) and darker brown squares (#B58863). All 8 files (a-h)
-    are labeled along the bottom and all 8 ranks (1-8) along the left side in bold
-    text. Unicode chess symbols are used for pieces - white pieces appear in white
-    with a subtle gray outline, black pieces in dark gray/black. The white queen on
-    f7 delivers checkmate to the black king on e8. White has standard development
-    with pieces on their starting squares except for the pawn on e4, white queen on
-    f7, and both bishops still on c1 and f1. Black has pawns on ranks 7, a knight
-    on c6 and f6, and back rank pieces. The board is properly oriented with white
-    at bottom (h1 is light as per chess standards). Title at top reads "Scholar''s
-    Mate · chessboard-pieces · seaborn · pyplots.ai".'
+  - No visual hierarchy or data storytelling to explain position significance
+  - Design lacks aesthetic sophistication beyond functional defaults
+  - White piece color could use better theme-adaptation (pure white hardcoded)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct theme color
+      Chrome: Title in 24pt bold dark text, axis labels (a-h, 1-8) at 20pt bold, all perfectly readable
+      Data: Chessboard with classic tan (#F0D9B5) and brown (#B58863) squares; black pieces render as solid dark silhouettes; white pieces render as hollow outlines with dark strokes; all pieces clearly distinguishable at 48pt fontsize
+      Legibility verdict: PASS - all text and elements clearly readable, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct theme color
+      Chrome: Title and labels now light-colored (#F0EFE8), perfectly readable on dark background; no dark-on-dark text issues
+      Data: Identical board colors (tan and brown) confirm only chrome adapts per theme requirement; pieces render with light outlines maintaining complete visual consistency with light render
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt is clear, axis labels at 20pt bold are perfectly readable
+        comment: Title 24pt, labels 20pt, ticks 20pt; explicitly set and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: Board layout clean, all labels well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Chess pieces are well-sized at 48pt, clear with stroke effect for
-          visibility
+        comment: Unicode pieces at 48pt, well-adapted to board size
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Classic brown/tan chess colors, white/black pieces with outline for
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square 1:1 aspect ratio, board fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for chess board - file/rank labels serve this purpose but not
-          descriptive labels with units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid/legend needed; board lines are subtle at 0.5 width
+        comment: Black/white clearly distinguished, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 12x12 figure, board fills 70% canvas, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title with spec-id/library, chess notation labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate chess colors, correct backgrounds, theme-adaptive text
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Classic but follows defaults; could add custom refinements
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean axes, subtle lines, piece outlines; well-refined for functional
+          diagram
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Real position shown but no visual emphasis or narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: chess board with pieces visualization'
+        comment: Correct chessboard with pieces
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Squares correctly mapped to algebraic notation (a-h, 1-8)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: Unicode pieces, dictionary mapping, correct
-          board orientation, h1 light'
-      - id: SC-04
-        name: Data Range
+        comment: Unicode symbols, correct orientation, pieces properly positioned
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 8x8 board displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Algebraic notation correct, all pieces visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A, but title accurately describes position
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: Scholar''s Mate · chessboard-pieces · seaborn ·
-          pyplots.ai'
+        comment: Title format correct with spec-id and library
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple piece types (K/Q/R/B/N/P), both colors, realistic
-          game position
+        comment: Variety of piece types in both colors
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Scholar's Mate is a famous, real chess pattern used in teaching
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standard chess position with correct piece placement
+        comment: Fried Liver Attack is real, famous opening
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Position factually accurate
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,52 +167,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports -> data -> plot -> save'
+        comment: Linear flow, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 0
-        max: 3
-        passed: false
-        comment: No random seed needed as data is deterministic, but deducting slightly
-          as no randomness involved
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic piece dictionary
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.patheffects, pyplot, numpy, seaborn)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn heatmap API
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct DPI
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses seaborn heatmap as base, but mostly relies on matplotlib for
-          piece placement
+        comment: Good seaborn set_theme and heatmap usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage, not distinctive to seaborn
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - patches
   patterns:
+  - data-generation
   - matrix-construction
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - custom-colormap
   - edge-highlighting
+  - minimal-chrome
