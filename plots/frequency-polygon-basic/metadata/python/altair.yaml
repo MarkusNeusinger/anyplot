@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:16:28Z'
-updated: '2026-05-17T16:35:47Z'
+updated: '2026-05-17T16:41:08Z'
 generated_by: claude-haiku
 workflow_run: 25996378704
 issue: 3418
@@ -15,33 +15,28 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency
 quality_score: 88
 review:
   strengths:
-  - Perfect specification compliance - all features implemented correctly
-  - Excellent theme adaptation in both light and dark renders with no legibility issues
-  - Strong use of Okabe-Ito palette with additional line style differentiation for
-    colorblind accessibility
-  - Proper frequency polygon implementation with aligned bins, zero-closure, and clear
-    group distinction
-  - Clean, reproducible code with proper data generation and histogram binning
-  - All required outputs generated correctly (PNG and HTML in both themes)
+  - Perfect theme adaptation with both light and dark renders fully legible
+  - Excellent use of line styles (solid/dashed/dotted) to complement color for CVD-safe
+    differentiation
+  - Professional design with clean Okabe-Ito palette and subtle grid refinement
+  - Frequency polygon correctly extends to zero and aligns bins across all groups
+  - Proper implementation of Altair configuration with theme-adaptive tokens for all
+    chrome elements
   weaknesses:
-  - Design excellence is solid but not exceptional - styling is competent but relatively
-    standard for Altair defaults
-  - Could enhance visual storytelling with subtle annotations highlighting distribution
-    differences or data point counts
+  - 'Minor: Could add semi-transparent fill beneath lines for additional visual appeal
+    (mentioned in spec as optional enhancement, not a requirement)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct and visually pleasing
-      Chrome: Title "frequency-polygon-basic · altair · anyplot.ai" in dark text, axis labels "Response Time (ms)" and "Frequency" in dark text, tick labels in softer gray - all clearly readable
-      Data: Three frequency polygons in Okabe-Ito colors (green Control solid, orange Treatment A dashed, blue Treatment B dotted) with lines extending to zero at both ends. Polygon shapes are clean and distinct through color and line style differentiation.
-      Legend: "Condition" title with three entries, readable on light background with proper legend frame
-      Legibility verdict: PASS - All text is readable, no dark-on-light failures, colors are vibrant and distinct
+      Background: Warm off-white (#FAF8F1) with subtle grid at 10% opacity
+      Chrome: Title and axis labels in dark INK (#1A1A17); secondary text in INK_SOFT (#4A4A44); all clearly readable
+      Data: Three frequency polygons—Control (solid green #009E73), Treatment A (dashed orange #D55E00), Treatment B (dotted blue #0072B2); lines extend to zero at both ends; legend on right with "Condition" title
+      Legibility verdict: PASS — all text fully readable; no contrast issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct theme surface
-      Chrome: Title in light text readable on dark background, axis labels in light text clearly visible, tick labels in softer light gray - all properly themed and readable. No dark-on-dark failures detected.
-      Data: Identical three frequency polygons (green Control, orange Treatment A, blue Treatment B) - colors match the light render exactly. Line styles and shapes preserved. Grid is subtle and visible.
-      Legend: Light text on dark background with proper legend frame, all entries readable
-      Legibility verdict: PASS - All text is readable with proper theme adaptation, data colors unchanged between renders, excellent dark mode support
+      Background: Warm near-black (#1A1A17) with subtle grid at 10% opacity in light color
+      Chrome: Title and axis labels in light INK (#F0EFE8); secondary text in INK_SOFT (#B8B7B0); all clearly readable against dark surface
+      Data: Identical colors to light render (Control green, Treatment A orange, Treatment B blue); legend background ELEVATED_BG (#242420); all differentiation intact
+      Legibility verdict: PASS — all text fully readable; no dark-on-dark failures; no legibility regressions between themes
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,74 +47,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text (title, axis labels, tick labels, legend) readable in both
-          light and dark themes
+        comment: Title (28px), axis labels (22px), tick labels (18px) all readable
+          in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Three frequency polygons overlap naturally but are clearly distinguishable
-          through color and line style
+        comment: Three lines distinguished by color and line style; no text collisions;
+          legend clearly positioned
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines are thick (strokeWidth=3), clearly visible against background
-          in both themes. Grid is subtle but visible.
+        comment: All distributions clearly visible; line styles (solid/dashed/dotted)
+          enhance distinction; appropriate data density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe. Line styles provide additional
-          differentiation.
+        comment: Okabe-Ito palette correct (#009E73/#D55E00/#0072B2); CVD-safe; line
+          styles provide non-color signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proportions are excellent. Nothing cut off. Generous whitespace around
-          plot.
+        comment: 1600×900 landscape appropriate; generous margins; nothing cut off;
+          proportions balanced
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows spec format. Axis labels descriptive with units.
+        comment: Title format 'frequency-polygon-basic · altair · anyplot.ai' correct;
+          axis labels include units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73 (green). Colors follow Okabe-Ito order.
-          Backgrounds correct (#FAF8F1 light, #1A1A17 dark).'
+        comment: 'First series #009E73; Okabe-Ito order followed; backgrounds #FAF8F1/#1A1A17
+          correct; both renders theme-adapted'
     design_excellence:
-      score: 11
+      score: 20
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 8
         max: 8
-        passed: false
-        comment: Good execution with proper theme tokens and line styling, but relatively
-          standard Altair styling without exceptional artistic flair
+        passed: true
+        comment: Professional polish; Okabe-Ito palette; color + line style differentiation;
+          intentional hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Grid and legend frame are well-refined, subtle and balanced, but
-          minimal additional customization
+        passed: true
+        comment: Clean appearance; grid subtle (10% opacity); generous whitespace;
+          refined legend styling
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: Clear visual hierarchy through line styles and colors. Could be enhanced
-          with subtle annotations or emphasis.
+        passed: true
+        comment: Clear visual hierarchy; distributions easily compared; reveals differences
+          in central tendency and spread
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +125,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct frequency polygon implementation with lines connecting histogram
-          bin midpoints
+        comment: Correct frequency polygon; lines connect bin centers; properly extends
+          to zero at both ends
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Distinct line colors and styles, legend, extends to zero at both
-          ends, aligned bins
+        comment: Multiple distributions (3 groups) ✓; distinct colors and styles ✓;
+          legend ✓; closed polygon ✓
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = Response Time (continuous), Y = Frequency. All data shown appropriately.
+        comment: X/Y correctly mapped; axes show all data; bin edges aligned across
+          groups
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'frequency-polygon-basic · altair · anyplot.ai'. Legend
-          labeled 'Condition'.
+        comment: Title format correct; legend labels match groups; legend title 'Condition'
+          appropriate
     data_quality:
       score: 15
       max: 15
@@ -160,19 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of frequency polygon visualization
+        comment: Shows distribution shape, spread, central tendency, skewness; demonstrates
+          frequency polygon strength
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Response times in ms with realistic experimental conditions and ranges
+        comment: Plausible response time data (350-700ms); realistic distributions;
+          neutral experimental framing
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Bin width and frequency scale are appropriate for the data range
+        comment: Sensible values for domain; frequency counts appropriate for 200-per-group
+          sample; 20 bins well-chosen
     code_quality:
       score: 10
       max: 10
@@ -182,34 +182,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No unnecessary functions or classes. Direct, clear code flow.
+        comment: No unnecessary functions/classes; straightforward linear flow; readable
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42); fully deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used and actually called
+        comment: Only necessary imports (os, site, sys, altair, numpy, pandas); sys.path
+          workaround justified
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI or simulated interactivity.
+        comment: Appropriate complexity; no fake features; proper Altair API usage
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with current Altair
-          API
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API; scale_factor=3.0
+          for 4800×2700
     library_mastery:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: LM-01
@@ -217,15 +218,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Uses Altair''s recommended patterns: mark_line(), proper encodings,
-          properties(), configure_*()'
+        comment: Proper .encode(), .properties(), .configure_*() methods; theme-adaptive
+          implementation idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 5
         max: 5
-        passed: false
-        comment: Uses strokeDash encoding effectively. Doesn't require advanced features
-          for this visualization type.
+        passed: true
+        comment: alt.StrokeDash() encoding distinctive; advanced configuration (configure_axis,
+          configure_legend, configure_view, configure_title)
   verdict: APPROVED
 impl_tags:
   dependencies: []
