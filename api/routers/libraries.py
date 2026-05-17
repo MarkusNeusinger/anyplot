@@ -100,6 +100,7 @@ async def get_library_images(library_id: str, db: AsyncSession = Depends(require
                     {
                         "spec_id": spec.id,
                         "library": impl.library_id,
+                        "language": impl.language_id,
                         "url": impl.preview_url,
                         "html": impl.preview_html,
                         "code": strip_noqa_comments(impl.code),

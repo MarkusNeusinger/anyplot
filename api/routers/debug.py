@@ -113,6 +113,7 @@ class SpecStatusItem(BaseModel):
     # Library scores - None means no implementation
     altair: float | None = None
     bokeh: float | None = None
+    ggplot2: float | None = None
     highcharts: float | None = None
     letsplot: float | None = None
     matplotlib: float | None = None
@@ -165,6 +166,7 @@ class RecentActivity(BaseModel):
     spec_id: str
     spec_title: str
     library_id: str
+    language_id: str
     quality_score: float | None
     generated_by: str | None
     updated: str  # ISO datetime
@@ -276,6 +278,7 @@ async def get_debug_status(request: Request, db: AsyncSession = Depends(require_
                         spec_id=spec.id,
                         spec_title=spec.title,
                         library_id=lib_id,
+                        language_id=impl.language_id,
                         quality_score=score,
                         generated_by=impl.generated_by,
                         updated=impl.updated.isoformat(),
@@ -308,6 +311,7 @@ async def get_debug_status(request: Request, db: AsyncSession = Depends(require_
                 avg_score=round(avg_score, 1) if avg_score else None,
                 altair=spec_scores.get("altair"),
                 bokeh=spec_scores.get("bokeh"),
+                ggplot2=spec_scores.get("ggplot2"),
                 highcharts=spec_scores.get("highcharts"),
                 letsplot=spec_scores.get("letsplot"),
                 matplotlib=spec_scores.get("matplotlib"),
@@ -328,6 +332,7 @@ async def get_debug_status(request: Request, db: AsyncSession = Depends(require_
     library_names = {
         "altair": "Altair",
         "bokeh": "Bokeh",
+        "ggplot2": "ggplot2",
         "highcharts": "Highcharts",
         "letsplot": "lets-plot",
         "matplotlib": "Matplotlib",
@@ -414,7 +419,7 @@ async def get_debug_status(request: Request, db: AsyncSession = Depends(require_
     # ========================================================================
 
     response_time_ms = (time.time() - start_time) * 1000
-    coverage = (total_implementations / (len(all_specs) * 9) * 100) if all_specs else 0
+    coverage = (total_implementations / (len(all_specs) * len(SUPPORTED_LIBRARIES)) * 100) if all_specs else 0
 
     system_health = SystemHealth(
         database_connected=True,

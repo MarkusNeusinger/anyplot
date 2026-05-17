@@ -5,7 +5,7 @@ import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 
-import { DEBUG_API_URL, LIBRARIES, LIB_ABBREV } from '../constants';
+import { DEBUG_API_URL, LIBRARIES, LIB_ABBREV, LIB_TO_LANG } from '../constants';
 import { specPath } from '../utils/paths';
 import { SectionHeader } from '../components/SectionHeader';
 import { typography, colors, semanticColors, fontSize } from '../theme';
@@ -21,6 +21,7 @@ interface SpecStatus {
   avg_score: number | null;
   altair: number | null;
   bokeh: number | null;
+  ggplot2: number | null;
   highcharts: number | null;
   letsplot: number | null;
   matplotlib: number | null;
@@ -63,6 +64,7 @@ interface RecentActivity {
   spec_id: string;
   spec_title: string;
   library_id: string;
+  language_id: string;
   quality_score: number | null;
   generated_by: string | null;
   updated: string;
@@ -318,7 +320,7 @@ export function DebugPage() {
       const q = searchText.toLowerCase();
       filtered = filtered.filter(s => s.id.toLowerCase().includes(q) || s.title.toLowerCase().includes(q));
     }
-    if (showIncomplete) filtered = filtered.filter(s => countImpls(s) < 9);
+    if (showIncomplete) filtered = filtered.filter(s => countImpls(s) < LIBRARIES.length);
     if (showLowScores) filtered = filtered.filter(hasLowScore);
     if (missingLibrary) filtered = filtered.filter(s => s[missingLibrary as keyof SpecStatus] === null);
 
@@ -624,7 +626,7 @@ export function DebugPage() {
               <Link
                 key={`${act.spec_id}-${act.library_id}-${idx}`}
                 component={RouterLink}
-                to={specPath(act.spec_id, 'python', act.library_id)}
+                to={specPath(act.spec_id, act.language_id, act.library_id)}
                 sx={{
                   display: 'grid',
                   gridTemplateColumns: { xs: '55px 1fr 30px', sm: '65px 90px minmax(0, 1fr) 30px 130px' },
@@ -802,7 +804,7 @@ export function DebugPage() {
             borderColor: showIncomplete ? colors.primary : 'var(--rule)',
           }}
         >
-          incomplete {'<'}9
+          incomplete {'<'}{LIBRARIES.length}
         </Box>
         <Box
           component="button"
@@ -844,7 +846,7 @@ export function DebugPage() {
           {/* Header row */}
           <Box sx={{
             display: 'grid',
-            gridTemplateColumns: '180px minmax(180px, 1fr) 50px 50px repeat(9, 40px) 80px',
+            gridTemplateColumns: `180px minmax(180px, 1fr) 50px 50px repeat(${LIBRARIES.length}, 40px) 80px`,
             gap: 0, alignItems: 'center',
             position: 'sticky', top: 0, zIndex: 1,
             bgcolor: 'var(--bg-page)',
@@ -869,7 +871,7 @@ export function DebugPage() {
                 key={spec.id}
                 sx={{
                   display: 'grid',
-                  gridTemplateColumns: '180px minmax(180px, 1fr) 50px 50px repeat(9, 40px) 80px',
+                  gridTemplateColumns: `180px minmax(180px, 1fr) 50px 50px repeat(${LIBRARIES.length}, 40px) 80px`,
                   gap: 0, alignItems: 'center', py: 0.5,
                   borderBottom: '1px solid var(--rule)',
                   '&:hover': { bgcolor: 'var(--bg-surface)' },
@@ -896,10 +898,10 @@ export function DebugPage() {
                 </Typography>
                 <Typography sx={{
                   fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600,
-                  color: implCount === 9 ? colors.success : implCount > 0 ? semanticColors.mutedText : 'var(--ink-muted)',
+                  color: implCount === LIBRARIES.length ? colors.success : implCount > 0 ? semanticColors.mutedText : 'var(--ink-muted)',
                   textAlign: 'center',
                 }}>
-                  {implCount}/9
+                  {implCount}/{LIBRARIES.length}
                 </Typography>
                 <Typography sx={{
                   fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600,
@@ -920,7 +922,7 @@ export function DebugPage() {
                     <Link
                       key={lib}
                       component={RouterLink}
-                      to={specPath(spec.id, 'python', lib)}
+                      to={specPath(spec.id, LIB_TO_LANG[lib] ?? 'python', lib)}
                       sx={{
                         textAlign: 'center', textDecoration: 'none',
                         fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600,
@@ -996,7 +998,7 @@ export function DebugPage() {
                   <Link
                     key={lib}
                     component={RouterLink}
-                    to={specPath(spec.id, 'python', lib)}
+                    to={specPath(spec.id, LIB_TO_LANG[lib] ?? 'python', lib)}
                     sx={{ ...commonSx, '&:hover': { opacity: 0.75 } }}
                   >
                     <Box component="span">{abbrev}</Box>
