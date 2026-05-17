@@ -1,7 +1,7 @@
 """ anyplot.ai
 kagi-basic: Basic Kagi Chart
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-17
+Quality: 90/100 | Updated: 2026-05-17
 """
 
 import os
