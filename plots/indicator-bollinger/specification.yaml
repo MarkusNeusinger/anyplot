@@ -6,7 +6,7 @@ title: Bollinger Bands Indicator Chart
 
 # Specification tracking
 created: 2026-01-07T20:11:29Z
-updated: null
+updated: 2026-05-17T17:42:35Z
 issue: 3237
 suggested: MarkusNeusinger
 
@@ -15,8 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - band
-    - indicator
   data_type:
     - timeseries
     - numeric
