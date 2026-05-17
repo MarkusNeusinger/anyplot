@@ -1,164 +1,175 @@
 library: altair
+language: python
 specification_id: chessboard-pieces
 created: '2026-01-08T22:01:19Z'
-updated: '2026-01-08T22:12:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20833013493
+updated: '2026-05-17T03:26:16Z'
+generated_by: claude-haiku
+workflow_run: 25979962046
 issue: 3350
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/altair/plot.html
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/altair/plot-dark.html
 quality_score: 92
 review:
   strengths:
-  - Excellent visual representation of a chess board with proper traditional colors
-    and styling
-  - Unicode chess symbols are large, clear, and well-positioned within squares
-  - White pieces have dark outlines for excellent visibility on light squares
-  - Proper chess board orientation with white at bottom and correct light square position
-    (h1)
-  - Good use of Altair layering with board squares as base layer and pieces as overlaid
-    text marks
-  - Correct title format following the pyplots convention
-  - Clean, readable code structure following KISS principles
+  - Excellent legibility in both light and dark themes with proper text color adaptation
+  - Authentic chess board design with standard colors and proper piece representation
+  - Clean, professional code with well-organized theme tokens and data structures
+  - Correct title format and axis labeling with chess notation
+  - 'Perfect spec compliance: all required features present and correctly implemented'
+  - Proper use of Unicode chess symbols for clarity and elegance
+  - Theme-adaptive chrome elements (background, text colors) while preserving piece
+    color consistency
   weaknesses:
-  - Could add Altair interactivity (tooltips showing piece type and square name on
-    hover)
-  - The Scholar's Mate position is slightly unconventional (black king on e7 instead
-    of e8)
-  - Small amount of extra padding/whitespace below the board
-  image_description: The plot shows a chess board displaying a "Scholar's Mate Setup"
-    position. The board uses traditional chess square colors - cream/tan (#F0D9B5)
-    for light squares and brown (#B58863) for dark squares. The board is oriented
-    with white at the bottom (row 1) and black at the top (row 8), following standard
-    chess convention. Files (a-h) are labeled at the bottom in brown color, and ranks
-    (1-8) are labeled on the left side. All 32 pieces from an early-game position
-    are displayed using Unicode chess symbols. White pieces are rendered in off-white
-    with dark outlines for visibility, while black pieces are solid dark gray/black.
-    The position shows a Scholar's Mate setup with the white queen on h5, white bishop
-    on c4, and the black king exposed on e7. The title "Scholar's Mate Setup · chessboard-pieces
-    · altair · pyplots.ai" appears at the top in dark gray text. The board has a subtle
-    brown border around the entire grid. The square aspect ratio (approximately 1:1)
-    works well for the chess board visualization.
+  - Library Mastery could be enhanced with more distinctive Altair features beyond
+    basic mark layering
+  - Design Excellence slightly limited to standard chess visualization (no custom
+    refinements beyond authenticity)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and readable
+      Chrome: Title "Scholar's Mate Setup · chessboard-pieces · altair · anyplot.ai" in dark text (INK #1A1A17), file labels (a-h) and rank labels (8-1) in bold, large text - all clearly readable
+      Data: Board uses authentic chess colors (light #F0D9B5 and dark #B58863 squares); all 32 pieces rendered as Unicode symbols in white (♔♕♖♗♘♙) and black (♚♛♜♝♞♟); pieces correctly positioned for Scholar's Mate setup
+      Legibility verdict: PASS - All elements readable with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and distinct from pure black
+      Chrome: Title in light text (INK #F0EFE8) and clearly visible against dark background; file and rank labels also in light text and readable - no dark-on-dark failures
+      Data: Board square colors identical to light render (theme-independent, appropriate for chess domain); piece colors unchanged from light render (white and black pieces maintain contrast with brown board squares); all pieces clearly distinguishable and visible
+      Legibility verdict: PASS - All text readable; no theme-adaptation failures; data colors consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text (title, file/rank labels) is clearly readable at full size
-          with large, bold fonts
+        comment: Title and axis labels readable in both light and dark; proper font
+          sizes and colors
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements; pieces are well-centered within squares
+        comment: Board squares clean, pieces well-spaced, labels properly positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Chess pieces are large and clearly visible; white pieces have dark
-          outlines for contrast
+        comment: All pieces and board elements clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Traditional chess board colors with good contrast; distinction is
-          by shape not color
+        comment: Standard chess colors provide good contrast; no color-coding as sole
+          signal; colorblind safe
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: false
-        comment: Good square layout but some empty space below the file labels
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600×3600) appropriate for symmetric board; proper
+          proportions
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Files (a-h) and ranks (1-8) clearly labeled following chess convention
+        comment: Correct title format; axes labeled with chess notation
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: No grid needed for chess board; subtle border frames the board nicely
+        comment: Correct background colors for both themes; title and labels use theme-adapted
+          INK tokens
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, clean design using authentic chess colors; prioritizes
+          clarity
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Board border uses theme-adapted color; white pieces styled with stroke
+          outline; clean layout
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Title identifies tactical setup; piece placement tells educational
+          story; clear visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct chart type - chess board with positioned pieces using rect
-          and text marks
+        comment: Correct chess board visualization with programmable piece placement
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Files and ranks correctly mapped to X/Y axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: Unicode symbols, correct orientation,
-          light square at h1'
-      - id: SC-04
-        name: Data Range
+        comment: Pieces positioned via dictionary; Unicode symbols used; Scholar's
+          Mate demonstrated
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 8x8 squares visible with correct file/rank ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y mapping correct (files, ranks); standard board orientation
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for chess board; piece identification is by shape
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format with spec-id, library, and pyplots.ai
+        comment: Title format correct; legend appropriately omitted
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows variety of pieces: kings, queens, rooks, bishops, knights,
-          pawns for both colors'
+        comment: Complete chess board with all piece types; demonstrates position
+          setup
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: false
-        comment: Scholar's Mate setup is real but black king on e7 is unconventional
-          for this position name
+        max: 5
+        passed: true
+        comment: Scholar's Mate is well-known educational chess pattern; neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: All pieces in valid positions; minor unconventional king placement
+        comment: All 64 squares rendered; all pieces visible; appropriate scale
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,50 +177,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: No unnecessary functions/classes; direct, linear code
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
-        passed: false
-        comment: Deterministic data but position dict could be more clearly documented
+        max: 2
+        passed: true
+        comment: Hardcoded pieces data; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only necessary imports; special handling for altair naming conflict
+          appropriate
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Appropriate complexity; clean theme token management
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html; proper
+          scale_factor
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good use of Altair idioms: mark_rect, mark_text, proper encoding,
+          axis customization'
+      - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses layered composition but doesn't leverage Altair's interactivity
-          or tooltips
+        comment: Uses layer composition and custom stroke styling; mostly straightforward
+          patterns; could use more distinctive techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
   styling:
-  - edge-highlighting
+  - publication-ready
