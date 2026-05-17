@@ -1,23 +1,40 @@
-""" pyplots.ai
+"""anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 82/100 | Created: 2026-01-09
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
 import math
+import os
+import sys
+from importlib import import_module
 
-import pygal
-from pygal.style import Style
 from sklearn.datasets import load_iris
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
 
+# Ensure we import the installed pygal package, not the local script
+site_packages = [p for p in sys.path if "site-packages" in p or "dist-packages" in p]
+if site_packages:
+    sys.path = site_packages + [p for p in sys.path if "site-packages" not in p and "dist-packages" not in p]
+
+pygal = import_module("pygal")
+Style = import_module("pygal.style").Style
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette: first series always #009E73 (brand), then position 2 and 3
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
 # Load and prepare data
 iris = load_iris()
 X = iris.data
 y = iris.target
-feature_names = iris.feature_names
 target_names = iris.target_names
 
 # Standardize features
@@ -26,35 +43,27 @@ X_scaled = StandardScaler().fit_transform(X)
 # Perform PCA
 pca = PCA(n_components=2)
 scores = pca.fit_transform(X_scaled)
-loadings = pca.components_.T  # Shape: (n_features, n_components)
+loadings = pca.components_.T
 variance_explained = pca.explained_variance_ratio_ * 100
 
 # Use correlation biplot scaling
 score_range = max(scores[:, 0].max() - scores[:, 0].min(), scores[:, 1].max() - scores[:, 1].min())
 loading_scale = score_range * 0.4
-unit_circle_radius = loading_scale
 
-# Custom style for 4800x2700 px canvas
-species_colors = ["#306998", "#FFD43B", "#2ECC71"]  # Blue, Yellow, Green for species
-unit_circle_color = "#AAAAAA"  # Gray for unit circle reference
-# Distinct colors for each loading vector (colorblind-friendly)
-loading_colors = ["#E41A1C", "#984EA3", "#FF7F00", "#377EB8"]  # Red, Purple, Orange, Blue
-
+# Custom style for theme-adaptive rendering
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=tuple(species_colors + [unit_circle_color] + loading_colors),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    tooltip_font_size=36,
-    stroke_width=4,
-    opacity=0.85,
-    opacity_hover=0.95,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=2,
 )
 
 # Create XY chart for biplot
@@ -62,17 +71,16 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="biplot-pca · pygal · pyplots.ai",
+    title="biplot-pca · pygal · anyplot.ai",
     x_title=f"PC1 ({variance_explained[0]:.1f}%)",
     y_title=f"PC2 ({variance_explained[1]:.1f}%)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_box_size=36,
-    dots_size=14,
+    dots_size=10,
     stroke=False,
     show_x_guides=True,
     show_y_guides=True,
-    truncate_legend=50,
+    truncate_legend=0,
     explicit_size=True,
 )
 
@@ -80,37 +88,27 @@ chart = pygal.XY(
 for i, name in enumerate(target_names):
     mask = y == i
     points = [(float(scores[j, 0]), float(scores[j, 1])) for j in range(len(y)) if mask[j]]
-    chart.add(name.capitalize(), points, stroke=False, dots_size=14)
-
-# Create unit circle for loading magnitude reference
-circle_points = []
-for angle in range(0, 361, 3):
-    rad = math.radians(angle)
-    circle_points.append((unit_circle_radius * math.cos(rad), unit_circle_radius * math.sin(rad)))
-chart.add("Unit Circle", circle_points, stroke=True, show_dots=False, stroke_style={"width": 3, "dasharray": "10,8"})
+    chart.add(name.capitalize(), points, stroke=False, dots_size=10)
 
 # Full feature names for legend clarity
 full_names = ["Sepal Length", "Sepal Width", "Petal Length", "Petal Width"]
 
-# Add each loading vector as line arrow with arrowhead
+# Add each loading vector as a thin line arrow
 for i, full_name in enumerate(full_names):
     tip_x = float(loadings[i, 0] * loading_scale)
     tip_y = float(loadings[i, 1] * loading_scale)
 
-    # Calculate arrow geometry for line-style arrow
     dx, dy = tip_x, tip_y
     length = math.sqrt(dx * dx + dy * dy)
     ux = dx / length if length > 0 else 0
     uy = dy / length if length > 0 else 0
     px, py = -uy, ux  # Perpendicular vector
 
-    # Smaller arrowhead for cleaner line appearance
-    head_len = 0.08 * loading_scale
-    head_wid = 0.04 * loading_scale
+    head_len = 0.06 * loading_scale
+    head_wid = 0.03 * loading_scale
     hb_x = tip_x - ux * head_len
     hb_y = tip_y - uy * head_len
 
-    # Line arrow: origin to tip with small arrowhead triangle
     arrow_line = [
         (0.0, 0.0),
         (tip_x, tip_y),
@@ -119,7 +117,9 @@ for i, full_name in enumerate(full_names):
         (hb_x - px * head_wid, hb_y - py * head_wid),
         (tip_x, tip_y),
     ]
-    chart.add(full_name, arrow_line, stroke=True, show_dots=False, fill=False, stroke_style={"width": 5})
+    chart.add(full_name, arrow_line, stroke=True, show_dots=False, fill=False, stroke_style={"width": 2})
 
-# Save PNG output only
-chart.render_to_png("plot.png")
+# Save outputs
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
