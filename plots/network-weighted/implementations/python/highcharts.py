@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-08
+Library: highcharts unknown | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-17
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -14,6 +15,17 @@ import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data: Research collaboration network between university departments
 np.random.seed(42)
@@ -64,38 +76,19 @@ for src, tgt, w in edges:
     weighted_degree[src] += w
     weighted_degree[tgt] += w
 
-# Normalize for marker size (bigger nodes = more collaborations)
+# Normalize for marker size
 max_degree = max(weighted_degree.values())
 min_degree = min(weighted_degree.values())
-
-# Colors for nodes - colorblind-safe palette
-colors = [
-    "#306998",
-    "#FFD43B",
-    "#9467BD",
-    "#17BECF",
-    "#8C564B",
-    "#E377C2",
-    "#7F7F7F",
-    "#BCBD22",
-    "#1F77B4",
-    "#FF7F0E",
-    "#2CA02C",
-    "#D62728",
-]
 
 # Create nodes for Highcharts networkgraph
 nodes_data = []
 for i, dept in enumerate(departments):
     deg = weighted_degree[dept["id"]]
-    # Scale marker size between 50 and 120 based on weighted degree
     marker_size = 50 + 70 * (deg - min_degree) / (max_degree - min_degree)
-    nodes_data.append(
-        {"id": dept["id"], "name": dept["name"], "marker": {"radius": marker_size}, "color": colors[i % len(colors)]}
-    )
+    color = OKABE_ITO[i % len(OKABE_ITO)]
+    nodes_data.append({"id": dept["id"], "name": dept["name"], "marker": {"radius": int(marker_size)}, "color": color})
 
 # Create links with width based on weight
-# Scale line width between 4 and 24 based on weight
 min_weight = min(w for _, _, w in edges)
 max_weight = max(w for _, _, w in edges)
 
@@ -104,21 +97,23 @@ for src, tgt, weight in edges:
     width = 4 + 20 * (weight - min_weight) / (max_weight - min_weight)
     links_data.append({"from": src, "to": tgt, "width": round(width, 1)})
 
-# Convert links and nodes to JSON for embedding
+# Convert links and nodes to JSON
 links_json = json.dumps(links_data)
 nodes_json = json.dumps(nodes_data)
 
-# Download Highcharts JS and networkgraph module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-networkgraph_url = "https://code.highcharts.com/modules/networkgraph.js"
+# Download Highcharts JS and networkgraph module from jsdelivr CDN
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+networkgraph_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/modules/networkgraph.js"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+req_hc = urllib.request.Request(highcharts_url, headers={"User-Agent": "Mozilla/5.0"})
+with urllib.request.urlopen(req_hc, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-with urllib.request.urlopen(networkgraph_url, timeout=30) as response:
+req_ng = urllib.request.Request(networkgraph_url, headers={"User-Agent": "Mozilla/5.0"})
+with urllib.request.urlopen(req_ng, timeout=30) as response:
     networkgraph_js = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts, weight legend, and custom link width rendering
+# Generate HTML with inline scripts and theme-adaptive styling
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -126,37 +121,37 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{networkgraph_js}</script>
     <style>
-        body {{ margin: 0; padding: 0; }}
+        body {{ margin: 0; padding: 0; background: {PAGE_BG}; }}
         #container {{ width: 4800px; height: 2700px; }}
         #legend {{
             position: absolute;
-            bottom: 120px;
-            left: 150px;
-            background: rgba(255, 255, 255, 0.95);
-            border: 3px solid #306998;
+            top: 120px;
+            right: 120px;
+            background: {ELEVATED_BG};
+            border: 2px solid {INK_SOFT};
             border-radius: 12px;
             padding: 30px 40px;
-            font-family: 'Segoe UI', Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }}
         #legend h3 {{
             margin: 0 0 20px 0;
-            font-size: 36px;
-            color: #333;
-            font-weight: bold;
+            font-size: 28px;
+            color: {INK};
+            font-weight: 600;
         }}
         .legend-item {{
             display: flex;
             align-items: center;
             margin: 16px 0;
-            font-size: 28px;
-            color: #444;
+            font-size: 18px;
+            color: {INK_SOFT};
         }}
         .legend-line {{
             height: 0;
             margin-right: 20px;
             border-top-style: solid;
-            border-top-color: #306998;
+            border-top-color: {OKABE_ITO[0]};
         }}
         .legend-line.thin {{ width: 80px; border-top-width: 4px; }}
         .legend-line.medium {{ width: 80px; border-top-width: 14px; }}
@@ -166,18 +161,18 @@ html_content = f"""<!DOCTYPE html>
 <body>
     <div id="container"></div>
     <div id="legend">
-        <h3>Edge Weight (Publications)</h3>
+        <h3>Edge Weight</h3>
         <div class="legend-item">
             <div class="legend-line thin"></div>
-            <span>{min_weight} publications</span>
+            <span>{int(min_weight)} publications</span>
         </div>
         <div class="legend-item">
             <div class="legend-line medium"></div>
-            <span>~{(min_weight + max_weight) // 2} publications</span>
+            <span>~{int((min_weight + max_weight) / 2)} publications</span>
         </div>
         <div class="legend-item">
             <div class="legend-line thick"></div>
-            <span>{max_weight} publications</span>
+            <span>{int(max_weight)} publications</span>
         </div>
     </div>
     <script>
@@ -189,35 +184,22 @@ html_content = f"""<!DOCTYPE html>
                 type: 'networkgraph',
                 width: 4800,
                 height: 2700,
-                backgroundColor: '#ffffff',
-                marginTop: 180,
-                marginBottom: 200,
-                marginLeft: 400,
-                marginRight: 400,
-                events: {{
-                    load: function() {{
-                        // Center the network by adjusting plot area
-                        var chart = this;
-                        chart.plotBackground.attr({{
-                            fill: 'none'
-                        }});
-                    }}
-                }}
+                backgroundColor: '{PAGE_BG}',
+                marginTop: 120,
+                marginBottom: 120,
+                marginLeft: 120,
+                marginRight: 120,
             }},
             title: {{
-                text: 'network-weighted · highcharts · pyplots.ai',
-                style: {{ fontSize: '56px', fontWeight: 'bold' }}
-            }},
-            subtitle: {{
-                text: 'University Department Collaboration Network',
-                style: {{ fontSize: '36px', color: '#666666' }}
+                text: 'network-weighted · highcharts · anyplot.ai',
+                style: {{ fontSize: '28px', fontWeight: '600', color: '{INK}' }}
             }},
             plotOptions: {{
                 networkgraph: {{
                     layoutAlgorithm: {{
                         enableSimulation: true,
                         friction: -0.92,
-                        linkLength: 320,
+                        linkLength: 280,
                         gravitationalConstant: 0.08,
                         integration: 'verlet',
                         approximation: 'none',
@@ -226,16 +208,16 @@ html_content = f"""<!DOCTYPE html>
                         initialPositionRadius: 800
                     }},
                     link: {{
-                        color: '#306998'
+                        color: '{INK_SOFT}'
                     }},
                     dataLabels: {{
                         enabled: true,
-                        linkFormat: '',
                         allowOverlap: false,
                         style: {{
-                            fontSize: '36px',
-                            fontWeight: 'bold',
-                            textOutline: '4px white'
+                            fontSize: '22px',
+                            fontWeight: '600',
+                            color: '{INK}',
+                            textOutline: '3px {PAGE_BG}'
                         }}
                     }}
                 }}
@@ -247,12 +229,12 @@ html_content = f"""<!DOCTYPE html>
                 data: linksData,
                 dataLabels: {{
                     enabled: true,
-                    linkFormat: '',
                     format: '{{point.id}}',
                     style: {{
-                        fontSize: '36px',
-                        fontWeight: 'bold',
-                        textOutline: '4px white'
+                        fontSize: '22px',
+                        fontWeight: '600',
+                        color: '{INK}',
+                        textOutline: '3px {PAGE_BG}'
                     }}
                 }},
                 marker: {{
@@ -262,23 +244,24 @@ html_content = f"""<!DOCTYPE html>
             credits: {{ enabled: false }},
             tooltip: {{
                 enabled: true,
-                style: {{ fontSize: '28px' }},
+                style: {{ fontSize: '18px', color: '{INK}' }},
+                backgroundColor: '{ELEVATED_BG}',
+                borderColor: '{INK_SOFT}',
                 formatter: function() {{
                     if (this.point.isNode) {{
-                        return '<b>' + this.point.id + '</b>';
+                        return '<b style="color: {INK}">' + this.point.id + '</b>';
                     }}
                     var link = linksData.find(function(l) {{
                         return (l.from === this.point.from && l.to === this.point.to) ||
                                (l.from === this.point.to && l.to === this.point.from);
                     }}, this);
                     if (link) {{
-                        return this.point.from + ' - ' + this.point.to + ': <b>' + link.width.toFixed(1) + '</b>';
+                        return '<span style="color: {INK}">' + this.point.from + ' - ' + this.point.to + ': <b>' + link.width.toFixed(1) + '</b></span>';
                     }}
-                    return this.point.from + ' - ' + this.point.to;
+                    return '<span style="color: {INK}">' + this.point.from + ' - ' + this.point.to + '</span>';
                 }}
             }}
         }}, function(chart) {{
-            // After chart renders, update link widths based on data
             setTimeout(function() {{
                 chart.series[0].points.forEach(function(point) {{
                     if (!point.isNode && point.graphic) {{
@@ -299,26 +282,26 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Write HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save as plot.html for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4900,2800")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(10)  # Wait for network simulation to settle
-driver.save_screenshot("plot.png")
+time.sleep(5)  # Wait for network simulation to settle
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()  # Clean up temp file
