@@ -6,7 +6,7 @@ title: Permutation Feature Importance Plot
 
 # Specification tracking
 created: 2025-12-31T10:26:42Z
-updated: 2025-12-31T10:26:42Z
+updated: 2026-05-17T12:14:43Z
 issue: 2998
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - bar
-    - horizontal
   data_type:
     - numeric
     - categorical
