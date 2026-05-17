@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: chessboard-pieces
 created: '2026-01-08T21:54:36Z'
-updated: '2026-05-17T03:14:20Z'
+updated: '2026-05-17T03:19:53Z'
 generated_by: claude-haiku
 workflow_run: 25979848044
 issue: 3350
@@ -12,40 +12,31 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 85
 review:
   strengths:
-  - Perfect visual quality — all text readable in both themes, excellent legibility,
-    no overlap
-  - Complete spec compliance — all features correctly implemented
-  - Clean code — simple, deterministic, reproducible with proper theme handling
-  - Proper theme-adaptive chrome — title, labels, axes all thread tokens correctly
-    while maintaining board integrity
-  - Chess accuracy — board orientation correct, square coloring accurate, piece placement
-    precise
-  - Professional polish — path effects on pieces demonstrate intentional visibility
-    strategy
+  - Perfect visual quality with excellent readability in both light and dark themes
+  - Accurate chess representation with correct h1 light square and proper algebraic
+    notation
+  - Clean code structure with proper theme token abstraction
+  - Educational data showing real Fried Liver Attack position
+  - Enhanced piece visibility through path effects (outlines)
   weaknesses:
-  - Design excellence is adequate but conventional — standard chess board styling
-    without distinctive design innovation
-  - Library mastery is moderate — core piece placement is matplotlib, seaborn used
-    mainly for styling/heatmap utility
-  - Could benefit from tactical annotations — highlighting key squares or strategic
-    significance would enhance data storytelling
+  - No visual hierarchy or data storytelling to explain position significance
+  - Design lacks aesthetic sophistication beyond functional defaults
+  - White piece color could use better theme-adaptation (pure white hardcoded)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "Italian Game · chessboard-pieces · seaborn · anyplot.ai" in dark INK color (24pt bold), fully readable. Axis labels a–h and 1–8 in 20pt bold INK_SOFT gray, clear and distinct.
-      Data: Classic chess board squares (#F0D9B5 light, #B58863 dark) with subtle grid lines. Black pieces rendered solid dark with outlines, white pieces white with dark outlines. All pieces clearly visible at 48pt with path effects.
-      Legibility verdict: PASS — all text readable, proper contrast, no dark-on-light issues.
+      Background: Warm off-white (#FAF8F1), correct theme color
+      Chrome: Title in 24pt bold dark text, axis labels (a-h, 1-8) at 20pt bold, all perfectly readable
+      Data: Chessboard with classic tan (#F0D9B5) and brown (#B58863) squares; black pieces render as solid dark silhouettes; white pieces render as hollow outlines with dark strokes; all pieces clearly distinguishable at 48pt fontsize
+      Legibility verdict: PASS - all text and elements clearly readable, excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title in light text (#F0EFE8) on dark background, excellent contrast. Axis labels in light gray (INK_SOFT #B8B7B0), fully readable against dark surface. No dark-on-dark failures.
-      Data: Board squares identical to light render (classic chess colors maintained, not theme-adaptive—correct, board is data not chrome). Pieces show identical data colors to light render (white pieces light, black pieces dark with outlines).
-      Legibility verdict: PASS — all elements readable, theme tokens properly applied to chrome only, data colors consistent.
-
-    Both renders confirmed legible and theme-correct. Data colors identical between renders; only chrome (background, text) adapts to theme.
+      Background: Warm near-black (#1A1A17), correct theme color
+      Chrome: Title and labels now light-colored (#F0EFE8), perfectly readable on dark background; no dark-on-dark text issues
+      Data: Identical board colors (tan and brown) confirm only chrome adapts per theme requirement; pieces render with light outlines maintaining complete visual consistency with light render
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,74 +47,67 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt bold theme-adaptive, axis labels 20pt bold readable both
-          themes, all text explicitly styled
+        comment: Title 24pt, labels 20pt, ticks 20pt; explicitly set and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Pieces centered (ha/va center), board well-spaced, no collisions
+        comment: Board layout clean, all labels well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Piece symbols 48pt with path_effects stroke, all markers distinct
-          from background
+        comment: Unicode pieces at 48pt, well-adapted to board size
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: White (#ffffff) vs black (INK) high contrast, monochromatic scheme
-          CVD-safe, board colors traditional and accessible
+        comment: Black/white clearly distinguished, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 12x12 figsize (3600x3600px) proper for chessboard, generous
-          margins, nothing cut off
+        comment: 12x12 figure, board fills 70% canvas, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title descriptive: Italian Game · chessboard-pieces · seaborn ·
-          anyplot.ai. Axis labels follow chess notation (a–h, 1–8)'
+        comment: Title with spec-id/library, chess notation labels
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds #FAF8F1 (light) #1A1A17 (dark) correct, board colors
-          chess-domain appropriate, both renders theme-correct'
+        comment: Appropriate chess colors, correct backgrounds, theme-adaptive text
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: Clean professional presentation, path effects show intentional strategy,
-          but styling is conventional without distinctive design
+        passed: false
+        comment: Classic but follows defaults; could add custom refinements
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spines hidden, grid subtle, whitespace generous, but minimal customization—clean
-          but not highly refined
+        passed: true
+        comment: Clean axes, subtle lines, piece outlines; well-refined for functional
+          diagram
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Clearly shows famous position, pieces recognizable, but no annotations
-          on key squares or tactical emphasis
+        comment: Real position shown but no visual emphasis or narrative
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +117,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chess board with pieces, Unicode symbols, proper orientation
-          (white at bottom, h1 light)
+        comment: Correct chessboard with pieces
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Pieces dict → board layout, algebraic notation (a–h, 1–8), Unicode
-          pieces (♔–♟), centered and properly sized
+        comment: Unicode symbols, correct orientation, pieces properly positioned
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Column/row math correct (col = ord(square[0]) − ord(a), row = 8 −
-          int(square[1])), full 8x8 board
+        comment: Algebraic notation correct, all pieces visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches spec format, no legend needed (single-series)
+        comment: Title format correct with spec-id and library
     data_quality:
       score: 15
       max: 15
@@ -164,22 +145,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 64-square board, all piece types (K/Q/R/B/N/P), complete Italian
-          Game position
+        comment: Variety of piece types in both colors
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Italian Game/Fried Liver position real, famous, educational, neutral
-          use case
+        comment: Fried Liver Attack is real, famous opening
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12x12 figsize at 300dpi = 3600x3600px, piece 48pt, title 24pt, labels
-          20pt—all prominent
+        comment: Position factually accurate
     code_quality:
       score: 10
       max: 10
@@ -189,36 +167,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no unnecessary functions, straightforward piece placement
-          loop
+        comment: Linear flow, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic, fixed piece positions, no randomness
+        comment: Deterministic piece dictionary
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, seaborn imported, path shadowing workaround
-          clean
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, no fake UI, piece color logic simple, theme
-          token handling elegant
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png, no bare plot.png, current matplotlib API
+        comment: Correct plot-{THEME}.png format
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -226,24 +201,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.set_theme(), sns.heatmap(), theme tokens, ax.tick_params(), path_effects
-          all idiomatic
+        comment: Good seaborn set_theme and heatmap usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Heatmap for board clever, path effects nice, but core is matplotlib—seaborn
-          mainly for styling/heatmap wrapper
+        comment: Generic usage, not distinctive to seaborn
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - path-effects
+  - patches
   patterns:
+  - data-generation
   - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
-  - theme-adaptive-chrome
-  - custom-edges
+  - edge-highlighting
+  - minimal-chrome

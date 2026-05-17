@@ -1,7 +1,7 @@
 """ anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-17
+Quality: 85/100 | Updated: 2026-05-17
 """
 
 import os
