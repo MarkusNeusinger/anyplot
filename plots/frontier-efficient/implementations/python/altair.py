@@ -1,14 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 94/100 | Created: 2026-01-08
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 from scipy.optimize import minimize
 
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
 
 # Data - Portfolio simulation with efficient frontier
 np.random.seed(42)
@@ -111,7 +124,7 @@ cml_df = pd.DataFrame({"Risk (Std Dev)": cml_risk, "Expected Return": cml_return
 # Risk-free rate point
 rf_df = pd.DataFrame({"Risk (Std Dev)": [0], "Expected Return": [risk_free_rate], "Point": ["Risk-Free Rate"]})
 
-# Create Altair chart
+# Plot
 # Scatter plot of random portfolios colored by Sharpe ratio
 scatter = (
     alt.Chart(portfolios_df)
@@ -130,13 +143,13 @@ scatter = (
 
 # Efficient frontier line
 frontier_line = (
-    alt.Chart(frontier_df).mark_line(strokeWidth=4, color="#306998").encode(x="Risk (Std Dev):Q", y="Expected Return:Q")
+    alt.Chart(frontier_df).mark_line(strokeWidth=4, color=BRAND).encode(x="Risk (Std Dev):Q", y="Expected Return:Q")
 )
 
 # Capital market line
 cml_line = (
     alt.Chart(cml_df)
-    .mark_line(strokeWidth=3, strokeDash=[8, 4], color="#FFD43B")
+    .mark_line(strokeWidth=3, strokeDash=[8, 4], color=OKABE_ITO[1])
     .encode(x="Risk (Std Dev):Q", y="Expected Return:Q")
 )
 
@@ -149,7 +162,7 @@ special_points = (
         y="Expected Return:Q",
         color=alt.Color(
             "Portfolio:N",
-            scale=alt.Scale(domain=["Minimum Variance", "Maximum Sharpe Ratio"], range=["#E63946", "#2A9D8F"]),
+            scale=alt.Scale(domain=["Minimum Variance", "Maximum Sharpe Ratio"], range=[OKABE_ITO[1], OKABE_ITO[2]]),
             legend=alt.Legend(title="Key Portfolios", titleFontSize=16, labelFontSize=14),
         ),
         tooltip=["Portfolio", "Risk (Std Dev)", "Expected Return"],
@@ -159,7 +172,7 @@ special_points = (
 # Risk-free rate point
 rf_point = (
     alt.Chart(rf_df)
-    .mark_point(size=300, shape="diamond", filled=True, color="#FFD43B")
+    .mark_point(size=300, shape="diamond", filled=True, color=INK_SOFT)
     .encode(x="Risk (Std Dev):Q", y="Expected Return:Q", tooltip=["Point", "Expected Return"])
 )
 
@@ -169,13 +182,32 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("frontier-efficient · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title("frontier-efficient · altair · anyplot.ai", fontSize=28, anchor="middle"),
     )
-    .configure_axis(labelFontSize=16, titleFontSize=20, gridOpacity=0.3)
-    .configure_legend(titleFontSize=16, labelFontSize=14, symbolSize=200)
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        labelFontSize=16,
+        titleColor=INK,
+        titleFontSize=20,
+    )
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        titleFontSize=16,
+        labelFontSize=14,
+        symbolSize=200,
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
 )
 
 # Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
