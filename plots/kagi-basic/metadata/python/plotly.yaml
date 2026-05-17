@@ -1,149 +1,174 @@
 library: plotly
+language: python
 specification_id: kagi-basic
 created: '2026-01-08T21:53:29Z'
-updated: '2026-01-08T22:29:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832941604
+updated: '2026-05-17T08:23:29Z'
+generated_by: claude-haiku
+workflow_run: 25985198888
 issue: 3341
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/plotly/plot.html
-quality_score: 85
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/kagi-basic/python/plotly/plot-dark.html
+quality_score: 97
 review:
   strengths:
-  - Excellent colorblind-accessible color scheme (blue/orange instead of red/green)
-  - Clean implementation of Kagi algorithm with proper yang/yin state tracking
-  - Good use of line width differentiation (10 vs 2 pixels) for yang/yin distinction
-  - Proper title format and well-sized text elements
-  - Comprehensive hover tooltips showing trend type and price
-  weaknesses:
-  - Shoulder and waist markers are added in code but do not appear in the rendered
-    image
-  - The number of line indices (8) is fewer than desired for demonstrating meaningful
-    Kagi patterns
-  - Legend shows Shoulder and Waist entries but markers are invisible
-  image_description: The plot displays a Kagi chart with price movements ranging from
-    approximately $89 to $117 over 8 line indices. The chart uses thick blue lines
-    (labeled "Yang (Bullish)") for upward trending segments and thin orange lines
-    (labeled "Yin (Bearish)") for downward trending segments. The title "kagi-basic
-    · plotly · pyplots.ai" appears at the top center. The x-axis shows "Line Index"
-    (0-8) and the y-axis shows "Price ($)" (90-115). A horizontal legend at the top
-    shows both line types. The chart demonstrates multiple yang/yin transitions with
-    clear shoulder and waist reversal points. The background is white with subtle
-    gray gridlines.
+  - Perfect visual quality with flawless theme-adaptive rendering in both light and
+    dark modes
+  - Sophisticated use of visual hierarchy through line thickness (10 vs 2) as yang/yin
+    differentiator
+  - Correct and complete Kagi chart implementation with shoulder and waist markers
+  - Excellent use of Plotly's interactive features (hover tooltips with formatted
+    price, toggleable legend)
+  - Theme tokens properly threaded through all chrome elements
+  - Meaningful data generation with clear trend reversals demonstrating plot type
+  - Clean, reproducible, and maintainable code
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels, tick labels all in dark INK color (#1A1A17) and INK_SOFT (#4A4A44) - all clearly readable against light background
+      Data: Thick green lines (width 10, #009E73) for Yang, thin orange lines (width 2, #D55E00) for Yin; triangle-down markers (green) for shoulders, triangle-up markers (orange) for waists - all clearly visible and properly colored per Okabe-Ito palette
+      Grid: Subtle grid lines visible but not dominant
+      Legend: Well-positioned, color-coded, readable with proper line-width matching
+      Legibility verdict: PASS - all text is clearly readable; no legibility failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels in light INK color (#F0EFE8), tick labels in INK_SOFT (#B8B7B0) - all clearly readable against dark background; no dark-on-dark failures
+      Data: Identical colors to light render - green (#009E73) for Yang, orange (#D55E00) for Yin; markers visible and properly colored
+      Grid: Subtle but visible
+      Legend: Readable and properly styled for dark theme
+      Theme consistency: Data colors remain constant between light and dark (only chrome flipped) - correctly implements theme-adaptive design
+      Legibility verdict: PASS - all text is clearly readable; no dark-on-dark failures; proper contrast throughout
   criteria_checklist:
     visual_quality:
-      score: 34
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: All text sizes follow guidelines; readable in both light and dark
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; clear separation of all elements
       - id: VQ-03
         name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Line width differentiation and markers clearly visible at full resolution
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette; colorblind-safe; line width provides secondary
+          cue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape format appropriate; all elements in bounds; proportions
+          well-balanced
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title and axes clearly labeled with units; descriptive text
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Okabe-Ito order; theme backgrounds correct; both renders
+          theme-adaptive
+    design_excellence:
+      score: 18
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 7
         max: 8
         passed: true
-        comment: Line widths (10 vs 2) provide good yang/yin differentiation
-      - id: VQ-04
-        name: Color Accessibility
+        comment: Intentional visual hierarchy through line weight; professional presentation
+      - id: DE-02
+        name: Visual Refinement
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Uses colorblind-safe blue (#0077BB) and orange (#EE7733)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        comment: Subtle grid; generous margins; clean Plotly rendering
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
         passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Y-axis has units but X-axis could be more descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend shows Shoulder/Waist entries but markers not visible in plot
+        comment: Clear visual hierarchy; markers highlight reversals; narrative intuitive
     spec_compliance:
-      score: 22
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Kagi chart with vertical lines changing direction on reversal
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Line index on X, price on Y as specified
-      - id: SC-03
+        comment: Correct Kagi chart with proper thickness variation for yang/yin
+      - id: SC-02
         name: Required Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Yang/yin shown but shoulder/waist markers not visible
-      - id: SC-04
-        name: Data Range
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features present: thick/thin lines, colors, markers,
+          reversals'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis line index; Y-axis price; axes encompass all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Yang (Bullish) and Yin (Bearish) correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format kagi-basic · plotly · pyplots.ai
+        comment: Proper title format; legend labels clear and descriptive
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows multiple yang/yin transitions but only 8 line indices
+        comment: Demonstrates multiple yang/yin segments and clear transitions
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price scenario with plausible price movements
+        comment: Plausible synthetic stock data; neutral and non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price values realistic though range narrower than intended
+        comment: Price range and reversal threshold are realistic and meaningful
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -151,52 +176,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Clean procedural code; no unnecessary abstractions; appropriate complexity
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: 'Only necessary imports: os, numpy, plotly.graph_objects'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Sound algorithm logic; no simulated interactive features
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output: plot-light.png, plot-dark.png, .html files; current
+          API'
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Scatter with hover templates and HTML export, but could leverage
-          more Plotly features
+        comment: Uses go.Figure() and add_trace() idiomatically; appropriate abstraction
+          level
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages hover tooltips with custom hovertemplate; toggleable legend;
+          HTML export
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - custom-legend
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
