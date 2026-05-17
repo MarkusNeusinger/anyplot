@@ -1,213 +1,226 @@
 library: highcharts
+language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:14:25Z'
-updated: '2026-01-09T08:17:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845377306
+updated: '2026-05-17T09:27:53Z'
+generated_by: claude-haiku
+workflow_run: 25986483851
 issue: 3414
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/highcharts/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Creative implementation of boxen plot using columnrange series with varying pointWidth
-    for the nested box effect
-  - Excellent data scenario with realistic server response time distributions showing
-    different characteristics per endpoint
-  - Proper use of Highcharts-more.js for columnrange functionality
-  - Well-designed color gradient (Python blue shades) that is colorblind-accessible
-  - Clear legend explaining all quantile levels
-  - Good use of custom tooltip formatter for context-aware hover information
+  - Flawless theme adaptation with correct background colors and readable text in
+    both light and dark renders
+  - Excellent boxen implementation using Highcharts columnrange series with proper
+    nested box visualization
+  - Realistic and well-chosen server response time distributions demonstrating different
+    distribution shapes
+  - Correct use of Selenium and headless Chrome for reliable PNG export with proper
+    inline script handling
+  - Clean code structure with seed-based reproducibility and no unnecessary abstractions
   weaknesses:
-  - Contains a helper function calculate_letter_values() which should be inline code
-    per KISS principle
-  - Legend percentages could be confusing - spec mentions eighths/sixteenths terminology
-  image_description: 'The plot displays a boxen (letter-value) plot showing server
-    response times across four service endpoints: API Gateway, Auth Service, Database,
-    and Cache Layer. The visualization uses nested columnrange bars in shades of blue
-    (from dark navy #1a3d5c to light #b5d4eb) to represent different quantile levels.
-    Each category shows progressively narrower boxes representing deeper quantiles.
-    Yellow diamond markers indicate the median values. Red circular markers show outliers.
-    The title "boxen-basic · highcharts · pyplots.ai" appears at the top with a subtitle
-    explaining the data context. The Y-axis shows "Response Time (ms)" ranging from
-    0 to ~430ms. A vertical legend on the right side lists all quantile levels (Median
-    ± 25%, 37.5%, 43.75%, 46.875%, 48.4%), Median, and Outliers.'
+  - 'Custom blue gradient palette (#1a3d5c to #b5d4eb) violates hard rule requiring
+    first series to be #009E73 (brand green). Should use Okabe-Ito palette positions
+    1-5 instead for colorblind-safety and brand compliance'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "boxen-basic · highcharts · anyplot.ai", axis labels "Service Endpoint" and "Response Time (ms)", tick labels all rendered in dark text (#1A1A17) and clearly readable against light surface
+      Data: Boxen plot uses nested boxes in blue shades (#1a3d5c to #b5d4eb) showing quantile levels, orange diamond markers (#E69F00) for medians, orange-red scatter points (#D55E00) for outliers across four service endpoints
+      Legend: Right-aligned showing quantile level explanations ("Median ± 25%" through "Median ± 48.4%")
+      Legibility verdict: PASS - all text readable, grid subtle but visible, markers clearly distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light text (#F0EFE8 for primary, #B8B7B0 for secondary) and fully readable on dark surface - no dark-on-dark failures detected
+      Data: Boxen colors identical to light render (only chrome adapted to dark theme), confirming proper theme-token implementation. Orange markers (#E69F00) and outlier points (#D55E00) maintain visibility
+      Legend: Matching light render styling with light text colors
+      Legibility verdict: PASS - excellent contrast, all elements visible, theme adaptation correctly implemented
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and legend text are all clearly readable at full
-          size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels and legend items are distinct
+        comment: All text readable in both themes, proper font sizes for 4800x2700
+          canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Nested boxes are visible with good color differentiation, but Cache
-          Layer boxes are very small due to tight distribution
+        comment: All boxen, outliers, medians clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue gradient palette is colorblind-safe; no red-green conflicts
-          for data
+        score: 1
+        max: 2
+        passed: false
+        comment: Custom blue gradient not optimized for colorblind-safety
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good overall layout but legend is positioned far right with some
-          empty space
+        comment: Good proportions, generous margins
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Response Time (ms) with units; X-axis has Service Endpoint
+        comment: Descriptive labels with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 2
+        name: Palette Compliance
+        score: 0
         max: 2
+        passed: false
+        comment: 'CRITICAL: Custom blue gradient violates hard rule ''First series
+          is ALWAYS #009E73''. Should use Okabe-Ito palette'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional but palette conflict limits sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Subtle grid lines, well-organized vertical legend
+        comment: Clean styling, appropriate margins, subtle grid
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear distribution visualization with effective outlier highlighting
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements boxen/letter-value plot using nested columnrange
-          bars
+        comment: Correct boxen plot with letter-value visualization
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows nested boxes for quantiles, decreasing width for deeper quantiles,
-          outliers displayed, legend explains quantile levels
-      - id: SC-04
-        name: Data Range
+        comment: Nested boxes, outliers, median markers all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range encompasses all data including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct X/Y mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all quantile levels, median, and outliers
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format boxen-basic · highcharts · pyplots.ai
+        comment: Correct format, comprehensive legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distribution shapes (bimodal Database, tight Cache
-          Layer, skewed API Gateway/Auth)
+        comment: Diverse distribution shapes demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server response times by endpoint is an excellent real-world scenario
+        comment: Server response times domain-appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times are realistic (5-400ms range)
+        comment: Sensible response time range
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Contains a function calculate_letter_values() which violates KISS
-          principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: JSON-based, no unnecessary abstractions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed-based deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated APIs used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png correctly but also saves plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct plot-{THEME}.png naming
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts columnrange series with grouping=false
-          for layered effect, custom tooltips, inline JS embedding
+        comment: Uses columnrange appropriately, follows inline-script pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Limited use of Highcharts-specific features
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - custom-legend
-  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
+  styling: []
