@@ -6,7 +6,7 @@ title: Basic Renko Chart
 
 # Specification tracking
 created: 2026-01-08T15:54:31Z
-updated: null
+updated: 2026-05-17T11:25:49Z
 issue: 3294
 suggested: MarkusNeusinger
 
@@ -17,7 +17,7 @@ tags:
     - renko
     - candlestick
   data_type:
-    - timeseries
+    - time-series
     - numeric
   domain:
     - finance

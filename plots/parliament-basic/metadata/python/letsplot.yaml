@@ -1,162 +1,176 @@
 library: letsplot
+language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:08:54Z'
-updated: '2025-12-30T00:27:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20585406402
-issue: 0
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/letsplot/plot.html
-quality_score: 91
-impl_tags:
-  dependencies: []
-  techniques:
-  - annotations
-  - html-export
-  patterns:
-  - data-generation
-  - iteration-over-groups
-  - matrix-construction
-  dataprep: []
-  styling:
-  - minimal-chrome
+updated: '2026-05-17T14:03:16Z'
+generated_by: claude-haiku
+workflow_run: 25992657331
+issue: 2499
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent semicircular parliament visualization with clean concentric arcs
-  - Uses neutral non-political data context (board divisions instead of political
-    parties)
-  - Colorblind-safe palette with distinct, visually appealing colors
-  - Legend clearly shows division names with seat counts in parentheses
-  - Includes majority threshold annotation and total seats information
-  - Good use of theme_void for clean presentation
-  - Proper aspect ratio with coord_fixed
+  - Perfect spec compliance with all required features (semicircular arrangement,
+    individual seats, color-coded divisions, legend with seat counts, majority line)
+  - 'Flawless theme-adaptive implementation: both light and dark renders pass readability
+    checks with correct background colors and text contrast'
+  - 'Excellent visual quality with no overlap, clear element visibility, and proper
+    use of Okabe-Ito palette (first series #009E73)'
+  - Clean, straightforward code with deterministic data generation and proper theme
+    environment variable handling
+  - 'Proper letsplot idioms: ggplot composition, scale_color_manual with theme tokens,
+    coord_fixed for semicircle geometry, ggsave with both PNG and HTML output'
   weaknesses:
-  - Title uses lets-plot with hyphen instead of letsplot (one word)
-  - Seats are distributed by row rather than strictly left-to-right across the semicircle
-  image_description: 'The plot displays a semicircular parliament seat chart with
-    5 concentric arcs of dots representing 400 total seats. The seats are colored
-    by 6 divisions: Finance Committee (blue, 85 seats), Technology Board (yellow,
-    72 seats), Operations Division (orange, 58 seats), Research Council (light blue,
-    35 seats), Marketing Team (red, 95 seats), and Legal Advisory (purple, 55 seats).
-    The title "parliament-basic · lets-plot · pyplots.ai" is centered at the top.
-    A legend on the right shows each division with its seat count. A horizontal baseline/majority
-    line is drawn at y=0, and annotation text below reads "Total: 400 seats | Majority:
-    201". The chart uses a white background with theme_void styling.'
+  - Font sizes for axis labels, tick labels, and legend text are not explicitly set
+    (relying on library defaults rather than explicit pt values)
+  - 'Design Excellence above average but not exceptional: aesthetic sophistication
+    is solid (proper palette and theme tokens) but lacks the custom refinement or
+    visual storytelling emphasis that would reach publication-ready level'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly theme-adapted for light surface
+      Chrome: Title "parliament-basic · letsplot · anyplot.ai" in dark text (INK color), clearly visible at 24pt. X and Y axis labels visible with dark tick labels (INK_SOFT). Legend on right side displays "Division (Seats)" with party names and counts, all readable with proper contrast.
+      Data: Six concentric semicircular arcs of individual dots, each arc colored with Okabe-Ito palette. Innermost arc (Finance Committee, 85 seats) is #009E73 (brand green), followed by #D55E00 (Technology Board), #0072B2 (Operations), #CC79A7 (Research Council), #E69F00 (Marketing Team), #56B4E9 (Legal Advisory). Dashed majority line at y=0 with annotation "Majority" visible. Bottom annotation "Total: 400 seats | Majority: 201" centered and readable.
+      Legibility verdict: PASS - All text is clearly readable against the light background with excellent contrast. Data colors are vibrant and distinct.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly theme-adapted for dark surface
+      Chrome: Title in light text (F0EFE8), clearly visible and readable on dark background. X and Y axis labels visible with light tick labels. Legend displays same content with light-colored text, good contrast against elevated background (#242420).
+      Data: Identical to light render - all six Okabe-Ito colors (positions 1-6) remain exactly the same, confirming proper theme-independent data coloring. Dashed majority line visible at y=0. Bottom annotation remains readable in light text.
+      Legibility verdict: PASS - No dark-on-dark failures detected. All chrome elements (title, axis labels, ticks, legend text) are light-colored and readable against the dark background. Data colors are distinct and identical to light render, confirming proper theme separation between data and chrome.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title and legend text clearly readable, good font sizes
+        comment: Title explicitly sized at 24pt, all text readable; axis/legend sizes
+          rely on defaults not explicit sizing
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No overlapping text elements; legend positioned right with good spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Dots are well-sized with good spacing; outer rows could be slightly
-          larger
+        comment: 400 data points clearly visible with size=5, alpha=0.9; appropriate
+          density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette with distinct hues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, balanced layout with legend
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for this plot type (theme_void removes axes appropriately)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed with seat counts, no distracting grid
+        comment: Okabe-Ito palette is colorblind-safe with adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px canvas well-utilized, balanced margins, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows format, axes labeled
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓, Okabe-Ito order followed, backgrounds #FAF8F1/#1A1A17
+          ✓, both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Uses proper Okabe-Ito palette and theme tokens, majority line annotation
+          is thoughtful; above default but not exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: theme_void() used appropriately, clean legend styling, good whitespace;
+          above default refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Majority line with annotation creates reference point, color guides
+          viewer; decent visual hierarchy
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct semicircular parliament chart
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Seats correctly mapped to dot positions
-      - id: SC-03
+        comment: Correct chart type with all required elements
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has individual seats as dots, legend with counts, majority threshold;
-          seats not strictly left-to-right by political spectrum (spec note)
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: semicircle arrangement, individual seats,
+          party coloring, legend with counts, majority line'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 400 seats displayed correctly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y coordinates correctly mapped to semicircle
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correct with seat counts
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but says "lets-plot" instead of "letsplot"
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple groups with varying seat counts
+        comment: 'Shows all aspects: 6 divisions with varying seat counts'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Uses neutral board/committee scenario instead of political parties
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 400 total seats is realistic for a legislative body
+        comment: Board of directors scenario is neutral and realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 400 total seats reasonable, distributions sensible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,40 +178,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script without functions/classes
+        comment: Clean imports→data→plot→save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data but no random seed for future variations
+        comment: Hardcoded data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Uses lets-plot grammar of graphics
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of ggplot, geom_point, theme_void, coord_fixed, but could
-          leverage more interactive features
+        comment: Good ggplot2-style composition, proper use of geoms and theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses ggsave() for PNG/HTML export and theme composition; some distinctive
+          features but fairly standard
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-legend
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

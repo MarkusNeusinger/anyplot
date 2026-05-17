@@ -1,13 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-17
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens (see prompts/default-style-guide.md "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data: Trade network between 15 countries (billions USD)
 np.random.seed(42)
@@ -68,7 +80,7 @@ n_nodes = len(nodes)
 
 # Force-directed layout calculation
 pos = np.random.rand(n_nodes, 2) * 2 - 1
-k = 0.3  # Optimal distance
+k = 0.3
 
 for iteration in range(200):
     disp = np.zeros((n_nodes, 2))
@@ -125,7 +137,7 @@ edge_df = pd.DataFrame(edge_data)
 # Create edge layer with varying thickness
 edge_chart = (
     alt.Chart(edge_df)
-    .mark_rule(opacity=0.5)
+    .mark_rule(opacity=0.4)
     .encode(
         x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-1.2, 1.2])),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-1.2, 1.2])),
@@ -136,14 +148,14 @@ edge_chart = (
             scale=alt.Scale(domain=[min_weight, max_weight], range=[2, 14]),
             legend=alt.Legend(title="Trade (B USD)", titleFontSize=18, labelFontSize=16, orient="right", offset=10),
         ),
-        color=alt.value("#555555"),
+        color=alt.value(INK_SOFT),
     )
 )
 
 # Create node layer with size by weighted degree
 node_chart = (
     alt.Chart(node_df)
-    .mark_circle(stroke="#222222", strokeWidth=2)
+    .mark_circle(stroke=INK_SOFT, strokeWidth=2)
     .encode(
         x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-1.2, 1.2])),
         y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-1.2, 1.2])),
@@ -154,9 +166,7 @@ node_chart = (
         ),
         color=alt.Color(
             "group:N",
-            scale=alt.Scale(
-                domain=["Americas", "Europe", "Asia", "Oceania"], range=["#306998", "#FFD43B", "#FF6B6B", "#4ECDC4"]
-            ),
+            scale=alt.Scale(domain=["Americas", "Europe", "Asia", "Oceania"], range=OKABE_ITO),
             legend=alt.Legend(
                 title="Region", titleFontSize=18, labelFontSize=16, orient="right", symbolSize=600, offset=10
             ),
@@ -165,36 +175,42 @@ node_chart = (
     )
 )
 
-# Create label layer for node names
+# Create label layer for node names with adjusted positioning
 label_chart = (
     alt.Chart(node_df)
-    .mark_text(fontSize=16, fontWeight="bold", dy=-22)
+    .mark_text(fontSize=16, fontWeight="bold", dy=-26, align="center")
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[-1.2, 1.2])),
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-1.2, 1.2])),
         text="name:N",
-        color=alt.value("#222222"),
+        color=alt.value(INK),
     )
 )
 
-# Combine all layers
+# Combine all layers with interactivity
 chart = (
     (edge_chart + node_chart + label_chart)
+    .interactive()
     .properties(
         width=1600,
         height=900,
         title=alt.Title(
-            "network-weighted · altair · pyplots.ai",
+            "network-weighted · altair · anyplot.ai",
             fontSize=28,
             anchor="middle",
+            color=INK,
             subtitle="International Trade Network: Edge thickness shows bilateral trade volume (billions USD)",
             subtitleFontSize=18,
         ),
+        background=PAGE_BG,
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(titleFontSize=18, labelFontSize=16, padding=10)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK, padding=10)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

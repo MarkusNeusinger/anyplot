@@ -1,12 +1,23 @@
-""" pyplots.ai
+""" anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - Trade network between countries (billions USD)
 np.random.seed(42)
@@ -95,10 +106,9 @@ for _ in range(200):
     length = np.where(length < 0.01, 0.01, length)
     pos += displacement / length[:, np.newaxis] * min(0.1, k)
 
-# Normalize positions with margin for labels and annotation
+# Normalize positions
 pos = (pos - pos.min(axis=0)) / (pos.max(axis=0) - pos.min(axis=0))
-pos = pos * 1.6 - 0.8  # Scale to [-0.8, 0.8]
-# Center the layout
+pos = pos * 1.6 - 0.8
 pos = pos - pos.mean(axis=0)
 node_positions = {countries[i]: pos[i] for i in range(n_nodes)}
 
@@ -121,14 +131,16 @@ for source, target, weight in edges:
     # Scale width: 2 to 18 based on weight
     normalized = (weight - min_weight) / (max_weight - min_weight)
     line_width = 2 + normalized * 16
-    # Color alpha based on weight (darker = stronger)
+    # Edge color from Okabe-Ito palette (use BRAND with alpha for weight-based opacity)
     alpha = 0.4 + normalized * 0.5
+    # Parse BRAND hex and create rgba
+    edge_color = f"rgba(0, 158, 115, {alpha})"
     edge_traces.append(
         go.Scatter(
             x=[x0, x1, None],
             y=[y0, y1, None],
             mode="lines",
-            line={"width": line_width, "color": f"rgba(48, 105, 152, {alpha})"},
+            line={"width": line_width, "color": edge_color},
             hoverinfo="text",
             text=f"{source} ↔ {target}: ${weight}B",
             showlegend=False,
@@ -139,8 +151,7 @@ for source, target, weight in edges:
 node_x = [node_positions[node][0] for node in countries]
 node_y = [node_positions[node][1] for node in countries]
 
-# Calculate smart label positions to avoid overlap with explicit handling
-# for known problematic pairs: Japan/S.Korea and Italy/France
+# Calculate smart label positions to avoid overlap
 label_positions = []
 
 for i, node in enumerate(countries):
@@ -188,10 +199,10 @@ node_trace = go.Scatter(
     x=node_x,
     y=node_y,
     mode="markers+text",
-    marker={"size": node_sizes, "color": "#FFD43B", "line": {"width": 2, "color": "#306998"}},
+    marker={"size": node_sizes, "color": BRAND, "line": {"width": 2, "color": INK_SOFT}},
     text=countries,
     textposition=label_positions,
-    textfont={"size": 16, "color": "#333333"},
+    textfont={"size": 16, "color": INK},
     hoverinfo="text",
     hovertext=[f"{c}<br>Trade Volume: ${weighted_degree[c]}B" for c in countries],
     showlegend=False,
@@ -207,7 +218,7 @@ for trace in edge_traces:
 # Add nodes
 fig.add_trace(node_trace)
 
-# Add weight scale annotation (positioned at top-left to avoid cutoff)
+# Add weight scale annotation
 fig.add_annotation(
     x=0.01,
     y=0.99,
@@ -215,29 +226,33 @@ fig.add_annotation(
     yref="paper",
     text="Edge Thickness = Trade Volume<br>35B USD (thin) to 620B USD (thick)",
     showarrow=False,
-    font={"size": 18, "color": "#333333", "family": "Arial"},
+    font={"size": 18, "color": INK, "family": "Arial"},
     align="left",
     xanchor="left",
     yanchor="top",
-    bgcolor="rgba(255,255,255,0.95)",
-    bordercolor="#999999",
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
     borderwidth=1,
     borderpad=10,
 )
 
-# Update layout
+# Update layout with theme-adaptive colors
 fig.update_layout(
     title={
-        "text": "network-weighted · plotly · pyplots.ai", "font": {"size": 28, "color": "#333333"}, "x": 0.5, "xanchor": "center"
+        "text": "network-weighted · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
     },
-    xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "title": ""},
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "title": ""},
-    template="plotly_white",
+    xaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "title": "", "linecolor": INK_SOFT},
+    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "title": "", "linecolor": INK_SOFT},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     showlegend=False,
     margin={"l": 80, "r": 80, "t": 100, "b": 80},
-    plot_bgcolor="white",
 )
 
 # Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

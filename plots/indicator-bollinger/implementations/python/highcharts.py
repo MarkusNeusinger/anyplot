@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 indicator-bollinger: Bollinger Bands Indicator Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-07
+Library: highcharts unknown | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-17
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -15,6 +16,17 @@ import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Generate 120 days of stock price data with Bollinger Bands
 np.random.seed(42)
@@ -67,186 +79,199 @@ lower_json = json.dumps(lower_data)
 band_json = json.dumps(band_data)
 
 # Chart configuration using raw JavaScript
-chart_js = """
-Highcharts.chart('container', {
-    chart: {
+chart_js = f"""
+Highcharts.chart('container', {{
+    chart: {{
         width: 4800,
         height: 2700,
-        backgroundColor: '#ffffff',
+        backgroundColor: '{PAGE_BG}',
         marginBottom: 250,
         marginTop: 200,
         marginLeft: 200,
         marginRight: 150,
-        style: {
-            fontFamily: 'Arial, sans-serif'
-        }
-    },
+        style: {{
+            fontFamily: 'Arial, sans-serif',
+            color: '{INK}'
+        }}
+    }},
 
-    title: {
-        text: 'indicator-bollinger \\u00b7 highcharts \\u00b7 pyplots.ai',
-        style: {
-            fontSize: '64px',
-            fontWeight: 'bold'
-        }
-    },
+    title: {{
+        text: 'indicator-bollinger · highcharts · anyplot.ai',
+        style: {{
+            fontSize: '28px',
+            fontWeight: 'bold',
+            color: '{INK}'
+        }}
+    }},
 
-    subtitle: {
-        text: '20-Day SMA with 2 Standard Deviation Bands',
-        style: {
-            fontSize: '36px',
-            color: '#666666'
-        }
-    },
-
-    credits: {
+    credits: {{
         enabled: false
-    },
+    }},
 
-    xAxis: {
+    xAxis: {{
         type: 'datetime',
-        title: {
+        title: {{
             text: 'Date',
-            style: {
-                fontSize: '40px'
-            },
+            style: {{
+                fontSize: '22px',
+                color: '{INK}'
+            }},
             margin: 40
-        },
-        labels: {
-            style: {
-                fontSize: '28px'
-            },
-            format: '{value:%b %Y}',
+        }},
+        labels: {{
+            style: {{
+                fontSize: '18px',
+                color: '{INK_SOFT}'
+            }},
+            format: '{{value:%b %Y}}',
             y: 35
-        },
+        }},
         tickInterval: 30 * 24 * 3600 * 1000,
-        lineWidth: 3,
-        tickWidth: 3,
+        lineColor: '{INK_SOFT}',
+        lineWidth: 2,
+        tickColor: '{INK_SOFT}',
+        tickWidth: 2,
         gridLineWidth: 1,
-        gridLineColor: '#E5E5E5'
-    },
+        gridLineColor: '{GRID}'
+    }},
 
-    yAxis: {
-        title: {
+    yAxis: {{
+        title: {{
             text: 'Price (USD)',
-            style: {
-                fontSize: '40px'
-            },
+            style: {{
+                fontSize: '22px',
+                color: '{INK}'
+            }},
             margin: 30
-        },
-        labels: {
-            style: {
-                fontSize: '32px'
-            },
-            format: '${value:.0f}',
+        }},
+        labels: {{
+            style: {{
+                fontSize: '18px',
+                color: '{INK_SOFT}'
+            }},
+            format: '${{value:.0f}}',
             x: -10
-        },
+        }},
         gridLineWidth: 1,
-        gridLineColor: '#E5E5E5',
+        gridLineColor: '{GRID}',
         gridLineDashStyle: 'Dash'
-    },
+    }},
 
-    legend: {
+    legend: {{
         enabled: true,
         layout: 'horizontal',
         align: 'center',
         verticalAlign: 'top',
         y: 100,
-        itemStyle: {
-            fontSize: '28px'
-        },
+        itemStyle: {{
+            fontSize: '18px',
+            color: '{INK_SOFT}'
+        }},
+        backgroundColor: '{ELEVATED_BG}',
+        borderColor: '{INK_SOFT}',
+        borderWidth: 1,
+        borderRadius: 8,
         symbolWidth: 50,
         symbolHeight: 16
-    },
+    }},
 
-    tooltip: {
+    tooltip: {{
         shared: true,
         crosshairs: true,
-        style: {
-            fontSize: '24px'
-        },
-        headerFormat: '<b>{point.x:%b %d, %Y}</b><br/>',
-        pointFormat: '<span style="color:{point.color}">\\u25cf</span> {series.name}: <b>${point.y:.2f}</b><br/>'
-    },
+        style: {{
+            fontSize: '18px',
+            color: '{INK}'
+        }},
+        headerFormat: '<b>{{point.x:%b %d, %Y}}</b><br/>',
+        pointFormat: '<span style="color:{{point.color}}">●</span> {{series.name}}: <b>${{point.y:.2f}}</b><br/>'
+    }},
 
-    plotOptions: {
-        series: {
+    plotOptions: {{
+        series: {{
             animation: false
-        },
-        line: {
+        }},
+        line: {{
             lineWidth: 5,
-            marker: {
+            marker: {{
                 enabled: false
-            }
-        },
-        arearange: {
+            }}
+        }},
+        arearange: {{
             fillOpacity: 0.25,
             lineWidth: 0,
-            marker: {
+            marker: {{
                 enabled: false
-            }
-        }
-    },
+            }}
+        }}
+    }},
 
-    series: [{
+    colors: {json.dumps(OKABE_ITO)},
+
+    series: [{{
         type: 'arearange',
         name: 'Bollinger Bands',
-        data: BAND_DATA_PLACEHOLDER,
-        color: '#306998',
+        data: {band_json},
+        color: '{OKABE_ITO[2]}',
         fillOpacity: 0.2,
         lineWidth: 0,
         zIndex: 0,
         enableMouseTracking: false
-    }, {
+    }}, {{
         type: 'line',
-        name: 'Upper Band (+2\\u03c3)',
-        data: UPPER_DATA_PLACEHOLDER,
-        color: '#306998',
+        name: 'Upper Band (+2σ)',
+        data: {upper_json},
+        color: '{OKABE_ITO[2]}',
         lineWidth: 4,
         dashStyle: 'Dash',
         zIndex: 1
-    }, {
+    }}, {{
         type: 'line',
-        name: 'Lower Band (-2\\u03c3)',
-        data: LOWER_DATA_PLACEHOLDER,
-        color: '#306998',
+        name: 'Lower Band (-2σ)',
+        data: {lower_json},
+        color: '{OKABE_ITO[2]}',
         lineWidth: 4,
         dashStyle: 'Dash',
         zIndex: 1
-    }, {
+    }}, {{
         type: 'line',
         name: '20-Day SMA',
-        data: SMA_DATA_PLACEHOLDER,
-        color: '#FFD43B',
+        data: {sma_json},
+        color: '{OKABE_ITO[1]}',
         lineWidth: 5,
         dashStyle: 'Dot',
         zIndex: 2
-    }, {
+    }}, {{
         type: 'line',
         name: 'Close Price',
-        data: CLOSE_DATA_PLACEHOLDER,
-        color: '#17BECF',
+        data: {close_json},
+        color: '{OKABE_ITO[0]}',
         lineWidth: 6,
         zIndex: 3
-    }]
-});
+    }}]
+}});
 """
 
-# Replace data placeholders
-chart_js = chart_js.replace("BAND_DATA_PLACEHOLDER", band_json)
-chart_js = chart_js.replace("UPPER_DATA_PLACEHOLDER", upper_json)
-chart_js = chart_js.replace("LOWER_DATA_PLACEHOLDER", lower_json)
-chart_js = chart_js.replace("SMA_DATA_PLACEHOLDER", sma_json)
-chart_js = chart_js.replace("CLOSE_DATA_PLACEHOLDER", close_json)
-
 # Download Highcharts JS for inline embedding
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+try:
+    highcharts_url = "https://code.highcharts.com/highcharts.js"
+    req = urllib.request.Request(highcharts_url)
+    req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+    with urllib.request.urlopen(req, timeout=30) as response:
+        highcharts_js = response.read().decode("utf-8")
+except Exception as e:
+    print(f"Warning: Could not download Highcharts JS: {e}")
+    highcharts_js = "// Highcharts JS unavailable"
 
 # Download highcharts-more for arearange series
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
+try:
+    highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
+    req = urllib.request.Request(highcharts_more_url)
+    req.add_header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+    with urllib.request.urlopen(req, timeout=30) as response:
+        highcharts_more_js = response.read().decode("utf-8")
+except Exception as e:
+    print(f"Warning: Could not download Highcharts-more JS: {e}")
+    highcharts_more_js = "// Highcharts-more JS unavailable"
 
 # Generate HTML with inline scripts
 html_content = f"""<!DOCTYPE html>
@@ -256,7 +281,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0; padding:0;">
+<body style="margin:0; padding:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
     {chart_js}
@@ -264,14 +289,14 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Write temp HTML file
+# Save HTML for interactive version
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML file for screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Also save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
 # Take screenshot using Selenium
 chrome_options = Options()
@@ -283,8 +308,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(6)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 # Clean up temp file

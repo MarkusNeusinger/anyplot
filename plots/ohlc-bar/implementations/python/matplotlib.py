@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 ohlc-bar: OHLC Bar Chart
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-08
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-17
 """
+
+import os
 
 import matplotlib.dates as mdates
 import matplotlib.pyplot as plt
@@ -10,6 +12,17 @@ import numpy as np
 import pandas as pd
 from matplotlib.lines import Line2D
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+COLOR_UP = "#009E73"  # Brand green for up bars
+COLOR_DOWN = "#D55E00"  # Vermillion for down bars
 
 # Data - Generate 45 trading days of synthetic stock OHLC data
 np.random.seed(42)
@@ -40,7 +53,8 @@ low_prices = np.minimum(open_prices, close_prices) - low_sub
 df = pd.DataFrame({"date": dates, "open": open_prices, "high": high_prices, "low": low_prices, "close": close_prices})
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Draw OHLC bars
 tick_width = 0.4  # Width of open/close ticks in days
@@ -50,10 +64,7 @@ for _idx, row in df.iterrows():
     date_num = mdates.date2num(row["date"])
 
     # Determine color based on price direction
-    if row["close"] >= row["open"]:
-        color = "#306998"  # Python Blue for up bars
-    else:
-        color = "#D62728"  # Red for down bars
+    color = COLOR_UP if row["close"] >= row["open"] else COLOR_DOWN
 
     # Draw high-low vertical line
     ax.plot([date_num, date_num], [row["low"], row["high"]], color=color, linewidth=line_width, solid_capstyle="round")
@@ -76,11 +87,11 @@ for _idx, row in df.iterrows():
         solid_capstyle="butt",
     )
 
-# Styling
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Price (USD)", fontsize=20)
-ax.set_title("ohlc-bar · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+# Style
+ax.set_xlabel("Date", fontsize=20, color=INK)
+ax.set_ylabel("Price (USD)", fontsize=20, color=INK)
+ax.set_title("ohlc-bar · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
 # Format x-axis dates
 ax.xaxis.set_major_locator(mdates.WeekdayLocator(byweekday=mdates.MONDAY))
@@ -88,9 +99,15 @@ ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %d"))
 ax.xaxis.set_minor_locator(mdates.DayLocator())
 fig.autofmt_xdate(rotation=45)
 
+# Spine styling
+for spine in ("top", "right"):
+    ax.spines[spine].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
+
 # Grid for reading price levels
-ax.grid(True, alpha=0.3, linestyle="--", axis="y")
-ax.grid(True, alpha=0.15, linestyle="--", axis="x")
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
+ax.xaxis.grid(True, alpha=0.08, linewidth=0.8, color=INK)
 
 # Add padding to y-axis
 y_min, y_max = ax.get_ylim()
@@ -99,10 +116,14 @@ ax.set_ylim(y_min - y_padding, y_max + y_padding)
 
 # Add legend for up/down bars
 legend_elements = [
-    Line2D([0], [0], color="#306998", linewidth=3, label="Up (Close ≥ Open)"),
-    Line2D([0], [0], color="#D62728", linewidth=3, label="Down (Close < Open)"),
+    Line2D([0], [0], color=COLOR_UP, linewidth=3, label="Up (Close ≥ Open)"),
+    Line2D([0], [0], color=COLOR_DOWN, linewidth=3, label="Down (Close < Open)"),
 ]
-ax.legend(handles=legend_elements, fontsize=16, loc="upper left")
+legend = ax.legend(handles=legend_elements, fontsize=16, loc="upper left")
+legend.get_frame().set_facecolor(ELEVATED_BG)
+legend.get_frame().set_edgecolor(INK_SOFT)
+for text in legend.get_texts():
+    text.set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

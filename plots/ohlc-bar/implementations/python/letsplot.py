@@ -1,14 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 ohlc-bar: OHLC Bar Chart
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_line,
+    element_rect,
     element_text,
     geom_segment,
     ggplot,
@@ -23,6 +27,18 @@ from lets_plot import (
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for up/down
+UP_COLOR = "#009E73"  # Brand green (position 1)
+DOWN_COLOR = "#D55E00"  # Vermillion (position 2)
 
 # Data: Generate 50 trading days of OHLC data
 np.random.seed(42)
@@ -64,6 +80,20 @@ df["date_right"] = df["date"] + tick_offset
 # 2. Left tick at open price
 # 3. Right tick at close price
 
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major_y=element_line(color=RULE, size=0.3),
+    panel_grid_major_x=element_line(color=RULE, size=0.3),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(size=24, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
+)
+
 plot = (
     ggplot()
     # High-Low vertical line
@@ -72,22 +102,14 @@ plot = (
     + geom_segment(aes(x="date_left", y="open", xend="date", yend="open", color="direction"), data=df, size=1.5)
     # Close tick (right)
     + geom_segment(aes(x="date", y="close", xend="date_right", yend="close", color="direction"), data=df, size=1.5)
-    + scale_color_manual(values={"up": "#306998", "down": "#DC2626"}, name="Direction")
+    + scale_color_manual(values={"up": UP_COLOR, "down": DOWN_COLOR}, name="Direction")
     + scale_x_datetime(format="%b %d")
-    + labs(title="ohlc-bar · letsplot · pyplots.ai", x="Date", y="Price (USD)")
+    + labs(title="ohlc-bar · letsplot · anyplot.ai", x="Date", y="Price (USD)")
     + theme_minimal()
-    + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save as HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+# Save as PNG (scale 3x for 4800 × 2700 px) and HTML
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")
