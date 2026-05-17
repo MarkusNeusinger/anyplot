@@ -1,155 +1,206 @@
 library: plotly
+language: python
 specification_id: frequency-polygon-basic
 created: '2026-01-09T13:16:52Z'
-updated: '2026-01-09T13:19:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20853034974
+updated: '2026-05-17T16:31:30Z'
+generated_by: claude-haiku
+workflow_run: 25996283903
 issue: 3418
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/plotly/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frequency-polygon-basic/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent visual clarity with well-differentiated line colors and styles (dashed
-    for Sleep Deprived)
-  - Perfect spec compliance - all required features implemented including polygon
-    extension to zero
-  - Realistic, neutral data scenario using reaction time research
-  - Clean code structure following KISS principles
-  - Proper use of plotly semi-transparent fills (tozeroy)
+  - 'Spec compliance is perfect across all dimensions: plot type, required features,
+    data mapping, and title/legend formatting'
+  - Theme-adaptive styling is correctly implemented in both light and dark renders
+    with proper use of INK, INK_SOFT, and GRID tokens
+  - Three distributions clearly visualized with distinct colors (Okabe-Ito), line
+    styles (dashed for Sleep Deprived), and semi-transparent fills that prevent obscuring
+    overlaps
+  - Data is realistic (reaction times in psychology context) with proper binning,
+    deterministic seeding, and readable axis labels with units
+  - All text elements render legibly in both themes with appropriate font sizes (28px
+    title, 22px axis labels, 18px ticks)
+  - Semi-transparent polygon fills are an effective technique for showing distribution
+    overlap while maintaining clarity
   weaknesses:
-  - Grid opacity (0.1) is quite subtle - could be 0.2-0.3 for better readability
-  - Could leverage more plotly-specific interactivity features (range slider, dropdown)
-  image_description: 'The plot displays three frequency polygons comparing reaction
-    time distributions across experimental conditions. The X-axis shows "Reaction
-    Time (ms)" ranging from 100 to 700, and the Y-axis shows "Frequency" ranging from
-    0 to 40. Three groups are visualized: Control (blue solid line with circular markers,
-    peaked around 350-380ms), Caffeine (yellow/gold solid line with circular markers,
-    peaked around 240-260ms showing faster reactions), and Sleep Deprived (red/coral
-    dashed line with circular markers, peaked around 440-500ms showing slower, more
-    variable reactions). Each polygon has a semi-transparent fill beneath the line.
-    The title "frequency-polygon-basic · plotly · pyplots.ai" is centered at the top.
-    The legend is positioned in the upper-right corner with a white background and
-    subtle border. The layout uses a clean white template with subtle gridlines.'
+  - 'Design Excellence is adequate but not exceptional: could enhance visual hierarchy
+    through strategic emphasis (e.g., highlight the peak of one distribution, adjust
+    line widths to emphasize focal points)'
+  - 'Minimal use of Plotly-specific advanced features beyond basic scatter traces:
+    could leverage hover templates for detailed frequency information, or use Plotly''s
+    native shape annotations for median lines or threshold indicators'
+  - 'Visual refinement could be improved: currently uses Plotly defaults for spines
+    and grid; more refined plot might reduce grid opacity further, adjust marker sizes
+    based on data density, or use custom fonts for typography hierarchy'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface at #FAF8F1 with subtle grid at ~10% opacity; provides excellent contrast for data visualization without harsh pure-white appearance.
+      Chrome: Title "frequency-polygon-basic · plotly · anyplot.ai" centered in dark text (#1A1A17); X-axis labeled "Reaction Time (ms)" and Y-axis labeled "Frequency" in matching dark text; tick labels at size 18px in softer INK_SOFT color (#4A4A44). All text is clearly readable with strong contrast against light background.
+      Data: Three frequency polygons with distinct visual treatment—Control (solid green line #009E73) peaks around 350ms, Caffeine (solid orange line #D55E00) peaks earlier at 280ms, Sleep Deprived (dashed blue line #0072B2) peaks later at 450ms with wider spread. Semi-transparent polygon fills in corresponding colors (alpha 0.2) show distribution area without obscuring overlaps. Markers (size 10) placed at bin centers. Lines extend to zero at both extremes as specified.
+      Legend: Positioned top-right with legend entries "Control", "Caffeine", "Sleep Deprived", rendered in INK_SOFT (#4A4A44) at size 16px on light elevated background (#FFFDF6) with subtle border.
+      Legibility verdict: **PASS** — All elements (title, labels, ticks, legend, data) are fully readable with excellent contrast in the light theme.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface at #1A1A17 with subtle grid at ~10% opacity; provides clean dark context for data visualization without harsh pure-black appearance.
+      Chrome: Title rendered in light text (#F0EFE8) maintains readability against dark background; X and Y axis labels in matching light color (#F0EFE8); tick labels in softer INK_SOFT dark equivalent (#B8B7B0). All text remains clearly visible against dark surface—no dark-on-dark failures detected.
+      Data: Frequency polygons display identical colors to light render (only chrome flips theme): Control solid green #009E73, Caffeine solid orange #D55E00, Sleep Deprived dashed blue #0072B2 with identical semi-transparent fills (alpha 0.2). Distribution shapes and markers identical to light render, confirming data colors are theme-independent as required. All lines and fills clearly distinguishable against dark background.
+      Legend: Positioned identically in top-right with dark elevated background (#242420) and INK_SOFT border (#B8B7B0), text in light theme (#B8B7B0) for readability.
+      Legibility verdict: **PASS** — All text elements readable in dark theme; no "dark-on-dark" issues; data colors maintain full visibility and distinction.
+
+    Both renders successfully implement theme-adaptive styling while maintaining data color consistency.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text clearly readable: title at 32pt, axis labels at 24pt, tick
-          labels at 18pt'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: Font sizes explicitly set (28px title, 22px axis, 18px ticks). All
+          text readable in both light and dark themes with strong contrast.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Overlapping frequency polygons are intentional for comparison. Lines
+          use different styles (solid/dashed) and semi-transparent fills prevent obscuring.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines and markers well-sized (width=4, marker size=10); overlapping
-          fills slightly obscure each other
+        comment: All three distributions clearly visible. Markers at appropriate size
+          (10px). Line widths (4px) ensure visibility. Semi-transparent fill shows
+          all overlaps.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, red/coral are colorblind-distinguishable; dashed line
-          provides additional differentiation
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito palette (#009E73, #D55E00, #0072B2) is colorblind-safe.
+          Adequate contrast between colors and background.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 1600x900 with scale 3 = 4800x2700px. Legend positioned top-right
+          without data overlap. Margins (80/60/100/80) are generous. No elements cut
+          off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha 0.1), legend well-placed; grid could be more visible
+        comment: 'X-axis labeled ''Reaction Time (ms)'' with units. Y-axis labeled
+          ''Frequency''. Title follows spec format: ''frequency-polygon-basic · plotly
+          · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Control) is #009E73 (Okabe-Ito position 1). Multi-series
+          follows order (positions 2, 3). Backgrounds #FAF8F1 (light) / #1A1A17 (dark)
+          correct. Both renders theme-compliant.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-executed standard Plotly styling with semi-transparent fills
+          and dashed line differentiation. Lacks exceptional design touches or custom
+          palette refinement.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid is subtle and appropriate. Legend has good styling with background
+          and border. Limited spine control in Plotly. Whitespace is generous but
+          could be more refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy showing three distinct distributions. Dashed
+          line distinguishes Sleep Deprived. Color and fill transparency create focal
+          points. Could benefit from emphasized peaks or annotations.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct frequency polygon with lines connecting histogram bin midpoints
+        comment: 'Correctly implements frequency polygon: lines connect bin midpoints,
+          extends to zero at both ends, shows distribution shape.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows continuous variable, Y-axis shows frequency counts
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes distinct line styles, legend, markers, extended to zero,
-          semi-transparent fills
-      - id: SC-04
-        name: Data Range
+        comment: 'All specified features present: distinct line colors, different
+          styles (dashed), legend, semi-transparent fills, extended to zero.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (100-700ms range) covers data appropriately. Y-axis frequency
+          (0-40+) correct. Consistent bins across all groups. Data fully mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three groups
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: frequency-polygon-basic · plotly · pyplots.ai'
+        comment: Title format correct. Legend clearly identifies all three groups
+          with matching colors.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows distributions with different central tendencies and spreads;
-          could show more variation in modality
+        comment: 'Shows full frequency polygon capability: three distributions with
+          different locations, spreads, and modalities. Demonstrates comparative analysis
+          strength.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Reaction time experiment is a realistic psychology research scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Reaction times of 200-600ms are realistic for cognitive psychology
-          experiments
+        comment: Reaction times under experimental conditions (control, caffeine,
+          sleep deprivation) is realistic and plausible. Neutral domain appropriate
+          for demonstrations.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 observations per group within recommended range (50-1000). Values
+          realistic for reaction times. Bin range appropriate for data distribution.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -157,42 +208,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No functions or classes. Direct numpy histogram and Plotly API usage.
+          Simple, clean, straightforward.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Uses np.random.seed(42) for deterministic output. Fully reproducible
+          across runs.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: 'Minimal imports: os, numpy, plotly.graph_objects. All used, no unused
+          imports.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactive features. Appropriate complexity for task. Clean
+          implementation.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as both plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html with theme suffix.
+          Uses current Plotly API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses go.Figure() and go.Scatter() idiomatically. Leverages update_layout()
+          for comprehensive styling. Theme tokens implementation is clean.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses plotly's interactive features, semi-transparent fills, and HTML
-          export; could leverage more advanced features
+        passed: false
+        comment: Uses fill='tozeroy' with semi-transparent fillcolor (Plotly-specific).
+          Dashed lines for differentiation. Could leverage hover templates, annotations,
+          or shape overlays for richer interactivity.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -200,8 +264,8 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
+  - matrix-construction
   dataprep:
   - binning
   styling:
   - alpha-blending
-  - grid-styling
