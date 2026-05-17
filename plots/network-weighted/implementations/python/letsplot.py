@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,13 @@ from lets_plot import *
 
 LetsPlot.setup_html()
 np.random.seed(42)
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Create trade network: 15 countries with weighted trade relationships
 countries = [
@@ -80,8 +89,8 @@ angles = np.linspace(0, 2 * np.pi, n_nodes, endpoint=False)
 pos[:, 0] = np.cos(angles)
 pos[:, 1] = np.sin(angles)
 
-# Simple force-directed iterations
-for _ in range(100):
+# Force-directed iterations with weight-aware attraction
+for _ in range(150):
     forces = np.zeros_like(pos)
 
     # Repulsion between all nodes
@@ -97,19 +106,20 @@ for _ in range(100):
     for edge in edges_data:
         i, j = edge["source"], edge["target"]
         diff = pos[j] - pos[i]
-        dist = np.linalg.norm(diff)
-        weight_factor = np.log1p(edge["weight"]) * 0.001
-        force = diff * weight_factor
+        dist = max(np.linalg.norm(diff), 0.01)
+        # Weight influences attraction strength more strongly
+        weight_factor = (np.log1p(edge["weight"]) ** 1.2) * 0.002
+        force = diff / dist * weight_factor
         forces[i] += force
         forces[j] -= force
 
     # Apply forces with damping
-    pos += forces * 0.1
+    pos += forces * 0.08
 
     # Center
     pos -= pos.mean(axis=0)
 
-# Scale positions with margin for labels (reduce scale to leave space at boundaries)
+# Scale positions with margin for labels
 pos = pos / np.abs(pos).max() * 3.2
 
 # Calculate weighted degree for node sizing
@@ -140,44 +150,47 @@ min_d, max_d = nodes_df["weighted_degree"].min(), nodes_df["weighted_degree"].ma
 nodes_df["node_size"] = 6 + (nodes_df["weighted_degree"] - min_d) / (max_d - min_d) * 12
 
 # Create the plot
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid=element_blank(),
+    axis_title=element_blank(),
+    axis_text=element_blank(),
+    axis_ticks=element_blank(),
+    plot_title=element_text(size=28, color=INK),
+    plot_subtitle=element_text(size=18, color=INK_SOFT),
+    legend_title=element_text(size=16, color=INK),
+    legend_text=element_text(size=14, color=INK_SOFT),
+    legend_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
+    legend_position=[0.95, 0.25],
+    legend_justification=[1, 0.5],
+)
+
 plot = (
     ggplot()
     # Edges as segments with varying width based on weight
-    + geom_segment(
-        aes(x="x", y="y", xend="xend", yend="yend", size="weight"), data=edges_df, color="#888888", alpha=0.6
-    )
-    # Scale for edge thickness
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend", size="weight"), data=edges_df, color=INK_SOFT, alpha=0.5)
+    # Scale for edge thickness - use Okabe-Ito color for legend
     + scale_size(range=[1, 10], name="Trade Volume\n(Billions USD)")
-    # Nodes as points sized by weighted degree (Python colors)
-    + geom_point(aes(x="x", y="y", size="node_size"), data=nodes_df, color="#306998", alpha=0.95, show_legend=False)
+    # Nodes as points sized by weighted degree
+    + geom_point(aes(x="x", y="y", size="node_size"), data=nodes_df, color=BRAND, alpha=0.9, show_legend=False)
     # Node labels
-    + geom_text(aes(x="x", y="y", label="label"), data=nodes_df, size=14, color="#1a1a1a", nudge_y=0.4, fontface="bold")
+    + geom_text(aes(x="x", y="y", label="label"), data=nodes_df, size=14, color=INK, nudge_y=0.4, fontface="bold")
     # Styling
     + labs(
-        title="network-weighted · letsplot · pyplots.ai",
+        title="network-weighted · letsplot · anyplot.ai",
         subtitle="International Trade Network (Edge Thickness = Trade Volume)",
     )
     # Explicit axis limits to prevent label clipping
     + scale_x_continuous(limits=[-5, 5])
     + scale_y_continuous(limits=[-5, 5])
     + theme_minimal()
-    + theme(
-        plot_title=element_text(size=28),
-        plot_subtitle=element_text(size=18),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
-        legend_position=[0.95, 0.25],
-        legend_justification=[1, 0.5],
-        axis_title=element_blank(),
-        axis_text=element_blank(),
-        axis_ticks=element_blank(),
-        panel_grid=element_blank(),
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
 )
 
 # Save PNG (scaled 3x for 4800 × 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save HTML for interactive version
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
