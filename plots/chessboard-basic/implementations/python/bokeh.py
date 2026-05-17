@@ -1,85 +1,113 @@
-""" pyplots.ai
+"""anyplot.ai
 chessboard-basic: Chess Board Grid Visualization
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
-from bokeh.io import export_png, save
+import os
+import time
+from pathlib import Path
+
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource
 from bokeh.plotting import figure
-from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Chess board colors (light and dark squares)
+LIGHT_SQUARE = "#F0D9B5"
+DARK_SQUARE = "#B58863"
 
 # Data - 8x8 chess board squares
 columns = list("abcdefgh")
 rows = list("12345678")
 
-# Create square data
 x_coords = []
 y_coords = []
 colors = []
 
-# Light square color (cream) and dark square color (brown)
-light_color = "#F0D9B5"
-dark_color = "#B58863"
-
 for row_idx, _row in enumerate(rows):
     for col_idx, _col in enumerate(columns):
-        # Center of each square
         x_coords.append(col_idx + 0.5)
         y_coords.append(row_idx + 0.5)
-        # Alternating colors: light square at h1 (row 0, col 7)
-        # Pattern: (row_idx + col_idx) even = dark, odd = light
         if (row_idx + col_idx) % 2 == 0:
-            colors.append(dark_color)
+            colors.append(DARK_SQUARE)
         else:
-            colors.append(light_color)
+            colors.append(LIGHT_SQUARE)
 
 source = ColumnDataSource(data={"x": x_coords, "y": y_coords, "color": colors})
 
-# Create figure with 1:1 aspect ratio (square)
+# Plot
 p = figure(
     width=3600,
     height=3600,
-    title="chessboard-basic · bokeh · pyplots.ai",
+    title="chessboard-basic · bokeh · anyplot.ai",
     x_range=(-0.1, 8.1),
     y_range=(-0.1, 8.1),
     tools="",
     toolbar_location=None,
 )
 
-# Draw squares as rectangles
-p.rect(x="x", y="y", width=1, height=1, source=source, color="color", line_color="#333333", line_width=2)
+p.rect(x="x", y="y", width=1, height=1, source=source, color="color", line_color=INK_SOFT, line_width=2)
 
-# Style the figure
+# Style
 p.title.text_font_size = "32pt"
+p.title.text_color = INK
 p.title.align = "center"
 
-# Configure x-axis (columns a-h)
 p.xaxis.ticker = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5]
 p.xaxis.major_label_overrides = {0.5: "a", 1.5: "b", 2.5: "c", 3.5: "d", 4.5: "e", 5.5: "f", 6.5: "g", 7.5: "h"}
 p.xaxis.major_label_text_font_size = "24pt"
+p.xaxis.major_label_text_color = INK_SOFT
 p.xaxis.axis_label = "Column"
 p.xaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.xaxis.axis_line_color = INK_SOFT
 
-# Configure y-axis (rows 1-8)
 p.yaxis.ticker = [0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5]
 p.yaxis.major_label_overrides = {0.5: "1", 1.5: "2", 2.5: "3", 3.5: "4", 4.5: "5", 5.5: "6", 6.5: "7", 7.5: "8"}
 p.yaxis.major_label_text_font_size = "24pt"
+p.yaxis.major_label_text_color = INK_SOFT
 p.yaxis.axis_label = "Row"
 p.yaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_color = INK
+p.yaxis.axis_line_color = INK_SOFT
 
-# Remove grid lines (the squares themselves form the grid)
 p.xgrid.visible = False
 p.ygrid.visible = False
 
-# Style axis lines
-p.outline_line_color = "#333333"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 p.outline_line_width = 3
 
-# Background
-p.background_fill_color = "#FAFAFA"
+# Save HTML
+output_file(f"plot-{THEME}.html")
+save(p)
 
-# Save outputs
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="chessboard-basic · bokeh · pyplots.ai")
+# Screenshot with headless Chrome
+W, H = 3600, 3600
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
