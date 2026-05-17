@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:21:42Z'
-updated: '2026-05-17T10:01:10Z'
+updated: '2026-05-17T10:06:47Z'
 generated_by: claude-haiku
 workflow_run: 25987481141
 issue: 3237
@@ -12,36 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/pygal/plot-dark.html
-quality_score: 74
+quality_score: 53
 review:
   strengths:
-  - Accurate Bollinger Bands calculation with realistic stock price data
-  - Complete data visualization with all four required series
-  - Good rendering quality with large readable fonts at 4800×2700 px
-  - Deterministic code with proper seed-based reproducibility
+  - Correct chart type for Bollinger Bands
+  - All required data series present (Close, SMA, Upper/Lower bands)
+  - Good data generation with realistic price movements
+  - Readable layout and no overlapping elements
   weaknesses:
-  - 'Title has typo: ''pyplots.ai'' instead of ''anyplot.ai'''
-  - 'Palette non-compliance: custom colors instead of Okabe-Ito; first series is #306998
-    instead of #009E73'
-  - 'No theme environment variable support: hardcodes white background and dark text
-    colors'
-  - 'Wrong output filenames: saves as plot.png instead of plot-{THEME}.png'
-  - Missing semi-transparent fill between Bollinger Bands as specified
-  - Generic design with no visual hierarchy or aesthetic sophistication
+  - 'Palette compliance failure: uses #306998 (blue) for first series instead of #009E73
+    (brand green)'
+  - 'No theme adaptation: hard-coded white background instead of reading ANYPLOT_THEME
+    and using #FAF8F1 (light) / #1A1A17 (dark)'
+  - Output files saved as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html
+  - 'Title format incorrect: shows ''pyplots.ai'' instead of ''anyplot.ai'''
+  - 'Dark theme text legibility compromised: dark/muted text on dark background (ax
+    foreground colors not theme-adapted)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - CORRECT
-      Chrome: Title "Bollinger Band Indicator", axis labels "Trading Day" (x-axis, rotated 45°) and "Price (USD)" (y-axis), legend at bottom - all readable with dark text
-      Data: Four series visible (Close Price orange, Upper Band light blue, Lower Band green, SMA dashed) - colors distinct and distinguishable
-      Legibility verdict: PASS - all text readable at 4800×2700 px
+      Background: Off-white surface, appears to be pure white or very close (should be #FAF8F1)
+      Chrome: Title "Bollinger Band Indicator", axis labels "Trading Day" and "Price (USD)", tick labels visible
+      Data: Close Price (first series) appears as green/teal line; Upper Band (orange); Lower Band (blue); SMA dashed line (teal)
+      Palette: Colors are hard-coded #306998, #FFD43B, #5A9BD4, #8BC34A - NOT Okabe-Ito
+      Legibility verdict: PASS for text readability, but FAIL for palette compliance
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - CORRECT
-      Chrome: Same title and axis labels visible with light text (appears light gray/off-white) against dark background, legend at bottom - all readable
-      Data: Four series colors identical to light render (orange, light blue, green, dashed) - GOOD, data colors remain constant as required
-      Legibility verdict: PASS - no dark-on-dark failures, all text readable, proper theme adaptation of chrome
+      Background: Dark surface, appears to be near-black (matches #1A1A17 expectation)
+      Chrome: Title visible but appears dim/faint; axis labels present; tick labels are muted brown/tan
+      Data: Colors appear muted compared to light render - close price appears orange/gold instead of green
+      Issue: Dark-on-dark detected - muted foreground color (#333333) on dark background creates poor contrast
+      Data colors: NOT identical to light render (first series changed from green to orange-ish), violating theme consistency rule
+      Legibility verdict: FAIL - text contrast insufficient on dark background, data colors changed between renders instead of remaining constant
 
-    Note: Discrepancy detected - source code hardcodes `background="white"` and `foreground="#333333"` with no ANYPLOT_THEME env variable usage, yet rendered images show correct theme backgrounds (#FAF8F1 light / #1A1A17 dark) and themed text colors. This suggests workflow modification or rendering pipeline automation. CODE MUST BE FIXED to explicitly use theme environment variable for reproducibility.
+    Both renders FAIL theme-readiness check: background is hard-coded white (light) with no adaptation to ANYPLOT_THEME environment variable; colors are not Okabe-Ito compliant.
   criteria_checklist:
     visual_quality:
       score: 26
@@ -49,54 +52,47 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
-        passed: true
-        comment: 'Font sizes explicitly set (title 72px, labels 42px, ticks 36px).
-          Both renders fully readable. Minor: theme colors hardcoded in code but correct
-          in images.'
+        passed: false
+        comment: Light readable; dark theme has poor contrast (dark text on dark background)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels rotated 45°, major-only display. No overlap, all text
-          readable.
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All four data series (Close Price, Upper Band, Lower Band, SMA) clearly
-          visible and distinguishable.
+        comment: All lines and markers clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between series; colors distinct without relying on
-          red-green alone.
+        comment: Distinct colors, but not Okabe-Ito safe palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 px correct. Plot fills 50-70% of canvas with balanced margins.
+        comment: Good proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Axis labels descriptive with units. CRITICAL: Title contains typo
-          ''pyplots.ai'' instead of ''anyplot.ai''.'
+        passed: true
+        comment: Labels present but title format wrong
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'FAILED: Custom colors (#306998, #FFD43B, #5A9BD4, #8BC34A) not Okabe-Ito.
-          First series #306998 should be #009E73. Code hardcodes white background,
-          doesn''t use ANYPLOT_THEME. Mismatch between code and rendered images.'
+        comment: 'CRITICAL: Uses #306998 (blue) instead of #009E73 for first series;
+          background hard-coded white, not theme-adaptive'
     design_excellence:
       score: 8
       max: 20
@@ -106,24 +102,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Custom Style and colors show effort, but arbitrary palette (not Okabe-Ito)
-          undermines design. Looks like configured default, not publication-ready.
+        comment: Generic styling with default colors
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization. Spines not explicitly removed, grid using
-          library defaults.
+        comment: Minimal customization, default appearance
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Plot mechanically displays four series without visual hierarchy,
-          emphasis, or narrative.
+        comment: Functional but no visual hierarchy or emphasis
     spec_compliance:
-      score: 11
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -131,28 +124,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with all Bollinger Band components.
+        comment: Correct line chart for Bollinger Bands
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Close price, SMA, upper/lower bands present. MISSING: semi-transparent
-          fill between bands as specified.'
+        passed: true
+        comment: Close price, SMA, upper/lower bands all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: trading periods. Y-axis: price USD. All data visible and
-          correctly mapped.'
+        comment: Axes show all 120 days of data correctly
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: Legend labels correct. Title contains typo 'pyplots.ai' instead of
-          'anyplot.ai' - fails format.
+        comment: 'Title format wrong: ''pyplots.ai'' instead of ''anyplot.ai''; legend
+          present'
     data_quality:
       score: 15
       max: 15
@@ -162,24 +153,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: close price, SMA, upper/lower bands. 120-day
-          range shows volatility patterns.'
+        comment: Shows all Bollinger Bands components
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world stock scenario; standard 20-period SMA with 2σ bands;
-          neutral, non-controversial.
+        comment: Realistic stock price data with proper volatility
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $120–185 realistic; volatility and proportions factually
-          sound.
+        comment: Sensible $100-$180 price range
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -187,59 +175,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → calculations → plot → render.
-          No functions/classes.'
+        comment: Simple, straightforward code
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pygal, pygal.style.Style all used. No unused imports.
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: Does not use os.getenv(''ANYPLOT_THEME''). Hardcodes background=''white''
-          and foreground=''#333333''. Should apply theme-adaptive tokens from style
-          guide.'
+        comment: Functional but uses hard-coded colors/backgrounds instead of theme
+          tokens
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves to hardcoded ''plot.png'' and ''plot.html''. Must
-          save to f''plot-{THEME}.png'' and f''plot-{THEME}.html''.'
+        comment: 'CRITICAL: Saves to plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html'
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: pygal.Line(), custom Style, chart.add(), stroke_style, interpolate
-          parameters all idiomatic.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Attempts to use pygal.style.Style for theming (good intent) but doesn't
-          actually leverage ANYPLOT_THEME env variable. Standard feature usage, not
-          distinctive.
+        comment: Uses pygal.Line and Style correctly, but missing critical theme adaptation
+          pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses fill=True and dashed lines (basic features, not distinctive)
   verdict: REJECTED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
