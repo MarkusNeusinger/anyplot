@@ -1,14 +1,27 @@
-""" pyplots.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from scipy.optimize import minimize
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # Okabe-Ito position 1
+ACCENT_1 = "#D55E00"  # Okabe-Ito position 2 (orange)
+ACCENT_2 = "#0072B2"  # Okabe-Ito position 3 (blue)
 
 # Data - Generate random portfolios and efficient frontier
 np.random.seed(42)
@@ -51,7 +64,7 @@ portfolio_risks = np.array(portfolio_risks)
 portfolio_sharpe = np.array(portfolio_sharpe)
 
 
-# Optimization objective functions (required for scipy.optimize)
+# Optimization objective functions
 def calc_vol(w):
     return np.sqrt(np.dot(w.T, np.dot(cov_matrix, w)))
 
@@ -96,43 +109,54 @@ for target in target_returns:
 frontier_risks = np.array(frontier_risks)
 frontier_returns = np.array(frontier_returns)
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
-sns.set_style("whitegrid")
+# Plot
+sns.set_theme(
+    style="whitegrid",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
 # Scatter plot of random portfolios colored by Sharpe ratio
-sns.scatterplot(
-    x=portfolio_risks * 100,
-    y=portfolio_returns * 100,
-    hue=portfolio_sharpe,
-    palette="viridis",
+scatter = ax.scatter(
+    portfolio_risks * 100,
+    portfolio_returns * 100,
+    c=portfolio_sharpe,
+    cmap="viridis",
     s=100,
     alpha=0.6,
-    ax=ax,
-    legend=False,
+    edgecolors=PAGE_BG,
+    linewidth=0.5,
 )
 
-# Add colorbar for Sharpe ratio
-norm = plt.Normalize(portfolio_sharpe.min(), portfolio_sharpe.max())
-sm = plt.cm.ScalarMappable(cmap="viridis", norm=norm)
-sm.set_array([])
-cbar = plt.colorbar(sm, ax=ax)
-cbar.set_label("Sharpe Ratio", fontsize=18)
-cbar.ax.tick_params(labelsize=14)
+# Colorbar for Sharpe ratio
+cbar = plt.colorbar(scatter, ax=ax)
+cbar.set_label("Sharpe Ratio", fontsize=18, color=INK)
+cbar.ax.tick_params(labelsize=14, colors=INK_SOFT)
 
-# Plot efficient frontier curve
-ax.plot(
-    frontier_risks * 100, frontier_returns * 100, color="#FFD43B", linewidth=4, label="Efficient Frontier", zorder=5
-)
+# Plot efficient frontier curve (use brand color)
+ax.plot(frontier_risks * 100, frontier_returns * 100, color=BRAND, linewidth=4, label="Efficient Frontier", zorder=5)
 
 # Mark minimum variance portfolio
 ax.scatter(
     min_var_risk * 100,
     min_var_return * 100,
-    color="#306998",
+    color=ACCENT_2,
     s=400,
     marker="*",
-    edgecolors="white",
+    edgecolors=PAGE_BG,
     linewidths=2,
     zorder=10,
     label="Min Variance Portfolio",
@@ -142,40 +166,40 @@ ax.scatter(
 ax.scatter(
     max_sharpe_risk * 100,
     max_sharpe_return * 100,
-    color="#E63946",
+    color=ACCENT_1,
     s=400,
     marker="*",
-    edgecolors="white",
+    edgecolors=PAGE_BG,
     linewidths=2,
     zorder=10,
     label="Max Sharpe Portfolio",
 )
 
-# Capital Market Line (from risk-free rate tangent to max Sharpe portfolio)
+# Capital Market Line
 cml_x = np.array([0, max_sharpe_risk * 100 * 1.5])
 cml_slope = (max_sharpe_return - risk_free_rate) / max_sharpe_risk
 cml_y = risk_free_rate * 100 + cml_slope * cml_x
-ax.plot(cml_x, cml_y, color="#306998", linewidth=2.5, linestyle="--", label="Capital Market Line", zorder=4)
+ax.plot(cml_x, cml_y, color=ACCENT_2, linewidth=2.5, linestyle="--", label="Capital Market Line", zorder=4)
 
 # Mark risk-free rate
-ax.scatter(0, risk_free_rate * 100, color="#306998", s=250, marker="o", edgecolors="white", linewidths=2, zorder=10)
+ax.scatter(0, risk_free_rate * 100, color=ACCENT_2, s=250, marker="o", edgecolors=PAGE_BG, linewidths=2, zorder=10)
 ax.annotate(
     f"Risk-Free\n({risk_free_rate * 100:.0f}%)",
     xy=(0, risk_free_rate * 100),
     xytext=(2, risk_free_rate * 100 + 1.5),
     fontsize=14,
-    ha="left",
+    color=INK,
 )
 
-# Labels and styling
-ax.set_xlabel("Risk (Standard Deviation, %)", fontsize=20)
-ax.set_ylabel("Expected Return (%)", fontsize=20)
-ax.set_title("frontier-efficient · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(loc="lower right", fontsize=14, framealpha=0.9)
+# Style
+ax.set_xlabel("Risk (Standard Deviation, %)", fontsize=20, color=INK)
+ax.set_ylabel("Expected Return (%)", fontsize=20, color=INK)
+ax.set_title("frontier-efficient · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.legend(loc="lower right", fontsize=14, framealpha=0.95)
 ax.set_xlim(-1, 35)
 ax.set_ylim(0, 18)
-ax.grid(True, alpha=0.3, linestyle="--")
+ax.grid(True, alpha=0.10, linestyle="-")
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
