@@ -1,154 +1,165 @@
 library: plotly
+language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:11:22Z'
-updated: '2026-01-09T08:14:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845371093
+updated: '2026-05-17T08:53:53Z'
+generated_by: claude-haiku
+workflow_run: 25986274015
 issue: 3414
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/plotly/plot.html
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/plotly/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Excellent implementation of boxen plot concept using Plotly shapes API
-  - Clear visual hierarchy with opacity-based quantile differentiation
-  - Comprehensive legend explaining all quantile levels
-  - Realistic server response time data with varied distributions
-  - Clean KISS-style code structure
-  - Both PNG and HTML exports included
+  - Perfect visual quality with explicit font sizing across all elements
+  - Exemplary palette compliance—theme-adaptive colors with identical data representation
+    in both renders
+  - 'All spec features implemented: nested boxes with decreasing width, outlier points,
+    legend with quantile labels'
+  - Realistic data context (server response times) with diverse distributions demonstrating
+    all boxen plot features
+  - Clean, reproducible code with deterministic data generation and proper theme token
+    usage
   weaknesses:
-  - Box width decrease is subtle (only 10% per level) - could be more pronounced
-  - Outlier markers at size 8 could be slightly larger for better visibility
-  - Legend takes significant horizontal space
-  image_description: 'The plot displays a boxen (letter-value) plot showing server
-    response times across four endpoints: API Gateway, Auth Service, Data Query, and
-    File Upload. Each endpoint shows nested boxes in varying shades of blue (darker
-    for inner quantiles, lighter for outer quantiles) representing different quantile
-    levels (50%, 75%, 87.5%, 93.75%, 96.9%, 98.4%, 99.2%). The median is shown as
-    a bright yellow/gold horizontal line across each boxen. Outliers are displayed
-    as individual blue scatter points with jitter above and below the box structures.
-    The legend on the right clearly explains the quantile levels and median. The title
-    follows the correct format "boxen-basic · plotly · pyplots.ai". Axes are well-labeled
-    with "Server Endpoint" on X and "Response Time (ms)" on Y. Each distribution shows
-    distinct shapes: API Gateway has a heavy tail with outliers around 450-500ms,
-    Auth Service is compact with outliers around 150-250ms, Data Query shows a bimodal
-    pattern with outliers at both extremes, and File Upload has the widest spread
-    reaching 800ms with many outliers.'
+  - Library mastery could be higher—implementation uses generic shape-drawing rather
+    than leveraging plotly-specific specialized features
+  - Design excellence slightly below publication-ready—visual hierarchy could be enhanced
+    through additional styling refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly themed
+      Chrome: Title "boxen-basic · plotly · anyplot.ai" at 28px, axis labels at 22px, tick labels at 18px, legend at right with "Quantile Level" title—all clearly readable with dark text (#1A1A17) against light background
+      Data: Four server endpoints (API Gateway, Auth Service, Data Query, File Upload) with nested boxes in varying shades of #009E73 (from full opacity to 0.2), decreasing width for deeper quantiles, outlier points in full-opacity green scattered above/below, thick black median lines
+      Legibility verdict: PASS—all elements perfectly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly themed
+      Chrome: All text elements remain clearly visible with light text (#F0EFE8 for titles/labels, #B8B7B0 for ticks/legend) against dark background. No dark-on-dark failures. Grid lines subtle and visible with rgba(240,239,232,0.10)
+      Data: Identical data colors to light render—all shades of #009E73 preserved. Boxes, median lines, and outlier points all properly visible and distinguishable
+      Legibility verdict: PASS—theme adaptation flawless, all elements readable
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 26pt, tick labels at 20pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: All font sizes explicitly set and readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Boxes well-sized, outlier markers visible but could be slightly larger
+        comment: All markers and boxes clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single-hue blue palette with varying opacity is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight extra space on right due to legend
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Response Time (ms), Server Endpoint'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: CVD-safe palette with good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions and margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate; legend is well-placed but slightly
-          large
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Perfect Okabe-Ito compliance and theme-correct chrome in both renders
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional styling with custom opacity gradient
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good refinement with subtle grid and clean lines
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy from median to extreme values
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct boxen/letter-value plot with nested boxes for quantiles
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on X-axis, values on Y-axis correctly assigned
-      - id: SC-03
+        comment: Correct boxen plot with all features
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows nested boxes, decreasing widths, outliers, legend. Box width
-          decrease is subtle
-      - id: SC-04
-        name: Data Range
+        comment: Nested boxes, outliers, legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers up to 800ms
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Endpoints on x-axis, response times on y-axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly explains all quantile levels and median
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format boxen-basic · plotly · pyplots.ai
+        comment: Correct title format and descriptive legend
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows different distribution shapes: lognormal, exponential, bimodal,
-          gamma with outliers'
+        comment: Shows all boxen plot aspects across distributions
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Server response times by endpoint is realistic and neutral
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response times in ms range (0-800ms) are realistic for server endpoints
+        comment: Real-world server scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic response time ranges
     code_quality:
       score: 10
       max: 10
@@ -158,54 +169,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Clean linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current plotly API used throughout
+        comment: Pythonic and well-structured
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Figure with shapes and scatter, HTML export. Could leverage
-          more Plotly interactivity
+        comment: Proper graph_objects patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic shape-drawing approach
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
-  - patches
-  - html-export
-  - hover-tooltips
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
