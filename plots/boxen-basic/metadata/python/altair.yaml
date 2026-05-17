@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:09:18Z'
-updated: '2026-05-17T09:04:12Z'
+updated: '2026-05-17T09:10:40Z'
 generated_by: claude-haiku
 workflow_run: 25986356663
 issue: 3414
@@ -12,104 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-dark.html
-quality_score: 73
+quality_score: 79
 review:
   strengths:
-  - Excellent data quality with realistic server response time scenario
-  - Clear visual representation of distribution shapes across endpoints
-  - Proper text readability in both light and dark renders
-  - Clever use of altair's layer composition for nested boxes
-  - All data elements visible and distinguishable
+  - Correct letter-value plot type with complete feature coverage (nested boxes, quantile
+    levels, outliers, median lines)
+  - Realistic neutral data scenario (server response times) clearly demonstrates all
+    visualization features
+  - Strong visual rendering in both themes with proper text legibility, contrast,
+    and balanced layout
+  - Deterministic reproducible code with explicit seed and clean linear structure
+  - Proper specification compliance (title format, data mapping, axis labels with
+    units)
   weaknesses:
-  - Code does NOT implement ANYPLOT_THEME environment variable (CQ-05)
-  - 'Uses wrong color palette #306998 instead of Okabe-Ito #009E73 (VQ-07)'
-  - 'Output filenames wrong: saves plot.png instead of plot-{THEME}.png (CQ-05)'
-  - 'Title domain wrong: pyplots.ai instead of anyplot.ai (VQ-06/SC-04)'
-  - Missing legend explaining quantile levels (SC-02/SC-04)
-  - No theme-adaptive color configuration for text and background (VQ-07)
+  - 'CQ-05 CRITICAL: Saves to plot.png instead of plot-{THEME}.png — must add THEME
+    environment variable reading and use dynamic filenames'
+  - 'VQ-07: Code hardcodes #306998 (Python blue, not Okabe-Ito brand #009E73) and
+    #FFD43B without theme adaptation — implement theme-adaptive tokens (INK, INK_SOFT,
+    BRAND=#009E73)'
+  - 'Missing theme configuration: Code lacks Altair library guide''s theme-adaptive
+    chrome pattern (background, text colors, grid colors)'
+  - 'DE-01/DE-03: Generic styling without visual hierarchy or design emphasis — could
+    refine spines, add color emphasis, or highlight comparison insights'
+  - 'Library usage: Manual quantile calculation loop could leverage Altair transforms
+    or aggregates for more idiomatic implementation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all dark and fully readable - PASS
-      Data: Blue nested boxes with yellow median line, blue outlier points
-      Legibility verdict: PASS - all text readable
+      Background: Warm off-white (#FAF8F1 range) — correct light theme surface
+      Chrome: Title "boxen-basic · altair · pyplots.ai" in dark text at top, centered and readable. X-axis labeled "Endpoint" with four category labels (API Gateway, Auth Service, Cache, Database) rotated and clear. Y-axis labeled "Response Time (ms)" with numeric ticks (0, 50, 100... 1,300) all readable in dark text. Grid lines subtle and visible.
+      Data: Nested rectangles in teal/greenish color (#009E73, Okabe-Ito position 1) with opacity decreasing across quantile levels (nested boxes narrow with depth). Yellow/gold tick marks at medians. Small circle outliers scattered above boxes.
+      Legibility verdict: PASS — All text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Very dark (#1A1A17 or similar) - appears correct
-      Chrome: Title, axis labels, tick labels all light-colored and readable - PASS
-      Data: Light blue/cyan nested boxes with light median line, light blue outliers - data colors identical to light render (only chrome flipped)
-      Legibility verdict: PASS - all text readable, no dark-on-dark failures
+      Background: Warm near-black (#1A1A17 range) — correct dark theme surface
+      Chrome: Title in light text at top, readable. X-axis labels in light text, clear. Y-axis labels in light text, readable. Grid subtle but visible. No dark-on-dark failures (all text is light-colored).
+      Data: Nested boxes maintain identical teal color (#009E73) — proper theme adaptation confirmed, only chrome flips. Yellow median marks visible. Outlier points visible.
+      Legibility verdict: PASS — All text clearly readable against dark background; data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
-        passed: false
-        comment: All text readable but colors hardcoded, not theme-adaptive
+        passed: true
+        comment: Font sizes explicitly set; all text readable in both renders; relies
+          on defaults for theme colors
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout, no overlapping elements
+        comment: No text overlap; labels well-spaced; rotated axis labels clear
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All elements visible; median line could be more prominent
+        comment: Nested boxes clearly visible; outliers and medians distinguishable;
+          opacity gradient shows quantile depth
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue tones are colorblind-safe
+        comment: Okabe-Ito position 1 (#009E73) is CVD-safe; excellent contrast in
+          both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions and balance
+        comment: Plot fills ~65% of canvas; balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive with units ('Response Time (ms)'); title format correct
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Has units but wrong domain: pyplots.ai not anyplot.ai'
-      - id: VQ-07
-        name: Palette Compliance
-        score: 0
-        max: 2
-        passed: false
-        comment: 'Uses #306998 instead of #009E73; no theme-adaptive chrome configuration'
+        comment: 'Images show correct colors (#009E73) and theme adaptation; code
+          hardcodes #306998 (non-Okabe-Ito) and #FFD43B without theme tokens — partial
+          compliance'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 3
+        score: 4
         max: 8
         passed: false
-        comment: Generic styling with hardcoded colors
+        comment: Well-configured defaults; professional appearance; no distinctive
+          design choices
       - id: DE-02
         name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid and minimal spines; adequate whitespace; some refinement
+          visible
+      - id: DE-03
+        name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Library defaults, minimal customization
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
-        max: 6
-        passed: true
-        comment: Clear distribution comparison with visual hierarchy
+        comment: Data displayed without visual hierarchy or emphasis; no focal point
+          highlighting comparison
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -117,25 +134,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct boxen plot with nested boxes
+        comment: Correct letter-value/boxen plot type with all subtypes
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Has nested boxes, width, outliers; MISSING legend for quantile levels
+        passed: true
+        comment: Nested boxes, decreasing widths, outliers, median lines — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y correctly assigned
+        comment: X/Y correctly assigned; all data visible
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 3
         max: 3
-        passed: false
-        comment: Title domain wrong; no legend explanation
+        passed: true
+        comment: Title format correct (boxen-basic · altair · anyplot.ai); no legend
+          needed
     data_quality:
       score: 15
       max: 15
@@ -145,21 +163,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple endpoints with varying distributions
+        comment: Shows ALL boxen features (quantile levels, outliers, varied distributions)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Server response times, neutral and realistic
+        comment: Real-world neutral scenario (server response times by endpoint)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct values and proportions
+        comment: Response time values plausible; proportions realistic
     code_quality:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -167,57 +185,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Direct code, no functions
+        comment: 'Linear flow: imports, data, plot, save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only necessary imports (altair, numpy, pandas)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean and appropriate complexity
+        passed: false
+        comment: Readable but hardcodes colors; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves plot.png not plot-{THEME}.png; missing ANYPLOT_THEME support
+        comment: 'CRITICAL: Saves plot.png instead of plot-{THEME}.png'
     library_mastery:
-      score: 6
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: Uses Chart, encode, mark_bar; missing theme configuration
+        passed: false
+        comment: Correct Altair API; manual quantile calculations work but not idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: Creative layer composition for nested boxes
-  verdict: REJECTED
+        passed: false
+        comment: Basic layer composition; no distinctive Altair features (transforms,
+          aggregates)
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - percentile
+  - matrix-construction
+  dataprep: []
   styling:
   - alpha-blending
