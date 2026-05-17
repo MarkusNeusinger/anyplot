@@ -1,163 +1,184 @@
 library: plotly
+language: python
 specification_id: frontier-efficient
 created: '2026-01-08T22:39:25Z'
-updated: '2026-01-08T22:42:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20834093070
+updated: '2026-05-17T04:46:17Z'
+generated_by: claude-haiku
+workflow_run: 25981505536
 issue: 3342
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/plotly/plot.html
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/frontier-efficient/python/plotly/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Comprehensive implementation of all spec requirements including efficient frontier
-    curve, random portfolios, key portfolio markers, and capital market line
-  - Excellent data generation approach using Monte Carlo simulation with binning to
-    extract the efficient frontier
-  - Good use of Viridis colormap for Sharpe ratio visualization
-  - Clean hover templates providing detailed information on hover
-  - Proper title format and clear axis labels with units
+  - Perfect text legibility across both light and dark themes with explicit font sizing
+  - Flawless Okabe-Ito palette compliance with efficient frontier correctly using
+    brand green (#009E73)
+  - 'Comprehensive efficient frontier visualization with all required elements: frontier
+    curve, random portfolios, key portfolio markers, capital market line, and risk-free
+    rate'
+  - 'Excellent use of Plotly''s interactive features: colorbar legend, hover templates
+    with formatted percentages, HTML export'
+  - Realistic, professional Modern Portfolio Theory scenario with correct risk, return,
+    and Sharpe ratio ranges
+  - Clean, reproducible code with clear variable naming and appropriate complexity
+  - 'Perfect theme adaptation: data colors identical across light/dark, only chrome
+    elements flip to theme-correct colors'
   weaknesses:
-  - Legend marker for Random Portfolios shows a single color instead of indicating
-    the color scale variation
-  - Could benefit from slightly larger marker sizes given the canvas size for better
-    visibility at lower densities
-  - The efficient frontier line appears somewhat thick relative to the data density,
-    could be slightly refined
-  image_description: 'The plot displays an efficient frontier visualization for portfolio
-    optimization. The X-axis shows "Risk (Standard Deviation)" ranging from 0% to
-    35%, and the Y-axis shows "Expected Return (Annual)" from 0% to 25%. Random portfolios
-    are shown as scatter points colored by Sharpe ratio using the Viridis colormap
-    (purple to yellow gradient), with a colorbar on the right indicating Sharpe Ratio
-    values from ~0.43 to ~0.55. The efficient frontier is displayed as a thick yellow/gold
-    curved line running through the upper-left envelope of the portfolio cloud. A
-    dashed blue Capital Market Line extends from the risk-free rate point (3% at 0
-    risk) through the optimal tangency point. Key portfolios are marked: a red diamond
-    for "Min Variance" portfolio (~15% risk, ~10% return), and a cyan star for "Max
-    Sharpe" portfolio (~18% risk, ~14% return). The legend is positioned in the upper-left
-    corner with a semi-transparent background. The title correctly uses the format
-    "frontier-efficient · plotly · pyplots.ai".'
+  - 'Design Excellence could be elevated: follows standard library-default aesthetic
+    rather than custom design sophistication'
+  - Data storytelling relies on visual hierarchy without explicit annotations for
+    key insights
+  - Library mastery could leverage more advanced Plotly features like interactive
+    callbacks or range sliders
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels, ticks all clearly visible in dark text; legend positioned top-left with light background and border
+      Data: Efficient frontier as thick green line (#009E73 brand color); random portfolios scattered and colored by Sharpe ratio (Viridis colormap); Capital Market Line in orange (#D55E00); Min Variance marker as blue diamond (#0072B2); Max Sharpe marker as pink star (#CC79A7); risk-free rate as gray dot (#4A4A44)
+      Legibility verdict: PASS - All text perfectly readable; no legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: All text light-colored and clearly readable against dark background; no dark-on-dark failures; grid subtle and visible
+      Data: All data colors identical to light render - efficient frontier still #009E73, CML still #D55E00, Min Variance still #0072B2, Max Sharpe still #CC79A7; Viridis colormap perceptually identical
+      Legibility verdict: PASS - All text perfectly readable in dark theme; proper theme adaptation confirmed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and legend text are all clearly
-          readable at full resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No significant text overlap; Min Variance and Max Sharpe labels are
-          positioned to avoid collision
+        comment: All font sizes explicitly set; Title 28px, labels 22px, ticks 18px;
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero text collisions; clean positioning of all labels and annotations
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Markers are visible but the scatter points are somewhat dense in
-          the cluster area; size of 10 is reasonable for 300 points with alpha 0.7
+        comment: Markers (size 10, opacity 0.7) adapted to 300 points; frontier line
+          (width 5) clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe; key portfolios use distinct
-          shapes/colors
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; slight imbalance with colorbar on right
-          creating asymmetry
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: Risk (Standard Deviation) and Expected
-          Return (Annual)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette correct; Viridis perceptually uniform; good contrast;
+          CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~70% of canvas with balanced margins; no cut-off; generous
+          whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle but legend shows uniform marker color that does not
-          match the Viridis-colored scatter
+        comment: 'Fully descriptive labels with units: ''Risk (Standard Deviation)''
+          and ''Expected Return (Annual)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito compliance; efficient frontier #009E73; secondary
+          colors in order; Viridis for continuous; theme-correct backgrounds and chrome'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Strong use of palette; intentional visual hierarchy; professional
+          styling; follows standard patterns rather than custom design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid with theme-aware colors; generous whitespace; legend with theme-adaptive
+          styling; grid could be more subtle
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with frontier as focal point; guides narrative
+          effectively; lacks explicit annotations for key insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct efficient frontier visualization with scatter and curve
+        comment: Efficient frontier visualization with all required chart elements
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=risk (std dev), Y=expected return as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required: random portfolios, frontier curve, min variance point,
-          max Sharpe point, capital market line, Sharpe ratio color coding'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: frontier, random portfolios, key portfolio
+          markers, CML, risk-free rate'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes appropriately show all data points and the full frontier curve
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; axes show complete data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: frontier-efficient · plotly · pyplots.ai'
+        comment: Title format correct; legend includes all six series with accurate
+          labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variety of portfolios with different risk-return profiles;
-          efficient frontier clearly distinguishable from suboptimal portfolios
+        comment: Shows complete risk-return spectrum with all portfolio types represented
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Portfolio optimization with 5 assets, realistic return expectations
-          (8-18% annually), sensible covariance matrix, 3% risk-free rate
+        comment: Legitimate Modern Portfolio Theory scenario with realistic financial
+          values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic; returns 8-18% and risks 15-35% are plausible
+        comment: Risk (0-35%), return (0-25%), Sharpe ratios (0.4-0.5) all factually
+          correct
     code_quality:
       score: 10
       max: 10
@@ -167,58 +188,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data generation → plotting → save structure
+        comment: Linear flow; no unnecessary functions; clean structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at the beginning
+        comment: np.random.seed(42) set; deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only necessary imports; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable, appropriate complexity; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct format: plot-{THEME}.png and .html'
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses Plotly graph_objects well with hover templates and colorbar
-          but does not leverage unique Plotly strengths like animations or more advanced
-          interactive features
+        passed: true
+        comment: Proper use of Graph Objects API; follows Plotly best practices; could
+          leverage more advanced features
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses colorbar, hover templates, HTML export; could add interactive
+          callbacks or range sliders
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - binning
+  - matrix-construction
+  dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
