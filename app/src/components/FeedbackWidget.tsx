@@ -38,7 +38,15 @@ function newSessionId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID();
   }
-  return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+  if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+    const bytes = new Uint8Array(16);
+    crypto.getRandomValues(bytes);
+    return `s-${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
+  }
+  // Browser without Web Crypto support (e.g. very old, or insecure context). The
+  // session id is an opaque correlation handle, not a credential — a coarse
+  // timestamp-derived id is acceptable here, but we never use Math.random().
+  return `s-${Date.now().toString(36)}`;
 }
 
 /**
