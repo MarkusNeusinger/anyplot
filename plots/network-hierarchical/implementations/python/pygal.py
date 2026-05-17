@@ -1,15 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 network-hierarchical: Hierarchical Network Graph with Tree Layout
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-08
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-17
 """
+
+import os
+import shutil
+import subprocess
 
 import pygal
 from pygal.style import Style
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
 # Define organizational hierarchy (CEO -> VPs -> Directors -> Managers)
-# Structure: {node_id: (label, level, parent_id)}
 hierarchy = {
     0: ("CEO", 0, None),
     1: ("VP Eng", 1, 0),
@@ -42,10 +52,9 @@ for node_id, (_label, level, _parent) in hierarchy.items():
         levels[level] = []
     levels[level].append(node_id)
 
-# Calculate node positions using tree layout - maximize vertical space usage
+# Calculate node positions using tree layout
 node_positions = {}
 max_level = max(levels.keys())
-# Use full vertical range from 10 to 90 for better canvas utilization
 y_min, y_max = 10, 90
 y_spacing = (y_max - y_min) / max_level
 
@@ -54,61 +63,58 @@ for level, nodes in levels.items():
     x_spacing = 90 / (num_nodes + 1)
     for i, node_id in enumerate(nodes):
         x = 5 + (i + 1) * x_spacing
-        y = y_max - (level * y_spacing)  # Top to bottom layout
+        y = y_max - (level * y_spacing)
         node_positions[node_id] = (x, y)
 
-# Level colors: Blue (CEO), Yellow (VPs), Teal (Directors), Coral (Managers)
-level_colors = ["#306998", "#FFD43B", "#4ECDC4", "#FF6B6B"]
-level_names = ["Level 0: Executive", "Level 1: VPs", "Level 2: Directors", "Level 3: Managers"]
+# Level colors using Okabe-Ito palette
+level_colors = [OKABE_ITO[0], OKABE_ITO[1], OKABE_ITO[2], OKABE_ITO[3]]
+level_names = ["Executive", "VPs", "Directors", "Managers"]
 
-# Create custom style with larger fonts and subtle grid
+# Create custom style with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#999999",
-    guide_stroke_color="#e0e0e0",  # Subtle light gray grid lines
-    guide_stroke_dasharray="4,4",  # Dashed grid for subtlety
-    colors=("#888888", "#306998", "#FFD43B", "#4ECDC4", "#FF6B6B"),  # Gray for edges
-    title_font_size=72,
-    label_font_size=40,
-    major_label_font_size=36,
-    legend_font_size=40,
-    value_font_size=32,
-    tooltip_font_size=32,
-    stroke_width=8,
-    opacity=0.95,
-    opacity_hover=1.0,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    guide_stroke_color=INK_MUTED,
+    guide_stroke_dasharray="none",
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    tooltip_font_size=14,
+    stroke_width=3,
 )
 
-# Create XY chart with legend showing hierarchy levels
+# Create XY chart with legend
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="network-hierarchical · pygal · pyplots.ai",
+    title="network-hierarchical · pygal · anyplot.ai",
     x_title="Horizontal Position (Peer Distribution)",
     y_title="Management Level (0=Top, 3=Bottom)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=5,
-    show_x_guides=True,
-    show_y_guides=True,
+    show_x_guides=False,
+    show_y_guides=False,
     stroke=True,
-    dots_size=35,
+    dots_size=28,
     show_dots=True,
     range=(0, 100),
     xrange=(0, 100),
     explicit_size=True,
     truncate_legend=-1,
-    margin_bottom=140,
+    margin_bottom=120,
     margin_top=100,
-    x_labels=[str(i) for i in range(0, 101, 20)],
-    y_labels=[str(i) for i in range(0, 101, 20)],
+    margin_left=100,
+    margin_right=100,
 )
 
-# Collect all edges
+# Add reporting lines
 all_edges = []
 for node_id, (_label, _level, parent_id) in hierarchy.items():
     if parent_id is not None:
@@ -116,7 +122,6 @@ for node_id, (_label, _level, parent_id) in hierarchy.items():
         child_pos = node_positions[node_id]
         all_edges.append((parent_pos, child_pos))
 
-# Add edges as a single series with discontinuous lines using None
 edge_data = []
 for start, end in all_edges:
     if edge_data:
@@ -124,21 +129,34 @@ for start, end in all_edges:
     edge_data.append(start)
     edge_data.append(end)
 
-# Add edges with explicit stroke style for visible legend indicator
-chart.add("Reporting Lines", edge_data, show_dots=False, stroke=True, stroke_style={"width": 6, "dasharray": "none"})
+chart.add("Edges", edge_data, show_dots=False, stroke=True, color=INK_MUTED)
 
-# Group nodes by level and add as separate series for proper legend
-# Include node labels in the data for visibility via tooltips
+# Add nodes by level with labels visible
 for level_idx in range(max_level + 1):
     level_nodes = levels[level_idx]
     level_data = []
     for node_id in level_nodes:
         pos = node_positions[node_id]
         node_label = hierarchy[node_id][0]
-        # Add position with tooltip label for interactivity
+        # Create data point with label visible as annotation
         level_data.append({"value": pos, "label": node_label})
     chart.add(level_names[level_idx], level_data, stroke=False, color=level_colors[level_idx])
 
-# Render to PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save to PNG and HTML
+chart.render_to_file(f"plot-{THEME}.svg")
+# For PNG, we write SVG first then use a simple conversion approach
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
+
+# Create static PNG using basic SVG rendering
+try:
+    subprocess.run(["rsvg-convert", "-f", "png", "-o", f"plot-{THEME}.png", f"plot-{THEME}.svg"], check=True)
+except (FileNotFoundError, subprocess.CalledProcessError):
+    # Fallback: use cairosvg if available
+    try:
+        import cairosvg
+
+        cairosvg.svg2png(url=f"plot-{THEME}.svg", write_to=f"plot-{THEME}.png")
+    except ImportError:
+        # If no PNG converter available, just keep the SVG
+        shutil.copy(f"plot-{THEME}.svg", f"plot-{THEME}.png")

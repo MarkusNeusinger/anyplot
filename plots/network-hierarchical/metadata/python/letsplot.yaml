@@ -1,213 +1,234 @@
 library: letsplot
+language: python
 specification_id: network-hierarchical
 created: '2026-01-08T22:03:38Z'
-updated: '2026-01-08T22:12:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20833172323
+updated: '2026-05-17T06:31:44Z'
+generated_by: claude-haiku
+workflow_run: 25983445204
 issue: 3343
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/letsplot/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent tree layout algorithm that properly centers parents over children
-  - Clean implementation of hierarchical positioning without external dependencies
-    like NetworkX
-  - Good use of lets-plot grammar of graphics with layer composition (segments, points,
-    text)
-  - 'Appropriate visual encoding: node size decreases by level, distinct colors per
-    level'
-  - Well-balanced canvas utilization and professional appearance
+  - Perfect visual quality with full legibility in both light and dark themes
+  - Tree layout algorithm well-implemented with thoughtful recursive positioning
+  - Correct Okabe-Ito palette usage mapped to organizational hierarchy levels
+  - Excellent spec compliance across all dimensions
+  - Theme-adaptive styling works seamlessly; data colors maintain identity across
+    themes
   weaknesses:
-  - Title includes descriptive prefix rather than pure spec-id format (minor)
-  - Helper functions deviate slightly from KISS principle, though justified for layout
-    complexity
-  image_description: The plot displays a hierarchical organizational chart for a tech
-    company with 30 employees across 4 management levels. The visualization uses a
-    tree layout with the CEO at the top (large blue node), followed by 3 VPs in the
-    second level (yellow nodes), 8 managers in the third level (green nodes), and
-    18 individual contributors at the bottom (orange nodes). Each node displays a
-    short label (CEO, VP Eng, VP Sales, VP Ops, Mgr FE, Dev 1, etc.). Gray edges connect
-    parent nodes to child nodes showing the reporting relationships. The legend on
-    the right side clearly identifies each level (Executive, VP, Manager, Staff) with
-    corresponding colors. The title "Tech Company Org Chart · network-hierarchical
-    · letsplot · pyplots.ai" appears at the top left. The plot has a clean white background
-    with no axis lines, ticks, or grid, appropriate for this network visualization.
+  - Design Excellence could be more refined—edges are simple lines and could use more
+    sophisticated styling (curves, bundling)
+  - Library Mastery reflects competent but basic usage; could leverage letsplot's
+    interactive features more prominently
+  - Visual storytelling could gain impact through strategic color emphasis or additional
+    emphasis techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1 ✓
+      Chrome: Title "network-hierarchical · letsplot · anyplot.ai" in bold 24pt dark text; node labels in bold 8pt dark text; legend "Level" in 14pt secondary text (#4A4A44). All clearly readable against light background.
+      Data: CEO node (15pt, #009E73), VPs (12pt, #D55E00), Managers (10.5pt, #0072B2), Staff (9pt, #CC79A7) following Okabe-Ito positions 1-4. Gray edges at 1.5 width with 0.6 alpha showing hierarchy connections.
+      Legibility verdict: PASS ✓ - All text elements fully readable, high contrast against light surface.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17 ✓
+      Chrome: Title in light bold text (#F0EFE8) clearly visible on dark background; node labels in white bold text; legend in 14pt secondary text (#B8B7B0). All text readable with no dark-on-dark failures.
+      Data: Data colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7). Node sizes and positions match light render. Gray edges visible and distinguishable from background.
+      Legibility verdict: PASS ✓ - All elements readable on dark surface; data colors maintain integrity; theme adaptation successful.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All text is clearly readable at full size; title is bold and prominent,
-          node labels are appropriately sized
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or nodes; good spacing between labels
+        comment: Title 24pt bold, node labels 8pt bold, legend 14pt, all readable
+          in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Node labels positioned above nodes (y+0.035), no collisions, clean
+          layout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes are well-sized with appropriate hierarchy (larger for higher
-          levels); edges visible with good alpha
+        comment: 30 nodes clearly visible, sizes decrease by level (18→9pt), edges
+          visible at 1.5 width
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green, orange palette is colorblind-safe with good
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Tree centered well on canvas with balanced whitespace
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for network graph - no axes needed for this visualization type
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed on right; no unnecessary grid for this network
-          viz
+        comment: Okabe-Ito palette positions 1-4 used; CVD-safe; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600×900 base (4800×2700 at scale 3x), 16:9 aspect, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; node labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; follows Okabe-Ito order; backgrounds #FAF8F1/#1A1A17
+          correct; both theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional hierarchy visualization with level-based color encoding
+          and size variation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid removed; generous whitespace; node strokes add definition.
+          Edges could be more refined.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear hierarchy through size and positioning; CEO focal point; top-down
+          flow clear. Could use additional emphasis.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct hierarchical network graph with tree layout
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Nodes positioned by level (vertical) and subtree span (horizontal)
-      - id: SC-03
+        comment: Hierarchical network with tree layout; root at top; parent-child
+          edges clear
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has nodes, edges, levels, labels; edges are straight as noted in
-          spec
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: node labels, edges, level-based organization'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 30 nodes and 29 edges visible within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y positions via tree layout; all 30 nodes and edges rendered
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 4 levels
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Uses descriptive prefix 'Tech Company Org Chart' before spec-id format
+        comment: Title format correct; legend with proper category names
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 levels, varying branch widths, realistic org structure
+        comment: Demonstrates hierarchy, branching, structure, appropriate complexity
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Tech company organizational chart is a perfect real-world example
+        comment: Tech company org chart; plausible role names; neutral professional
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 30 employees across 4 levels is reasonable with realistic team size
-          variation
+        comment: 30 nodes, 4 levels, realistic branching factors
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Has helper functions but justified for layout algorithm complexity
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Helper functions necessary; straightforward data structures
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42); all data deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports; no unused code
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity; no fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png/html; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar, geom_segment, geom_point with color mapping,
-          geom_text, scale_color_manual, scale_size_identity, comprehensive theme
-          customization, HTML export
+        comment: ggplot2-style grammar with + composition; aes() correct; appropriate
+          geoms
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: HTML export and theme-adaptive styling shown; basic usage; could
+          leverage more advanced features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
-  - custom-legend
-  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
+  - publication-ready
   - alpha-blending
