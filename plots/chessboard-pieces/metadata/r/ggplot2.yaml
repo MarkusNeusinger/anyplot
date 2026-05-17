@@ -1,0 +1,236 @@
+library: ggplot2
+language: r
+specification_id: chessboard-pieces
+created: '2026-05-17T03:26:24Z'
+updated: '2026-05-17T03:36:20Z'
+generated_by: claude-haiku
+workflow_run: 25980160420
+issue: 3350
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Perfect theme-adaptive chrome (background colors and text colors correctly flip
+    between light and dark)
+  - Clean, idiomatic ggplot2 code with good structure and explicit font sizing
+  - 'All technical requirements met: correct board layout, proper piece positioning,
+    excellent readability across both renders'
+  - Strong visual quality with no text overlap or element visibility issues
+  weaknesses:
+  - Design could be more sophisticated (styling is well-configured defaults but not
+    particularly distinctive)
+  - Missing visual storytelling or emphasis (data is displayed but doesn't guide the
+    viewer to insights)
+  - No visual hierarchy or focal points beyond the chess board itself
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and matches spec standard
+      Chrome: Title "chessboard-pieces · ggplot2 · anyplot.ai" is bold, dark text at appropriate size; column labels (a-h) and row labels (1-8) are clearly visible in dark (INK_SOFT) color against light background
+      Data: Chess board with alternating light (#F5E6D3) and dark (#8B7355) squares in standard pattern; all 32 pieces displayed as Unicode chess symbols (white pieces in light color, black pieces in dark color) in starting position; pieces are well-centered within squares
+      Legibility verdict: PASS - All text is readable, no overlap, elements clearly visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and matches spec standard
+      Chrome: Same title in light text, clearly visible against dark background; column and row labels are light colored (INK = #F0EFE8 in dark theme) for proper contrast
+      Data: Identical board and piece colors to light render - square colors (#F5E6D3 and #8B7355) remain identical between themes, confirming proper theme handling (only chrome flips, not data colors)
+      Legibility verdict: PASS - All text is light and readable against dark background, no dark-on-dark failures, all labels clearly visible
+
+    Both renders pass full theme-readiness check: no text legibility issues in either render, proper contrast, and correct color handling between themes.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, axis labels 20pt, ticks
+          16pt) and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, clean spacing throughout
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Chess pieces and board squares perfectly sized and visible, excellent
+          contrast
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast between pieces and backgrounds, CVD-safe light/dark
+          square distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with balanced margins, board fills 50-70% of canvas
+          appropriately
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted as 'chessboard-pieces · ggplot2 · anyplot.ai',
+          axis labels use standard chess notation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect theme-adaptive chrome: background #FAF8F1 (light) and #1A1A17
+          (dark) correct, text colors flip appropriately, board colors identical between
+          themes'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with chess-standard colors, but not
+          particularly sophisticated or distinctive design
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Some refinement visible (grid removed, margins set, ticks removed)
+          but could be more sophisticated
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Displays chess starting position but no visual hierarchy, emphasis,
+          or narrative direction
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct chess board visualization with all subtypes present
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: 8x8 board, pieces in starting position, Unicode
+          symbols, proper coloring'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis (a-h) and Y-axis (1-8) correctly mapped, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct, legend not needed for chess board
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: full 8x8 board, all piece types, both colors,
+          starting position'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Chess starting position is real, iconic, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 8x8 board and piece positioning are factually correct per chess standards
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear structure: seed → tokens → data → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses set.seed(42) and deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Imports ggplot2, dplyr, ragg appropriately (dplyr standard in R)
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or over-engineering, clean R code
+      - id: CQ-05
+        name: Output & API
+        score: 0
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-light.png and plot-dark.png using ragg device
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses ggplot2 API: geom_tile, geom_text, scale_*, labs,
+          theme, coord_fixed'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses geom_tile + geom_text + coord_fixed for chess board, somewhat
+          distinctive but not groundbreaking
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep: []
+  styling: []
