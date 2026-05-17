@@ -1,0 +1,234 @@
+library: ggplot2
+language: r
+specification_id: bar-permutation-importance
+created: '2026-05-17T12:38:09Z'
+updated: '2026-05-17T12:41:53Z'
+generated_by: claude-haiku
+workflow_run: 25991008871
+issue: 2998
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
+review:
+  strengths:
+  - Excellent palette compliance with perfect theme-adaptive chrome (data colors identical,
+    chrome flips properly)
+  - All text explicitly sized and perfectly readable in both light and dark themes
+    with no legibility failures
+  - Clear data storytelling through color gradient encoding and sorted importance
+    ranking
+  - Proper use of error bars and reference line for context and uncertainty visualization
+  - Idiomatic ggplot2 code with proper theme composition and modern ragg device usage
+  weaknesses:
+  - Design could emphasize top 3 features more prominently (e.g., subtle size variation
+    or annotation for greater visual hierarchy)
+  - Legend styling is functional but not distinctive; could enhance aesthetic sophistication
+    with custom styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, clean and professional
+      Chrome: Title, y-axis feature labels, x-axis label all dark text (#1A1A17, INK) — perfectly readable. Tick labels dark (INK_SOFT). Legend box with proper contrast.
+      Data: Horizontal bars with smooth color gradient from green (#009E73) at low importance to orange (#D55E00) at high importance. Error bars visible, showing variability. Reference line at x=0. 15 features sorted by importance (highest at top). Grid lines (x-axis) subtle and clean.
+      Legibility verdict: PASS — all elements readable, no overlap, proper contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, maintains professional aesthetic
+      Chrome: Title and labels rendered in light text (INK #F0EFE8, INK_SOFT #B8B7B0) — excellent contrast against dark background. No dark-on-dark failures. Legend background properly elevated (#242420).
+      Data: Identical color gradient to light render (green to orange) — data colors invariant across themes. Error bars visible. Reference line at x=0. All features clearly readable.
+      Legibility verdict: PASS — both chrome and data perfectly adapted to dark theme. Data colors identical to light render (only chrome flipped).
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt). Perfect
+          readability in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text positioned without collision. Feature labels, ticks, legend
+          all readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars (width=0.7) and error bars optimally sized and clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Green-to-orange gradient perceptually uniform, CVD-safe (both Okabe-Ito
+          colors).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas. Balanced margins and legend placement.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels with context. Title format correct: ''bar-permutation-importance
+          · ggplot2 · anyplot.ai''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Gradient uses #009E73 (brand) to #D55E00. Backgrounds #FAF8F1/#1A1A17
+          correct. Perfect theme chrome in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Intentional color gradient, professional polish. Above defaults but
+          not publication-ready custom palette.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, y-grid removed, subtle x-grid, generous whitespace.
+          Minor enhancements possible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Gradient and sort order guide from high (orange) to low (green) importance.
+          Error bars add context. Could emphasize top features more.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct horizontal bar chart for permutation importance.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Sorted bars, error bars, color gradient, reference line all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: importance_mean, Y: features, error bars: ±std. All correct.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Exact title format and proper legend labeling.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 15 features showing full range (0.001–0.127) and varying uncertainty.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Diabetes prediction ML scenario, realistic features, neutral domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Plausible importance values, proper uncertainty representation.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → theme → data → plot → save. No functions.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) and deterministic data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used (ggplot2, dplyr, scales, ragg, tidyr in workflow).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No over-engineering, no fake functionality. Clean idiomatic R.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct: plot-{THEME}.png via ragg::agg_png, 4800×2700px.'
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of ggplot2: geom_col, geom_errorbarh, scale_fill_gradient,
+          theme chaining, ragg device.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses scale_fill_gradient for continuous encoding and sophisticated
+          theme composition. Could explore more advanced features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - colorbar
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - custom-colormap
+  - grid-styling
+  - minimal-chrome
