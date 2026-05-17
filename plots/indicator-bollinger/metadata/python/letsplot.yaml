@@ -1,200 +1,44 @@
 library: letsplot
+language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:21:22Z'
-updated: '2026-01-07T20:29:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795221197
+updated: '2026-05-17T10:01:50Z'
+generated_by: claude-haiku
+workflow_run: 25987562842
 issue: 3237
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/letsplot/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent visual clarity with well-chosen blue/yellow color scheme that clearly
-    distinguishes price from bands
-  - Proper implementation of Bollinger Bands with all three components (upper, lower,
-    SMA) plus semi-transparent fill
-  - Realistic synthetic data with volatility clustering that demonstrates band expansion/contraction
-  - Clean KISS code structure following lets-plot grammar of graphics
-  - Correct title format and descriptive axis labels with units
+  - Perfect palette compliance with both light and dark renders
+  - Excellent text legibility with explicitly sized elements across all themes
+  - Clean, well-structured code with proper theme-adaptive styling
+  - Comprehensive Bollinger Bands visualization showing volatility envelope, price,
+    and SMA
+  - Realistic financial data with volatility clustering demonstrating band squeeze
+    and expansion
+  - Professional minimal styling with thoughtful visual hierarchy
   weaknesses:
-  - Missing legend to identify the three line types (Close Price, SMA, Upper/Lower
-    Bands)
-  - Grid styling could be more subtle (currently visible but acceptable)
-  image_description: The plot displays a Bollinger Bands chart with a time series
-    from January 22 to June 17, 2024. The price line (close) is rendered as a prominent
-    yellow/gold line that moves within a blue-shaded volatility envelope. The upper
-    and lower bands are shown as solid blue lines defining the envelope boundaries,
-    with a semi-transparent light blue fill between them. The middle band (20-period
-    SMA) is displayed as a dashed blue line. The chart shows price starting around
-    $96, rising to ~$112 in early February, then declining through a high-volatility
-    period (visible band widening around Feb-Mar), reaching lows near $76-78 in late
-    March, followed by recovery with narrower bands. The title "indicator-bollinger
-    · letsplot · pyplots.ai" appears at top center. X-axis shows "Date" with monthly
-    tick marks, Y-axis shows "Price (USD)" ranging from 76 to 114.
-  criteria_checklist:
-    visual_quality:
-      score: 36
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at the
-          exported resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; x-axis date labels are well-spaced
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 8
-        passed: true
-        comment: Lines are visible but yellow price line could be slightly thicker
-          for better prominence
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills the canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Price (USD) and Date are descriptive with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: No legend present to identify the three line types (price, SMA, bands)
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Bollinger Bands chart with upper/lower bands, SMA, and price
-          line
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, price values on Y-axis, correctly mapped
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: All three bands present with fill; missing explicit legend identifying
-          components
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: No legend present to verify accuracy
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as indicator-bollinger · letsplot · pyplots.ai
-    data_quality:
-      score: 19
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows volatility expansion, price touching bands, and band contraction;
-          could show more explicit band squeeze patterns
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Synthetic stock price data with realistic price movements and volatility
-          clustering
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Price values ($76-$114) and 120-day timeframe are realistic for stock
-          data
-    code_quality:
-      score: 10
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Simple linear flow: imports, data generation, plot, save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 2
-        max: 2
-        passed: true
-        comment: All imports are used
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses ggplot grammar with geom_ribbon and geom_line layering; could
-          leverage more lets-plot specific features like tooltips
+  - Design sophistication could be enhanced with additional visual refinement or custom
+    styling
+  - Could leverage more distinctive letsplot features beyond standard layer composition
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and readable
+      Chrome: Title "indicator-bollinger · letsplot · anyplot.ai" clearly visible in dark text; axis labels "Date" (x) and "Price (USD)" (y) with units; tick labels visible at appropriate sizes (24pt title, 20pt labels, 16pt ticks)
+      Data: Green line (Close Price, #009E73) is prominent and clearly distinguished; blue ribbon (Bollinger Bands, #0072B2) with 20% transparency shows the envelope; blue dashed line shows 20-SMA reference. Grid lines are subtle and don't interfere with readability
+      Legibility verdict: PASS - All text is clearly readable against the light background with excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and readable
+      Chrome: Title and axis labels appear in light text; all text elements are clearly visible against the dark surface; grid lines are appropriately subtle; no dark-on-dark contrast failures
+      Data: Green and blue data colors are identical to light render; volatility envelope is equally clear in dark theme. The color palette maintains its identity across both renders while chrome (background, text, grid) properly flips
+      Legibility verdict: PASS - All text is clearly readable in dark theme with no dark-on-dark failures; proper theme adaptation throughout
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -205,7 +49,5 @@ impl_tags:
   - data-generation
   dataprep:
   - rolling-window
-  - time-series
   styling:
   - alpha-blending
-  - grid-styling
