@@ -1,158 +1,182 @@
 library: plotnine
+language: python
 specification_id: biplot-pca
 created: '2026-01-09T13:20:35Z'
-updated: '2026-01-09T13:23:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20853039303
+updated: '2026-05-17T17:45:35Z'
+generated_by: claude-haiku
+workflow_run: 25997879047
 issue: 3417
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - 'Excellent implementation of all biplot requirements: scores, loadings with arrows,
-    variable labels, and unit circle reference'
-  - Smart label positioning with manual adjustments to reduce overlap between petal
-    length/width labels
-  - Appropriate color palette that is colorblind-safe
-  - Well-scaled loadings that are visible alongside score points
-  - Proper axis labels with variance explained percentages
-  - Clean ggplot2-style layered composition using plotnine grammar of graphics
+  - 'Perfect spec compliance: PCA biplot structure, unit circle reference, correctly
+    labeled loadings, proper axis labels with variance percentages.'
+  - 'Flawless theme adaptation: Both renders use theme-adaptive tokens correctly.
+    Data colors identical between themes. Zero legibility failures.'
+  - 'Clean, reproducible code: load_iris() deterministic. Smart label offset logic
+    avoids overlap.'
+  - 'High visual quality: Points sized appropriately with density-aware alpha. Arrows
+    bold with arrow heads. Typography hierarchy respected.'
+  - 'Okabe-Ito palette applied correctly: First series #009E73, multi-series in canonical
+    order.'
   weaknesses:
-  - Slight overlap between petal length and petal width labels despite manual adjustment
-    attempt
-  - No random seed set (though not strictly needed since Iris is deterministic data)
-  - Could use more distinctive plotnine features like scale_color_brewer instead of
-    manual colors
-  image_description: 'The plot displays a PCA biplot using the Iris dataset with 150
-    observations (50 per species). The three Iris species (setosa, versicolor, virginica)
-    are shown as colored scatter points: blue for setosa clustered on the left, golden-yellow
-    for versicolor in the middle, and orange for virginica on the right. Four black
-    arrows originate from the origin representing variable loadings: "sepal width"
-    points upward-left, "sepal length" points to the upper-right, "petal width" and
-    "petal length" point to the right (nearly overlapping). A dashed gray unit circle
-    provides reference for loading magnitudes. Axis labels show "PC1 (73.0%)" and
-    "PC2 (22.9%)" with variance explained percentages. The title correctly follows
-    the format "biplot-pca · plotnine · pyplots.ai". The plot uses a 16:9 landscape
-    format with a minimal theme and subtle gray grid.'
+  - 'Design Excellence not maxed (15/20): While aesthetic is professional, could add
+    more aggressive visual refinement—e.g., remove top/right borders, custom grid
+    styling, or visual emphasis on key clusters.'
+  - 'Library Mastery not maxed (8/10): Uses plotnine idiomatically but in straightforward
+    ways. Could leverage distinctive features—e.g., faceting, custom legends, or annotation
+    callouts.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct for light theme
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt), loading labels (12pt bold) all in dark INK/INK_SOFT colors, clearly visible
+      Data: Three species in Okabe-Ito colors—setosa (#009E73) left cluster, versicolor (#D55E00) center, virginica (#0072B2) right. Four loading arrows black with arrow heads, labeled with manual offsets to avoid overlap. Unit circle dashed reference subtle but visible.
+      Legibility verdict: PASS — all text readable, no light-on-light conflicts
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct for dark theme
+      Chrome: All text now in light colors (INK #F0EFE8 primary, INK_SOFT #B8B7B0 secondary), clearly visible against dark surface. No dark-on-dark failures.
+      Data: Species colors identical to light render (#009E73 green, #D55E00 orange, #0072B2 blue). Arrows white with arrow heads. Legend background elevated (#242420) with subtle border.
+      Legibility verdict: PASS — all text readable, strong contrast, no accessibility issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Minor overlap between petal length and petal width labels due to
-          similar loading directions; still readable
-      - id: VQ-03
-        name: Element Visibility
         score: 8
         max: 8
         passed: true
-        comment: Point size 4 with alpha 0.7 is well-suited for 150 data points
+        comment: All text explicitly sized and readable in both themes via theme-adaptive
+          tokens
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Smart offset logic and manual adjustments prevent label collision
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Points, arrows, and circle all clearly visible with appropriate sizing
+          and alpha
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, orange palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, unit circle extends close to edges
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with variance explained percentages
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette applied correctly, colorblind-safe, no red-green
+          sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 format with good proportions, nothing cut off, generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle, legend well-placed; grid could be slightly less prominent
+        comment: Title matches spec format, axes include component names and variance
+          percentages
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Backgrounds correct, data colors identical between renders, chrome
+          flips appropriately
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional custom theme, good typography hierarchy, but could add
+          more visual distinction
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minimal chartjunk, subtle styling, could strengthen with more aggressive
+          design choices
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy and focal point, could enhance with strategic
+          emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct biplot with scores as points and loadings as arrows
+        comment: Correct PCA biplot with scores and loadings
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: PC1 on X-axis, PC2 on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scores, loadings, labels, unit circle,
-          variance explained'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: colored scores, labeled loadings, unit
+          circle'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points and loading arrows
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: PC1 vs PC2 correctly mapped with appropriate axis ranges
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Species legend labels are correct
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format biplot-pca · plotnine · pyplots.ai
+        comment: Title and legend follow spec format with correct labels
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear species separation, variable loadings with different
-          directions and magnitudes
+        comment: Iris dataset with 4 features, 150 observations, demonstrates PCA
+          effectively
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris dataset is a classic, neutral, real-world example for PCA
+        comment: Well-established dataset, non-controversial, appropriate for multivariate
+          analysis
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Scaled loadings visible alongside scores; loading scale factor could
-          be slightly larger
+        comment: Variance explained realistic, axis ranges standard for PCA, loadings
+          scaled appropriately
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,42 +184,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data loading, PCA, dataframes, plot, save'
+        comment: No functions or classes, straightforward sequential code
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses load_iris() which is deterministic, but no explicit np.random.seed()
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic data and analysis, no random state needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used, no unnecessary dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Modern plotnine and sklearn APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clear variable names, smart offset logic, no fake interactivity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png, current API version
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses layered composition but no advanced plotnine-specific features
-          like faceting or statistical transformations
+        passed: true
+        comment: ggplot2-style piping, high-level geoms, proper theme customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Solid use of standard plotnine features, but straightforward patterns
+          without distinctive innovations
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -207,7 +237,5 @@ impl_tags:
   - dataset-loading
   dataprep:
   - pca
-  - normalization
   styling:
   - alpha-blending
-  - grid-styling

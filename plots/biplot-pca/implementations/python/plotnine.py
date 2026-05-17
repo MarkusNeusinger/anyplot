@@ -1,14 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     arrow,
+    element_line,
+    element_rect,
     element_text,
     geom_path,
     geom_point,
@@ -24,6 +28,16 @@ from sklearn.datasets import load_iris
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 
+
+# Theme configuration
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first 3 for species)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Load Iris dataset
 iris = load_iris()
@@ -46,7 +60,6 @@ var_explained = pca.explained_variance_ratio_ * 100
 df_scores = pd.DataFrame({"PC1": scores[:, 0], "PC2": scores[:, 1], "Species": species_names})
 
 # Scale loadings to be visible alongside scores
-# Use a scaling factor based on the score range
 score_scale = np.max(np.abs(scores)) * 0.8
 loading_scale = np.max(np.abs(loadings))
 scale_factor = score_scale / loading_scale
@@ -82,46 +95,53 @@ df_labels.loc[3, "y"] += 0.15  # petal width - move up
 theta = np.linspace(0, 2 * np.pi, 100)
 df_circle = pd.DataFrame({"x": np.cos(theta) * scale_factor, "y": np.sin(theta) * scale_factor})
 
-# Colors - Python Blue variants for species
-colors = ["#306998", "#FFD43B", "#E67E22"]
+# Theme-adaptive theme
+anyplot_theme = theme(
+    figure_size=(16, 9),
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
+    panel_border=element_rect(color=INK_SOFT, fill=None),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT),
+    plot_title=element_text(size=24, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
+    text=element_text(size=14),
+)
 
 # Create biplot
 plot = (
     ggplot()
     # Unit circle reference
-    + geom_path(df_circle, aes(x="x", y="y"), color="gray", linetype="dashed", size=0.8, alpha=0.5)
+    + geom_path(df_circle, aes(x="x", y="y"), color=INK_SOFT, linetype="dashed", size=0.8, alpha=0.5)
     # Observation scores as points
     + geom_point(df_scores, aes(x="PC1", y="PC2", color="Species"), size=4, alpha=0.7)
     # Loading arrows
     + geom_segment(
         df_loadings,
         aes(x="x", y="y", xend="xend", yend="yend"),
-        color="#1a1a1a",
+        color=INK,
         size=1.2,
         arrow=arrow(length=0.15, type="closed"),
     )
-    # Loading labels (using separate df with pre-computed positions)
-    + geom_text(df_labels, aes(x="x", y="y", label="variable"), size=12, color="#1a1a1a", fontweight="bold")
+    # Loading labels
+    + geom_text(df_labels, aes(x="x", y="y", label="variable"), size=12, color=INK, fontweight="bold")
     # Labels
     + labs(
         x=f"PC1 ({var_explained[0]:.1f}%)",
         y=f"PC2 ({var_explained[1]:.1f}%)",
-        title="biplot-pca · plotnine · pyplots.ai",
+        title="biplot-pca · plotnine · anyplot.ai",
         color="Species",
     )
     # Theme
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-    )
-    + scale_color_manual(values=colors)
+    + anyplot_theme
+    + scale_color_manual(values=OKABE_ITO)
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
