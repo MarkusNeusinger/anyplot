@@ -1,7 +1,7 @@
 """ anyplot.ai
 network-weighted: Weighted Network Graph with Edge Thickness
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-17
+Quality: 92/100 | Updated: 2026-05-17
 """
 
 import os
