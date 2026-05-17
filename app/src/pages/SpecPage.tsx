@@ -456,24 +456,6 @@ export function SpecPage() {
             </Box>
           </Box>
         )}
-        {mode === 'detail' && detailLanguage && selectedLibrary && (
-          <Box
-            sx={{
-              display: 'flex',
-              justifyContent: 'flex-start',
-              alignItems: 'center',
-              gap: 0.75,
-              mb: 0.5,
-              fontFamily: typography.mono,
-              fontSize: fontSize.sm,
-              color: semanticColors.mutedText,
-            }}
-          >
-            <Box component="span">{detailLanguage}</Box>
-            <Box component="span" sx={{ color: 'var(--ink-muted)' }}>·</Box>
-            <Box component="span">{selectedLibrary}</Box>
-          </Box>
-        )}
 
         <Typography
           variant="h4"
