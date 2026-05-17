@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-17
 """
 
 import os
