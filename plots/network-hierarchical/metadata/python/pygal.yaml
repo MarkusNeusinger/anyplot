@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: network-hierarchical
 created: '2026-01-08T22:56:16Z'
-updated: '2026-05-17T06:28:02Z'
+updated: '2026-05-17T06:35:00Z'
 generated_by: claude-haiku
 workflow_run: 25983368953
 issue: 3343
@@ -12,44 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-h
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-hierarchical/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 81
 review:
   strengths:
-  - Excellent text legibility in both themes with clearly readable title, axis labels,
-    and tick labels
-  - Clean organizational hierarchy visualization with clear level-based layout and
-    proper spacing
-  - 'Correct theme-adaptive chrome: light background with dark text, dark background
-    with light text'
-  - 'Strong spec compliance: accurate hierarchical structure, proper level positioning,
-    correct title format and legend labels'
-  - Deterministic, clean code structure with well-organized data hierarchy definition
+  - 'Perfect visual and spec compliance: text fully readable in both themes, all spec
+    requirements met'
+  - 'Excellent palette implementation: correct Okabe-Ito order with identical data
+    colors across light/dark, proper theme-adaptive chrome'
+  - 'Clean code structure: KISS design, deterministic data, properly themed with explicit
+    font sizes'
+  - 'Strong theme consistency: backgrounds, text colors, and edge colors all correctly
+    adapt to light/dark'
   weaknesses:
-  - 'CRITICAL: First data series (Executive nodes) rendered in orange (#D55E00) instead
-    of required green (#009E73) — check color assignment logic, possibly off-by-one
-    error or SVG/PNG conversion issue'
-  - Level-based multi-color scheme while functional for hierarchy, is not the standard
-    approach — consider if color-by-level is preferred or if single Okabe-Ito series
-    with shape/size variation would better follow style guidelines
-  - Generic design with default library configuration — could enhance visual sophistication
-    through custom styling, refined typography hierarchy, or visual emphasis techniques
+  - 'Generic design sophistication: uses library defaults with minimal artistic customization'
+  - 'Limited library mastery: XY positioning is functional but not distinctive; could
+    be implemented in matplotlib or other libraries similarly'
+  - 'No visual storytelling: organizational chart is clear but doesn''t emphasize
+    patterns or insights'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title, axis labels (Y: "Management Level (0=Top, 3=Bottom)", X: "Horizontal Position (Peer Distribution)"), tick labels all clearly visible against light background with dark text
-      Data: Hierarchical network showing 4 organizational levels (Executive, VPs, Directors, Managers) connected by edges. Executive nodes at top are ORANGE (#D55E00), VPs are BLUE, Directors are REDDISH PURPLE, Managers are YELLOW/ORANGE. Node labels shown in/near points.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title, axis labels, and tick labels clearly visible with dark text
+      Data: CEO node in brand green (#009E73), three VPs in orange (#D55E00), seven Directors in blue (#0072B2), eleven Managers in reddish-purple (#CC79A7); edges in muted tan
+      Layout: Well-balanced margins, descriptive axis labels with units
+      Legibility verdict: PASS - all text readable and well-spaced
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title, axis labels, tick labels all clearly visible against dark background with light text — no dark-on-dark failures
-      Data: Same hierarchical structure with identical data colors as light render (orange, blue, reddish purple, yellow from top to bottom). Edges visible in muted cyan/teal color. All nodes clearly distinguishable.
-      Legibility verdict: PASS
-
-    CRITICAL PALETTE ISSUE: The first data series (Executive level) is rendered in orange (#D55E00) instead of the required green (#009E73). While the Okabe-Ito palette is correctly defined in the code, the color assignment appears incorrect — Executive nodes should be the brand-green position-1 color but display as position-2 orange. This violates the "first series is ALWAYS #009E73" rule.
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, axis labels, and tick labels clearly visible with light text; edge lines in light tan
+      Data: Identical colors to light render - green CEO, orange VPs, blue Directors, purple Managers (data color consistency verified)
+      Layout: Same composition as light render; no dark-on-dark failures
+      Legibility verdict: PASS - all text readable on dark surface with no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -57,46 +53,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set and perfectly readable in both themes
+        comment: Title 28px, labels 22px, ticks 18px; all explicitly sized and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, legend positioned without overlap
+        comment: All markers and labels fully readable with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Nodes and edges are optimally sized and visible
+        comment: 22 nodes with dots_size=28 appropriately sized; edges subtle but
+          clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between data elements
+        comment: Okabe-Ito palette is CVD-safe with good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect layout with balanced margins and good canvas utilization
+        comment: Plot fills 65-70% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context
+        comment: Descriptive labels with context; title in correct format
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: First data series (Executive) rendered in #D55E00 (orange)
-          instead of required #009E73 (green) — palette violation'
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds correct;
+          data colors identical between renders'
     design_excellence:
-      score: 11
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -104,19 +102,21 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults but lacks distinctive design choices
+        comment: Professional looking but uses library defaults with minimal artistic
+          customization
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: true
-        comment: Some refinement visible (no grid/guides, clean layout)
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Hierarchy is displayed clearly but limited visual emphasis or storytelling
+        comment: Guides disabled for clarity; standard library styling with minimal
+          customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Hierarchy clear through positioning but no visual emphasis on insights
     spec_compliance:
       score: 15
       max: 15
@@ -132,22 +132,23 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: nodes, edges, hierarchy levels, positioning'
+        comment: 'All features present: nodes with labels, edges, 4 levels, correct
+          positioning'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X/Y correctly mapped: horizontal position for peer distribution,
-          vertical for management level'
+        comment: X = horizontal position, Y = management level; all data visible and
+          correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend shows all level categories
+        comment: Title format correct; legend shows all four levels with proper labels
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -155,19 +156,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all hierarchy aspects: 4 levels with realistic branching'
+        comment: 'Shows all aspects: single root, multiple nodes per level, clear
+          branching'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Real organizational chart scenario with realistic role hierarchy
+        comment: Organizational chart is realistic but somewhat generic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions are plausible for org structure
+        comment: Organizational structure is realistic with proper proportions
     code_quality:
       score: 10
       max: 10
@@ -177,32 +179,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean sequential structure: imports → data → positioning → chart
-          → save'
+        comment: 'Simple linear structure: imports → constants → hierarchy → layout
+          → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic with hardcoded hierarchy data
+        comment: Hard-coded deterministic hierarchy; fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, shutil, subprocess, pygal, Style'
+        comment: 'Only imports used: os, shutil, subprocess, pygal, Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code with no over-engineering or fake functionality
+        comment: Appropriate complexity; no over-engineering or fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves as plot-{THEME}.png/.html/.svg
+        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
       score: 4
       max: 10
@@ -211,23 +213,22 @@ review:
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Correct usage of pygal.XY and Style, but fairly standard pattern
+        passed: true
+        comment: Correct use of XY chart and Style object; standard approach without
+          advanced features
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Minimal use of library-specific features; mostly basic scatter plot
-          with styling
-  verdict: REJECTED
+        comment: Generic XY positioning; could be replicated in other libraries; no
+          library-specific features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
