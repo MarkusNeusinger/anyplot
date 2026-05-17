@@ -1,13 +1,19 @@
-""" anyplot.ai
+"""anyplot.ai
 lollipop-grouped: Grouped Lollipop Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-17
 """
 
 import os
+import sys
 
-import pygal
-from pygal.style import Style
+
+# Prevent local filename from shadowing the pygal package by removing script dir from path
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path[:] = [p for p in sys.path if os.path.abspath(p) != _script_dir]
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
 
 
 # Theme tokens
