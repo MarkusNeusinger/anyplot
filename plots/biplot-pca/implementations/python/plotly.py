@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 biplot-pca: PCA Biplot with Scores and Loading Vectors
-Library: plotly 6.5.1 | Python 3.13
-Quality: pending | Updated: 2026-05-17
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-17
 """
 
 import os
