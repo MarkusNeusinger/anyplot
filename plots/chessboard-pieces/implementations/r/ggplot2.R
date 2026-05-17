@@ -1,7 +1,7 @@
 #' anyplot.ai
-#' chessboard-pieces: Chess Board with Pieces
-#' Library: ggplot2 | R 4.3
-#' Quality: pending | Created: 2026-05-17
+#' chessboard-pieces: Chess Board with Pieces for Position Diagrams
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 78/100 | Created: 2026-05-17
 
 library(ggplot2)
 library(dplyr)
