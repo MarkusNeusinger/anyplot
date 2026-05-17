@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' network-hierarchical: Hierarchical Network Graph with Tree Layout
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 57/100 | Created: 2026-05-17
+#' Quality: 81/100 | Created: 2026-05-17
 
 library(ggplot2)
 library(dplyr)
