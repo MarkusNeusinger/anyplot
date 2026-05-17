@@ -1,158 +1,164 @@
 library: letsplot
+language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:21:48Z'
-updated: '2026-01-09T08:25:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845627228
+updated: '2026-05-17T15:50:07Z'
+generated_by: claude-haiku
+workflow_run: 25995250561
 issue: 3415
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of Voronoi tessellation with proper Sutherland-Hodgman
-    polygon clipping algorithm
-  - Clean visual appearance with well-differentiated colors and clearly visible seed
-    points
-  - Correct title format and appropriate axis labeling
-  - Proper use of ggplot grammar with geom_polygon for Voronoi cells and layered points
-    for seeds
-  - Generates both PNG and HTML output for interactive viewing
-  - Realistic clustered data representing facility locations
+  - Perfect theme adaptation across light and dark renders with correct color preservation
+  - Excellent text legibility with properly sized, readable elements in both themes
+  - Strong spec compliance and data quality—all requirements met
+  - Clean, maintainable code with sophisticated polygon clipping algorithm
+  - No overlap, no legibility issues, proper color accessibility
+  - Good canvas utilization with balanced margins
   weaknesses:
-  - Star import from lets_plot (noqa comment used to suppress linting)
-  - Seed points could be slightly larger for better visibility at full resolution
-  image_description: The plot shows a Voronoi diagram with 20 seed points partitioning
-    a 100×100 coordinate space. The diagram features colorful polygon cells in a diverse
-    palette including dark blue, teal, yellow, orange, pink, light blue, green, and
-    purple tones. Each cell is filled with a distinct semi-transparent color (alpha
-    ~0.7) with white edges separating the regions. Seed points are clearly marked
-    as black circles with white centers, positioned within their respective Voronoi
-    cells. The plot has a correct title format "voronoi-basic · letsplot · pyplots.ai"
-    at the top. Axis labels show "X Coordinate" and "Y Coordinate" with tick marks
-    from 0 to 100 in increments of 5. The data shows two clusters - one centered around
-    (25, 40) and another around (75, 60) - representing the clustered facility locations
-    as described in the code. All cells are properly clipped to the bounding box.
-    The layout is clean with a minimal theme.
+  - 'Design Excellence is mid-range: functional and clean, but not exceptional or
+    publication-polished. Could benefit from more distinctive visual choices or refined
+    aesthetic sophistication beyond defaults.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct tone, not pure white
+      Chrome: Title "voronoi-basic · letsplot · anyplot.ai" clearly visible in dark text at top. Axis labels "X Coordinate" and "Y Coordinate" are readable. Tick marks (0-100 range) are properly spaced and legible.
+      Data: 20 colored Voronoi regions using diverse, visually distinct colors from extended Okabe-Ito palette. Seed points marked with dual-color circles (dark outer, light inner) for clear visibility. Polygon edges outlined in subtle dark gray.
+      Legibility verdict: PASS - all text elements perfectly readable, proper contrast between elements and background, no dark-on-dark issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct tone, not pure black
+      Chrome: Title is light-colored and clearly visible. Axis labels "X Coordinate" and "Y Coordinate" are light and readable. Tick marks are visible and legible.
+      Data: Voronoi region colors identical to light render (no color change - only chrome flips). Seed points still clearly marked with dual-circle technique. Polygon edges visible.
+      Legibility verdict: PASS - all text light-colored and readable against dark background, no dark-on-dark issues, chrome properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Title 24pt, labels 20pt, ticks 16pt - all explicitly set and readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; elements well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Seed points visible with good black/white contrast, but could be
-          slightly larger
+        comment: Voronoi regions and seed points clearly visible and well-adapted
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Diverse color palette with good differentiation between adjacent
-          regions
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good canvas utilization but some wasted space at bottom of plot
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels but no units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No visible grid which is appropriate for Voronoi, legend hidden as
-          regions are self-explanatory
+        comment: Extended Okabe-Ito palette provides good contrast and CVD-safe differentiation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-75% of canvas with balanced, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels and correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, text theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults, not exceptional innovation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good refinement with clean presentation, could be slightly more polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Effectively communicates spatial partitioning with clear visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Voronoi diagram with proper tessellation
+        comment: Correct Voronoi diagram with proper partitioning
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly assigned as seed points
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: clipped cells, distinguishable colors,
-          visible seed points'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: colored regions, seed points, differentiation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show 0-100 bounding box correctly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped, full data range visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately hidden
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format voronoi-basic · letsplot · pyplots.ai
+        comment: Title format correct, legend appropriately hidden
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clustered distribution demonstrating real-world facility placement
+        comment: Demonstrates varied region sizes and realistic spatial patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic scenario of facility locations with two clusters
+        comment: Plausible facility location scenario, neutral data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 0-100 coordinate range is sensible; 20 points within recommended
-          range
+        comment: Sensible coordinate range with realistic clustering
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,52 +166,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → polygon computation → plot → save'
+        comment: 'Linear flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Star import from lets_plot; scipy is needed for Voronoi
+        comment: np.random.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used, no redundancy
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean polygon clipping implementation, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper ggplot() + geom_* pattern with correct aesthetics and scaling
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_polygon, proper theme customization
+        comment: Good use of letsplot features but somewhat standard for polygon rendering
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting

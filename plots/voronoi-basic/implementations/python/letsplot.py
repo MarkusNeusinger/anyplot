@@ -1,17 +1,41 @@
-# ruff: noqa: F405
-"""pyplots.ai
+""" anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
-Library: lets-plot | Python 3.13
-Quality: pending | Created: 2025-01-09
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
+from lets_plot import (
+    LetsPlot,
+    aes,
+    coord_fixed,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_point,
+    geom_polygon,
+    ggplot,
+    ggsave,
+    ggsize,
+    labs,
+    scale_fill_manual,
+    theme,
+    theme_minimal,
+)
 from scipy.spatial import Voronoi
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Generate seed points for spatial partitioning
 np.random.seed(42)
@@ -109,49 +133,54 @@ df_polygons = pd.DataFrame(polygon_data)
 # Create seed points dataframe
 df_seeds = pd.DataFrame({"x": x, "y": y, "label": [f"P{i + 1}" for i in range(len(x))]})
 
-# Color palette for regions - starting with Python colors, then colorblind-safe additions
+# Color palette for regions - diverse and visually distinct
 colors = [
-    "#306998",
-    "#FFD43B",
-    "#4ECDC4",
-    "#FF6B6B",
-    "#45B7D1",
-    "#96CEB4",
-    "#FFEAA7",
-    "#DDA0DD",
-    "#98D8C8",
-    "#F7DC6F",
-    "#BB8FCE",
-    "#85C1E9",
-    "#F8B500",
-    "#00CED1",
-    "#FF7F50",
-    "#9370DB",
-    "#20B2AA",
-    "#FFB6C1",
-    "#87CEEB",
-    "#DEB887",
+    "#009E73",
+    "#D55E00",
+    "#0072B2",
+    "#CC79A7",
+    "#E69F00",
+    "#56B4E9",
+    "#F0E442",
+    "#1B9E77",
+    "#D95F02",
+    "#7570B3",
+    "#E7298A",
+    "#66A61E",
+    "#E6AB02",
+    "#A6761D",
+    "#666666",
+    "#1B9E77",
+    "#D95F02",
+    "#7570B3",
+    "#E7298A",
+    "#66A61E",
 ]
 
 # Build plot with Voronoi cells and seed points
 plot = (
     ggplot()
-    + geom_polygon(data=df_polygons, mapping=aes(x="x", y="y", fill="region"), color="white", size=1.5, alpha=0.7)
-    + geom_point(data=df_seeds, mapping=aes(x="x", y="y"), color="#1a1a1a", size=6)
-    + geom_point(data=df_seeds, mapping=aes(x="x", y="y"), color="white", size=3)
+    + geom_polygon(data=df_polygons, mapping=aes(x="x", y="y", fill="region"), color=INK_SOFT, size=1.5, alpha=0.7)
+    + geom_point(data=df_seeds, mapping=aes(x="x", y="y"), color=INK, size=8)
+    + geom_point(data=df_seeds, mapping=aes(x="x", y="y"), color=PAGE_BG, size=4)
     + scale_fill_manual(values=colors)
     + coord_fixed(xlim=[x_min, x_max], ylim=[y_min, y_max])
-    + labs(x="X Coordinate", y="Y Coordinate", title="voronoi-basic · letsplot · pyplots.ai")
+    + labs(x="X Coordinate", y="Y Coordinate", title="voronoi-basic · letsplot · anyplot.ai")
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_blank(),
+        panel_grid_minor=element_blank(),
+        plot_title=element_text(size=24, color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
         legend_position="none",
     )
     + ggsize(1600, 900)
 )
 
-# Save outputs to current directory
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save outputs with theme suffix
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.html", path=".")
