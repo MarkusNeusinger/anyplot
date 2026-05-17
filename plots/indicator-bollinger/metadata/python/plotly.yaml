@@ -1,156 +1,181 @@
 library: plotly
+language: python
 specification_id: indicator-bollinger
 created: '2026-01-07T20:19:32Z'
-updated: '2026-01-07T20:27:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20795210355
+updated: '2026-05-17T09:50:12Z'
+generated_by: claude-haiku
+workflow_run: 25987313982
 issue: 3237
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of Bollinger Bands with all required components (price,
-    SMA, upper/lower bands, filled envelope)
-  - Good color scheme with prominent black price line, contrasting yellow SMA, and
-    coordinated blue bands
-  - Proper use of dashed line for SMA as spec suggests
-  - Clean, readable code following KISS principles
-  - Correct 4800x2700 output using scale=3 method
-  - Good hover tooltips with formatted price values
-  - Semi-transparent fill between bands implemented correctly
+  - 'Perfect theme adaptation: both light and dark renders are readable with no dark-on-dark
+    or light-on-light failures'
+  - 'All required Bollinger Bands elements present and correctly positioned: bands,
+    SMA, close price'
+  - 'Proper palette compliance: first series is brand green (#009E73), subsequent
+    series follow Okabe-Ito order'
+  - Clean, reproducible code with deterministic seed
+  - Realistic synthetic data demonstrating meaningful price volatility and trend
+  - Responsive legend and clear typography hierarchy
   weaknesses:
-  - Legend shows 5 separate items when Upper Band and Lower Band could potentially
-    share a legend entry since they use the same color
+  - 'Design excellence is solid but not exceptional: could use additional visual refinement
+    (legend placement, grid styling, stronger visual hierarchy)'
+  - 'Library mastery leaves room for distinctive Plotly features: no range selectors,
+    range sliders, or candlestick representation despite technical indicator context'
   image_description: |-
-    The plot displays a Bollinger Bands indicator chart with stock price data from late January 2024 through early June 2024. The chart shows:
-    - A black line representing the closing price, which starts around $97-100, rises briefly to ~$103, then trends downward to ~$84 by late March before recovering to ~$95 by June
-    - A yellow dashed line showing the 20-day Simple Moving Average (SMA), which smoothly follows the price trend
-    - Blue solid lines for the upper and lower Bollinger Bands (±2σ), with the bands widening during volatile periods and narrowing during calmer periods
-    - A light blue semi-transparent fill between the upper and lower bands representing the volatility envelope
-    - The title "indicator-bollinger · plotly · pyplots.ai" is centered at the top
-    - A horizontal legend above the plot showing all five elements: Close Price, 20-day SMA, Lower Band (-2σ), Upper Band (+2σ), and Bollinger Bands (2σ)
-    - X-axis labeled "Date" with business day dates, Y-axis labeled "Price ($)" with dollar-formatted values from $85 to $110
-    - Subtle gray grid lines on white background
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "indicator-bollinger · plotly · anyplot.ai" in dark text (28px), clearly visible. Axis labels ("Date", "Price ($)") in dark text (22px). Tick labels in subdued dark gray (18px). All text fully readable with excellent contrast.
+      Data: Close price as prominent green line (#009E73) with diamond markers ranging from ~$98 to ~$112. 20-day SMA as dashed blue line (#0072B2) running through center. Upper/lower bands as orange solid lines (#D55E00) with light orange semi-transparent fill between them. All colors distinct and visible.
+      Grid: Subtle grid lines in light gray, non-competing with data
+      Legend: Positioned top-center with clear labels for all five series, light background with subtle border
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title in light text (#F0EFE8), clearly visible. Axis labels in light text. Tick labels in light gray (#B8B7B0). All text fully readable against dark background with no dark-on-dark failures.
+      Data: Close price green line, 20-day SMA blue dashed line, upper/lower bands orange lines - all colors identical to light render, confirming proper theme separation (data colors are theme-independent, only chrome flips)
+      Grid: Subtle grid lines in light-adapted rgba color, visible but subtle
+      Legend: Dark elevated background (#242420) with light text, maintaining clear hierarchy
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick fonts at 18pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legend is well-spaced
+        comment: Title 28px, axis labels 22px, tick labels 18px—all explicitly sized
+          and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend positioned clearly without overlapping data; all labels distinct
+          and readable
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Lines are visible with good widths (2-3px), though the dark blue
-          bands could have slightly more contrast against the fill
+        comment: All lines, markers, and fills visible; band envelope clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Good color choices: black for price, yellow for SMA, blue for bands
-          - distinct and colorblind-safe'
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with appropriate margins, legend positioned
-          above plot
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price ($) includes units, Date is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette used correctly; colors CVD-safe; no red-green-only
+          signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions; generous margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend shows 5 items when some could be consolidated; grid is subtle
-          and appropriate
+        passed: true
+        comment: Title identifies plot, library, domain; axes have descriptive labels
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (position 1); bands #D55E00 (position 2); SMA
+          #0072B2 (position 3); backgrounds correct; both renders theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom theme tokens show intentional design; professional polish.
+          Hierarchy through color and line weight. Not highly innovative.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean layout with proper margins; subtle grid; clear legend styling.
+          Could be enhanced.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear focal point with green price line; good hierarchy; Bollinger
+          Bands context supports narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Bollinger Bands chart with price line and volatility envelope
+        comment: Correct Bollinger Bands chart with overlaid line series
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, price values on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required elements present: close price, upper/lower bands, middle
-          band/SMA, semi-transparent fill'
-      - id: SC-04
-        name: Data Range
+        comment: 'All elements present: close price, 20-day SMA, upper/lower bands
+          with fill'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes encompass full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: date; Y-axis: price ($); all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly describe each element
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: indicator-bollinger · plotly · pyplots.ai'
+        comment: Title format correct; legend labels match all series
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows band expansion/contraction, price touching bands, trending
-          periods. Could show more distinct squeeze patterns
+        comment: 'Complete plot type showing all aspects: close price, SMA, bands,
+          120-period series'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock price scenario with plausible price movements and
-          volatility
+        comment: Plausible synthetic stock price; business day frequency; realistic
+          trend and volatility; neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 120 trading days is good, prices ~$85-$110 are realistic for a stock
+        comment: Price range ($85–$112) sensible; 20-period SMA standard; 2σ envelope
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -160,11 +185,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, data generation, plot, save'
+        comment: No unnecessary functions; straightforward code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: Uses np.random.seed(42)
       - id: CQ-03
@@ -172,42 +197,44 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly.graph_objects - all used
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/html; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Scatter with fill=tonexty for band area, custom hovertemplate
-          for interactivity, plotly_white template. Could leverage more plotly features
-          like rangeslider
+        comment: Uses go.Scatter() idiomatically; proper trace patterns; theme-adaptive
+          styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses hovermode, custom fill, rgba transparency. Could leverage more
+          Plotly features (range slider, candlestick).
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep:
   - rolling-window
-  - time-series
-  styling:
-  - alpha-blending
-  - grid-styling
+  styling: []
