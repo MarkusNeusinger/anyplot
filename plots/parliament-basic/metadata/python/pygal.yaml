@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: parliament-basic
 created: '2026-05-17T13:49:46Z'
-updated: '2026-05-17T14:00:37Z'
+updated: '2026-05-17T14:11:04Z'
 generated_by: claude-haiku
 workflow_run: 25992566125
 issue: 2499
@@ -12,113 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliamen
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/pygal/plot-dark.html
-quality_score: 73
+quality_score: 45
 review:
   strengths:
-  - Perfect theme adaptation in both light and dark renders
-  - Explicit font sizing throughout for visibility at 4800×2700 px
-  - Correct Okabe-Ito palette compliance with brand green (#009E73)
-  - Clean, deterministic code structure with proper output format
-  - Realistic, neutral data (European Parliament 2024)
+  - Theme tokens correctly applied (light/dark backgrounds, text colors adapted appropriately)
+  - Okabe-Ito palette properly defined and passed to Style object
+  - Title and axis labels are readable in both themes
+  - Data colors remain constant between light and dark renders (only chrome changes)
   weaknesses:
-  - Renders as connected line arcs instead of discrete individual seat dots—contradicts
-    spec requirement
-  - 'No design excellence: generic styling with defaults and no visual hierarchy'
-  - Missing visual storytelling or insight emphasis
-  - 'Limited library mastery: uses only basic pygal API without distinctive techniques'
-  - No grid/spine refinement or customization
+  - 'SC-01 CRITICAL: Visualization does not represent a parliament seat chart - shows
+    connected curves instead of discrete dots representing individual seats. Specification
+    requires ''Individual seats rendered as dots or small segments'' arranged in semicircular
+    arcs.'
+  - 'VQ-03 CRITICAL: Element visibility fails - seats are not visible as individual
+    data points. The curves merge party seats into single visual objects, preventing
+    seat-level analysis.'
+  - 'AR-05 CHECK: While pygal chart functions are used, the XY scatter implementation
+    with connecting lines does not properly implement the parliament chart specification.'
+  - 'Data representation: parliament_layout() generates semicircular coordinates but
+    pygal''s XY chart connects consecutive points into lines rather than showing discrete
+    points'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "parliament-basic · pygal · anyplot.ai" dark and readable; Y-axis labeled "Parliament Arcs", X-axis labeled "Left - Spectrum - Right"; axis labels, tick labels all dark and readable
-      Data: Six colored arcs/lines in Okabe-Ito colors (green, orange, blue, pink, orange-yellow, light blue); legend on left showing party names with seat counts; grid lines subtle but visible
-      Legibility verdict: PASS - All text perfectly readable against light background; no light-on-light issues
+      Background: Warm off-white approximately #FAF8F1 ✓
+      Chrome: Title "parliament-basic · pygal · anyplot.ai" is readable. Y-axis labels (0-100) visible. X-axis labels visible. Legend on left shows party names with seat counts in dark text. Grid lines are subtle and light gray.
+      Data: The plot shows colored curved lines radiating outward, not individual dots. Colors present: sky blue (#56B4E9), yellow (#F0E442), orange (#D55E00, #E69F00), pink/magenta (#CC79A7), and teal (#009E73 - expected as first series). However, the lines appear to connect points rather than display them as discrete seat markers.
+      Legibility verdict: FAIL - The visualization does not show individual parliament seats as discrete dots. Instead, it renders as smooth curves connecting points within each party, making it impossible to see the seat-by-seat breakdown required by the specification.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title, axis labels, tick labels all light-colored and readable against dark background; grid lines subtle and visible
-      Data: Same six colored arcs/lines identical to light render (data colors theme-independent); legend matches
-      Legibility verdict: PASS - All text perfectly readable against dark background; no dark-on-dark issues detected
-
-    CRITICAL ISSUE: Both renders display data as connected lines forming arcs, not as discrete individual dots arranged in semicircular parliament pattern. Spec requires "Individual seats rendered as dots or small segments" but visualization shows connected line arcs instead.
+      Background: Warm near-black approximately #1A1A17 ✓
+      Chrome: Title and axis labels are rendered in light gray/white text, readable against dark background ✓. Grid lines are subtle light gray. Legend text is light.
+      Data: Identical curved lines as light render. Data colors match the light render perfectly (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9, #F0E442 visible). No dark-on-dark issues with text.
+      Legibility verdict: FAIL - Same fundamental issue as light render: the parliament layout shows connected curves instead of discrete seat dots. Theme adaptation is technically correct, but the visualization itself fails the core specification requirement.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 10
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 18px labels, 16px ticks);
-          perfectly readable in both themes
+        comment: Text sizes set explicitly, all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements; clean layout
-      - id: VQ-03
-        name: Element Visibility
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Elements visible but rendering as connected lines rather than discrete
-          dots; wrong representation style
+        comment: Legend overlaps with plot area slightly; axis labels readable but
+          cramped
+      - id: VQ-03
+        name: Element Visibility
+        score: 0
+        max: 6
+        passed: false
+        comment: 'CRITICAL FAIL: Individual seats not visible. Connected curves obscure
+          discrete seat representation required by spec.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good contrast throughout
+        comment: Okabe-Ito palette used, CVD-safe, good contrast between curves
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Excellent layout; plot fills appropriate canvas area with balanced
-          margins
+        passed: false
+        comment: Significant wasted space; plot fills ~30-40% of 4800x2700 canvas
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context-appropriate titles
+        comment: Title format correct, axis labels generic (x/y numeric ranges only)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds #FAF8F1/#1A1A17;
-          theme-correct chrome'
+        comment: 'Okabe-Ito palette correct, backgrounds theme-correct #FAF8F1/#1A1A17,
+          text colors theme-adaptive'
     design_excellence:
-      score: 8
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Well-configured defaults but lacks intentional design thought or
-          custom polish
+        comment: Generic library default styling, no design intent beyond correct
+          colors
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization; library defaults with no special grid styling
-          or spine removal
+        comment: Minimal customization, no spine removal, basic grid, no whitespace
+          refinement
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis; doesn't convey
-          insight about political balance
+        comment: No visual hierarchy; data presented without emphasis or insight
     spec_compliance:
-      score: 10
+      score: 6
       max: 15
       items:
       - id: SC-01
@@ -126,38 +127,39 @@ review:
         score: 2
         max: 5
         passed: false
-        comment: 'CRITICAL: Renders as connected lines instead of discrete dots; spec
-          requires individual seat dots in semicircular arrangement'
+        comment: 'REJECT: Visualization is not a proper parliament seat chart. Shows
+          connected curves instead of discrete semicircular-arranged seat dots.'
       - id: SC-02
         name: Required Features
         score: 2
         max: 4
         passed: false
-        comment: Semicircular algorithm correct; colored by party correct; legend
-          present; but individual seat dots missing and lines used instead of dots
+        comment: 'Missing: individual seat visibility, semicircular arc arrangement
+          unclear, legend with seat counts partially present but unclear'
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: X/Y coordinates properly mapped for semicircular layout
+        passed: false
+        comment: X/Y coordinates used but do not represent parliament layout semantically.
+          User cannot extract seat-level information.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format correct; legend shows party names with seat counts
+        comment: Title format correct, legend shows party names + seat counts correctly
     data_quality:
-      score: 14
+      score: 10
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 4
         max: 6
-        passed: true
-        comment: Shows 6 parties with 37–188 seat range; demonstrates variety but
-          limited edge cases
+        passed: false
+        comment: Data shows 6 parties with varying seat counts (188, 136, 77, 53,
+          78, 37) - realistic distribution
       - id: DQ-02
         name: Realistic Context
         score: 5
@@ -166,12 +168,13 @@ review:
         comment: European Parliament 2024 data is real, comprehensible, and neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: Realistic values for legislative representation
+        passed: false
+        comment: Seat counts are factually correct, but visualization does not properly
+          represent the data
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -179,48 +182,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save; no unnecessary functions
+        comment: 'Clean structure: imports, data, custom style, chart creation, rendering'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data; no randomness
+        comment: Data is deterministic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (math, os, sys, pygal, Style)
+        comment: All imports used (math, os, sys, pygal)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean and Pythonic; defensive sys.path handling is appropriate
+        passed: false
+        comment: parliament_layout() function is well-named but the XY scatter approach
+          is fundamentally wrong for this spec. Using scatter for parliament is a
+          conceptual error.
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot-{THEME}.png + plot-{THEME}.html; current API
+        passed: false
+        comment: Saves to plot-{THEME}.png and .html correctly, but the visual output
+          is incorrect
     library_mastery:
-      score: 4
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Correct use of pygal.XY and Style object, but could leverage more
-          advanced features
+        passed: false
+        comment: Uses pygal.XY() chart correctly at syntax level, but is not the appropriate
+          chart type for parliament visualization. No distinctive library patterns.
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic scatter plot usage; no pygal-specific techniques beyond theming
+        comment: No distinctive pygal features used. Basic scatter plot with standard
+          style configuration.
+    score_caps_applied:
+    - VQ-03 = 0 (invisible/misrepresented elements) → max_score capped at 49
   verdict: REJECTED
 impl_tags:
   dependencies: []
