@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: renko-basic
 created: '2026-01-08T16:03:26Z'
-updated: '2026-05-17T11:39:23Z'
+updated: '2026-05-17T11:45:38Z'
 generated_by: claude-haiku
 workflow_run: 25989638756
 issue: 3294
@@ -12,35 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/plotly/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - Perfect theme adaptation with readable text in both light and dark renders
-  - 'Correct Okabe-Ito palette usage (#009E73 bullish, #D55E00 bearish) with identical
-    data colors across themes'
-  - Clean KISS code structure with inline Renko brick calculation
-  - 'All spec requirements met: proper legend, grid, brick size annotation, correct
-    axis formatting'
-  - Idiomatic plotly usage with proper theme tokens and hover templates
+  - Perfect theme adaptation with no dark-on-dark or light-on-light failures
+  - All text perfectly readable and explicitly sized for large canvas
+  - Clean, reproducible code with proper random seed
+  - Correct Okabe-Ito palette usage with brand green as primary series
+  - Professional styling with theme-aware colors throughout
+  - Clear data storytelling through color-coded trends and reversals
+  - Proper legend and annotation placement
   weaknesses:
-  - Design could be more sophisticated - uses standard plotly styling without custom
-    spine removal or enhanced visual refinement
-  - Limited use of plotly-specific distinctive features - hover tooltips are standard;
-    could enhance with range sliders or custom annotations
+  - Design is functional but generic - well-configured defaults without custom visual
+    sophistication
+  - Limited use of distinctive Plotly features - could leverage more interactive capabilities
+  - Minimal visual refinement beyond adequate basics
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white. Perfect neutral surface.
-      Chrome: Title "renko-basic · plotly · anyplot.ai" in dark text (#1A1A17), centered, clearly readable. Axis labels "Brick Index" (x) and "Price (USD)" (y) in dark text. Tick labels ($110, $100, etc.) in secondary text (#4A4A44). Legend "Bullish (Up)" and "Bearish (Down)" with color squares. All text perfectly readable.
-      Data: Green bricks (#009E73, Okabe-Ito position 1) represent bullish/up price movements. Orange/vermillion bricks (#D55E00, Okabe-Ito position 2) represent bearish/down movements. Brick Size annotation "$2.00" in bottom right. All elements clearly distinguishable from background.
-      Grid: Subtle gridlines at 10% opacity, visible but not dominant.
-      Legibility verdict: PASS - All text is readable, color contrast excellent, layout clear.
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "renko-basic · plotly · anyplot.ai" in dark INK; axis labels "Brick Index" and "Price (USD)" in dark INK; tick labels in secondary INK_SOFT color - all clearly readable
+      Data: Green bullish bricks (#009E73) and orange bearish bricks (#D55E00) clearly distinguishable; ~76 bricks showing price movement from ~$100 starting price
+      Grid: Subtle light gray grid (10% opacity) visible but non-dominant
+      Legend: Positioned at top center with light elevated background box, readable legend text
+      Annotation: "Brick Size: $2.00" in bottom right, readable in secondary text color
+      Legibility verdict: PASS - all elements clearly readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black. Proper dark surface.
-      Chrome: Title in light text (#F0EFE8), clearly readable against dark background. Axis labels in light text. Tick labels in soft ink (#B8B7B0), all readable—no dark-on-dark issues. Legend text light-colored and readable.
-      Data: Green bricks (#009E73) and orange bricks (#D55E00) - identical colors to light render, proving data color consistency across themes. All bricks clearly visible and distinguishable on dark surface.
-      Grid: Subtle gridlines visible with appropriate opacity.
-      Legibility verdict: PASS - All text is light-colored and readable against dark background. No dark-on-dark failures. Brand green (#009E73) visible and strong.
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all rendered in light text (INK and INK_SOFT tokens for dark theme) with excellent contrast - no dark-on-dark failures detected
+      Data: Green bullish bricks (#009E73) and orange bearish bricks (#D55E00) - IDENTICAL to light render, confirming theme-independent data representation
+      Grid: Subtle light gray grid (10% opacity) visible but non-dominant
+      Legend: Dark elevated background (#242420) with light borders and text, readable
+      Annotation: "Brick Size: $2.00" readable in secondary text color
+      Layout: Identical proportions to light render with balanced margins
+      Legibility verdict: PASS - all elements clearly readable with proper dark theme adaptation, no text contrast failures, data colors consistent with light render
   criteria_checklist:
     visual_quality:
       score: 30
@@ -51,75 +56,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, ticks
-          18px. Perfectly readable in both themes.'
+        comment: All text explicitly sized (title 28px, labels 22px, ticks 18px) and
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text. Title centered, legend positioned above plot,
-          annotation in corner.
+        comment: No overlapping text or elements, all labels well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bricks clearly visible. Bar width 0.8 with gap 0.15 provides
-          optimal spacing.
+        comment: Bricks optimally sized (width=0.8) and clearly visible with perfect
+          color contrast
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette inherently colorblind-safe. Green/orange distinction
-          clear.
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) is colorblind-safe with strong
+          luminance contrast'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, generous margins (100/50/100/80), 4800×2700px
-          output.
+        comment: Perfect canvas utilization (70-75%), balanced margins (l=100, r=50,
+          t=100, b=80)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units. Title: ''renko-basic · plotly · anyplot.ai''.
-          Axes: ''Brick Index'' and ''Price (USD)''.'
+        comment: 'Descriptive labels with units: ''Brick Index'', ''Price (USD)'',
+          proper title format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (correct), second #D55E00 (correct). Backgrounds
-          #FAF8F1/#1A1A17 (correct). Theme chrome properly flips; data colors identical.'
+        comment: 'Okabe-Ito correct (first #009E73, second #D55E00), backgrounds theme-correct
+          (#FAF8F1 light, #1A1A17 dark), both renders properly theme-adapted'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: false
-        comment: Clean professional design. Intentional palette and layout. Slightly
-          above defaults but not exceptional.
+        comment: Professional but generic - well-configured library defaults without
+          custom design thinking
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Bar edges have subtle definition. Grid subtle. Whitespace good. Spines
-          not explicitly removed.
+        comment: Some refinement in legend styling (bgcolor, borderwidth), but mostly
+          library defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Green up/orange down creates visual hierarchy. Brick Size annotation
-          adds context. Straightforward narrative.
+        passed: true
+        comment: Color coding tells trend story effectively; visual hierarchy through
+          color guides viewer through price movement
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Renko chart type using bar visualization.
+        comment: 'Correct Renko chart with all subtypes: uptrend, downtrend, reversals'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: bullish/bearish bricks, brick size annotation,
-          grid, legend.'
+        comment: 'All features present: green bullish, orange bearish, uniform bricks,
+          clear separation, grid, brick size annotation'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis brick index, Y-axis price with proper formatting. All data
-          visible.
+        comment: X-axis correctly shows brick index, Y-axis correctly shows price
+          levels
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend labels 'Bullish (Up)' and 'Bearish (Down)'
-          accurate.
+        comment: Title 'renko-basic · plotly · anyplot.ai' correct format, legend
+          labels match data
     data_quality:
       score: 15
       max: 15
@@ -160,22 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both uptrends and downtrends. Demonstrates brick size effect
-          fully.
+        comment: 'Shows all Renko aspects: bullish trends, bearish trends, reversals,
+          support/resistance patterns'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Geometric random walk with 2% volatility. Realistic stock price behavior.
-          250 days plausible.
+        comment: Stock price data with geometric random walk is realistic and plausible,
+          neutral financial context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $2.00 brick size appropriate for $78-$110 range. ~75 bricks (slightly
-          above 20-50 but acceptable).
+        comment: $100 starting price, $2 brick size, 250 trading days - all proportions
+          factually plausible
     code_quality:
       score: 10
       max: 10
@@ -185,31 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes. Direct data generation and plotting.
+        comment: 'Clean linear flow: imports → data → renko calculation → plot → save,
+          no over-engineering'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set for deterministic output.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, numpy, pandas, plotly—all used.
+        comment: Only necessary imports (os, sys, numpy, pandas, plotly), all actively
+          used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI. Straightforward Renko calculation.
+        comment: Pythonic, appropriate complexity, no fake UI or over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Correct file naming (plot-light.png, plot-dark.png, HTML files)
     library_mastery:
       score: 6
       max: 10
@@ -218,23 +224,23 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: false
-        comment: Uses go.Figure() and go.Bar() idiomatically. Theme tokens applied
-          correctly. Hover templates included.
+        passed: true
+        comment: Standard Graph Objects patterns (go.Figure, go.Bar, add_trace, update_layout),
+          could use update_traces for batch styling
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Hover templates are standard. Could leverage range sliders, custom
-          shapes, or interactive annotations.
+        comment: Uses legendgroup and hovertemplate (Plotly-specific), but limited
+          distinctive feature usage overall
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
