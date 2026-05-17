@@ -1,164 +1,172 @@
 library: plotly
+language: python
 specification_id: bar-permutation-importance
 created: '2025-12-31T10:55:40Z'
-updated: '2025-12-31T11:05:24Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20617498175
+updated: '2026-05-17T12:27:31Z'
+generated_by: claude-haiku
+workflow_run: 25990689137
 issue: 2998
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/plotly/plot.html
-quality_score: 93
-impl_tags:
-  dependencies: []
-  techniques:
-  - html-export
-  patterns:
-  - data-generation
-  dataprep: []
-  styling: []
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-permutation-importance/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent visual hierarchy with clear color gradient distinguishing importance
-    levels
-  - Error bars implemented correctly with appropriate styling (semi-transparent, proper
-    width)
-  - Clean professional appearance with white background and subtle grid
-  - Includes both PNG and interactive HTML output (good use of Plotly dual-output
-    capability)
-  - Data represents a realistic ML feature importance scenario with weather features
-  - Proper handling of negative importance values with reference line at x=0
+  - Perfect visual quality and readability in both light and dark themes with zero
+    legibility issues
+  - Complete spec compliance with all required features implemented and working correctly
+  - Excellent data quality with realistic, meaningful feature names and plausible
+    permutation importance distribution
+  - Custom viridis-based gradient colormap effectively visualizes the continuous importance
+    scale
+  - Thoughtful annotations on top 3 features enhance data storytelling and guide viewer
+    attention
+  - 'Proper theme adaptation throughout: all chrome elements (text, grid, background)
+    correctly styled with theme tokens; data colors remain identical across themes'
+  - Clean, reproducible code with idiomatic plotly usage and good code structure
   weaknesses:
-  - X-axis label could include units or more context (e.g., Mean Decrease in R² Score)
-  - Color gradient could use a more standard colormap name for clarity in code
-  - Could add annotations for the top features to enhance information density
-  image_description: The plot displays a horizontal bar chart showing permutation
-    feature importance for 15 weather/environmental features. The bars are sorted
-    by importance with "Temperature" at the top (highest importance ~0.245) down to
-    "Time of Day" at the bottom (negative importance ~-0.008). A sequential color
-    gradient transitions from dark teal/blue (low importance) to yellow (high importance).
-    Each bar has horizontal error bars showing standard deviation. A dashed vertical
-    reference line at x=0 distinguishes positive from negative importance values.
-    The title reads "bar-permutation-importance · plotly · pyplots.ai" centered at
-    the top. X-axis is labeled "Mean Decrease in Model Score" and Y-axis is labeled
-    "Feature". The background is clean white with subtle gridlines.
+  - 'Minor: Design Excellence could be elevated slightly with additional visual refinements
+    (e.g., custom spine styling, additional accent colors, or enhanced emphasis techniques)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct warm tone, not pure white
+      Chrome: Title (32px, dark #1A1A17), axis labels (22px, dark), tick labels (18px, dark #4A4A44) — all clearly visible and readable against light background
+      Data: Viridis-based gradient bars from blue (low importance) to yellow (high importance); 15 features sorted by descending importance; error bars in INK_SOFT gray showing variability; reference line at x=0 in dashed style; annotations on top 3 features positioned without overlap
+      Legibility verdict: PASS — All text perfectly readable, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct warm tone, not pure black
+      Chrome: Title (light #F0EFE8), axis labels (light #F0EFE8), tick labels (secondary light #B8B7B0) — all clearly visible against dark background; grid uses 10% opacity light
+      Data: Viridis gradient bars IDENTICAL to light render (blue to yellow) — confirms only chrome changed, not data colors; error bars light colored; reference line light dashed; annotations visible and readable
+      Legibility verdict: PASS — All text light-colored and readable on dark background; zero dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at full
-          resolution
+        comment: All text explicitly sized and perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; feature names are well-spaced on y-axis
+        comment: Feature names, tick labels, and annotations positioned without overlap
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are appropriately sized, error bars visible and proportional
+        comment: All bars, error bars, gridlines, and reference line clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Sequential blue-to-yellow gradient is colorblind-safe (viridis-like)
+        comment: Viridis colormap is perceptually uniform and CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space, balanced margins, plot fills appropriate
-          area
+        comment: Balanced margins, plot fills 50-75% of canvas with generous whitespace
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but x-axis lacks units (could specify "score decrease"
-          units)
+        comment: X-axis includes unit (R² loss); labels and title descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate; no legend needed for single-series
-          plot
+        comment: 'Viridis continuous colormap correct; backgrounds #FAF8F1/#1A1A17;
+          theme-adaptive chrome; data colors identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom viridis colormap with intentional hierarchy; annotations add
+          polish; professional styling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle gridlines, dashed reference line, generous whitespace; could
+          have more spine styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Color gradient tells importance story; reference line shows positive/negative;
+          annotations highlight key findings
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct horizontal bar chart for permutation importance
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Features on y-axis, importance values on x-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has error bars, color gradient, vertical reference line at x=0, sorted
-          by importance
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: bars, error bars, sorting, gradient, reference
+          line'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range including negative values
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: importance_mean, Y: feature names; all 15 features shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (single series, no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses `{spec-id} · {library} · pyplots.ai` format
+        comment: Title format correct; axis labels descriptive; legend omitted appropriately
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive AND negative importance values, varying error bar
-          sizes; could show more extreme negative values
+        comment: All 15 features shown; demonstrates full spectrum and variability
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Weather/environmental ML model is a plausible, neutral scenario
+        comment: Realistic ML features (Temperature, Humidity, etc.); weather context;
+          neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for permutation importance (0-0.25 range typical);
-          some features have nearly identical low values
+        comment: Realistic importance values and standard deviations for the domain
     code_quality:
       score: 10
       max: 10
@@ -168,41 +176,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: 'Linear: imports → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses `np.random.seed(42)`
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and plotly.graph_objects (all used)
+        comment: 'Only used imports: os, numpy, pandas, plotly.graph_objects'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Appropriate complexity; no over-engineering or fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as `plot.png` and `plot.html`
-    library_features:
-      score: 3
-      max: 5
+        comment: 'Correct output files: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Uses distinctive library features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses `go.Bar` with `error_x`, `add_vline`, custom hover template;
-          could leverage more Plotly-specific features like annotations or subplot
-          capabilities
+        comment: Proper use of go.Figure, go.Bar, add_vline, add_annotation, update_layout
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Custom colormap, reference line, value annotations, custom hovertemplate
   verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - custom-colormap
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - publication-ready
