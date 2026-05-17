@@ -1,13 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Label
-from bokeh.plotting import figure, output_file, save
+import os
+import time
+from pathlib import Path
 
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, Label
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Unicode chess piece symbols
 PIECE_SYMBOLS = {
@@ -67,9 +79,9 @@ pieces = {
 p = figure(
     width=3600,
     height=3600,
-    title="Scholar's Mate · chessboard-pieces · bokeh · pyplots.ai",
-    x_range=(-0.8, 7.5),
-    y_range=(-0.8, 7.5),
+    title="Scholar's Mate · chessboard-pieces · bokeh · anyplot.ai",
+    x_range=(-0.5, 7.5),
+    y_range=(-0.5, 7.5),
     tools="pan,wheel_zoom,reset",
     toolbar_location="right",
 )
@@ -124,42 +136,59 @@ for square, piece in pieces.items():
 files = "abcdefgh"
 for i, f in enumerate(files):
     p.add_layout(
-        Label(
-            x=i, y=-0.5, text=f, text_font_size="36pt", text_align="center", text_baseline="top", text_color="#306998"
-        )
+        Label(x=i, y=-0.3, text=f, text_font_size="36pt", text_align="center", text_baseline="top", text_color=INK_SOFT)
     )
 
 # Add rank labels (1-8)
 for i in range(8):
     p.add_layout(
         Label(
-            x=-0.5,
+            x=-0.3,
             y=i,
             text=str(i + 1),
             text_font_size="36pt",
             text_align="right",
             text_baseline="middle",
-            text_color="#306998",
+            text_color=INK_SOFT,
         )
     )
 
 # Style the plot
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+p.outline_line_width = 4
+
 p.title.text_font_size = "48pt"
 p.title.align = "center"
-p.title.text_color = "#306998"
+p.title.text_color = INK
 
 # Hide axes and grid
 p.axis.visible = False
 p.grid.visible = False
-p.outline_line_color = "#306998"
-p.outline_line_width = 4
 
 # Add board border
-p.rect(x=3.5, y=3.5, width=8, height=8, fill_alpha=0, line_color="#306998", line_width=8)
+p.rect(x=3.5, y=3.5, width=8, height=8, fill_alpha=0, line_color=INK_SOFT, line_width=8)
 
-# Export PNG
-export_png(p, filename="plot.png")
-
-# Export HTML for interactive viewing
-output_file("plot.html")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome — Selenium 4 / Selenium Manager
+W, H = 3600, 3600
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
