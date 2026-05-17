@@ -1,152 +1,177 @@
 library: matplotlib
+language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:44:06Z'
-updated: '2026-01-09T08:46:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20846153012
+updated: '2026-05-17T15:42:39Z'
+generated_by: claude-haiku
+workflow_run: 25994860847
 issue: 3415
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent use of mirror points technique to ensure all Voronoi cells are finite
-    and properly bounded
-  - Clean implementation using scipy.spatial.Voronoi with PolyCollection for efficient
-    rendering
-  - Good visual design with colorblind-safe palette and prominent seed point markers
-  - Proper clipping of polygons to bounding box
-  - Follows KISS principles with clear, linear code structure
+  - 'Perfect visual quality: all text explicitly sized and readable across both themes;
+    no overlap; excellent palette compliance with Okabe-Ito and theme-correct chrome'
+  - Correct Voronoi implementation with mirror-point technique for finite regions;
+    all spec features present and working
+  - Clean, reproducible code with KISS structure, seeded randomness, and efficient
+    PolyCollection rendering
+  - 'Professional theme handling: data colors identical between light and dark renders,
+    chrome fully adapted, no dark-on-dark failures'
   weaknesses:
-  - Axis labels could include units (e.g., "X Coordinate (units)" or use a more domain-specific
-    context)
-  - Could demonstrate more distinctive library features beyond basic PolyCollection
-    usage
-  image_description: The plot displays a Voronoi diagram with 15 seed points distributed
-    across a 10×10 coordinate space. Each Voronoi cell is filled with a distinct color
-    from a varied pastel palette (light green, pink/coral, cyan, yellow, purple/lavender,
-    blue-gray). The seed points are rendered as prominent dark blue (#306998) circles
-    with white edge highlights, clearly visible within their respective cells. Cell
-    boundaries are drawn with dark gray (#333333) edges with good line weight. The
-    plot has a subtle dashed grid at alpha=0.3. The title "voronoi-basic · matplotlib
-    · pyplots.ai" appears at the top in appropriate font size. Axis labels "X Coordinate"
-    and "Y Coordinate" are clearly readable. The aspect ratio is equal (1:1), and
-    the plot fills the canvas well with balanced margins. All cells are properly clipped
-    to the bounding box [0, 10] × [0, 10].
+  - 'Design Excellence is modest (12/20): implementation is competent default rather
+    than exceptional; design choices are correct but not surprising'
+  - 'Library Mastery conservative: uses efficient PolyCollection but could leverage
+    more distinctive matplotlib features for greater sophistication'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct for light theme
+      Chrome: Title (fontsize=24), axis labels (20), tick labels (16) all explicitly sized and clearly readable in dark text (INK=#1A1A17); grid lines subtle (alpha=0.12)
+      Data: Voronoi regions filled with Okabe-Ito palette colors; seed points marked with green circles (#009E73) with white edges (s=350); cell edges visible (linewidth=2.5, color=INK_SOFT)
+      Legibility verdict: PASS — all text crisp and readable; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct for dark theme
+      Chrome: Title, axis labels, and tick labels all light-colored (INK=#F0EFE8, INK_SOFT=#B8B7B0) and fully readable on dark surface; grid lines adapt subtly
+      Data: Voronoi cell colors identical to light render (data colors are theme-invariant) — confirmed Okabe-Ito positions preserved; seed points retain #009E73 green with white edges
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome is correctly theme-adapted; excellent readability on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; labels, ticks, title have proper spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Seed points are prominent (s=350), cells clearly distinguishable
-          with good alpha=0.6
+        comment: Voronoi cells distinct; seed points prominent (s=350); cell edges
+          visible (linewidth=2.5)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Uses a diverse palette with good differentiation beyond just red-green
+        comment: Okabe-Ito palette colorblind-safe; white edges on green markers provide
+          contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good canvas utilization with equal aspect ratio, slight margin asymmetry
+        comment: Optimal 16:9 layout; plot fills canvas well; balanced margins; tight_layout
+          applied
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive but lack units
+        comment: Title in spec format; axis labels descriptive (X/Y Coordinate)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3), no legend needed for this plot type
+        comment: 'First series #009E73 (brand green); Okabe-Ito palette used; backgrounds
+          #FAF8F1/#1A1A17; both renders theme-correct; no dark-on-dark failures'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default; clean professional rendering, but not exceptional
+          or surprising
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed (L-shaped); subtle grid; balanced whitespace; cell
+          edges styled with INK_SOFT
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Voronoi clearly shows spatial partitioning; seed points in brand
+          green create focal points; visual hierarchy present
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Voronoi diagram visualization
+        comment: Correct Voronoi diagram with cells clipped to bounding box and prominent
+          seed points
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly mapped to seed points
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: bounded cells, distinguishable colors,
-          visible seed points'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: cells clipped, visually distinguishable via colors,
+          seed points marked'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full [0,10] range visible on both axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped to 0-10 range; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; seed points self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format {spec-id} · {library} · pyplots.ai
+        comment: Title format correct; legend not required for Voronoi regions
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied cell shapes and sizes, good point distribution; could
-          show clustering patterns
+        comment: 'All Voronoi aspects shown: spatial partitioning, seed influence,
+          boundary effects, density variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Neutral spatial partitioning example, no controversial content
+        comment: Plausible scenario (service areas, territorial boundaries); neutral,
+          non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Sensible coordinate range [0,10], 15 points is reasonable for clarity
+        comment: 15 points in 10x10 space provides good density; scale sensible for
+          Voronoi; factually correct
     code_quality:
       score: 10
       max: 10
@@ -156,42 +181,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Clean imports → data → plot → save; no functions/classes; linear
+          flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, PolyCollection, scipy.spatial.Voronoi)
+        comment: 'Only used imports: os, matplotlib, numpy, scipy.spatial'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib APIs
+        comment: Pythonic; mirror-point technique standard; PolyCollection efficient;
+          no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct DPI and facecolor
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Axes methods correctly; theme-aware via environment variable;
+          follows best practices
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses PolyCollection for efficient polygon rendering, good use of
-          matplotlib's object-oriented API with ax methods
+        passed: false
+        comment: Uses PolyCollection (matplotlib-specific) but primarily standard
+          usage; could leverage more distinctive features
+    score_caps:
+      applied: false
+      description: No caps triggered
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -200,8 +237,8 @@ impl_tags:
   - patches
   patterns:
   - data-generation
+  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
