@@ -79,13 +79,7 @@ def _get_category_values(
 
 
 def _category_matches_filter(
-    category: str,
-    values: list[str],
-    spec_id: str,
-    library: str,
-    language: str,
-    spec_tags: dict,
-    impl_tags: dict,
+    category: str, values: list[str], spec_id: str, library: str, language: str, spec_tags: dict, impl_tags: dict
 ) -> bool:
     """
     Check if any of the filter values match the category's values.
@@ -107,12 +101,7 @@ def _category_matches_filter(
 
 
 def _image_matches_groups(
-    spec_id: str,
-    library: str,
-    language: str,
-    groups: list[dict],
-    spec_lookup: dict,
-    impl_lookup: dict,
+    spec_id: str, library: str, language: str, groups: list[dict], spec_lookup: dict, impl_lookup: dict
 ) -> bool:
     """Check if an image matches a set of filter groups."""
     if spec_id not in spec_lookup:
@@ -130,12 +119,7 @@ def _image_matches_groups(
 
 
 def _increment_category_counts(
-    counts: dict,
-    spec_id: str,
-    library: str,
-    language: str,
-    spec_tags: dict,
-    impl_tags: dict,
+    counts: dict, spec_id: str, library: str, language: str, spec_tags: dict, impl_tags: dict
 ) -> None:
     """Increment counts for all categories based on an image's spec/impl tags."""
     all_categories = ["lang", "lib", "spec", "plot", "data", "dom", "feat", "dep", "tech", "pat", "prep", "style"]
