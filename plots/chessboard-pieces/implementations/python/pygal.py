@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 76/100 | Created: 2026-05-17
+Quality: 80/100 | Created: 2026-05-17
 """
 
 import importlib
