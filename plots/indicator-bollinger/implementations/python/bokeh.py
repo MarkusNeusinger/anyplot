@@ -1,15 +1,38 @@
-""" pyplots.ai
+""" anyplot.ai
 indicator-bollinger: Bollinger Bands Indicator Chart
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-07
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-17
 """
 
-import numpy as np
-import pandas as pd
-from bokeh.io import export_png
-from bokeh.models import Band, ColumnDataSource, HoverTool, Legend
-from bokeh.plotting import figure, output_file, save
+import os
+import sys
+import time
+from pathlib import Path
 
+
+# Prevent this script from shadowing the bokeh package
+sys.path = [p for p in sys.path if "implementations" not in p]
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from bokeh.io import output_file, save  # noqa: E402
+from bokeh.models import Band, ColumnDataSource, HoverTool, Legend  # noqa: E402
+from bokeh.plotting import figure  # noqa: E402
+from selenium import webdriver  # noqa: E402
+from selenium.webdriver.chrome.options import Options  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (positions 1-3)
+BRAND = "#009E73"  # Position 1 - first series (price)
+ACCENT_BLUE = "#0072B2"  # Position 3 - SMA and bands
+ACCENT_ORANGE = "#D55E00"  # Position 2 - optional
 
 # Data - Generate synthetic stock price data
 np.random.seed(42)
@@ -40,7 +63,7 @@ source = ColumnDataSource(df)
 p = figure(
     width=4800,
     height=2700,
-    title="indicator-bollinger · bokeh · pyplots.ai",
+    title="indicator-bollinger · bokeh · anyplot.ai",
     x_axis_label="Date",
     y_axis_label="Price ($)",
     x_axis_type="datetime",
@@ -53,29 +76,29 @@ band = Band(
     lower="lower_band",
     upper="upper_band",
     source=source,
-    fill_alpha=0.25,
-    fill_color="#306998",
-    line_color="#306998",
-    line_alpha=0.3,
+    fill_alpha=0.15,
+    fill_color=ACCENT_BLUE,
+    line_color=ACCENT_BLUE,
+    line_alpha=0.4,
 )
 p.add_layout(band)
 
 # Plot the bands and price lines with legend
 # Upper band
 upper_line = p.line(
-    "date", "upper_band", source=source, line_color="#306998", line_width=3, line_dash="solid", alpha=0.8
+    "date", "upper_band", source=source, line_color=ACCENT_BLUE, line_width=2, line_dash="solid", alpha=0.6
 )
 
 # Lower band
 lower_line = p.line(
-    "date", "lower_band", source=source, line_color="#306998", line_width=3, line_dash="solid", alpha=0.8
+    "date", "lower_band", source=source, line_color=ACCENT_BLUE, line_width=2, line_dash="solid", alpha=0.6
 )
 
 # Middle band (SMA) - dashed line
-sma_line = p.line("date", "sma", source=source, line_color="#FFD43B", line_width=4, line_dash="dashed", alpha=0.9)
+sma_line = p.line("date", "sma", source=source, line_color=ACCENT_BLUE, line_width=3, line_dash="dashed", alpha=0.9)
 
-# Price line - most prominent
-price_line = p.line("date", "close", source=source, line_color="#1a1a2e", line_width=5, alpha=1.0)
+# Price line - most prominent (first series in Okabe-Ito)
+price_line = p.line("date", "close", source=source, line_color=BRAND, line_width=5, alpha=1.0)
 
 # Add hover tool for interactivity
 hover = HoverTool(
@@ -100,39 +123,65 @@ legend = Legend(
 
 p.add_layout(legend, "right")
 
-# Style the plot
-p.title.text_font_size = "36pt"
-p.title.text_font_style = "bold"
-p.xaxis.axis_label_text_font_size = "26pt"
-p.yaxis.axis_label_text_font_size = "26pt"
-p.xaxis.major_label_text_font_size = "20pt"
-p.yaxis.major_label_text_font_size = "20pt"
+# Style the plot - text sizing for 4800×2700 px
+p.title.text_font_size = "28pt"
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
 
 # Legend styling
-p.legend.label_text_font_size = "22pt"
-p.legend.glyph_width = 50
-p.legend.glyph_height = 30
-p.legend.spacing = 15
-p.legend.padding = 20
-p.legend.background_fill_alpha = 0.9
+p.legend.label_text_font_size = "16pt"
+p.legend.glyph_width = 40
+p.legend.glyph_height = 25
+p.legend.spacing = 12
+p.legend.padding = 15
 
-# Grid styling
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = [6, 4]
+# Grid styling - subtle
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
 
-# Background
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "#ffffff"
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Axis styling
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
-p.xaxis.major_tick_line_width = 2
-p.yaxis.major_tick_line_width = 2
+p.title.text_color = INK
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Save PNG
-export_png(p, filename="plot.png")
+if p.legend:
+    p.legend.background_fill_color = ELEVATED_BG
+    p.legend.border_line_color = INK_SOFT
+    p.legend.label_text_color = INK_SOFT
 
 # Save interactive HTML
-output_file("plot.html", title="Bollinger Bands - bokeh - pyplots.ai")
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome (Selenium 4 / Selenium Manager)
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
