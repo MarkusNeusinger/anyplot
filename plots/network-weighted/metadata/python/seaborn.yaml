@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: network-weighted
 created: '2026-01-08T15:57:59Z'
-updated: '2026-05-17T14:45:11Z'
+updated: '2026-05-17T14:50:31Z'
 generated_by: claude-haiku
 workflow_run: 25993665408
 issue: 3290
@@ -12,84 +12,85 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-w
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 77
+quality_score: 70
 review:
   strengths:
-  - Accurate data representation with realistic international trade scenario
-  - Clear visual encoding of edge weights via both thickness and color gradient
-  - Effective node sizing communicates network importance via weighted degree
-  - Proper legend and colorbar integration
-  - Both light and dark renders properly theme-adapted with identical data colors
+  - Weighted network visualization clearly communicates edge strength differences
+    via line width
+  - Edge thickness range provides good visual distinction without extreme extremes
+  - Node sizing by weighted degree creates intuitive visual hierarchy
+  - Fruchterman-Reingold layout produces readable node positioning
+  - Both light and dark renders are perfectly readable with correct theme adaptation
   weaknesses:
-  - 'Title contains typo: ''pyplots.ai'' should be ''anyplot.ai'''
-  - Output filename hard-coded as 'plot.png' instead of reading ANYPLOT_THEME and
-    saving as 'plot-{THEME}.png'
-  - Background color hard-coded to white instead of using theme-adaptive PAGE_BG token
-  - 'Node label color hard-coded to #333333 instead of using theme-adaptive INK token'
-  - Set2 palette violates Okabe-Ito branding rules; seaborn.md explicitly forbids
-    Set2 for categorical data
+  - 'Set2 palette violates explicit seaborn/anyplot rule: nodes must use Okabe-Ito
+    (#009E73) not Set2'
+  - Multi-color nodes don't encode any data variable — adds visual noise without information
+  - 'Title format wrong: should be ''network-weighted · seaborn · anyplot.ai'' not
+    ''International Trade Network · ...'''
+  - Code doesn't implement theme-adaptive colors (INK, PAGE_BG tokens) — filename
+    hardcoded as 'plot.png' instead of 'plot-{THEME}.png'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title in dark text (24pt), colorbar label and ticks in dark text - all readable
-      Data: Network with 15 country nodes in Set2 palette colors (teal, orange, pink, blue, yellow, green), edges in blue gradient representing trade volume with clear thickness variation (thin=low weight, thick=high weight). Node sizes scale by weighted degree, showing hub structure with USA and China as central hubs.
-      Legibility verdict: PASS - all text readable at full resolution, though some elements below style guide minimums
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title "International Trade Network · network-weighted · seaborn · anyplot.ai", node labels (USA, China, Germany, etc.) in bold dark text, legend "Node Size = Total Trade", colorbar "Trade Volume (Billions USD)" — all clearly readable
+      Data: Nodes in multi-color Set2 palette (various colors per node), sized by weighted degree ranging from ~500px to ~2600px. Edges colored in blue sequential colormap representing trade volume (80-620B USD), thickness varies from 1-12 linewidth. Edge transparency at 0.7 provides good overlap visibility.
+      Legibility verdict: PASS — all text readable, data elements distinguishable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and all labels rendered in light text colors, clearly readable against dark surface - no dark-on-dark failures
-      Data: Identical node colors to light render (Set2 palette unchanged - only chrome inverts). Edge colors, weights, and gradients identical. Node sizes identical. Verifies proper theme adaptation with data colors constant across both renders.
-      Legibility verdict: PASS - all elements properly theme-adapted with correct color consistency
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title, labels, legend, colorbar all in light/white text — all clearly readable against dark surface. No dark-on-dark failures.
+      Data: Node colors IDENTICAL to light render (Set2 palette preserved), edge colors IDENTICAL to light render (blue sequential preserved). This is correct — only chrome should flip between themes.
+      Legibility verdict: PASS — all text readable, theme adaptation correct
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Readable in both renders but font sizes below style guide minimums
+        comment: All text readable in both light and dark renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text well-spaced, no collisions
+        comment: Labels well-positioned, no collision issues
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Edge thickness variation clear, all nodes visible
+        comment: All nodes, edges, and labels visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Set2 palette not CVD-optimized compared to Okabe-Ito standard
+        passed: true
+        comment: Colormap readable, edges distinguishable
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Good proportions, balanced margins
+        passed: false
+        comment: Good proportions but some edge overlap in dense areas
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: 'Title has typo: ''pyplots.ai'' should be ''anyplot.ai'''
+        comment: 'Title format wrong: should be ''network-weighted · seaborn · anyplot.ai'''
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Set2 palette violates Okabe-Ito brand identity; backgrounds render
-          correctly
+        comment: 'CRITICAL: Nodes use Set2 palette instead of Okabe-Ito (#009E73).
+          Library rules explicitly forbid Set2 for categorical data.'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -97,21 +98,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Generic defaults, Set2 palette lacks design intent
+        comment: Multi-colored nodes without encoding data variable adds noise rather
+          than sophistication
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Minimal customization beyond basic layout
+        passed: true
+        comment: Spines removed, clean layout, but generic coloring
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Shows trade relationships but lacks directed visual emphasis
+        comment: Edge thickness and node size work well but multi-color adds confusion
     spec_compliance:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -125,21 +127,21 @@ review:
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: weighted edges, node sizing, layout, legends'
+        comment: Edge weights shown via thickness, nodes sized by degree
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct X/Y mapping
+        comment: All data encoded clearly
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 0
         max: 3
         passed: false
-        comment: Title contains typo
+        comment: Title format violates spec template
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -147,21 +149,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 countries, 30 edges, wide weight range
+        comment: Trade network thoroughly demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: International trade is plausible and neutral
+        comment: Real-world trade data, plausible values
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Trade values sensible
+        passed: false
+        comment: Edge-weight variations could be more pronounced
     code_quality:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -169,57 +171,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear, no unnecessary functions
+        comment: Straightforward code, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seeded with np.random.seed(42)
+        comment: Seed set (lines 18, 85)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake functionality
+        comment: Custom layout algorithm appropriate
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Still hard-coded output filename and colors; should be theme-aware
+        comment: Saves as 'plot.png' but should save as 'plot-{THEME}.png'. Missing
+          theme-adaptive colors.
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Uses seaborn styling but not seaborn plot functions; relies on matplotlib
-          primitives
+        comment: LineCollection good but Set2 palette violates seaborn brand rules
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
-        passed: false
-        comment: Generic implementation, could be replicated in other libraries
+        passed: true
+        comment: Manual Fruchterman-Reingold layout is custom
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - colorbar
   - custom-legend
-  - annotations
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
