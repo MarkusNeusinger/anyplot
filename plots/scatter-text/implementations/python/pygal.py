@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-text: Scatter Plot with Text Labels Instead of Points
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-17
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 40/100 | Created: 2026-05-17
 """
 
 import os
