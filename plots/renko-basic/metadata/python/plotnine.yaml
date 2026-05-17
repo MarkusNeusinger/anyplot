@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: renko-basic
 created: '2026-01-08T16:03:21Z'
-updated: '2026-05-17T11:45:32Z'
+updated: '2026-05-17T11:50:44Z'
 generated_by: claude-haiku
 workflow_run: 25989766255
 issue: 3294
@@ -12,56 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 85
 review:
   strengths:
-  - 'Perfect visual quality: All text explicitly sized and readable in both themes;
-    palette correctly implements Okabe-Ito with first series as #009E73'
-  - 'Excellent spec compliance: Correct plot type, all required features present (bullish/bearish
-    colors, uniform bricks, gap separation, labeled axes)'
-  - 'Strong data quality: Realistic stock price scenario with appropriate brick size;
-    shows full range of trend reversals over realistic timeframe'
-  - 'Clean code quality: KISS structure with deterministic data generation (seed=42);
-    proper theme token usage without unnecessary complexity'
-  - 'Idiomatic plotnine usage: Proper grammar-of-graphics pattern with ggplot() +
-    geom_rect() + theme-adaptive styling throughout'
+  - Correct Renko algorithm with proper up/down directionality
+  - Perfect theme-adaptive colors matching Okabe-Ito spec
+  - All text fully readable in both light and dark themes
+  - Explicit font sizing (24/20/16pt) for high-resolution output
+  - 'Complete feature coverage: bullish/bearish bricks, trend reversals, subtle grid'
   weaknesses:
-  - 'DE-01 moderate (4/8): Aesthetic design is functional but looks like a well-configured
-    library default rather than intentional design sophistication'
-  - 'DE-02 good but not refined (4/6): Standard theme_minimal() base with subtle grid
-    adjustments; lacks distinctive visual polish or custom refinement'
-  - 'DE-03 minimal (2/6): Plot displays renko data clearly but doesn''t create visual
-    hierarchy or storytelling through emphasis; data shown without narrative'
-  - 'LM-02 generic (1/5): Uses standard plotnine geoms and API patterns; no distinctive
-    features unique to plotnine or this visualization'
+  - Design lacks visual hierarchy or emphasis on key insights (trend direction changes)
+  - No custom design choices—feels like well-configured library defaults
+  - Could benefit from visual storytelling techniques beyond basic data display
   image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
-    \ surface (#FAF8F1) as specified — not pure white.\n  Chrome: Title \"renko-basic\
-    \ · plotnine · anyplot.ai\" in 24pt dark text, clearly readable. \n          Axis\
-    \ labels \"Brick Index\" (X) and \"Price ($)\" (Y) in 20pt dark text, fully legible.\
-    \ \n          Tick labels in 16pt medium-gray text, well-positioned and readable.\n\
-    \          Subtle gridlines with low opacity visible for reference.\n  Data: Renko\
-    \ bricks displayed as uniform rectangles with small gaps (xmin/xmax = ±0.1 offset).\n\
-    \        Bullish bricks (up movement) rendered in green (#009E73 — Okabe-Ito position\
-    \ 1).\n        Bearish bricks (down movement) rendered in orange (#D55E00 — Okabe-Ito\
-    \ position 2).\n        Brick heights vary naturally by price magnitude, creating\
-    \ clear visual distinction.\n        Legend on right shows \"Direction\" with\
-    \ \"Bearish\" and \"Bullish\" labels.\n        About 55 bricks generated from\
-    \ 250 trading days with $2 brick size.\n  Legibility verdict: PASS — All text\
-    \ readable, data colors vibrant and distinct.\n\nDark render (plot-dark.png):\n\
-    \  Background: Warm near-black surface (#1A1A17) as specified — not pure black.\n\
-    \  Chrome: Title in 24pt light text (#F0EFE8), fully readable against dark surface.\n\
-    \          Axis labels in 20pt light text, clearly visible.\n          Tick labels\
-    \ in 16pt medium-light gray text (#B8B7B0), properly readable.\n          Grid\
-    \ lines with low opacity visible, scaled for contrast.\n          Legend background\
-    \ in elevated dark tone (#242420) for definition.\n  Data: Renko bricks identical\
-    \ in color to light render — green (#009E73) for bullish,\n        orange (#D55E00)\
-    \ for bearish. No color shift between themes (data colors theme-independent).\n\
-    \        Brick structure and spacing identical to light render.\n        All bricks\
-    \ remain clearly distinguishable.\n  Legibility verdict: PASS — No dark-on-dark\
-    \ failures. Brand green remains vibrant. \n                     All chrome properly\
-    \ theme-adapted. Text readable throughout.\n\nBoth renders confirm: Data colors\
-    \ are identical across themes (only chrome flips). \nAll text legibility requirements\
-    \ met in both surfaces."
+    \ (#FAF8F1) with subtle texture\n  Chrome: Title, axis labels (Brick Index, Price\
+    \ ($)), and tick labels all dark (#1A1A17), clearly readable against light background\n\
+    \  Data: Green bricks (#009E73) represent bullish movements, orange bricks (#D55E00)\
+    \ represent bearish movements. Approximately 50 bricks showing trend reversals\
+    \ and price oscillation. Subtle horizontal grid aids price level identification.\n\
+    \  Legibility verdict: PASS - All elements perfectly readable\n\nDark render (plot-dark.png):\n\
+    \  Background: Warm near-black (#1A1A17) \n  Chrome: Title and axis labels in\
+    \ light cream text (#F0EFE8), tick labels in softer light gray (#B8B7B0), all\
+    \ clearly visible against dark background with no dark-on-dark failures\n  Data:\
+    \ Green bullish bricks (#009E73) and orange bearish bricks (#D55E00) are identical\
+    \ in color to light render—only chrome has flipped. Grid lines are visible but\
+    \ subtle, supporting price-level reference.\n  Legibility verdict: PASS - All\
+    \ text readable, no contrast failures, data colors perfectly preserved from light\
+    \ render"
   criteria_checklist:
     visual_quality:
       score: 30
@@ -72,53 +49,44 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks).
-          Perfect readability in both light and dark themes. Exceeds requirements.
+        comment: Font sizes explicitly set; all text readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping elements. All text fully readable. Brick separation
-          (0.1 offset) prevents crowding.
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Renko bricks optimally sized and spaced. Data elements clearly distinguishable.
-          Proper adaptation to data density.
+        comment: Bricks clearly visible, density-appropriate spacing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/orange Okabe-Ito palette is colorblind-safe with good contrast.
-          Elements distinguishable without color alone.
+        comment: Okabe-Ito palette, high contrast, CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions. Plot fills 50-80% of canvas with balanced margins.
-          Legend well-positioned. No wasted space or cut-off content.
+        comment: Good utilization, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title: ''renko-basic · plotnine · anyplot.ai'' (correct format).
-          Y-axis label includes units: ''Price ($)''. X-axis descriptive: ''Brick
-          Index''.'
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect palette compliance. First categorical series is #009E73
-          (Okabe-Ito position 1). Second series #D55E00 (position 2). Plot background
-          light #FAF8F1, dark #1A1A17. Data colors identical between themes. Chrome
-          properly theme-adaptive.'
+        comment: Okabe-Ito positions 1-2, correct theme backgrounds, chrome properly
+          adapted
     design_excellence:
       score: 10
       max: 20
@@ -128,25 +96,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default with proper palette and theme tokens.
-          Functionally polished but no exceptional design thought or custom touches.
-          Lacks publication-ready sophistication or intentional hierarchy.
+        comment: Well-configured defaults, no custom design thought
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: subtle grid (alpha 0.15/0.08), panel border, axis
-          styling. theme_minimal() provides clean base. Could benefit from more distinctive
-          visual polish or custom color choices.'
+        passed: true
+        comment: Subtle grid, minimal customization
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: 'Default level: plot displays renko data clearly but creates no special
-          visual hierarchy or narrative emphasis. Viewer must find their own story
-          in the price movements.'
+        comment: Data displayed but no visual hierarchy or insight emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -156,29 +118,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: Renko chart with both bullish and bearish bricks.
-          All subtypes present.'
+        comment: Correct Renko chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: green bullish/orange bearish colors, uniform
-          brick size, clear separation, subtle grid, price levels shown.'
+        comment: 'All features: green/red bricks, uniform size, gaps, grid'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Brick index (0-50+). Y-axis: Price in dollars (70-115).
-          All data visible, axes correctly assigned.'
+        comment: X/Y correct, all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''renko-basic · plotnine · anyplot.ai'' (perfect format).
-          Legend: ''Direction'' with ''Bearish''/''Bullish'' labels (correct).'
+        comment: Title format correct, legend labels match
     data_quality:
       score: 15
       max: 15
@@ -188,24 +146,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects of renko: bullish bricks, bearish bricks, trend
-          reversals, price level support/resistance. 55 bricks generated from 250
-          trading days.'
+        comment: 'Shows all aspects: bullish, bearish, reversals'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world stock price scenario (250 trading days, daily frequency).
-          Realistic price range ($80-$115). $2 brick size appropriate. Neutral, comprehensible
-          context.
+        comment: Plausible stock price scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values plausible: closing prices realistic, brick size sensible
-          for price magnitude, 55 bricks within expected range (20-50 meaningful bricks).'
+        comment: Realistic price range and brick size
     code_quality:
       score: 10
       max: 10
@@ -215,61 +168,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data generation → renko calculation
-          → plotting → save. No functions/classes. Clean and straightforward.'
+        comment: Linear flow, no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Deterministic data generation ensures identical
-          output on repeated runs.
+        comment: Seed set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used (os, sys, numpy, pandas, plotnine). sys.path.pop(0)
-          documented for naming collision workaround.
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Renko brick calculation appropriate in complexity. No over-engineering.
-          No fake functionality. Pythonic and readable.
+        comment: Appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current plotnine API. dpi=300, proper
-          dimensions.
+        comment: Correct format
     library_mastery:
-      score: 6
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent idiomatic plotnine: ggplot() + geom_rect() + aes() + scale_fill_manual()
-          + theme(). High-level API used throughout. Proper element_text/element_line/element_rect
-          for styling.'
+        comment: Good grammar-of-graphics usage
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Generic usage. geom_rect() is a basic geom. Theme-adaptive coloring
-          is standard practice. No features distinctive to plotnine or this visualization.
+        comment: Generic patterns, no library-specific creativity
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - theme-adaptive
+  - alpha-blending
