@@ -138,14 +138,20 @@ Highcharts.chart('container', {{
     }},
     plotOptions: {{
         sankey: {{
-            nodeWidth: 200,
+            nodeWidth: 250,
+            nodeHeight: 40,
             dataLabels: {{
                 enabled: true,
                 style: {{
-                    fontSize: '16px',
+                    fontSize: '20px',
                     fontWeight: 'bold',
                     color: '{INK}'
-                }}
+                }},
+                overflow: 'justify'
+            }},
+            tooltip: {{
+                headerFormat: '<span style="font-size: 18px"><b>{{point.name}}</b></span><br/>',
+                pointFormat: '{{}}'
             }}
         }}
     }},
