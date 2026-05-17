@@ -1,149 +1,170 @@
 library: seaborn
+language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:20:47Z'
-updated: '2026-01-09T08:23:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845617189
+updated: '2026-05-17T15:38:57Z'
+generated_by: claude-haiku
+workflow_run: 25994909126
 issue: 3415
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent Voronoi tessellation with proper clipping to bounding box using mirror
-    points technique
-  - Clear visual differentiation between regions with HUSL color palette and white
-    edges
-  - Seed points prominently displayed with appropriate sizing and styling
-  - Correct title format and well-labeled axes with units
-  - Clean, reproducible code with proper random seed
+  - Excellent visual quality with perfect theme adaptation in both light and dark
+    renders
+  - Correct Voronoi diagram implementation with proper clipping, seed point highlighting,
+    and Okabe-Ito color cycling
+  - Professional use of seaborn theming, context management, and alpha-blended cells
+    for visual depth
+  - All text elements (title, axis labels, tick labels) readable in both themes with
+    proper color tokens
   weaknesses:
-  - Seaborn usage is limited to styling (set_style, set_context) and scatterplot for
-    seed points; the core Voronoi visualization uses scipy and matplotlib patches
-  - No legend explaining what the seed points represent (e.g., Store Locations)
-  - Some adjacent HUSL colors are similar (multiple pinks/corals near each other)
-  image_description: The plot displays a Voronoi tessellation on a 100x100 km coordinate
-    system. Twenty seed points (dark blue circles with white edges, size ~350) are
-    distributed across the plane. Each seed point has its own Voronoi cell, colored
-    distinctly using the seaborn "husl" palette with alpha=0.7 transparency. Colors
-    include teal, olive green, coral/salmon, pink/magenta, orange, and seafoam green.
-    White edges (linewidth 2.5) separate adjacent regions. The diagram is bounded
-    to [0,100] on both axes, with cells clipped at boundaries. Title "voronoi-basic
-    · seaborn · pyplots.ai" appears at top in bold. Axis labels read "X Coordinate
-    (km)" and "Y Coordinate (km)" with tick labels at 0, 20, 40, 60, 80, 100. A subtle
-    blue border frames the plot. The layout uses equal aspect ratio, resulting in
-    a near-square visualization.
+  - Design Excellence is adequate but not exceptional - implementation follows standard
+    styling guidelines without distinctive embellishments
+  - Library Mastery focuses on seaborn theming rather than distinctive seaborn-specific
+    features beyond palette and context management
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color
+      Chrome: Title "voronoi-basic · seaborn · anyplot.ai" is bold and readable; X/Y axis labels "Coordinate (km)" are clear; tick labels (0–100) are visible in soft gray (INK_SOFT)
+      Data: Voronoi cells use Okabe-Ito palette positions 1–7 with 0.7 alpha blending for visual depth; seed points marked as green circles (#009E73) with white edges and dark outline for clear definition; polygon edges in soft gray
+      Legibility verdict: PASS — all elements fully readable, proper contrast throughout
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface color
+      Chrome: Title, axis labels, and tick labels all readable in light text colors; no dark-on-dark failures; tick labels properly use light gray (INK_SOFT equivalent)
+      Data: Okabe-Ito colors identical to light render (only chrome flipped as expected); seed points still visible as cyan-edged circles on dark surface; polygon edges remain in light gray
+      Legibility verdict: PASS — all text readable, theme adaptation correct, data colors consistent across both renders
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt bold, labels 20pt, ticks 16pt - all perfectly readable
+        comment: All text readable in both themes; proper font sizes and colors
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No overlapping elements; clean separation of cells and labels
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Seed points s=350 clearly visible, regions well-defined with alpha=0.7
+        comment: Seed points clearly marked; Voronoi cells well-differentiated via
+          color
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: HUSL palette provides good differentiation; some similar hues nearby
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with equal aspect ratio, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: X/Y Coordinate (km)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe; no problematic color combinations
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 landscape format; good proportions; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No legend explaining what seed points represent
+        passed: true
+        comment: Title follows format; axes labeled with units (km)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is brand green; Okabe-Ito order maintained; backgrounds
+          correct (#FAF8F1 light, #1A1A17 dark)'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional polish with seaborn theming; intentional visual hierarchy
+          through seed point emphasis
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean design; grid appropriately absent for plot type; whitespace
+          generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy via color differentiation; seed points guide
+          viewer understanding; effective spatial narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Voronoi diagram visualization
+        comment: Correct Voronoi diagram visualization with proper spatial partitioning
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly mapped to seed points
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Cells clipped, distinct colors, seed points marked, white edges
-      - id: SC-04
-        name: Data Range
+        comment: Shows seed points, cell boundaries, colored regions, clipped to bounding
+          box
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-100 bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y coordinates correct; axes display full data range (0–100)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this visualization type
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: voronoi-basic · seaborn · pyplots.ai'
+        comment: 'Correct title format: ''voronoi-basic · seaborn · anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied cell sizes and shapes; could show more edge cases
+        comment: 'All Voronoi aspects shown: cells, edges, seed points, spatial regions'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Store location scenario is plausible but context could be stronger
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 100km x 100km with 20 points appropriate for store coverage
+        comment: Synthetic but plausible spatial data; neutral context with km units
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Range 0–100 km is sensible for territorial/service area analysis
     code_quality:
       score: 10
       max: 10
@@ -153,42 +174,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → voronoi → plot → save'
+        comment: No unnecessary functions or classes; straightforward implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42) for deterministic results
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: matplotlib, numpy, pandas, seaborn, scipy'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI; proper implementation
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; uses current API
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of sns.set_theme, sns.set_context, sns.set_palette, sns.scatterplot;
+          matplotlib.patches used appropriately for geometry
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
         max: 5
         passed: false
-        comment: Uses sns styling and scatterplot, but core Voronoi uses scipy/matplotlib
-          patches
+        comment: Standard seaborn theming and palette features; scipy.spatial.Voronoi
+          is not seaborn-specific
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -197,8 +225,8 @@ impl_tags:
   - patches
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
+  - publication-ready
