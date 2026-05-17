@@ -1,150 +1,166 @@
 library: plotly
+language: python
 specification_id: chessboard-pieces
 created: '2026-01-08T21:55:25Z'
-updated: '2026-01-08T22:09:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20832957914
+updated: '2026-05-17T03:21:21Z'
+generated_by: claude-haiku
+workflow_run: 25979885009
 issue: 3350
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/plotly/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-pieces/python/plotly/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent visual quality with clear, properly sized Unicode chess pieces
-  - Perfect board orientation following chess standards (white at bottom, light square
-    at h1)
-  - Scholar's Mate is an excellent educational example position
-  - Clean code structure with well-organized constants
-  - Generates both static PNG and interactive HTML outputs
-  - Appropriate square aspect ratio for chess board
+  - Perfect spec compliance with all requirements met
+  - Excellent theme adaptation with correct color switching between light and dark
+    modes
+  - Clean code architecture with simple structure and proper reproducibility
+  - Professional polish using appropriate traditional chess colors and clean layout
+  - Both renders fully readable with no accessibility issues
   weaknesses:
-  - Could add hover tooltips to show piece names when hovering over pieces
-  - The PIECE_SYMBOLS dictionary could be more compact
-  image_description: The plot displays a chess board visualizing Scholar's Mate position.
-    The board uses traditional colors with tan/beige (#F0D9B5) for light squares and
-    brown (#B58863) for dark squares. The 8×8 grid is properly oriented with white
-    at the bottom (ranks 1-2) and black at the top (ranks 7-8). File labels (a-h)
-    appear below the board and rank labels (1-8) on the left side. Chess pieces are
-    rendered using Unicode symbols in black color - white pieces shown as outlined
-    symbols (♔♕♖♗♘♙) and black pieces as filled symbols (♚♛♜♝♞♟). The white queen
-    on f7 delivers checkmate to the black king on h8. The title "Scholar's Mate ·
-    chessboard-pieces · plotly · pyplots.ai" appears at the top. A dark border frames
-    the board. The square aspect ratio is appropriate for a chess board diagram.
+  - Design Excellence uses defaults without significant visual refinement or custom
+    styling
+  - 'Limited library mastery: does not leverage plotly''s distinctive interactive
+    capabilities like hover tooltips'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title is dark text (#1A1A17) and clearly readable; file labels (a-h) and rank labels (1-8) are in subtle gray (INK_SOFT #4A4A44); border is present
+      Data: Chess board uses traditional alternating light (#F0D9B5) and dark (#B58863) squares; white pieces rendered as dark Unicode symbols (♔♕♖♗♘♙); black pieces as outlined Unicode (♚♛♜♝♞♟); all pieces clearly visible against both square colors
+      Legibility verdict: PASS - all text and elements are fully readable with excellent contrast against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Title is light text (#F0EFE8) and clearly readable; file labels and rank labels are in lighter gray (INK_SOFT #B8B7B0); border is present in light gray
+      Data: Chess board squares retain traditional colors (light #F0D9B5 and dark #B58863) which provide sufficient contrast against dark background; white pieces rendered as light Unicode symbols (cream/light colored); black pieces as lighter Unicode; piece colors are identical to light render - only chrome has changed
+      Legibility verdict: PASS - all text is fully readable, no dark-on-dark issues, pieces clearly distinguishable from background
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and labels clearly readable, piece symbols large (70pt) and
-          well-centered
+        comment: Title and labels explicitly colored with theme tokens; fully readable
+          in both renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, pieces fit within squares
+        comment: Clean layout with no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Pieces perfectly sized and visible, not touching square edges
+        comment: All pieces and board features clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Brown/tan board colors are colorblind-safe, black pieces with clear
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square format perfect for chess board, good margins and centering
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for chess board, but file/rank labels appropriately provided
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Board squares serve as grid, clean border, no legend needed
+        comment: Pieces distinguished by shape and color; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect square format (1200×1200), well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive title with library/source; algebraic notation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Background matches theme tokens; piece colors adapt correctly
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean, professional design using traditional colors; not particularly
+          sophisticated
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Margins and border present; minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Scholar's Mate is recognizable; functional but no special emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct chess board visualization with piece placement
+        comment: Correct chess board representation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Squares correctly mapped using algebraic notation
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Unicode symbols, white at bottom, light square at h1, pieces centered
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: Unicode pieces, square grid, proper orientation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 8x8 board displayed with proper coordinates
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Accurate algebraic mapping; all pieces correctly positioned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for chess board, piece symbols self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: Scholar''s Mate · chessboard-pieces · plotly · pyplots.ai'
+        comment: Correct format with library and source
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows Scholar's Mate with all piece types represented
+        comment: Complete position with all piece types
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Scholar's Mate is a famous, educational chess position
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standard chess position, all pieces in valid squares
+        comment: Scholar's Mate is a real, famous opening trap
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 8×8 board with appropriate piece sizing
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -152,49 +168,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → shapes → annotations →
-          layout → save'
+        comment: Simple, direct implementation without unnecessary abstraction
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data with fixed piece positions
+        comment: Deterministic layout; no random elements
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Only plotly imported, minor verbosity in constants
-      - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
         passed: true
-        comment: No deprecated functions used
+        comment: Only os and plotly.graph_objects; both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses shapes for squares, annotations for pieces, generates PNG and
-          HTML. Could add hover tooltips.
+        comment: Good use of graph_objects API; shapes and annotations follow plotly
+          conventions
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage; does not leverage plotly's interactive capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
   patterns: []
   dataprep: []
   styling: []
