@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:44:06Z'
-updated: '2026-05-17T15:30:48Z'
+updated: '2026-05-17T15:36:31Z'
 generated_by: claude-haiku
 workflow_run: 25994860847
 issue: 3415
@@ -12,90 +12,89 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-b
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 49
+quality_score: 62
 review:
   strengths:
-  - Correct Voronoi tessellation implementation with proper bounded regions
-  - Seed points clearly marked with white edge contrast
-  - Clean code structure with proper data organization
-  - Mirror-points technique correctly handles infinite regions
-  - Proper figure sizing and aspect ratio (16:9)
+  - Voronoi geometry correctly computed and clipped to bounding box
+  - Both light and dark renders generated and legible in both themes
+  - Seed points prominently marked with white-edge circles for clear visibility
+  - Appropriate data density (15 seed points in 10x10 region) and spatial bounds
+  - Efficient batch rendering with PolyCollection
   weaknesses:
-  - 'CRITICAL: No theme adaptation implemented - code does not read ANYPLOT_THEME
-    environment variable'
-  - 'CRITICAL: Output saves as plot.png instead of plot-light.png/plot-dark.png'
-  - 'CRITICAL: Voronoi cell colors use custom palette, not Okabe-Ito compliant'
-  - 'CRITICAL: Seed point color is #306998 (dark blue) instead of #009E73 (brand green)'
-  - 'CRITICAL: All chrome elements (background, text, grid, spines) lack theme-adaptive
-    styling'
-  - 'Title contains wrong domain: ''pyplots.ai'' should be ''anyplot.ai'''
-  - Generic visual design with no aesthetic refinement beyond library defaults
-  - No visual hierarchy or data storytelling in the visualization
+  - Code does not implement theme-adaptive chrome - missing os.getenv('ANYPLOT_THEME')
+    and theme tokens (PAGE_BG, INK, INK_SOFT); images appear themed but logic absent
+    from code
+  - 'Seed points use Python blue #306998 instead of brand green #009E73 - violates
+    mandatory Okabe-Ito palette rule'
+  - Custom color palette not Okabe-Ito compliant - should use positions 1→N in canonical
+    order
+  - Grid styling too prominent - dashed lines at 30% opacity should be solid, subtle
+    (10-15%), y-axis preferred
+  - Top and right spines not removed - violates style guide default for L-shaped frame
+  - Design lacks intentional refinement - generic matplotlib defaults with no visual
+    hierarchy or polish
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - CORRECT light theme surface
-      Chrome: Title "voronoi-basic · matplotlib · anyplot.ai" and axis labels "X Coordinate" / "Y Coordinate" are dark and clearly readable. Tick labels visible. Grid is subtle and light-gray.
-      Data: 15 Voronoi cells in various colors (blue, yellow, teal, red, pink, orange, purple). Seed points rendered as circles with white edges, appearing in green/teal color.
-      Legibility verdict: PASS - All text is readable, proper contrast against light background
+      Background: Warm off-white (#FAF8F1 approximate) - correct surface color
+      Chrome: Title 'voronoi-basic · matplotlib · anyplot.ai' renders in dark text; axis labels 'X Coordinate' and 'Y Coordinate' in dark; tick labels 0-10 in dark. All readable with good contrast against light background.
+      Data: 15 Voronoi cells colored with custom palette (blues, oranges, teals, pinks, yellows); edges in gray (#333333, 2.5px width); seed points as circles with teal/green fill and white edges positioned at cell centers. Faint dashed grid visible at low opacity.
+      Legibility verdict: PASS - all elements clearly readable with good contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - CORRECT dark theme surface
-      Chrome: Title and axis labels appear in light color (light-gray or off-white) and are clearly readable against dark background. Grid is subtle. No dark-on-dark failures in rendered image.
-      Data: Voronoi cell colors IDENTICAL to light render (data colors preserved across themes, only chrome changed). Seed points remain visible with consistent appearance.
-      Legibility verdict: PASS - All text is readable, proper light-on-dark contrast
-
-    Note: The rendered images show proper theme adaptation and correct color implementation, but the submitted source code does NOT contain this logic. This indicates a mismatch between the code being reviewed and the generated images.
+      Background: Warm near-black (#1A1A17 approximate) - correct dark surface color
+      Chrome: Title, axis labels, tick labels flip to light text; all remain fully readable against dark background. No dark-on-dark failures detected (text is light, background is dark).
+      Data: Voronoi cell colors remain identical to light render (only chrome adapted). Seed points maintain teal/green appearance with white edges.
+      Legibility verdict: PASS - all text and data elements legible; theme adaptation working correctly in rendered output. Note: theme implementation missing from code suggests workflow post-processing or stale source file.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 21
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Readable sizes but no explicit theme-adaptive implementation in code
+        passed: true
+        comment: Text readable in both renders but theme tokens missing from code
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All text elements properly spaced, no collisions
+        comment: All text clear and readable, no colliding elements
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Voronoi regions and seed points clearly visible, but colors not theme-adaptive
-          in code
+        comment: Voronoi cells and seed points clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Custom palette not Okabe-Ito compliant, limited contrast optimization
+        comment: Colors distinct but custom palette not verified for CVD safety
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout with balanced margins, plot fills canvas appropriately
+        comment: Good proportions, all elements within bounds, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels present (X/Y Coordinate)
+        comment: Title present and descriptive with axes labeled
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Code uses custom colors and #306998 seed points, not Okabe-Ito;
-          no theme-adaptive chrome'
+        comment: 'CRITICAL: Custom colors not Okabe-Ito; seed points #306998 not brand
+          #009E73; backgrounds not theme-implemented in code'
     design_excellence:
-      score: 6
+      score: 5
       max: 20
       items:
       - id: DE-01
@@ -103,19 +102,19 @@ review:
         score: 2
         max: 8
         passed: false
-        comment: Generic defaults, no design intent or custom styling
+        comment: Generic matplotlib defaults; custom palette lacks design intent
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 1
         max: 6
         passed: false
-        comment: Library defaults with minimal customization
+        comment: Grid too prominent (dashed, 30%); spines not refined
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy or emphasis
+        comment: Clear structure but no visual hierarchy or emphasis
     spec_compliance:
       score: 13
       max: 15
@@ -125,50 +124,50 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Voronoi diagram
+        comment: Correct Voronoi diagram with proper spatial geometry
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All required features present: cells, edges, seed points, bounded
-          regions'
+        comment: Cells colored, points marked, clipped; seed point color violates
+          spec
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y axes correct, all 15 points rendered
+        comment: X/Y correctly mapped; axes span full data range
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: 'Title format wrong: contains ''pyplots.ai'' instead of ''anyplot.ai'''
+        passed: true
+        comment: Title present; code shows 'pyplots.ai' but image shows 'anyplot.ai'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows Voronoi cells, boundaries, and seed points
+        comment: Complete Voronoi tessellation with all regions visible
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Plausible random seed point distribution
+        comment: Random bounded seed points; realistic spatial analysis scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: '[0,10] × [0,10] domain is appropriate'
+        comment: 15 seed points in 10x10 region is appropriate density
     code_quality:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -176,34 +175,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow, no unnecessary functions
+        comment: No unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, scipy imported and used
+        comment: All imports used (matplotlib, numpy, scipy.spatial)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, no fake UI or over-engineering
+        passed: false
+        comment: PolyCollection efficient but missing theme-adaptive logic
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: Saves as ''plot.png'' instead of ''plot-light.png'' /
-          ''plot-dark.png'''
+        comment: 'CRITICAL: Hardcoded ''plot.png'' instead of ''plot-{THEME}.png'''
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -211,24 +209,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of PolyCollection, scatter, and Voronoi
+        comment: scipy.spatial.Voronoi and PolyCollection are idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses PolyCollection (distinctive), mirror-points technique
+        passed: false
+        comment: Uses scipy geometry; missing matplotlib theme token implementation
   verdict: REJECTED
 impl_tags:
   dependencies:
   - scipy
-  techniques:
-  - patches
+  techniques: []
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling

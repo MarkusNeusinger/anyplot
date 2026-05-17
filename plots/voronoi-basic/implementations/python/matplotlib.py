@@ -1,7 +1,7 @@
 """ anyplot.ai
 voronoi-basic: Voronoi Diagram for Spatial Partitioning
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 49/100 | Updated: 2026-05-17
+Quality: 62/100 | Updated: 2026-05-17
 """
 
 import matplotlib.pyplot as plt
