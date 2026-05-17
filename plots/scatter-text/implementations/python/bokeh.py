@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-text: Scatter Plot with Text Labels Instead of Points
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-17
+Quality: 92/100 | Updated: 2026-05-17
 """
 
 import os

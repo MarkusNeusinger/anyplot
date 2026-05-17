@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-text
 created: '2026-01-09T14:25:32Z'
-updated: '2026-05-17T23:31:51Z'
+updated: '2026-05-17T23:37:31Z'
 generated_by: claude-haiku
 workflow_run: 26005772897
 issue: 3482
@@ -12,50 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 92
 review:
   strengths:
-  - 'Perfect theme compliance: backgrounds, text colors, and grid all correctly implement
-    theme tokens for both light and dark renders'
-  - 'Flawless text legibility: all font sizes explicitly set (28pt title, 22pt labels,
-    18pt ticks), perfectly readable in both themes with no overlap'
-  - 'Excellent spec compliance: correct scatter-text plot type, all 30 language labels
-    properly positioned, accurate title format'
-  - 'High-quality data curation: languages organized into meaningful semantic groups
-    (modern, systems, functional, scientific, scripting, legacy) that reflect real
-    programming paradigms'
-  - 'Idiomatic Bokeh usage: ColumnDataSource, LabelSet, HoverTool, Selenium screenshot
-    pipeline — all library patterns correctly applied'
-  - 'Robust reproducibility: seed set (np.random.seed(42)), deterministic output,
-    clean imports, KISS code structure'
-  - 'Perfect palette compliance: brand green (#009E73) as sole data color, consistent
-    across both renders, excellent Okabe-Ito adherence'
+  - Perfect text legibility and contrast in both light and dark themes
+  - Excellent visual hierarchy via alpha and size variation that emphasizes categories
+    without losing data
+  - Idiomatic bokeh patterns (ColumnDataSource, LabelSet, HoverTool)
+  - Clever use of invisible scatter points for interaction without visual clutter
+  - Proper theme-adaptive styling with all chrome colors correctly set from tokens
+  - Clean reproducible data generation with realistic categorization
   weaknesses:
-  - 'Limited visual storytelling: language groups are organized in code (modern, systems,
-    functional, scientific, scripting, legacy) but not visually emphasized — consider
-    color-coding categories or varying alpha/size to guide viewer focus'
-  - 'Design lacks distinctive aesthetic: single brand green color is correct but austere
-    — consider subtle visual hierarchy, custom styling, or refined typography choices
-    to elevate from ''well-configured default'' to ''publication-ready'''
-  - 'Minimal visual refinement: grid and layout are correct but represent library
-    defaults — customization like removing/adjusting grid alpha, tweaking margins,
-    or spine styling could add polish'
+  - 'DE-02: Spines not explicitly styled—consider removing top/right spines or adjusting
+    spine width/color for more visual polish'
+  - 'DE-03: Language category grouping is visually encoded but not labeled—reader
+    doesn''t immediately understand category distinctions; could add annotations or
+    legend'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with subtle grid lines at 10% opacity
-      Chrome: Title in dark text (28pt, clearly readable), axis labels in dark text (22pt), tick labels in soft gray (18pt) — all elements properly themed
-      Data: 30 programming language names rendered in brand green (#009E73) at 22pt, well-distributed across the 2D embedding space with no overlapping text
-      Text: "C++", "Assembly", "Rust", "Go", "Swift" cluster in upper-left systems region; "Python", "Java", "JavaScript" in upper-right modern region; "Scala", "Haskell", "Clojure" in lower-left functional region; "R", "MATLAB", "Julia" in lower-center scientific region
-      Legibility verdict: PASS — All text is clearly readable against the light background, proper font sizes, excellent contrast
+      Background: Warm off-white at #FAF8F1 (correct theme color)
+      Chrome: Title "scatter-text · Python · bokeh · anyplot.ai" at 28pt dark text; axis labels "Embedding Dimension 1/2" at 22pt dark; tick labels at 18pt in INK_SOFT gray—all clearly readable against light background
+      Data: 30 programming language names in teal/cyan (#009E73, Okabe-Ito position 1) with font sizes 20-23pt and alpha 0.73-0.95 creating visual hierarchy; no overlaps or collisions
+      Grid: Subtle light gray lines at 10% opacity on both axes
+      Legibility verdict: PASS—all text fully legible with strong contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with matching subtle grid
-      Chrome: Title in light text (#F0EFE8), axis labels in light text, tick labels in light gray (#B8B7B0) — all properly inverted for dark theme
-      Data: Identical 30 language labels in the same brand green (#009E73) — data colors are pixel-perfect matches with light render
-      Text positioning: Identical to light render, all labels at same coordinates and sizes
-      Legibility verdict: PASS — All text is equally readable on dark background, brand green maintains excellent contrast on both surfaces, no dark-on-dark failures
+      Background: Warm near-black at #1A1A17 (correct theme color)
+      Chrome: Title and axis labels now in light text (INK=#F0EFE8, INK_SOFT=#B8B7B0), clearly readable; tick labels in light gray—all visible against dark background
+      Data: Language labels identical teal/cyan (#009E73)—data color unchanged from light render, only chrome flips (correct behavior)
+      Grid: Subtle light gray lines at 10% opacity visible on both axes
+      Legibility verdict: PASS—no dark-on-dark failures; brand green vibrant and distinguishable from dark background; all text fully legible
 
-    Both renders demonstrate correct theme-adaptive implementation: chrome (background, title, labels, grid, axes) inverts between themes while data colors (brand green) remain constant.
+    Both renders: Data colors are theme-invariant (correct). Only chrome (background, text, grid) changes between light and dark themes as per style guide.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -66,78 +54,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt;
-          perfectly readable in both light and dark themes'
+        comment: All text explicitly sized; readable in both themes (title 28pt, axis
+          labels 22pt, ticks 18pt, language 20-23pt)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: All 30 text labels well-distributed across 2D space; no overlapping
-          elements; all text fully readable
+        comment: 30 labels positioned without collisions; strategic grouping and jitter
+          reduction prevent overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Text labels appropriately sized at 22pt; excellent visibility against
-          both light and dark backgrounds
+        comment: Text labels visible throughout; varying alpha (0.73-0.95) creates
+          hierarchy without hiding elements
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 (Okabe-Ito position 1) is colorblind-safe; excellent
-          contrast in both themes'
+        comment: 'Single Okabe-Ito #009E73 is colorblind-safe with strong contrast
+          on both backgrounds'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~65% of canvas; balanced margins; generous whitespace
-          distribution; no wasted space
+        comment: Correct 4800×2700 landscape, generous margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: ''Embedding Dimension 1'' and ''Embedding Dimension
-          2''; title format correct'
+        comment: Title format correct; axis labels descriptive (Embedding Dimension
+          1/2)
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series uses #009E73 (brand green); background #FAF8F1 light
-          / #1A1A17 dark; data colors identical across renders; chrome theme-correct
-          in both'
+        comment: 'First series #009E73 ✓; backgrounds #FAF8F1/#1A1A17 ✓; data color
+          identical across themes ✓'
     design_excellence:
-      score: 9
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library default with clean typography and balanced
-          layout; lacks custom palette or distinctive design touches for publication-ready
-          level
+        passed: true
+        comment: Intentional hierarchy via group-based size (modern 23pt, others 20-22pt)
+          and alpha (0.95→0.73); professional not generic (raised from default 4)
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid and whitespace are good; represents library defaults with minimal
-          customization beyond style guide compliance
+        passed: true
+        comment: Outline subtle, grid refined (10% alpha), invisible scatter elegant;
+          could benefit from explicit spine removal/adjustment
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed in semantic groups (modern, systems, functional, etc.)
-          but not visually emphasized; no color coding or visual hierarchy to guide
-          narrative
+        passed: true
+        comment: Grouping creates narrative (modern prominent, legacy subtle); hierarchy
+          guides focus but grouping logic not self-evident
     spec_compliance:
       score: 15
       max: 15
@@ -147,29 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter plot with text labels as primary visual element;
-          all data points properly positioned
+        comment: Text labels at coordinates instead of markers (correct)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All 30 text labels displayed; proper 2D positioning; legible font;
-          interactive hover tooltips
+        comment: x, y, label present; alpha used; font size varies appropriately
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis and Y-axis correctly mapped to embedding dimensions; all data
-          visible; axes appropriately scaled
+        comment: X/Y embedding dimensions correct; all 30 labels positioned correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''scatter-text · Python · bokeh · anyplot.ai'' — correct
-          format; no legend needed for single series'
+        comment: Title format correct; HoverTool provides group/language identification
+          (appropriate for single-series)
     data_quality:
       score: 15
       max: 15
@@ -179,23 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Demonstrates all aspects of scatter-text: 30 diverse programming
-          languages across modern, systems, functional, scientific, scripting, and
-          legacy categories'
+        comment: Scatter-text well-demonstrated with 30 languages across 6 categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real programming languages in embedding space scenario; plausible
-          dimensionality reduction output; neutral topic; contextually meaningful
+        comment: Simulated embeddings for languages; realistic per spec; neutral real-world
+          data
       - id: DQ-03
-        name: Appropriate Scale & Factual Correctness
+        name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Language groupings are factually sensible; embedding values are plausible
-          for t-SNE/UMAP output; proportions match real-world language relationships
+        comment: 30 points in recommended 20-100 range; font sizes readable at density;
+          coordinates typical for embedding space
     code_quality:
       score: 10
       max: 10
@@ -205,38 +184,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → theme setup → data generation → plot
-          creation → save; no classes or functions'
+        comment: No functions/classes; straightforward procedural code with clear
+          sections
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at line 27; deterministic output; consistent
-          results across runs
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (ANYPLOT_THEME), numpy (data generation), bokeh
-          modules (plotting), selenium (screenshot)'
+        comment: All imports used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized with meaningful variable names; appropriate complexity;
-          proper Bokeh patterns; no over-engineering or fake functionality
+        comment: No fake UI; HoverTool legitimate; group styling clear
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current Bokeh
-          API; Selenium screenshot approach matches bokeh.md recommendation
+        comment: Saves as plot-{THEME}.html and plot-{THEME}.png; current bokeh 3.9.0
+          API
     library_mastery:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -244,29 +220,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of Bokeh patterns: ColumnDataSource for data, LabelSet
-          for text rendering, HoverTool for interactivity, output_file + save for
-          HTML export, Selenium for headless screenshot'
+        comment: ColumnDataSource, figure(), LabelSet, HoverTool, Selenium all follow
+          bokeh patterns; theme tokens via env vars (raised from default 3)
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: LabelSet for text-based scatter plot is Bokabe-specific; HoverTool
-          with tooltips leverages Bokeh's interactivity; Selenium approach follows
-          bokeh.md best practices
-    score_caps_applied: []
-  verdict: REJECTED
+        comment: Invisible scatter + HoverTool clever; per-group LabelSet shows organization;
+          theme tokens show mastery (raised from default 1)
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
+  - columndatasource
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
+  - dark-theme
