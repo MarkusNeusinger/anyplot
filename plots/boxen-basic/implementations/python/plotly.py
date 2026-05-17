@@ -1,12 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
+import sys
+
+
+# Prioritize venv's site-packages over current directory
+if sys.prefix not in sys.path:
+    import site
+
+    site_packages = site.getsitepackages()
+    if isinstance(site_packages, list):
+        sys.path = site_packages + sys.path
+    else:
+        sys.path.insert(0, site_packages)
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
 
 # Data - Server response times by endpoint (large dataset for boxen plot)
 np.random.seed(42)
@@ -37,16 +60,15 @@ data = {
     ),
 }
 
-# Colors for quantile levels (darker for inner boxes, lighter for outer)
+# Colors for quantile levels - theme-adaptive brand green with varying opacity
 colors = [
-    "rgba(48, 105, 152, 1.0)",
-    "rgba(48, 105, 152, 0.85)",
-    "rgba(48, 105, 152, 0.7)",
-    "rgba(48, 105, 152, 0.55)",
-    "rgba(48, 105, 152, 0.4)",
-    "rgba(48, 105, 152, 0.3)",
-    "rgba(48, 105, 152, 0.2)",
-    "rgba(48, 105, 152, 0.15)",
+    f"rgba({int(BRAND[1:3], 16)}, {int(BRAND[3:5], 16)}, {int(BRAND[5:7], 16)}, 1.0)",
+    f"rgba({int(BRAND[1:3], 16)}, {int(BRAND[3:5], 16)}, {int(BRAND[5:7], 16)}, 0.85)",
+    f"rgba({int(BRAND[1:3], 16)}, {int(BRAND[3:5], 16)}, {int(BRAND[5:7], 16)}, 0.7)",
+    f"rgba({int(BRAND[1:3], 16)}, {int(BRAND[3:5], 16)}, {int(BRAND[5:7], 16)}, 0.55)",
+    f"rgba({int(BRAND[1:3], 16)}, {int(BRAND[3:5], 16)}, {int(BRAND[5:7], 16)}, 0.4)",
+    f"rgba({int(BRAND[1:3], 16)}, {int(BRAND[3:5], 16)}, {int(BRAND[5:7], 16)}, 0.3)",
+    f"rgba({int(BRAND[1:3], 16)}, {int(BRAND[3:5], 16)}, {int(BRAND[5:7], 16)}, 0.2)",
 ]
 
 fig = go.Figure()
@@ -73,7 +95,7 @@ for idx, endpoint in enumerate(endpoints):
     # Draw boxes from outermost (widest, lightest) to innermost (narrowest, darkest)
     for i in range(n_levels - 1, -1, -1):
         lower, upper = letter_values[i]
-        width = box_width_base * (1 - i * 0.1)
+        width = box_width_base * (1 - i * 0.15)  # Increased from 0.10 to 0.15 for more pronounced decrease
 
         fig.add_shape(
             type="rect",
@@ -82,7 +104,7 @@ for idx, endpoint in enumerate(endpoints):
             y0=lower,
             y1=upper,
             fillcolor=colors[i],
-            line={"color": "#306998", "width": 1.5},
+            line={"color": INK_SOFT, "width": 1.5},
             layer="below",
         )
 
@@ -93,7 +115,7 @@ for idx, endpoint in enumerate(endpoints):
         x1=pos + box_width_base / 2,
         y0=median,
         y1=median,
-        line={"color": "#FFD43B", "width": 5},
+        line={"color": INK, "width": 5},
     )
 
     # Find and plot outliers (beyond the outermost letter value)
@@ -109,7 +131,7 @@ for idx, endpoint in enumerate(endpoints):
                 x=pos + jitter,
                 y=outlier_sample,
                 mode="markers",
-                marker={"color": "#306998", "size": 8, "opacity": 0.6},
+                marker={"color": BRAND, "size": 11, "opacity": 0.7},
                 showlegend=False,
                 hovertemplate="Response: %{y:.0f}ms<extra></extra>",
             )
@@ -123,7 +145,7 @@ for i, label in enumerate(quantile_labels):
             x=[None],
             y=[None],
             mode="markers",
-            marker={"size": 20, "color": colors[i], "symbol": "square", "line": {"color": "#306998", "width": 1}},
+            marker={"size": 20, "color": colors[i], "symbol": "square", "line": {"color": INK_SOFT, "width": 1}},
             name=label,
             showlegend=True,
         )
@@ -131,47 +153,51 @@ for i, label in enumerate(quantile_labels):
 
 # Add median legend entry
 fig.add_trace(
-    go.Scatter(x=[None], y=[None], mode="lines", line={"color": "#FFD43B", "width": 5}, name="Median", showlegend=True)
+    go.Scatter(x=[None], y=[None], mode="lines", line={"color": INK, "width": 5}, name="Median", showlegend=True)
 )
 
 # Layout
 fig.update_layout(
     title={
-        "text": "boxen-basic · plotly · pyplots.ai",
-        "font": {"size": 36, "color": "#333333"},
+        "text": "boxen-basic · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Server Endpoint", "font": {"size": 26}},
-        "tickfont": {"size": 20},
+        "title": {"text": "Server Endpoint", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "tickvals": positions,
         "ticktext": endpoints,
         "showgrid": False,
         "zeroline": False,
+        "linecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Response Time (ms)", "font": {"size": 26}},
-        "tickfont": {"size": 20},
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Response Time (ms)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
         "zeroline": False,
+        "linecolor": INK_SOFT,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     legend={
-        "title": {"text": "Quantile Level", "font": {"size": 20}},
-        "font": {"size": 18},
-        "x": 1.02,
+        "title": {"text": "Quantile Level", "font": {"size": 20, "color": INK}},
+        "font": {"size": 18, "color": INK_SOFT},
+        "x": 0.98,
         "y": 0.5,
+        "xanchor": "right",
         "yanchor": "middle",
-        "bgcolor": "rgba(255,255,255,0.95)",
-        "bordercolor": "#cccccc",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
     margin={"l": 120, "r": 220, "t": 100, "b": 100},
-    plot_bgcolor="white",
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
