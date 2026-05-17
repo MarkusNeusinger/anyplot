@@ -1,207 +1,233 @@
 library: plotnine
+language: python
 specification_id: voronoi-basic
 created: '2026-01-09T08:21:49Z'
-updated: '2026-01-09T08:24:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845623618
+updated: '2026-05-17T15:41:40Z'
+generated_by: claude-haiku
+workflow_run: 25995104222
 issue: 3415
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/voronoi-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent visual quality with clear cell differentiation and well-placed seed
-    point markers
-  - Proper Voronoi computation with mirror points technique to ensure finite bounded
-    cells
-  - Good use of plotnine grammar of graphics for layered composition (polygons + points)
-  - Colorblind-friendly 20-color palette with adequate contrast
-  - Proper clipping to bounding box using Sutherland-Hodgman algorithm
-  - Square aspect ratio maintained with coord_fixed
-  weaknesses:
-  - Code contains functions (clip_polygon) violating KISS principle - should be refactored
-    to procedural style if possible
-  - Axis labels lack units (though coordinates are unitless in this context)
-  image_description: The plot displays a Voronoi diagram with 20 seed points distributed
-    within a 10×10 bounded region. Each Voronoi cell is filled with a distinct color
-    from a 20-color palette including blues, yellows, oranges, greens, purples, pinks,
-    and grays. The cells are clearly delineated with dark gray (#333333) edge lines.
-    Each seed point is marked with a blue-outlined yellow-filled circular marker positioned
-    within its respective cell. The title "voronoi-basic · plotnine · pyplots.ai"
-    appears at the top in bold. Axes are labeled "X Coordinate" and "Y Coordinate"
-    with tick marks from 0 to 10. The background is light gray (#fafafa) and the plot
-    has a square 1:1 aspect ratio. All Voronoi cells are properly clipped to the bounding
-    box with no infinite regions extending beyond the visible area.
+  - Excellent visual quality with perfect theme adaptation (data colors identical
+    in light and dark, chrome properly adapted)
+  - Professional typography hierarchy with explicit font sizes (24pt title, 20pt labels,
+    16pt ticks)
+  - Strong Voronoi implementation with proper Sutherland-Hodgman polygon clipping
+    and bounding box handling
+  - 'Perfect palette compliance: Okabe-Ito starting with #009E73 brand green across
+    both renders'
+  - All text readable in both themes with no dark-on-dark or light-on-light failures
+  - Clean, elegant code structure with deterministic output and proper plotnine library
+    usage
+  - Data clearly demonstrates Voronoi spatial partitioning concept with natural clustering
+    visible
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "voronoi-basic · plotnine · anyplot.ai" in dark text (24pt, bold); axis labels "X Coordinate" / "Y Coordinate" in dark text (20pt); tick labels in dark gray (#4A4A44); all clearly readable against light background
+      Data: 20 Voronoi cells filled with diverse palette starting with Okabe-Ito positions; seed points marked with green circles (#009E73); cell borders subtle gray (#4A4A44, alpha=0.7); all cells visually distinguishable
+      Legibility verdict: PASS - no dark-on-dark, no light-on-light, all text crisp and readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title in light text (#F0EFE8); axis labels in light text (#F0EFE8); tick labels in light gray (#B8B7B0); cell borders light gray - all clearly readable against dark background
+      Data: Cell colors are identical to light render (Okabe-Ito palette preserved #009E73, #D55E00, #0072B2, #CC79A7, etc.); seed points in same green (#009E73); only chrome has flipped to light theme
+      Legibility verdict: PASS - no dark-on-dark failures, green seed points pop distinctly on dark surface, all text light-colored and readable
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 28pt bold, axis titles 20pt, tick labels 16pt - all clearly
-          readable
+        comment: Explicit font sizes (24pt, 20pt, 16pt); perfectly readable in both
+          themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: No overlapping elements; all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Seed points and cell boundaries clearly visible; markers could be
-          slightly larger
+        comment: Seed points clearly visible; 20 cells optimally distinguished by
+          color
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Diverse 20-color palette with good differentiation, colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Perfect square layout, plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels but no units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid disabled (appropriate), legend hidden (appropriate)
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Voronoi diagram with proper spatial partitioning
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly mapped to seed points and cell vertices
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Cells clipped to bounding box, distinguishable colors, seed points
-          marked
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within 0-10 bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: Legend hidden (acceptable, spec mentions optional labels)
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: 'Correct format: voronoi-basic · plotnine · pyplots.ai'
-    data_quality:
-      score: 18
+        comment: Okabe-Ito palette colorblind-safe; cells distinguishable by hue and
+          spatial position
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect canvas utilization; square format ideal; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: ''X Coordinate'' and ''Y Coordinate'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
+          theme-correct chrome'
+    design_excellence:
+      score: 15
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
         max: 8
         passed: true
-        comment: Shows diverse cell shapes (edge cells, interior cells, various polygon
-          sizes)
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
+        comment: Professional, intentional design; thoughtful palette; strong typography
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
         passed: true
-        comment: Spatial partitioning demonstration, generic but plausible
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Subtle borders; no grid (appropriate); clean appearance; polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through seed-point emphasis; clear focal points
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: 20 points in 0-10 range matches spec recommendation
+        comment: Correct Voronoi diagram with proper spatial partitioning
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: clipped cells, marked seed points, distinguishable
+          cells'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y axes correctly show 0-10; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed (appropriate)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all Voronoi features: partitioning, seed positions, diverse
+          spatial relationships'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Plausible, neutral scenario (service areas, facility analysis, territories)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 20 points well-distributed; 0-10 range sensible; reproducible seed
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Contains functions (clip_polygon) violating KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: 'Clean, linear flow: data → Voronoi → clipping → DataFrame → plot
+          → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Well-implemented Sutherland-Hodgman clipping; no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png with 300 DPI
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses plotnine grammar of graphics: ggplot, geom_polygon, geom_point,
-          coord_fixed, scale_fill_manual, proper theme customization'
+        comment: Excellent ggplot2 grammar patterns; proper geom layering; comprehensive
+          theming
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Good use of scale_fill_manual for 20-color mapping; coord_fixed for
+          aspect ratio
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - layer-composition
-  - patches
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending
