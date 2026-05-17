@@ -1,167 +1,182 @@
 library: altair
+language: python
 specification_id: indicator-bollinger
 created: '2026-01-09T08:18:00Z'
-updated: '2026-01-09T08:20:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845562942
+updated: '2026-05-17T09:50:50Z'
+generated_by: claude-haiku
+workflow_run: 25987399023
 issue: 3237
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-bollinger/python/altair/plot-dark.html
+quality_score: 99
 review:
   strengths:
-  - 'Excellent layer composition with clear visual hierarchy: price line (yellow)
-    stands out prominently against the band area and SMA'
-  - Proper use of Altair declarative grammar with multiple marks layered correctly
-  - Good use of dashed line for SMA distinguishes it from the band boundaries
-  - Semi-transparent band area (25% opacity) allows price movements to be visible
-    within the volatility envelope
-  - Data generation shows realistic price behavior with trending periods and varying
-    volatility
-  - Correct title format following pyplots.ai convention
+  - Excellent theme-adaptive implementation with proper INK and INK_SOFT tokens across
+    all text elements
+  - 'Perfect use of Okabe-Ito palette: brand green for price, vermillion for SMA,
+    blue for bands'
+  - 'Sophisticated layer composition with appropriate visual hierarchy: thick price
+    line draws attention, thin band lines stay subtle'
+  - 'Proper handling of both renders: identical data colors across light/dark, only
+    chrome adapts'
+  - 'Comprehensive styling: dashed SMA line, transparent band area (0.2 opacity),
+    proper stroke widths'
+  - Clean, idiomatic Altair code using alt.layer(), proper encoding, and configure_*
+    methods
+  - 'Excellent data preparation: realistic stock prices with trend changes, proper
+    Bollinger Band calculation (20-period SMA, 2 std)'
+  - Correct axis ranges with 2% padding on all sides, preventing data crowding
+  - Fully reproducible with np.random.seed(42)
+  - All text explicitly sized for high-resolution canvas (title 28px, labels 22px,
+    ticks 18px)
   weaknesses:
-  - The upper and lower band lines could use the same color as the SMA line but with
-    solid styling to differentiate from the dashed SMA - currently all three use the
-    same blue color which could cause confusion
-  - No legend is present to identify what each line represents (price, SMA, upper/lower
-    bands)
+  - The implementation file requires sys.path manipulation to avoid circular import
+    (naming conflict with altair module) - minor quirk that doesn't affect output
+    quality
   image_description: |-
-    The plot displays a Bollinger Bands technical indicator chart with a landscape orientation. The title "indicator-bollinger · altair · pyplots.ai" appears at the top center in a clear, readable font.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white or gray
+      Title: "indicator-bollinger · altair · anyplot.ai" in dark text (#1A1A17), centered, properly sized
+      Axis labels: "Date" (x-axis) and "Price ($)" (y-axis) in dark text, clearly readable
+      Tick labels: Month/day dates (e.g., "Jan 20") on x-axis, price values on y-axis, both readable
+      Data representation: Four distinct visual elements - (1) thick green price line (#009E73) as focal point, (2) dashed vermillion SMA line (#D55E00) for trend, (3) blue band lines (#0072B2) at 0.6 opacity, (4) light blue band area fill at 0.2 opacity showing volatility envelope
+      Grid: Subtle horizontal grid lines at ~10% opacity, doesn't compete with data
+      All text legible against light background - passes light-theme readiness check
+      Legibility verdict: PASS - All elements readable, clear visual hierarchy, excellent contrast
 
-    The chart shows price data over approximately 120 trading days (from late January to mid-June 2024). The key visual elements are:
-
-    1. **Price Line (Yellow/Gold)**: A bright yellow line showing the closing price, which starts around $99-100, trends downward with volatility through February-March, reaching lows around $84-85 in late March, then consolidates and shows recovery toward the end around $88-91.
-
-    2. **Bollinger Band Area (Light Blue with 25% opacity)**: A semi-transparent blue shaded region representing the volatility envelope between the upper and lower bands. The band width varies - narrower during consolidation periods and wider during volatile movements.
-
-    3. **SMA Line (Blue Dashed)**: A dashed blue line running through the middle of the band area representing the 20-period Simple Moving Average, clearly distinguishable from the band boundaries.
-
-    4. **Upper and Lower Band Lines**: Solid blue lines at 70% opacity defining the band boundaries, matching the band area color.
-
-    The Y-axis shows "Price ($)" ranging from approximately $82 to $112. The X-axis shows "Date" with tick marks at roughly weekly intervals, labels angled at -45 degrees for readability.
-
-    The chart demonstrates classic Bollinger Band behavior: the price touching or breaking outside the bands at various points, band squeeze patterns, and price mean reversion toward the SMA.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Title: Same text in light color (#F0EFE8), properly sized and centered
+      Axis labels: "Date" and "Price ($)" in light secondary text color (#B8B7B0), clearly readable against dark background
+      Tick labels: Month/day and price values in light secondary color, all readable
+      Data colors: Identical to light render - green price line, vermillion SMA, blue bands - confirming Okabe-Ito color consistency across themes
+      Grid: Subtle grid lines using light-colored ink at 10% opacity, visible but not dominant
+      Chrome adaptation: All non-data elements properly adapted to dark theme - no dark-on-dark failures
+      Brand green (#009E73) maintains excellent visibility on dark background
+      Legibility verdict: PASS - No dark-on-dark text issues, all elements readable, consistent data colors with light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all perfectly
-          readable at full resolution
+        comment: All text explicitly sized and colored for both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: X-axis date labels angled at -45 degrees prevent overlap, no text
-          collision anywhere
+        comment: Clean, uncluttered layout with proper angle and spacing
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths appropriate (3px for price, 2.5px for SMA, 2px for bands),
-          elements clearly visible
+        comment: All four elements clearly visible with appropriate stroke widths
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Yellow vs blue provides good contrast, but yellow-blue distinction
-          could be challenging for some color vision deficiencies
+        comment: Okabe-Ito palette ensures CVD safety
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good canvas utilization, slight excess whitespace above the chart
-          area
+        comment: Correct 16:9 proportions with proper padding
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has 'Price ($)' with unit, X-axis has 'Date' which is appropriate
+        comment: Descriptive title and axes with units
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid at 30% opacity is good, but no legend present to identify the
-          different lines
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Bollinger Bands chart with price line, SMA, and band area
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, price values on Y-axis, correct encoding
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has price line, SMA (dashed), upper/lower bands, and shaded area
-          - spec mentions considering band width indicator which is not shown but
-          optional
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Y-axis properly scaled with 2% padding to show all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: No legend present to identify lines
-      - id: SC-06
-        name: Title Format
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct format: indicator-bollinger · altair · pyplots.ai'
-    data_quality:
-      score: 18
+        comment: Okabe-Ito order, theme-correct chrome, consistent data colors
+    design_excellence:
+      score: 19
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 7
         max: 8
         passed: true
-        comment: Shows uptrend, downtrend, consolidation, band squeezes, price touching
-          bands - covers most Bollinger Band scenarios
-      - id: DQ-02
-        name: Realistic Context
+        comment: Thoughtful color selection and transparency strategy
+      - id: DE-02
+        name: Visual Refinement
         score: 6
-        max: 7
+        max: 6
         passed: true
-        comment: Stock price scenario with realistic daily returns (~1.5% std), proper
-          business days
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Minimal chrome, subtle grid, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy and focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Stock prices around $100 with realistic volatility ranges
+        comment: Correct Bollinger Bands visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: All bands and price lines present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Proper X/Y encoding and scale domain
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Spec-compliant title format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 120 periods with volatility envelope
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic daily stock prices with trend patterns
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sensible price range with proper padding
     code_quality:
       score: 10
       max: 10
@@ -171,55 +186,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, data generation, chart layers,
-          save'
+        comment: Simple procedural code
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: altair, numpy, pandas'
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: No fake UI, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale_factor=3.0, also saves plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct plot-{THEME}.png and .html output
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper alt.Chart() API and encode/configure patterns
+      - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of Altair's declarative grammar with alt.layer() for
-          composition, proper encoding types (:T, :Q), mark_area with y/y2 encoding,
-          configure_axis, and HTML export for interactivity
+        comment: Excellent use of alt.layer() and theme-adaptive configuration
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
   dataprep:
   - rolling-window
-  - time-series
   styling:
   - alpha-blending
   - grid-styling
