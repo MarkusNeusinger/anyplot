@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:53:39Z'
-updated: '2026-05-17T01:58:00Z'
+updated: '2026-05-17T02:02:47Z'
 generated_by: claude-haiku
 workflow_run: 25978445461
 issue: 3340
@@ -12,102 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/letsplot/plot-dark.html
-quality_score: 72
+quality_score: 87
 review:
   strengths:
-  - Perfect grid layout and square proportions (1:1 aspect ratio)
-  - Correct spec compliance across all dimensions
-  - Clean, simple code structure with deterministic data
-  - 'Light render is flawless: title and axis labels clearly readable'
-  - Proper use of ggplot/geom_tile idiom
+  - 'Excellent theme adaptation: both light and dark renders are perfectly readable
+    with no legibility issues'
+  - Correct chessboard pattern with proper corner orientation (light square at h1)
+  - Clean, well-organized code with proper use of theme tokens (INK, INK_SOFT, PAGE_BG)
+  - All spec requirements met precisely
+  - Proper file naming and output format (plot-light.png, plot-dark.png, HTML exports)
   weaknesses:
-  - Dark render background color not applied - plot_background=element_blank() prevents
-    PAGE_BG token from being used
-  - Dark render text nearly invisible - light-colored INK and INK_SOFT on inadvertently
-    light background
-  - No visual design polish or refinement beyond defaults
-  - No distinctive letsplot features leveraged
+  - Design Excellence is solid but not exceptional—uses traditional chessboard colors
+    without exploring palette variations or visual refinement beyond the basic requirements
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and matches style guide
-      Chrome: Title "chessboard-basic · letsplot · anyplot.ai" in dark text (INK #1A1A17) at top, clearly readable. X-axis labels (a–h) in soft dark text (INK_SOFT #4A4A44), fully readable. Y-axis labels (1–8) in soft dark text, fully readable. All text is properly positioned with no overlaps.
-      Data: 8×8 chessboard with wheat (#F5DEB3) and brown (#8B4513) squares, separated by brown borders (#5D4037). Perfect alternating pattern with 1:1 aspect ratio.
-      Legibility verdict: PASS - All text is clear and legible against the light background.
+      Background: Warm off-white (#FAF8F1), not pure white or dark
+      Chrome: Title "chessboard-basic · letsplot · anyplot.ai" is clearly visible in dark ink (#1A1A17). Row labels (1-8) and column labels (a-h) are rendered in secondary text color (#4A4A44) and are fully readable
+      Data: Alternating cream (#F5DEB3) and brown (#8B4513) squares with subtle brown borders. Proper 1:1 aspect ratio, light square at h1 corner per chess standard
+      Legibility verdict: PASS - All text is clearly readable with good contrast against the light background
 
     Dark render (plot-dark.png):
-      Background: Should be warm near-black (#1A1A17) but appears light - FAILURE. The plot_background theme element is set to element_blank(), which prevents the PAGE_BG color from being applied.
-      Chrome: Title is rendered in light text (INK #F0EFE8) but is nearly invisible because the background is not dark as intended. X-axis labels (a–h) and Y-axis labels (1–8) are in light soft text (INK_SOFT #B8B7B0) but are extremely faint and barely readable against the light background. This is a critical theme-adaptation failure.
-      Data: 8×8 chessboard squares are visible with identical colors to light render (#F5DEB3 and #8B4513), confirming data consistency across themes. However, the failure to apply the dark background compromises the entire dark render.
-      Legibility verdict: FAIL - Text is unreadable. Dark-on-light is not dark-on-dark, but the failure to set PAGE_BG to #1A1A17 means light text is rendered on a light surface, making it nearly invisible.
+      Background: Warm near-black (#1A1A17), not pure black or light
+      Chrome: Title is now in light ink (#F0EFE8) and remains clearly visible. Row and column labels are rendered in light secondary text (#B8B7B0) and are fully readable against the dark background
+      Data: Identical cream and brown square colors to the light render—only background and text have adapted. No dark-on-dark issues detected
+      Legibility verdict: PASS - All text is clearly readable; data colors remain identical to light render (only chrome adapted)
   criteria_checklist:
     visual_quality:
-      score: 20
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Dark render text unreadable - theme background not applied
+        passed: true
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: Perfect grid layout, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 64 squares clearly visible and well-spaced
+        comment: All tiles and borders clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Excellent contrast between wheat and brown; CVD-safe
+        comment: Excellent contrast, not red-green dependent
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 1:1 aspect ratio, balanced margins
+        comment: Square format appropriate, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches spec format; axis labels descriptive
+        comment: Descriptive title with attribution, standard algebraic notation
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dark render background is not #1A1A17; theme-chrome failure'
+        passed: true
+        comment: Backgrounds match style guide, data colors consistent
     design_excellence:
-      score: 8
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Classic chess colors are appropriate but not exceptional
+        comment: Uses traditional default colors, no custom palette
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Library defaults with minimal customization
+        passed: true
+        comment: Minimal but effective, borders add definition
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed cleanly but without visual hierarchy
+        passed: true
+        comment: Clear, well-organized presentation
     spec_compliance:
       score: 15
       max: 15
@@ -117,25 +114,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 8×8 grid chart
+        comment: Correct 8x8 chess board grid
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: rows, columns, alternating colors, labels'
+        comment: 'All features present: rows, columns, colors, labels, aspect ratio'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned
+        comment: Correct mapping with proper corner orientation
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend hidden appropriately
+        comment: Title format correct, legend hidden appropriately
     data_quality:
       score: 15
       max: 15
@@ -145,19 +142,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete 8×8 chessboard with all features
+        comment: Complete 8x8 board with all squares and labels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard chess board; neutral and recognizable
+        comment: Standard chess board is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proper 1:1 proportions; factually correct
+        comment: Proper proportions for chess board
     code_quality:
       score: 10
       max: 10
@@ -167,54 +164,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow
+        comment: Simple, direct implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data
+        comment: Deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity
+        comment: Clean, readable code
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png format
+        comment: Correct output format
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Correct ggplot + geom_tile pattern but standard usage
+        passed: true
+        comment: Good use of geom_tile, aes, scales, theme
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Generic tile usage; no distinctive letsplot features
-  verdict: REJECTED
+        comment: coord_fixed used well, mostly straightforward
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
-  - matrix-construction
   dataprep: []
   styling:
-  - minimal-chrome
+  - theme-adaptive-chrome
