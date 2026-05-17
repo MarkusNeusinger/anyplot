@@ -1,148 +1,168 @@
 library: bokeh
+language: python
 specification_id: renko-basic
 created: '2026-01-08T16:05:31Z'
-updated: '2026-01-08T16:12:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20823048781
+updated: '2026-05-17T11:48:28Z'
+generated_by: claude-haiku
+workflow_run: 25989682660
 issue: 3294
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/renko-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/renko-basic/bokeh/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Correct Renko chart algorithm with proper reversal logic (2-brick reversal requirement)
-  - Clean implementation of bullish/bearish brick separation
-  - Good use of Bokeh ColumnDataSource pattern
-  - Proper canvas sizing (4800x2700) with scaled font sizes
-  - Includes both PNG and HTML output
-  - Subtle grid styling with dashed lines
+  - Pixel-perfect theme adaptation with no dark-on-dark or light-on-light failures
+  - Explicit font sizing throughout ensures readability at 4800×2700px
+  - Correct Okabe-Ito palette usage with proper first-series green
+  - Clean, professional code with proper random seed
+  - Accurate Renko algorithm implementation with proper trend reversal logic
+  - Legend and grid styling show attention to detail
   weaknesses:
-  - Legend label text (24pt) appears small in the final render despite being scaled
-  - Could add HoverTool to show brick details on hover for better interactivity
-  - No tooltips showing brick price range on hover
-  image_description: The plot displays a Renko chart showing price movements using
-    uniform-sized bricks. Green bricks represent bullish (upward) price movements
-    while red bricks represent bearish (downward) movements. The chart starts around
-    $100, rises to approximately $107, then experiences a significant downtrend to
-    around $78, followed by choppy price action oscillating between $78-$90. The title
-    "renko-basic · bokeh · pyplots.ai" is positioned at the top left. The X-axis is
-    labeled "Brick Number" (ranging from 0 to 50) and the Y-axis is labeled "Price
-    ($)" (ranging from 75 to 105). A legend in the top left shows "Bullish" (green)
-    and "Bearish" (red). The background is a light gray (#FAFAFA), and subtle dashed
-    grid lines are visible. Bricks are properly separated with small gaps.
+  - 'Design could be elevated: consider removing top/right spines for more refined
+    appearance'
+  - Data storytelling could add emphasis (e.g., highlight a specific trend reversal
+    or support/resistance level)
+  - Could explore more Bokeh-specific features for added sophistication
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) per specification
+      Chrome: Title "renko-basic · bokeh · anyplot.ai" clearly visible in dark text; axis labels "Brick Number" and "Price ($)" are readable; tick labels well-spaced and legible
+      Data: Bullish bricks in green (#009E73), bearish bricks in orange (#D55E00); bricks uniform and well-separated; legend with proper labels
+      Legibility verdict: PASS - All text, labels, and data elements are clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) per specification
+      Chrome: Title clearly visible in light text; axis labels and tick labels all readable in light color; no dark-on-dark failures observed
+      Data: Green (#009E73) and orange (#D55E00) bricks identical to light render - only chrome elements changed theme; all bricks and prices remain equally visible
+      Legibility verdict: PASS - All elements readable against dark background; proper theme adaptation with no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all clearly
-          readable
+        comment: All sizes explicitly set (title 28pt, labels 22pt, ticks 18pt); perfect
+          readability in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, legend positioned away from data
+        comment: Bricks well-spaced, no overlapping text, all elements readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bricks are uniformly sized with clear separation and visible borders
+        comment: Bricks perfectly sized and distinguishable; optimal adaptation to
+          data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Green and red are distinguishable with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well, slight empty space on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price ($) includes units, Brick Number is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito colors are CVD-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, plot fills 50-80% of canvas, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive title and axis labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; all text colors theme-adaptive;
+          both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Legend label text appears too small relative to canvas size
+        comment: Clean professional design; well above defaults but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid explicitly styled with 0.10 alpha; legend has custom styling;
+          some refinement visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Color coding guides viewer through trends; visual hierarchy present
+          but not emphasized
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Renko chart implementation with uniform bricks
+        comment: Correct Renko chart with proper brick logic
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Brick index on X-axis, price on Y-axis as expected
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Green/red colors, uniform bricks, gaps, grid present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: bullish/bearish bricks, colors, grid, spacing'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All bricks visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis brick index, Y-axis price; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Bullish and Bearish
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format renko-basic · bokeh · pyplots.ai
+        comment: Title format correct; legend shows proper labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish bricks, trend reversals, extended
-          moves
+        comment: Shows uptrends, downtrends, reversals, full price range
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price simulation with geometric random walk is realistic
+        comment: Stock price data is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: $2 brick size on ~$100 stock is reasonable
+        comment: Brick size and price range are sensible
     code_quality:
       score: 10
       max: 10
@@ -152,54 +172,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, brick calculation, plotting,
-          save'
+        comment: Linear flow; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean, Pythonic code; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Correct ColumnDataSource and vbar usage; theme-adaptive design well-executed
+      - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses ColumnDataSource and vbar which are standard; no HoverTool or
-          advanced interactivity
+        comment: Uses HoverTool and HTML export; could leverage more Bokeh-specific
+          features
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - columndatasource
-  - iteration-over-groups
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
   - grid-styling
-  - edge-highlighting
