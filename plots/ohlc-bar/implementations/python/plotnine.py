@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-08
+Library: plotnine 0.15.2 | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -21,6 +23,17 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for up/down distinction
+UP_COLOR = "#009E73"  # Position 1: bluish green
+DOWN_COLOR = "#D55E00"  # Position 2: vermillion
 
 # Data - Generate 50 days of realistic stock OHLC data
 np.random.seed(42)
@@ -78,33 +91,35 @@ plot = (
     + geom_segment(aes(x="open_x_start", xend="open_x_end", y="open", yend="open", color="direction"), size=1.2)
     # Close tick (right horizontal line)
     + geom_segment(aes(x="close_x_start", xend="close_x_end", y="close", yend="close", color="direction"), size=1.2)
-    # Colors: up (green) and down (red)
+    # Colors: up (Okabe-Ito position 1) and down (Okabe-Ito position 2)
     + scale_color_manual(
-        values={"up": "#2E7D32", "down": "#C62828"}, labels={"up": "Up (Close > Open)", "down": "Down (Close < Open)"}
+        values={"up": UP_COLOR, "down": DOWN_COLOR}, labels={"up": "Up (Close > Open)", "down": "Down (Close < Open)"}
     )
     # X-axis labels - show every 10th date
     + scale_x_continuous(
         breaks=list(range(0, n_days, 10)), labels=[dates[i].strftime("%b %d") for i in range(0, n_days, 10)]
     )
     # Labels
-    + labs(title="ohlc-bar \u00b7 plotnine \u00b7 pyplots.ai", x="Date", y="Price (USD)", color="Direction")
+    + labs(title="ohlc-bar · plotnine · anyplot.ai", x="Date", y="Price (USD)", color="Direction")
     # Theme
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        axis_text_x=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_title=element_text(size=24, weight="bold", color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
         legend_position="right",
-        panel_grid_major=element_line(color="#CCCCCC", alpha=0.3),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        panel_grid_major=element_line(color=INK, alpha=0.10, size=0.3),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="white"),
-        plot_background=element_rect(fill="white"),
+        panel_background=element_rect(fill=PAGE_BG, color=None),
+        plot_background=element_rect(fill=PAGE_BG, color=None),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
     )
 )
 
 # Save the plot
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
