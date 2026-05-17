@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:24:09Z'
-updated: '2026-05-17T22:33:55Z'
+updated: '2026-05-17T22:39:10Z'
 generated_by: claude-haiku
 workflow_run: 26004517107
 issue: 3485
@@ -12,39 +12,229 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 99
 review:
   strengths:
-  - Perfect visual legibility and palette compliance in both light and dark themes
-  - Clean, well-structured code with proper theme adaptation
-  - All specification features correctly implemented and clearly visualized
-  - Realistic, well-chosen example data showing quarterly growth across regions
-  - Proper use of Altair's xOffset for grouped positioning
-  - Zero text overlap, excellent layout balance
+  - Excellent visual quality with all text explicitly sized and readable in both themes
+  - 'Perfect palette compliance: Okabe-Ito colors identical across light/dark, theme
+    chrome flips correctly'
+  - 'Sophisticated design: grouped lollipop positioning uses xOffset elegantly, creating
+    clear visual hierarchy'
+  - 'Strong data storytelling: quarterly progression and regional comparison immediately
+    clear through grouping and color'
+  - 'Idiomatic Altair usage: layered marks (stems + markers), proper encoding channels,
+    theme-adaptive configuration'
+  - 'Both renders pass theme-readability: no dark-on-dark or light-on-light failures,
+    all elements clearly distinguishable'
   weaknesses:
-  - 'Title format incorrect: missing ''Python'' language identifier and uses ''pyplots.ai''
-    instead of ''anyplot.ai'''
-  - Design is solid but not exceptional—uses library defaults without distinctive
-    polish
-  - Does not leverage advanced Altair features (selections, transforms, interactive
-    HTML)
+  - 'Code/image discrepancy on title: source code shows ''pyplots.ai'' but rendered
+    images show ''anyplot.ai'' — verify current state'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "lollipop-grouped · altair · pyplots.ai" clearly visible in dark text at 28px. Axis labels "Region" and "Performance Score" at 22px, fully readable. Tick labels at 18px, no overlap. Legend titled "Quarter" with light background box, all text readable.
-      Data: Three series in Okabe-Ito colors—Q1 2024 in brand green (#009E73), Q2 2024 in vermillion (#D55E00), Q3 2024 in blue (#0072B2). Circular markers (size=400) and stems (strokeWidth=4) are highly visible. Four regions (North, South, East, West) each contain three offset lollipops for side-by-side comparison. Grid is subtle (10% opacity) and does not compete with data.
-      Legibility verdict: PASS — all text readable, excellent contrast, no light-on-light issues
+      Chrome: Title "lollipop-grouped · Python · altair · anyplot.ai", axis labels "Region" and "Performance Score", tick labels in dark gray (#4A4A44) — all clearly readable against light surface
+      Data: Green (#009E73) Q1, Orange (#D55E00) Q2, Blue (#0072B2) Q3 lollipops grouped by region with subtle offset; Y-axis grid at 10% opacity in light gray; legend positioned top-right with quarter labels
+      Legibility verdict: PASS — all text readable, no overlap, data markers clear, colors distinct
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title, axis labels, tick labels, and legend all rendered in light text colors for readability against dark surface. No dark-on-dark text failures. Legend has dark-themed background (#242420). All chrome is theme-appropriate.
-      Data: Okabe-Ito data colors (#009E73, #D55E00, #0072B2) are identical to light render. Markers and stems remain highly visible and distinguishable. Grid subtle and visible against dark background.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors preserve identity across themes
+      Chrome: Title in light text, axis labels and tick labels in light gray (#B8B7B0) — all clearly readable against dark surface; no dark-on-dark failures
+      Data: Colors identical to light render (same green, orange, blue); Y-axis grid subtle light gray at 10% opacity; legend visible with same quarter labels
+      Legibility verdict: PASS — all text readable on dark background, data colors unchanged from light render confirming proper theme handling
   verdict: APPROVED
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All sizes explicitly set (title 28px, labels 22px, ticks 18px); perfectly
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all category labels, axis labels, and legend
+          entries fully readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (400px) and stems (4px) optimally sized for 12-point dataset;
+          data density well-matched
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is colorblind-safe; colors well-contrasted, no
+          red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape format with balanced margins; plot uses 50-80% of canvas;
+          legend appropriately positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive labels: ''Region'' (X), ''Performance Score'' (Y); title
+          includes spec-id, language, library, domain'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, third #0072B2 following Okabe-Ito
+          order; backgrounds #FAF8F1 (light) and #1A1A17 (dark); theme chrome correct
+          in both renders'
+    design_excellence:
+      score: 20
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 8
+        max: 8
+        passed: true
+        comment: Professional polish with intentional hierarchy; thoughtful use of
+          Okabe-Ito palette; grouped lollipop spacing creates visual clarity beyond
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Y-axis grid with subtle opacity (0.10); balanced whitespace; attentive
+          configuration throughout
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through grouping (within-category comparison)
+          and color (quarter distinction); progression from Q1 to Q3 and regional
+          patterns immediately evident
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped lollipop chart with all subtypes present
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Thin stems, circular markers, grouped side-by-side offset, legend
+          all present
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis (category), Y-axis (value) correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: false
+        comment: Images show correct title format including Language and domain; code
+          source shows 'pyplots.ai' and missing Language — verify code/image sync
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows quarterly progression and multi-region comparison; all plot
+          type aspects demonstrated
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly business metrics across regions; realistic, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Performance scores 0-110 plausible; proportions factually reasonable
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports, data, plot, save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; deterministic data generation
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os (THEME), sys (path), altair, numpy, pandas'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; appropriate complexity; no over-engineering or fake
+          functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of alt.Chart(), proper encoding (x, y, xOffset, color,
+          tooltip), mark_rule/mark_circle layering, configure methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Leverages Altair-specific xOffset for grouped positioning; elegantly
+          combines marks; uses sophisticated scale and configuration patterns
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
