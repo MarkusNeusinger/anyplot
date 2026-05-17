@@ -1,23 +1,35 @@
-""" pyplots.ai
+""" anyplot.ai
 kagi-basic: Basic Kagi Chart
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 85/100 | Created: 2026-01-08
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 97/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette: green for yang (bullish), vermillion for yin (bearish)
+YANG_COLOR = "#009E73"  # Okabe-Ito position 1 - green
+YIN_COLOR = "#D55E00"  # Okabe-Ito position 2 - vermillion
+
 # Generate sample price data designed to demonstrate multiple yang/yin transitions
 np.random.seed(42)
 
 # Create price series with clear swings that will break through shoulders and waists
-# Using larger price moves (wider range ~70-150) and more segments for ~15+ line indices
 prices_list = [100.0]
 
 # Generate data with deliberate swings to create yang/yin transitions
 # Key: Price must break above previous shoulder for yang, below previous waist for yin
-# Using larger moves and more segments to create ~15-20 line indices
 segments = [
     # (target_price, volatility, n_steps) - target relative to previous end
     (15, 0.4, 15),  # Up to ~115
@@ -58,7 +70,6 @@ prices = np.array(prices_list)
 reversal_pct = 0.03
 
 # Build Kagi chart data with yang/yin tracking at reversal points
-# Yang/yin state changes when price breaks above previous shoulder (yang) or below previous waist (yin)
 kagi_points = []  # List of (x, y, is_yang) tuples
 current_direction = 1  # 1 = up, -1 = down
 current_high = prices[0]
@@ -130,13 +141,13 @@ while i < len(kagi_x) - 1:
     # Determine if this segment is yang or yin
     is_yang_seg = yang_yin[i]
 
-    # Color and width based on yang/yin (colorblind-accessible colors)
-    # Using 10/2 width ratio for stronger visual differentiation
+    # Color and width based on yang/yin (per spec: green for yang, red for yin)
+    # Using 10/2 width ratio for strong visual differentiation
     if is_yang_seg:
-        color = "#0077BB"  # Blue for yang (bullish) - colorblind safe
+        color = YANG_COLOR  # Green for yang (bullish)
         width = 10
     else:
-        color = "#EE7733"  # Orange for yin (bearish) - colorblind safe
+        color = YIN_COLOR  # Vermillion for yin (bearish)
         width = 2
 
     # Add line segment with hover information
@@ -148,7 +159,7 @@ while i < len(kagi_x) - 1:
             mode="lines",
             line={"color": color, "width": width},
             showlegend=False,
-            hovertemplate=f"<b>{trend_type}</b><br>Price: $%{{y:.2f}}<extra></extra>",
+            hovertemplate=f"<b>{trend_type}</b><br>Price: ${'{y:.2f}'}<extra></extra>",
         )
     )
     i += 1
@@ -178,9 +189,9 @@ if shoulder_x:
             x=shoulder_x,
             y=shoulder_y,
             mode="markers",
-            marker={"symbol": "triangle-down", "size": 12, "color": "#0077BB", "line": {"width": 1, "color": "white"}},
+            marker={"symbol": "triangle-down", "size": 12, "color": YANG_COLOR, "line": {"width": 2, "color": PAGE_BG}},
             name="Shoulder",
-            hovertemplate="<b>Shoulder</b><br>Price: $%{y:.2f}<extra></extra>",
+            hovertemplate="<b>Shoulder</b><br>Price: ${y:.2f}<extra></extra>",
         )
     )
 
@@ -191,59 +202,61 @@ if waist_x:
             x=waist_x,
             y=waist_y,
             mode="markers",
-            marker={"symbol": "triangle-up", "size": 12, "color": "#EE7733", "line": {"width": 1, "color": "white"}},
+            marker={"symbol": "triangle-up", "size": 12, "color": YIN_COLOR, "line": {"width": 2, "color": PAGE_BG}},
             name="Waist",
-            hovertemplate="<b>Waist</b><br>Price: $%{y:.2f}<extra></extra>",
+            hovertemplate="<b>Waist</b><br>Price: ${y:.2f}<extra></extra>",
         )
     )
 
-# Add legend entries with colorblind-accessible colors (matching widths)
+# Add legend entries with Okabe-Ito colors (matching widths)
 fig.add_trace(
-    go.Scatter(x=[None], y=[None], mode="lines", line={"color": "#0077BB", "width": 10}, name="Yang (Bullish)")
+    go.Scatter(x=[None], y=[None], mode="lines", line={"color": YANG_COLOR, "width": 10}, name="Yang (Bullish)")
 )
-fig.add_trace(go.Scatter(x=[None], y=[None], mode="lines", line={"color": "#EE7733", "width": 2}, name="Yin (Bearish)"))
+fig.add_trace(go.Scatter(x=[None], y=[None], mode="lines", line={"color": YIN_COLOR, "width": 2}, name="Yin (Bearish)"))
 
-# Layout with improved legend placement closer to plot
+# Layout with theme-adaptive styling
 fig.update_layout(
     title={
-        "text": "kagi-basic · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#333333"},
+        "text": "kagi-basic · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Line Index", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Line Index", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(128, 128, 128, 0.25)",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Price ($)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Price ($)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "showgrid": True,
         "gridwidth": 1,
-        "gridcolor": "rgba(128, 128, 128, 0.25)",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     legend={
-        "font": {"size": 16},
+        "font": {"size": 16, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
         "orientation": "h",
         "yanchor": "bottom",
         "y": 1.01,
         "xanchor": "center",
         "x": 0.5,
-        "bgcolor": "rgba(255, 255, 255, 0.95)",
-        "bordercolor": "rgba(0, 0, 0, 0.15)",
-        "borderwidth": 1,
     },
     margin={"l": 80, "r": 40, "t": 100, "b": 80},
-    plot_bgcolor="white",
     hovermode="x unified",
 )
 
-# Save as PNG (4800x2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save as PNG (4800x2700 px) and HTML
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
