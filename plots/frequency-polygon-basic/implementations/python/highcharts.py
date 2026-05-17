@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 Library: highcharts unknown | Python 3.13.13
-Quality: 38/100 | Updated: 2026-05-17
+Quality: 86/100 | Updated: 2026-05-17
 """
 
 import os
