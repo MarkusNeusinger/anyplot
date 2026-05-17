@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:08:54Z'
-updated: '2026-05-17T13:55:45Z'
+updated: '2026-05-17T14:03:16Z'
 generated_by: claude-haiku
 workflow_run: 25992657331
 issue: 2499
@@ -12,92 +12,89 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliamen
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Theme-adaptive styling fully correct with proper tokens, both renders perfectly
-    legible
-  - 'Palette compliance perfect: first series #009E73, multi-series follows Okabe-Ito
-    order, data colors identical across themes'
-  - 'Spec compliance complete: all required features present (semicircular arcs, dots,
-    color coding, legend with counts, majority line, seat annotation)'
-  - Clean, reproducible, deterministic code with proper API usage
-  - 'Visual quality high: no text legibility issues, no overlaps, element sizing appropriate
-    for 400 points at 4800×2700px'
+  - Perfect spec compliance with all required features (semicircular arrangement,
+    individual seats, color-coded divisions, legend with seat counts, majority line)
+  - 'Flawless theme-adaptive implementation: both light and dark renders pass readability
+    checks with correct background colors and text contrast'
+  - 'Excellent visual quality with no overlap, clear element visibility, and proper
+    use of Okabe-Ito palette (first series #009E73)'
+  - Clean, straightforward code with deterministic data generation and proper theme
+    environment variable handling
+  - 'Proper letsplot idioms: ggplot composition, scale_color_manual with theme tokens,
+    coord_fixed for semicircle geometry, ggsave with both PNG and HTML output'
   weaknesses:
-  - 'Design excellence limited: follows library defaults rather than introducing custom
-    visual polish beyond correctness'
-  - 'Data storytelling generic: neutral board-composition data lacks compelling narrative
-    or visual hierarchy to guide viewers to insight'
-  - 'Library mastery not distinctive: uses standard ggplot() patterns without leveraging
-    lets_plot-specific features'
-  - 'Annotation sizing: total seats annotation (size=14) could be slightly larger
-    for better visual hierarchy'
+  - Font sizes for axis labels, tick labels, and legend text are not explicitly set
+    (relying on library defaults rather than explicit pt values)
+  - 'Design Excellence above average but not exceptional: aesthetic sophistication
+    is solid (proper palette and theme tokens) but lacks the custom refinement or
+    visual storytelling emphasis that would reach publication-ready level'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct surface tone
-      Chrome: Title "parliament-basic · letsplot · anyplot.ai" in dark text (24pt, explicit size). Axis labels and tick labels in dark text with good contrast. Legend "Division (Seats)" with all 6 divisions listed with seat counts in dark-readable text against elevated background. Majority line annotation in subtle gray. Total seats annotation at bottom in medium-gray readable text.
-      Data: 400 seats arranged in 5 concentric semicircular arcs. First series (Finance Committee, 85 seats) rendered in brand green (#009E73). Remaining divisions in Okabe-Ito order: vermillion (#D55E00), blue (#0072B2), reddish purple (#CC79A7), orange (#E69F00), sky blue (#56B4E9). Dot size=5, alpha=0.9 provides clear visibility without crowding.
-      Legibility verdict: PASS - All text is clearly readable with proper contrast. Title, labels, legend entries, and annotations all have sufficient size and color differentiation against the light background. No "light on light" issues.
+      Background: Warm off-white (#FAF8F1) - correctly theme-adapted for light surface
+      Chrome: Title "parliament-basic · letsplot · anyplot.ai" in dark text (INK color), clearly visible at 24pt. X and Y axis labels visible with dark tick labels (INK_SOFT). Legend on right side displays "Division (Seats)" with party names and counts, all readable with proper contrast.
+      Data: Six concentric semicircular arcs of individual dots, each arc colored with Okabe-Ito palette. Innermost arc (Finance Committee, 85 seats) is #009E73 (brand green), followed by #D55E00 (Technology Board), #0072B2 (Operations), #CC79A7 (Research Council), #E69F00 (Marketing Team), #56B4E9 (Legal Advisory). Dashed majority line at y=0 with annotation "Majority" visible. Bottom annotation "Total: 400 seats | Majority: 201" centered and readable.
+      Legibility verdict: PASS - All text is clearly readable against the light background with excellent contrast. Data colors are vibrant and distinct.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark surface tone
-      Chrome: Title in light text (#F0EFE8), clearly visible. Axis labels and tick labels in light-gray text (#B8B7B0) with excellent contrast against dark background. Legend text light-gray, positioned near data with elevated dark background (#242420). Majority line in subtle gray. Total seats annotation in medium light-gray.
-      Data: IDENTICAL data colors to light render - brand green #009E73 for Finance Committee, all other divisions in same Okabe-Ito order. This confirms theme-independent data colors with no drift between renders.
-      Legibility verdict: PASS - All text is clearly readable against dark background. No "dark-on-dark" failures. Text colors properly use INK (#F0EFE8) for primary text and INK_SOFT (#B8B7B0) for secondary text, ensuring readability. Data colors remain unchanged from light render, maintaining visual identity.
+      Background: Warm near-black (#1A1A17) - correctly theme-adapted for dark surface
+      Chrome: Title in light text (F0EFE8), clearly visible and readable on dark background. X and Y axis labels visible with light tick labels. Legend displays same content with light-colored text, good contrast against elevated background (#242420).
+      Data: Identical to light render - all six Okabe-Ito colors (positions 1-6) remain exactly the same, confirming proper theme-independent data coloring. Dashed majority line visible at y=0. Bottom annotation remains readable in light text.
+      Legibility verdict: PASS - No dark-on-dark failures detected. All chrome elements (title, axis labels, ticks, legend text) are light-colored and readable against the dark background. Data colors are distinct and identical to light render, confirming proper theme separation between data and chrome.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Title, labels, legend all explicitly sized and readable. Annotation
-          could be slightly larger.
+        comment: Title explicitly sized at 24pt, all text readable; axis/legend sizes
+          rely on defaults not explicit sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend positioned right, no overlaps. All text fully readable.
+        comment: No overlapping text elements; legend positioned right with good spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 400 dots with size=5, alpha=0.9 optimally scaled for density. Clearly
-          distinguishable.
+        comment: 400 data points clearly visible with size=5, alpha=0.9; appropriate
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe with excellent contrast.
+        comment: Okabe-Ito palette is colorblind-safe with adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 60-70% of canvas with balanced 40px margins.
+        comment: 4800x2700px canvas well-utilized, balanced margins, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. Axes show coordinate ranges appropriate for
-          layout-based viz.
+        comment: Title follows format, axes labeled
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series Okabe-Ito order, light/dark backgrounds
-          correct, text theme-adaptive.'
+        comment: 'First series #009E73 ✓, Okabe-Ito order followed, backgrounds #FAF8F1/#1A1A17
+          ✓, both renders theme-correct'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -105,22 +102,22 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Correct Okabe-Ito application with theme adaptation, but follows
-          library defaults without custom polish.
+        comment: Uses proper Okabe-Ito palette and theme tokens, majority line annotation
+          is thoughtful; above default but not exceptional design
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: theme_void() clean, subtle majority line, generous margins. Could
-          explore grid/background texture.
+        comment: theme_void() used appropriately, clean legend styling, good whitespace;
+          above default refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: false
-        comment: Functional hierarchy through arc arrangement, but neutral data lacks
-          compelling narrative or visual emphasis.
+        comment: Majority line with annotation creates reference point, color guides
+          viewer; decent visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -130,26 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct semicircular parliament chart with concentric arcs.
+        comment: Correct chart type with all required elements
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: arcs, dots, color coding, legend with counts, majority
-          line, seat annotation.'
+        comment: 'All features present: semicircle arrangement, individual seats,
+          party coloring, legend with counts, majority line'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y coordinates properly mapped. All 400 seats correctly positioned.
+        comment: X/Y coordinates correctly mapped to semicircle
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format perfect. Legend labels clear with seat counts.
+        comment: Title format correct, legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -159,22 +156,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 6 divisions shown with varying counts (35-95), full spectrum
-          represented.
+        comment: 'Shows all aspects: 6 divisions with varying seat counts'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Board of Directors composition—neutral, non-controversial, real organizational
-          scenario.
+        comment: Board of directors scenario is neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 400 total seats plausible. Proportions accurate. Majority threshold
-          (201) correct.
+        comment: 400 total seats reasonable, distributions sensible
     code_quality:
       score: 10
       max: 10
@@ -184,35 +178,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, positions, DataFrame, colors, theme,
-          plot, save.'
+        comment: Clean imports→data→plot→save, no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic—hardcoded data, np.linspace for positions, no
-          randomness.
+        comment: Hardcoded data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, numpy, pandas, lets_plot.'
+        comment: Only necessary imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity, clear naming, zip(strict=True), no fake UI.
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html with scale=3.
+        comment: Saves as plot-{THEME}.png and .html correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -220,23 +212,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot+geom, aes(), scale_color_manual(), coord_fixed(), theme_void().
-          Correct but standard patterns.
+        comment: Good ggplot2-style composition, proper use of geoms and theme
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: coord_fixed() and geom_hline()/geom_text() are standard lets_plot,
-          not distinctive. Generic ggplot usage.
+        comment: Uses ggsave() for PNG/HTML export and theme composition; some distinctive
+          features but fairly standard
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
