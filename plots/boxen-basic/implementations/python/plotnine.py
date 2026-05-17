@@ -1,14 +1,24 @@
-""" pyplots.ai
+""" anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-17
 """
+
+import os
+import sys
 
 import numpy as np
 import pandas as pd
-from plotnine import (
+
+
+# Avoid shadowing by removing current directory from path during import
+cwd = os.getcwd()
+sys.path = [p for p in sys.path if os.path.abspath(p) != cwd]
+
+from plotnine import (  # noqa: E402
     aes,
     element_line,
+    element_rect,
     element_text,
     geom_point,
     geom_rect,
@@ -21,6 +31,14 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Set seed for reproducibility
 np.random.seed(42)
@@ -56,7 +74,6 @@ for endpoint in endpoints:
         data.append({"endpoint": endpoint, "response_time": v})
 
 df = pd.DataFrame(data)
-
 
 # Compute letter values for each group
 categories = df["endpoint"].unique()
@@ -122,16 +139,21 @@ box_df = pd.DataFrame(box_data)
 outlier_df = pd.DataFrame(outlier_data) if outlier_data else pd.DataFrame(columns=["x", "y", "endpoint"])
 median_df = pd.DataFrame(median_data)
 
-# Color palette - Python Blue gradient from dark to light
+# Color palette - high contrast gradient with brand color base
+# Using Okabe-Ito greens and blues for better contrast
 n_levels = box_df["level"].max() + 1 if len(box_df) > 0 else 1
-# Create gradient from dark blue (#1a4971) to light blue (#a8d4f0)
 colors = []
-for i in range(n_levels):
-    t = i / max(n_levels - 1, 1)  # Normalize to 0-1
-    r = int(26 + t * (168 - 26))
-    g = int(73 + t * (212 - 73))
-    b = int(113 + t * (240 - 113))
-    colors.append(f"#{r:02x}{g:02x}{b:02x}")
+if n_levels == 1:
+    colors = [BRAND]
+else:
+    # Create a gradient from dark brand to light, with stronger contrast
+    for i in range(n_levels):
+        t = i / max(n_levels - 1, 1)  # 0 to 1
+        # Interpolate from darker brand shade to lighter version
+        r = int(0 + t * (200 - 0))
+        g = int(158 + t * (220 - 158))
+        b = int(115 + t * (240 - 115))
+        colors.append(f"#{r:02x}{g:02x}{b:02x}")
 
 # Create the plot
 plot = (
@@ -139,37 +161,42 @@ plot = (
     + geom_rect(
         data=box_df.sort_values("level", ascending=False),  # Draw outer boxes first
         mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="factor(level)"),
-        color="#1a1a1a",
+        color=INK_SOFT,
         size=0.3,
     )
-    + geom_segment(data=median_df, mapping=aes(x="x - 0.35", xend="x + 0.35", y="y", yend="y"), color="white", size=1.5)
+    + geom_segment(data=median_df, mapping=aes(x="x - 0.35", xend="x + 0.35", y="y", yend="y"), color=INK, size=1.5)
     + scale_fill_manual(
         values=colors,
         name="Quantile Level",
         labels=[f"{50 * (0.5 ** (i + 1)):.1f}%-{100 - 50 * (0.5 ** (i + 1)):.1f}%" for i in range(n_levels)],
     )
-    + labs(title="boxen-basic · plotnine · pyplots.ai", x="Endpoint", y="Response Time (ms)")
+    + labs(title="boxen-basic · plotnine · anyplot.ai", x="Endpoint", y="Response Time (ms)")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        axis_text_x=element_text(size=18),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, alpha=0.10, size=0.3),
+        panel_grid_minor=element_line(color=INK, alpha=0.05, size=0.2),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.3),
+        axis_line=element_line(color=INK_SOFT, size=0.3),
+        plot_title=element_text(size=24, color=INK, weight="bold"),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_text_x=element_text(size=18, color=INK_SOFT),
+        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_position="right",
-        panel_grid_major=element_line(alpha=0.3),
-        panel_grid_minor=element_line(alpha=0.15),
     )
 )
 
 # Add outliers if present
 if len(outlier_df) > 0:
-    plot = plot + geom_point(data=outlier_df, mapping=aes(x="x", y="y"), color="#306998", size=2, alpha=0.5)
+    plot = plot + geom_point(data=outlier_df, mapping=aes(x="x", y="y"), color=BRAND, size=2, alpha=0.5)
 
 # Custom x-axis scale for category names
 plot = plot + scale_x_continuous(breaks=list(range(len(categories))), labels=list(categories))
 
 # Save the plot
-plot.save("plot.png", dpi=300, width=16, height=9)
+plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=9)
