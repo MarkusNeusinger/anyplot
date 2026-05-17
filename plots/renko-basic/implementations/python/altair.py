@@ -1,13 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 renko-basic: Basic Renko Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 94/100 | Created: 2026-01-08
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Workaround for import conflict: altair.py shadows the altair library
+# Remove the script directory from sys.path before importing
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens (see prompts/default-style-guide.md "Background" + "Theme-adaptive Chrome")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito colors (positions 1 and 2 for bullish/bearish)
+BULLISH = "#009E73"  # Okabe-Ito position 1
+BEARISH = "#D55E00"  # Okabe-Ito position 2
 
 # Data - Generate realistic stock price data
 np.random.seed(42)
@@ -51,7 +71,7 @@ df_bricks["x2"] = df_bricks["brick_idx"] + 0.85  # Gap between bricks
 # Create Renko chart
 chart = (
     alt.Chart(df_bricks)
-    .mark_rect(strokeWidth=1, stroke="white")
+    .mark_rect(strokeWidth=1, stroke=INK_SOFT)
     .encode(
         x=alt.X("x1:Q", title="Brick Index", scale=alt.Scale(nice=False)),
         x2="x2:Q",
@@ -59,10 +79,7 @@ chart = (
         y2="y2:Q",
         color=alt.Color(
             "direction:N",
-            scale=alt.Scale(
-                domain=["Bullish", "Bearish"],
-                range=["#26A69A", "#EF5350"],  # Green for up, red for down
-            ),
+            scale=alt.Scale(domain=["Bullish", "Bearish"], range=[BULLISH, BEARISH]),
             legend=alt.Legend(title="Direction", titleFontSize=18, labelFontSize=16, orient="top-right"),
         ),
         tooltip=[
@@ -73,12 +90,27 @@ chart = (
         ],
     )
     .properties(
-        width=1600, height=900, title=alt.Title("renko-basic · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        title=alt.Title("renko-basic · altair · anyplot.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridColor="#E0E0E0", gridOpacity=0.5)
-    .configure_view(strokeWidth=0)
+    .interactive()
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        gridColor=INK,
+        gridOpacity=0.10,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+    )
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
