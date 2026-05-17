@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:25:14Z'
-updated: '2026-05-17T22:41:08Z'
+updated: '2026-05-17T22:46:31Z'
 generated_by: claude-haiku
 workflow_run: 26004696663
 issue: 3485
@@ -12,40 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/letsplot/plot-dark.html
-quality_score: 82
+quality_score: 88
 review:
   strengths:
-  - 'Perfect palette compliance: Okabe-Ito positions 1–3 correctly applied with proper
-    INK token adaptation for light and dark themes'
-  - 'Complete spec implementation: all required features (stems, markers, grouping,
-    legend) correctly implemented'
-  - 'Both renders fully legible: proper contrast and readability in light (#FAF8F1)
-    and dark (#1A1A17) themes'
-  - 'Clean, reproducible code: straightforward structure, proper file naming (plot-{THEME}.png/html),
-    current lets_plot API'
-  - 'Full grouped lollipop functionality: 4 regions × 3 products demonstrates plot
-    type effectively'
+  - Perfect theme-adaptive implementation with identical data colors across light/dark
+    renders and zero legibility issues
+  - Meticulous explicit font sizing (24/20/16pt) ensuring readability at large canvas
+    resolution
+  - Clean minimalist aesthetic with all spines/grid removed, creating refined visual
+    composition
+  - Comprehensive spec compliance demonstrating all grouped lollipop features correctly
+  - Realistic data scenario with proper proportions and units throughout
   weaknesses:
-  - 'Design Excellence score low (8/20): generic styling with minimal visual sophistication;
-    relies entirely on theme tokens without custom enhancements'
-  - 'No visual hierarchy: all lollipops treated equally; could emphasize patterns
-    (e.g., highlight max/min values per region) or guide viewer through data'
-  - 'Limited distinctive lets_plot features: uses basic geom_segment + geom_point
-    without showcasing library-specific capabilities beyond standard API patterns'
+  - No visual hierarchy or data storytelling—plot displays data without highlighting
+    insights or directing viewer attention
+  - Generic styling relying on library defaults rather than distinctive visual emphasis
+    or narrative structure
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme surface
-      Chrome: Title, axis labels (Region, Revenue $ thousands), tick labels all clearly visible in dark text (INK color #1A1A17 and INK_SOFT #4A4A44)
-      Data: Green (#009E73 Electronics), orange (#D55E00 Furniture), blue (#0072B2 Clothing) lollipops arranged in 4 regional groups
-      Legend: "Product Line" with three items positioned on right side
-      Legibility verdict: PASS - all text is fully readable against light background with proper contrast
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all dark and clearly readable; legend on right with light background
+      Data: Green (#009E73) Electronics, orange (#D55E00) Furniture, blue (#0072B2) Clothing; thin stems, round markers; East shows highest Electronics value
+      Legibility verdict: PASS - All text readable, proper contrast, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct dark theme surface
-      Chrome: Title and labels now rendered in light text (INK #F0EFE8, INK_SOFT #B8B7B0) - completely readable against dark background, no dark-on-dark failures
-      Data: Colors identical to light render (green, orange, blue) - only chrome adapted
-      Legend: Same structure with light text on dark background - fully readable
-      Legibility verdict: PASS - no dark-on-dark issues, all elements properly contrast-adapted for dark theme
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title, axis labels, tick labels all light (#F0EFE8 / #B8B7B0) and clearly readable; legend background elevated (#242420); no dark-on-dark text failures
+      Data: Colors identical to light render (green, orange, blue preserved); stems and markers maintain same structure and visibility
+      Legibility verdict: PASS - All text readable against dark surface, proper contrast, brand green clearly visible
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,47 +50,47 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt; all fully legible in both
-          themes
+        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Lollipops well-spaced within groups; no text collisions
+        comment: No collisions between elements; clean grouping layout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 12 lollipops clearly visible; stems and markers properly sized
+        comment: Stems and markers properly sized for data density; all clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1–3; colorblind-safe palette
+        comment: Okabe-Ito palette with high contrast between series
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Landscape format appropriate; generous margins; nothing cut off
+        comment: Plot fills 60-70% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct title format
+        comment: Y-axis includes units; X-axis descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order; backgrounds #FAF8F1/#1A1A17;
-          both themes correct'
+        comment: 'First series #009E73, follows Okabe-Ito order, theme-correct backgrounds
+          and text'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -104,20 +98,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Correct palette usage but no custom design enhancements beyond theme
-          tokens
+        comment: Well-configured defaults but not publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal grid, adequate whitespace; no special refinements
+        passed: true
+        comment: Clean spine/grid removal with good whitespace
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Clear grouping but no visual hierarchy or focal points to guide narrative
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -127,7 +120,7 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped lollipop implementation
+        comment: Correct grouped lollipop with all subtypes
       - id: SC-02
         name: Required Features
         score: 4
@@ -139,13 +132,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: X/Y/color axes correct; full data range visible
+        comment: X=Region, Y=Revenue, Color=Product; full range visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Proper title format; legend labels match data
+        comment: Title format correct; legend properly labeled
     data_quality:
       score: 15
       max: 15
@@ -155,19 +148,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of grouped lollipop type
+        comment: Shows all aspects with variation across regions/products
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sales revenue data is plausible and neutral
+        comment: Real quarterly revenue scenario; neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Y-axis [0, 300] appropriate for data range
+        comment: Values and proportions realistic for business data
     code_quality:
       score: 10
       max: 10
@@ -177,47 +170,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; straightforward
+        comment: Linear flow with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic, fully reproducible
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; no extraneous dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Clean, Pythonic, no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png/html; current API
+        comment: Correct output format with current API
     library_mastery:
-      score: 4
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot2-style grammar with proper aes and scale functions
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: ggplot() grammar; basic theme API usage
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
-        max: 5
-        passed: false
-        comment: No distinctive lets_plot features showcased
+        comment: Uses ggsize/ggsave but segment+point layering is generic
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -226,5 +219,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - minimal-chrome
+  styling: []
