@@ -1,156 +1,175 @@
 library: highcharts
+language: python
 specification_id: renko-basic
 created: '2026-01-08T17:12:22Z'
-updated: '2026-01-08T17:23:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20823171414
+updated: '2026-05-17T11:49:33Z'
+generated_by: claude-haiku
+workflow_run: 25989851718
 issue: 3294
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/renko-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/renko-basic/highcharts/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/renko-basic/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent colorblind-safe blue/orange palette instead of traditional red/green
-  - Proper use of columnrange chart type to represent Renko bricks
-  - Well-configured tooltips showing brick price range
-  - Includes both PNG and HTML output for interactivity
-  - Good use of responsive rules for different screen sizes
-  - Clear visual separation between bricks with borders
-  - Realistic stock price simulation with appropriate brick size
+  - Perfect visual quality with explicit font sizing and theme-correct chrome in both
+    renders
+  - 'Excellent Okabe-Ito palette compliance (#009E73 for bullish, #D55E00 for bearish)'
+  - Professional code structure with proper theme tokens and clean data generation
+  - All spec requirements met with proper title format and legend labels
+  - Realistic and appropriate stock price data with sensible brick size parameters
   weaknesses:
-  - Grid lines on legend markers appear slightly inconsistent with data visualization
-  - Legend styling could be slightly more polished (border width/color)
-  image_description: 'The plot displays a Renko chart with approximately 70+ bricks
-    showing stock price movements from around $84 to $116. Blue bricks represent bullish
-    (upward) price movements and orange bricks represent bearish (downward) movements
-    - a colorblind-safe palette. The chart starts at ~$100, drops to a low around
-    $86, then recovers to peak near $114. The title "renko-basic · highcharts · pyplots.ai"
-    is prominently displayed with a subtitle showing "Stock Price Movement | Brick
-    Size: $2". A well-positioned legend in the top-right corner identifies the two
-    series. Both axes have clear labels ("Brick Index" and "Price ($)") with dollar
-    formatting on the y-axis. A subtle grid helps identify price levels. The bricks
-    are uniform in size with clear borders and small gaps between them.'
+  - Design excellence is solid but not particularly innovative - looks like a well-configured
+    Highcharts default rather than pushing creative boundaries
+  - Library mastery uses standard columnrange series without leveraging more advanced
+    Highcharts-specific features (interactive drilling, advanced animations)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and not pure white
+      Chrome: Title "renko-basic · highcharts · anyplot.ai" is dark (#1A1A17), clearly readable; subtitle "Stock Price Movement | Brick Size: $2" is in soft ink (#4A4A44), readable; x-axis label "Brick Index" and y-axis label "Price ($)" are dark and readable; tick labels (0, 5, 10... and $84, $86...) are in soft ink and readable; grid lines are subtle and visible
+      Data: Green bricks (#009E73) represent bullish movements, orange bricks (#D55E00) represent bearish movements, clearly separated with borders and uniform sizing
+      Legibility verdict: PASS - All text elements are clearly readable against the light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and not pure black
+      Chrome: Title is light (#F0EFE8), clearly readable; subtitle is in soft light (#B8B7B0), readable; axis labels and tick labels are all light-colored and readable on the dark background - no dark-on-dark failures observed
+      Data: Green (#009E73) and orange (#D55E00) bricks are identical to light render, confirming theme-adaptive chrome is working correctly
+      Legibility verdict: PASS - All text elements are clearly readable against the dark background with proper light coloring; both renders are equally legible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable
-          at full resolution. Font sizes are appropriate for the 4800x2700 canvas.
+        comment: All fonts explicitly set (title 28px, labels 22px, ticks 18px) and
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels are clearly separated.
+        comment: No overlapping elements; all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bricks are perfectly sized and visible with clear borders distinguishing
-          each brick.
+        comment: ~75+ bricks clearly visible and well-adapted to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/orange palette is colorblind-safe, avoiding red-green conflict.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; minor deduction for slightly larger margins
-          than needed.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis shows 'Price ($)' with units, X-axis shows 'Brick Index' which
-          is descriptive.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with excellent contrast and CVD safety
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with 4800x2700px canvas, proper margins (250/280/200/100),
+          plot fills 50-70%
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is appropriately subtle but legend styling could be more polished.
+        passed: true
+        comment: Title follows spec format; axes labeled descriptively with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito compliance; backgrounds (#FAF8F1 light, #1A1A17
+          dark); theme-correct chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-configured with thoughtful Okabe-Ito colors and professional
+          hierarchy; above default but not publication-ready level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, borders on bricks for definition, professional legend
+          styling with background and padding
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy guides viewer through price action; subtitle
+          provides context about brick size
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Renko chart using columnrange to represent bricks.
+        comment: Correct Renko chart using columnrange
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis shows brick index, Y-axis shows price range correctly.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has bullish/bearish colors, uniform brick size, clear separation,
-          subtle grid.
-      - id: SC-04
-        name: Data Range
+        comment: Green/red colors for bullish/bearish, uniform bricks, subtle grid,
+          brick index x-axis, brick size shown
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points without clipping.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (brick index), Y-axis (price in dollars); all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies 'Bullish (Up)' and 'Bearish (Down)'.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: ''renko-basic · highcharts · pyplots.ai''.'
+        comment: 'Title: ''renko-basic · highcharts · anyplot.ai''; Legend: ''Bullish
+          (Up)'' and ''Bearish (Down)'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish bricks, trend reversals, support/resistance
-          levels visible.
+        comment: 'Shows all aspects: both bullish and bearish movements, multiple
+          trend reversals, ~75+ bricks'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price simulation starting at $100 with realistic daily returns
-          is a neutral, appropriate financial scenario.
+        comment: Real stock data scenario with realistic daily returns (μ=0.0005,
+          σ=0.015), $100 starting price, $2 brick size
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price range of $84-$114 is realistic for a $100 stock over 300 days
-          with $2 brick size.
+        comment: Price range $84-$114 is proportionally correct; 300 days generates
+          appropriate brick count
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,53 +177,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with imports → data → plot → save structure.
+        comment: 'Linear flow: imports → tokens → data → chart → export; no unnecessary
+          abstractions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible results.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, highcharts_core, selenium, etc.).
+        comment: 'Only used imports: os, tempfile, time, urllib, pathlib, numpy, highcharts_core,
+          selenium'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering or fake
+          UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Minor point deduction for code structure.
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-light.png/html and plot-dark.png/html; current Highcharts
+          API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: 'Uses Highcharts-specific features: responsive rules, tooltip customization,
-          columnrange chart type, credits/exporting options, HTML export.'
+        comment: Expert use of Chart(), HighchartsOptions, series configuration, theme-aware
+          color setup, Selenium export pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses columnrange (standard for this library) and tooltip formatting;
+          could explore more advanced features like drilling or animations
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
-  - grid-styling
+  - publication-ready
