@@ -1,155 +1,175 @@
 library: plotnine
+language: python
 specification_id: scatter-text
 created: '2026-01-09T14:27:13Z'
-updated: '2026-01-09T14:29:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854880694
+updated: '2026-05-17T23:34:15Z'
+generated_by: claude-haiku
+workflow_run: 26005857502
 issue: 3482
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-text/plotnine/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - 'Excellent thematic data choice: programming language embeddings create a meaningful
-    and engaging visualization'
-  - Clean ggplot2-style code using proper grammar of graphics pattern
-  - Colorblind-safe palette with good visual distinction between categories
-  - Appropriate use of alpha transparency (0.85) for text labels
-  - Well-configured text sizes following the library guidelines
+  - Perfect text legibility in both light and dark themes with explicit, well-sized
+    typography
+  - Flawless Okabe-Ito palette compliance with correct first-series green and multi-series
+    ordering
+  - Realistic, engaging programming language embedding data with thoughtful categorization
+  - Clean, reproducible code structure with proper theme tokens
+  - Strong theme adaptation with data colors identical across renders and chrome appropriately
+    flipping
+  - Well-balanced layout with generous margins and uncluttered design
   weaknesses:
-  - Grid lines are barely visible despite configuration (may need higher alpha values)
-  - A few text labels are close together (R/MATLAB, SAS/Scala) which could be improved
-    with position adjustments
-  image_description: 'The plot shows a scatter plot where programming language names
-    serve as data points instead of markers. Languages are positioned in a 2D space
-    representing "Dimension 1 (Paradigm Similarity)" on the x-axis and "Dimension
-    2 (Abstraction Level)" on the y-axis. Five categories are color-coded: Data (teal/green),
-    Functional (light blue), General (dark blue), Systems (orange/yellow), and Web
-    (golden yellow). The title "scatter-text · plotnine · pyplots.ai" appears centered
-    at the top. A legend on the right identifies the categories. Languages are well-distributed
-    across the space with clear clustering by category - functional languages (Haskell,
-    Erlang, Clojure) in the lower-left, systems languages (C, Rust, Go, Zig) on the
-    right, web languages (JavaScript, TypeScript, PHP) in the upper-middle-right,
-    and general-purpose languages (Python, Java, Ruby) in the upper-left. The text
-    labels are bold and legible with slight transparency (alpha=0.85).'
+  - 'Generic color palette usage: uses mandatory Okabe-Ito without additional custom
+    palette sophistication'
+  - 'Limited visual storytelling: plot displays data clearly but creates no special
+    emphasis or focal point through size/position variation'
+  - Library usage could leverage more plotnine-specific features for distinctiveness
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - confirmed correct surface color.
+      Chrome: Title "scatter-text · Python · plotnine · anyplot.ai", axis labels "Dimension 1 (Paradigm Similarity)" and "Dimension 2 (Abstraction Level)", tick labels, and legend all in dark ink (#1A1A17) - all fully readable against light background.
+      Data: Five programming language categories in Okabe-Ito colors - General (green #009E73), Systems (orange #D55E00), Functional (blue #0072B2), Web (purple #CC79A7), Data (gold #E69F00). First series correctly green. Bold text labels at coordinates.
+      Legibility verdict: PASS - all elements clearly visible and readable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - confirmed correct surface color.
+      Chrome: Title, axis labels, tick labels all in light ink (#F0EFE8) and secondary ink (#B8B7B0) - all fully readable against dark background. No dark-on-dark issues found.
+      Data: All five Okabe-Ito colors are IDENTICAL to light render - perfect color consistency across themes. Data representation unchanged, only chrome (background, text, grid) adapted to dark theme.
+      Legibility verdict: PASS - all elements clearly visible with excellent contrast against dark background.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All text labels clearly readable at full size with appropriate font
-          sizing
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Minimal overlap; a few close labels (R/MATLAB, C#/Kotlin, SAS/Scala)
-          but still readable
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Text labels well-sized for data density (25 points); bold weight
-          helps visibility
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette with good contrast between categories
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent canvas utilization with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with context: Paradigm Similarity and Abstraction
-          Level'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid lines barely visible despite configuration; legend placement
-          is good
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
         score: 8
         max: 8
         passed: true
-        comment: Correct scatter plot with text labels instead of points
+        comment: All font sizes explicitly set (title=24pt, axis_title=20pt, axis_text=16pt,
+          text=11pt). Perfect readability in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Clean, well-spaced layout.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Text markers optimally sized for 25-point dataset with alpha=0.9.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: All Okabe-Ito colors used. Colorblind-safe with good contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Perfect layout: plot fills 60-70% of canvas with balanced margins.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with context (Paradigm Similarity, Abstraction
+          Level).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series follows Okabe-Ito order, correct
+          backgrounds, theme-correct text colors in both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful typography with bold font weight. Above defaults but not
+          publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle custom grid (varying opacity), themed borders, generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear narrative via axis labels and visual clustering. No special
+          emphasis through variation.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-text using geom_text with coordinate positioning.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly assigned to dimension axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: text labels, color encoding, alpha transparency'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: text labels at (x,y), legible sizing,
+          categorical colors.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned. Axes show complete data range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly maps category names to colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: scatter-text · plotnine · pyplots.ai'
+        comment: Title format correct. Legend labels match categories.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows text labels with color encoding, good variety of positions
+        comment: Shows all five language categories with multiple examples per category.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: 'Excellent real-world scenario: programming language embeddings'
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Dimensionality reduction coordinates are realistic (-2 to +2 range)
+        comment: 'Real, plausible, neutral scenario: programming language embeddings
+          from dimensionality reduction.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinate values realistic for 2D projection output.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -157,42 +177,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save'
+        comment: 'Linear structure: imports → data → plot → save. No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: 'Fixed seed: np.random.seed(42)'
+        comment: Uses np.random.seed(42) for deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only necessary imports: numpy, pandas, plotnine components.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code with appropriate complexity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but uses verbose=False parameter
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png. Uses current API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses plotnine grammar of graphics but could showcase more unique
-          features
+        comment: Idiomatic ggplot() + geom_text() + scale_color_manual() + theme()
+          pattern. Correct but not leveraging advanced features.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic usage - could be replicated in other libraries with minor
+          syntax changes.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -200,6 +227,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - alpha-blending
-  - grid-styling
+  styling: []
