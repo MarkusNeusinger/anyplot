@@ -1,28 +1,54 @@
-""" pyplots.ai
+""" anyplot.ai
 parliament-basic: Parliament Seat Chart
-Library: plotly 6.5.0 | Python 3.13.11
-Quality: 93/100 | Created: 2025-12-30
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-17
 """
 
-import numpy as np
-import plotly.graph_objects as go
+import os
+import site
+import sys
 
 
-# Data - Fictional parliament with neutral party names (avoiding political references)
+# Remove current directory from sys.path to avoid shadowing installed packages
+sys.path = [p for p in sys.path if p not in ("", ".") and not p.endswith("/python")]
+
+# Ensure site-packages are at the front
+for sp in reversed(site.getsitepackages()):
+    sys.path.insert(0, sp)
+
+import numpy as np  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (positions 1→6, first is always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+
+# Data - Fictional parliament with neutral party names
 parties = [
-    {"name": "Progressive Alliance", "seats": 145, "color": "#306998"},
-    {"name": "Civic Union", "seats": 118, "color": "#FFD43B"},
-    {"name": "Green Future", "seats": 52, "color": "#2CA02C"},
-    {"name": "Liberty Party", "seats": 48, "color": "#9467BD"},
-    {"name": "Reform Coalition", "seats": 35, "color": "#FF7F0E"},
-    {"name": "Independent Group", "seats": 22, "color": "#E377C2"},
+    {"name": "Progressive Alliance", "seats": 145},
+    {"name": "Civic Union", "seats": 118},
+    {"name": "Green Future", "seats": 52},
+    {"name": "Liberty Party", "seats": 48},
+    {"name": "Reform Coalition", "seats": 35},
+    {"name": "Independent Group", "seats": 22},
 ]
+
+# Assign Okabe-Ito colors to parties
+for i, party in enumerate(parties):
+    party["color"] = OKABE_ITO[i % len(OKABE_ITO)]
 
 total_seats = sum(p["seats"] for p in parties)
 majority_threshold = total_seats // 2 + 1
 
 # Calculate seat positions in semicircular arrangement
-# Seats are arranged by angle across all rows, with parties grouped from left to right
 n_rows = 7 if total_seats <= 500 else 9
 inner_radius = 0.4
 row_spacing = 0.11
@@ -76,13 +102,13 @@ for party in parties:
             x=[p["x"] for p in party_positions],
             y=[p["y"] for p in party_positions],
             mode="markers",
-            marker=dict(size=14, color=party["color"], line=dict(color="white", width=1)),
+            marker=dict(size=14, color=party["color"], line=dict(color=PAGE_BG, width=1)),
             name=f"{party['name']} ({party['seats']})",
             hovertemplate=f"{party['name']}<br>Seats: {party['seats']}<extra></extra>",
         )
     )
 
-# Add majority threshold arc (dashed line)
+# Add majority threshold arc (more visible with increased alpha)
 threshold_angle = np.linspace(0, np.pi, 100)
 threshold_radius = 0.5 + 0.12 * (len(set(p["row"] for p in positions)) / 2)
 fig.add_trace(
@@ -90,7 +116,7 @@ fig.add_trace(
         x=threshold_radius * np.cos(threshold_angle),
         y=threshold_radius * np.sin(threshold_angle),
         mode="lines",
-        line=dict(color="rgba(0,0,0,0.3)", width=2, dash="dash"),
+        line=dict(color=INK_SOFT, width=3, dash="dash"),
         name=f"Majority ({majority_threshold})",
         hoverinfo="skip",
     )
@@ -98,30 +124,31 @@ fig.add_trace(
 
 # Layout
 fig.update_layout(
-    title=dict(
-        text="parliament-basic · plotly · pyplots.ai", font=dict(size=28, color="#333"), x=0.5, xanchor="center"
-    ),
+    title=dict(text="parliament-basic · plotly · anyplot.ai", font=dict(size=28, color=INK), x=0.5, xanchor="center"),
     xaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-1.3, 1.3], scaleanchor="y", scaleratio=1),
     yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-0.15, 1.2]),
     legend=dict(
-        orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5, font=dict(size=16), itemsizing="constant"
+        orientation="h",
+        yanchor="bottom",
+        y=-0.15,
+        xanchor="center",
+        x=0.5,
+        font=dict(size=16, color=INK_SOFT),
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
+        itemsizing="constant",
     ),
-    template="plotly_white",
-    plot_bgcolor="white",
-    paper_bgcolor="white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     margin=dict(l=50, r=50, t=100, b=120),
 )
 
 # Add annotation for total seats
 fig.add_annotation(
-    x=0,
-    y=0.05,
-    text=f"<b>{total_seats}</b><br>seats",
-    font=dict(size=24, color="#333"),
-    showarrow=False,
-    align="center",
+    x=0, y=0.05, text=f"<b>{total_seats}</b><br>seats", font=dict(size=24, color=INK), showarrow=False, align="center"
 )
 
 # Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
