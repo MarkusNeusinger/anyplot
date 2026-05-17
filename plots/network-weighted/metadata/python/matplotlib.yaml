@@ -1,176 +1,182 @@
 library: matplotlib
+language: python
 specification_id: network-weighted
 created: '2026-01-08T16:00:04Z'
-updated: '2026-01-08T16:05:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20822849334
+updated: '2026-05-17T14:36:58Z'
+generated_by: claude-haiku
+workflow_run: 25993617084
 issue: 3290
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-weighted/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 99
 review:
   strengths:
-  - Excellent force-directed layout implementation from scratch using numpy - demonstrates
-    strong matplotlib fundamentals
-  - Edge thickness clearly differentiates trade volume with appropriate scaling (1.5-11.5
-    linewidth range)
-  - Node sizing by weighted degree effectively highlights central hubs like CHN and
-    USA
-  - Clean region color scheme with good accessibility (blue, yellow, red, green -
-    distinguishable)
-  - 'Both legends present: region legend and edge thickness annotation explaining
-    the weight scale'
-  - KISS code structure with proper seed for reproducibility
-  weaknesses:
-  - Some node labels slightly overlap with edges in dense areas (CHN/KOR/JPN cluster)
-  - The BRA node label appears close to the top edge of the plot area
+  - Custom force-directed layout algorithm demonstrates deep matplotlib mastery
+  - Perfect theme adaptation with consistent Okabe-Ito palette across light/dark renders
+  - Exceptional visual hierarchy and data storytelling through node sizing and edge
+    thickness
+  - Excellent legibility with all text clearly readable in both themes
+  - Sophisticated styling including rounded edges, alpha blending, and custom legend
+    construction
+  - Proper KISS code structure with deterministic seeding for reproducibility
+  weaknesses: []
   image_description: |-
-    The plot displays a weighted network graph showing international trade relationships between 13 countries. The title "network-weighted · matplotlib · pyplots.ai" appears at the top in bold black text.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), exactly matching spec requirements
+      Chrome: Title "network-weighted · matplotlib · anyplot.ai" in large bold dark text (INK color); node labels positioned above nodes in dark bold text; legend with "Region" title and four regional categories (Americas, Europe, Asia, Oceania) in legend box with light background; edge thickness annotation in rounded callout box at bottom-left
+      Data: Nodes colored by region using Okabe-Ito palette (#009E73 for Americas, #D55E00 for Europe, #0072B2 for Asia, #CC79A7 for Oceania); nodes sized by weighted degree creating visual hierarchy; 27 edges rendered in gray (#4A4A44) with thickness scaled from 1.5 to 11.5 units based on trade volume (20B-650B USD); edges have alpha blending (0.3-0.8) creating visual depth without losing edges
+      Legibility verdict: PASS - all text is clearly readable against the light background, no light-on-light failures, all data elements (nodes, edges, labels) are clearly distinguishable
 
-    Nodes are represented as colored circles of varying sizes:
-    - Americas (blue): USA, CAN, MEX, BRA - with USA and CHN being the largest nodes indicating highest weighted degree
-    - Europe (yellow): DEU, FRA, GBR, ITA - medium-sized nodes clustered on the left side
-    - Asia (red): CHN, JPN, KOR, IND - CHN is prominently large in the center-right, JPN also significant
-    - Oceania (green): AUS - small green node at the bottom
-
-    Edges connect nodes with varying thickness representing trade volume. The thickest edges are clearly visible between:
-    - USA-CAN and USA-MEX (Americas trade corridor)
-    - CHN-JPN and CHN-KOR (Asian trade relationships)
-    - USA-CHN (major cross-Pacific trade)
-
-    Thinner edges represent smaller trade volumes like IND-AUS and BRA-DEU.
-
-    The layout uses a force-directed algorithm resulting in regional clustering - European countries (yellow) are grouped on the left, Asian countries (red) cluster in the center-bottom, and Americas (blue) spread across the right side.
-
-    Two legends are present:
-    1. Upper-left: Region legend showing the four color categories (Americas, Europe, Asia, Oceania)
-    2. Lower-left: Edge thickness annotation box explaining "Edge thickness: Trade volume ($20B - $650B USD)"
-
-    The background is white, axes are hidden, and node labels (3-letter country codes) appear above each node in bold gray text. White edge highlights on nodes provide good separation from the gray edges.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), properly theme-adaptive
+      Chrome: Title in light text (INK color) clearly visible; node labels in light text properly positioned; legend with elevated background (#242420) and light text, all readable; edge thickness annotation box maintains contrast and readability
+      Data: Okabe-Ito colors are identical to light render (green, orange, blue, pink nodes), confirming no data color shift between themes; edge gray is slightly lighter for dark background visibility; node sizing and edge thickness relationships are identical to light render
+      Legibility verdict: PASS - all text is clearly readable against the dark background, no dark-on-dark failures, brand green (#009E73) remains highly visible on dark surface, all chrome elements properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, node labels at 14pt bold, legend text at 16-18pt -
-          all clearly readable at full resolution
+        comment: All text fully readable in both light and dark themes; font sizes
+          appropriately scaled for 4800x2700 resolution
       - id: VQ-02
         name: No Overlap
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Minor label proximity issues in dense CHN/KOR/JPN area, but labels
-          remain readable
+        comment: Node labels positioned with proper offset; no overlapping text or
+          data elements; force-directed layout naturally separates nodes
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Node sizes well-scaled (400-2400), edge thickness clearly distinguishable
-          (1.5-11.5 linewidth), alpha blending on edges prevents visual clutter
+        comment: All nodes clearly visible with size range 400-2400; edges with varying
+          thickness (1.5-11.5) and alpha (0.3-0.8) remain visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, yellow, red, green) with good luminance
-          variation - colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Network fills canvas well with balanced margins, legends positioned
-          in corners without overlapping data
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A - Network graph with axes hidden as appropriate for this plot
-          type
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: 'Two legends present and well-styled: region legend with title, edge
-          thickness annotation in rounded box'
+        comment: Okabe-Ito palette provides colorblind-safe colors; neutral gray edges
+          avoid redundant encoding; adequate contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Standard 16:9 landscape (4800x2700); generous whitespace; nothing
+          cut off; tight_layout and bbox_inches ensure proper framing
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title properly formatted; region legend labels match spec; edge thickness
+          annotation explains weight scale
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series uses #009E73; multi-series follows Okabe-Ito order;
+          backgrounds are #FAF8F1/#1A1A17; theme adaptation perfect in both renders'
+    design_excellence:
+      score: 19
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom force-directed algorithm shows professional implementation;
+          node sizing by weighted degree adds intentional design; rounded edge caps,
+          custom legend styling demonstrate polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Axes off for minimal aesthetic; node edges provide definition; alpha
+          blending creates depth; legend frame styling refined; generous whitespace
+          throughout
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with central hubs (CHN, USA) standing out;
+          region color coding creates immediate grouping; edge thickness reveals trade
+          importance; layout guides viewer through network structure
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct weighted network graph with nodes and edges
+        comment: Correct weighted network graph implementation with proper edge thickness
+          encoding
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Edge thickness correctly maps to weight (trade volume), node size
-          maps to weighted degree
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: weighted edges, force-directed layout,
-          weight legend, optional node sizing by weighted degree'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements met: edge thickness mapped to weight, node
+          sizing by weighted degree, force-directed layout, legend and annotation
+          present'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All nodes and edges visible within plot bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 13 nodes and 27 edges properly displayed; weight mapping accurate
+          and visible; positions derived from algorithm
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Region legend accurate, edge thickness legend shows correct range
-          ($20B-$650B)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: network-weighted · matplotlib · pyplots.ai'
+        comment: Title format correct; region legend labels match spec; edge annotation
+          explains mapping
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows full range of edge weights (thin to thick), varying node sizes,
-          multiple regional clusters, both dense and sparse connections
+        comment: 'Comprehensive network visualization showing all aspects: positioning,
+          edge thickness, node sizing, regional grouping'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: International trade network is an excellent real-world application
-          - neutral, educational topic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Trade volumes in billions USD are realistic (USA-CAN $650B, USA-MEX
-          $580B match real-world magnitudes)
+        comment: Trade network context is realistic; volumes (20B-650B USD) plausible;
+          network structure believable with USA and China as hubs; neutral educational
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 13 nodes within spec recommendation (10-50); trade volumes in sensible
+          units; weight and degree ranges provide good visual distinction
     code_quality:
       score: 10
       max: 10
@@ -180,56 +186,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → layout computation → plot →
-          save, no functions or classes'
+        comment: Straightforward procedural script with no unnecessary functions or
+          classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start for reproducible layout
+        comment: np.random.seed(42) ensures deterministic force-directed layout
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only os, matplotlib.pyplot, numpy imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: No fake UI or simulated interactivity; appropriate complexity; force-directed
+          algorithm well-structured
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300 and facecolor parameter; current
+          matplotlib API
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper axes methods usage (not pyplot); high-level API with scatter,
+          plot, annotate; standard parameters; theme-aware os.getenv implementation
+      - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of matplotlib primitives: scatter for nodes, plot
-          for edges, annotate for labels, custom legend construction with handles
-          - demonstrates matplotlib''s flexibility for custom visualizations'
+        comment: Custom force-directed algorithm shows deep matplotlib knowledge;
+          proper zorder layering; manual legend construction; sophisticated positioning
+          calculations; solid_capstyle='round' refinement
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - custom-legend
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
+  - matrix-construction
+  dataprep: []
   styling:
-  - minimal-chrome
+  - publication-ready
   - alpha-blending
   - edge-highlighting
