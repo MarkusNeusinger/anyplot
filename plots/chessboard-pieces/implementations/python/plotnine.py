@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-08
+Library: plotnine 0.15.2 | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
 
 import pandas as pd
 from plotnine import (
@@ -22,20 +24,26 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
 # Unicode chess symbols mapping
 UNICODE_PIECES = {
-    "K": "\u2654",  # White King
-    "Q": "\u2655",  # White Queen
-    "R": "\u2656",  # White Rook
-    "B": "\u2657",  # White Bishop
-    "N": "\u2658",  # White Knight
-    "P": "\u2659",  # White Pawn
-    "k": "\u265a",  # Black King
-    "q": "\u265b",  # Black Queen
-    "r": "\u265c",  # Black Rook
-    "b": "\u265d",  # Black Bishop
-    "n": "\u265e",  # Black Knight
-    "p": "\u265f",  # Black Pawn
+    "K": "♔",  # White King
+    "Q": "♕",  # White Queen
+    "R": "♖",  # White Rook
+    "B": "♗",  # White Bishop
+    "N": "♘",  # White Knight
+    "P": "♙",  # White Pawn
+    "k": "♚",  # Black King
+    "q": "♛",  # Black Queen
+    "r": "♜",  # Black Rook
+    "b": "♝",  # Black Bishop
+    "n": "♞",  # Black Knight
+    "p": "♟",  # Black Pawn
 }
 
 # Scholar's Mate position - a famous 4-move checkmate
@@ -99,8 +107,11 @@ for square, piece in pieces.items():
 
 pieces_df = pd.DataFrame(pieces_data)
 
-# Color scheme for board squares
+# Board colors (theme-independent - chess tradition)
 board_colors = {"light": "#F0D9B5", "dark": "#B58863"}
+
+# Piece color adapts to theme for visibility
+piece_color = "#000000" if THEME == "light" else "#FFFFFF"
 
 # Create the plot
 plot = (
@@ -108,25 +119,25 @@ plot = (
     + geom_tile(data=board_df, mapping=aes(x="file", y="rank", fill="color"), width=1, height=1)
     + scale_fill_manual(values=board_colors)
     + geom_text(
-        data=pieces_df, mapping=aes(x="file", y="rank", label="piece"), size=28, family="DejaVu Sans", color="#000000"
+        data=pieces_df, mapping=aes(x="file", y="rank", label="piece"), size=28, family="DejaVu Sans", color=piece_color
     )
     + scale_x_continuous(breaks=list(range(1, 9)), labels=list("abcdefgh"), expand=(0, 0))
     + scale_y_continuous(breaks=list(range(1, 9)), labels=[str(i) for i in range(1, 9)], expand=(0, 0))
     + coord_fixed(ratio=1)
-    + labs(title="Scholar's Mate · chessboard-pieces · plotnine · pyplots.ai")
+    + labs(title="Scholar's Mate · chessboard-pieces · plotnine · anyplot.ai")
     + theme(
         figure_size=(12, 12),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
+        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
         axis_title=element_blank(),
-        axis_text_x=element_text(size=20, weight="bold"),
-        axis_text_y=element_text(size=20, weight="bold"),
+        axis_text_x=element_text(size=20, weight="bold", color=INK_SOFT),
+        axis_text_y=element_text(size=20, weight="bold", color=INK_SOFT),
         axis_ticks=element_blank(),
-        panel_background=element_rect(fill="#FFFFFF"),
+        panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        plot_background=element_rect(fill="#FFFFFF"),
+        plot_background=element_rect(fill=PAGE_BG),
         legend_position="none",
     )
 )
 
-plot.save("plot.png", dpi=300, width=12, height=12)
+plot.save(f"plot-{THEME}.png", dpi=300, width=12, height=12)
