@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-05-17
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-17
 """
 
 import os
