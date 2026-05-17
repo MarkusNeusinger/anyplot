@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 frequency-polygon-basic: Frequency Polygon for Distribution Comparison
 Library: highcharts unknown | Python 3.13.13
 Quality: 38/100 | Updated: 2026-05-17
@@ -13,7 +13,7 @@ from pathlib import Path
 import numpy as np
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
-from highcharts_core.options.series.area import AreaSeries
+from highcharts_core.options.series.spline import SplineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -64,25 +64,25 @@ chart.options = HighchartsOptions()
 
 # Chart configuration
 chart.options.chart = {
-    "type": "areaspline",
+    "type": "spline",
     "width": 4800,
     "height": 2700,
     "backgroundColor": PAGE_BG,
-    "marginBottom": 300,
-    "marginLeft": 220,
-    "marginRight": 180,
-    "marginTop": 150,
+    "marginBottom": 180,
+    "marginLeft": 140,
+    "marginRight": 100,
+    "marginTop": 120,
 }
 
 # Title
 chart.options.title = {
-    "text": "frequency-polygon-basic · highcharts · pyplots.ai",
+    "text": "frequency-polygon-basic · highcharts · anyplot.ai",
     "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
 }
 
 # X-axis (score ranges)
 chart.options.x_axis = {
-    "title": {"text": "Test Score", "style": {"fontSize": "22px", "color": INK}, "margin": 30},
+    "title": {"text": "Test Score (0-100)", "style": {"fontSize": "22px", "color": INK}, "margin": 30},
     "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "y": 35},
     "tickInterval": 10,
     "min": 0,
@@ -95,7 +95,7 @@ chart.options.x_axis = {
 
 # Y-axis (frequency)
 chart.options.y_axis = {
-    "title": {"text": "Number of Students", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
+    "title": {"text": "Frequency (count)", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
     "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": 0,
     "gridLineWidth": 1,
@@ -118,28 +118,31 @@ chart.options.legend = {
     "borderWidth": 1,
 }
 
-# Plot options for area spline (frequency polygon)
+# Plot options for spline (frequency polygon)
 chart.options.plot_options = {
-    "areaspline": {"fillOpacity": 0.2, "lineWidth": 5, "marker": {"enabled": True, "radius": 8, "symbol": "circle"}}
+    "spline": {"fillOpacity": 0.2, "lineWidth": 5, "marker": {"enabled": True, "radius": 8, "symbol": "circle"}}
 }
 
 # Create series for each class using Okabe-Ito palette
-series_a = AreaSeries()
+series_a = SplineSeries()
 series_a.name = "Class A (Avg: 72)"
 series_a.data = [[float(x), int(y)] for x, y in zip(extended_centers, freq_a_extended, strict=True)]
 series_a.color = OKABE_ITO[0]  # #009E73 - brand green
+series_a.fill_color = OKABE_ITO[0]
 series_a.marker = {"fillColor": OKABE_ITO[0], "lineWidth": 2, "lineColor": PAGE_BG}
 
-series_b = AreaSeries()
+series_b = SplineSeries()
 series_b.name = "Class B (Avg: 80)"
 series_b.data = [[float(x), int(y)] for x, y in zip(extended_centers, freq_b_extended, strict=True)]
 series_b.color = OKABE_ITO[1]  # #D55E00 - vermillion
+series_b.fill_color = OKABE_ITO[1]
 series_b.marker = {"fillColor": OKABE_ITO[1], "lineWidth": 2, "lineColor": PAGE_BG}
 
-series_c = AreaSeries()
+series_c = SplineSeries()
 series_c.name = "Class C (Bimodal)"
 series_c.data = [[float(x), int(y)] for x, y in zip(extended_centers, freq_c_extended, strict=True)]
 series_c.color = OKABE_ITO[2]  # #0072B2 - blue
+series_c.fill_color = OKABE_ITO[2]
 series_c.marker = {"fillColor": OKABE_ITO[2], "lineWidth": 2, "lineColor": PAGE_BG}
 
 # Add series to chart
@@ -212,7 +215,7 @@ with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
 <html>
 <head>
     <meta charset="utf-8">
-    <title>frequency-polygon-basic - highcharts - pyplots.ai</title>
+    <title>frequency-polygon-basic - highcharts - anyplot.ai</title>
     <script src="https://code.highcharts.com/highcharts.js"></script>
 </head>
 <body style="margin:0; background:{PAGE_BG};">
