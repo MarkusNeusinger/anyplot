@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: biplot-pca
 created: '2026-01-09T13:17:48Z'
-updated: '2026-05-17T17:30:27Z'
+updated: '2026-05-17T17:36:04Z'
 generated_by: claude-haiku
 workflow_run: 25997636311
 issue: 3417
@@ -12,104 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 76
+quality_score: 83
 review:
   strengths:
-  - Correct biplot implementation with clear iris species separation
-  - Effective visual representation of PCA results with proper loading vector scaling
-  - Good axis labels showing variance explained by each component
-  - Clean code structure with logical data preparation flow
-  - Real, recognizable scientific dataset with neutral context
+  - Perfect visual quality in both renders with no text overlap or visibility issues
+  - 'Proper theme adaptation: warm off-white/near-black backgrounds with readable
+    light and dark text'
+  - 'Complete spec compliance: all PCA biplot features present (scores, loadings,
+    variance percentages, legends)'
+  - 'Excellent color accessibility: Okabe-Ito palette (teal, orange, blue) with strong
+    contrast in both themes'
+  - 'Well-designed data: Iris dataset is realistic, neutral, and demonstrates clear
+    cluster separation with variable importance'
+  - 'Proper variance explained percentages on axes (PC1: 73.0%, PC2: 2.8%)'
+  - Careful label positioning with manual offsets prevents overlap while maintaining
+    readability
+  - Good marker sizing and transparency (s=150, alpha=0.7) optimized for data density
   weaknesses:
-  - 'Palette non-compliance: uses #306998 (Python Blue) instead of #009E73 (brand
-    green); includes #FFD43B and #E74C3C which are not Okabe-Ito colors'
-  - 'Theme adaptation failure: arrow labels use hardcoded dark color (#2C3E50) creating
-    dark-on-dark contrast in dark render'
-  - 'Wrong output filename: saves as plot.png instead of plot-{THEME}.png'
-  - 'No theme-adaptive styling: missing ANYPLOT_THEME environment variable handling
-    for text colors'
+  - 'Design could be more sophisticated: uses well-configured defaults without custom
+    styling or visual hierarchy'
+  - Missing spine removal for cleaner L-shaped frame (top/right spines should be hidden)
+  - Manual label offset positioning is somewhat verbose; could leverage matplotlib's
+    TextBbox or other positioning utilities
+  - Generic visualization approach without distinctive matplotlib features (could
+    use Path objects, custom artists, or advanced annotation styling)
+  - No explicit grid refinement beyond basic alpha=0.3 styling
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title, axis labels, tick labels all clearly readable with dark text on light background
-      Data: Three iris species colored in teal (#306998), orange (#FFD43B), and blue (#E74C3C) with loading vectors labeled
-      Legibility verdict: PASS - all text clearly visible and readable on light surface
+      Chrome: Title, axis labels ("PC1 (73.0%)", "PC2 (2.8%)"), tick labels all clearly visible with dark text
+      Data: Setosa (teal #009E73), Versicolor (orange #D55E00), Virginica (blue #0072B2) - Okabe-Ito compliant
+      Loading arrows: Four vectors with labels (Sepal Length, Sepal Width, Petal Length, Petal Width) - all readable, no overlap
+      Legend: Properly positioned with species names
+      Legibility verdict: PASS - All text readable, excellent contrast, proper sizing
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and axis labels appear in light colors (readable); however, arrow feature labels (Sepal Width, Sepal Length, Petal Width, Petal Length) use dark hardcoded color creating poor contrast on dark background
-      Data: Data point colors identical to light render (correct) - teal, orange, blue remain consistent
-      Legibility verdict: PARTIAL FAIL - arrow labels have dark-on-dark contrast failure in dark render, making them difficult to read. Title/axis labels are properly adapted to light colors.
+      Chrome: Title, axis labels, tick labels all clearly visible with light text - no dark-on-dark failures
+      Data: Colors identical to light render (teal, orange, blue maintained) - proper theme consistency
+      Loading arrows: Same positions and visibility as light render
+      Legend: Light text on dark background, fully readable
+      Legibility verdict: PASS - All text readable, no theme-adaptation failures, excellent contrast
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 8
         max: 8
-        passed: false
-        comment: Arrow labels have dark-on-dark contrast in dark render
+        passed: true
+        comment: All text sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Perfectly readable in both light and dark renders.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Good label positioning with minimal overlap
+        comment: Custom offset positioning prevents all label overlap. All text fully
+          readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and arrows clearly visible
+        comment: Markers (s=150, alpha=0.7) and arrows (scale 2.5) perfectly adapted
+          to data density. All elements clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between series
+        comment: Okabe-Ito palette (teal, orange, blue) provides excellent contrast
+          and CVD safety. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent layout with balanced margins
+        comment: Plot fills 60-70% of canvas with balanced margins. Legend well integrated.
+          Perfect layout balance.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with variance percentages
+        comment: Axis labels include component names and variance percentages (e.g.,
+          'PC1 (73.0%)'). Fully descriptive.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-Okabe-Ito colors: #306998 instead of #009E73, plus #FFD43B and
-          #E74C3C not in palette'
+        passed: true
+        comment: 'Okabe-Ito colors verified (#009E73, #D55E00, #0072B2). Backgrounds
+          correct (#FAF8F1 light, #1A1A17 dark). Both renders theme-correct with proper
+          text colors.'
     design_excellence:
-      score: 9
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic styling with incorrect palette choices
+        comment: Well-configured library defaults with functional color use. No custom
+          palette, intentional hierarchy, or publication-ready sophistication.
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Some customization visible but defaults dominate
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Clear narrative showing iris separation and variable importance
+        passed: false
+        comment: Arrows styled with custom arrowstyle and 2.5lw. Markers have white
+          edges. Grid subtle but present. Top/right spines not removed.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data clearly displayed (three iris species clusters). Loading arrows
+          show variable importance. No special emphasis or visual hierarchy beyond
+          coloring by group.
     spec_compliance:
       score: 15
       max: 15
@@ -119,25 +143,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct PCA biplot
+        comment: Correct PCA biplot with observation scores (scatter) and loading
+          vectors (arrows). PC1 vs PC2 displayed.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: 'All features present: observation scores colored by group, loading
+          arrows with variable labels, origin reference lines, variance percentages
+          on axes.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct PC1 vs PC2 mapping
+        comment: X/Y correctly assigned to PC1/PC2. Axes limits appropriate. All data
+          visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct format and labels
+        comment: Title 'biplot-pca · matplotlib · anyplot.ai' correctly formatted.
+          Legend properly labeled with species names.
     data_quality:
       score: 15
       max: 15
@@ -147,21 +176,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All iris species and features shown
+        comment: Iris dataset shows all four features. Three species with distinct
+          distributions demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real scientific dataset
+        comment: Iris dataset is real, well-known scientific benchmark. Neutral, comprehensible
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Factually correct
+        comment: All values factually correct. Proportions match reality. Proper standardization
+          applied.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -169,56 +201,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow
+        comment: 'Clean linear structure: imports → data load → PCA → plot → save.
+          No unnecessary functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic
+        comment: Iris dataset and StandardScaler deterministic. PCA produces consistent
+          output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All used
+        comment: 'Only necessary imports: matplotlib, sklearn components. All used.'
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Verbose with manual label offsets
+        comment: Code is clean but manual label offset positioning is verbose. Theme
+          handling and color palette could be more robust.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves as plot.png instead of plot-{THEME}.png
+        passed: true
+        comment: Saves output files. Current matplotlib API (3.10.9). No deprecated
+          functions.
     library_mastery:
-      score: 7
+      score: 4
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Correct matplotlib patterns
-      - id: LM-02
-        name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Custom arrow styling
+        passed: false
+        comment: Uses matplotlib's high-level API (scatter, annotate, grid, legend).
+          Manual loop-based label positioning is somewhat low-level.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage without distinctive matplotlib features. Could leverage
+          Path objects, custom artists, or advanced annotation techniques.
+    score_caps_applied: []
   verdict: REJECTED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
+  - manual-ticks
   patterns:
   - dataset-loading
   - iteration-over-groups
   dataprep:
   - pca
-  styling: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
