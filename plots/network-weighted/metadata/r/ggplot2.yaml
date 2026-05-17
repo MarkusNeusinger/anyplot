@@ -1,0 +1,229 @@
+library: ggplot2
+language: r
+specification_id: network-weighted
+created: '2026-05-17T14:52:18Z'
+updated: '2026-05-17T15:04:51Z'
+generated_by: claude-haiku
+workflow_run: 25994040678
+issue: 3290
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-weighted/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-weighted/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Perfect palette compliance: #009E73 across both renders with correct theme-adaptive
+    chrome (#FAF8F1 light / #1A1A17 dark)'
+  - Excellent legibility in both themes; no dark-on-dark or light-on-light failures
+  - Edge thickness variation elegantly communicates weight hierarchy; layout naturally
+    reveals network hubs
+  - Spec-compliant implementation with all required features (nodes, weighted edges,
+    labels, scale documentation)
+  - Clean, reproducible code following ggplot2 idioms; correct output format and dimensions
+  weaknesses:
+  - Node label font size (3.5) is functional but slightly small relative to the 4800×2700px
+    canvas; could be increased to 4–4.5 for better prominence
+  - Design is functional but generic; edge weight variation is a semantic choice,
+    not an aesthetic innovation
+  - 'Library Mastery: Network visualization does not leverage ggplot2-specific features;
+    implementation is straightforward grammar-of-graphics usage that could be replicated
+    in other libraries'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "network-weighted · ggplot2 · anyplot.ai" is bold, dark, and clearly readable. Node labels (3-letter country codes) rendered in white/light text on teal nodes with good contrast.
+      Data: 15 nodes in teal (#009E73, Okabe-Ito position 1) arranged in circular layout with edges of varying thickness (1–4pt) representing trade volumes (65–640B USD). Edge weight annotation visible at bottom-right.
+      Legibility verdict: PASS ✓
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title in light-colored text, clearly readable against dark background. Node labels in white/light text, excellent contrast with teal nodes.
+      Data: Identical to light render—same teal nodes (#009E73) and edges with matching thickness variation. Data colors constant across themes (only chrome flips).
+      Legibility verdict: PASS ✓
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Explicitly sized fonts; readable in both themes; labels slightly
+          small for canvas size
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal overlap (e.g., Ind Chi); all text readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Optimal sizing; edge thickness clearly shows weight variation
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito #009E73 with excellent contrast; CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 70–80% canvas utilization; balanced margins; well-centered
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Correct format: ''network-weighted · ggplot2 · anyplot.ai'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect: #009E73 on both; correct backgrounds; theme-correct chrome'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults; clean minimalist design; no distinctive
+          flourishes
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: no grid, generous whitespace; some customization'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Edge thickness creates hierarchy; central hubs naturally emerge
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct weighted network graph
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: nodes, weighted edges, labels, scale annotation'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Proper 2D layout; weight→linewidth mapping (1–4); all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; weight scale documented
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All plot aspects shown: varying degrees, wide weight range (65–640B),
+          multiple regions'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real international trade scenario; plausible relationships
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct trade values and proportions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: theme → data → plot → save; no functions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures consistent layout
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg used; no extraneous imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R; appropriate complexity
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct format; ragg device; 4800×2700px
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics: geom_segment, scale_linewidth, coord_equal'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic network implementation; could be replicated in other libraries
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - normalization
+  styling:
+  - minimal-chrome
+  - alpha-blending
