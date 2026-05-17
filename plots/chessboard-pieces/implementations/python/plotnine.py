@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
-Library: plotnine 0.15.2 | Python 3.13
-Quality: pending | Created: 2026-05-17
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-17
 """
 
 import os
