@@ -1,13 +1,24 @@
-""" pyplots.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-08
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Data - Generate simulated portfolios and efficient frontier
 np.random.seed(42)
@@ -47,7 +58,6 @@ for _ in range(n_portfolios):
     portfolio_sharpes.append(sharpe)
 
 # Generate efficient frontier by finding optimal portfolios at each risk level
-# Using many random samples and selecting pareto-optimal ones
 n_samples = 5000
 all_returns = []
 all_risks = []
@@ -64,7 +74,6 @@ for _ in range(n_samples):
     all_sharpes.append(sharpe)
 
 # Find efficient frontier points (pareto optimal)
-# Sort by risk and find maximum return for each risk bucket
 risk_buckets = np.linspace(min(all_risks), max(all_risks), 40)
 frontier_risks = []
 frontier_returns = []
@@ -93,24 +102,20 @@ max_sharpe_idx = np.argmax(all_sharpes)
 max_sharpe_risk = all_risks[max_sharpe_idx]
 max_sharpe_return = all_returns[max_sharpe_idx]
 
-# Custom style for pyplots - increased font sizes for better readability
+# Custom style - theme-adaptive tokens, Okabe-Ito palette
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#2ECC71", "#1A1A1A", "#9B59B6", "#E74C3C"),
-    title_font_size=56,
-    label_font_size=40,
-    major_label_font_size=32,
-    legend_font_size=32,
-    value_font_size=24,
-    value_label_font_size=24,
-    tooltip_font_size=24,
-    stroke_width=4,
-    opacity=0.6,
-    opacity_hover=0.9,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
 # Calculate appropriate axis ranges based on actual data
@@ -128,7 +133,7 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="frontier-efficient · pygal · pyplots.ai",
+    title="frontier-efficient · pygal · anyplot.ai",
     x_title="Risk (Standard Deviation)",
     y_title="Expected Return",
     show_x_guides=True,
@@ -145,7 +150,6 @@ chart = pygal.XY(
 )
 
 # Add random portfolios grouped by Sharpe ratio
-# Adjust thresholds based on actual data distribution
 sharpe_33 = np.percentile(portfolio_sharpes, 33)
 sharpe_66 = np.percentile(portfolio_sharpes, 66)
 
@@ -165,29 +169,17 @@ chart.add(f"Low Sharpe (<{sharpe_33:.2f})", low_sharpe, dots_size=8)
 chart.add(f"Mid Sharpe ({sharpe_33:.2f}-{sharpe_66:.2f})", mid_sharpe, dots_size=8)
 chart.add(f"High Sharpe (≥{sharpe_66:.2f})", high_sharpe, dots_size=8)
 
-# Add efficient frontier as connected line - using dark color to stand out
+# Add efficient frontier as connected line
 frontier_points = list(zip(frontier_risks, frontier_returns, strict=False))
 chart.add("Efficient Frontier", frontier_points, stroke=True, dots_size=0, stroke_style={"width": 8})
 
-# Add special marker points with larger sizes for visibility
+# Add special marker points for key portfolios
 chart.add("Min Variance", [(min_var_risk, min_var_return)], dots_size=25)
 chart.add("Max Sharpe", [(max_sharpe_risk, max_sharpe_return)], dots_size=25)
 
 # Save outputs
-chart.render_to_png("plot.png")
+chart.render_to_png(f"plot-{THEME}.png")
 
 # Save HTML for interactive version
-with open("plot.html", "w") as f:
-    f.write(f"""<!DOCTYPE html>
-<html>
-<head>
-    <title>Efficient Frontier - pygal</title>
-    <style>
-        body {{ margin: 0; padding: 20px; background: white; }}
-        svg {{ max-width: 100%; height: auto; }}
-    </style>
-</head>
-<body>
-    {chart.render(is_unicode=True)}
-</body>
-</html>""")
+with open(f"plot-{THEME}.html", "w") as f:
+    f.write(chart.render().decode("utf-8"))
