@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: parliament-basic
 created: '2025-12-30T00:05:36Z'
-updated: '2026-05-17T13:53:26Z'
+updated: '2026-05-17T14:00:12Z'
 generated_by: claude-haiku
 workflow_run: 25992612933
 issue: 2499
@@ -12,32 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/parliamen
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/parliament-basic/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Perfect visual quality with readable text in both light and dark themes
-  - Clean, uncluttered design appropriate for parliament visualization type
-  - Full specification compliance with all required features present
-  - Robust CDN fallback handling ensures reliable Highcharts JS download
-  - Proper theme-adaptive styling with consistent Okabe-Ito color usage across both
-    renders
+  - Perfect theme adaptation with no readability failures in either light or dark
+    render
+  - 'Okabe-Ito palette correctly applied with no deviations; first series is always
+    #009E73'
+  - All visual elements (title, legend, seat dots) clearly readable in both themes
+  - Excellent specifications compliance; all required features present
+  - Robust error handling for CDN fallback downloads
+  - Clean, deterministic, reproducible code with no unnecessary complexity
+  - Proper use of theme tokens throughout (PAGE_BG, INK, INK_SOFT, ELEVATED_BG, GRID)
   weaknesses:
-  - Design excellence is functional but standard—uses palette and theme tokens correctly
-    without additional artistic sophistication
-  - Library mastery is competent but not distinctive—straightforward Highcharts API
-    usage without specialized features
+  - Design Excellence is functional but standard—clean styling without distinctive
+    artistic refinement or premium polish
+  - Library Mastery is competent but not distinctive—straightforward Highcharts API
+    usage without exploring specialized features or responsive/accessibility enhancements
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), proper theme background
-      Chrome: Title "parliament-basic · highcharts · anyplot.ai" clearly visible in dark INK color; legend shows all 6 parties with seat counts, readable against light background
-      Data: 280 seats arranged in 5 semicircular arcs, colors follow Okabe-Ito order (green #009E73 → orange #D55E00 → blue #0072B2 → reddish-purple #CC79A7 → orange #E69F00 → sky blue #56B4E9); all individual dots clearly visible
-      Legibility verdict: PASS - All text elements highly readable with proper contrast
+      Background: Warm off-white (#FAF8F1), proper light theme background
+      Chrome: Title "parliament-basic · highcharts · anyplot.ai" clearly visible in dark INK color; legend shows all 6 parties with seat counts, readable against light background with elevated background box and subtle border
+      Data: 280 seats arranged in 5 semicircular arcs, colors follow Okabe-Ito order (green #009E73 → orange #D55E00 → blue #0072B2 → reddish-purple #CC79A7 → golden-orange #E69F00 → sky blue #56B4E9); all individual dots clearly visible with subtle white edge coloring for definition
+      Legibility verdict: PASS - All text elements highly readable with proper contrast; no light-on-light failures
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17), proper dark theme background
-      Chrome: Title rendered in light INK color (#F0EFE8), fully readable; legend uses ELEVATED_BG (#242420) background with light text, all labels readable; no dark-on-dark failures
-      Data: Identical colors to light render - Okabe-Ito palette colors unchanged between themes; seat distribution identical to light render
-      Legibility verdict: PASS - Theme adaptation successful, no dark-on-dark text issues, all elements readable
+      Chrome: Title rendered in light INK color (#F0EFE8), fully readable; legend uses ELEVATED_BG (#242420) background with light text (#B8B7B0), all labels readable with no dark-on-dark failures; subtle border visible
+      Data: Identical colors to light render - Okabe-Ito palette colors unchanged between themes; seat distribution identical; all individual dots clearly visible against dark surface
+      Legibility verdict: PASS - Theme adaptation successful, no dark-on-dark text issues, no readability failures
   criteria_checklist:
     visual_quality:
       score: 30
@@ -48,34 +51,35 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes appropriate for 4800×2700; title and legend render clearly
-          in both themes
+        comment: Font sizes appropriate for 4800×2700; title (28px) and legend (18px)
+          render clearly in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Parliament seats well-distributed; legend positioned cleanly without
-          overlap
+        comment: Parliament seats well-distributed; legend positioned cleanly on right
+          without overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 280 seat markers visible; marker density appropriate
+        comment: All 280 seat markers visible; marker density appropriate across 5
+          arcs
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; each party visually distinct
+        comment: Okabe-Ito palette is CVD-safe; each party color visually distinct
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Semicircle layout well-proportioned; nothing cut off; good canvas
-          utilization
+        comment: Semicircle layout well-proportioned; margins generous; nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
@@ -90,26 +94,26 @@ review:
         comment: 'First series #009E73; Okabe-Ito order 1→6; correct backgrounds for
           both themes'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Clean professional styling; standard defaults without additional
-          artistic refinement
+        comment: Professional styling but functional rather than artistically refined;
+          standard layout without distinctive choices
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Axes hidden cleanly; legend has subtle border/background; whitespace
-          generous; marker edge styling adds definition
+        comment: Axes hidden cleanly; legend has subtle border/background; marker
+          edge styling adds definition; generous whitespace
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
         comment: Parliament visualization tells clear story; party colors create visual
@@ -196,7 +200,7 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, elegant implementation; proper CDN fallback error handling;
+        comment: Clean, elegant implementation; robust CDN fallback error handling;
           no fake UI
       - id: CQ-05
         name: Output & API
@@ -205,7 +209,7 @@ review:
         passed: true
         comment: Outputs plot-{THEME}.png and plot-{THEME}.html; current API
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -217,13 +221,13 @@ review:
           configuration
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: false
         comment: Uses custom tooltip and marker styling; functional but not distinctively
           advanced
     total:
-      score: 87
+      score: 92
       max: 100
   verdict: APPROVED
 impl_tags:
@@ -234,6 +238,6 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep: []
-  styling: []
+  styling:
+  - edge-highlighting
