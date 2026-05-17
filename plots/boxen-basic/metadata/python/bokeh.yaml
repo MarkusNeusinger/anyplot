@@ -1,211 +1,225 @@
 library: bokeh
+language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:10:30Z'
-updated: '2026-01-09T08:12:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845373630
+updated: '2026-05-17T08:56:50Z'
+generated_by: claude-haiku
+workflow_run: 25986315270
 issue: 3414
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/bokeh/plot-dark.html
+quality_score: 96
 review:
   strengths:
-  - Excellent visual representation of the boxen plot concept with clear nested quantile
-    boxes
-  - Good use of color gradient to distinguish quantile levels
-  - Comprehensive legend explaining all elements
-  - Realistic data scenario with appropriate scale
-  - Clean separation of categories with good spacing
-  weaknesses:
-  - Helper function compute_letter_values() violates KISS structure requirement
-  - Legend order is counter-intuitive (should show quantiles in logical progression)
-  image_description: The plot displays a boxen (letter-value) plot showing server
-    response times across 4 API endpoints (API Auth, API Users, API Orders, API Search).
-    Each endpoint shows nested rectangular boxes in a gradient of blue colors - ranging
-    from lightest (#a8d4f0) for the median level to darkest (#0d3048) for the 64ths
-    quantile level. The boxes decrease in width for deeper quantiles, creating a distinctive
-    "stacked" appearance. A bright yellow/gold horizontal line marks the median within
-    each boxen. Outliers are rendered as yellow/gold scattered points with jitter
-    applied for visibility, appearing both above and below the main box structures.
-    The y-axis shows "Response Time (ms)" ranging from 0 to ~600ms, and the x-axis
-    shows "API Endpoint" with the four category labels. A comprehensive legend on
-    the right side explains each quantile level (Median Line, 64ths, 32nds, Sixteenths,
-    Eighths, Fourths, Median 50%, and Outliers). The background is a subtle off-white
-    (#fafafa) with dashed horizontal grid lines. The title correctly follows the format
-    "boxen-basic · bokeh · pyplots.ai".
+  - Expertly implements complex quantile visualization with nested boxes and proper
+    letter-value construction
+  - 'Perfect theme adaptation: light/dark renders are identical for data colors with
+    correct theme-specific chrome'
+  - Idiomatic bokeh usage with ColumnDataSource, glyphs, and custom legend showing
+    library mastery
+  - Clean, reproducible code with explicit font sizing for all elements
+  - Realistic data with diverse distributions showing all plot type features
+  - Professional visual hierarchy through color gradient and nesting depth
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "boxen-basic · bokeh · anyplot.ai" in dark text (28pt), axis labels "API Endpoint"/"Response Time (ms)" in dark (22pt), tick labels in dark (18pt) - all clearly readable
+      Data: Nested blue gradient boxes (light to dark) for six quantile levels; green median lines (#009E73); green outlier points with jitter; multiple API endpoints showing different distributions
+      Legibility verdict: PASS - all text readable, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title in light text (#F0EFE8), axis labels and tick labels in light (#B8B7B0) - all clearly readable; no dark-on-dark failures
+      Data: Identical nested box colors and green data elements to light render (confirming theme-independent data colors); all elements visible
+      Legibility verdict: PASS - all text readable in light colors, professional theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 32pt is excellent, axis labels at 24pt are clear, tick labels
-          readable. Y-axis tick labels at 18pt could be slightly larger.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
+          fully readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; legend positioned well; clean layout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Boxes are clearly visible with good sizing. Outlier points could
-          be slightly larger for this data density.
+        comment: Outliers and median lines perfectly adapted to 5000+ points; nested
+          boxes all distinct
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue gradient palette is colorblind-safe, yellow accents provide
-          excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, legend positioned cleanly to the right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Response Time (ms) includes units, API Endpoint is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Brand green #009E73 is Okabe-Ito safe; CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions at 4800×2700; optimal canvas fill; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend order is confusing - shows Median Line first, then 64ths-to-Median
-          in reverse order, then Outliers. Quantile levels should be in intuitive
-          order.
+        passed: true
+        comment: Title correct; axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Data colors theme-independent (#009E73); backgrounds correct; text
+          colors theme-adaptive
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Custom blue gradient; intentional visual hierarchy; publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid; refined legend with spacing and padding; clean overall
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Nested boxes guide eye through progression; multiple endpoints reveal
+          patterns
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct boxen/letter-value plot implementation
+        comment: Correct boxen plot with all quantile levels
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows nested boxes for letter values, decreasing widths, outliers
-          as individual points, clear axis labels and legend
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: nested boxes, decreasing widths, contrasting
+          colors, outliers, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis range appropriate
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend accurately describes all quantile levels
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses boxen-basic · bokeh · pyplots.ai format
+        comment: Title format correct; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distribution shapes across categories (exponential,
-          normal, lognormal, gamma), outliers visible. Distinctions could be more
-          pronounced.
+        comment: All quantile levels shown; outliers displayed; diverse distributions
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server response times by API endpoint is a realistic, neutral scenario
-          perfect for large dataset analysis
+        comment: Server response times is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 0-600ms are realistic for API calls. Some outlier
-          values above 500ms are plausible but borderline high.
+        comment: Response times 0-600ms plausible; distributions align with backend
+          behavior
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code includes a helper function compute_letter_values() which violates
-          the KISS principle of no functions/classes
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Simple linear flow; no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Seed set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean, Pythonic; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent: figure(), ColumnDataSource, bokeh glyphs, custom Legend'
+      - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of ColumnDataSource, quad glyphs, scatter, custom Legend
-          with LegendItem. Could leverage HoverTool for interactivity.
+        comment: Uses quad() glyph, LegendItem, Selenium integration; could explore
+          more interactive capabilities
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - custom-legend
-  - patches
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
@@ -213,5 +227,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
-  - edge-highlighting
+  - publication-ready
+  - dark-theme
