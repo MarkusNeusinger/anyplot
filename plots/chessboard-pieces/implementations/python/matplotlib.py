@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-17
+Quality: 90/100 | Updated: 2026-05-17
 """
 
 import os
