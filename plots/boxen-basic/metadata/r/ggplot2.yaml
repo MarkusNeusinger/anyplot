@@ -1,0 +1,239 @@
+library: ggplot2
+language: r
+specification_id: boxen-basic
+created: '2026-05-17T09:05:37Z'
+updated: '2026-05-17T09:22:41Z'
+generated_by: claude-haiku
+workflow_run: 25986571562
+issue: 3414
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Perfect visual quality in both light and dark renders
+  - Correct specification implementation with all letter-value plot requirements
+  - Clean, reproducible code with proper ggplot2 idioms and dplyr patterns
+  - Realistic data scenario showing varied distributions
+  - Sophisticated theme-adaptive styling with warm backgrounds (#FAF8F1/#1A1A17)
+  - 'Excellent visual refinement: removed spines, subtle grid, polished legend'
+  weaknesses:
+  - 'Design Excellence could be improved: Limited aesthetic sophistication beyond
+    well-configured defaults; synthetic data lacks narrative depth for visual storytelling'
+  - 'Library Mastery: Uses standard geom layers (geom_rect, geom_segment, geom_point)
+    that aren''t distinctive to ggplot2; could leverage library-specific features'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title (24pt bold), axis labels (20pt bold), tick labels (16pt) - all clearly visible in dark text (#1A1A17). Y-axis grid subtle. Legend background elevated (#FFFDF6). Legend text dark. All text readable.
+      Data: Okabe-Ito colors (green #009E73 for API Reports, orange #D55E00 for API Search, blue #0072B2 for API Users). Nested boxes show quantile levels with decreasing opacity. Median lines bold and visible. Outlier points (shape 21 circles with strokes) clearly visible.
+      Legibility: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, axis labels, tick labels - all clearly visible in light text (#F0EFE8). No dark-on-dark issues. Grid subtle but visible. Legend background dark (#242420) with light text (#B8B7B0). All text readable.
+      Data: Data colors IDENTICAL to light render (#009E73 green, #D55E00 orange, #0072B2 blue). Nested boxes structure preserved. Median lines light-colored and visible. Outlier points clearly visible.
+      Legibility: PASS - Both renders theme-correct with matching data colors and readable chrome elements.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; all text fully readable with proper
+          spacing
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Nested boxes and outliers optimally visible; adapted to data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette ensures colorblind safety; good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-80% of canvas; balanced margins; good whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; axes descriptive with units (Response Time
+          (ms))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
+          dark); theme-adaptive chrome'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Strong design with theme-adaptive colors and intentional styling;
+          above defaults but not FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Spines removed; subtle grid styling; generous whitespace; polished
+          details
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through nested boxes and outlier separation;
+          synthetic data limits narrative depth
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct letter-value plot with all components (nested boxes, quantile
+          levels, outliers)
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: nested boxes, width progression for quantiles,
+          outlier display, legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly mapped; all data visible; axes show full range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct (spec-id · library · anyplot.ai); legend labels
+          match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all plot type aspects: varied distributions (API Reports bimodal,
+          API Search tight, API Users sparse outliers)'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real server endpoint scenario; neutral and plausible; realistic response
+          time values
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Response times realistic (10-800ms range); proportions factually
+          correct
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → data generation → letter-value computation
+          → plot construction → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: ggplot2, dplyr, ragg, tibble'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity; clean code
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct PNG filenames (plot-light.png, plot-dark.png); current ggplot2
+          API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ggplot2 + dplyr patterns; proper theme layering; idiomatic
+          data transformation
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: true
+        comment: Standard geom layers (geom_rect, geom_segment, geom_point) not distinctive
+          to ggplot2; could leverage library-specific features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
