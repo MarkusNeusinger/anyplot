@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-05-17
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-17
 """
 
 import os
