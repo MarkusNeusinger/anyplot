@@ -1,150 +1,172 @@
 library: highcharts
+language: python
 specification_id: biplot-pca
 created: '2026-01-09T13:20:39Z'
-updated: '2026-01-09T13:23:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20853043243
+updated: '2026-05-17T17:44:23Z'
+generated_by: claude-haiku
+workflow_run: 25997974299
 issue: 3417
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/biplot-pca/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of PCA biplot showing both scores and loading vectors
-  - Uses Highcharts SVG renderer effectively to draw custom arrow elements
-  - Colorblind-safe palette with clear species differentiation
-  - Proper axis labels with variance explained percentages
-  - Well-scaled loading vectors that are visible alongside score points
+  - Perfect visual quality across both themes with excellent text legibility and no
+    overlap
+  - Complete spec compliance with all biplot components correctly implemented
+  - Professional theme adaptation using proper design tokens for light and dark modes
+  - High-quality data using well-known iris dataset with realistic scenario
+  - Clean, reproducible code with proper dependency management
+  - Distinctive use of Highcharts SVG rendering for loading vector visualization
+  - Perfect Okabe-Ito palette compliance with data colors identical across themes
   weaknesses:
-  - No random seed set (though data is deterministic from sklearn)
-  - Grid lines could be more subtle
-  - Could leverage more Highcharts interactive features like tooltips on loading arrows
-  image_description: 'The plot displays a PCA biplot using the Iris dataset with 150
-    observations colored by species. Three species are shown: Setosa (blue), Versicolor
-    (yellow), and Virginica (purple). The scatter points represent observation scores
-    in the PC1-PC2 space. Four red loading vectors (arrows) originate from the origin,
-    representing the four Iris features: Sepal Width (pointing upper-right), Sepal
-    Length (pointing right and slightly up), Petal Width and Petal Length (both pointing
-    right near the PC1 axis). The axes are labeled with variance explained: PC1 (73.0%)
-    on x-axis and PC2 (22.9%) on y-axis. The title reads "Iris PCA · biplot-pca ·
-    highcharts · pyplots.ai". A legend is positioned on the right side showing the
-    three species. Grid lines are subtle and gray reference lines mark the origin.'
+  - Design excellence could be enhanced by introducing more distinctive visual storytelling
+    or emphasis techniques beyond standard biplot conventions
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all rendered in dark text (#1A1A17) - all readable with explicit font sizing (28px, 22px, 18px)
+      Data: Three species as scatter points in Okabe-Ito colors - Setosa #009E73 (right/green), Versicolor #D55E00 (middle/orange), Virginica #0072B2 (left/blue)
+      Loading Vectors: Four arrows from origin with labels (Sepal Length, Sepal Width, Petal Length, Petal Width) in dark color - clearly visible with readable labels
+      Legend: Right side positioning with proper species names and colors
+      Legibility verdict: PASS - all text elements readable, proper contrast, grid subtle but visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, tick labels rendered in light text (#F0EFE8) - all readable with same explicit sizing
+      Data: Data colors identical to light render - #009E73, #D55E00, #0072B2 preserved (only chrome adapted)
+      Loading Vectors: Arrows rendered in light color with readable labels - no dark-on-dark failures
+      Legend: Light text on dark background with proper contrast
+      Legibility verdict: PASS - all elements readable, proper light text on dark background, no accessibility failures, brand green #009E73 remains visible
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and loading arrow labels are all
-          clearly readable
+        comment: All font sizes explicitly set (28px, 22px, 18px, 16px), perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; loading labels are positioned appropriately
+        comment: No overlapping text, all labels clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are well-sized for 150 data points, loading arrows are prominent
+        comment: Markers (radius 8) and arrows (stroke-width 4) perfectly visible
+          for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, purple)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout but some empty space on lower-left
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: PC1 (73.0%) and PC2 (22.9%) with variance explained
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend is well-placed but grid is slightly too prominent
+        passed: true
+        comment: Descriptive labels with variance explained percentages
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito colors correct, backgrounds theme-correct, chrome properly
+          adaptive
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Well-designed with custom SVG arrow rendering; follows standard biplot
+          conventions
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, professional margins, clean legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through color and spatial layout
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct biplot with scores and loading vectors
+        comment: Correct PCA biplot with both scores and loadings
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: PC1 on X, PC2 on Y, loadings as arrows from origin
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: scores as points, loadings as arrows
-          with labels, variance explained in axis labels'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: points, arrows, labels, variance explained'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: PC1/PC2 correctly mapped, all 150 samples visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Species names correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows {spec-id} · {library} · pyplots.ai format
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear species separation along PC1, loading directions show
-          feature contributions
+        comment: Iris dataset shows all biplot aspects
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Uses classic Iris dataset, but this is very generic/commonly used
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Standardized data with appropriate loadings scaling
+        comment: Canonical scientific dataset, appropriate for PCA demonstration
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: PCA computed correctly, variance percentages accurate
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -152,51 +174,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, PCA, plot, save'
+        comment: Clean linear flow without unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: No random seed set (uses Iris dataset which is deterministic, but
-          PCA eigenvalue decomposition can have sign ambiguity)
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, deterministic iris dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports necessary and used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current APIs
+        comment: Pythonic, appropriate complexity, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html correctly
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses custom SVG renderer for arrows via Highcharts.addEvent, but
-          could leverage more interactive features
+        comment: Correct Chart/Series/Options usage; custom SVG rendering is effective
+          but somewhat unconventional
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts SVG renderer, event system, and plotLines effectively
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   - selenium
   techniques:
-  - annotations
   - html-export
+  - annotations
   patterns:
   - dataset-loading
   - iteration-over-groups
@@ -204,4 +231,4 @@ impl_tags:
   - pca
   - normalization
   styling:
-  - grid-styling
+  - publication-ready
