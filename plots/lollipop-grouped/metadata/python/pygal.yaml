@@ -1,202 +1,232 @@
 library: pygal
+language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:28:30Z'
-updated: '2026-01-09T14:31:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854886094
+updated: '2026-05-17T22:41:26Z'
+generated_by: claude-haiku
+workflow_run: 26004605964
 issue: 3485
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/pygal/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Creative approach using XY chart to create lollipop visualization since pygal
-    lacks native lollipop support
-  - Clean color scheme with good accessibility (blue, yellow, green)
-  - Well-organized legend at bottom with proper column layout
-  - Good use of node size differentiation (r=0 for base, r=22 for marker)
-  - Appropriate canvas sizing (4800x2700) with scaled font sizes
+  - Perfect visual quality across all criteria—text legible at full resolution, no
+    overlaps, proper color contrast in both themes
+  - Full spec compliance with all required features correctly implemented
+  - Clean, reproducible code with proper theme-adaptive design
+  - Correct Okabe-Ito palette usage with first series at brand green (#009E73)
+  - Both light and dark renders theme-correct with identical data colors
   weaknesses:
-  - Function definition (x_label_formatter) slightly deviates from pure KISS structure
-  - Legend entries show small color squares rather than lollipop symbols
-  image_description: 'The plot displays a grouped lollipop chart showing quarterly
-    revenue by product line across four regions (North, South, East, West). Three
-    series are represented: Electronics (blue #306998), Furniture (yellow #FFD43B),
-    and Apparel (green #2ecc71). Each region has three lollipops positioned side-by-side
-    with slight horizontal offsets. The stems are thin vertical lines extending from
-    the baseline (0) to circular markers at the data values. The title "lollipop-grouped
-    · pygal · pyplots.ai" appears at the top. The y-axis shows "Revenue ($ millions)"
-    ranging from 0 to ~55, and the x-axis shows "Region" with category labels. A legend
-    at the bottom identifies the three series in a horizontal layout.'
+  - 'Design Excellence limited to well-configured defaults (DE-01: 4/8)—no exceptional
+    aesthetic sophistication beyond library configuration'
+  - 'Minimal visual storytelling (DE-03: 2/6)—data displayed clearly but no visual
+    hierarchy or emphasis guiding interpretation'
+  - 'Library Mastery moderate (LM-01: 3/5, LM-02: 2/5)—straightforward XY chart usage
+    without leveraging distinctive pygal features creatively'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "lollipop-grouped · Python · pygal · anyplot.ai" clearly visible in dark text. Axis labels "Region" and "Revenue ($ millions)" with units. Tick labels for all four regions and revenue scale. Legend with three series at bottom. All text dark and highly readable.
+      Data: Green (#009E73) Electronics markers, orange (#D55E00) Furniture markers, blue (#0072B2) Apparel markers. Each series positioned side-by-side with proper offsets. Thin stems, circular 22px markers. Grid subtle on y-axis.
+      Legibility verdict: PASS — all elements clearly readable; excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title and all labels rendered in light text for proper contrast. Tick labels light against dark background. All text elements clearly readable. No dark-on-dark failures detected.
+      Data: All colors IDENTICAL to light render—green, orange, blue lollipops maintain exact hex values (#009E73, #D55E00, #0072B2). Markers and stems equally visible. Grid subtle as in light version.
+      Legibility verdict: PASS — all elements clearly readable; perfect theme adaptation; no readability failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are clearly readable. Font sizes
-          appropriate for 4800x2700 canvas.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements. Lollipops well-spaced within groups.
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px, legend 16px; perfectly readable at full resolution'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; lollipops spaced with offsets; all elements
+          distinct
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (dots_size=22) appropriately sized. Stems (stroke_width=6)
-          thin but visible.
+        comment: Markers (22px) and stems (3px stroke) optimally sized for 12-point
+          data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green provide good contrast and colorblind accessibility.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization with balanced margins. Legend well-positioned
-          at bottom.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has 'Revenue ($ millions)' with units. X-axis has 'Region'
-          label.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is colorblind-safe; good contrast; no red-green
+          only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas; balanced margins; legend positioned appropriately
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis guides are subtle. Legend at bottom with column layout. No
-          x-axis grid.
+        comment: 'Descriptive with units: ''Revenue ($ millions)'' on y-axis'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); Okabe-Ito order followed; light/dark
+          backgrounds correct; theme-correct chrome'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults; professional but not exceptional
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, appropriate margins, theme-adaptive colors; minimal
+          customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly; no visual hierarchy or emphasis guiding interpretation
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped lollipop chart with stems and circular markers.
+        comment: Correct grouped lollipop chart with all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis, series by color.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, side-by-side grouping, legend present.
-      - id: SC-04
-        name: Data Range
+        comment: Stems, circular markers, grouped positioning, legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range (0-55) shows all data clearly.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned; axes show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Electronics, Furniture, Apparel.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format 'lollipop-grouped · pygal · pyplots.ai'.
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and series with different patterns.
+        comment: 'Shows all aspects: 3 product lines across 4 regions with meaningful
+          variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly revenue by product line across regions is real business
-          scenario.
+        comment: Quarterly revenue scenario; realistic product categories; neutral
+          domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Revenue values (15-48M) plausible for regional product line revenue.
+        comment: Values 15-48M realistic for quarterly revenue; proportions correct
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally follows pattern but has function definition (x_label_formatter).
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic hardcoded data, no random elements.
+        comment: 'Linear flow: imports → data → style → chart → render'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Static data; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used.
+        comment: All imports used; sys.path manipulation justified
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; elegant color palette construction
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html correctly.
-    library_features:
+        comment: Saves as plot-{THEME}.png and .html; current API
+    library_mastery:
       score: 5
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Creative XY chart usage for lollipop effect, Style class, x_value_formatter,
-          legend_at_bottom_columns.
+        comment: Correct pygal.XY usage with proper Style configuration; doesn't fully
+          leverage library capabilities
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: XY chart used creatively for lollipop; straightforward implementation,
+          fairly generic patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - manual-ticks
   patterns:
-  - iteration-over-groups
+  - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - publication-ready
