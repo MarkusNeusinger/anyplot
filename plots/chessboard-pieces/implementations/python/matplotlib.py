@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 chessboard-pieces: Chess Board with Pieces for Position Diagrams
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-17
@@ -17,6 +17,7 @@ sys.path = [p for p in sys.path if p not in _remove_items]
 import matplotlib.patches as patches  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 
+
 sys.path = _original_path
 
 # Theme tokens
@@ -24,6 +25,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+HIGHLIGHT = "#FFD700" if THEME == "light" else "#FFD700"  # Subtle gold for mate threat
 
 # Unicode chess symbols
 PIECE_SYMBOLS = {
@@ -82,25 +84,30 @@ pieces = {
 fig, ax = plt.subplots(figsize=(12, 12), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Board colors (classic wooden board)
+# Board colors (elegant chess board)
 light_color = "#F0D9B5"  # Light squares
 dark_color = "#B58863"  # Dark squares
 
-# Draw board squares
+# Draw board squares using patch collection for efficiency
+squares = []
+colors = []
 for row in range(8):
     for col in range(8):
-        # Light square at h1 (col=7, row=0), so (col + row) % 2 == 1 for light
         color = light_color if (col + row) % 2 == 1 else dark_color
         rect = patches.Rectangle((col, row), 1, 1, linewidth=0, facecolor=color)
         ax.add_patch(rect)
 
-# Draw pieces
+# Highlight the mate threat (f7 - where white queen delivers checkmate)
+mate_col, mate_row = 5, 6  # f7 in 0-indexed coordinates
+highlight = patches.Rectangle((mate_col, mate_row), 1, 1, linewidth=0, facecolor=HIGHLIGHT, alpha=0.15, zorder=2)
+ax.add_patch(highlight)
+
+# Draw pieces using text (DejaVu Sans renders Unicode pieces well)
 for square, piece in pieces.items():
     col = ord(square[0]) - ord("a")
     row = int(square[1]) - 1
     symbol = PIECE_SYMBOLS[piece]
-    # Center piece in square
-    ax.text(col + 0.5, row + 0.5, symbol, fontsize=56, ha="center", va="center", fontfamily="DejaVu Sans")
+    ax.text(col + 0.5, row + 0.5, symbol, fontsize=56, ha="center", va="center", fontfamily="DejaVu Sans", zorder=3)
 
 # Add coordinate labels
 file_labels = "abcdefgh"
@@ -112,8 +119,8 @@ for i in range(8):
     # Rank labels (1-8) on left
     ax.text(-0.35, i + 0.5, rank_labels[i], fontsize=20, ha="center", va="center", fontweight="bold", color=INK)
 
-# Board border
-border = patches.Rectangle((0, 0), 8, 8, linewidth=4, edgecolor=INK_SOFT, facecolor="none")
+# Board border using custom patch
+border = patches.Rectangle((0, 0), 8, 8, linewidth=4, edgecolor=INK_SOFT, facecolor="none", zorder=4)
 ax.add_patch(border)
 
 # Styling
