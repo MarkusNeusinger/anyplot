@@ -1,27 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 frontier-efficient: Efficient Frontier for Portfolio Optimization
-Library: bokeh 3.8.1 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-17
 """
 
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Fix for running script named bokeh.py (avoid shadowing the bokeh package)
+if Path(__file__).name == "bokeh.py":
+    sys.path = [p for p in sys.path if Path(__file__).parent != Path(p)]
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColorBar, ColumnDataSource, LinearColorMapper
 from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
 from scipy.optimize import minimize
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Set seed for reproducibility
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+ACCENT_1 = "#D55E00"  # Okabe-Ito position 2
+ACCENT_2 = "#0072B2"  # Okabe-Ito position 3
+
+# Asset data (5 assets)
 np.random.seed(42)
-
-# Generate realistic asset data (5 assets)
 n_assets = 5
 
-# Expected returns (annualized)
 expected_returns = np.array([0.04, 0.10, 0.12, 0.09, 0.07])
 
-# Covariance matrix (realistic correlations)
 volatilities = np.array([0.05, 0.18, 0.25, 0.20, 0.22])
 correlations = np.array(
     [
@@ -35,21 +52,6 @@ correlations = np.array(
 cov_matrix = np.outer(volatilities, volatilities) * correlations
 risk_free_rate = 0.02
 
-
-def portfolio_return(weights):
-    return np.dot(weights, expected_returns)
-
-
-def portfolio_risk(weights):
-    return np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
-
-
-def neg_sharpe_ratio(weights):
-    ret = portfolio_return(weights)
-    risk = portfolio_risk(weights)
-    return -(ret - risk_free_rate) / risk
-
-
 # Generate random portfolios
 n_portfolios = 300
 portfolio_returns = []
@@ -60,8 +62,8 @@ for _ in range(n_portfolios):
     weights = np.random.random(n_assets)
     weights /= weights.sum()
 
-    ret = portfolio_return(weights)
-    risk = portfolio_risk(weights)
+    ret = np.dot(weights, expected_returns)
+    risk = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
     sharpe = (ret - risk_free_rate) / risk
 
     portfolio_returns.append(ret)
@@ -78,16 +80,28 @@ bounds = tuple((0, 1) for _ in range(n_assets))
 init_weights = np.array([1 / n_assets] * n_assets)
 
 # Find minimum variance portfolio
-min_var_result = minimize(portfolio_risk, init_weights, method="SLSQP", bounds=bounds, constraints=constraints)
+min_var_result = minimize(
+    lambda w: np.sqrt(np.dot(w.T, np.dot(cov_matrix, w))),
+    init_weights,
+    method="SLSQP",
+    bounds=bounds,
+    constraints=constraints,
+)
 min_var_weights = min_var_result.x
-min_var_return = portfolio_return(min_var_weights)
-min_var_risk = portfolio_risk(min_var_weights)
+min_var_return = np.dot(min_var_weights, expected_returns)
+min_var_risk = np.sqrt(np.dot(min_var_weights.T, np.dot(cov_matrix, min_var_weights)))
 
 # Find maximum Sharpe ratio portfolio
-max_sharpe_result = minimize(neg_sharpe_ratio, init_weights, method="SLSQP", bounds=bounds, constraints=constraints)
+max_sharpe_result = minimize(
+    lambda w: -(np.dot(w, expected_returns) - risk_free_rate) / np.sqrt(np.dot(w.T, np.dot(cov_matrix, w))),
+    init_weights,
+    method="SLSQP",
+    bounds=bounds,
+    constraints=constraints,
+)
 max_sharpe_weights = max_sharpe_result.x
-max_sharpe_return = portfolio_return(max_sharpe_weights)
-max_sharpe_risk = portfolio_risk(max_sharpe_weights)
+max_sharpe_return = np.dot(max_sharpe_weights, expected_returns)
+max_sharpe_risk = np.sqrt(np.dot(max_sharpe_weights.T, np.dot(cov_matrix, max_sharpe_weights)))
 max_sharpe = (max_sharpe_return - risk_free_rate) / max_sharpe_risk
 
 # Generate efficient frontier
@@ -98,12 +112,18 @@ target_returns = np.linspace(min_var_return, expected_returns.max(), 50)
 for target in target_returns:
     constraints_ef = (
         {"type": "eq", "fun": lambda x: np.sum(x) - 1},
-        {"type": "eq", "fun": lambda x, t=target: portfolio_return(x) - t},
+        {"type": "eq", "fun": lambda x, t=target: np.dot(x, expected_returns) - t},
     )
-    result = minimize(portfolio_risk, init_weights, method="SLSQP", bounds=bounds, constraints=constraints_ef)
+    result = minimize(
+        lambda w: np.sqrt(np.dot(w.T, np.dot(cov_matrix, w))),
+        init_weights,
+        method="SLSQP",
+        bounds=bounds,
+        constraints=constraints_ef,
+    )
     if result.success:
-        frontier_returns.append(portfolio_return(result.x))
-        frontier_risks.append(portfolio_risk(result.x))
+        frontier_returns.append(np.dot(result.x, expected_returns))
+        frontier_risks.append(np.sqrt(np.dot(result.x.T, np.dot(cov_matrix, result.x))))
 
 # Map Sharpe ratios to colors
 sharpe_min = min(portfolio_sharpes)
@@ -121,33 +141,18 @@ source = ColumnDataSource(
 p = figure(
     width=4800,
     height=2700,
-    title="frontier-efficient · bokeh · pyplots.ai",
+    title="frontier-efficient · bokeh · anyplot.ai",
     x_axis_label="Risk (Standard Deviation)",
     y_axis_label="Expected Return",
     tools="pan,box_zoom,reset,save",
 )
 
-# Style the plot
-p.title.text_font_size = "36pt"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
-
 # Plot random portfolios with Sharpe ratio color coding
-p.scatter(
-    "risk",
-    "return",
-    source=source,
-    size=18,
-    color="color",
-    alpha=0.7,
-    legend_label="Random Portfolios (color = Sharpe)",
-)
+p.scatter("risk", "return", source=source, size=18, color="color", alpha=0.7)
 
 # Plot efficient frontier curve
 frontier_source = ColumnDataSource(data={"risk": frontier_risks, "return": frontier_returns})
-p.line("risk", "return", source=frontier_source, line_width=6, color="#306998", legend_label="Efficient Frontier")
+p.line("risk", "return", source=frontier_source, line_width=6, color=BRAND, legend_label="Efficient Frontier")
 
 # Mark minimum variance portfolio
 min_var_source = ColumnDataSource(data={"risk": [min_var_risk], "return": [min_var_return]})
@@ -156,9 +161,9 @@ p.scatter(
     "return",
     source=min_var_source,
     size=45,
-    color="#FFD43B",
+    color=ACCENT_1,
     marker="star",
-    line_color="#333333",
+    line_color=INK_SOFT,
     line_width=3,
     legend_label="Min Variance Portfolio",
 )
@@ -170,9 +175,9 @@ p.scatter(
     "return",
     source=max_sharpe_source,
     size=45,
-    color="#E74C3C",
+    color=ACCENT_2,
     marker="diamond",
-    line_color="#333333",
+    line_color=INK_SOFT,
     line_width=3,
     legend_label="Max Sharpe Portfolio",
 )
@@ -182,49 +187,83 @@ cml_x_end = max(portfolio_risks) * 1.1
 cml_y_end = risk_free_rate + max_sharpe * cml_x_end
 cml_source = ColumnDataSource(data={"x": [0, cml_x_end], "y": [risk_free_rate, cml_y_end]})
 p.line(
-    "x", "y", source=cml_source, line_width=4, line_dash="dashed", color="#9B59B6", legend_label="Capital Market Line"
+    "x", "y", source=cml_source, line_width=4, line_dash="dashed", color=INK_SOFT, legend_label="Capital Market Line"
 )
 
-# Style legend
-p.legend.location = "top_left"
-p.legend.label_text_font_size = "22pt"
-p.legend.background_fill_alpha = 0.85
-p.legend.border_line_width = 2
+# Style title and labels
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+
+# Style grid
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+
+# Style legend (position bottom-right to avoid overlap)
+p.legend.location = "bottom_right"
+p.legend.label_text_font_size = "18pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.background_fill_color = PAGE_BG
+p.legend.background_fill_alpha = 0.9
+p.legend.border_line_color = INK_SOFT
 p.legend.glyph_height = 30
 p.legend.glyph_width = 30
-p.legend.spacing = 10
+p.legend.spacing = 12
 p.legend.padding = 15
-
-# Add grid styling
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = [6, 4]
-
-# Format axes as percentages
-p.xaxis.formatter.use_scientific = False
-p.yaxis.formatter.use_scientific = False
 
 # Add color bar for Sharpe ratio
 color_mapper = LinearColorMapper(palette=Viridis256, low=sharpe_min, high=sharpe_max)
 color_bar = ColorBar(
     color_mapper=color_mapper,
     title="Sharpe Ratio",
-    title_text_font_size="24pt",
+    title_text_font_size="22pt",
     major_label_text_font_size="18pt",
     label_standoff=15,
     width=40,
     location=(0, 0),
 )
+color_bar.title_text_color = INK
+color_bar.major_label_text_color = INK_SOFT
 p.add_layout(color_bar, "right")
 
-# Add right margin for color bar
+# Set background and borders
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 p.min_border_right = 120
 
-# Set background
-p.background_fill_color = "#fafafa"
-
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-
-# Also save HTML for interactive version
-output_file("plot.html")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
