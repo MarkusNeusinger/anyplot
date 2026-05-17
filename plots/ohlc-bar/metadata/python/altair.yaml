@@ -1,158 +1,181 @@
 library: altair
+language: python
 specification_id: ohlc-bar
 created: '2026-01-08T16:06:25Z'
-updated: '2026-01-08T16:14:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20823086975
+updated: '2026-05-17T10:44:46Z'
+generated_by: claude-haiku
+workflow_run: 25988553434
 issue: 3293
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/altair/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of OHLC bar structure using Altair layered approach with
-    three mark_rule components
-  - Creative use of transform_calculate for horizontal tick offsets (10 hours in milliseconds)
-  - Colorblind-friendly blue/yellow color scheme
-  - Proper use of Vega-Lite encoding types (:T for temporal, :Q for quantitative,
-    :N for nominal)
-  - Clean, readable code structure with clear comments
+  - Perfect spec compliance - all OHLC features correctly implemented with proper
+    open/high/low/close mapping
+  - Theme-adaptive styling correctly applied throughout - both light and dark renders
+    are legible and maintain brand green across themes
+  - Proper use of Okabe-Ito palette with meaningful color distinction between Up (#009E73)
+    and Down (#D55E00) bars
+  - Clean code structure with deterministic data generation (seed=42) and proper KISS
+    principle adherence
+  - Excellent text legibility in both themes - all titles, axis labels, and tick labels
+    clearly readable
+  - Effective use of altair's layer composition (mark_rule for verticals, transform_calculate
+    for tick positioning)
   weaknesses:
-  - Missing interactivity - Altair main strength is interactive visualization; adding
-    .interactive() or tooltips would showcase the library better
-  - Grid and legend styling could be more refined - the legend placement in the top-right
-    corner is adequate but could be more integrated
-  image_description: The plot displays an OHLC (Open-High-Low-Close) bar chart showing
-    50 trading days of financial data from January to March 2024. Each bar consists
-    of a thin vertical line representing the high-low price range, with horizontal
-    ticks extending left for the opening price and right for the closing price. The
-    chart uses Python Blue (#306998) for "Up" bars (close >= open) and Python Yellow
-    (#FFD43B) for "Down" bars (close < open). A clear downtrend is visible from approximately
-    $150 to $125. The title "ohlc-bar · altair · pyplots.ai" appears centered at the
-    top. A legend labeled "Direction" distinguishes Up vs Down days. The x-axis shows
-    dates formatted as "Mon DD" (e.g., "Jan 03", "Feb 15"), and the y-axis displays
-    "Price (USD)" ranging from $120 to $174. Subtle grid lines aid in reading exact
-    price levels.
+  - 'DE-01/DE-02: Visual refinement could be enhanced with more sophisticated styling
+    (e.g., custom spine configuration, refined typography hierarchy) to elevate from
+    baseline professional to publication-ready'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "ohlc-bar · altair · anyplot.ai" in dark text (clearly visible), axis titles "Date" and "Price (USD)" readable, tick labels on both axes clearly visible against light background
+      Data: 50 OHLC bars with green (#009E73) vertical lines for Up direction, orange (#D55E00) for Down direction, left horizontal ticks for open price, right ticks for close price, high-low range shown as vertical bars with 2px width
+      Legend: "Direction" legend showing Up/Down with correct colors
+      Grid: Subtle grid lines at opacity 0.10
+      Legibility verdict: PASS - All text and data elements are clearly readable, no overlap, good spacing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title in light text (clearly visible on dark), axis titles and tick labels all readable (light text on dark background), no dark-on-dark failures
+      Data: OHLC bars maintain identical colors to light render (green for Up, orange for Down) - only chrome flips themes as expected, vertical bars and ticks clearly distinguishable
+      Legend: Visible with light text on dark background
+      Grid: Subtle grid lines visible
+      Legibility verdict: PASS - All elements readable in dark theme, no text contrast issues, data colors consistent with light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is 28pt, axis labels are 22pt, tick labels are 18pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; date labels are well-spaced
+        comment: All text sizes follow style guide (title 28px, axis labels 22px,
+          ticks 18px) and are readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text clearly readable, no collisions, legend positioned well
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: OHLC bars are clearly visible with appropriate strokeWidth=2; slight
-          deduction as some bars are close together
+        comment: OHLC bars clearly visible, 50 data points well-distributed, no crowding
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/Yellow color scheme is colorblind-safe (not red-green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend properly positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) with units, Date is appropriate for temporal axis
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito safe, green and orange distinct, good contrast in both
+          themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 proportions good, nothing cut off, adequate margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title includes spec-id/library/domain, axes labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Okabe-Ito pos 1), second #D55E00 (pos 2),
+          backgrounds correct for both themes, data colors identical across themes'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color coding for Up/Down, professional technical analysis
+          representation, theme-aware design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: false
-        comment: Grid opacity is 0.3 which is good, but legend could be better integrated
+        comment: Clean grid and whitespace, but minimal customization beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy, direction encoding guides understanding,
+          effective color distinction
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct OHLC bar chart with vertical high-low lines and horizontal
-          open/close ticks
+        comment: Correct OHLC bar implementation with vertical bars and horizontal
+          ticks
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, Price on Y-axis, OHLC values correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has vertical lines for high-low, left ticks for open, right ticks
-          for close, color coding for up/down
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: thin vertical lines, left open ticks, right close
+          ticks, up/down coloring, grid'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis uses zero=False for appropriate price scaling, all data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=date, Y=price with proper scale, high/low mapped to y/y2
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Up and Down direction with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format ohlc-bar · altair · pyplots.ai
+        comment: Title format correct, legend labels match encoding
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both up and down bars, price volatility, realistic price movement;
-          slight deduction as no gaps shown
+        comment: All OHLC components shown, 50 trading days, realistic demonstration
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price data starting at $150 with realistic daily volatility
-          (~2%), plausible trading scenario
+        comment: Stock price range $120-$174 plausible, random walk with volatility
+          realistic, neutral data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price values are reasonable for stocks; 50 trading days is within
-          spec range (20-100)
+        comment: Price scale sensible, date range appropriate, volatility realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,43 +183,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data generation → plot creation → save'
+        comment: No unnecessary functions/classes, straightforward script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas are imported - all used
+        comment: 'All imports used: os, altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable, no fake interactivity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also plot.html (minor issue, both are valid
-          for Altair)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png/html with scale_factor=3.0
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses layered approach (alt.layer), transform_calculate for date offsets,
-          proper Vega-Lite encoding types; could use interactive() for Altair's strength
+        comment: Proper use of alt.Chart, mark_rule, layering, color encoding, configure_*
+          methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of transform_calculate, mark_rule with y2, layer composition,
+          interactive mode
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -205,8 +234,5 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - time-series
-  styling:
-  - grid-styling
+  dataprep: []
+  styling: []

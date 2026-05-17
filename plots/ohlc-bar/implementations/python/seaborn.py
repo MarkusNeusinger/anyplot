@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 ohlc-bar: OHLC Bar Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-08
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-17
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,8 +12,34 @@ import pandas as pd
 import seaborn as sns
 
 
-# Set seaborn style for consistent aesthetics
-sns.set_theme(style="whitegrid")
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# OHLC-specific colors: up bars and down bars
+COLOR_UP = "#306998"
+COLOR_DOWN = "#C44E52"
+
+# Set seaborn theme with theme-adaptive styling
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Generate synthetic OHLC stock data
 np.random.seed(42)
@@ -37,20 +65,15 @@ df = pd.DataFrame({"date": dates, "open": open_prices, "high": high_prices, "low
 # Add direction column for coloring
 df["direction"] = np.where(df["close"] >= df["open"], "up", "down")
 
-# Create figure with seaborn styling
-fig, ax = plt.subplots(figsize=(16, 9))
+# Create figure
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
-# Define colors - Python blue for up, desaturated red for down
-color_up = "#306998"  # Python Blue
-color_down = "#C44E52"  # Soft red (colorblind-friendly)
-
-# Draw OHLC bars using seaborn's lineplot for consistent styling
-# We'll draw each bar as individual elements
-tick_width = 0.4  # Width of open/close ticks
+# Draw OHLC bars using matplotlib primitives
+tick_width = 0.4
 
 for idx, row in df.iterrows():
     i = df.index.get_loc(idx)
-    color = color_up if row["direction"] == "up" else color_down
+    color = COLOR_UP if row["direction"] == "up" else COLOR_DOWN
 
     # Vertical line from low to high
     ax.vlines(x=i, ymin=row["low"], ymax=row["high"], color=color, linewidth=2)
@@ -61,25 +84,29 @@ for idx, row in df.iterrows():
     # Right tick for close price
     ax.hlines(y=row["close"], xmin=i, xmax=i + tick_width, color=color, linewidth=2)
 
-# Add invisible scatter points for the legend
-for label, color in [("Up (Close ≥ Open)", color_up), ("Down (Close < Open)", color_down)]:
-    ax.scatter([], [], color=color, s=150, marker="s", label=label)
+# Create custom legend with line representations
+up_line = plt.Line2D([0], [0], color=COLOR_UP, linewidth=2.5, label="Up (Close ≥ Open)")
+down_line = plt.Line2D([0], [0], color=COLOR_DOWN, linewidth=2.5, label="Down (Close < Open)")
+ax.legend(handles=[up_line, down_line], fontsize=16, loc="upper left")
 
 # Configure x-axis with date labels
 tick_positions = np.arange(0, len(df), max(1, len(df) // 8))
 tick_labels = [df["date"].iloc[i].strftime("%b %d") for i in tick_positions]
 ax.set_xticks(tick_positions)
-ax.set_xticklabels(tick_labels, rotation=45, ha="right")
+ax.set_xticklabels(tick_labels, rotation=45, ha="right", fontsize=16)
 
 # Style the plot
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Price ($)", fontsize=20)
-ax.set_title("ohlc-bar · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.legend(fontsize=16, loc="upper left", framealpha=0.9)
+ax.set_xlabel("Date", fontsize=20, color=INK)
+ax.set_ylabel("Price ($)", fontsize=20, color=INK)
+ax.set_title("ohlc-bar · seaborn · anyplot.ai", fontsize=24, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Adjust grid
-ax.grid(True, alpha=0.3, linestyle="--")
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+
+# Subtle grid
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
 # Set axis limits with padding
@@ -89,4 +116,4 @@ y_padding = (y_max - y_min) * 0.1
 ax.set_ylim(y_min - y_padding, y_max + y_padding)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
