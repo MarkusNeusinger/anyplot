@@ -1,7 +1,7 @@
 """ anyplot.ai
 boxen-basic: Basic Boxen Plot (Letter-Value Plot)
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 67/100 | Updated: 2026-05-17
+Quality: 73/100 | Updated: 2026-05-17
 """
 
 import altair as alt

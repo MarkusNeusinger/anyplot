@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: boxen-basic
 created: '2026-01-09T08:09:18Z'
-updated: '2026-05-17T08:58:06Z'
+updated: '2026-05-17T09:04:12Z'
 generated_by: claude-haiku
 workflow_run: 25986356663
 issue: 3414
@@ -12,114 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/boxen-bas
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/boxen-basic/python/altair/plot-dark.html
-quality_score: 67
+quality_score: 73
 review:
   strengths:
-  - Correct boxen plot type with properly nested letter values showing distribution
-    quantiles
-  - Excellent spec compliance - all required features implemented
-  - Good data choice with realistic server response time scenario
-  - Clean code structure with deterministic random seed
-  - Strong visual hierarchy through nested box widths
-  - Clear, readable text in both themes
+  - Excellent data quality with realistic server response time scenario
+  - Clear visual representation of distribution shapes across endpoints
+  - Proper text readability in both light and dark renders
+  - Clever use of altair's layer composition for nested boxes
+  - All data elements visible and distinguishable
   weaknesses:
-  - No theme-adaptive chrome - code uses hard-coded colors instead of reading ANYPLOT_THEME
-    and applying color tokens (INK, INK_SOFT, PAGE_BG). This violates the explicit
-    pattern in prompts/library/altair.md
-  - Incorrect output file naming - saves to plot.png instead of plot-light.png and
-    plot-dark.png as required
-  - 'Wrong categorical color - uses Python blue (#306998) instead of Okabe-Ito brand
-    #009E73 for first series'
-  - Font sizes slightly undersized (18/22px instead of 22/28px recommended for pixel-based
-    libraries)
-  - Generic styling with no design sophistication beyond library defaults
+  - Code does NOT implement ANYPLOT_THEME environment variable (CQ-05)
+  - 'Uses wrong color palette #306998 instead of Okabe-Ito #009E73 (VQ-07)'
+  - 'Output filenames wrong: saves plot.png instead of plot-{THEME}.png (CQ-05)'
+  - 'Title domain wrong: pyplots.ai instead of anyplot.ai (VQ-06/SC-04)'
+  - Missing legend explaining quantile levels (SC-02/SC-04)
+  - No theme-adaptive color configuration for text and background (VQ-07)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 specification
-      Chrome: Title "boxen-basic · altair · pyplots.ai" in dark text, axis labels "Response Time (ms)" and "Endpoint" clearly readable, tick labels visible and properly sized
-      Data: Uses dark blue boxes (#306998/#4A90C2) representing letter values at different quantile levels, teal/cyan outlier points, yellow median line; nested boxes decrease in width appropriately
-      Legibility verdict: PASS - all text is clearly readable against light background
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all dark and fully readable - PASS
+      Data: Blue nested boxes with yellow median line, blue outlier points
+      Legibility verdict: PASS - all text readable
 
     Dark render (plot-dark.png):
-      Background: Dark background matching #1A1A17 specification
-      Chrome: Title in light text, axis labels and tick labels in light color, all clearly readable
-      Data: Outlier points remain teal/cyan (same color as light render - correct), median line remains yellow (same as light - correct), nested boxes are lighter to maintain contrast on dark background
-      Legibility verdict: PASS - all text is readable, no dark-on-dark failures
-
-    Theme consistency: Data colors are identical between renders. However, the implementation does not use theme-adaptive color tokens (INK, INK_SOFT) - colors are hard-coded rather than environment-based, violating the architectural requirement in prompts/library/altair.md
+      Background: Very dark (#1A1A17 or similar) - appears correct
+      Chrome: Title, axis labels, tick labels all light-colored and readable - PASS
+      Data: Light blue/cyan nested boxes with light median line, light blue outliers - data colors identical to light render (only chrome flipped)
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 6
         max: 8
         passed: false
-        comment: Readable but font sizes slightly undersized (18/22px vs recommended
-          22/28px)
+        comment: All text readable but colors hardcoded, not theme-adaptive
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap, clean layout
+        comment: Clean layout, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All elements clearly visible and well-proportioned
+        comment: All elements visible; median line could be more prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast and CVD-safe palette
+        comment: Blue tones are colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent layout, plot fills appropriate portion
+        comment: Excellent proportions and balance
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Descriptive with units
+        passed: false
+        comment: 'Has units but wrong domain: pyplots.ai not anyplot.ai'
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses hard-coded Python blue instead of Okabe-Ito #009E73;
-          no theme-adaptive chrome; missing INK/INK_SOFT tokens'
+        comment: 'Uses #306998 instead of #009E73; no theme-adaptive chrome configuration'
     design_excellence:
       score: 8
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Well-configured defaults but generic
+        comment: Generic styling with hardcoded colors
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond defaults
+        comment: Library defaults, minimal customization
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Data displayed but without visual hierarchy
+        passed: true
+        comment: Clear distribution comparison with visual hierarchy
     spec_compliance:
-      score: 15
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -127,25 +117,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct boxen plot with nested letter values
+        comment: Correct boxen plot with nested boxes
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: 'All features present: nested boxes, outliers, quantile levels'
+        passed: false
+        comment: Has nested boxes, width, outliers; MISSING legend for quantile levels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Endpoint, Y=Response Time, all data visible
+        comment: X and Y correctly assigned
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Correct title format
+        passed: false
+        comment: Title domain wrong; no legend explanation
     data_quality:
       score: 15
       max: 15
@@ -155,21 +145,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full distribution shape with varied endpoints
+        comment: Multiple endpoints with varying distributions
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real scenario, neutral, plausible
+        comment: Server response times, neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Realistic values and proportions
+        comment: Factually correct values and proportions
     code_quality:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -177,13 +167,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear structure
+        comment: Direct code, no functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set
+        comment: Uses np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -192,39 +182,42 @@ review:
         comment: Only necessary imports
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: No theme awareness
+        passed: true
+        comment: Clean and appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png instead of plot-light.png/plot-dark.png
+        comment: Saves plot.png not plot-{THEME}.png; missing ANYPLOT_THEME support
     library_mastery:
-      score: 3
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: Correct but doesn't leverage best practices
+        passed: true
+        comment: Uses Chart, encode, mark_bar; missing theme configuration
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 3
         max: 5
-        passed: false
-        comment: Generic layer usage
+        passed: true
+        comment: Creative layer composition for nested boxes
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
-  styling: []
+  dataprep:
+  - percentile
+  styling:
+  - alpha-blending
