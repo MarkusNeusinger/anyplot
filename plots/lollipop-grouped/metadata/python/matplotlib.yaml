@@ -1,154 +1,163 @@
 library: matplotlib
+language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:25:40Z'
-updated: '2026-01-09T14:28:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854876497
+updated: '2026-05-17T22:43:50Z'
+generated_by: claude-haiku
+workflow_run: 26004332590
 issue: 3485
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
 review:
   strengths:
-  - Excellent implementation of the grouped lollipop concept with proper spacing and
-    positioning
-  - Clean, readable code following KISS principles with good organization
-  - Professional color scheme that is colorblind-accessible
-  - Proper use of zorder to ensure markers appear above stems
-  - White edge highlighting on markers adds polish
-  - Correct title format and appropriate axis labels with units
+  - Perfect text legibility in both light and dark themes
+  - Correct Okabe-Ito palette with flawless theme chrome adaptation
+  - Clean lollipop design with proper stem-to-marker proportions
+  - Well-spaced grouped layout; legend doesn't overlap
+  - Realistic, neutral business data context
+  - Reproducible code with deterministic seed
   weaknesses:
-  - Legend placement in upper right could be moved to avoid proximity to data area
-  - Could use more distinctive matplotlib features
-  - Data values are somewhat uniform - more variation would better showcase the chart
-    comparison capability
-  image_description: 'The plot displays a grouped lollipop chart showing quarterly
-    revenue by product line across four regions (North, South, East, West). Each region
-    has three lollipops side by side representing Electronics (blue #306998), Furniture
-    (yellow #FFD43B), and Clothing (green #4CAF50). The stems are thin vertical lines
-    extending from a baseline at y=0 up to circular markers. The title reads "lollipop-grouped
-    · matplotlib · pyplots.ai" at the top. The y-axis shows "Revenue ($ millions)"
-    ranging from 0 to approximately 6.5, and the x-axis shows "Region". A legend in
-    the upper right identifies the three series. A subtle dashed horizontal grid is
-    present on the y-axis. The data shows variation across regions - East has the
-    highest Electronics revenue (~5.5M), while Furniture values vary considerably
-    across regions.'
+  - Source code file is out of sync with actual renders - must synchronize data labels,
+    colors, and title before merge
+  - Generic styling with library defaults - no custom design sophistication
+  - Minimal visual refinement - spines not removed, grid could be subtler
+  - No visual hierarchy or data storytelling - purely functional display
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark ink; legend in upper right
+      Data: Hardware in brand green (#009E73), Software in vermillion (#D55E00), Services in blue (#0072B2); stems at 2px with circular markers (s=250) with white edges; 4 categories × 3 series well-spaced
+      Legibility verdict: PASS - all text readable, no overlap, proper contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title, axis labels, tick labels all in light text; grid and spines adapted to dark theme; legend maintains contrast
+      Data: Identical colors to light render (green #009E73, orange #D55E00, blue #0072B2); markers retain white edges for visibility; stems clearly visible
+      Legibility verdict: PASS - all text readable in dark theme, no dark-on-dark failures, colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, legend at
-          16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements, lollipops well-spaced within groups
+        comment: All font sizes explicitly set; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; legend clear
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers at s=250 appropriately sized for 12 data points, stems have
-          good linewidth=2
+        comment: Markers and stems optimal for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green palette is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with tight_layout(), balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units, X-axis is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette; CVD-safe; high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 65-70% of canvas; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive with units; proper title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette correct; theme chrome perfect in both renders
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend in upper right slightly overlaps visual data area
+        comment: Well-configured defaults but no exceptional design polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; grid could be subtler; spines visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped lollipop chart with stems and circular markers
+        comment: Correct grouped lollipop chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values on Y-axis, series distinguished by color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has thin stems, circular markers, grouped positioning, legend, and
-          baseline
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: stems, markers, grouping, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis from 0 to 6.5 shows all data with appropriate headroom
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-Y mapping correct; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three product lines
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exactly matches required format
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and series, demonstrates comparison
-          capability
+        comment: Shows all aspects of plot type
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly revenue by product line across regions is a real, neutral
-          business scenario
+        comment: Real business context; neutral and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 2.2-5.5 million are realistic for regional revenue
+        comment: Values and proportions realistic for domain
     code_quality:
       score: 10
       max: 10
@@ -158,42 +167,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear flow with no functions/classes
+        comment: Linear structure; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Random seed set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: All APIs are current
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output format
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: false
-        comment: Uses basic matplotlib scatter and plot methods correctly but doesn't
-          leverage distinctive features
+        comment: Correct but doesn't leverage advanced patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic matplotlib usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -205,4 +219,3 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling
