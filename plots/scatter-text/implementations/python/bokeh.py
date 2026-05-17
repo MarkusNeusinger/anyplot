@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-text: Scatter Plot with Text Labels Instead of Points
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-17
@@ -151,24 +151,65 @@ p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
+# Define group membership for visual hierarchy
+groups = {
+    "modern": [0, 1, 2, 8, 9, 10, 18, 20],
+    "systems": [3, 5, 6, 7, 24],
+    "functional": [11, 16, 17, 19, 29],
+    "scientific": [4, 12, 13, 21],
+    "scripting": [14, 15, 26, 27],
+    "legacy": [22, 23, 25, 28],
+}
+
+# Create per-group styling with visual hierarchy: modern prominent, others subtle
+group_alpha = {
+    "modern": 0.95,  # Primary group
+    "systems": 0.80,  # Subtle
+    "functional": 0.75,  # Subtle
+    "scientific": 0.85,  # Moderate
+    "scripting": 0.78,  # Subtle
+    "legacy": 0.73,  # Subtle
+}
+
+group_size = {
+    "modern": "23pt",  # Slightly larger
+    "systems": "21pt",  # Slightly smaller
+    "functional": "20pt",
+    "scientific": "22pt",
+    "scripting": "20pt",
+    "legacy": "20pt",
+}
+
+# Assign group info to data for styling
+group_membership = [""] * n
+for group_name, indices in groups.items():
+    for idx in indices:
+        group_membership[idx] = group_name
+
+source.data["group"] = group_membership
+
 # Add invisible scatter points for HoverTool
-hover = HoverTool(tooltips=[("Language", "@labels")])
+hover = HoverTool(tooltips=[("Language", "@labels"), ("Group", "@group")])
 p.add_tools(hover)
 p.scatter("x", "y", source=source, size=1, alpha=0)
 
-# Add text labels at each coordinate
-text_labels = LabelSet(
-    x="x",
-    y="y",
-    text="labels",
-    source=source,
-    text_font_size="22pt",
-    text_color=BRAND,
-    text_alpha=0.85,
-    text_align="center",
-    text_baseline="middle",
-)
-p.add_layout(text_labels)
+# Add text labels with per-group visual hierarchy
+for group_name, indices in groups.items():
+    group_data = ColumnDataSource(
+        data={"x": [x[i] for i in indices], "y": [y[i] for i in indices], "labels": [labels[i] for i in indices]}
+    )
+    text_labels = LabelSet(
+        x="x",
+        y="y",
+        text="labels",
+        source=group_data,
+        text_font_size=group_size[group_name],
+        text_color=BRAND,
+        text_alpha=group_alpha[group_name],
+        text_align="center",
+        text_baseline="middle",
+    )
+    p.add_layout(text_labels)
 
 # Save HTML
 output_file(f"plot-{THEME}.html")
