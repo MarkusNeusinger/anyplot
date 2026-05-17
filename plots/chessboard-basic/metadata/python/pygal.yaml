@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: chessboard-basic
 created: '2026-01-08T21:55:10Z'
-updated: '2026-05-17T01:54:20Z'
+updated: '2026-05-17T01:59:36Z'
 generated_by: claude-haiku
 workflow_run: 25978372923
 issue: 3340
@@ -12,43 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/chessboar
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/chessboard-basic/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 76
 review:
   strengths:
-  - Perfect text legibility and readability in both light and dark themes
-  - Correct chess board pattern with proper 8x8 grid and alternating squares
-  - 'Specification compliant: proper title format, correct labels, accurate board
-    layout'
-  - Clean, deterministic code with no unnecessary complexity
-  - Creative use of StackedBar to generate grid-based visualization
-  - 'Excellent data quality: realistic chess board with correct proportions and feature
-    coverage'
+  - Perfect layout and canvas utilization (3600×3600 square format appropriate for
+    symmetric grid)
+  - Excellent text legibility with explicit font sizing in both light and dark themes
+  - 'All spec requirements met: 8×8 grid with correct chess pattern (h1 light, a1
+    dark), proper row/column labels'
+  - Proper theme-adaptive chrome (backgrounds and text colors correctly adapted to
+    light/dark themes)
+  - Data is realistic, neutral, and shows all features of a standard chessboard
   weaknesses:
-  - 'Missing theme-aware implementation: code hardcodes white background and renders
-    to plot.png instead of plot-{THEME}.png'
-  - 'Inconsistent data colors between light and dark renders: light squares appear
-    noticeably different in dark theme, violating identical-data-colors principle'
-  - Code does not use os.getenv(ANYPLOT_THEME) or theme tokens from style guide despite
-    pygal.md guidance
-  - 'Limited design excellence: uses default styling without custom palette refinement
-    or visual hierarchy'
-  - 'No visual refinement beyond library defaults: minimal attention to grid styling,
-    whitespace, or polish'
+  - 'Critical: Title domain is ''pyplots.ai'' but should be ''anyplot.ai'' per SC-04
+    specification'
+  - Output filenames hardcoded to 'plot.png/svg/html' instead of 'plot-{THEME}.png/svg/html'
+  - Code does not read ANYPLOT_THEME environment variable for theme-aware rendering
+    (hardcoded backgrounds)
+  - Design lacks aesthetic sophistication - uses generic defaults rather than thoughtful
+    color/typography choices
+  - Library usage is creative but somewhat unconventional - StackedBar for a grid
+    is a workaround, not idiomatic pygal
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white surface (#FAF8F1) provides excellent contrast for the visualization.
-      Chrome: Title "chessboard-basic · pygal · pyplots.ai" is prominently displayed in dark text at top. Column labels (a-h) appear clearly at bottom in dark gray. Row labels (1-8) on left side in dark gray. All text is perfectly readable with explicit font sizing (title 72px, labels 52px, ticks 48px).
-      Data: Chess board shows classic cream (#F0D9B5) and brown (#B58863) square colors in proper alternating pattern. All 64 squares are distinct and clearly visible. Board maintains perfect 1:1 aspect ratio with proper proportions.
-      Legibility verdict: PASS - all text readable, excellent contrast, clean layout.
+      Background: Warm off-white surface approximately #FAF8F1 as specified - correct
+      Chrome: Title "chessboard-basic · pygal · pyplots.ai" in dark text is clearly readable; row labels (1-8) on left side in dark gray are visible; column labels (a-h) at bottom in dark text are clearly readable; all elements well-spaced
+      Data: 8×8 chessboard with classic cream (#F0D9B5) and brown (#B58863) alternating squares; h1 (bottom-right) correctly shows light square, a1 (bottom-left) correctly shows dark square; pattern is complete and correct
+      Legibility verdict: PASS - All elements clearly readable with good contrast against the light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black surface (#1A1A17) with visible margins and proper padding.
-      Chrome: Title, column labels (a-h), and row labels (1-8) are all rendered in light text that is clearly readable against the dark background. No dark-on-dark failures detected. Axis elements have good visibility.
-      Data: Chess board pattern is present and clear, BUT the light squares appear noticeably lighter/paler compared to light render (approximately #D0C0A0 or similar instead of #F0D9B5). The brown dark squares appear consistent. This color adaptation between themes improves dark-mode readability but violates the "identical data colors across themes" principle — only chrome should change.
-      Legibility verdict: PASS for text readability, but FAIL for data color consistency (light squares are adapted rather than identical).
+      Background: Warm near-black surface approximately #1A1A17 as specified - correct, not pure black
+      Chrome: Title is visible in light gray/white text; row labels appear in light gray, clearly readable; column labels in light text are visible; no "dark-on-dark" failures detected
+      Data: Identical chessboard colors to light render (#F0D9B5 light, #B58863 dark) - correct, data colors unchanged between themes, only chrome adapted
+      Legibility verdict: PASS - All text readable in dark theme, proper color inversion for chrome while maintaining data color consistency
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -56,47 +55,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 72px, labels 52px, ticks 48px),
-          perfectly readable in both renders
+        comment: All font sizes explicitly set (title 72, labels 52, major 48); perfectly
+          readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text, clean layout with proper spacing
+        comment: Zero text overlap, all labels well-spaced
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 64 squares clearly visible and distinct in both renders
+        comment: Chessboard squares clearly visible and well-sized for the 8×8 grid
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between light/dark squares, colors are distinguishable
+        comment: Cream/brown chess colors provide excellent contrast, colorblind-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect 1:1 aspect ratio (3600x3600), balanced margins, content well-utilized
+        comment: Perfect 3600×3600 square format with balanced margins (180 general,
+          220 left) fills plot area well
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title format correct: ''chessboard-basic · pygal · pyplots.ai'',
-          labels a-h and 1-8 descriptive'
-      - id: VQ-07
-        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Background colors theme-correct (#FAF8F1 light, #1A1A17 dark), but
-          chess square colors not identical between renders — light squares appear
-          adapted for dark-theme contrast, violating data-color-consistency rule'
+        comment: 'Title domain is wrong: ''pyplots.ai'' instead of ''anyplot.ai'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Theme-adaptive chrome correct in both renders; background colors
+          properly adapted (#FAF8F1 light, #1A1A17 dark); text colors theme-correct'
     design_excellence:
       score: 8
       max: 20
@@ -106,24 +104,24 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses classic chess colors appropriately, but no custom palette refinement
-          or design sophistication beyond defaults
+        comment: Well-executed but generic styling; uses domain-appropriate colors
+          (cream/brown) but no custom palette or intentional design hierarchy beyond
+          defaults
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization; no special attention
-          to grid styling, whitespace polish, or visual details
+        comment: Minimal customization beyond library defaults; clean but not polished
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Straightforward presentation of chess board; no visual hierarchy,
-          emphasis, or data-driven narrative
+        comment: Displays the chessboard clearly but no visual hierarchy or narrative
+          emphasis (appropriate for a reference visualization)
     spec_compliance:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -131,26 +129,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct chess board grid visualization using StackedBar
+        comment: Correct 8×8 grid visualization with all subtypes present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 8x8 board with alternating squares, column labels a-h, row labels
-          1-8, all present
+        comment: 'All features present: 8×8 grid, columns a-h, rows 1-8, alternating
+          light/dark pattern, h1 light (correct), a1 dark (correct)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Rows and columns correctly mapped to StackedBar structure
+        comment: X-axis (columns a-h) and Y-axis (rows 1-8) correctly labeled, all
+          squares visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title correctly formatted, no legend needed for this visualization
+        passed: false
+        comment: 'Title format wrong: says ''chessboard-basic · pygal · pyplots.ai''
+          but should be ''chessboard-basic · pygal · anyplot.ai'''
     data_quality:
       score: 15
       max: 15
@@ -160,23 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete 8x8 chess board showing all features: proper alternating
-          pattern, correct corner colors'
+        comment: Shows all features of a standard chessboard - complete 8×8 pattern
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Classic chess board is real-world realistic, neutral, universally
-          recognized
+        comment: Real, well-known, neutral scenario (chess is universal and non-controversial)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Board proportions and sizing are correct for chess notation standard
+        comment: Factually correct 8×8 grid, 1:1 aspect ratio for proper square proportions
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -184,35 +182,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → config → data loop → rendering'
+        comment: 'Clean structure: imports → setup → loop → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Chess board layout is deterministic (no randomness)
+        comment: Deterministic pattern based on logic, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both used
+        comment: Only necessary imports (pygal, Style)
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic code with no fake functionality
+        passed: false
+        comment: Code is readable but missing theme adaptation - does not read ANYPLOT_THEME;
+          hardcodes background colors
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'CRITICAL: renders to plot.png instead of plot-{THEME}.png; does
-          not use os.getenv(ANYPLOT_THEME) for theme-aware rendering as specified
-          in pygal.md'
+        comment: 'Output filenames are wrong: saves to ''plot.png/svg/html'' instead
+          of ''plot-{THEME}.png/svg/html'''
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -220,21 +218,20 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Uses StackedBar and Style objects correctly, but does not follow
-          theme-aware patterns from pygal.md guide — hardcodes white background instead
-          of using PAGE_BG token
+        comment: Correctly uses pygal.StackedBar but the approach is somewhat unconventional
+          for a grid (using stacked bars as a workaround)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Creative use of StackedBar for grid generation, but minimal leverage
-          of distinctive pygal features
+        comment: Creative use of stacking for grid layout, but more of a workaround
+          than leveraging distinctive library features
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
-  - matrix-construction
+  - data-generation
   dataprep: []
   styling: []
