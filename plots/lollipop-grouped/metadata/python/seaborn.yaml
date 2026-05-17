@@ -1,152 +1,176 @@
 library: seaborn
+language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:24:45Z'
-updated: '2026-01-09T14:27:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854877690
+updated: '2026-05-17T22:33:37Z'
+generated_by: claude-haiku
+workflow_run: 26004378790
 issue: 3485
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
 review:
   strengths:
-  - Excellent visual clarity with well-sized markers and stems
-  - Proper grouped positioning with calculated offsets
-  - Good colorblind-friendly color palette (Python Blue + accessible colors)
-  - Clean KISS code structure with realistic business data scenario
-  - Correct title format and comprehensive axis labeling with units
+  - Perfect visual quality with no legibility issues in either theme
+  - Correct Okabe-Ito palette with first series in brand green (#009E73)
+  - 'Excellent theme adaptation: both light and dark renders readable with theme-correct
+    chrome'
+  - Explicit font sizes throughout (title 24pt, labels 20pt, ticks 16pt)
+  - Clean grouped lollipop implementation with proper marker edges for definition
+  - Realistic, plausible data representing quarterly revenue across regions
+  - Reproducible code with seed set
+  - Proper spine removal and subtle grid styling
   weaknesses:
-  - Implementation does not actually use seaborn library - only matplotlib functions
-    are used (ax.plot, ax.scatter). This is a seaborn implementation file but seaborn
-    is not imported.
-  - 'Minor: legend title terminology inconsistency with spec'
-  image_description: 'The plot displays a grouped lollipop chart showing quarterly
-    revenue by product line across 4 regions (North, South, East, West). Each region
-    has 3 lollipops representing Electronics (blue #306998), Clothing (yellow #FFD43B),
-    and Food (red/coral #E24A33). The lollipops consist of thin vertical stems extending
-    from a baseline of 0 up to circular markers at the top. The plot uses a 16:9 aspect
-    ratio with clear axis labels - "Region" on x-axis and "Revenue (M$)" on y-axis
-    with units. The title follows the correct format "lollipop-grouped · seaborn ·
-    pyplots.ai". A legend in the upper right identifies each product line. A subtle
-    horizontal grid (alpha 0.3, dashed) aids value reading. Values range from ~22
-    to ~53 M$, showing Electronics consistently highest across regions.'
+  - 'Title has typo: ''pyplots.ai'' should be ''anyplot.ai'''
+  - 'Title missing Language designation: should include ''Python'' in format'
+  - Design Excellence is generic - relies on well-configured defaults with minimal
+    custom styling
+  - No visual hierarchy or emphasis to create data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title, axis labels ("Region", "Revenue (M$)"), tick labels all readable in dark INK color ✓
+      Data: Three series rendered with Okabe-Ito colors - Electronics #009E73 (green, brand color), Clothing #D55E00 (orange), Food #0072B2 (blue). Markers have white edges for definition. Stems are thin, clear.
+      Grid: Y-axis only, subtle alpha=0.10
+      Legibility verdict: PASS - All text is readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, axis labels, tick labels all rendered in light INK color (#F0EFE8) and are clearly readable. No "dark on dark" failures.
+      Data: Colors are identical to light render - Electronics still #009E73 (green), Clothing still #D55E00 (orange), Food still #0072B2 (blue). White marker edges remain visible.
+      Grid: Subtle and visible
+      Legibility verdict: PASS - All text is readable against dark background, theme adaptation is correct
+
+    Both renders show correct theme-adaptive chrome with identical data colors across themes.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: All text explicitly set with proper sizes, perfectly readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear spacing, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (s=250) and stems (linewidth=2.5) well-sized for 12 data
-          points
+        comment: Markers well-sized, stems clear, all data visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/red palette is colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Revenue (M$), Region'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe, good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent canvas utilization with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive with units (Revenue M$)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand), others follow Okabe-Ito order, backgrounds
+          correct for theme'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend title Product Line inconsistent with spec terminology series
+        comment: Well-configured defaults but not exceptional, no custom touches
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Spines removed, grid subtle, white marker edges, but minimal extra
+          refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but no visual hierarchy or emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped lollipop chart with stems and circular markers
+        comment: Correct grouped lollipop chart with proper grouping
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y, series distinguished by color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: thin stems, circular markers, grouped
-          positioning, legend'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: stems, markers, grouping, legend'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis starts at 0, extends to max*1.15 showing all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all three series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format {spec-id} · {library} · pyplots.ai
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: Title has typo (pyplots.ai→anyplot.ai) and missing Python designation.
+          Legend labels are correct.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and product lines; could show more
-          dramatic differences
+        comment: Shows variation across regions and product lines
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly revenue by product line across regions is a real business
-          scenario
+        comment: Realistic quarterly revenue data, neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Revenue values 20-55 M$ are plausible, though range is somewhat narrow
+        comment: Values plausible for business context
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -154,52 +178,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → plot → save'
+        comment: Simple, clean linear structure
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas)
+        comment: All imports used appropriately
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Header says Library: seaborn but seaborn is not imported or used'
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: false
-        comment: Implementation uses matplotlib directly (ax.plot, ax.scatter) rather
-          than seaborn functions
-  verdict: REJECTED
+        comment: Correct seaborn theme setup, but lollipop chart is manually constructed
+          with scatter+plot (appropriate given seaborn lacks native lollipop function)
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses seaborn theming but otherwise generic implementation
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
-  - custom-legend
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
+  styling: []
