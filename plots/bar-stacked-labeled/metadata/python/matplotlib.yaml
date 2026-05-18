@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:31:25Z'
-updated: '2026-05-18T01:48:31Z'
+updated: '2026-05-18T01:54:21Z'
 generated_by: claude-haiku
 workflow_run: 26009034890
 issue: 3504
@@ -12,36 +12,33 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - Perfect text legibility in both light and dark themes
-  - 'Flawless Okabe-Ito palette usage with correct first series color #009E73'
-  - Sophisticated theme-adaptive chrome implementation with no dark-on-dark or light-on-light
-    failures
-  - Well-executed visual hierarchy with bold total labels and clear segment annotations
-  - Realistic quarterly revenue data demonstrating all aspects of stacked bar type
-  - Clean, reproducible code with proper seed and deterministic generation
-  - Proper spine removal and subtle grid styling with polished visual refinement
+  - Perfect visual quality—all text sized explicitly (title 24pt, labels 20pt, ticks
+    16pt) and readable in both themes
+  - Excellent theme adaptation—chrome flips correctly (#FAF8F1↔#1A1A17, text colors
+    invert, grid adapts) while Okabe-Ito data colors remain constant
+  - Professional design—white edges on bars, bold total labels, conditional segment
+    labels create clear visual hierarchy
+  - Clean code—KISS structure, deterministic with seed, proper Axes API usage, no
+    fake features
   weaknesses:
-  - Title format missing 'Python' language identifier — should be 'bar-stacked-labeled
-    · Python · matplotlib · pyplots.ai'
-  - Design Excellence is solid but not exceptional — executes best practices well
-    rather than adding custom aesthetic sophistication
-  - Visual storytelling could be enhanced with emphasis techniques or refined color
-    choices beyond Okabe-Ito defaults
+  - Title says 'pyplots.ai' instead of 'anyplot.ai'—violates SC-04 spec format requirement
+  - Library Mastery is generic—white edge highlighting on bars is the only library-specific
+    touch; doesn't leverage distinctive matplotlib features
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and professional
-      Chrome: Title "bar-stacked-labeled · matplotlib · pyplots.ai" in 24pt dark text, clearly readable. Axis labels "Quarter" and "Revenue ($ Millions)" in 20pt dark text, fully legible. Tick labels (Q1-Q4, 0-200) in 16pt dark text, sharp and readable. Y-axis grid subtle with alpha 0.1.
-      Data: Four colored segments per bar (Software #009E73 green, Hardware #D55E00 orange, Services #0072B2 blue, Support #CC79A7 pink) in Okabe-Ito order. Bold total labels above each bar ($115M, $130M, $153M, $177M) in 20pt bold dark text. White segment labels inside bars (45, 30, 25, 15, etc.) readable on colored backgrounds. Legend in upper left with clear labels and framed styling.
-      Legibility verdict: PASS — All text is readable against light background, no overlaps, strong contrast throughout.
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title, axis labels, tick labels in dark text, clearly readable ✓
+      Data: Stacked bars with Okabe-Ito colors (green Software, orange Hardware, blue Services, purple Support). White edges for definition. Bold total labels ($115M–$177M) above bars. Segment values in white text on colored backgrounds.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), consistent with light render theme
-      Chrome: Title and axis labels render in light text (INK token #F0EFE8), clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0), fully legible. Grid subtle on dark surface. Spines visible in light color. Legend has dark frame background (#242420) with light text.
-      Data: Data colors IDENTICAL to light render — same green, orange, blue, pink in exact same positions, confirming proper theme-adaptive chrome. White segment labels inside bars equally readable. Bold total labels in light text, prominently placed and clear.
-      Legibility verdict: PASS — No dark-on-dark failures detected. All text maintains strong contrast. Brand green #009E73 remains visible and distinct on dark background. Both renders fully pass legibility requirements with zero readability issues.
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, axis labels, tick labels in light text, clearly readable. No dark-on-dark failures ✓
+      Data: Colors identical to light render—same green, orange, blue, purple in same positions with same values.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,44 +49,45 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text explicitly sized and readable in both themes
+        comment: Title 24pt, labels 20pt, ticks 16pt, all explicitly set and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlaps; labels positioned without collisions
+        comment: No overlapping text; total labels have clear spacing above bars
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and segments optimally visible; white edges provide definition
+        comment: All segments clearly visible; white edges provide definition
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette colorblind-safe with good contrast
+        comment: Okabe-Ito palette is CVD-safe; colors are visually distinct
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700 px with balanced margins and 60% canvas utilization
+        comment: Good proportions; balanced margins; generous whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Labels include units; descriptive
+        comment: 'Descriptive with units: ''Quarter'', ''Revenue ($ Millions)'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito correct, backgrounds #FAF8F1/#1A1A17 correct, theme-adaptive
-          chrome perfect'
+        comment: 'Okabe-Ito order correct; #009E73 first; backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
     design_excellence:
       score: 13
       max: 20
@@ -99,24 +97,24 @@ review:
         score: 5
         max: 8
         passed: false
-        comment: Thoughtful typography and color harmony; executes defaults well but
-          not exceptional custom design
+        comment: Okabe-Ito consistent; white edges and bold labels create hierarchy;
+          professional but not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: false
-        comment: Spines removed, subtle grid, generous whitespace; good polish but
-          not exceptional
+        comment: Top/right spines removed; y-axis grid subtle (alpha=0.1); legend
+          frame refined; whitespace generous
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: false
-        comment: Clear quarterly growth narrative with visual hierarchy through labels;
-          straightforward presentation
+        comment: Total labels highlight growth (115→177); color consistency aids product
+          tracking across quarters
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -124,25 +122,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart type
+        comment: Correct stacked bar chart with multiple categories and components
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: stacked bars, total labels, segment labels'
+        comment: Total labels above bars present; all spec features implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes correctly assigned; all data visible
+        comment: 'X: quarters (categorical); Y: revenue stacked by product (numeric);
+          all data visible'
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: Title missing 'Python' language identifier per spec format requirement
+        comment: 'CRITICAL: Title says ''pyplots.ai'' instead of ''anyplot.ai''. Required:
+          ''bar-stacked-labeled · Python · matplotlib · anyplot.ai'''
     data_quality:
       score: 15
       max: 15
@@ -152,20 +152,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: 4 categories, 4 quarters, realistic variation,
-          growth trend'
+        comment: Shows all stacked segments with variation across quarters; all product
+          categories present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real, neutral quarterly revenue scenario
+        comment: Quarterly revenue by product is realistic, neutral, business-appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values factually plausible and logically proportioned
+        comment: Values plausible (15–62 per component, totals 115–177); proportions
+          realistic for quarterly revenue
     code_quality:
       score: 10
       max: 10
@@ -175,56 +176,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear flow with no functions or classes
+        comment: 'Linear: imports → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) for deterministic generation
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only matplotlib, numpy, os, sys imported; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, no over-engineering or fake functionality
+        comment: Clean, Pythonic; appropriate complexity; no fake features
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png correctly
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight'
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: Excellent use of Axes methods and matplotlib patterns
+        passed: false
+        comment: 'Correct idioms: ax.bar() with bottom parameter for stacking, ax.text()
+          for labels, theme via os.getenv()'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Good use of manual stacking and theme-adaptive chrome; patterns somewhat
-          standard
+        passed: false
+        comment: White edge highlighting on bars is a matplotlib detail; usage is
+          otherwise generic
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   patterns:
-  - data-generation
+  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
