@@ -1,7 +1,7 @@
 """ anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 79/100 | Updated: 2026-05-18
+Quality: 87/100 | Updated: 2026-05-18
 """
 
 import os
