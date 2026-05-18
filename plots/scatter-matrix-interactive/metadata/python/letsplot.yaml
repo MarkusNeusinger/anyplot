@@ -1,158 +1,182 @@
 library: letsplot
+language: python
 specification_id: scatter-matrix-interactive
 created: '2026-01-10T02:00:12Z'
-updated: '2026-01-10T02:30:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20870870323
+updated: '2026-05-18T16:52:28Z'
+generated_by: claude-haiku
+workflow_run: 26046324205
 issue: 3604
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/letsplot/plot.html
-quality_score: 78
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/letsplot/plot-dark.html
+quality_score: 81
 review:
   strengths:
-  - Clean ggplot2-style code using ggbunch for complex grid layout
-  - Colorblind-safe palette with good contrast
-  - Abbreviated axis labels prevent text crowding in tight matrix cells
-  - Proper histogram overlays on diagonal with alpha transparency
-  - Realistic iris-like synthetic data with species clustering
-  - Hover tooltips provide basic interactivity for data exploration
+  - Perfect visual quality and readability in both light and dark themes
+  - Beautiful, balanced 4×4 matrix layout with proper spacing and typography
+  - Flawless Okabe-Ito palette compliance and theme-adaptive chrome
+  - Clean, reproducible, well-organized code
+  - Proper diagonal histograms and scatter plot structure
+  - Excellent hover tooltips with species and coordinate information
+  - Correct title and legend formatting
   weaknesses:
-  - Lacks linked brushing/selection across subplots (core spec requirement)
-  - No zoom/pan functionality as specified
-  - No selection reset mechanism
-  - Legend appears disconnected as separate ggbunch element at bottom
-  image_description: 'The plot displays a 4x4 scatter plot matrix (SPLOM) showing
-    pairwise relationships between 4 iris-like variables: Sepal Length, Sepal Width,
-    Petal Length, and Petal Width. Three species (Setosa in blue, Versicolor in orange,
-    Virginica in teal/green) are distinguished by color. The diagonal cells show overlapping
-    histograms for univariate distributions with alpha transparency. Off-diagonal
-    cells contain scatter plots with colored points. The title "scatter-matrix-interactive
-    · letsplot · pyplots.ai" appears at the top. A legend at the bottom shows the
-    species color mapping. Axis labels use abbreviated names (Sepal Len., Sepal Wid.,
-    etc.) on the left and bottom edges only. Points have alpha=0.7 for visibility
-    of overlapping data.'
+  - 'Missing core interactive feature: brushing/selection with cross-plot highlighting
+    (SC-02)'
+  - No linked selection across subplots - fundamental to SPLOM specification
+  - No zoom/pan functionality for interactive exploration
+  - Unselected points not de-emphasized
+  - No reset/clear selection mechanism
+  - Design is competent but not sophisticated - relies on library defaults
+  - Doesn't fully leverage letsplot's interactive potential beyond tooltips
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "scatter-matrix-interactive · python · letsplot · anyplot.ai" in 32pt dark text, axis labels in 16pt dark text, tick labels in 13pt secondary color - all clearly readable
+      Data: 4×4 matrix with histograms on diagonal (colored by species), scatter plots off-diagonal with consistent Okabe-Ito colors (green #009E73 for Setosa, orange #D55E00 for Versicolor, blue #0072B2 for Virginica)
+      Layout: Well-balanced title (6%), grid (80%), legend (6%) with proper margins
+      Legibility verdict: PASS - all text perfectly readable, no overlap, grid subtle
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title and axis labels in light text (#F0EFE8), tick labels in secondary light (#B8B7B0) - all clearly readable on dark background. NO dark-on-dark failures.
+      Data: Identical colors to light render - green, orange, blue data colors preserved exactly across themes (only chrome adapts)
+      Grid: Subtle grid lines in light color scheme, properly visible
+      Legend: Light text on dark background, properly positioned
+      Legibility verdict: PASS - all text readable, theme-adaptive chrome perfect, no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 32
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
-        passed: true
-        comment: Text is readable but title could be slightly larger; tick labels
-          are clear
-      - id: VQ-02
-        name: No Overlap
-        score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; abbreviated axis labels prevent crowding
+        comment: All font sizes explicitly set; title 32pt, axis labels 16pt, ticks
+          13pt; perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Well-spaced 4×4 grid with 6px margins; no text overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Points are visible with good alpha; marker size of 4 is appropriate
-          for 150 points
+        comment: Points (size=4.5, alpha=0.72) and histograms well-adapted to data
+          density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/orange/teal palette is colorblind-safe with good contrast
+        comment: Okabe-Ito palette, CVD-safe, excellent contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Matrix fills canvas well but legend appears slightly disconnected
-          at bottom
+        comment: Perfect proportions; title (6%), grid (80%), legend (6%); balanced
+          margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Abbreviated labels are descriptive but lack units in display
+        comment: Descriptive variable names; proper title format
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle from theme_minimal; legend placement at bottom is
-          functional but isolated
+        comment: 'First series #009E73; colors identical across themes; backgrounds
+          correct; chrome theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional layout with clear hierarchy; well-organized grid; solid
+          defaults but somewhat formulaic
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, clean appearance, generous whitespace; relies on library
+          defaults with minimal polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear visual narrative showing pairwise relationships; data displayed
+          but not interpreted
     spec_compliance:
-      score: 19
-      max: 25
+      score: 9
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot matrix with histograms on diagonal
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables correctly mapped to pairwise scatter and diagonal histograms
-      - id: SC-03
-        name: Required Features
-        score: 2
+        score: 3
         max: 5
         passed: false
-        comment: Hover tooltips provided but NO linked brushing/selection (spec requires
-          brushing to highlight across subplots, zoom/pan, selection reset). Library
-          limitation acknowledged.
-      - id: SC-04
-        name: Data Range
+        comment: Structurally correct 4×4 scatter matrix; however, spec emphasizes
+          'interactive' and static visualization lacks full interactivity
+      - id: SC-02
+        name: Required Features
+        score: 0
+        max: 4
+        passed: false
+        comment: 'CRITICAL: Missing brushing/selection with cross-plot highlighting,
+          zoom/pan, de-emphasis, reset. Only hover tooltips present.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X/Y correctly mapped; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows species correctly but appears as separate plot element
-      - id: SC-06
-        name: Title Format
-        score: 0
-        max: 2
-        passed: false
-        comment: Title uses correct format but first row diagonal has no y-axis label
+        comment: Title format perfect; legend properly labeled and colored
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows 3 species with distinct clusters, correlations visible between
-          petal measurements; some overlap between Versicolor/Virginica demonstrates
-          realistic biological variation
+        comment: Shows all pairwise relationships and univariate distributions; demonstrates
+          correlations
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris-like botanical measurement data is a classic, neutral scientific
-          scenario
+        comment: Iris-like synthetic data; realistic scales; neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for iris measurements (sepal 4-8cm, petal 0-7cm)
+        comment: Factually correct ranges for iris measurements
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,44 +184,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plots → combine → save (no functions/classes)'
+        comment: Clean linear flow; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png but path='.' is unconventional
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct file naming
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Expert ggplot syntax; theme-adaptive tokens integrated; layer_tooltips
+          for hover
+      - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 2
         max: 5
         passed: false
-        comment: Implementation acknowledges lets-plot lacks linked brushing. Only
-          uses basic hover tooltips via layer_tooltips(), which is minimal interactivity.
-          ggbunch for layout is a lets-plot feature but does not compensate for missing
-          core interactive functionality required by spec.
+        comment: Uses ggbunch and layer_tooltips; doesn't leverage linked-brushing
+          or advanced interactive capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -211,3 +240,4 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - publication-ready
