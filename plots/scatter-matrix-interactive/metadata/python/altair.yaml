@@ -1,158 +1,169 @@
 library: altair
+language: python
 specification_id: scatter-matrix-interactive
 created: '2026-01-10T01:58:17Z'
-updated: '2026-01-10T02:01:06Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20870868375
+updated: '2026-05-18T16:30:50Z'
+generated_by: claude-haiku
+workflow_run: 26046098691
 issue: 3604
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Altair declarative grammar with transform_density for KDE plots
-    on diagonal
-  - HTML version implements proper linked brushing with selection_interval (resolve=global)
-  - Clean separation of PNG (static) and HTML (interactive) outputs addresses spec
-    interactivity requirement
-  - Realistic Iris-like synthetic data with clear cluster separation
-  - Good color encoding consistency across all subplots
-  - Proper title format with informative subtitle
+  - 'Perfect visual quality: readability, no overlap, optimal element sizing across
+    both light and dark themes'
+  - All spec features fully implemented with proper linked brushing and interactive
+    selection
+  - 'Excellent data quality: realistic iris example with clear species separation
+    across all dimensions'
+  - Clean, reproducible code with proper theme tokenization and explicit font sizing
+  - 'Distinctive Altair usage: native linked selection via brush + condition, matrix
+    generation via repeat()'
   weaknesses:
-  - Yellow color on light background could be improved for better visibility
-  - Static PNG cannot demonstrate the interactive brushing which is central to the
-    spec purpose
-  image_description: 'The plot displays a 4×4 scatter plot matrix (SPLOM) for Iris-like
-    synthetic data with 4 variables: Sepal Length, Sepal Width, Petal Length, and
-    Petal Width (all in cm). Three species are visualized: setosa (blue), versicolor
-    (yellow), and virginica (red/coral). The diagonal cells show KDE density distributions
-    for each variable colored by species, while off-diagonal cells contain scatter
-    plots showing pairwise relationships. A "Species" legend appears on the right
-    side. The title follows the correct format: "scatter-matrix-interactive · altair
-    · pyplots.ai" with a subtitle indicating brush selection is available in the HTML
-    version. Grid lines are subtle (alpha 0.3), and axis labels include units. The
-    three clusters are clearly distinguishable, showing good separation for setosa
-    and overlap between versicolor and virginica in some dimensions.'
+  - Design Excellence score reflects reliance on library defaults rather than custom
+    aesthetic polish
+  - Grid and axis styling are theme-aware but fairly standard—could benefit from spine
+    removal or more refined visual treatment
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1, not pure white
+      Chrome: Title, subtitle, axis labels, tick labels all in dark text (INK=#1A1A17), fully readable
+      Data: Scatter plots and KDE density curves visible; three species color-coded (setosa #009E73, versicolor #D55E00, virginica #0072B2)
+      Legibility verdict: PASS - all elements clearly readable against light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels all in light text (INK_SOFT=#B8B7B0), fully readable; no dark-on-dark failures
+      Data: Same three species colors as light render (identical); markers and density areas clearly distinguishable
+      Legibility verdict: PASS - all elements clearly readable against dark surface; brand green #009E73 maintains visibility
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable; font sizes are good but some tick labels could
-          be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Font sizes explicitly set; all readable at full resolution in both
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Tick labels angled -45°; all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are visible with good opacity (0.7), though density in some
-          scatter plots makes individual points harder to distinguish
+        comment: Marker sizing optimal; opacity appropriate for density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/red scheme is distinguishable but yellow on light background
-          can be subtle
+        comment: Okabe-Ito palette colorblind-safe; good contrast
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good layout utilizing canvas well, though legend placement creates
-          some asymmetry
+        comment: 4×4 matrix well-proportioned; generous spacing
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Sepal Length (cm), Petal Width (cm),
-          etc.'
+        comment: All labels descriptive with units
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha 0.3, legend well-placed
+        comment: Okabe-Ito order correct; theme-correct chrome both renders
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured defaults; lacks custom polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid customized, theme-aware colors; could benefit from spine removal
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Species coloring guides discovery; structure aids narrative
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot matrix (SPLOM)
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X/Y correctly assigned for all variable pairs
-      - id: SC-03
+        comment: Correct SPLOM; 4×4 layout with scatter off-diagonal, KDE on diagonal
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has KDE on diagonal, scatter on off-diagonal, color encoding; linked
-          brushing in HTML version
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: brush, linked highlighting, univariate distributions,
+          zoom/pan, opacity de-emphasis, reset'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly mapped; all four numeric variables used
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows species with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format but subtitle mentions HTML version
+        comment: Title format correct; legend labels accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3 distinct clusters with varying degrees of separation
+        comment: Iris data shows all aspects; three distinct species with clear variation
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Iris-like botanical data is a classic, neutral scenario perfect for
-          SPLOM demos
+        comment: Realistic botanical context; neutral, widely recognized domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for iris measurements
+        comment: Measurements factually sound and realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,54 +171,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save; no functions/classes'
+        comment: Linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, altair - all used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of Altair: declarative grammar, transform_density
-          for KDE, repeat() for SPLOM, selection_interval with linked brushing'
+        comment: Proper API usage; standard patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses alt.selection_interval(), alt.condition(), alt.repeat(), alt.transform_density()
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - faceting
   - hover-tooltips
-  - html-export
+  - faceting
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - kde
   styling:
-  - alpha-blending
   - grid-styling
