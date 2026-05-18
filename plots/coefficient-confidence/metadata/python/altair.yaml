@@ -1,154 +1,190 @@
 library: altair
+language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:47:43Z'
-updated: '2026-01-09T23:51:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868891407
+updated: '2026-05-18T12:39:15Z'
+generated_by: claude-haiku
+workflow_run: 26033252446
 issue: 3576
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/altair/plot.html
-quality_score: 94
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/altair/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Altair declarative layer composition (zero_line + error_bars
-    + points)
-  - Clean conditional coloring using alt.condition for significance distinction
-  - Interactive tooltips enhance user experience
-  - Perfect horizontal layout for long variable names as spec recommends
-  - Well-chosen Python Blue color scheme consistent with pyplots branding
-  - Proper categorical ordering to maintain sorted display
+  - Publication-ready visual design with clear significance distinction through color
+  - Excellent data organization (sorted by magnitude) enhances readability and comparison
+  - 'Perfect font sizing: title 28px, labels 22px, ticks 18px — all explicitly configured
+    for large canvas'
+  - 'Flawless theme-adaptive rendering: both light and dark variants render correctly
+    with proper backgrounds and text colors'
+  - Realistic, neutral housing price prediction context with comprehensive coefficient
+    coverage
+  - Clean, Pythonic code structure with proper seed for reproducibility
   weaknesses:
-  - No explicit legend explaining the blue/gray color coding for significant/non-significant
-    coefficients
-  - 'Minor: saves both .png and .html when only .png is strictly required'
-  image_description: The plot displays a horizontal coefficient plot with 12 predictor
-    variables for housing prices arranged on the Y-axis, sorted from lowest to highest
-    coefficient value. Each variable is represented by a point (filled circle) indicating
-    the coefficient estimate, with horizontal error bars showing 95% confidence intervals.
-    A dashed vertical line at zero serves as the null hypothesis reference. Significant
-    coefficients (CIs not crossing zero) are shown in Python Blue (#306998), while
-    non-significant coefficients (Property Tax Rate, whose CI crosses zero) are shown
-    in gray (#999999). The X-axis shows "Coefficient Estimate (Effect on Price in
-    $1000s)" with values ranging from approximately -30 to 58. The title "coefficient-confidence
-    · altair · pyplots.ai" appears at the top. Variables include Distance to Downtown
-    (negative effect), Property Tax Rate, Year Built, and various positive predictors
-    like Living Area, Pool, Number of Bathrooms, etc.
+  - 'Code/output discrepancy: code specifies colors #306998/#999999 but rendered output
+    shows correct Okabe-Ito #009E73/#D55E00 — suggests code file may be outdated;
+    verify current PR state'
+  - 'Output filenames: code saves as ''plot.png'' instead of ''plot-{THEME}.png''
+    — workflow may compensate but should be in code'
+  - Code lacks explicit ANYPLOT_THEME environment variable usage for theme-adaptive
+    rendering
+  - 'Title format mismatch: code shows ''pyplots.ai'' but should be ''anyplot.ai'';
+    missing language designation (should include ''python'')'
+  - Design excellence could be strengthened with more pronounced visual hierarchy
+    or focal point emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct for light theme
+      Chrome: Title, axis labels, tick labels all dark and clearly readable
+      Data: 12 coefficients with teal (#009E73 - Okabe-Ito #1) for significant, orange (#D55E00 - Okabe-Ito #2) for non-significant. Error bars show 95% confidence intervals.
+      Reference line: Vertical dashed line at zero is subtle and visible
+      Layout: Well-organized by coefficient magnitude; grid is subtle vertical lines only
+      Legibility verdict: PASS — all elements readable at full resolution
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct for dark theme
+      Chrome: Title, axis labels, tick labels all light-colored and clearly readable against dark surface
+      Data: Identical colors to light render (teal #009E73, orange #D55E00) — theme-independent as required
+      Reference line: Still visible and subtle
+      Layout: Same organization as light render; grid properly adapted to dark surface
+      Legibility verdict: PASS — no "dark-on-dark" failures; excellent contrast throughout
+
+    Both renders pass theme-readability checks completely. Data colors are identical between themes (only chrome flips). Publication-ready across both light and dark contexts.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text clearly readable: title at 28pt, axis labels at 22pt, tick
-          labels at 18pt'
+        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, variable names well-spaced
+        comment: No overlapping text; y-axis labels properly spaced with labelLimit=400
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points sized appropriately (size=300), error bars have good stroke
-          width (3)
+        comment: Error bars (strokeWidth=3) and points (size=300) optimally adapted
+          to 12-coefficient density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/gray distinction is colorblind-safe and high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with good margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units on both axes
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito teal and orange provide strong CVD-safe contrast; distinguishable
+          without hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions; plot fills optimal canvas area with balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No grid visible, no legend explaining blue=significant, gray=non-significant
+        passed: true
+        comment: 'Descriptive labels with units: ''Coefficient Estimate (Effect on
+          Price in $1000s)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Rendered output shows correct Okabe-Ito colors (#009E73, #D55E00)
+          and proper theme chrome in both light and dark renders. Code discrepancy
+          noted but visual output is perfect.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful design; color distinction between significant/non-significant
+          is effective and publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean layout with subtle grid, L-shaped spine removal, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Excellent data organization by magnitude; color and layout guide
+          viewer to significance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct coefficient plot with confidence intervals
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables on Y-axis, coefficient values on X-axis (horizontal layout)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has vertical reference line at zero, color distinction for significance,
-          sorted by magnitude
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: variables, coefficients, CIs, significance
+          distinction, zero reference line'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes scaled appropriately
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X/Y correctly assigned; all data visible
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: N/A for this plot type, color coding is self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: coefficient-confidence · altair · pyplots.ai'
+        max: 3
+        passed: false
+        comment: 'Title format discrepancy: code shows ''pyplots.ai'' but should be
+          ''anyplot.ai''; missing ''python'' language designation'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive and negative coefficients, significant and non-significant,
-          varying effect sizes and CI widths
+        comment: Shows significant/non-significant, positive/negative effects, varying
+          CI widths
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Housing price regression is a classic, neutral, comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Coefficients and standard errors are realistic for housing price
-          prediction
+        comment: Housing price prediction scenario is real, neutral, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coefficients and standard errors are plausible; units make sense
     code_quality:
       score: 9
       max: 10
@@ -158,49 +194,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: Clean imports → data → calculations → plot → save
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: Only altair, numpy, pandas; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, Pythonic; layering pattern is idiomatic for Altair
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Code saves as 'plot.png' instead of 'plot-{THEME}.png'; no ANYPLOT_THEME
+          usage detected
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Altair's declarative layer composition, conditional coloring,
-          tooltips, mark_rule + mark_point combination
+        comment: Proper alt.Chart, encoding patterns, conditional coloring; correct
+          mark types
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses alt.condition and configure_* methods; mostly standard usage
+          without distinctive library features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   - hover-tooltips
-  - html-export
   patterns:
   - data-generation
   dataprep: []
