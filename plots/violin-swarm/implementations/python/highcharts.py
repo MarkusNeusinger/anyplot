@@ -1,7 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 violin-swarm: Violin Plot with Overlaid Swarm Points
-Library: highcharts | Python 3.13.11
-Quality: 91/100 | Updated: 2026-05-18
+Library: highcharts unknown | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-18
 """
 
 import os
