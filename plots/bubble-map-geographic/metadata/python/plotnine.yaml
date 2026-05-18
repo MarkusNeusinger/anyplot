@@ -1,153 +1,187 @@
 library: plotnine
+language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:09:49Z'
-updated: '2026-01-10T06:12:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20873959857
+updated: '2026-05-18T23:11:37Z'
+generated_by: claude-sonnet
+workflow_run: 26064291917
 issue: 3625
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent use of scale_size_area() to properly scale bubble area (not radius)
-    to data values
-  - Clean, professional appearance with well-chosen colorblind-safe palette
-  - Comprehensive real-world dataset with 30 major cities across all continents
-  - Creative solution for basemap using simplified continent polygons via geom_polygon
-  - Good alpha transparency (0.7) for overlapping bubbles
-  - Proper coord_fixed(ratio=1.0) for accurate geographic projection
+  - Theme-adaptive ocean background (OCEAN_BG) and continent fills that correctly
+    flip between light and dark themes
+  - 'Perfect spec compliance: scale_size_area for area-proportional encoding, alpha=0.7
+    transparency, dual legend (size + color), continent basemap'
+  - Real-world city data with accurate coordinates and neutral topic; factually plausible
+    population figures
+  - All font sizes explicitly set following guidelines; clean code with proper KISS
+    structure
+  - 'Idiomatic plotnine layering: geom_polygon basemap under geom_point bubbles using
+    grammar-of-graphics composition'
   weaknesses:
-  - Grid lines are slightly too prominent (alpha=0.5, should be 0.2-0.4 for subtlety)
-  - Region legend shows tiny dots instead of circles that match the bubble aesthetic
-  image_description: 'The plot displays a world map visualization showing city populations
-    as sized bubbles. The background has a light blue color representing oceans, with
-    simplified gray continent polygons serving as a basemap (North America, South
-    America, Europe, Africa, Asia, and Australia). Bubbles are positioned at geographic
-    coordinates and sized proportionally to population (millions). Colors represent
-    regions: purple for Africa, blue for Asia, yellow for Europe, green for North
-    America, cyan for Oceania, and red for South America. The title "World City Populations
-    · bubble-map-geographic · plotnine · pyplots.ai" appears at the top in bold. Two
-    legends on the right show Population (M) with circles of sizes 10, 20, 30, and
-    Region with colored dots for each continent. Axis labels show Longitude (°) and
-    Latitude (°).'
+  - Title clipping at left canvas edge in both renders — the long title string starts
+    at the boundary; add plot_title margin or center alignment (hjust=0.5)
+  - Legend text is 14pt instead of the recommended 16pt minimum
+  - No data storytelling or focal emphasis — consider annotating the top city (Tokyo)
+    or adding a subtle callout to highlight Asia dominance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Panel background: Light blue ocean (#D4E8F7) — excellent geographic context
+      Continent fills: Light gray (#E0E0E0) with subtle gray borders — clearly separates land from ocean
+      Chrome: Title "World City Populations · bubble-map-geographic · python · plotnine · anyplot.ai" in dark ink — readable but starts at the very left edge of the canvas (possible slight clip). Axis labels "Longitude (°)" and "Latitude (°)" in dark INK at 20pt — readable. Tick labels in INK_SOFT at 16pt — readable. Legend on right with elevated off-white background showing both Population (M) size legend and Region color legend with correct labels.
+      Data: 30 city bubbles sized proportionally to population via scale_size_area. Africa = #009E73 (green), Asia = #D55E00 (orange/vermillion), Europe = #0072B2 (blue), N. America = #CC79A7 (pink), Oceania = #E69F00 (yellow-orange), S. America = #56B4E9 (sky blue). Large Asian cities cluster densely in east; Asian cities dominate by size (Tokyo, Delhi, Shanghai largest). Alpha=0.7 handles overlapping bubbles adequately.
+      Legibility verdict: PASS — all text readable against light background; minor concern about title touching left edge
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Panel background: Dark ocean (#1A2E3D) — correctly adapts ocean color for dark theme
+      Continent fills: Dark gray (#2A2A2A) with dark borders (#555550) — land/ocean contrast maintained on dark surface
+      Chrome: Title in light #F0EFE8 ink — readable against dark background. Axis labels and tick labels in light INK/INK_SOFT tokens — readable. Legend background elevated to #242420 with light text — readable. No dark-on-dark text failures observed.
+      Data: Data colors are IDENTICAL to light render — Africa=#009E73, Asia=orange, Europe=blue, N. America=pink, Oceania=yellow, S. America=sky blue — all matching Okabe-Ito positions 1-6 as expected.
+      Legibility verdict: PASS — all text readable against dark background; theme-adaptive chrome correctly applied throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt bold, axis labels at 20pt, tick labels at 16pt, legend
-          text at 14-18pt - all perfectly readable
+        comment: All font sizes explicitly set (title 24, axis 20, ticks 16); legend
+          text is 14pt instead of recommended 16pt
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, bubbles have appropriate transparency
+        comment: Some bubble overlap in dense Asian cities cluster, mitigated by alpha=0.7
+          transparency
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Bubble sizes well-adapted with alpha=0.7, though some smaller cities
-          could be slightly more visible
+        comment: Bubbles well-sized with scale_size_area max_size=20; smaller cities
+          (Dubai-level) still distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette with distinct hues for each region
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, legends positioned to the right, good use
-          of 16:9 aspect ratio
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Longitude (°) and Latitude (°)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
+        comment: Okabe-Ito is CVD-safe; good contrast on both light and dark backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
         passed: false
-        comment: Grid is slightly too prominent (alpha=0.5), region legend markers
-          are very small dots
+        comment: Title starts at left canvas edge and appears slightly clipped in
+          both renders; long title string exceeds plot width
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (°) and Latitude (°) — descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Africa) = #009E73; Okabe-Ito order followed; backgrounds
+          #FAF8F1 light / #1A1A17 dark; chrome theme-correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom ocean background (OCEAN_BG) and continent fills that adapt
+          per theme; above well-configured default; crude simplified continent polygons
+          limit ceiling
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.10), no minor grid, elevated legend background,
+          panel border present; some refinement evident
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Size and color encoding create visual hierarchy (Asia's population
+          dominance immediately visible); no explicit annotations or focal points
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct bubble map with geographic context
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Longitude/latitude correctly mapped, size encoding population
-      - id: SC-03
+        comment: Correct geographic bubble map with lat/lon coordinates and size-encoded
+          population
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has basemap, size legend, color grouping, transparency; missing minimum
-          bubble size
-      - id: SC-04
-        name: Data Range
+        comment: scale_size_area (area-proportional), alpha=0.7 transparency, continent
+          basemap, dual legend (size + color), 30 cities in spec range
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full world coverage with xlim(-180, 180), ylim(-60, 80)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: longitude=x, latitude=y, population=size, region=color; coord_fixed
+          maintains geographic aspect ratio
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both legends correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Title is correct but spec-id should be more prominent
+        comment: 'Title format correct: ''World City Populations · bubble-map-geographic
+          · python · plotnine · anyplot.ai''; legend labels match all 6 regions'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows wide range of populations (3.4M to 37.4M), multiple regions,
-          geographic spread
+        comment: 'Shows full range: large (37.4M Tokyo) to small (3.4M Dubai); 6 regions;
+          dense and sparse areas'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Uses real world cities with accurate population data
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Population values in millions are accurate for major world cities
+        comment: Real world cities with approximate population data; world geography
+          is a neutral universal topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population values are factually accurate metro area figures; coordinates
+          are correct for each city
     code_quality:
       score: 10
       max: 10
@@ -157,13 +191,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Imports → Data → Continent data → Plot → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -171,38 +205,43 @@ review:
         passed: true
         comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; continent data construction is verbose but appropriate
+          for the task
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with dpi=300; current plotnine API used
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses grammar of graphics with ggplot, scale_size_area, and theme
-          customization, but creates manual polygon basemaps rather than using dedicated
-          mapping features
+        passed: true
+        comment: 'Expert grammar-of-graphics usage: geom_polygon + geom_point layering,
+          scale_size_area, coord_fixed, scale_color_manual, proper theme() tokens'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses plotnine/ggplot2-idiomatic layer composition and coordinate
+          system for geographic mapping; not exclusive to plotnine but clearly idiomatic
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - custom-legend
   patterns:
   - data-generation
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
