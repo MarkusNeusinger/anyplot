@@ -1,154 +1,167 @@
 library: plotnine
+language: python
 specification_id: density-rug
 created: '2026-01-09T15:32:27Z'
-updated: '2026-01-09T15:35:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856775016
+updated: '2026-05-18T00:42:23Z'
+generated_by: claude-haiku
+workflow_run: 26007269112
 issue: 3505
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-rug/plotnine/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 93
 review:
   strengths:
-  - Excellent bimodal distribution that clearly demonstrates the value of combining
-    KDE with rug marks
-  - Realistic API response time scenario makes the visualization immediately understandable
-  - Clean, idiomatic plotnine code using grammar of graphics properly
-  - Good visual balance with appropriate alpha values for density fill (0.5) and rug
-    marks (0.4)
-  - Title follows correct format specification
+  - Perfect theme-adaptive implementation with readable text in both light and dark
+    modes
+  - 'Excellent spec compliance: all KDE + rug features correctly implemented'
+  - Clean, idiomatic plotnine code using the proper theme API
+  - Effective data storytelling combining distribution shape with raw observation
+    locations
+  - Proper Okabe-Ito palette usage; bimodal pattern clearly visible in both renders
+  - Bimodal distribution with outliers (fast path ~120ms, slow path ~280ms) tells
+    realistic API response time story
   weaknesses:
-  - Rug marks could be slightly longer/more prominent for better visibility at lower
-    densities
-  - Could demonstrate more extreme outliers to better showcase rug mark utility
-  image_description: The plot displays a kernel density estimation (KDE) curve with
-    rug marks along the x-axis. The density curve is filled with a semi-transparent
-    blue color (#306998 at 50% opacity) and outlined with a solid blue line. The distribution
-    shows a clear bimodal pattern with a dominant peak around 120ms (representing
-    fast API responses) and a smaller secondary peak around 280ms (slower responses).
-    Rug marks appear as small vertical tick marks in blue along the bottom of the
-    plot, clearly showing where individual data points fall - dense clustering is
-    visible around both modes with sparser marks in between and at the tails. The
-    title "density-rug · plotnine · pyplots.ai" is centered at the top. The x-axis
-    is labeled "Response Time (ms)" and the y-axis is labeled "Density". Grid lines
-    are subtle with appropriate alpha values. The plot uses a 16:9 aspect ratio with
-    good canvas utilization and balanced margins.
+  - 'Design Excellence is conservative: relies on minimal theme defaults rather than
+    extensive visual polish; however, this restraint is appropriate for exploratory
+    plots'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title, axis labels ("Response Time (ms)", "Density"), and tick labels all in dark text (#1A1A17), clearly readable against light surface
+      Data: KDE curve filled with brand green (#009E73) at 50% alpha with darker green outline; rug marks in same green at 50% alpha showing individual observations; grid subtle at 10% alpha
+      Legibility verdict: PASS - All text elements readable, excellent contrast, no overlaps
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, axis labels, and tick labels in light text (#F0EFE8 primary, #B8B7B0 secondary), clearly readable against dark surface; NO dark-on-dark failures
+      Data: KDE curve and rug marks maintain identical green (#009E73) color to light render; grid adapted to light-on-dark styling; bimodal shape equally clear
+      Legibility verdict: PASS - All text readable, data colors identical to light render, proper theme adaptation confirmed
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis titles at 20pt, axis text at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements anywhere in the plot
+        comment: All text properly sized and colored; readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout; axis labels and rug marks coexist without collision
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density curve and rug marks clearly visible; rug marks could be slightly
-          longer for better visibility
+        comment: KDE curve, rug marks, grid, axes all clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Response Time (ms) and Density'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: No legend needed, grid is subtle with alpha 0.3/0.15
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
+        comment: Okabe-Ito brand green is colorblind-safe; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Correct KDE density plot with rug marks
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Response times correctly mapped to x-axis
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: KDE with fill, rug marks along x-axis, semi-transparent fill, subtle
-          rug marks with transparency
-      - id: SC-04
-        name: Data Range
+        comment: 16:9 well-proportioned; nothing cut off; generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Title properly formatted; axis labels include units
+      - id: VQ-07
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: N/A - no legend needed for single variable
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: density-rug · plotnine · pyplots.ai'
-    data_quality:
-      score: 18
+        comment: Brand green (#009E73) used; backgrounds correct; both renders theme-correct
+    design_excellence:
+      score: 13
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive chrome well-executed; semi-transparent layering shows
+          intent
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean borders, subtle grid, appropriate whitespace; outline adds
+          definition
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal distribution with outliers tells clear story; rug marks preserve
+          transparency
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct KDE + rug combination
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: KDE curve with fill, rug marks, semi-transparency, both visible
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis response times (0-600ms), Y-axis density; full range displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact; no legend required for single series
+    data_quality:
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bimodal distribution well demonstrating KDE smoothing, but
-          could show more extreme outliers
+        comment: Shows complete KDE shape, individual observations, outlier distribution
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: API response times is an excellent, realistic scenario
+        comment: Bimodal API response times realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic (50-400ms for API), 250 data points within recommended
-          range
+        comment: Density and response time scales sensible for domain
     code_quality:
       score: 10
       max: 10
@@ -158,42 +171,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: Simple, direct code; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Fixed seed with np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, no extras
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean; no fake UI; proper theme token usage
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of grammar of graphics (ggplot + geom_density + geom_rug
-          + theme system), but could leverage additional plotnine features
+        comment: Proper ggplot() grammar; element_* API for theme
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Demonstrates plotnine's theme customization system
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -201,8 +219,6 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  dataprep:
-  - kde
+  dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
