@@ -1,13 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: matplotlib | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette — use positions 1→N in canonical order
+OKABE_ITO = [
+    "#009E73",  # 1: bluish green (ALWAYS first series)
+    "#D55E00",  # 2: vermillion
+    "#0072B2",  # 3: blue
+    "#CC79A7",  # 4: reddish purple
+    "#E69F00",  # 5: orange
+    "#56B4E9",  # 6: sky blue
+]
 
 # Data - Major world cities with population and region
 np.random.seed(42)
@@ -47,21 +67,15 @@ lons = np.array([cities[c][1] for c in names])
 populations = np.array([cities[c][2] for c in names])
 regions = [cities[c][3] for c in names]
 
-# Map regions to colors
-region_colors = {
-    "Asia": "#306998",  # Python Blue
-    "Europe": "#FFD43B",  # Python Yellow
-    "North America": "#E24A33",  # Red-orange
-    "South America": "#348ABD",  # Light blue
-    "Africa": "#8EBA42",  # Green
-    "Oceania": "#988ED5",  # Purple
-}
+# Map regions to Okabe-Ito colors
+unique_regions = ["Asia", "South America", "North America", "Africa", "Europe", "Oceania"]
+region_colors = {region: OKABE_ITO[i] for i, region in enumerate(unique_regions)}
 colors = [region_colors[r] for r in regions]
 
 # Scale sizes based on population
 sizes = populations * 22
 
-# Simplified world map coastlines (improved accuracy)
+# Simplified world map coastlines
 continents = [
     # North America
     [(-168, 66), (-165, 60), (-141, 60), (-141, 70), (-156, 71), (-168, 66)],
@@ -383,45 +397,54 @@ continents = [
     ],
 ]
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Set background color (ocean)
-ax.set_facecolor("#C8DDF0")
+# Ocean color (theme-adaptive)
+ocean_bg = "#D4E4F5" if THEME == "light" else "#2A3A4A"
 
 # Draw continents
+continent_color = "#E8E5DC" if THEME == "light" else "#3A3935"
+continent_edge = INK_SOFT
 for continent in continents:
-    poly = plt.Polygon(continent, facecolor="#E5E5E0", edgecolor="#888888", linewidth=0.6, zorder=1)
+    poly = plt.Polygon(continent, facecolor=continent_color, edgecolor=continent_edge, linewidth=0.6, zorder=1)
     ax.add_patch(poly)
 
 # Add graticule (grid lines)
 for lat in range(-60, 90, 30):
-    ax.axhline(y=lat, color="#AAAAAA", linewidth=0.4, linestyle=":", alpha=0.6, zorder=0)
+    ax.axhline(y=lat, color=INK_SOFT, linewidth=0.4, linestyle=":", alpha=0.15, zorder=0)
 for lon in range(-150, 181, 30):
-    ax.axvline(x=lon, color="#AAAAAA", linewidth=0.4, linestyle=":", alpha=0.6, zorder=0)
+    ax.axvline(x=lon, color=INK_SOFT, linewidth=0.4, linestyle=":", alpha=0.15, zorder=0)
 
 # Plot cities
-scatter = ax.scatter(lons, lats, c=colors, s=sizes, alpha=0.8, edgecolors="white", linewidths=2.5, zorder=5)
+ax.scatter(lons, lats, c=colors, s=sizes, alpha=0.8, edgecolors=PAGE_BG, linewidths=2.5, zorder=5)
 
 # Set axis limits
 ax.set_xlim(-180, 180)
 ax.set_ylim(-60, 80)
 
-# Labels
-ax.set_xlabel("Longitude (°)", fontsize=20)
-ax.set_ylabel("Latitude (°)", fontsize=20)
+# Style
+ax.set_xlabel("Longitude (°)", fontsize=20, color=INK)
+ax.set_ylabel("Latitude (°)", fontsize=20, color=INK)
 ax.set_title(
-    "World's Largest Cities by Population · scatter-map-geographic · matplotlib · pyplots.ai",
-    fontsize=22,
-    fontweight="bold",
+    "World's Largest Cities by Population · scatter-map-geographic · python · matplotlib · anyplot.ai",
+    fontsize=24,
+    fontweight="medium",
+    color=INK,
     pad=15,
 )
-ax.tick_params(axis="both", labelsize=16)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
 
 # Create region legend
 legend_handles = []
-for region, color in region_colors.items():
-    handle = mpatches.Patch(facecolor=color, edgecolor="white", linewidth=2, label=region)
+for region in unique_regions:
+    color = region_colors[region]
+    handle = mpatches.Patch(facecolor=color, edgecolor=PAGE_BG, linewidth=1.5, label=region)
     legend_handles.append(handle)
 
 region_legend = ax.legend(
@@ -431,9 +454,11 @@ region_legend = ax.legend(
     fontsize=14,
     title_fontsize=16,
     framealpha=0.95,
-    edgecolor="#CCCCCC",
-    fancybox=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
+region_legend.get_title().set_color(INK)
+plt.setp(region_legend.get_texts(), color=INK_SOFT)
 ax.add_artist(region_legend)
 
 # Create size legend (population)
@@ -441,7 +466,7 @@ size_values = [10, 20, 35]
 size_labels = ["10M", "20M", "35M"]
 size_handles = []
 for val, label in zip(size_values, size_labels, strict=True):
-    handle = ax.scatter([], [], c="#666666", s=val * 22, label=label, edgecolors="white", linewidths=1.5, alpha=0.8)
+    handle = ax.scatter([], [], c=OKABE_ITO[0], s=val * 22, label=label, edgecolors=PAGE_BG, linewidths=1.5, alpha=0.8)
     size_handles.append(handle)
 
 size_legend = ax.legend(
@@ -451,9 +476,11 @@ size_legend = ax.legend(
     fontsize=14,
     title_fontsize=16,
     framealpha=0.95,
-    edgecolor="#CCCCCC",
-    fancybox=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
+size_legend.get_title().set_color(INK)
+plt.setp(size_legend.get_texts(), color=INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
