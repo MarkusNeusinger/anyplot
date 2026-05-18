@@ -1,12 +1,36 @@
-""" pyplots.ai
+"""anyplot.ai
 range-interval: Range Interval Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
 
-import pandas as pd
-from plotnine import aes, element_blank, element_text, geom_linerange, geom_point, ggplot, labs, theme, theme_minimal
+import os
+import pathlib
 
+import pandas as pd
+from plotnine import (
+    aes,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_linerange,
+    geom_point,
+    ggplot,
+    labs,
+    theme,
+    theme_minimal,
+)
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+ACCENT = "#E69F00"  # Okabe-Ito position 5
 
 # Data - Monthly temperature ranges (high/low) for a weather station
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -19,21 +43,28 @@ df["month"] = pd.Categorical(df["month"], categories=months, ordered=True)
 # Plot - Range interval chart showing temperature ranges
 plot = (
     ggplot(df, aes(x="month", ymin="min_temp", ymax="max_temp"))
-    + geom_linerange(size=8, color="#306998", alpha=0.8)
-    + geom_point(aes(y="max_temp"), size=4, color="#FFD43B", stroke=0.5)
-    + geom_point(aes(y="min_temp"), size=4, color="#FFD43B", stroke=0.5)
-    + labs(x="Month", y="Temperature (°C)", title="range-interval · plotnine · pyplots.ai")
+    + geom_linerange(size=8, color=BRAND, alpha=0.8)
+    + geom_point(aes(y="max_temp"), size=5, color=ACCENT, stroke=0.8)
+    + geom_point(aes(y="min_temp"), size=5, color=ACCENT, stroke=0.8)
+    + labs(x="Month", y="Temperature (°C)", title="range-interval · python · plotnine · anyplot.ai")
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
+        text=element_text(size=14, color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        plot_title=element_text(size=24, color=INK),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_blank(),
-        panel_grid_major_x=element_blank(),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        axis_line=element_line(color=INK_SOFT, size=0.4),
+        legend_position="none",
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+output_dir = pathlib.Path(__file__).parent
+output_dir.mkdir(parents=True, exist_ok=True)
+plot.save(str(output_dir / f"plot-{THEME}.png"), dpi=300)
