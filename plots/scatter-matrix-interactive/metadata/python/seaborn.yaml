@@ -1,153 +1,165 @@
 library: seaborn
+language: python
 specification_id: scatter-matrix-interactive
 created: '2026-01-10T01:56:03Z'
-updated: '2026-01-10T02:05:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20870865895
+updated: '2026-05-18T16:32:48Z'
+generated_by: claude-haiku
+workflow_run: 26045595410
 issue: 3604
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent use of seaborn's PairGrid for creating a polished scatter matrix
-  - Appropriate disclaimer about static limitations vs interactive libraries
-  - Good colorblind-safe palette with Python Blue as primary color
-  - KDE plots on diagonal provide clear univariate distributions
-  - Well-formatted axis labels with units
+  - Perfect theme adaptation with no dark-on-dark or light-on-light failures
+  - 'Idiomatic seaborn usage: expert PairGrid, faceting, and rc-based theming'
+  - 'Excellent visual quality: text legibility, spacing, element visibility all maximum
+    scores'
+  - Okabe-Ito palette correctly applied and consistent across both renders
+  - Clean, realistic Iris dataset with clear clustering and relationships
   weaknesses:
-  - Tick label font size (14pt) could be slightly larger for the 3600x3600 canvas
-  - Legend marker scale could be increased for better visibility at this canvas size
-  image_description: 'The plot displays a 4×4 scatter plot matrix (SPLOM) of the Iris
-    dataset with four numeric variables: Sepal Length (cm), Sepal Width (cm), Petal
-    Length (cm), and Petal Width (cm). The three species are color-coded: setosa in
-    blue (#306998), versicolor in yellow (#FFD43B), and virginica in green (#4DAF4A).
-    Off-diagonal cells show scatter plots with circular markers (s=80, alpha=0.7)
-    with white edges. Diagonal cells display KDE (kernel density estimation) plots
-    showing univariate distributions for each species, filled with transparency. The
-    title "scatter-matrix-interactive · seaborn · pyplots.ai" appears at the top in
-    bold, with an italic subtitle noting the static nature. A legend is positioned
-    to the right outside the plot area. All axis labels include units (cm). Grid lines
-    are subtle (alpha=0.2, dashed).'
+  - 'Design Excellence (DE-01) moderate: uses well-configured defaults rather than
+    custom design sophistication'
+  - Interactive features (brushing, zoom, pan) not implementable in static PNG per
+    seaborn library constraints; provides best static alternative
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title, axis labels, tick labels all clearly readable in dark text (explicit sizes: 24pt, 20pt, 18pt)
+      Data: Three iris species colored in Okabe-Ito (setosa #009E73, versicolor #D55E00, virginica #0072B2); scatter markers clearly distinguishable; KDE plots on diagonal visible with proper fills
+      Legibility verdict: PASS - All text readable, no overlap, proper contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title, axis labels, tick labels all clearly readable in light text (#F0EFE8, #B8B7B0); NO dark-on-dark failures; legend box themed to #242420 with light text
+      Data: Three species colors identical to light render (same Okabe-Ito hex values); scatter markers clearly distinguishable; KDE plots visible with proper contrast; grid lines subtle but present
+      Legibility verdict: PASS - All text readable, both themes equally accessible, brand green visible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title 26pt, labels 16pt, ticks 14pt - readable but tick labels could
-          be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All sizes explicitly set; perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized (s=80) for 150 points with good alpha - minor
-          overlap in dense regions
+        comment: Markers perfectly adapted to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/Yellow/Green palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout, legend positioned well but slight canvas underutilization
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All labels include units (cm)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format ideal for 4x4 grid; excellent margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.2, legend well placed but slightly small relative
-          to canvas
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito correct; backgrounds and theme chrome perfect
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults; professional but not exceptionally custom
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, styled spines, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through species colors
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter matrix/SPLOM
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: 4 variables correctly mapped in pairwise scatter plots
-      - id: SC-03
+        comment: Correct SPLOM with diagonal KDE and scatter
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has diagonal KDE, scatter off-diagonal, color encoding. Note about
-          interactivity limitation appropriate since seaborn is static
-      - id: SC-04
-        name: Data Range
+        comment: Univariate distributions present; interactive brushing not feasible
+          in static PNG per seaborn library rules
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All variables correctly positioned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies three species
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but subtitle could be better integrated
+        comment: Format correct
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear cluster separation, correlations visible, all aspects
-          of scatter matrix demonstrated
+        comment: Shows all plot aspects; clear clustering
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Iris dataset is classic and appropriate, but could use a more unique
-          dataset
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All values realistic for iris flower measurements
+        comment: Iris dataset; real scientific context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct measurements
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,52 +167,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Linear, clean flow
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Uses built-in dataset (deterministic) but no explicit seed
+        comment: Deterministic dataset
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and seaborn imported
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current seaborn API (PairGrid)
+        comment: No fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct filename
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert PairGrid and rc-based theming
+      - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of PairGrid, map_offdiag, map_diag, sns.load_dataset, KDE
-          on diagonal - seaborn strengths well utilized
+        comment: Good use of map_offdiag/map_diag faceting
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
+  - custom-legend
   patterns:
   - dataset-loading
-  dataprep:
-  - kde
+  dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
   - grid-styling
+  - alpha-blending
