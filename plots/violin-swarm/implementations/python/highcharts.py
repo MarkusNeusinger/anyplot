@@ -1,9 +1,10 @@
-""" pyplots.ai
+"""pyplots.ai
 violin-swarm: Violin Plot with Overlaid Swarm Points
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: highcharts | Python 3.13.11
+Quality: 91/100 | Updated: 2026-05-18
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -19,17 +20,21 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme configuration
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data - Reaction times (ms) across 4 experimental conditions
 np.random.seed(42)
 categories = ["Control", "Condition A", "Condition B", "Condition C"]
-# Violin fills with transparency, darker point colors for contrast
-colors_violin = [
-    "rgba(48, 105, 152, 0.4)",
-    "rgba(255, 212, 59, 0.4)",
-    "rgba(148, 103, 189, 0.4)",
-    "rgba(23, 190, 207, 0.4)",
-]
-colors_points = ["#1a3d5c", "#c9a200", "#5c3d7a", "#0d7a85"]  # Darker variants for points
 n_obs = 50
 
 # Generate distinct distributions for each condition
@@ -65,8 +70,7 @@ for i, cat in enumerate(categories):
             "y_grid": y_grid,
             "density": density_norm,
             "raw_data": data,
-            "color_violin": colors_violin[i],
-            "color_points": colors_points[i],
+            "color": OKABE_ITO[i],
         }
     )
 
@@ -118,7 +122,7 @@ chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 200,
     "marginLeft": 280,
     "marginRight": 150,
@@ -127,51 +131,57 @@ chart.options.chart = {
 # Title
 chart.options.title = {
     "text": "violin-swarm · highcharts · pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
+    "style": {"fontSize": "28px", "fontWeight": "bold", "color": INK},
 }
 
 # Subtitle
 chart.options.subtitle = {
     "text": "Reaction Times Across Experimental Conditions",
-    "style": {"fontSize": "42px", "color": "#666666"},
+    "style": {"fontSize": "22px", "color": INK_SOFT},
 }
 
 # X-axis (categories)
 chart.options.x_axis = {
-    "title": {"text": "Experimental Condition", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "38px"}},
+    "title": {"text": "Experimental Condition", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": -0.6,
     "max": 3.6,
     "tickPositions": [0, 1, 2, 3],
     "categories": categories,
     "lineWidth": 2,
-    "lineColor": "#333333",
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Y-axis (values)
 chart.options.y_axis = {
-    "title": {"text": "Reaction Time (ms)", "style": {"fontSize": "48px"}},
-    "labels": {"style": {"fontSize": "38px"}},
+    "title": {"text": "Reaction Time (ms)", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.12)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Legend
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "38px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
     "symbolHeight": 24,
     "symbolWidth": 24,
     "layout": "horizontal",
     "align": "center",
     "verticalAlign": "bottom",
     "y": 30,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
 }
 
 # Plot options
 chart.options.plot_options = {
     "polygon": {"lineWidth": 2, "fillOpacity": 0.35, "enableMouseTracking": False},
-    "scatter": {"marker": {"radius": 10, "symbol": "circle", "lineWidth": 2}, "zIndex": 10},
+    "scatter": {"marker": {"radius": 8, "symbol": "circle", "lineWidth": 2}, "zIndex": 10},
 }
 
 # Add violin shapes as polygon series (background)
@@ -191,8 +201,8 @@ for v in violin_data:
     series = PolygonSeries()
     series.data = polygon_points
     series.name = f"{v['category']} (distribution)"
-    series.color = v["color_points"]  # Border color
-    series.fill_color = v["color_violin"]  # Semi-transparent fill
+    series.color = v["color"]
+    series.fill_color = v["color"]
     series.fill_opacity = 0.35
     series.show_in_legend = False
     series.z_index = 1
@@ -207,26 +217,66 @@ for v in violin_data:
     scatter_series = ScatterSeries()
     scatter_series.data = [[float(x), float(y)] for x, y in zip(x_positions, v["raw_data"], strict=True)]
     scatter_series.name = v["category"]
-    scatter_series.color = v["color_points"]
+    scatter_series.color = v["color"]
     scatter_series.marker = {
-        "fillColor": v["color_points"],
+        "fillColor": v["color"],
         "lineColor": "#ffffff",
         "lineWidth": 2,
-        "radius": 12,  # Larger markers for visibility
+        "radius": 8,
         "symbol": "circle",
     }
     scatter_series.z_index = 10
     chart.add_series(scatter_series)
 
-# Download Highcharts JS files
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Download Highcharts JS files with fallback CDNs
+cdn_urls = [
+    "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.min.js",
+    "https://unpkg.com/highcharts@11/highcharts.js",
+    "https://code.highcharts.com/highcharts.js",
+]
 
-# Polygon requires highcharts-more.js
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
+highcharts_js = None
+for url in cdn_urls:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"})
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                highcharts_js = response.read().decode("utf-8")
+                break
+        except (urllib.error.URLError, urllib.error.HTTPError):
+            if attempt < max_retries - 1:
+                time.sleep(1)
+    if highcharts_js:
+        break
+
+if not highcharts_js:
+    raise RuntimeError("Could not download Highcharts from any CDN")
+
+# Polygon requires highcharts-more.js - try multiple CDN sources
+cdn_more_urls = [
+    "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts-more.min.js",
+    "https://unpkg.com/highcharts@11/modules/highcharts-more.js",
+    "https://code.highcharts.com/highcharts-more.js",
+]
+
+highcharts_more_js = None
+for url in cdn_more_urls:
+    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"})
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            with urllib.request.urlopen(req, timeout=30) as response:
+                highcharts_more_js = response.read().decode("utf-8")
+                break
+        except (urllib.error.URLError, urllib.error.HTTPError):
+            if attempt < max_retries - 1:
+                time.sleep(1)
+    if highcharts_more_js:
+        break
+
+if not highcharts_more_js:
+    raise RuntimeError("Could not download Highcharts-more from any CDN")
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -237,32 +287,20 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML file
+# Save HTML for interactive viewing
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML file for screenshot
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
-
-# Save HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    standalone_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(standalone_html)
 
 # Take screenshot with Selenium
 chrome_options = Options()
@@ -270,14 +308,13 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=5000,3000")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
 
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
