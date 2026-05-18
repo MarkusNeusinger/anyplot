@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' density-rug: Density Plot with Rug Marks
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 84/100 | Created: 2026-05-18
+#' Quality: 95/100 | Created: 2026-05-18
 
 library(ggplot2)
 library(ragg)
