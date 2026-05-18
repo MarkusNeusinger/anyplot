@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-18
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-18
 """
 
 import os
