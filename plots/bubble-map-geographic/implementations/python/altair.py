@@ -1,228 +1,243 @@
-""" pyplots.ai
+"""anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-10
+Library: altair | Python 3.13
+Quality: 93/100 | Updated: 2026-05-18
 """
 
-import altair as alt
+import os
+import sys
+
 import pandas as pd
 
 
-# Data: Major world cities with population (millions)
-cities_data = {
-    "city": [
-        "Tokyo",
-        "Delhi",
-        "Shanghai",
-        "Sao Paulo",
-        "Mexico City",
-        "Cairo",
-        "Mumbai",
-        "Beijing",
-        "Dhaka",
-        "Osaka",
-        "New York",
-        "Karachi",
-        "Buenos Aires",
-        "Istanbul",
-        "Lagos",
-        "Los Angeles",
-        "Kolkata",
-        "Manila",
-        "Rio de Janeiro",
-        "Guangzhou",
-        "Moscow",
-        "Shenzhen",
-        "Paris",
-        "Jakarta",
-        "Lima",
-        "Bangkok",
-        "London",
-        "Chicago",
-        "Bogota",
-        "Sydney",
+# Work around filename shadowing the altair library
+sys.path.pop(0)
+import altair as alt
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+LAND_FILL = "#E8E4DC" if THEME == "light" else "#2C2C28"
+LAND_STROKE = "#B0AFA8" if THEME == "light" else "#4A4A44"
+
+# Okabe-Ito positions 1-4 for tectonic regions
+REGION_COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Major earthquakes (M ≥ 6.0), 20th–21st century
+# Source: USGS Significant Earthquake Catalog
+earthquakes = {
+    "name": [
+        "Tōhoku, Japan",
+        "Sumatra-Andaman",
+        "Hokkaido, Japan",
+        "Java, Indonesia",
+        "Solomon Islands",
+        "Kuril Islands",
+        "Sea of Okhotsk",
+        "Christchurch, NZ",
+        "Tonga",
+        "Kamchatka, Russia",
+        "Valdivia, Chile",
+        "Bio-Bio, Chile",
+        "Michoacan, Mexico",
+        "Haiti",
+        "Ecuador",
+        "Bolivia (deep)",
+        "Peru",
+        "El Salvador",
+        "Costa Rica",
+        "Alaska",
+        "Turkey-Syria",
+        "Izmit, Turkey",
+        "Zagros, Iran",
+        "Bam, Iran",
+        "Nepal",
+        "Gujarat, India",
+        "Pakistan (AJK)",
+        "Hindu Kush",
+        "Sichuan, China",
+        "Yunnan, China",
     ],
     "latitude": [
-        35.68,
-        28.61,
-        31.23,
-        -23.55,
-        19.43,
-        30.04,
-        19.08,
-        39.90,
-        23.81,
-        34.69,
-        40.71,
-        24.86,
-        -34.60,
-        41.01,
-        6.52,
-        34.05,
-        22.57,
-        14.60,
-        -22.91,
-        23.13,
-        55.76,
-        22.54,
-        48.86,
-        -6.21,
-        -12.05,
-        13.76,
-        51.51,
-        41.88,
-        4.71,
-        -33.87,
+        38.3,
+        3.3,
+        42.16,
+        -9.35,
+        -8.47,
+        46.55,
+        54.89,
+        -43.58,
+        -18.0,
+        52.75,
+        -38.14,
+        -35.9,
+        18.19,
+        18.44,
+        0.36,
+        -13.84,
+        -5.76,
+        13.04,
+        10.39,
+        61.0,
+        37.22,
+        40.75,
+        26.75,
+        29.00,
+        28.15,
+        23.36,
+        34.55,
+        36.07,
+        31.00,
+        25.07,
     ],
     "longitude": [
-        139.69,
-        77.21,
-        121.47,
-        -46.63,
-        -99.13,
-        31.24,
-        72.88,
-        116.41,
-        90.41,
-        135.50,
-        -74.01,
-        67.01,
-        -58.38,
-        28.98,
-        3.38,
-        -118.24,
-        88.36,
-        120.98,
-        -43.17,
-        113.26,
-        37.62,
-        114.06,
-        2.35,
-        106.85,
-        -77.04,
-        100.50,
-        -0.13,
-        -87.63,
-        -74.07,
-        151.21,
+        142.37,
+        95.98,
+        142.86,
+        107.35,
+        157.04,
+        153.30,
+        153.28,
+        172.68,
+        -174.0,
+        159.5,
+        -73.41,
+        -72.73,
+        -102.53,
+        -72.57,
+        -79.94,
+        -67.55,
+        -75.27,
+        -88.66,
+        -85.24,
+        -147.5,
+        37.02,
+        29.99,
+        57.6,
+        58.37,
+        84.71,
+        70.34,
+        73.59,
+        70.49,
+        103.32,
+        99.31,
     ],
-    "population": [
-        37.4,
-        32.9,
-        29.2,
-        22.4,
-        21.8,
-        21.3,
-        21.0,
-        20.9,
-        22.5,
-        19.1,
-        18.8,
-        16.8,
-        15.4,
-        15.6,
-        15.3,
-        12.5,
-        15.1,
-        14.4,
-        13.5,
-        14.3,
-        12.5,
-        13.4,
-        11.0,
-        11.2,
-        11.0,
-        10.7,
+    "magnitude": [
+        9.1,
+        9.1,
+        8.3,
+        7.7,
+        8.1,
+        8.3,
+        8.3,
+        6.3,
+        7.4,
+        9.0,
         9.5,
-        8.9,
-        11.3,
-        5.4,
+        8.8,
+        8.0,
+        7.0,
+        7.8,
+        8.2,
+        8.0,
+        7.7,
+        7.6,
+        9.2,
+        7.8,
+        7.6,
+        6.8,
+        6.6,
+        7.8,
+        7.7,
+        7.6,
+        6.1,
+        7.9,
+        6.2,
     ],
     "region": [
-        "Asia",
-        "Asia",
-        "Asia",
-        "South America",
-        "North America",
-        "Africa",
-        "Asia",
-        "Asia",
-        "Asia",
-        "Asia",
-        "North America",
-        "Asia",
-        "South America",
-        "Europe",
-        "Africa",
-        "North America",
-        "Asia",
-        "Asia",
-        "South America",
-        "Asia",
-        "Europe",
-        "Asia",
-        "Europe",
-        "Asia",
-        "South America",
-        "Asia",
-        "Europe",
-        "North America",
-        "South America",
-        "Oceania",
+        "East & SE Asia",
+        "East & SE Asia",
+        "East & SE Asia",
+        "East & SE Asia",
+        "East & SE Asia",
+        "East & SE Asia",
+        "East & SE Asia",
+        "East & SE Asia",
+        "East & SE Asia",
+        "East & SE Asia",
+        "Americas",
+        "Americas",
+        "Americas",
+        "Americas",
+        "Americas",
+        "Americas",
+        "Americas",
+        "Americas",
+        "Americas",
+        "Americas",
+        "Middle East & C. Asia",
+        "Middle East & C. Asia",
+        "Middle East & C. Asia",
+        "Middle East & C. Asia",
+        "South Asia",
+        "South Asia",
+        "South Asia",
+        "South Asia",
+        "South Asia",
+        "South Asia",
     ],
 }
 
-df = pd.DataFrame(cities_data)
+df = pd.DataFrame(earthquakes)
 
-# Load world map from vega-datasets URL (works without vega_datasets package)
+# World map basemap via vega-datasets CDN (no local package required)
 world_url = "https://cdn.jsdelivr.net/npm/vega-datasets@2/data/world-110m.json"
 countries = alt.topo_feature(world_url, "countries")
 
-# Region color mapping (colorblind-safe)
-region_colors = {
-    "Asia": "#306998",
-    "Europe": "#FFD43B",
-    "North America": "#2CA02C",
-    "South America": "#D62728",
-    "Africa": "#9467BD",
-    "Oceania": "#17BECF",
-}
-
-# Create base map with country boundaries
+# Base map layer: country boundaries
 base_map = (
     alt.Chart(countries)
-    .mark_geoshape(fill="#E8E8E0", stroke="#B0B0B0", strokeWidth=0.5)
+    .mark_geoshape(fill=LAND_FILL, stroke=LAND_STROKE, strokeWidth=0.5)
     .project(type="equirectangular", scale=280, translate=[800, 480])
     .properties(width=1600, height=900)
 )
 
-# Create bubble layer with sized markers
+# Earthquake bubble layer
+region_order = ["East & SE Asia", "Americas", "Middle East & C. Asia", "South Asia"]
+
 bubbles = (
     alt.Chart(df)
-    .mark_circle(opacity=0.7, stroke="#FFFFFF", strokeWidth=1.5)
+    .mark_circle(opacity=0.65, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
         longitude="longitude:Q",
         latitude="latitude:Q",
         size=alt.Size(
-            "population:Q",
-            scale=alt.Scale(domain=[5, 40], range=[100, 2500]),
+            "magnitude:Q",
+            scale=alt.Scale(domain=[6.0, 9.5], range=[80, 2800]),
             legend=alt.Legend(
-                title="Population (millions)",
+                title="Magnitude",
                 titleFontSize=16,
                 labelFontSize=14,
-                symbolFillColor="#306998",
                 orient="bottom-left",
                 offset=20,
+                values=[6.5, 7.5, 8.5, 9.5],
+                symbolFillColor="#009E73",
             ),
         ),
         color=alt.Color(
             "region:N",
-            scale=alt.Scale(domain=list(region_colors.keys()), range=list(region_colors.values())),
-            legend=alt.Legend(title="Region", titleFontSize=16, labelFontSize=14, orient="bottom-right", offset=20),
+            scale=alt.Scale(domain=region_order, range=REGION_COLORS),
+            legend=alt.Legend(
+                title="Tectonic Region", titleFontSize=16, labelFontSize=14, orient="bottom-right", offset=20
+            ),
         ),
         tooltip=[
-            alt.Tooltip("city:N", title="City"),
-            alt.Tooltip("population:Q", title="Population (M)", format=".1f"),
+            alt.Tooltip("name:N", title="Location"),
+            alt.Tooltip("magnitude:Q", title="Magnitude", format=".1f"),
             alt.Tooltip("region:N", title="Region"),
             alt.Tooltip("latitude:Q", title="Latitude", format=".2f"),
             alt.Tooltip("longitude:Q", title="Longitude", format=".2f"),
@@ -231,25 +246,27 @@ bubbles = (
     .project(type="equirectangular", scale=280, translate=[800, 480])
 )
 
-# Combine base map and bubbles
+# Compose and apply theme-adaptive chrome
 chart = (
     (base_map + bubbles)
     .properties(
         title=alt.Title(
-            text="World City Populations · bubble-map-geographic · altair · pyplots.ai",
-            fontSize=28,
+            text="Major Earthquakes · bubble-map-geographic · python · altair · anyplot.ai",
+            fontSize=26,
             anchor="middle",
-            color="#333333",
+            color=INK,
         ),
         width=1600,
         height=900,
+        background=PAGE_BG,
     )
-    .configure_view(stroke=None)
-    .configure_legend(titleColor="#333333", labelColor="#555555", padding=15, cornerRadius=5)
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG, strokeColor=INK_SOFT, titleColor=INK, labelColor=INK_SOFT, padding=15, cornerRadius=5
+    )
 )
 
-# Save as PNG (scale 3x for 4800x2700)
-chart.save("plot.png", scale_factor=3.0)
-
-# Save interactive HTML version
-chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
