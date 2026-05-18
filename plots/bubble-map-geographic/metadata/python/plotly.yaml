@@ -1,160 +1,187 @@
 library: plotly
+language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:09:27Z'
-updated: '2026-01-10T06:13:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20873955145
+updated: '2026-05-18T23:01:47Z'
+generated_by: claude-sonnet
+workflow_run: 26064039573
 issue: 3625
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent geographic visualization using Plotly's native Scattergeo with Natural
-    Earth projection
-  - Proper area scaling using sqrt transform for perceptually accurate bubble sizes
-  - Well-designed colorblind-safe palette for 6 distinct regions
-  - Comprehensive hover tooltips showing city name and population
-  - Clean code structure with clear data preparation
-  - Both PNG and interactive HTML outputs generated
+  - 'Full spec compliance: all required features (size encoding, transparency, geographic
+    context, size legend, hover tooltips) implemented correctly'
+  - 'Excellent theme-adaptive implementation: both renders pass legibility and color
+    checks; geographic chrome (land, ocean, coast, country) is also theme-adaptive'
+  - Real, factually accurate world city data with good geographic distribution and
+    population range (5M-37.4M)
+  - Correct area-proportional sizing (sqrt normalization + sizemode=diameter)
   weaknesses:
-  - Size legend shows text labels (5M, 20M, 35M) but lacks corresponding visual bubble
-    indicators to demonstrate the actual sizes
-  - Could leverage more Plotly-specific features like linked hover highlighting or
-    custom zoom controls
-  image_description: 'The plot displays a world map using the Natural Earth projection
-    with a light gray landmass and pale blue ocean. Thirty major world cities are
-    represented as bubbles sized proportionally to their population (in millions).
-    The bubbles are color-coded by region using a 6-color palette: blue for Asia,
-    orange for South America, green for North America, purple for Africa, yellow for
-    Europe, and cyan for Oceania. The largest bubbles (Tokyo, Delhi, Shanghai) are
-    clearly visible in Asia. A region legend is positioned in the lower-left corner
-    with a white semi-transparent background. Below the legend, a size legend annotation
-    explains "Bubble size = Population (millions)" with example sizes for 5M, 20M,
-    and 35M. The title at the top follows the required format. Country boundaries
-    are shown as subtle gray lines, and the map uses appropriate latitude/longitude
-    constraints to show all populated continents.'
+  - 'DE-01/DE-03: No visual emphasis or callout on notable data points — the Asia
+    population dominance is visually obvious but not reinforced by any annotation
+    or focal treatment'
+  - 'DE-03: No subtitle or caption providing geographic insight (e.g., ''Asia hosts
+    10 of the world''s 15 largest cities'')'
+  - 'VQ-01: Size legend annotation text at 15px is just below the 16px minimum for
+    legend-level text'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct. Land in beige #E8E4D8, ocean in soft light-blue #D0E4F0.
+      Chrome: Title "World City Populations · bubble-map-geographic · python · plotly · anyplot.ai" at top center in dark #1A1A17 ink, 28px, fully readable. Region legend with dark INK_SOFT text in ELEVATED_BG box. Population scale box with three reference circles (5M, 20M, 35M).
+      Data: Asia bubbles in #009E73 (largest — Tokyo 37.4M, Delhi 31.2M, Shanghai 27.8M); Europe in #D55E00; North America in #0072B2; South America in #CC79A7; Africa in #E69F00; Oceania in #56B4E9. Okabe-Ito order correct. First series = #009E73.
+      Legibility verdict: PASS — all text clearly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct. Land in dark charcoal #2E2E28, ocean in dark navy #1A2535.
+      Chrome: Title renders in light #F0EFE8 text, fully readable. Region legend text in #B8B7B0 against #242420 elevated background. No dark-on-dark failures observed.
+      Data: Bubble colors identical to light render — same green Asia cluster, orange Europe, blue North America, pink South America, yellow-orange Africa, sky-blue Oceania. Only chrome flips between themes.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 32pt is excellent, legend text at 18-20pt is good. Size
-          legend text at 14-16pt is slightly small but readable.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements. Bubbles intentionally overlap in dense
-          areas but handled well with transparency.
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Marker sizes scale well from small to large cities. Some smaller
-          cities could be slightly more visible.
+        comment: All rendered text has explicitly set font sizes. 15px size legend
+          annotations fall just below 16px minimum.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: East Asian city bubbles overlap geographically (inherent), handled
+          by 0.65 opacity and white borders. No text collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bubbles visible, including small Oceania cities. min_size=15
+          ensures no value disappears.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Six-color palette is colorblind-safe with good distinction between
-          all colors.
+        comment: Okabe-Ito palette is CVD-safe. Adequate contrast between all six
+          region colors and both map surfaces.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Map fills canvas well, balanced margins, legend positioned appropriately.
+        comment: Map fills landscape canvas well. Legends well-placed in map corners.
+          Margins appropriate.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for geographic maps - no traditional axis labels needed.
+        comment: Descriptive title present. No axis labels needed for geographic map
+          — N/A.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Region legend well-formatted with semi-transparent background. Size
-          legend provides helpful context.
+        comment: 'First series (Asia) = #009E73. Okabe-Ito canonical order. Background
+          #FAF8F1/#1A1A17. Theme-adaptive chrome correct in both renders.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default 4: custom theme-adaptive geographic colors, custom
+          size legend. Below FiveThirtyEight level — no focal annotations or visual
+          emphasis on standout data.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Slightly above default 2: white marker edges, 0.65 opacity, themed
+          legend boxes. Geographic maps offer limited chrome-reduction opportunities.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Slightly above default 2: size variation conveys Asia dominance,
+          six region colors enable instant comparison. No annotations guide viewer
+          to key insight.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements geographic bubble map with Scattergeo.
+        comment: 'Correct: geographic bubble map with go.Scattergeo using Natural
+          Earth projection.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Latitude/longitude correctly mapped, population correctly encoded
-          as bubble size.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec requirements met: size legend, transparency, geographic
-          context, hover tooltips.'
-      - id: SC-04
-        name: Data Range
+        comment: Area-proportional sizing, transparency 0.65, geographic context,
+          size legend, hover tooltips — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Map shows all data points with appropriate lat/lon range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: lat/lon mapped to geo coordinates, population to bubble size, region
+          to color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Region legend is accurate; size legend explains the scaling.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format with spec-id, library, and pyplots.ai.
+        comment: 'Title format correct: ''World City Populations · bubble-map-geographic
+          · python · plotly · anyplot.ai''. Region legend labels match data.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good range of populations across 6 regions. Could include more
-          small cities.
+        comment: 30 real world cities spanning all inhabited continents, wide population
+          range (5M-37.4M), six regions.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real-world city population data with accurate coordinates.
+        comment: Real-world world city populations — neutral, comprehensible geography
+          topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Population values are realistic and current.
+        comment: Population values match real-world data closely. Coordinates are
+          accurate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,43 +189,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, size calculation, figure,
-          save.'
+        comment: 'Flat script: theme tokens → data → sizing → plot → layout → size
+          legend → save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: np.random.seed(42) set. Data is hardcoded so fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and plotly.graph_objects imported.
+        comment: os, numpy, pandas, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable. sizemode=diameter with sqrt-normalized values is
+          correct for area-proportional encoding.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Size legend text labels lack corresponding visual bubble indicators.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct go.Scattergeo with hovertemplate, fig.update_layout() for
+          geo config, fig.add_shape()/add_annotation() for custom size legend in paper
+          coordinates.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Scattergeo and generates interactive HTML with hover tooltips.
-          Could leverage more Plotly features.
+        comment: Natural Earth geographic projection, interactive hover, HTML export,
+          paper-coordinate size legend using fig.add_shape() circles — Plotly-distinctive
+          but not exceptionally advanced.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -206,9 +243,7 @@ impl_tags:
   - annotations
   - hover-tooltips
   - html-export
-  - iteration-over-groups
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
   - normalization

@@ -1,154 +1,177 @@
 library: pygal
+language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:14:04Z'
-updated: '2026-01-10T06:22:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20873960009
+updated: '2026-05-18T22:52:05Z'
+generated_by: claude-sonnet
+workflow_run: 26064374495
 issue: 3625
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/pygal/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with well-sized text and clear color differentiation
-  - Effective use of custom coastline polygons to provide geographic context
-  - Good use of pygal custom Style for controlling fonts and colors at high resolution
-  - Interactive HTML output with hover tooltips showing city names and populations
-  - Clean well-structured code following KISS principles
+  - Creative use of pygal.XY as a geographic map with ocean background, polygon coastlines,
+    and sized bubbles despite pygal having no native map type
+  - 'Perfect spec compliance: all required features (size encoding, transparency,
+    size legend, tooltips, coastlines) present and working'
+  - Factually accurate real-world population data with excellent geographic coverage
+    across all continents
+  - Clean code structure with proper theme-adaptive tokens for both light and dark
+    renders
   weaknesses:
-  - Bubble sizes are categorical (4 fixed sizes) rather than continuously scaled proportional
-    to population values as the spec requires
-  - Grid lines are somewhat prominent compared to ideal subtle alpha 0.2-0.4
-  - Does not use pygal World map capability which could provide better geographic
-    basemap
-  image_description: 'The plot displays a geographic bubble map with 20 world cities
-    plotted on an XY coordinate system where X represents Longitude (-180 to 160°)
-    and Y represents Latitude (-60 to 80°). The background is a light blue (#C8DDF0)
-    representing oceans, with simplified gray coastline outlines for continents (North
-    America, South America, Europe, Africa, Asia, Australia). City bubbles are color-coded
-    by population category: small dark blue (Pop < 12M), medium blue (Pop 12-20M),
-    yellow (Pop 20-30M), and red-orange (Pop > 30M). Bubble sizes increase proportionally
-    with population category. The two largest red-orange bubbles represent Tokyo and
-    Delhi (>30M). The title "bubble-map-geographic · pygal · pyplots.ai" appears at
-    the top. A legend at the bottom shows the four population categories. Grid lines
-    are subtle dashed gray lines.'
+  - Design sophistication limited by uniform single-color bubbles — continent grouping
+    or subtle opacity variation would elevate DE-01
+  - Default pygal chart border/frame visible in both renders — reducing this would
+    improve visual refinement
+  - In-map size legend (reference bubbles in south Pacific) could be misread as actual
+    data points; more explicit annotation or tighter text-bubble integration would
+    improve clarity
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white outer area (~#FAF8F1); ocean plot area uses light blue (#C8DDF0)
+      Chrome: Title "bubble-map-geographic · python · pygal · anyplot.ai" in dark text at top; "Longitude (°)" and "Latitude (°)" axis labels with units; tick labels at -160/-120/-80/-40/0/40/80/120/160 and -60/-10/0/10/20/30/40/50 are clearly readable; bottom legend shows "5M pop", "15M pop", "25M pop", "37M pop"
+      Data: All 20 city bubbles rendered in brand green (#009E73) sized proportionally to population (area ∝ population via sqrt scaling); polygon coastlines in muted gray; four reference bubbles in south Pacific (lon=-158°) for size legend
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black outer area (~#1A1A17); ocean plot area uses dark navy (#0D2535)
+      Chrome: Title and all axis/tick labels appear in light tones (consistent with INK=#F0EFE8); legend text readable; no dark-on-dark failures detected anywhere in the render
+      Data: City bubble colors are identical brand green (#009E73) — data colors unchanged from light render; only chrome (background, text) has flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text clearly readable: title at 72pt, axis labels at 48pt, tick
-          labels at 40pt, legend at 40pt'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: 'All font sizes explicitly set: title=72, label=48, major_label=40,
+          legend=40; readable in both renders'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap; city names go to interactive tooltips, not plot
+          labels
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Bubbles are well-sized and visible; however size variation within
-          each category is not shown
+        comment: Bubbles well-sized across full range; sqrt area scaling ensures even
+          small values visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/red color scheme is colorblind-safe and provides good
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas with balanced margins, plot fills appropriate
-          area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°) with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single brand-green on blue/off-white; colorblind-safe; strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills ~75% of canvas; balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid lines are quite visible/prominent, not subtle alpha 0.2-0.4
+        passed: true
+        comment: Longitude (°) and Latitude (°) both include units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green #009E73 throughout; outer backgrounds correctly #FAF8F1/#1A1A17;
+          ocean background is intentional design'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Ocean-vs-page background distinction is intentional; rough polygon
+          coastlines and uniform single-color bubbles limit sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid removed; custom ocean background; opacity=0.72; default pygal
+          chart frame remains
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bubble size variation reveals Asian city dominance; geographic clustering
+          readable; size legend enables quantitative comparison
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct bubble map implementation using XY scatter with sized markers
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Longitude on X, Latitude on Y, population controlling size category
-      - id: SC-03
+        comment: Correct geographic bubble map using sized markers
+      - id: SC-02
         name: Required Features
-        score: 3
-        max: 5
-        passed: false
-        comment: 'Has sized bubbles, geographic context, transparency, tooltips. Missing:
-          continuous size scaling'
-      - id: SC-04
-        name: Data Range
+        score: 4
+        max: 4
+        passed: true
+        comment: Size encoding, size legend, transparency, geographic context, interactive
+          tooltips all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Longitude, Y=Latitude; all 20 cities visible within defined extent
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all four population categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: bubble-map-geographic · pygal · pyplots.ai'
+        comment: Title format correct; legend shows population scale references
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows range of populations, good geographic spread. Categorical binning
-          reduces continuous size variation demo
+        comment: Wide size range, all continents, overlapping bubbles in dense regions,
+          size reference
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real-world city population data, accurate locations, plausible values
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Population values are realistic and well-documented (in millions)
+        comment: Real world cities with actual population figures; neutral, comprehensible
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population values factually accurate for major metro areas
     code_quality:
       score: 10
       max: 10
@@ -158,54 +181,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → coastlines → chart → save'
+        comment: Imports → Data → Style → Plot → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: All data hardcoded; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only os, sys, pygal, pygal.style.Style
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean and Pythonic; k_scale for sqrt-area sizing appropriate
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves both plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of pygal.XY, Style, per-series add() with dict format,
+          render_to_png + render
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of XY chart, custom Style, interactive HTML output. Does
-          not use pygal World map charts
+        comment: Per-series dots_size for variable bubble sizing, interactive HTML
+          with labeled tooltips, creative coastline approach
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   - custom-legend
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep:
-  - binning
+  - normalization
   styling:
   - alpha-blending
-  - grid-styling
