@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-18
@@ -19,11 +19,12 @@ from lets_plot import (
     geom_contourf,
     geom_path,
     geom_point,
+    geom_text,
     ggplot,
     ggsize,
     labs,
     layer_tooltips,
-    scale_fill_gradient2,
+    scale_fill_viridis,
     scale_size,
     theme,
     theme_minimal,
@@ -39,6 +40,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
 # Data — synthetic California seismic events clustered around major fault lines
 np.random.seed(42)
@@ -78,6 +80,9 @@ density = kernel(grid_positions).reshape(lon_mesh.shape)
 
 df_grid = pd.DataFrame({"longitude": lon_mesh.flatten(), "latitude": lat_mesh.flatten(), "density": density.flatten()})
 
+# City labels for geographic context
+city_labels = pd.DataFrame({"lon": [-122.42, -118.25], "lat": [38.2, 34.5], "city": ["San Francisco", "Los Angeles"]})
+
 # Simplified California coastline for geographic context
 ca_coast = pd.DataFrame(
     {
@@ -91,6 +96,7 @@ plot = (
     ggplot()
     + geom_contourf(aes(x="longitude", y="latitude", z="density", fill="..level.."), data=df_grid, bins=12, alpha=0.85)
     + geom_path(aes(x="lon", y="lat"), data=ca_coast, color=INK_SOFT, size=1.5)
+    + geom_text(aes(x="lon", y="lat", label="city"), data=city_labels, color=INK, size=13, hjust=0.5, fontface="bold")
     + geom_point(
         aes(x="longitude", y="latitude", size="magnitude"),
         data=df,
@@ -104,9 +110,7 @@ plot = (
         .line("Lon: @longitude{.2f}")
         .line("Magnitude: @magnitude{.1f}"),
     )
-    + scale_fill_gradient2(
-        low="#FFFFD9", mid="#FD8D3C", high="#D73027", midpoint=density.max() * 0.5, name="Event\nDensity"
-    )
+    + scale_fill_viridis(name="Event\nDensity")
     + scale_size(range=[2, 10], name="Magnitude")
     + labs(
         x="Longitude",
@@ -123,9 +127,9 @@ plot = (
         axis_title=element_text(size=20, color=INK),
         axis_text=element_text(size=16, color=INK_SOFT),
         legend_title=element_text(size=16, color=INK),
-        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
-        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_major=element_line(color=RULE, size=0.5),
         panel_grid_minor=element_blank(),
     )
 )
