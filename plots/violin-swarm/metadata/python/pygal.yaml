@@ -1,210 +1,234 @@
 library: pygal
+language: python
 specification_id: violin-swarm
 created: '2026-01-09T21:48:14Z'
-updated: '2026-01-09T21:50:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866458624
+updated: '2026-05-18T04:58:31Z'
+generated_by: claude-haiku
+workflow_run: 26014209388
 issue: 3526
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/pygal/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent creative solution using pygal XY chart to manually construct violin
-    shapes with KDE
-  - Clean swarm point positioning algorithm that spreads points within violin boundaries
-  - Good use of pygal Style customization for proper sizing and colors
-  - Semi-transparent violins allow swarm points to remain visible
-  - Appropriate data scenario (reaction times) with realistic values
-  weaknesses:
-  - Uses helper functions instead of flat KISS structure (compute_kde and compute_swarm_positions)
-  - Could use more contrasting colors between violins and swarm points for better
-    differentiation
-  image_description: 'The plot displays four violin shapes with overlaid swarm points
-    representing reaction times across experimental conditions (Control, Treatment
-    A, Treatment B, Treatment C). The violins are rendered in a light blue color (#306998
-    with transparency) showing kernel density estimation. Darker blue dots (#1a4d75)
-    are overlaid as swarm points within each violin, horizontally spread to avoid
-    overlap. The Y-axis shows "Reaction Time (ms)" ranging from approximately 100
-    to 500ms. The X-axis displays "Experimental Condition" with four category labels.
-    The title follows the required format: "violin-swarm · pygal · pyplots.ai". Background
-    is white with subtle horizontal guide lines. Each condition shows different distribution
-    shapes - Control is centered around 320ms, Treatment A around 280ms, Treatment
-    B around 250ms, and Treatment C around 290ms with visible spread variation.'
+  - 'Perfect visual quality: all text legible in both themes with explicit font sizing,
+    correct Okabe-Ito palette with #009E73 first, theme-correct chrome (backgrounds
+    and text colors)'
+  - 'Excellent spec compliance: violin-swarm correctly implemented with transparent
+    violins overlaid with swarm points, all categories shown, proper data mapping'
+  - 'Clean, reproducible code: KISS structure with seeded RNG, mathematically sound
+    KDE implementation, elegant swarm positioning algorithm'
+  - 'Realistic data: reaction-time scenario across experimental conditions is plausible
+    and neutral'
+  - 'Strong theme adaptation: data colors identical across light/dark renders, backgrounds
+    and text properly theme-adaptive'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface
+      Chrome: Title "violin-swarm · Python · pygal · anyplot.ai" clearly visible in dark text; axis labels "Experimental Condition" and "Reaction Time (ms)" readable; tick labels (Control, Treatment A/B/C) well-positioned with no overlap; subtle y-axis grid lines visible
+      Data: Four violin distributions in Okabe-Ito palette with first series in brand green (#009E73), followed by orange, blue, pink; semi-transparent violins (alpha ~0.35) with overlaid swarm points clearly distinguishable
+      Legibility verdict: PASS - All text elements readable, excellent contrast, data well-represented
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface
+      Chrome: Title, axis labels, tick labels all clearly visible in light text (#F0EFE8) against dark background; no dark-on-dark failures; subtle grid remains visible
+      Data: Identical data colors to light render (only chrome changes); swarm points have excellent contrast against dark background; brand green #009E73 still prominent
+      Legibility verdict: PASS - Perfect theme adaptation; all text readable; no dark-on-dark issues; data colors maintained
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and labels clearly readable at full size, good font sizing
-          for 4800x2700 canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, swarm points spread well
+        comment: 'All text explicitly sized: Title 28px, labels 22px, ticks 18px;
+          readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; x-axis labels well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Swarm dots visible at size 10, violins appropriately transparent,
-          could be slightly larger
+        comment: Swarm points clearly visible, violin shapes distinct; density-appropriate
+          sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue color scheme is colorblind-safe, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (ms), X-axis descriptively labeled
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe; good contrast; alpha appropriate for
+          density
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-70% of canvas; balanced margins; whitespace generous
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle but legend is hidden when it would help explain the
-          layering
+        passed: true
+        comment: Y-axis includes units (ms); both axes descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; colors identical across themes; backgrounds
+          correct; chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional, clean design; well-configured defaults; intentional
+          semi-transparency
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid; refined whitespace; violin transparency shows design
+          thought
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy clear: violins show density, points show individuals;
+          distributions immediately apparent'
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct violin plot with swarm overlay
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on X, values on Y correctly mapped
-      - id: SC-03
+        comment: Correct violin-swarm with overlaid points
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has transparency, swarm overlay, spreading; contrasting color is
-          subtle
-      - id: SC-04
-        name: Data Range
+        comment: Violins, swarm overlay, multiple categories all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within range 50-550
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: categories; Y: reaction time; all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately hidden for this visualization
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: violin-swarm · pygal · pyplots.ai'
+        comment: 'Title: violin-swarm · Python · pygal · anyplot.ai (correct format)'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distributions, means, and spreads across groups;
-          could show more extreme outliers
+        comment: 'Shows all aspects: distributions, individual points, variation across
+          conditions'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Reaction times across experimental conditions is a plausible scientific
-          scenario
+        comment: Reaction time across experimental conditions; realistic, neutral,
+          science-based
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 100-600ms are realistic for reaction times, though clipping
-          is applied
+        comment: Range 100-600ms plausible for human RT; proportions realistic
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses helper functions (compute_kde, compute_swarm_positions) instead
-          of flat structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Fixed seed np.random.seed(42)
+        comment: 'Clean flow: imports → data → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic KDE implementation; clean swarm algorithm
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 2
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html correctly
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Creative use of XY chart with custom shapes, Style customization,
-          dual output (SVG-based HTML + PNG)
+        comment: Proper XY chart; Style-based theme adaptation; correct add() usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Custom KDE + swarm (workaround for pygal's lack of built-in violin
+          plots)
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  - layer-composition
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
   dataprep:
   - kde
   styling:
+  - theme-adaptive
   - alpha-blending
