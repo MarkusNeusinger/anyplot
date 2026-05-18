@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
 Library: highcharts unknown | Python 3.13.13
-Quality: 42/100 | Updated: 2026-05-18
+Quality: 78/100 | Updated: 2026-05-18
 """
 
 import tempfile
