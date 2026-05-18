@@ -1,12 +1,23 @@
-""" pyplots.ai
+""" anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data: Housing price regression coefficients
 np.random.seed(42)
@@ -46,7 +57,7 @@ ci_upper = ci_upper[sort_idx]
 significant = significant[sort_idx]
 
 # Colors based on significance
-colors = ["#306998" if sig else "#999999" for sig in significant]
+colors = [BRAND if sig else INK_SOFT for sig in significant]
 marker_symbols = ["circle" if sig else "circle-open" for sig in significant]
 
 # Create figure
@@ -60,7 +71,7 @@ for i in range(len(variables)):
             x=[ci_lower[i], ci_upper[i]],
             y=[variables[i], variables[i]],
             mode="lines",
-            line=dict(color=colors[i], width=4),
+            line={"color": colors[i], "width": 4},
             showlegend=False,
             hoverinfo="skip",
         )
@@ -72,7 +83,7 @@ for i in range(len(variables)):
             x=[ci_lower[i], ci_upper[i]],
             y=[variables[i], variables[i]],
             mode="markers",
-            marker=dict(symbol="line-ns", size=16, color=colors[i], line=dict(width=3)),
+            marker={"symbol": "line-ns", "size": 16, "color": colors[i], "line": {"width": 3}},
             showlegend=False,
             hoverinfo="skip",
         )
@@ -84,7 +95,7 @@ fig.add_trace(
         x=coefficients[significant],
         y=[variables[i] for i in range(len(variables)) if significant[i]],
         mode="markers",
-        marker=dict(size=18, color="#306998", line=dict(width=2, color="white")),
+        marker={"size": 18, "color": BRAND, "line": {"width": 2, "color": PAGE_BG}},
         name="Significant (p < 0.05)",
         hovertemplate="%{y}<br>Coefficient: %{x:.3f}<extra></extra>",
     )
@@ -95,7 +106,7 @@ fig.add_trace(
         x=coefficients[~significant],
         y=[variables[i] for i in range(len(variables)) if not significant[i]],
         mode="markers",
-        marker=dict(size=18, color="#999999", symbol="circle-open", line=dict(width=3, color="#999999")),
+        marker={"size": 18, "color": INK_SOFT, "symbol": "circle-open", "line": {"width": 3, "color": INK_SOFT}},
         name="Not Significant",
         hovertemplate="%{y}<br>Coefficient: %{x:.3f}<extra></extra>",
     )
@@ -104,33 +115,55 @@ fig.add_trace(
 # Add vertical reference line at zero
 fig.add_vline(
     x=0,
-    line=dict(color="#333333", width=2, dash="dash"),
+    line={"color": INK_SOFT, "width": 2, "dash": "dash"},
     annotation_text="Null",
     annotation_position="top",
-    annotation_font=dict(size=16, color="#333333"),
+    annotation_font={"size": 16, "color": INK_SOFT},
 )
 
 # Layout
 fig.update_layout(
-    title=dict(text="coefficient-confidence · plotly · pyplots.ai", font=dict(size=28), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Coefficient Estimate (Standardized)", font=dict(size=22)),
-        tickfont=dict(size=18),
-        zeroline=False,
-        gridcolor="rgba(0,0,0,0.1)",
-        range=[-0.6, 0.7],
-    ),
-    yaxis=dict(
-        title=dict(text="Predictor Variable", font=dict(size=22)), tickfont=dict(size=18), gridcolor="rgba(0,0,0,0.1)"
-    ),
-    template="plotly_white",
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="center", x=0.5, font=dict(size=18)),
-    margin=dict(l=200, r=80, t=120, b=80),
-    plot_bgcolor="white",
+    title={
+        "text": "coefficient-confidence · python · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": "Coefficient Estimate (Standardized)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "zeroline": False,
+        "gridcolor": GRID,
+        "range": [-0.6, 0.7],
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    yaxis={
+        "title": {"text": "Predictor Variable", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    legend={
+        "orientation": "h",
+        "yanchor": "bottom",
+        "y": 1.02,
+        "xanchor": "center",
+        "x": 0.5,
+        "font": {"size": 18, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
+    margin={"l": 200, "r": 80, "t": 120, "b": 80},
 )
 
 # Save as PNG (4800x2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
 
 # Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
