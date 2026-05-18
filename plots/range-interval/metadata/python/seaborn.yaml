@@ -1,159 +1,188 @@
 library: seaborn
+language: python
 specification_id: range-interval
 created: '2026-01-09T23:48:58Z'
-updated: '2026-01-09T23:52:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868888721
+updated: '2026-05-18T10:44:15Z'
+generated_by: claude-haiku
+workflow_run: 26028109676
 issue: 3577
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/range-interval/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent visual clarity with well-sized elements appropriate for the 4800×2700
-    canvas
-  - Effective use of color contrast between blue ranges and yellow max markers
-  - Thoughtful addition of the freezing point reference line (0°C) for context
-  - Custom legend clearly explains all visual elements
-  - Realistic seasonal temperature pattern demonstrates the range-interval concept
-    well
-  - Proper seaborn integration with DataFrame-based plotting
+  - 'Perfect visual quality: all text legible, no overlap, proper font sizing (title
+    24pt, labels 20pt, ticks 16pt)'
+  - 'Flawless palette compliance: brand green (#009E73) for primary series, orange
+    (#D55E00) for secondary, both Okabe-Ito colors applied correctly'
+  - 'Strong theme adaptation: light/dark renders both readable with correct background
+    colors (#FAF8F1 and #1A1A17)'
+  - 'Thoughtful data visualization design: thick round-cap bars with alpha blending
+    create modern aesthetic, color-coded markers (green min, orange max) provide visual
+    clarity'
+  - 'Complete spec compliance: all required features present (min-max ranges, category
+    labels, correct title format)'
+  - 'Clean code: simple linear structure, deterministic seed, no unused imports, all
+    Okabe-Ito palette implementation'
+  - 'Realistic salary data: tech industry context is neutral, contextually plausible,
+    shows good range variation'
   weaknesses:
-  - Custom legend is created manually with Line2D while sns.scatterplot also adds
-    legend entries (minor redundancy)
-  - Range bars use matplotlib ax.plot rather than a seaborn-specific function (acceptable
-    but less seaborn-native)
-  image_description: 'The plot displays a range interval chart showing monthly temperature
-    ranges for a temperate climate city. Each month (Jan-Dec) is represented by a
-    vertical blue bar (#306998) connecting the minimum and maximum temperatures. Blue
-    circular markers indicate minimum temperatures, and yellow/gold markers (#FFD43B)
-    indicate maximum temperatures. The title "range-interval · seaborn · pyplots.ai"
-    is centered at the top. A horizontal dashed gray reference line at 0°C (freezing
-    point) adds context. The legend in the upper right clearly explains the three
-    elements: Temperature Range (bar), Min Temperature (blue dot), and Max Temperature
-    (yellow dot). The Y-axis shows "Temperature (°C)" ranging from about -5 to 30,
-    and the X-axis shows month abbreviations. A subtle dashed grid provides visual
-    guidance. The seasonal pattern is evident with January showing the coldest range
-    (approximately -4°C to 7°C) and July showing the warmest (approximately 20°C to
-    30°C).'
+  - 'Library mastery: implementation uses manual matplotlib loop (ax.plot) rather
+    than leveraging seaborn''s high-level APIs more creatively — could explore seaborn''s
+    capabilities for more distinctive visual features'
+  - 'Design excellence: while thoughtful, aesthetic sophistication could be elevated
+    — publication-ready would require additional refinements like custom typography
+    hierarchy or more sophisticated color interactions'
+  - 'Data storytelling: visual hierarchy is good but could be stronger through strategic
+    emphasis techniques or more nuanced visual contrast'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme color
+      Chrome: Title is properly formatted, axis labels are descriptive with units, tick labels are dark and clearly visible against the light surface. No legibility issues.
+      Data: Vertical green bars (#009E73) represent salary ranges, with orange (#D55E00) endpoint markers for max values and green (#009E73) markers for min values. All elements are clearly distinguishable.
+      Grid: Subtle y-axis grid at low opacity (10%) with appropriate styling
+      Legibility verdict: PASS ✓
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme color
+      Chrome: All text is light-colored and readable against the dark background. Title, axis labels, and tick labels all have sufficient contrast. No dark-on-dark failures detected.
+      Data: Green bars and orange/green markers are identical in color to the light render, confirming proper palette consistency across themes. Only background and text chrome have adapted.
+      Grid: Subtle and visible against dark background
+      Legibility verdict: PASS ✓
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: 'All fonts explicitly set: title 24pt, labels 20pt, ticks 16pt, perfectly
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, month labels well-spaced
+        comment: All text fully readable, no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Range bars with linewidth=12 are well-sized, markers s=250 clearly
+        comment: Bars (linewidth=14) and markers (s=300) optimally sized and clearly
           visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow/gold are colorblind-safe, high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned nicely
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) includes units, Month is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette ensures colorblind safety, good contrast between
+          green and orange
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 16:9 layout with balanced margins, 50-80% canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (alpha=0.3), but legend could be more compact
+        passed: true
+        comment: Y-axis includes units (thousands USD), all labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand), secondary #D55E00, backgrounds #FAF8F1
+          (light) #1A1A17 (dark), theme chrome correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with thoughtful color coding, round-cap bars with alpha
+          blending, clearly above defaults but not yet publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent: proper spine removal, subtle grid styling, generous whitespace'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through color differentiation and range emphasis,
+          could strengthen through additional emphasis techniques
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct range interval chart showing min-max as bars/segments
+        comment: Correct range-interval chart type with vertical bars showing min-max
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, temperature range values on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Vertical range bars, min/max markers, reference line present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: categories, min/max values, range visualization'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis appropriately scaled
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis categories, Y-axis numeric values, correct mapping throughout
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly describes all three elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format range-interval · seaborn · pyplots.ai
+        comment: 'Title correctly formatted: ''range-interval · python · seaborn ·
+          anyplot.ai'', legend N/A for single-series'
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows seasonal variation with different range sizes; slight deduction
-          as ranges could show more variation in width
+        comment: Good coverage of range variation across job titles, shows both narrow
+          and wide ranges
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Monthly temperature ranges for a temperate city - real, comprehensible,
-          neutral scenario
+        comment: Real, neutral tech industry salary context, plausible values for
+          US market
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Realistic temperature values (-4°C to 30°C), though some months show
-          narrow ranges
+        comment: All salary values factually accurate for domain, proper scale relationships
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,52 +190,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save, no functions/classes'
+        comment: 'Simple linear flow: imports → data → plot → save, no functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set, data deterministic
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Line2D import is used for custom legend, but sns.scatterplot labels
-          are also set (potential duplication)
+        passed: true
+        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn and matplotlib APIs
+        comment: Clean, appropriate complexity, no fake functionality or over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
+        comment: Correctly saves as plot-{THEME}.png, modern matplotlib API
+    library_mastery:
       score: 5
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses seaborn scatterplot for markers, integrates with matplotlib
-          for range bars, proper DataFrame usage with seaborn conventions
+        comment: Good use of matplotlib/seaborn APIs with theme-adaptive styling,
+          manual loop is reasonable for range-interval
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage that could be replicated in other libraries with minor
+          syntax changes
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - custom-legend
   - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
