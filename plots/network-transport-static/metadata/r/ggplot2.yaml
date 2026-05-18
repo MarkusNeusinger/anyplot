@@ -1,0 +1,232 @@
+library: ggplot2
+language: r
+specification_id: network-transport-static
+created: '2026-05-18T14:35:23Z'
+updated: '2026-05-18T14:48:08Z'
+generated_by: claude-haiku
+workflow_run: 26040100297
+issue: 3463
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Perfect theme adaptation with correct light/dark tokens throughout
+  - 'All specification requirements met: directed edges with arrows, departure/arrival
+    times, route identifiers, and multi-route disambiguation'
+  - Clean, idiomatic ggplot2 code with proper data merging and styling
+  - 'Excellent palette compliance: Okabe-Ito colors stay identical between themes,
+    only chrome adapts correctly'
+  - 'Well-sized elements for high-resolution canvas: title 24pt, labels 4.5-18pt,
+    all readable'
+  weaknesses:
+  - Unnecessary grid library import (not used in code)
+  - Minor potential label overlap in very dense edge regions
+  - Design sophistication is competent but not exceptional - uses well-configured
+    defaults rather than distinctive aesthetic choices
+  - No pronounced visual hierarchy or focal point to guide viewer beyond network structure
+    itself
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) providing excellent contrast for all elements
+      Chrome: Title "network-transport-static · r · ggplot2 · anyplot.ai" in dark text; station labels above nodes with light backgrounds; edge labels at route midpoints with light box backgrounds; legend with "Route Type" title clearly visible on right side
+      Data: Three route types color-coded: Regional in green (#009E73), Express in orange (#D55E00), Local in blue (#0072B2); edges have closed arrows indicating direction; station nodes are hollow circles with soft strokes; all edge labels show route ID and times (e.g., "RE01 | 08:15 → 08:45")
+      Legibility verdict: PASS - All text easily readable against light background; excellent contrast; no dark-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) maintaining readability without harsh pure-black contrast
+      Chrome: Title in light text (#F0EFE8); station labels with dark backgrounds and light text; edge labels with dark box backgrounds and light text; legend clearly visible with proper contrast
+      Data: Route colors identical to light render - Regional green (#009E73), Express orange (#D55E00), Local blue (#0072B2); arrows and node styling match light render; all information preserved and readable
+      Legibility verdict: PASS - All text clearly readable against dark background; no dark-on-dark issues detected; station labels, edge labels, and legend text all have adequate contrast; chrome properly adapted while data colors remain constant
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title 24pt, labels 4.5-18pt; readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Station labels well-positioned; minor potential overlap in very dense
+          edge regions but content remains readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All stations, routes, arrows perfectly visible; alpha=0.7 optimal
+          for density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito 1-3 with excellent contrast; CVD-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4800x2700px; generous 20px margins; well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted; no X/Y labels needed for network
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect: first series #009E73; multi-series Okabe-Ito order; correct
+          backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome flips correctly'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional styling but relies on well-configured defaults rather
+          than distinctive design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Minimal chrome removal; subtle labels with backgrounds; decent refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Network structure and route types displayed clearly; lacks visual
+          hierarchy or focal point
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct static transport network diagram
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: stations, directed routes, arrows, times,
+          IDs, type-based colors'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Coordinates correctly used; routes properly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels accurate
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all plot aspects: 12 stations, 30 routes, 3 types, full timetable
+          info'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic station names, times, route IDs, neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Appropriate time ranges and network scale
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; straightforward data setup
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: library(grid) imported but not used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct output files
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2: proper grammar, geoms, theme customization, dplyr
+          joins'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses arrow() and coord_fixed(); solid but not particularly distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - minimal-chrome
