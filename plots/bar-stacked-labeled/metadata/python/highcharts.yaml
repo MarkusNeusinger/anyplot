@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:32:32Z'
-updated: '2026-05-18T02:08:47Z'
+updated: '2026-05-18T02:15:24Z'
 generated_by: claude-haiku
 workflow_run: 26009420730
 issue: 3504
@@ -15,125 +15,111 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 quality_score: 73
 review:
   strengths:
-  - Excellent visual composition with clear total labels above each bar stack
-  - Proper stacked bar implementation using Highcharts' native stacking
-  - Good text sizing and legibility in both light and dark renders - all elements
-    readable
-  - Clean data structure with realistic quarterly revenue scenario
-  - Proper use of Highcharts API for column charts with stacking and data labels
+  - Correct stacked bar chart type with all required features
+  - Stack and segment labels are properly formatted and visible
+  - Realistic business data context (quarterly revenue)
+  - Clean code structure and good canvas utilization
+  - Proper legend with descriptive product categories
   weaknesses:
-  - 'Code defines custom colors (#306998, #FFD43B, #9467BD, #17BECF) instead of Okabe-Ito
-    palette - must use Okabe-Ito starting with #009E73'
-  - Hardcoded white background (#ffffff) instead of theme-aware PAGE_BG token - prevents
-    correct dark theme rendering
-  - 'Title text in code is incorrect: shows ''pyplots.ai'' instead of ''anyplot.ai''
-    and missing ''Python'' - must be ''bar-stacked-labeled · Python · highcharts ·
-    anyplot.ai'''
-  - Output files hardcoded as 'plot.png' and 'plot.html' instead of 'plot-{THEME}.png'
-    and 'plot-{THEME}.html' - prevents theme-specific outputs
-  - Code doesn't import os or read ANYPLOT_THEME environment variable for theme-aware
-    rendering - must follow highcharts.md guidelines for theme-adaptive chrome
-  image_description: "Light render (plot-light.png):\n  Background: Warm off-white\
-    \ (#FAF8F1) - perfect theme surface\n  Chrome: Title \"bar-stacked-labeled · Python\
-    \ · highcharts · anyplot.ai\" is bold and clearly visible against light background;\
-    \ X-axis label \"Quarter\" and Y-axis label \"Revenue (thousands USD)\" are prominent;\
-    \ all tick labels (Q1-Q4, numeric scale) are readable with dark text on light\
-    \ background; no dark-on-light issues\n  Data: Stacked bars show 4 components\
-    \ (bottom to top: pink #CC79A7 (Sports), blue #0072B2 (Home & Garden), orange\
-    \ #D55E00 (Clothing), green #009E73 (Electronics)) - these are Okabe-Ito colors\
-    \ in proper order; total labels (910K, 1005K, 1030K, 1160K) are prominently displayed\
-    \ above each stack in bold; segment value labels within each bar section are visible\n\
-    \  Grid: Horizontal grid lines are subtle and don't compete with data\n  Legend:\
-    \ Right-aligned legend shows all 4 components with matching colors\n  Legibility\
-    \ verdict: PASS - all text is perfectly readable and well-contrasted against light\
-    \ background\n\nDark render (plot-dark.png):\n  Background: Warm near-black (#1A1A17)\
-    \ - proper dark theme surface  \n  Chrome: Title remains visible with light text;\
-    \ axis labels and tick labels are clearly visible in light color; no dark-on-dark\
-    \ issues - text is light enough for legibility\n  Data: Stacked bars maintain\
-    \ IDENTICAL colors to light render (same green, orange, blue, pink) - this is\
-    \ correct, confirming data colors are theme-independent per spec; total labels\
-    \ above bars remain bold and readable; segment labels are visible within bars\n\
-    \  Grid: Horizontal grid subtle but visible against dark background\n  Legend:\
-    \ Legend box has dark background treatment appropriate for dark theme\n  Legibility\
-    \ verdict: PASS - all text is clearly readable in light colors against dark background;\
-    \ no dark-on-dark failures; brand green (#009E73) is still prominently visible\
-    \ and accessible"
+  - 'First series color is #306998 (Python Blue) instead of required #009E73 (brand
+    green)'
+  - All colors are custom hardcoded, not using Okabe-Ito palette
+  - 'Text colors are not theme-adaptive: dark text on dark background makes dark render
+    unreadable'
+  - 'Background is pure white/black instead of warm tones (#FAF8F1 light / #1A1A17
+    dark)'
+  - Code does not read ANYPLOT_THEME environment variable
+  - Output files are not theme-scoped (plot.png instead of plot-light.png/plot-dark.png)
+  - Generic design with no aesthetic sophistication or visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Pure white (should be warm off-white #FAF8F1)
+      Chrome: Title and axis labels are dark and readable against light background. Axis labels are descriptive ("Quarter", "Revenue (thousands USD)"). Tick labels and grid are visible.
+      Data: Bars are stacked with segments in pink/magenta, blue, orange, and cyan. Individual segment values labeled inside (120, 145, etc.). Stack totals labeled above (990K, 1005K, 1030K, 1160K) in larger font.
+      Colors: First series is #306998 (Python Blue), not #009E73 (brand green) — palette violation. Other colors are #FFD43B, #9467BD, #17BECF — not Okabe-Ito.
+      Legibility verdict: PASS (readable in light theme, but colors are non-compliant)
+
+    Dark render (plot-dark.png):
+      Background: Pure black or very dark (should be warm near-black #1A1A17)
+      Chrome: Title and axis labels are dark/black on dark background — text is barely visible. Tick labels are dark on dark — hard to read. Grid lines are barely visible.
+      Data: Same stacked bar layout and values as light render. Data colors are identical to light (pink, blue, orange, cyan) — correct color consistency between themes.
+      Colors: Data colors match light render (good consistency), but all chrome text is dark in both renders — not adapted.
+      Legibility verdict: FAIL — Dark-on-dark text makes the plot unreadable in dark mode. This is a critical theme-adaptation failure. Text colors must be light in dark theme (#F0EFE8 or #B8B7B0).
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 3
         max: 8
-        passed: true
-        comment: All font sizes explicitly set and perfectly readable in both renders
+        passed: false
+        comment: Dark render has dark text on dark background — unreadable. Font sizes
+          set but not theme-adaptive.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, clean spacing throughout
+        comment: No overlapping text elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, labels, and segments clearly visible and appropriately
-          sized
+        comment: Bars and labels clearly visible at 4800x2700.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Okabe-Ito palette is CVD-safe with good contrast
+        passed: false
+        comment: Custom colors not Okabe-Ito; reasonably distinct but non-compliant.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Good proportions but code defines white background, not theme-aware
+        passed: true
+        comment: Excellent layout with balanced margins and good canvas utilization.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units present in render
+        comment: 'Descriptive labels with units: ''Quarter'' and ''Revenue (thousands
+          USD)''.'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: Render shows correct Okabe-Ito colors and theme backgrounds, but
-          code defines custom colors and hardcoded white
+        comment: 'CRITICAL: First series is #306998 not #009E73. All colors are hardcoded
+          custom, not Okabe-Ito. Backgrounds are pure white/black not warm tones.
+          Text colors not theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 6
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 2
         max: 8
         passed: false
-        comment: Looks like configured library default, custom palette colors undermine
-          the design
+        comment: Generic default styling with arbitrary colors. No design thought.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Basic customization, minimal refinement - grid and spacing are adequate
-          but not polished
+        comment: Minimal customization, library defaults, no polish.
       - id: DE-03
         name: Data Storytelling
-        score: 6
+        score: 2
         max: 6
-        passed: true
-        comment: Total labels above bars create clear visual hierarchy emphasizing
-          cumulative values
+        passed: false
+        comment: Data displayed but no visual hierarchy or narrative emphasis.
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -141,26 +127,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked column chart with all required stacking
+        comment: Correct stacked column chart.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Total value labels prominently displayed above each bar stack
+        comment: 'All features: stacking, totals, segment labels, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X-axis, values stacked on Y-axis, axes show all data
+        comment: Categories on X, components stacked, values correct.
       - id: SC-04
         name: Title & Legend
-        score: 0
+        score: 3
         max: 3
-        passed: false
-        comment: 'Render shows correct title format, but code has wrong title text:
-          ''pyplots.ai'' instead of ''anyplot.ai'' and missing ''Python'''
+        passed: true
+        comment: Title format correct. Legend labels match data.
     data_quality:
       score: 15
       max: 15
@@ -170,24 +155,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all aspects of stacked bar - multiple categories with multiple
-          components
+        comment: 'Shows all aspects: 4 categories, 4 components, good variation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Quarterly revenue by product category - real, comprehensible, neutral
-          scenario
+        comment: 'Realistic business scenario: quarterly revenue by product.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values are factually plausible for quarterly revenue in thousands
-          of USD
+        comment: Plausible quarterly revenue values (120-180K per component).
     code_quality:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -195,33 +177,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Straightforward imports → data → plot → save structure
+        comment: 'Linear structure: imports, data, config, save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data is deterministic and hardcoded
+        comment: Hardcoded deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports used.
       - id: CQ-04
         name: Code Elegance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Hardcoded colors and white background violate guidelines - code doesn't
-          follow highcharts.md theme-adaptive patterns
+        passed: true
+        comment: Clean code, no fake functionality.
       - id: CQ-05
         name: Output & API
-        score: -3
+        score: 0
         max: 1
         passed: false
-        comment: Saves to 'plot.png' and 'plot.html' instead of 'plot-{THEME}.png'
-          and 'plot-{THEME}.html' - breaks pipeline
+        comment: Saves as plot.png instead of plot-light.png/plot-dark.png. No ANYPLOT_THEME
+          environment variable support.
     library_mastery:
       score: 6
       max: 10
@@ -231,15 +212,14 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Uses Highcharts API correctly but doesn't implement theme-adaptive
-          chrome as recommended in highcharts.md
+        comment: Correct Highcharts API usage but standard patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses stacking and data labels, but misses theme-awareness and environment
-          variable handling unique to this workflow
+        comment: Uses stackLabels (Highcharts-specific) and dataLabels. Some distinctive
+          features.
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -248,6 +228,5 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling: []
