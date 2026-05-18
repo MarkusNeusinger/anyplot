@@ -1,23 +1,39 @@
-""" pyplots.ai
+"""anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
 
-# Remove current directory from sys.path to avoid circular import with pygal.py filename
 import os
 import sys
+import xml.etree.ElementTree as ET
 
 
+# Remove current directory from sys.path before importing to avoid circular import
 _script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _script_dir]
 
-import xml.etree.ElementTree as ET  # noqa: E402
-
 import cairosvg  # noqa: E402
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+
+# Okabe-Ito palette (colorblind-safe)
+BRAND = "#009E73"  # Position 1 - brand green
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Route type colors (using Okabe-Ito positions)
+route_colors = {
+    "RE": OKABE_ITO[0],  # Regional Express - brand green
+    "EX": OKABE_ITO[1],  # Express - vermillion
+    "LO": OKABE_ITO[2],  # Local - blue
+}
 
 # Station data: regional rail network
 stations = [
@@ -68,35 +84,6 @@ margin_bottom = 200
 plot_width = WIDTH - margin_left - margin_right
 plot_height = HEIGHT - margin_top - margin_bottom
 
-# Colors for route types (colorblind-safe)
-route_colors = {
-    "RE": "#306998",  # Python Blue - Regional Express
-    "EX": "#D62728",  # Red - Express
-    "LO": "#2CA02C",  # Green - Local
-}
-
-# Custom style using pygal
-custom_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#222222",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#D62728", "#2CA02C"),
-    title_font_size=72,
-    label_font_size=48,
-    legend_font_size=36,
-    major_label_font_size=40,
-    value_font_size=36,
-    font_family="sans-serif",
-)
-
-# Use pygal config for consistent settings
-config = pygal.Config()
-config.width = WIDTH
-config.height = HEIGHT
-config.style = custom_style
-
 
 def normalize_to_svg(x_norm, y_norm):
     """Convert normalized (0-1) coordinates to SVG coordinates."""
@@ -110,7 +97,7 @@ svg_ns = "http://www.w3.org/2000/svg"
 ET.register_namespace("", svg_ns)
 
 svg_root = ET.Element("svg", xmlns=svg_ns, width=str(WIDTH), height=str(HEIGHT), viewBox=f"0 0 {WIDTH} {HEIGHT}")
-svg_root.set("style", f"background-color: {custom_style.background};")
+svg_root.set("style", f"background-color: {PAGE_BG};")
 
 # Definitions for arrow markers
 defs = ET.SubElement(svg_root, "defs")
@@ -135,20 +122,20 @@ title_elem = ET.SubElement(svg_root, "text")
 title_elem.set("x", str(WIDTH / 2))
 title_elem.set("y", "80")
 title_elem.set("text-anchor", "middle")
-title_elem.set("fill", custom_style.foreground_strong)
-title_elem.set("font-size", str(custom_style.title_font_size))
-title_elem.set("font-family", custom_style.font_family)
+title_elem.set("fill", INK)
+title_elem.set("font-size", "56")
+title_elem.set("font-family", "sans-serif")
 title_elem.set("font-weight", "bold")
-title_elem.text = "network-transport-static \u00b7 pygal \u00b7 pyplots.ai"
+title_elem.text = "network-transport-static · python · pygal · anyplot.ai"
 
 # Subtitle
 subtitle_elem = ET.SubElement(svg_root, "text")
 subtitle_elem.set("x", str(WIDTH / 2))
 subtitle_elem.set("y", "140")
 subtitle_elem.set("text-anchor", "middle")
-subtitle_elem.set("fill", custom_style.foreground_subtle)
-subtitle_elem.set("font-size", "40")
-subtitle_elem.set("font-family", custom_style.font_family)
+subtitle_elem.set("fill", INK_SOFT)
+subtitle_elem.set("font-size", "32")
+subtitle_elem.set("font-family", "sans-serif")
 subtitle_elem.text = "Regional Rail Network - Morning Schedule"
 
 # Plot background
@@ -157,9 +144,10 @@ plot_bg.set("x", str(margin_left))
 plot_bg.set("y", str(margin_top))
 plot_bg.set("width", str(plot_width))
 plot_bg.set("height", str(plot_height))
-plot_bg.set("fill", custom_style.plot_background)
-plot_bg.set("stroke", "#cccccc")
+plot_bg.set("fill", PAGE_BG)
+plot_bg.set("stroke", INK_MUTED)
 plot_bg.set("stroke-width", "2")
+plot_bg.set("stroke-opacity", "0.3")
 
 # Group for edges (routes)
 edges_g = ET.SubElement(svg_root, "g")
@@ -183,7 +171,7 @@ for route in routes:
 
     # Get route color based on prefix
     route_prefix = route["route_id"].split()[0]
-    color = route_colors.get(route_prefix, "#306998")
+    color = route_colors.get(route_prefix, BRAND)
 
     # Calculate edge offset for multiple edges between same stations
     key = tuple(sorted([route["source"], route["target"]]))
@@ -231,14 +219,14 @@ for route in routes:
     mid_y = (y1 + y2) / 2
 
     # Label background
-    label_text = f"{route['route_id']} | {route['dep']} \u2192 {route['arr']}"
+    label_text = f"{route['route_id']} | {route['dep']} → {route['arr']}"
     label_bg = ET.SubElement(edges_g, "rect")
     label_bg.set("x", f"{mid_x - 130:.1f}")
     label_bg.set("y", f"{mid_y - 18:.1f}")
     label_bg.set("width", "260")
     label_bg.set("height", "36")
-    label_bg.set("fill", "white")
-    label_bg.set("fill-opacity", "0.92")
+    label_bg.set("fill", ELEVATED_BG)
+    label_bg.set("fill-opacity", "0.95")
     label_bg.set("rx", "6")
     label_bg.set("stroke", color)
     label_bg.set("stroke-width", "1")
@@ -251,13 +239,13 @@ for route in routes:
     label_elem.set("text-anchor", "middle")
     label_elem.set("fill", color)
     label_elem.set("font-size", "22")
-    label_elem.set("font-family", custom_style.font_family)
+    label_elem.set("font-family", "sans-serif")
     label_elem.set("font-weight", "600")
     label_elem.text = label_text
 
     # Tooltip
     title = ET.SubElement(line, "title")
-    title.text = f"{route['route_id']}: {route['dep']} \u2192 {route['arr']}"
+    title.text = f"{route['route_id']}: {route['dep']} → {route['arr']}"
 
 # Group for nodes (stations)
 nodes_g = ET.SubElement(svg_root, "g")
@@ -272,8 +260,8 @@ for station in stations:
     outer.set("cx", f"{x:.1f}")
     outer.set("cy", f"{y:.1f}")
     outer.set("r", "50")
-    outer.set("fill", "#FFD43B")  # Python Yellow
-    outer.set("stroke", "#306998")  # Python Blue
+    outer.set("fill", BRAND)  # Okabe-Ito position 1
+    outer.set("stroke", INK)
     outer.set("stroke-width", "5")
 
     # Station ID inside node
@@ -281,9 +269,9 @@ for station in stations:
     id_elem.set("x", f"{x:.1f}")
     id_elem.set("y", f"{y + 12:.1f}")
     id_elem.set("text-anchor", "middle")
-    id_elem.set("fill", "#306998")
+    id_elem.set("fill", PAGE_BG)
     id_elem.set("font-size", "36")
-    id_elem.set("font-family", custom_style.font_family)
+    id_elem.set("font-family", "sans-serif")
     id_elem.set("font-weight", "bold")
     id_elem.text = station["id"]
 
@@ -293,17 +281,20 @@ for station in stations:
     label_bg.set("y", f"{y + 60:.1f}")
     label_bg.set("width", "220")
     label_bg.set("height", "36")
-    label_bg.set("fill", "white")
+    label_bg.set("fill", ELEVATED_BG)
     label_bg.set("fill-opacity", "0.95")
     label_bg.set("rx", "6")
+    label_bg.set("stroke", INK_MUTED)
+    label_bg.set("stroke-width", "1")
+    label_bg.set("stroke-opacity", "0.3")
 
     label_elem = ET.SubElement(nodes_g, "text")
     label_elem.set("x", f"{x:.1f}")
     label_elem.set("y", f"{y + 86:.1f}")
     label_elem.set("text-anchor", "middle")
-    label_elem.set("fill", custom_style.foreground_strong)
+    label_elem.set("fill", INK)
     label_elem.set("font-size", "24")
-    label_elem.set("font-family", custom_style.font_family)
+    label_elem.set("font-family", "sans-serif")
     label_elem.set("font-weight", "600")
     label_elem.text = station["label"]
 
@@ -323,24 +314,25 @@ legend_bg.set("x", str(legend_x - 30))
 legend_bg.set("y", str(legend_y - 50))
 legend_bg.set("width", "400")
 legend_bg.set("height", "160")
-legend_bg.set("fill", "white")
+legend_bg.set("fill", ELEVATED_BG)
 legend_bg.set("fill-opacity", "0.95")
-legend_bg.set("stroke", "#cccccc")
+legend_bg.set("stroke", INK_MUTED)
 legend_bg.set("stroke-width", "2")
+legend_bg.set("stroke-opacity", "0.3")
 legend_bg.set("rx", "10")
 
 # Legend title
 legend_title = ET.SubElement(legend_g, "text")
 legend_title.set("x", str(legend_x))
 legend_title.set("y", str(legend_y - 10))
-legend_title.set("fill", custom_style.foreground_strong)
+legend_title.set("fill", INK)
 legend_title.set("font-size", "32")
-legend_title.set("font-family", custom_style.font_family)
+legend_title.set("font-family", "sans-serif")
 legend_title.set("font-weight", "bold")
 legend_title.text = "Route Types"
 
 # Legend items
-legend_items = [("RE - Regional Express", "#306998"), ("EX - Express", "#D62728"), ("LO - Local", "#2CA02C")]
+legend_items = [("RE - Regional Express", OKABE_ITO[0]), ("EX - Express", OKABE_ITO[1]), ("LO - Local", OKABE_ITO[2])]
 
 for i, (label, color) in enumerate(legend_items):
     ly = legend_y + 30 + i * 35
@@ -363,22 +355,23 @@ for i, (label, color) in enumerate(legend_items):
     label_elem = ET.SubElement(legend_g, "text")
     label_elem.set("x", str(legend_x + 80))
     label_elem.set("y", str(ly + 8))
-    label_elem.set("fill", custom_style.foreground)
+    label_elem.set("fill", INK_SOFT)
     label_elem.set("font-size", "26")
-    label_elem.set("font-family", custom_style.font_family)
+    label_elem.set("font-family", "sans-serif")
     label_elem.text = label
 
-# Write SVG to HTML file
+# Convert SVG to string
 svg_output = ET.tostring(svg_root, encoding="unicode")
 
+# Write HTML file
 html_content = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>network-transport-static - pygal - pyplots.ai</title>
+    <title>network-transport-static - pygal - anyplot.ai</title>
     <style>
-        body {{ margin: 0; padding: 20px; background: #f0f0f0; font-family: sans-serif; }}
+        body {{ margin: 0; padding: 20px; background: {PAGE_BG}; font-family: sans-serif; }}
         .container {{ max-width: 100%; overflow: auto; }}
         svg {{ display: block; margin: 0 auto; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }}
     </style>
@@ -390,10 +383,10 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Render to PNG using cairosvg
-cairosvg.svg2png(bytestring=svg_output.encode("utf-8"), write_to="plot.png", output_width=WIDTH, output_height=HEIGHT)
-
-print("Generated: plot.png, plot.html")
+cairosvg.svg2png(
+    bytestring=svg_output.encode("utf-8"), write_to=f"plot-{THEME}.png", output_width=WIDTH, output_height=HEIGHT
+)
