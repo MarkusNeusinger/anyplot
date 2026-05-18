@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-matrix-interactive
 created: '2026-05-18T16:28:22Z'
-updated: '2026-05-18T18:48:10Z'
+updated: '2026-05-18T19:10:15Z'
 generated_by: claude-haiku
 workflow_run: 26046117741
 issue: 3604
@@ -15,39 +15,40 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 quality_score: 40
 review:
   strengths:
-  - Theme tokens correctly applied — backgrounds, ink colors, and Okabe-Ito palette
-    adapt properly for light/dark.
-  - Font sizes explicitly set per style guide (title=28, label=22, ticks=18, legend=16).
-  - Clean reproducible code using the real iris dataset with correct KISS structure.
-  - 'HTML output with per-point labeled tooltips using pygal-idiomatic {\"value\":
-    ..., \"label\": ...} format.'
-  - Title format is exactly correct.
+  - Theme tokens correctly implemented (PAGE_BG, INK, INK_MUTED adapt for both light/dark
+    themes)
+  - 'Okabe-Ito colors in correct order; first series = #009E73 (brand green)'
+  - Font sizes correctly scaled for 4800x2700 canvas per pygal guide
+  - HTML output generated alongside PNG — correct for pygal as interactive library
+  - Clean flat code structure with iris dataset as canonical SPLOM example
+  - Point label dicts correctly implement hover tooltips in HTML output
   weaknesses:
-  - 'Critical: Not a scatter matrix — all three attempts produce a single scatter
-    plot. Must construct multiple pygal XY charts embedded in a single HTML page arranged
-    in a CSS grid showing all pairwise variable combinations.'
-  - Only 2 of 4 iris variables used (sepal_length, petal_length) — sepal_width and
-    petal_width are ignored.
-  - No diagonal univariate distribution panels (required by spec).
-  - Data points are too small for the 4800x2700 canvas — marker size must be increased.
-  - Considerable whitespace on right and top due to poor range constraint.
+  - 'CRITICAL REGRESSION: current code creates a single XY scatter chart — regression
+    from previous attempt that had implemented a proper 4x4 scatter matrix'
+  - 'Missing scatter plot matrix: no NxN grid of pairwise scatter subplots'
+  - Missing diagonal histograms showing per-variable univariate distributions
+  - Shows only 2 of 4 iris variables instead of all 4 in a matrix layout
+  - range=(4, 8) on Y-axis (petal_length) cuts off Setosa entirely (1.0-1.9 cm range)
+    and clips Versicolor — wrong axis range
+  - No linked brushing, selection, or de-emphasis mechanism (pygal limitation — acceptable
+    if noted, but basic matrix structure must be present)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "scatter-matrix-interactive · python · pygal · anyplot.ai" in dark text — readable. Axis labels "Sepal Length (cm)" and "Petal Length (cm)" with units — readable. Tick labels (4.4–7.6 on X, 1–6 on Y) in dark text — readable. Legend in top-left shows Setosa/Versicolor/Virginica with colored squares — readable.
-      Data: Three species plotted as tiny dots (~3 px). Setosa in teal-green (#009E73), Versicolor in orange (#D55E00), Virginica in blue (#0072B2) — correct Okabe-Ito order. Data clustered in center-left with large whitespace on right and top.
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm off-white (~#FAF8F1) — correct for light theme
+      Chrome: Title "scatter-matrix-interactive · python · pygal · anyplot.ai" readable; legend shows Setosa/Versicolor/Virginica in Okabe-Ito colors; individual cell axis labels small but visible at full resolution
+      Data: 4x4 scatter matrix grid; diagonal cells show stacked bar histograms per variable; off-diagonal cells show pairwise scatter plots; Setosa=#009E73, Versicolor=#D55E00, Virginica=#0072B2 (positions 1-3 correct)
+      Legibility verdict: PASS (title/legend clear; cell-level labels marginal at thumbnail but readable at 4800x2700)
+      NOTE: Images appear STALE from a previous attempt — current code creates a single XY chart, not this matrix
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light text — readable against dark background. No dark-on-dark failures detected. Legend text visible.
-      Data: Data colors are identical to the light render — Setosa teal-green, Versicolor orange, Virginica blue. Only chrome (background, text) flipped.
-      Legibility verdict: PASS — all text readable against dark background.
-
-    Critical issue: Both renders show a single XY scatter plot (sepal_length vs petal_length), NOT a scatter plot matrix. The spec requires a SPLOM grid of multiple scatter plots with diagonal univariate distributions and linked brushing.
+      Background: Near-black (~#1A1A17) — correct for dark theme
+      Chrome: Title and legend text appear as light text on dark background; no dark-on-dark failures observed; same 4x4 matrix layout as light render
+      Data: Okabe-Ito data colors identical to light render (positions 1-3 unchanged; only chrome flips between themes)
+      Legibility verdict: PASS
+      NOTE: Same stale-image caveat applies — images do not reflect current code output
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 21
       max: 30
       items:
       - id: VQ-01
@@ -55,45 +56,48 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set. All text readable in both themes.
+        comment: Font sizes correctly set per pygal guide (title=28, label=22, major_label=18,
+          legend=16); both theme tokens assigned correctly
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text overlaps. Minor point density overlap in center.
+        comment: 150 iris points in single chart; minor overlap expected at species
+          boundaries but not severe
       - id: VQ-03
         name: Element Visibility
-        score: 3
+        score: 1
         max: 6
-        passed: true
-        comment: Data points are very small (~3 px) at 4800x2700. Visible but not
-          optimal.
+        passed: false
+        comment: 'CRITICAL BUG: range=(4, 8) sets Y-axis (petal_length) to 4-8 cm;
+          Setosa petal_length 1.0-1.9 cm entirely cut off; Versicolor lower values
+          clipped'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, no red-green sole signal.
+        comment: Okabe-Ito palette is CVD-safe for deuteranopia and protanopia
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
         passed: true
-        comment: Data occupies ~30-40% of canvas. Large whitespace on right and top.
+        comment: Landscape 4800x2700 appropriate for scatter chart
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sepal Length (cm) and Petal Length (cm) — descriptive with units.
+        comment: Sepal Length (cm) / Petal Length (cm) with correct units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73, Okabe-Ito order correct, backgrounds #FAF8F1/#1A1A17
-          correct.'
+        comment: 'Correct backgrounds (#FAF8F1/#1A1A17), Okabe-Ito positions 1-3 in
+          correct order, first series = #009E73'
     design_excellence:
       score: 8
       max: 20
@@ -102,23 +106,24 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Correct theming and palette. Configured library default appearance.
+        passed: false
+        comment: Default pygal styling with custom Style object; no distinctive design
+          choices beyond required palette
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Dotted grid lines (pygal default), full border frame, minimal customization.
+        comment: Minimal customization; default pygal chrome and grid treatment
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Three species clusters visible but no emphasis, no focal point, no
-          visual hierarchy.
+        comment: Single XY scatter on two variables provides no visual hierarchy or
+          storytelling
     spec_compliance:
-      score: 4
+      score: 2
       max: 15
       items:
       - id: SC-01
@@ -126,30 +131,32 @@ review:
         score: 0
         max: 5
         passed: false
-        comment: WRONG PLOT TYPE. Single XY scatter instead of scatter plot matrix
-          (SPLOM).
+        comment: 'WRONG PLOT TYPE: code creates single pygal.XY() scatter chart, not
+          a scatter plot matrix (SPLOM). Fixed x_title/y_title confirm only one pair
+          shown.'
       - id: SC-02
         name: Required Features
         score: 0
         max: 4
         passed: false
-        comment: No scatter matrix grid, no linked brushing, no diagonal distributions,
-          no lasso selection.
+        comment: No matrix layout, no linked brushing, no diagonal histograms, no
+          selection/de-emphasis, no reset mechanism
       - id: SC-03
         name: Data Mapping
-        score: 1
+        score: 0
         max: 3
         passed: false
-        comment: sepal_length vs petal_length correctly mapped but only one of many
-          required pairs shown.
+        comment: Only 2 of 4 iris variables plotted; range=(4,8) clips petal_length
+          Y-axis hiding Setosa and partial Versicolor
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Title format exactly correct. Legend labels match species.
+        comment: 'Title format correct; legend shows species names; minor: no descriptive
+          prefix'
     data_quality:
-      score: 11
+      score: 9
       max: 15
       items:
       - id: DQ-01
@@ -157,23 +164,23 @@ review:
         score: 2
         max: 6
         passed: false
-        comment: Shows one variable pair. Fails to show all pairwise combinations
-          required by SPLOM.
+        comment: Shows one variable pair; misses SPLOM concept of all pairwise comparisons
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris dataset — real, well-known scientific dataset. Excellent for
-          scatter matrix.
+        comment: Iris dataset is real-world, domain-neutral, canonical choice for
+          multivariate scatter matrix
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Sepal 4-8 cm, petal 1-7 cm — factually correct for iris.
+        passed: false
+        comment: range=(4,8) correct for sepal_length X-axis but wrong for petal_length
+          Y-axis (1.0-6.9 cm); clips 50+ data points
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -181,33 +188,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports -> data -> plot -> save. No classes or functions.
+        comment: Flat script, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Iris dataset is deterministic. No random seed needed.
+        comment: Iris dataset is deterministic; no random seed needed
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: All imports used.
+        passed: false
+        comment: 'All post-sys.path imports carry # noqa: E402 disable comments; sys.path
+          manipulation is fragile boilerplate'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Loop over species is idiomatic.
+        comment: Clean, concise code for what it implements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct.
+        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 5
+      score: 4
       max: 10
       items:
       - id: LM-01
@@ -215,13 +223,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct use of pygal.XY with Style object and theme tokens.
+        comment: Correct use of pygal.XY(), Style object, render_to_png(), HTML export,
+          point label dicts for hover tooltips
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
-        passed: true
-        comment: HTML export with per-point {value, label} tooltip format is pygal-distinctive.
+        passed: false
+        comment: Only basic XY scatter used; pygal SVG composition and HTML interactivity
+          not leveraged for SPLOM requirement
   verdict: REJECTED
 impl_tags:
   dependencies:
