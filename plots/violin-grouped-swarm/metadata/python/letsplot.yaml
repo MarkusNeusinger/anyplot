@@ -1,155 +1,167 @@
 library: letsplot
+language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:48:04Z'
-updated: '2026-01-09T16:51:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858848647
+updated: '2026-05-18T03:33:38Z'
+generated_by: claude-haiku
+workflow_run: 26011659529
 issue: 3529
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/letsplot/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent color accessibility with blue/yellow palette that is colorblind-safe
-  - Perfect spec compliance - implements all required features (grouped violins, swarm
-    overlay, transparency, color matching)
-  - Clean, readable code following KISS principles
-  - Good use of position_jitterdodge for point placement within violins
-  - Realistic data scenario with meaningful variation across groups
-  - Proper use of alpha for violin transparency allowing points to show through
-  weaknesses:
-  - Legend could be positioned slightly closer to the plot area
-  - Could leverage more of lets-plot distinctive interactive features
-  image_description: 'The plot displays a grouped violin plot with swarm overlay showing
-    response times (in milliseconds) across three task types (Simple, Moderate, Complex)
-    and two expertise levels (Novice and Expert). Blue (muted steel blue, #306998)
-    represents Novice and yellow/gold (#FFD43B) represents Expert. Each category has
-    two side-by-side violin plots with individual data points overlaid inside them.
-    The violins have approximately 50% transparency allowing the points to be visible.
-    The distributions show clear patterns: Novice users have higher response times
-    and wider spreads than Experts across all task types, with the difference most
-    pronounced in Complex tasks. The title follows the correct format "violin-grouped-swarm
-    · letsplot · pyplots.ai" and is displayed prominently at the top. The legend is
-    positioned on the right side showing both groups with colored markers. Axis labels
-    are descriptive with units ("Response Time (ms)" on Y-axis, "Task Type" on X-axis).
-    The overall layout is clean with a minimal theme and no x-axis grid lines.'
+  - 'Perfect visual quality: all text readable, no overlap, excellent contrast in
+    both themes'
+  - Proper theme-adaptive chrome using tokens (PAGE_BG, INK, INK_SOFT) consistently
+  - Spec-compliant data with realistic pharmaceutical context (drug efficacy by dosage
+    + treatment)
+  - 'Idiomatic letsplot usage: position adjustments for grouped violin + swarm are
+    appropriate'
+  - Okabe-Ito palette correctly applied (#009E73 first series)
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels (Dosage Level, Efficacy Score), tick marks all dark and clearly visible
+      Data: Grouped violins with swarm overlay; green #009E73 (Placebo) and orange #D55E00 (Treatment); alpha=0.5 transparency on violins; point sizes appropriate
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, ticks all light-colored (INK_SOFT #B8B7B0) and clearly readable; no dark-on-dark failures
+      Data: Colors identical to light render (green and orange preserved); legend background uses elevated tone (#242420) with clear separation
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and bold, axis labels and tick labels are all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, violins are well-spaced
+        comment: Font sizes explicitly set; all text readable in both themes via proper
+          token usage
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title separated; labels and ticks have adequate spacing; legend positioned
+          cleanly
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are visible within violins, good size and alpha for the density
+        comment: Violins visible with alpha=0.5; swarm points appropriately sized
+          and positioned
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/Yellow palette is colorblind-safe, excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, balanced proportions
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units Response Time (ms), X-axis is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette; colorblind-safe with excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 px; perfect proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle, but legend position could be slightly closer to the
-          plot
+        passed: true
+        comment: Descriptive labels and title in correct format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 (light) and #1A1A17 (dark);
+          both renders correctly themed'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom Okabe-Ito palette; professional token usage; intentional design
+          choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal spines; subtle grid; clean legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; violins + swarm effectively communicate drug
+          efficacy across doses
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct grouped violin plot with swarm overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Category on X, Value on Y, Group as hue/color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: grouped violins, swarm points, transparency,
-          color matching'
-      - id: SC-04
-        name: Data Range
+        comment: Grouped violins, color differentiation, swarm points with matching
+          hue, appropriate transparency, spacing
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full data range from 0 to ~1300
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Dosage; Y: Efficacy Score; Fill/Color: Group; all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Novice/Expert with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: violin-grouped-swarm · letsplot · pyplots.ai'
+        comment: Title and legend match spec format
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distribution shapes, spreads, and outliers; good
-          variety across groups
+        comment: 'All aspects visible: distributions, raw data, group and dose comparisons'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Response times across task types and expertise levels is a plausible,
-          neutral scenario
+        comment: Pharmaceutical scenario; realistic values (1-10 scale, means 3-7.5)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic for response times (50-1300ms), though some
-          outliers are quite high
+        comment: Dosage levels and efficacy scale sensible; data range reasonable
     code_quality:
       score: 10
       max: 10
@@ -159,51 +171,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No functions or classes; simple data generation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity; position adjustments are idiomatic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot() composition proper; geom_violin/geom_point idiomatic; position
+          adjustments appropriate
+      - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses ggplot grammar and position_jitterdodge which is a lets-plot
-          strength, but could leverage more interactive features
+        comment: Standard practices; limited showcase of advanced letsplot capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
