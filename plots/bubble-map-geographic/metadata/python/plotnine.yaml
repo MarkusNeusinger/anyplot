@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:09:49Z'
-updated: '2026-05-18T22:46:56Z'
+updated: '2026-05-18T23:00:24Z'
 generated_by: claude-sonnet
 workflow_run: 26064291917
 issue: 3625
@@ -12,44 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-ma
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 77
+quality_score: 74
 review:
   strengths:
   - scale_size_area() correctly encodes bubble area proportionally to population —
     perceptually accurate and a plotnine strength
-  - Ocean-blue panel background (#D4E8F7) is a geographically intuitive design choice
-    that makes the map feel professional
   - coord_fixed(ratio=1.0) with explicit longitude/latitude limits ensures correct
     geographic proportions
-  - Real world population data for 30 globally representative cities; plausible and
-    neutral
-  - 'Clean grammar-of-graphics layered approach: polygon basemap layer + bubble layer
-    + dual legends'
-  - Good font sizing hierarchy (24/20/16) for the 4800x2700px canvas
+  - 'geom_polygon() basemap layer + geom_point() bubble layer: idiomatic grammar-of-graphics
+    layering'
+  - Ocean-blue panel background (#D4E8F7) is a geographically intuitive design choice
+  - 30 real-world cities with accurate population data; realistic, neutral context
+  - Good font sizing hierarchy (24/20/16pt) appropriate for 4800x2700px canvas
   weaknesses:
-  - 'Palette non-compliance: uses custom Python-logo hex colors instead of Okabe-Ito;
-    first series (Africa) gets purple #9467BD not brand green #009E73; fix by replacing
-    region_colors with Okabe-Ito order'
-  - 'CQ-05 / Theme support missing: saves as plot.png not plot-{THEME}.png; no os.getenv(ANYPLOT_THEME)
-    logic; must add PAGE_BG/INK/INK_SOFT tokens and theme-adaptive chrome'
-  - 'Code title mismatch: source reads plotnine · pyplots.ai — must include python
-    and use anyplot.ai domain'
-  - 'Red-green CVD hazard: current palette uses green (N. America) and red (S. America);
-    resolved automatically when switching to Okabe-Ito'
-  - 'Asia cluster crowding: ~12 cities overlap heavily; fix by sorting df descending
-    by population before plotting so smaller bubbles render on top'
+  - 'No ANYPLOT_THEME logic: code has no os.getenv(''ANYPLOT_THEME'') — must add PAGE_BG/INK/INK_SOFT
+    tokens and save as plot-{THEME}.png'
+  - 'Non-Okabe-Ito palette: region_colors uses Python-logo hexes (#306998, #9467BD,
+    etc.); first series must be #009E73; replace with canonical Okabe-Ito order'
+  - 'Wrong title in source: missing python language token and uses pyplots.ai not
+    anyplot.ai'
+  - 'CVD hazard: current palette has green N. America + red S. America as sole distinguishers
+    (resolved by switching to Okabe-Ito)'
+  - 'Asia cluster overlap: ~12 cities crowd together; sort df descending by population
+    before plotting so smaller bubbles render on top'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white outer page background; ocean/panel background is light blue #D4E8F7 (explicit geographic ocean color choice, not #FAF8F1)
-      Chrome: Title "World City Populations · bubble-map-geographic · python · plotnine · anyplot.ai" in bold, clearly readable dark text; axis labels "Longitude (°)" and "Latitude (°)" readable; tick labels readable; legend text readable
-      Data: Six region colors for bubbles (non-Okabe-Ito — Africa appears teal, Asia orange, Europe blue, N. America pink, Oceania yellow, S. America light blue); bubble sizes proportional to population (Tokyo largest ~37M); continent polygons in light gray; alpha=0.7 on bubbles
+      Background: Warm off-white outer page background (~#FAF8F1); ocean/panel background is light blue #D4E8F7 (explicit geographic ocean color — not the standard #FAF8F1 but a geographically intentional choice for the map)
+      Chrome: Title "World City Populations · bubble-map-geographic · python · plotnine · anyplot.ai" in bold dark text, clearly readable. Axis labels "Longitude (°)" and "Latitude (°)" readable. Tick labels visible. Legend text readable. All chrome dark on light background.
+      Data: Six region colors for bubbles appearing to use Okabe-Ito hues (Africa=teal ~#009E73, Asia=orange ~#D55E00, Europe=blue ~#0072B2, N. America=pink ~#CC79A7, Oceania=yellow ~#E69F00, S. America=sky blue ~#56B4E9) — NOTE: source code has non-Okabe-Ito hex values (#9467BD, #306998), indicating code/image version mismatch (images are from prior code version). Bubble sizes proportional to population (Tokyo largest ~37M, Dubai smallest ~3.4M). Continent polygons in light gray. Heavy overlap in Asia cluster.
       Legibility verdict: PASS — all text elements are clearly readable on the light background
 
     Dark render (plot-dark.png):
       Background: Dark near-black outer page background (~#1A1A17); ocean/panel background is dark navy blue (dark-mode adaptation of the light blue ocean); continent polygons in dark charcoal-gray
-      Chrome: Title text appears white/light and clearly readable; axis labels light-colored and readable; tick labels light and readable; legend text light and readable — no dark-on-dark failures observed
-      Data: Bubble data colors appear identical to light render (same teal/orange/blue/pink/yellow/cyan hues as light theme — Okabe-Ito positions 1-6 are consistent between themes); size encoding unchanged
-      Legibility verdict: PASS — all text elements clearly readable on the dark background; no dark-on-dark failures
+      Chrome: Title text appears white/light and clearly readable against dark background. Axis labels light-colored and readable. Tick labels light and readable. Legend text light and readable. No dark-on-dark failures observed. NOTE: source code has no os.getenv("ANYPLOT_THEME") logic — the dark render must be a cached image from a prior code version that had theme-adaptive chrome.
+      Data: Bubble data colors appear identical to light render (same teal/orange/blue/pink/yellow/cyan hues — only chrome flips between themes). Size encoding unchanged.
+      Legibility verdict: PASS — all text elements clearly readable on the dark background; no dark-on-dark failures. However, the current source code cannot reproduce this dark render.
   criteria_checklist:
     visual_quality:
       score: 22
@@ -62,77 +59,78 @@ review:
         passed: true
         comment: 'Font sizes explicitly set (title=24, axes=20, ticks=16). Both renders
           readable. Minor deduction: code lacks explicit ANYPLOT_THEME text color
-          tokens but images show correct adaptation.'
+          tokens (INK/INK_SOFT).'
       - id: VQ-02
         name: No Overlap
         score: 4
         max: 6
         passed: true
-        comment: East/South Asia cluster (Tokyo, Delhi, Shanghai, Mumbai, Beijing)
-          produces notable bubble overlap. Alpha=0.7 mitigates but crowding is visible.
+        comment: Asia cluster (Tokyo, Delhi, Shanghai, Mumbai, Beijing, Osaka) produces
+          heavy bubble crowding. Alpha=0.7 mitigates but significant overlap remains.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All bubbles visible; small cities (Dubai ~3.4M) are tiny but identifiable.
-          Continent polygons provide good basemap context.
+        comment: All bubbles visible; smallest (Dubai 3.4M) is tiny but identifiable.
+          Area encoding is clear.
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: 'Custom palette uses #2CA02C (green, N. America) and #D62728 (red,
-          S. America) as sole region distinguishers, creating a red-green CVD hazard.'
+        comment: 'Code palette uses #2CA02C (green) for N. America and #D62728 (red)
+          for S. America — red-green CVD hazard.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions; legend fits without crowding; minor edge whitespace
-          inefficiency.
+        comment: Good 16:9 proportions; legend fits without crowding; slight whitespace
+          inefficiency on right margin; title text runs close to left canvas edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: Longitude (deg) and Latitude (deg) are descriptive with units. Rendered
-          title correct.
+          title correct in legacy images.
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Code uses custom Python-logo hex colors not Okabe-Ito. First series
-          (Africa alphabetically) maps to purple #9467BD not brand green #009E73.
-          Panel background hardcoded to #D4E8F7 not #FAF8F1 for light theme.'
+        comment: 'Non-compliant: code contains #306998 (Python Blue, explicit 0-score
+          condition) for Asia; Africa gets #9467BD (purple) not #009E73 (brand green).
+          No os.getenv(ANYPLOT_THEME) means theme-adaptive chrome absent from source.'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Ocean-blue panel background is a creative, geographically appropriate
-          design choice. Moderate design thought beyond defaults.
+        comment: Well-configured library default. Ocean-blue panel background is a
+          geographically intuitive touch. Not exceptional design.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: theme_minimal removes most chrome clutter. Grid lines subtle. Legend
-          has box frame (minor). Top/right spines removed.
+        comment: Subtle grid (alpha=0.5), panel_grid_minor hidden, ocean background
+          adds geographic context. Some refinement evident but not polished.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Asian dominance immediately apparent. Geographic encoding works naturally.
-          Clear focal point on East Asia cluster.
+        comment: Size variation creates clear hierarchy (Tokyo at 37M is visually
+          dominant). Geographic clustering reveals Asian megacity density. No annotations;
+          viewer must find the story independently.
     spec_compliance:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: SC-01
@@ -140,30 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct geographic bubble map with area-proportional markers via
-          scale_size_area().
+        comment: Correct geographic bubble map with scale_size_area() for perceptually
+          accurate area encoding.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
         comment: 'Area-proportional sizing, transparency (alpha=0.7), geographic basemap,
-          size legend all present. Missing: no minimum bubble size enforced.'
+          size legend, color legend all present. Missing: no minimum bubble size enforced.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude->x, Latitude->y, Population->size, Region->color all correctly
-          mapped. coord_fixed preserves geographic proportions.
+        comment: Longitude->x, Latitude->y, Population->size, Region->color. coord_fixed
+          preserves geographic proportions.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 1
         max: 3
-        passed: true
-        comment: Rendered title matches required format. Code source has wrong title
-          (missing python, old domain pyplots.ai) — repair loop should fix the source
-          code title string.
+        passed: false
+        comment: Code title is 'World City Populations · bubble-map-geographic · plotnine
+          · pyplots.ai' — missing python language token and using wrong domain pyplots.ai
+          instead of anyplot.ai.
     data_quality:
       score: 14
       max: 15
@@ -173,21 +171,21 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 30 cities covering all major continents; both size (population) and
-          color (region) encoding dimensions used.
+        comment: 30 cities across all continents; both size (population) and color
+          (region) encoding demonstrated.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
         comment: Real world cities with plausible population figures in millions.
-          Neutral content.
+          Neutral geographic content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population range 3.4M-37.4M realistic for megacities. Coordinates
+        comment: Population range 3.4M-37.4M realistic for megacities; coordinates
           span full world.
     code_quality:
       score: 9
@@ -198,33 +196,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'No functions or classes; clean linear flow: data -> basemap polygons
-          -> plot -> save.'
+        comment: 'Clean linear flow: data -> basemap polygons -> plot -> save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present (data is deterministic but seed is defensive).
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used. No dead imports.
+        comment: All imported symbols are used; no dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake interactivity or simulated tooltips.
+        comment: Appropriate complexity; no fake interactivity or simulated tooltips.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
         comment: Saves as plot.png not plot-light.png/plot-dark.png. No os.getenv(ANYPLOT_THEME)
-          logic; ANYPLOT_THEME-adaptive chrome absent from source code.
+          logic; theme-adaptive chrome (PAGE_BG, INK, INK_SOFT tokens) completely
+          absent.
     library_mastery:
       score: 7
       max: 10
@@ -235,22 +234,24 @@ review:
         max: 5
         passed: true
         comment: 'Correct ggplot grammar: ggplot() + geom_polygon() + geom_point()
-          + scale_*() + coord_fixed() + labs() + theme(). Layered composition idiomatic.'
+          + scale_size_area() + scale_color_manual() + coord_fixed() + labs() + theme().
+          Layered composition is idiomatic.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
         comment: scale_size_area() (perceptually accurate bubble sizing), coord_fixed()
-          for geographic integrity, geom_polygon() for basemap are distinctively plotnine/ggplot2
-          features.
-  verdict: APPROVED
+          for geographic integrity, and geom_polygon() for basemap are distinctively
+          plotnine/ggplot2 features.
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
