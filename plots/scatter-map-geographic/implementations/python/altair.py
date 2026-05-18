@@ -1,12 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-10
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-18
 """
 
-import altair as alt
-import pandas as pd
+import os
+import sys
 
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+while script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+import altair as alt  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BASEMAP_FILL = "#E5E3D8" if THEME == "light" else "#3A3935"
+BASEMAP_STROKE = "#9C9A91" if THEME == "light" else "#5A5855"
 
 # Data: Major world cities with population and region
 cities_data = {
@@ -51,6 +67,10 @@ cities_data = {
         "Johannesburg",
         "Toronto",
         "Sydney",
+        "Casablanca",
+        "Addis Ababa",
+        "Nairobi",
+        "Dar es Salaam",
     ],
     "latitude": [
         35.6762,
@@ -93,6 +113,10 @@ cities_data = {
         -26.2041,
         43.6532,
         -33.8688,
+        33.5731,
+        9.0320,
+        -1.2921,
+        -6.8000,
     ],
     "longitude": [
         139.6503,
@@ -135,6 +159,10 @@ cities_data = {
         28.0473,
         -79.3832,
         151.2093,
+        -7.5898,
+        38.7469,
+        36.8219,
+        39.2069,
     ],
     "population_millions": [
         37.4,
@@ -177,6 +205,10 @@ cities_data = {
         5.8,
         6.2,
         5.3,
+        3.9,
+        4.4,
+        4.0,
+        4.7,
     ],
     "region": [
         "Asia",
@@ -219,42 +251,53 @@ cities_data = {
         "Africa",
         "North America",
         "Oceania",
+        "Africa",
+        "Africa",
+        "Africa",
+        "Africa",
     ],
 }
 
 df = pd.DataFrame(cities_data)
 
-# Load world basemap from world-atlas
+# Load world basemap
 world = alt.topo_feature("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json", "countries")
 
 # Create basemap layer
 basemap = (
     alt.Chart(world)
-    .mark_geoshape(fill="#e8e8e8", stroke="#ffffff", strokeWidth=0.5)
+    .mark_geoshape(fill=BASEMAP_FILL, stroke=BASEMAP_STROKE, strokeWidth=0.5)
     .project(type="naturalEarth1")
     .properties(width=1600, height=900)
 )
 
-# Define color scale for regions
-region_colors = ["#306998", "#FFD43B", "#E74C3C", "#2ECC71", "#9B59B6", "#1ABC9C"]
+# Define color scale for regions using Okabe-Ito palette positions
+region_colors = {
+    "Asia": "#009E73",  # OI position 1 (brand green)
+    "Africa": "#D55E00",  # OI position 2 (vermillion)
+    "Europe": "#0072B2",  # OI position 3 (blue)
+    "North America": "#CC79A7",  # OI position 4 (reddish purple)
+    "South America": "#E69F00",  # OI position 5 (orange)
+    "Oceania": "#56B4E9",  # OI position 6 (sky blue)
+}
 
 # Create scatter points layer
 points = (
     alt.Chart(df)
-    .mark_circle(opacity=0.8, stroke="#ffffff", strokeWidth=1)
+    .mark_circle(opacity=0.75, stroke=PAGE_BG, strokeWidth=1.5)
     .encode(
         longitude="longitude:Q",
         latitude="latitude:Q",
         size=alt.Size(
             "population_millions:Q",
-            scale=alt.Scale(range=[100, 2000]),
+            scale=alt.Scale(range=[150, 2000]),
             legend=alt.Legend(
                 title="Population (millions)", titleFontSize=18, labelFontSize=16, orient="bottom-left", offset=20
             ),
         ),
         color=alt.Color(
             "region:N",
-            scale=alt.Scale(range=region_colors),
+            scale=alt.Scale(domain=list(region_colors.keys()), range=list(region_colors.values())),
             legend=alt.Legend(title="Region", titleFontSize=18, labelFontSize=16, orient="bottom-right", offset=20),
         ),
         tooltip=["city:N", "population_millions:Q", "region:N"],
@@ -263,21 +306,35 @@ points = (
     .properties(width=1600, height=900)
 )
 
-# Combine layers
+# Combine layers with theme-adaptive styling
 chart = (
     alt.layer(basemap, points)
     .properties(
         title=alt.Title(
-            text="World Major Cities · scatter-map-geographic · altair · pyplots.ai",
+            text="World Major Cities · scatter-map-geographic · python · altair · anyplot.ai",
             fontSize=28,
             anchor="middle",
-            color="#333333",
-        )
+            color=INK,
+        ),
+        background=PAGE_BG,
     )
-    .configure_view(stroke=None)
-    .configure_legend(padding=15, cornerRadius=5, fillColor="#ffffff", strokeColor="#cccccc")
+    .configure_view(stroke=None, fill=PAGE_BG)
+    .configure_legend(
+        padding=15,
+        cornerRadius=0,
+        fillColor="transparent",
+        strokeColor=INK_SOFT,
+        strokeWidth=1,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_axis(labelColor=INK_SOFT, titleColor=INK)
+    .configure_title(color=INK)
 )
 
-# Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save as PNG and HTML with theme-suffixed filenames
+script_dir = os.path.dirname(os.path.abspath(__file__))
+png_path = os.path.join(script_dir, f"plot-{THEME}.png")
+html_path = os.path.join(script_dir, f"plot-{THEME}.html")
+chart.save(png_path, scale_factor=3.0)
+chart.save(html_path)
