@@ -1,164 +1,197 @@
 library: pygal
+language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:51:31Z'
-updated: '2026-01-09T23:56:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868895050
+updated: '2026-05-18T12:37:48Z'
+generated_by: claude-haiku
+workflow_run: 26033280532
 issue: 3576
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/pygal/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent color choice with blue/yellow distinction for significance - highly
-    accessible
-  - Proper horizontal layout with variables on y-axis for readability of long names
-  - Clean sorting by coefficient magnitude for easy comparison
-  - Clear zero reference line for significance assessment
-  - Good use of custom style for consistent sizing
+  - All font sizes explicitly set (28px title, 18px labels, 16px ticks) with perfect
+    readability in both light and dark themes
+  - 'Both renders correctly theme-adapted: #FAF8F1 light background with dark text,
+    #1A1A17 dark background with light text'
+  - Correct Okabe-Ito palette with brand green (#009E73) for significant coefficients,
+    theme-adaptive muted gray for non-significant
+  - 'All spec requirements implemented: coefficient points, confidence interval bars,
+    zero reference line, significance distinction'
+  - Professional housing price regression dataset showing realistic and comprehensive
+    feature coverage
+  - Clean, reproducible code with deterministic seed and logical structure (imports
+    → data → chart → save)
+  - Horizontal layout with sorted variables optimizes readability and aids coefficient
+    comparison
   weaknesses:
-  - Zero Reference line appears in legend as a dot rather than showing dashed line
-    style, creating visual inconsistency
-  - Confidence intervals added as separate None-labeled series creates many legend-less
-    series in the SVG structure
-  image_description: 'The plot displays a horizontal coefficient plot with confidence
-    intervals for a housing price regression model. Ten predictor variables are shown
-    on the y-axis (from bottom to top: Age of Home, Distance to City Center, Crime
-    Rate Index, Property Tax Rate, Number of Bedrooms, Garage Size, School Rating,
-    Number of Bathrooms, Lot Size, Square Footage), ordered by coefficient magnitude.
-    Coefficient estimates are shown as points on the x-axis (ranging from -0.6 to
-    0.7), with horizontal lines extending left and right indicating 95% confidence
-    intervals. Blue dots and lines represent statistically significant coefficients
-    (p < 0.05), while yellow/gold dots and lines indicate non-significant coefficients.
-    A vertical dashed gray line at x=0 serves as the zero reference line for significance
-    assessment. The title reads "coefficient-confidence · pygal · pyplots.ai" and
-    the x-axis is labeled "Coefficient Estimate (Standardized)". A legend at the bottom
-    shows three categories: Significant (p < 0.05), Not Significant, and Zero Reference.
-    The plot uses a clean white background with subtle gray gridlines.'
+  - Design Excellence (DE-01) is competent but not exceptional at 5/8 - uses well-configured
+    library defaults rather than distinctive design choices
+  - Library Mastery (LM-02) is conservative at 2/5 - doesn't fully leverage pygal's
+    unique interactive capabilities or advanced styling features
+  - Visual refinement (DE-02) at 4/6 - while good, could be elevated with more sophisticated
+    grid styling or visual hierarchy techniques
+  - No data storytelling emphasis beyond color differentiation (DE-03 at 4/6) - could
+    benefit from size variation or focal point emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correctly implemented, not pure white
+      Chrome: Title "coefficient-confidence · python · pygal · anyplot.ai" is clearly visible in dark text (28px). X-axis label "Coefficient Estimate" is readable (18px). Y-axis variable names are all readable in dark text with no overlaps. Grid lines are subtle and visible. Tick labels at 16px are clear and well-spaced.
+      Data: 10 variables displayed with coefficients. Significant coefficients (6 of them) shown as green (#009E73) dots with horizontal error bars. Non-significant coefficients (4 of them) shown as muted gray dots with error bars. Vertical dashed reference line at zero is visible in soft gray (#B8B7B0). All markers clearly distinguishable from background. Confidence intervals range from approximately -0.3 to +0.7.
+      Legibility verdict: PASS - All text is readable, no contrast failures, no "light on light" issues. Perfect theme adaptation for light surface.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correctly implemented, not pure black
+      Chrome: Title is clearly visible in light text (#F0EFE8) against dark background. X-axis label "Coefficient Estimate" is readable in light text. Y-axis variable names are all readable with no overlaps. Grid lines are subtle but visible. Tick labels in light color (18-16px) are clear and properly spaced.
+      Data: Data colors are identical to light render - green (#009E73) for significant, gray for non-significant - confirming proper theme implementation where only chrome changes, not data colors. All confidence intervals clearly visible. Reference line visible in light soft gray. Marker sizes and line widths identical to light render, proving consistent rendering across themes.
+      Legibility verdict: PASS - All text is readable, no dark-on-dark failures, proper contrast throughout. Brand green (#009E73) remains visually prominent. Perfect theme adaptation for dark surface.
+
+    Both renders pass theme-readability validation. Data colors are identical between light and dark (only chrome adapts). No legibility failures in either render.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text is clearly readable at full size. Title, axis labels, variable
-          names, and legend text are appropriately sized for the 4800x2700 canvas.
+        comment: Title 28px, labels 18px, tick labels 16px - all explicitly set and
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements. Variable names on y-axis are well-spaced,
-          confidence intervals do not overlap each other.
+        comment: Y-axis variable names, x-axis labels, and legend all have excellent
+          spacing with zero overlaps
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Dots are well-sized (dots_size=20), confidence interval lines are
-          clearly visible with appropriate stroke width.
+        comment: Marker size (18px dots) and CI bar width (4px stroke) are optimally
+          adapted for 10 coefficients
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-safe.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space, though there is some unused space on the
-          left side. Plot fills approximately 60% of canvas.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has descriptive label 'Coefficient Estimate (Standardized)'
-          with unit indication.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with green vs. muted gray provides excellent CVD-safe
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins (top:80, bottom:100,
+          left:300, right:80) - excellent proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title includes full spec info, x-axis labeled 'Coefficient Estimate'
+          - descriptive and informative
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is #009E73 ✓; background light #FAF8F1
+          ✓, dark #1A1A17 ✓; text colors theme-adaptive ✓; data colors identical across
+          themes ✓'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Zero Reference line appears in legend as a dot rather than showing
-          dashed line style, creating visual inconsistency.
+        comment: Custom Style with theme tokens and Okabe-Ito palette shows professional
+          competence, but design is well-configured defaults rather than distinctive/exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid styling is subtle (x-guides on, y-guides off), professional
+          margins and spacing, but minimal customization beyond pygal defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color distinction (green=significant, gray=non-sig) and zero reference
+          line guide interpretation, variables sorted by magnitude aids comparison,
+          but no emphasis technique
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct chart type: horizontal coefficient plot with confidence
-          intervals.'
+        comment: XY scatter chart with horizontal error bars - correct coefficient
+          plot type with all required elements
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables on y-axis, coefficient values on x-axis, exactly as spec
-          requires.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: points for coefficients, horizontal
-          error bars for CIs, vertical zero reference line, color distinction for
-          significance, sorted by magnitude.'
-      - id: SC-04
-        name: Data Range
+        comment: Coefficient points ✓, confidence interval bars ✓, zero reference
+          line ✓, significance distinction ✓, all spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points and full confidence intervals.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: coefficient values (-0.3 to +0.7), Y-axis: variable names
+          (10 housing-related predictors), all data visible and correctly mapped'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies significant vs non-significant coefficients.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: coefficient-confidence · pygal · pyplots.ai'
+        comment: 'Title: ''coefficient-confidence · python · pygal · anyplot.ai''
+          - correct format ✓; Legend shows ''Significant (p < 0.05)'', ''Not Significant'',
+          ''Zero Reference'' - clear labels ✓'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both positive and negative coefficients, significant and non-significant
-          results, varying confidence interval widths.
+        comment: Shows significant (6) and non-significant (4) coefficients, positive
+          and negative values, wide range of CI widths - comprehensive example
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Housing price regression is a classic, neutral, realistic scenario.
+        comment: Housing price prediction regression - real, comprehensible, neutral
+          scenario with realistic variables (square footage, bedrooms, crime rate,
+          school rating)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are mostly realistic for standardized coefficients, though
-          some CIs are quite wide.
+        comment: Coefficient values plausible for housing prices, confidence intervals
+          realistic with varying widths, significance mix (6/10 sig) is realistic
     code_quality:
       score: 10
       max: 10
@@ -168,51 +201,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure without functions
-          or classes.
+        comment: 'Linear structure: imports → theme tokens → data generation → chart
+          creation → save. No functions or classes. Direct and readable.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility.
+        comment: np.random.seed(42) at line 26 ensures deterministic data generation
+          across runs
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pygal, Style.'
+        comment: 'Only necessary imports: os, numpy, pygal, Style. All imports are
+          used. No dead code.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API.
+        comment: Well-structured, Pythonic, appropriate complexity. No over-engineering,
+          no fake UI, clean variable names
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Correct output format
+          and file naming. Renders correctly for both light and dark themes.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: false
-        comment: Uses XY chart workaround rather than pygal's native capabilities.
-          Confidence intervals added as separate unlabeled series.
+        comment: Proper Style object, chart initialization, data series via chart.add(),
+          y_labels for custom axis labels. Correct usage but doesn't leverage advanced
+          pygal patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses Style with theme-adaptive colors and xrange/range for axis bounds
+          - competent but generic. Doesn't explore pygal's interactive capabilities
+          or distinctive styling.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - custom-legend
+  techniques: []
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []

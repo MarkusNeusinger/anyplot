@@ -1,18 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # Significant coefficients (position 1 - brand green)
+MUTED = INK_MUTED  # Non-significant coefficients (theme-adaptive muted)
+
 # Data: Coefficients from a housing price regression model
 np.random.seed(42)
 
-# Variable names (predictors in housing price model)
 variables = [
     "Square Footage",
     "Number of Bedrooms",
@@ -26,7 +38,7 @@ variables = [
     "Property Tax Rate",
 ]
 
-# Generate realistic coefficients (some significant, some not)
+# Generate realistic coefficients
 coefficients = np.array([0.45, 0.12, 0.28, 0.18, 0.35, -0.22, -0.15, 0.25, -0.08, -0.05])
 std_errors = np.array([0.08, 0.09, 0.06, 0.05, 0.10, 0.07, 0.12, 0.08, 0.11, 0.09])
 
@@ -47,76 +59,102 @@ significant = significant[sort_idx]
 
 n_vars = len(variables)
 
-# Custom style for pyplots.ai
-# Colors: Blue for significant, Yellow for non-significant, Gray for zero line
+# Custom style for theme-adaptive rendering
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#999999"),  # Blue, Yellow, Gray
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    value_font_size=36,
-    value_label_font_size=36,
-    tooltip_font_size=36,
-    stroke_width=5,
-    font_family="sans-serif",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(BRAND, MUTED),
+    title_font_size=28,
+    label_font_size=18,
+    major_label_font_size=16,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
-# Create XY chart for coefficient plot with confidence intervals
+# Create XY chart for coefficient plot
 chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="coefficient-confidence · pygal · pyplots.ai",
-    x_title="Coefficient Estimate (Standardized)",
+    title="coefficient-confidence · python · pygal · anyplot.ai",
+    x_title="Coefficient Estimate",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=3,
-    show_y_guides=True,
+    legend_at_bottom_columns=2,
+    show_y_guides=False,
     show_x_guides=True,
-    dots_size=20,
+    dots_size=18,
     stroke=False,
     xrange=(-0.6, 0.7),
     range=(0, n_vars + 1),
-    margin=50,
+    margin_top=80,
+    margin_bottom=100,
+    margin_left=300,
+    margin_right=80,
     spacing=30,
     y_labels=[{"value": i + 1, "label": variables[i]} for i in range(n_vars)],
 )
 
-# Build data points for significant and non-significant coefficients
+# Build data series
 sig_points = []
 nonsig_points = []
+ci_sig = []
+ci_nonsig = []
 
-for i, (coef, sig) in enumerate(zip(coefficients, significant, strict=True)):
+for i, (coef, lower, upper, sig) in enumerate(
+    zip(coefficients, ci_lower, ci_upper, significant, strict=False)
+):
     y_pos = i + 1
-    point = (coef, y_pos)
     if sig:
-        sig_points.append(point)
+        sig_points.append((coef, y_pos))
+        ci_sig.append(((lower, y_pos), (upper, y_pos)))
     else:
-        nonsig_points.append(point)
+        nonsig_points.append((coef, y_pos))
+        ci_nonsig.append(((lower, y_pos), (upper, y_pos)))
 
-# Add series for coefficient points (Blue for significant first as primary color)
-chart.add("Significant (p < 0.05)", sig_points)
-chart.add("Not Significant", nonsig_points)
+# Add point series (significant first for color order)
+if sig_points:
+    chart.add("Significant (p < 0.05)", sig_points, color=BRAND, dots_size=18)
+if nonsig_points:
+    chart.add("Not Significant", nonsig_points, color=MUTED, dots_size=18)
 
-# Add vertical reference line at zero (null hypothesis threshold)
+# Add confidence interval lines as horizontal lines
+for (lower, y), (upper, y) in ci_sig:
+    chart.add(
+        None,
+        [(lower, y), (upper, y)],
+        stroke=True,
+        show_dots=False,
+        stroke_style={"width": 4, "linecap": "round"},
+        color=BRAND,
+    )
+
+for (lower, y), (upper, y) in ci_nonsig:
+    chart.add(
+        None,
+        [(lower, y), (upper, y)],
+        stroke=True,
+        show_dots=False,
+        stroke_style={"width": 4, "linecap": "round"},
+        color=MUTED,
+    )
+
+# Add vertical reference line at zero
 zero_line = [(0, 0), (0, n_vars + 1)]
-chart.add("Zero Reference", zero_line, stroke=True, show_dots=False, stroke_style={"width": 3, "dasharray": "10,5"})
+chart.add(
+    "Zero Reference",
+    zero_line,
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": 3, "dasharray": "8,4"},
+    color=INK_SOFT,
+)
 
-# Add confidence interval lines as separate series
-# Match colors to the point colors (blue for sig, yellow for non-sig)
-for i, (_coef, lower, upper, sig) in enumerate(zip(coefficients, ci_lower, ci_upper, significant, strict=True)):
-    y_pos = i + 1
-    ci_line = [(lower, y_pos), (upper, y_pos)]
-    # Use matching color for CI line
-    color = "#306998" if sig else "#FFD43B"
-    chart.add(None, ci_line, stroke=True, show_dots=False, stroke_style={"width": 5}, color=color)
-
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save outputs
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
