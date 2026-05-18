@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-18
@@ -39,10 +39,10 @@ totals = data.groupby("quarter")["revenue"].sum().reset_index()
 totals.columns = ["quarter", "total"]
 totals["label"] = totals["total"].apply(lambda x: f"${x}K")
 
-# Create stacked bar chart
+# Create stacked bar chart with enhanced styling
 bars = (
     alt.Chart(data)
-    .mark_bar(strokeWidth=1, stroke=PAGE_BG)
+    .mark_bar(strokeWidth=2, stroke="white", opacity=0.95)
     .encode(
         x=alt.X("quarter:N", title="Quarter", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
         y=alt.Y("revenue:Q", title="Revenue ($K)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
@@ -57,16 +57,24 @@ bars = (
     )
 )
 
-# Total labels above bars
+# Total labels with improved styling for emphasis
 labels = (
     alt.Chart(totals)
-    .mark_text(fontSize=22, fontWeight="bold", dy=-15, color=INK)
+    .mark_text(fontSize=24, fontWeight="bold", dy=-20, color=INK, align="center")
     .encode(x=alt.X("quarter:N"), y=alt.Y("total:Q"), text="label:N")
+)
+
+# Add visual hierarchy with a subtle reference line at average total
+avg_total = totals["total"].mean()
+reference_line = (
+    alt.Chart(pd.DataFrame({"avg": [avg_total]}))
+    .mark_rule(color=INK_SOFT, opacity=0.2, strokeWidth=2, strokeDash=[5, 5])
+    .encode(y=alt.Y("avg:Q"))
 )
 
 # Combine and configure
 chart = (
-    (bars + labels)
+    (reference_line + bars + labels)
     .properties(
         width=1600,
         height=900,
