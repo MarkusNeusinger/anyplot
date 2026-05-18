@@ -1,159 +1,181 @@
 library: matplotlib
+language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:47:40Z'
-updated: '2026-01-09T23:52:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868888757
+updated: '2026-05-18T12:24:48Z'
+generated_by: claude-haiku
+workflow_run: 26032690620
 issue: 3576
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/matplotlib/plot.png
-preview_html: null
-quality_score: 94
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of the coefficient plot specification with all required
-    features
-  - Clean visual design with proper colorblind-safe color scheme
-  - Professional use of different markers (circles vs squares) to distinguish significance
-  - Variables properly sorted by coefficient magnitude as specified
-  - Good use of matplotlib errorbar function with comprehensive styling
+  - Perfect visual quality with all text readable in both light and dark themes
+  - Correct Okabe-Ito palette (#009E73) with flawless theme-adaptive chrome
+  - Excellent data representation with clear significance distinction and null reference
+    line
+  - Professional appearance with well-proportioned markers, error bars, and subtle
+    grid
+  - Perfect specification compliance with all required features correctly implemented
+  - Realistic and neutral housing regression domain with plausible data
   weaknesses:
-  - Legend marker edge colors (white) blend slightly with white legend background
-  - Data context could be slightly more specific (e.g., actual variable units in context)
-  image_description: 'The plot displays a coefficient plot with 10 housing price regression
-    predictors arranged vertically on the y-axis (from bottom to top: Distance to
-    City Center, Crime Rate Index, Has Pool, Year Built, Garage Spaces, Number of
-    Bedrooms, Lot Size (acres), School Rating, Number of Bathrooms, Square Footage).
-    Each coefficient is shown as a point with horizontal error bars representing 95%
-    confidence intervals. A prominent yellow/gold vertical reference line at x=0 indicates
-    the null hypothesis threshold. Significant coefficients (where CIs do not cross
-    zero) are shown as blue circles, while non-significant coefficients are shown
-    as gray squares. The x-axis shows "Coefficient Estimate (Standardized)" ranging
-    from approximately -0.4 to 0.6. A legend in the lower right distinguishes "Significant
-    (p < 0.05)" (blue circle) from "Not Significant" (gray square). The title uses
-    the correct format "coefficient-confidence · matplotlib · pyplots.ai". The layout
-    is clean with the plot filling most of the canvas, subtle grid lines on the x-axis
-    only, and top/right spines removed for a cleaner look.'
+  - Source code lacks explicit theme handling (ANYPLOT_THEME, color tokens) despite
+    perfect theme rendering in outputs — code/render mismatch suggests file may be
+    outdated
+  - Design Excellence is adequate but generic, following configured defaults without
+    custom sophistication
+  - Library usage is standard with no distinctive matplotlib features beyond errorbar()
+    and custom legend
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all in dark text (#1A1A17), perfectly readable against light background
+      Data: Green circles (#009E73) for significant coefficients, gray squares (#999999) for non-significant; yellow reference line at zero (#FFD43B) stands out
+      Legibility verdict: PASS - All text and data elements are clear and well-spaced
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title, axis labels, tick labels in light text (#F0EFE8/#4A4A44 inverted), strong contrast against dark background, no dark-on-dark failures
+      Data: Green circles (#009E73) and gray squares identical to light render - data colors constant, only chrome flips
+      Legibility verdict: PASS - All text maintains excellent readability; yellow reference line visible on dark surface
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, x-axis label at 20pt, y-axis tick labels at 18pt,
-          all perfectly readable
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt)
+          — perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, variable names well spaced
+        comment: All text elements fully visible with no collisions or readability
+          issues
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized appropriately (14pt), error bars thick (3pt) with good
-          caps (8pt)
+        comment: Markers (markersize=14) and error bars (elinewidth=3) optimally sized
+          and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and gray are colorblind-safe and easily distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned without
-          obstructing data
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis label is descriptive with context (Standardized)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Strong contrast between green (#009E73) and gray (#999999); CVD-safe
+          Okabe-Ito palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas with balanced margins; figsize=(16,9) well-utilized
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'X-axis label includes units: ''Coefficient Estimate (Standardized)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (correct); backgrounds #FAF8F1 (light) and
+          #1A1A17 (dark); theme-adaptive text throughout'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend marker edge colors (white) blend with white legend background
+        comment: Professional and well-configured, but resembles defaults without
+          exceptional innovation
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Spines removed, subtle grid; fairly standard refinement without distinctive
+          polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Good visual distinction through color/shape; yellow reference line
+          emphasizes null; good but not exceptional narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct coefficient plot with horizontal error bars for confidence
-          intervals
+        comment: Correct coefficient plot with horizontal error bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables on y-axis, coefficient values on x-axis (horizontal layout
-          as specified)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Zero reference line, color/marker distinction for significance, sorted
-          by magnitude
-      - id: SC-04
-        name: Data Range
+        comment: Vertical reference line, error bars, significance distinction, all
+          present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis coefficients, Y-axis variables, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels significant vs non-significant
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format coefficient-confidence · matplotlib · pyplots.ai
+        comment: Title format correct; legend labels match and descriptive
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive and negative coefficients, mix of significant and
-          non-significant, varied effect sizes
+        comment: Shows positive/negative coefficients, significant/non-significant,
+          varying CI widths
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Housing price regression is plausible, though coefficient values
-          are somewhat generic
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Standardized coefficients in sensible -0.5 to 0.5 range
+        comment: Housing price regression with realistic variable names; neutral and
+          plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coefficients and standard errors factually sound for standardized
+          regression
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -161,42 +183,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, plot, save'
+        comment: 'Linear: data → plot → save; no unnecessary functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.pyplot, numpy, matplotlib.lines.Line2D)
+        comment: Only matplotlib and numpy imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib APIs
+        comment: Clean, Pythonic, no fake UI or over-engineering
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: Saves as 'plot.png' not 'plot-{THEME}.png'; lacks theme handling
+          code despite perfect theme renders
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of errorbar with custom styling, custom legend with Line2D,
-          axes customization
+        comment: Uses ax.errorbar(), ax.axvline(), custom legend with Line2D; standard
+          but correct patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage with no distinctive matplotlib features beyond errorbar()
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -209,4 +238,3 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling

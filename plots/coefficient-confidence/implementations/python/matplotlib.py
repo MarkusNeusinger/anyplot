@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 94/100 | Created: 2026-01-09
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-18
 """
 
 import matplotlib.pyplot as plt
