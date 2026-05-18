@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-transport-static: Static Transport Network Diagram
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-18
@@ -88,6 +88,9 @@ def get_edge_offset(source, target, route_idx):
     return sign * magnitude
 
 
+# Track which route types we've added to legend
+legend_items = set()
+
 # Draw edges (routes) with arrows
 for i, route in enumerate(routes):
     src = station_lookup[route["source"]]
@@ -115,6 +118,8 @@ for i, route in enumerate(routes):
     y1_draw = y1_off - shrink * dy / length
 
     color = OKABE_ITO[route["type"]]
+    show_in_legend = route["type"] not in legend_items
+    legend_items.add(route["type"])
 
     # Draw edge line
     fig.add_trace(
@@ -125,7 +130,9 @@ for i, route in enumerate(routes):
             line=dict(color=color, width=3),
             hoverinfo="text",
             hovertext=f"{route['route_id']}: {src['label']} → {tgt['label']}<br>{route['dep']} → {route['arr']}",
-            showlegend=False,
+            showlegend=show_in_legend,
+            name=route["type"].capitalize(),
+            legendgroup=route["type"],
         )
     )
 
@@ -151,7 +158,8 @@ for i, route in enumerate(routes):
     mx = (x0_draw + x1_draw) / 2
     my = (y0_draw + y1_draw) / 2
 
-    label_offset = 0.025
+    # Increase label offset in central area to reduce overlap
+    label_offset = 0.035
     mx_label = mx + px * label_offset
     my_label = my + py * label_offset
 
@@ -166,7 +174,7 @@ for i, route in enumerate(routes):
         y=my_label,
         text=f"<b>{route['route_id']}</b><br>{route['dep']}→{route['arr']}",
         showarrow=False,
-        font=dict(size=11, color=color),
+        font=dict(size=12, color=color),
         bgcolor=ELEVATED_BG,
         bordercolor=INK_SOFT,
         borderwidth=1,
@@ -209,22 +217,6 @@ for station in stations:
         borderpad=3,
     )
 
-# Add legend for route types
-legend_y_start = 0.95
-for i, (route_type, color) in enumerate(OKABE_ITO.items()):
-    fig.add_trace(
-        go.Scatter(
-            x=[0.02],
-            y=[legend_y_start - i * 0.06],
-            mode="markers+text",
-            marker=dict(size=15, color=color, symbol="line-ew", line=dict(width=4, color=color)),
-            text=[f"  {route_type.capitalize()}"],
-            textposition="middle right",
-            textfont=dict(size=16, color=color),
-            showlegend=False,
-            hoverinfo="skip",
-        )
-    )
 
 # Update layout
 fig.update_layout(
@@ -242,7 +234,8 @@ fig.update_layout(
     paper_bgcolor=PAGE_BG,
     font=dict(color=INK),
     margin=dict(l=40, r=40, t=80, b=40),
-    showlegend=False,
+    showlegend=True,
+    legend=dict(x=0.02, y=0.98, bgcolor="rgba(0,0,0,0)", borderwidth=0),
 )
 
 # Save outputs
