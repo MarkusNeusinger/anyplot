@@ -60,6 +60,14 @@ routes <- left_join(routes, stations %>% select(id, x, y), by = c("source_id" = 
   left_join(stations %>% select(id, x, y), by = c("target_id" = "id")) %>%
   rename(x_end = x, y_end = y)
 
+# Calculate midpoint for edge labels and format label text
+routes <- routes %>%
+  mutate(
+    x_mid = (x_start + x_end) / 2,
+    y_mid = (y_start + y_end) / 2,
+    label = paste0(route_id, " | ", departure_time, " → ", arrival_time)
+  )
+
 # --- Custom theme -----------------------------------------------------------
 anyplot_theme <- theme_minimal(base_size = 14) +
   theme(
@@ -85,7 +93,19 @@ p <- ggplot() +
     aes(x = x_start, y = y_start, xend = x_end, yend = y_end, color = route_type),
     arrow = arrow(length = unit(0.3, "cm"), type = "closed", angle = 20),
     linewidth = 0.8,
-    alpha = 0.6
+    alpha = 0.7
+  ) +
+  # Draw edge labels with background
+  geom_label(
+    data = routes,
+    aes(x = x_mid, y = y_mid, label = label),
+    size = 3.5,
+    color = INK,
+    fill = ELEVATED_BG,
+    label.padding = unit(0.3, "lines"),
+    label.size = 0.3,
+    label.r = unit(0.15, "lines"),
+    alpha = 0.85
   ) +
   # Draw stations as nodes
   geom_point(
@@ -97,15 +117,18 @@ p <- ggplot() +
     stroke = 2,
     shape = 21
   ) +
-  # Draw station labels
-  geom_text(
+  # Draw station labels with subtle background
+  geom_label(
     data = stations,
     aes(x = x, y = y, label = label),
-    size = 5,
+    size = 4.5,
     color = INK,
-    fontface = "bold",
-    vjust = -0.5,
-    hjust = 0.5
+    fill = ELEVATED_BG,
+    label.padding = unit(0.4, "lines"),
+    label.size = 0.2,
+    vjust = -1.2,
+    hjust = 0.5,
+    alpha = 0.9
   ) +
   # Scale colors for route types
   scale_color_manual(
