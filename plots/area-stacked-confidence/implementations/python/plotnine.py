@@ -1,14 +1,18 @@
-""" pyplots.ai
+""" anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 99/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     element_blank,
+    element_line,
+    element_rect,
     element_text,
     geom_line,
     geom_ribbon,
@@ -21,6 +25,16 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first three series)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Quarterly energy consumption forecast by source with prediction intervals
 np.random.seed(42)
@@ -103,8 +117,25 @@ df_areas = pd.concat(
 # Set order for legend
 df_areas["series"] = pd.Categorical(df_areas["series"], categories=["Solar", "Wind", "Hydro"], ordered=True)
 
-# Colors - using Python blue and complementary colors
-color_map = {"Solar": "#FFD43B", "Wind": "#306998", "Hydro": "#4ECDC4"}
+# Color mapping using Okabe-Ito palette
+color_map = {"Solar": OKABE_ITO[0], "Wind": OKABE_ITO[1], "Hydro": OKABE_ITO[2]}
+
+# Theme customization
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_minor=element_blank(),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(color=INK, size=24, weight="medium"),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=18),
+    figure_size=(16, 9),
+)
 
 # Create the plot with stacked areas and confidence bands
 plot = (
@@ -119,20 +150,11 @@ plot = (
     + scale_fill_manual(values=color_map, name="Energy Source\n(with 90% CI)")
     + scale_color_manual(values=color_map, guide=None)
     # Labels and styling
-    + labs(x="Quarter", y="Energy Consumption (TWh)", title="area-stacked-confidence · plotnine · pyplots.ai")
+    + labs(x="Quarter", y="Energy Consumption (TWh)", title="area-stacked-confidence · Python · plotnine · anyplot.ai")
     + scale_x_continuous(breaks=range(1, 21, 2))
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        legend_position="right",
-        panel_grid_minor=element_blank(),
-    )
+    + anyplot_theme
 )
 
 # Save the plot
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
