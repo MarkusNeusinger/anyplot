@@ -1,7 +1,7 @@
 """ anyplot.ai
 violin-swarm: Violin Plot with Overlaid Swarm Points
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 81/100 | Updated: 2026-05-18
+Quality: 90/100 | Updated: 2026-05-18
 """
 
 import os  # noqa: I001
