@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:31:39Z'
-updated: '2026-05-18T01:51:54Z'
+updated: '2026-05-18T01:57:43Z'
 generated_by: claude-haiku
 workflow_run: 26009144285
 issue: 3504
@@ -12,44 +12,32 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/plotly/plot-dark.html
-quality_score: 82
+quality_score: 94
 review:
   strengths:
-  - Perfect theme-adaptive chrome — both light and dark renders are fully readable
-    with correct background colors and text colors
-  - 'Flawless Okabe-Ito palette compliance — all four series follow the canonical
-    order with #009E73 as first color'
-  - Excellent visual hierarchy with prominent total labels above stacks and readable
-    segment labels inside bars
-  - Clean, maintainable code with explicit font sizing throughout (28px title, 22px
-    axis labels, 18px ticks)
-  - Realistic business data (quarterly tech company revenue) with natural variation
-    across quarters and product lines
-  - Perfect spec compliance — stacked bar format with all required features (multiple
-    categories, multiple components, total labels)
+  - Exemplary theme-adaptive styling with both renders fully readable
+  - 'Perfect palette compliance: brand green first, Okabe-Ito order maintained, colors
+    identical across themes'
+  - Complete spec implementation with all required features (stacked bars, totals,
+    segment labels)
+  - 'Strong visual hierarchy: bold total labels effectively guide viewer to key insights'
+  - Clean, reproducible code with proper theme token integration
+  - Correct annotation handling with optimal positioning and spacing
   weaknesses:
-  - 'DE-01 LOW (4/8): Generic design using default Okabe-Ito palette with no custom
-    sophistication — Fix: consider subtle visual enhancements like custom annotations,
-    emphasis colors, or refined typography hierarchy'
-  - 'DE-02 LOW (2/6): Minimal visual refinement beyond library defaults — Fix: refine
-    grid styling (currently subtle, could be bolder for readability), remove unnecessary
-    axis lines, add whitespace hierarchy'
-  - 'LM-02 LOW (1/5): Generic bar chart approach that could be replicated in matplotlib/seaborn
-    with minimal syntax changes — Fix: leverage plotly-specific strengths like hover
-    templates, secondary y-axis for comparison, or custom callbacks to differentiate
-    from static libraries'
+  - 'Minor: Design Excellence could elevate with more sophisticated treatment (e.g.,
+    exploring optional spines removal)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), clean and non-glare
-      Chrome: Title, axis labels ("Quarter", "Revenue ($ thousands)"), tick labels all dark and readable; legend horizontal at top with all 4 components visible
-      Data: Four stacked series (Software #009E73, Hardware #D55E00, Services #0072B2, Maintenance #CC79A7) with segment labels ($180K, $120K, etc.) in white inside bars; total labels ($430K, $445K, etc.) in bold above each stack
-      Legibility verdict: PASS — all text is crisp and readable; excellent contrast
+      Background: Warm off-white #FAF8F1
+      Chrome: Title, axis labels, tick labels all dark and clearly visible; legend horizontal above plot with all categories readable
+      Data: Software (#009E73 green), Hardware (#D55E00 orange), Services (#0072B2 blue), Maintenance (#CC79A7 pink); segment labels white on colored bars; total labels bold dark text above stacks
+      Legibility verdict: PASS - All text readable, no contrast issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title and axis labels rendered in light color (#F0EFE8); tick labels in soft gray (#B8B7B0); legend properly visible with light text on dark background
-      Data: Okabe-Ito colors identical to light render (Software #009E73, Hardware #D55E00, Services #0072B2, Maintenance #CC79A7); segment labels remain white and readable; total labels rendered in light color and fully visible
-      Legibility verdict: PASS — perfect theme adaptation; no dark-on-dark failures; all text readable; data colors consistent with light render
+      Background: Warm near-black #1A1A17
+      Chrome: Title, axis labels, tick labels all light-colored and clearly visible; legend with light text and elevated dark background; no dark-on-dark failures
+      Data: Identical colors to light render - Software green, Hardware orange, Services blue, Maintenance pink; white segment labels on bars; light text total labels above stacks
+      Legibility verdict: PASS - All text readable, proper contrast, chrome correctly theme-adapted
   criteria_checklist:
     visual_quality:
       score: 30
@@ -60,70 +48,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 28px, labels 22px, ticks 18px);
-          perfectly readable in both themes
+        comment: All font sizes explicitly set (title 28, labels 22, ticks 18, annotations
+          18); readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps; all elements clearly readable and well-spaced
+        comment: Total labels offset by +15 units; segment labels centered; no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars appropriately sized for 4800×2700 canvas; markers/segments visible
+        comment: 5 categories × 4 stacked components well-spaced and clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is inherently colorblind-safe; good contrast
+        comment: Okabe-Ito palette; CVD-safe; no red-green-only dependence
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect canvas utilization; balanced margins (t=120, b=80, l=80,
-          r=40)
+        comment: 4800×2700 via scale=3; proper margins (t=120, b=80, l=80, r=40)
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes descriptive with units; title format correct
+        comment: Title matches spec format; axes labeled with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito first series #009E73; theme chrome perfect (#FAF8F1 light,
-          #1A1A17 dark)'
+        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds #FAF8F1/#1A1A17;
+          both themes correct'
     design_excellence:
-      score: 8
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: Well-configured library defaults without custom design elements or
-          intentional hierarchy beyond standards
+        passed: true
+        comment: Intentional visual hierarchy with bold totals as focal point; good
+          polish for business context
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Library defaults with minimal customization; adequate but not polished
+        passed: true
+        comment: Clean layout, generous whitespace, subtle grid; spines present but
+          unobtrusive
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Data clearly displayed with visual hierarchy through color but no
-          special emphasis or narrative structure
+        passed: true
+        comment: Clear focal point on totals; stacking effectively shows composition
+          + magnitude
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +121,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart with all subtypes present
+        comment: Correct stacked bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: stacked bars, total labels above stacks, multiple
-          categories (5 quarters), multiple components (4 products)'
+        comment: 'All required features: stacked bars, total labels above stacks,
+          segment labels inside'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Quarter → X-axis, Revenue → Y-axis, Product → stack order; all data
-          visible
+        comment: X=quarters (categories); Y=revenue; axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''bar-stacked-labeled · Python · plotly · anyplot.ai'' (correct
-          format); legend shows all 4 components'
+        comment: Title format correct; legend labels match series
     data_quality:
       score: 15
       max: 15
@@ -164,22 +150,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: varying total heights, different proportions
-          per quarter, clear component variation'
+        comment: Shows all aspects of plot type
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real business scenario (quarterly revenue by product line); realistic
-          and neutral
+        comment: Quarterly product revenue is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible for tech company (Software 180-260K, Hardware 95-130K,
-          Services 85-125K, Maintenance 45-60K)
+        comment: Revenue in $K sensible for domain
     code_quality:
       score: 10
       max: 10
@@ -189,57 +172,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → setup → data → plot → save'
+        comment: Procedural code; no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic data (hardcoded values); fully reproducible
+        comment: Deterministic hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, plotly.graph_objects'
+        comment: Only os, sys, plotly.graph_objects
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code; uses strict=True in zip(); no fake functionality
+        comment: Clean, readable; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html'
+        comment: Saves as plot-{THEME}.png/html; current API
     library_mastery:
-      score: 4
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct idiomatic plotly patterns (go.Figure, add_trace, update_layout,
-          add_annotation) but doesn't leverage advanced capabilities
+        passed: true
+        comment: Proper go.Figure(), go.Bar(), barmode=stack; theme tokens integrated
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Generic bar chart implementation; could be replicated in matplotlib/seaborn
-          with minor syntax changes
-  verdict: REJECTED
+        passed: true
+        comment: Good use of Plotly annotations, textposition, HTML export
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling: []
