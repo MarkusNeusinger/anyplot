@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 97/100 | Updated: 2026-05-18
 """
 
-import numpy as np
+import os
+
 import pandas as pd
 from plotnine import (
     aes,
@@ -24,9 +25,18 @@ from plotnine import (
 )
 
 
-# Data: Major world cities with population and region
-np.random.seed(42)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BASEMAP_COLOR = "#E8E3D8" if THEME == "light" else "#2A2A26"
+BASEMAP_EDGE = "#C0B5A8" if THEME == "light" else "#4A4945"
+GRID_COLOR = INK if THEME == "light" else INK
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+
+# Data: Major world cities with population and region
 cities_data = {
     "city": [
         "Tokyo",
@@ -255,15 +265,14 @@ for i in range(len(au_lon)):
 
 df_continents = pd.DataFrame(continents)
 
-# Define region colors using colorblind-safe palette (Python Blue first)
-# Order alphabetically as plotnine uses alphabetical ordering for scale_color_manual
+# Define region colors using Okabe-Ito palette
 region_colors = {
-    "Africa": "#9467BD",
-    "Asia": "#306998",
-    "Europe": "#FFD43B",
-    "N. America": "#2CA02C",
-    "Oceania": "#17BECF",
-    "S. America": "#D62728",
+    "Africa": OKABE_ITO[0],
+    "Asia": OKABE_ITO[1],
+    "Europe": OKABE_ITO[2],
+    "N. America": OKABE_ITO[3],
+    "Oceania": OKABE_ITO[4],
+    "S. America": OKABE_ITO[5],
 }
 
 # Create the geographic scatter map
@@ -272,33 +281,33 @@ plot = (
     + geom_polygon(
         aes(x="lon", y="lat", group="continent"),
         data=df_continents,
-        fill="#E8E8E8",
-        color="#B0B0B0",
+        fill=BASEMAP_COLOR,
+        color=BASEMAP_EDGE,
         size=0.5,
-        alpha=0.8,
+        alpha=0.6,
     )
-    + geom_point(aes(x="longitude", y="latitude", color="region", size="population"), data=df, alpha=0.85, stroke=0.3)
+    + geom_point(aes(x="longitude", y="latitude", color="region", size="population"), data=df, alpha=0.8, stroke=0.5)
     + scale_color_manual(values=list(region_colors.values()), name="Region")
-    + scale_size_continuous(range=(3, 18), name="Population (M)")
-    + labs(
-        title="World Major Cities · scatter-map-geographic · plotnine · pyplots.ai", x="Longitude (°)", y="Latitude (°)"
-    )
+    + scale_size_continuous(range=(4, 20), name="Population (M)")
+    + labs(title="scatter-map-geographic · python · plotnine · anyplot.ai", x="Longitude (°)", y="Latitude (°)")
     + coord_fixed(ratio=1.0, xlim=(-180, 180), ylim=(-60, 80))
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
+        plot_title=element_text(size=24, color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.3),
         legend_position="right",
-        panel_grid_major=element_line(color="#DDDDDD", size=0.3, alpha=0.5),
+        panel_grid_major=element_line(color=GRID_COLOR, size=0.3, alpha=0.08),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="#D4E8F7", color=None),
-        plot_background=element_rect(fill="#F5F5F5", color=None),
+        panel_background=element_rect(fill=PAGE_BG, color=None),
+        plot_background=element_rect(fill=PAGE_BG, color=None),
+        panel_border=element_blank(),
     )
 )
 
-# Save PNG (dpi=300 gives 4800x2700 from 16x9 inches)
-plot.save("plot.png", dpi=300, verbose=False)
+# Save PNG
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
