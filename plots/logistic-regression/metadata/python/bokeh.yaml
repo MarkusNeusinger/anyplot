@@ -1,161 +1,181 @@
 library: bokeh
+language: python
 specification_id: logistic-regression
 created: '2026-01-09T21:55:42Z'
-updated: '2026-01-09T21:58:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866597324
+updated: '2026-05-18T08:42:49Z'
+generated_by: claude-haiku
+workflow_run: 26022257776
 issue: 3550
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/bokeh/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of all specification requirements including jittered
-    data points, sigmoid curve, confidence interval, and decision threshold
-  - Good use of Bokeh-specific features like ColumnDataSource, Span, and Label annotations
-  - Appropriate sizing for 4800x2700 canvas with proper font scaling
-  - Colorblind-accessible color scheme with blue and yellow
-  - Clean, well-structured code following KISS principles
-  - Realistic educational scenario with test scores
+  - Perfect theme adaptation with identical data colors across light/dark renders
+  - All text explicitly sized and theme-colored for full readability in both themes
+  - 'Complete spec compliance: sigmoid curve, confidence intervals, decision threshold,
+    jittered class points'
+  - 'Proper use of Okabe-Ito palette (#009E73 primary, #D55E00 secondary)'
+  - Clean code structure with deterministic seeding and idiomatic Bokeh ColumnDataSource
+    usage
   weaknesses:
-  - Legend positioned in bottom-right corner overlaps slightly with Class 0 data points
-    at high test scores
-  - Output path saves to script directory instead of working directory (minor issue
-    for workflow)
-  image_description: 'The plot shows a logistic regression visualization with the
-    characteristic S-shaped sigmoid curve. Blue markers (Class 0 - Failed) are jittered
-    around y=0 at the bottom, while yellow/gold markers (Class 1 - Passed) are jittered
-    around y=1 at the top. The smooth blue logistic curve runs through the middle,
-    showing the predicted probability transition from low to high. A light blue shaded
-    band represents the 95% confidence interval around the curve. A red dashed horizontal
-    line at p=0.5 indicates the decision threshold, labeled "Decision Threshold (p=0.5)".
-    The x-axis shows "Test Score" ranging from roughly 15 to 85, and the y-axis shows
-    "Probability of Passing" from 0 to 1. Model accuracy (88.5%) is annotated in the
-    upper left. The legend in the bottom right identifies all elements: 95% CI, Logistic
-    Curve, Class 0 (Failed), and Class 1 (Passed). The title follows the correct format
-    "logistic-regression · bokeh · pyplots.ai".'
+  - 'DE-02 LOW: Visual refinement could be bolder (legend background is subtle but
+    functional)'
+  - 'LM-02 LOW: Limited distinctive Bokeh features beyond basic Span/Label annotations'
+  - CI band could use slightly higher alpha for greater visual prominence
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct for light theme
+      Chrome: Title "logistic-regression · python · bokeh · anyplot.ai" in dark INK (#1A1A17); axis labels "Test Score" / "Probability of Passing" in dark INK; tick labels in INK_SOFT (#4A4A44); all clearly readable against light background. Legend positioned top-left with background fill and border. Model accuracy annotation "88.5%" and threshold label "Decision Threshold (p=0.5)" both readable.
+      Data: Class 0 (bottom, green #009E73) and Class 1 (top, orange #D55E00) points with alpha=0.6 jitter. Smooth logistic curve (line_width=5, #009E73) forms characteristic S-shape. Confidence interval band as light green semi-transparent fill (fill_alpha=0.15, #009E73). Horizontal dashed line at y=0.5 in INK_SOFT. All data elements clearly distinguishable.
+      Legibility verdict: PASS — full legibility across all text, data, and annotations
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct for dark theme
+      Chrome: Title text in light INK (#F0EFE8); axis labels in light INK; tick labels in INK_SOFT (#B8B7B0); all clearly readable against dark background. No dark-on-dark failures. Legend, accuracy label, and threshold label all readable. Grid lines subtle at 10% alpha with theme-correct INK color.
+      Data: Class 0 (green #009E73) and Class 1 (orange #D55E00) colors **identical** to light render — only chrome flips. Logistic curve, CI band, and threshold line all match light render's data representation. All elements remain clearly visible.
+      Legibility verdict: PASS — full legibility across all text and data; zero dark-on-dark failures; brand green visible and vibrant
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 20pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legend well-positioned away from data
+        comment: 28pt title, 22pt axis labels, 18pt ticks — all explicitly readable
+          in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend top-left, accuracy/threshold labels positioned away from data,
+          no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Markers appropriately sized (size=20) with good alpha (0.6-0.7) for
-          200 points; line width of 5 is good
+        comment: Data points visible at alpha=0.6, curve prominent (line_width=5),
+          CI band at fill_alpha=0.15 visible, grid subtle at 10%
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) are colorblind-safe, distinct
-          colors
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good use of 4800x2700 dimensions
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels Test Score and Probability of Passing
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito palette (#009E73, #D55E00) colorblind-safe, distinct orange/green
+          not red-green'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 landscape, good proportions, nothing cut off, generous
+          whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend positioned in bottom-right where Class 0 data points exist,
-          causing slight visual clutter
+        passed: true
+        comment: Title correct format; X='Test Score', Y='Probability of Passing'
+          — both descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand), second #D55E00 (Okabe-Ito pos 2);
+          backgrounds #FAF8F1/#1A1A17 correct; data colors identical between themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Okabe-Ito palette, thoughtful color hierarchy, meaningful annotations
+          (accuracy, threshold)
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Legend with background/border, subtle grid at 10%, theme tokens throughout
+          — functional refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear hierarchy with curve as focal point, color coding by class,
+          decision threshold annotation guides understanding
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct logistic regression curve with sigmoid shape
+        comment: Correct logistic regression sigmoid curve with binary classification
+          data
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X correctly shows continuous predictor, Y shows probability 0-1
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: jittered points, distinct class colors,
-          smooth curve, 95% CI band, decision threshold line at 0.5, model accuracy
-          annotation'
-      - id: SC-04
-        name: Data Range
+        comment: ✓ Class-colored points, ✓ sigmoid curve, ✓ 95% CI band, ✓ p=0.5 threshold
+          line, ✓ jitter for visibility
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=predictor (0-1 probability), Y=outcome (0/1 classes); axes cover
+          all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format logistic-regression · bokeh · pyplots.ai
+        comment: Title format correct; legend shows 95% CI, Logistic Curve, Class
+          0, Class 1 with clear labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear class separation, sigmoid transition region well visible,
-          some overlap in decision boundary region
+        comment: 'Shows all logistic regression aspects: binary classification, probabilities,
+          uncertainty, decision boundary'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Test score (20-80 range) predicting pass/fail is a realistic educational
-          scenario
+        comment: Test score → pass/fail outcome; realistic educational domain; neutral
+          scenario; 200 samples plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Test scores 20-80 are reasonable; probabilities 0-1 correct; 10%
-          label noise gives realistic separation
+        comment: X-axis 20-80 (sensible test score range), Y-axis 0-1 (correct probability)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,48 +183,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: No functions/classes, straightforward linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and random_state=42
+        comment: np.random.seed(42) ensures deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (os, numpy, bokeh components, sklearn)
+        comment: 'All imports used: numpy, bokeh.*, sklearn, selenium; no dead code'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity (Bokeh is interactive), appropriate complexity,
+          clear variable names
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: All APIs are current
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to script directory rather than current working directory
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html; Bokeh 3.9.0 current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses Bokeh-specific features: ColumnDataSource, Span for threshold
-          line, Label for annotations, varea for confidence band'
+        comment: ColumnDataSource for data management, figure() high-level API, varea()/line()/scatter()
+          appropriate; theme tokens idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Uses Span (threshold line) and Label (annotations) — Bokeh-specific
+          but limited scope; no advanced interactive features
+    score_caps_applied: []
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
+  - selenium
   techniques:
   - annotations
+  - html-export
   patterns:
   - data-generation
   - columndatasource
@@ -212,5 +243,4 @@ impl_tags:
   - regression
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
