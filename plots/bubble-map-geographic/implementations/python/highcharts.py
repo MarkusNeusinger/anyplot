@@ -1,7 +1,7 @@
 """ anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
 Library: highcharts unknown | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-18
+Quality: 88/100 | Updated: 2026-05-18
 """
 
 import json
