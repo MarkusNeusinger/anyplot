@@ -1,216 +1,225 @@
 library: highcharts
+language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:48:43Z'
-updated: '2026-01-09T16:52:08Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858847017
+updated: '2026-05-18T05:05:33Z'
+generated_by: claude-haiku
+workflow_run: 26014402449
 issue: 3526
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visualization of four distinct distribution types (normal, shifted,
-    bimodal, right-skewed)
-  - Clean implementation of the violin-swarm hybrid using Highcharts polygon and scatter
-    series
-  - Good swarm positioning algorithm that keeps points within violin boundaries
-  - Colorblind-safe color palette with good contrast between violin fills and point
-    colors
-  - Proper use of transparency (alpha 0.4) on violins so points remain visible
-  - Professional title formatting following the spec-id · library · pyplots.ai convention
-  - Good subtitle providing context about the data
+  - 'Correct Okabe-Ito palette with #009E73 as first series'
+  - Excellent theme adaptation with readable text in both light and dark renders
+  - Proper transparency on violin shapes (0.35 opacity) keeps swarm points visible
+  - Clear representation of different distribution types (normal, bimodal, right-skewed)
+  - Realistic and neutral data context (reaction times)
+  - Proper use of Highcharts polygon and scatter series for layered visualization
+  - Well-scaled fonts and markers for 4800×2700 canvas
+  - Deterministic data generation with seed for reproducibility
   weaknesses:
-  - Helper function swarm_positions() slightly deviates from KISS principle (though
-    justified for algorithm complexity)
-  - Legend at bottom is somewhat redundant with X-axis category labels
-  - Some swarm points in dense regions could benefit from smaller marker size or more
-    aggressive horizontal spreading
-  image_description: 'The plot displays 4 violin plots with overlaid swarm points
-    for reaction times across experimental conditions (Control, Condition A, Condition
-    B, Condition C). Each violin shows the kernel density estimation as a semi-transparent
-    filled shape with darker-colored individual data points (circles with white borders)
-    overlaid. The colors used are: blue for Control, golden-yellow for Condition A,
-    purple for Condition B, and teal for Condition C. The title "violin-swarm · highcharts
-    · pyplots.ai" is displayed prominently at the top, with a subtitle "Reaction Times
-    Across Experimental Conditions". The Y-axis shows "Reaction Time (ms)" ranging
-    from ~150 to ~530, and the X-axis shows "Experimental Condition" with the four
-    category labels. A horizontal legend at the bottom shows all four conditions with
-    their respective colors. The distributions show distinct shapes: Control has a
-    normal distribution centered around 350ms, Condition A is centered lower around
-    280ms with a long tail toward lower values, Condition B shows a bimodal distribution
-    spanning 320-510ms, and Condition C shows a right-skewed distribution from ~270-480ms.'
+  - Design Excellence limited to defaults and required theme tokens - no extra customization
+    or visual polish
+  - Library Mastery relies on standard Highcharts features without distinctive advanced
+    techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface at #FAF8F1 (correct)
+      Chrome: Title "violin-swarm · highcharts · pyplots.ai" with subtitle "Reaction Times Across Experimental Conditions" are dark-colored and clearly readable. Axis labels "Experimental Condition" (X) and "Reaction Time (ms)" (Y) are readable. Tick labels on both axes are in secondary ink color (#4A4A44) and legible. Grid lines are subtle but visible.
+      Data: Four violin distributions (Control-green #009E73, Condition A-orange #D55E00, Condition B-blue #0072B2, Condition C-purple #CC79A7) with white-outlined swarm points overlaid. Violins have 0.35 fill opacity allowing points to remain visible. Distribution shapes clearly show distinct patterns: Control is normal, Condition A shows concentration at lower values (faster responses), Condition B shows bimodal distribution, Condition C shows right-skewed pattern.
+      Legibility verdict: PASS - all text is readable, data colors are distinct and visible, violins are properly transparent.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface at #1A1A17 (correct)
+      Chrome: Title and subtitle now rendered in light text (#F0EFE8) and remain clearly readable against dark background. Axis labels and tick labels are appropriately lightened (secondary ink #B8B7B0) and legible. Grid lines maintain subtle appearance with light tint.
+      Data: Data colors are identical to light render (only chrome changed to light theme). All four violin distributions and swarm points are clearly visible and distinguishable. White outline on swarm points still provides good contrast against dark background.
+      Legibility verdict: PASS - all text is readable, no dark-on-dark failures detected, data colors consistent with light render, theme adaptation successful.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable
-          at the 4800x2700 resolution. Font sizes are appropriately scaled.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. Category labels are well-spaced, and
-          legend items do not overlap.
+        comment: All text clearly readable in both themes, proper font sizing for
+          4800x2700 canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Swarm points well-positioned within violin bounds, no overlapping
+          elements
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Swarm points are visible with white borders providing good contrast
-          against the violin fill. However, some points within the denser regions
-          of the violins are slightly difficult to distinguish individually.
+        comment: All markers visible, violin shapes clear, distribution patterns evident
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: The color palette (blue, gold, purple, teal) is colorblind-safe with
-          no red-green conflicts. Good contrast between colors.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills the canvas well with balanced margins. Good use of space.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has 'Reaction Time (ms)' with units, X-axis has 'Experimental
-          Condition'.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette used correctly, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle, but the legend placement at the bottom is somewhat
-          redundant since the X-axis already shows category names.
+        passed: true
+        comment: Descriptive title and subtitle, axes have clear labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, follows Okabe-Ito order, backgrounds #FAF8F1/#1A1A17
+          correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Correct palette and theme handling, but no extra design customization
+          beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean minimal aesthetic with subtle grid, proper legend styling with
+          elevated background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clearly shows distribution patterns and individual data; bimodal/skewed
+          characteristics visible
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: Violin plot with overlaid swarm points.'
+        comment: Correct violin plot with overlaid swarm points
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, continuous values on Y-axis as specified.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: violin shapes with transparency,
-          swarm points centered within violin, horizontal spreading of points.'
-      - id: SC-04
-        name: Data Range
+        comment: Violin shapes, KDE, swarm overlay, transparency, horizontal spread
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within the plot area.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on X-axis, reaction times in ms on Y-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four conditions.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title correctly formatted as 'violin-swarm · highcharts · pyplots.ai'.
+        comment: Title format correct, legend shows condition names
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent: Shows four distinct distributions - normal (Control),
-          shifted normal (Condition A), bimodal (Condition B), and right-skewed/exponential
-          (Condition C).'
+        comment: Shows violin distributions and individual swarms; different distribution
+          types well-represented
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Reaction times across experimental conditions is a plausible neuroscience/psychology
-          scenario.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Reaction times in the 150-530ms range are realistic for cognitive
-          experiments.
+        comment: Reaction times in ms across experimental conditions is realistic
+          and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 100-550ms realistic for reaction times, scale sensible
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses a helper function swarm_positions() which deviates from pure
-          KISS principle, though it is reasonably justified for the swarm algorithm
-          complexity.
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set for reproducibility.
+        comment: Straightforward, no unnecessary complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: Only necessary imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-structured, appropriate swarm positioning algorithm
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated functions.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png and plot.html correctly.
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct PNG/HTML naming convention
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper use of PolygonSeries for violins, ScatterSeries for points,
+          z-index layering
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses PolygonSeries for custom violin shapes and ScatterSeries for
-          swarm points. Uses highcharts-more.js for polygon support. Good use of library,
-          though no highly distinctive interactive features.
+        comment: Uses PolygonSeries geometry capabilities and z-index layering specific
+          to Highcharts
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -226,4 +235,3 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - edge-highlighting
