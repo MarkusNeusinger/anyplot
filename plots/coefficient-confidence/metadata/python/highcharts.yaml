@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:53:23Z'
-updated: '2026-05-18T12:36:41Z'
+updated: '2026-05-18T12:43:02Z'
 generated_by: claude-haiku
 workflow_run: 26033507087
 issue: 3576
@@ -12,44 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 77
 review:
   strengths:
-  - Spec fully compliant (15/15) with all required features
-  - Excellent data quality (15/15) with realistic housing context and good feature
-    coverage
-  - Clean, reproducible code with deterministic data and proper structure
-  - Correct coefficient plot implementation with effective significance distinction
-    through color encoding
-  - Theme-adaptive rendering with readable text in both light and dark themes
-  - Effective use of Highcharts-specific features (xrange series, plotLines, custom
-    tooltips)
+  - Correct plot type with all required features present
+  - Excellent text legibility and readability in both light and dark themes
+  - 'Proper theme-adaptive background colors rendered correctly (#FAF8F1 light, #1A1A17
+    dark)'
+  - Good element sizing and visibility of markers and confidence interval bars
+  - Accurate title format and descriptive axis labels with units
+  - Realistic, neutral data context (housing price regression)
+  - Proper zero reference line and significance distinction with color coding
   weaknesses:
-  - 'Code-rendering mismatch: source specifies #306998 (Python Blue, non-Okabe-Ito)
-    and #FFD43B but rendered output shows teal/green and orange; code colors must
-    be updated to match rendered output or vice versa'
-  - Title contains hardcoded 'pyplots.ai' in code but rendered shows 'anyplot.ai';
-    update code to use correct domain
-  - 'Design excellence minimal (9/20): looks like configured defaults with no visual
-    refinement, custom palette work, or sophisticated styling'
-  - 'Y-axis label sizing: readable but compressed; should increase font size to 22-24px
-    for better legibility at 4800x2700'
-  - 'Palette compliance concern: if code colors (#306998, #FFD43B) are actually used,
-    this violates Okabe-Ito requirement (first series must be #009E73)'
+  - Implementation bypasses highcharts_core Python API, instead hand-coding JavaScript
+    strings — violates idiomatic library usage (LM-01)
+  - 'Non-significant series uses #FFD43B (Okabe-Ito position 7), which per style guide
+    is restricted to thin lines/small markers due to low luminance'
+  - Code doesn't read ANYPLOT_THEME environment variable; output filenames lack theme
+    suffix (should be plot-{THEME}.png)
+  - No custom visual refinement; appears as well-configured library default with no
+    design sophistication beyond defaults
+  - No visual hierarchy or emphasis to guide reader through data storytelling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct theme color
-      Chrome: Title "coefficient-confidence · python · highcharts · anyplot.ai", subtitle, x-axis label "Coefficient Estimate (Standardized)", y-axis showing variable names (Distance to City Center, Crime Rate Index, Property Tax Rate, Year Built, Lot Size (acres), School Rating, Number of Bathrooms, Garage Spaces, Number of Bedrooms, Square Footage). All text rendered in dark gray, clearly readable.
-      Data: Horizontal confidence interval bars with two colors - teal/green bars (#009E73-like) for significant coefficients, orange bars (#D55E00-like) for non-significant. Vertical dashed reference line at x=0 labeled "Null (β = 0)". Legend shows "Significant (p < 0.05)" and "Not Significant".
-      Grid: Subtle light gray grid lines, not dominant
-      Legibility verdict: PASS - all text readable, colors distinct, no overlap
+      Background: Warm off-white #FAF8F1 matching style guide specification
+      Chrome: Title "coefficient-confidence · python · highcharts · anyplot.ai" in 56px, axis labels in 40px, tick labels in 32px — all dark text clearly readable on light background
+      Data: 10 horizontal coefficient estimates with confidence interval bars; green (#009E73) for significant coefficients, yellow (#FFD43B) for non-significant; vertical dashed reference line at zero with label; vertical gridlines subtle
+      Legibility verdict: PASS — all text highly readable at full resolution
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct theme color
-      Chrome: Same title and labels as light render, but text rendered in light gray/off-white for contrast. All text is clearly readable against dark background.
-      Data: IDENTICAL teal/green and orange colors to light render - data colors preserved across themes as required. Vertical reference line remains visible with light-colored label.
-      Grid: Subtle grid remains visible
-      Legibility verdict: PASS - all text readable in light colors, no dark-on-dark failures, data colors identical to light render, good contrast throughout
+      Background: Warm near-black #1A1A17 matching style guide specification
+      Chrome: Same title and axis labels as light render, now rendered in light text (approximately #F0EFE8); all clearly readable against dark background
+      Data: Coefficient colors are IDENTICAL to light render — green #009E73 for significant, yellow #FFD43B for non-significant (confirming proper theme handling where only chrome adapts)
+      Legibility verdict: PASS — no dark-on-dark failures, all text visible and readable
+    Both renders successfully demonstrate theme-aware rendering with identical data colors and properly adapted chrome elements.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -57,54 +53,53 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable at full resolution; explicit sizing via Highcharts;
-          y-axis labels could be slightly larger
+        comment: 'All font sizes explicitly set: title 56px, labels 40px, ticks 32px;
+          perfectly readable at 4800x2700'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlap, clean spacing between all elements
+        comment: Zero overlapping text elements; all distinctly positioned
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars and markers clearly visible, appropriate for 10-coefficient
-          data density
+        comment: CI bars and markers optimally sized for 10-variable density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe colors, good contrast both themes, no red-green dependency
+        comment: Green/yellow well-contrasted; significance encoded via color and
+          position
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Excellent balance, ~60% canvas utilization, generous margins, nothing
-          cut off
+        passed: false
+        comment: Plot fills ~65-70% of canvas; good margins but slight right-side
+          imbalance
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis label with context, title and subtitle present
+        comment: 'X-axis: ''Coefficient Estimate (Standardized)'' with units'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL ISSUE: Rendered images show teal/green and orange (Okabe-Ito-like
-          colors), but source code specifies #306998 (Python Blue, non-compliant)
-          and #FFD43B. Code-rendering mismatch must be resolved. Backgrounds and theme
-          chrome correct.'
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17), text colors theme-correct.
+          Non-significant uses #FFD43B (position 7, restricted to thin elements per
+          style guide) — problematic for large markers'
     design_excellence:
-      score: 9
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -112,22 +107,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Looks like well-configured library default; lacks custom design work
-          or sophisticated polish
+        comment: Well-configured library defaults; professional but not publication-ready
+          or exceptionally sophisticated
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization; could improve grid,
-          spines, whitespace tuning
+        comment: Minimal customization; standard grid visibility, all spines present,
+          no whitespace refinement
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: Color encoding and reference line create some visual hierarchy; data
-          ordering aids comparison; could be stronger with emphasis techniques
+        comment: Data displayed clearly but no visual hierarchy or emphasis beyond
+          color/position distinction
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +132,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct coefficient plot with confidence intervals and horizontal
-          layout
+        comment: Correct coefficient plot with confidence intervals
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: coefficients, CI bars, reference line at zero,
-          significance distinction'
+        comment: Error bars, points, reference line, variable labels, significance
+          distinction all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, all data visible, axes show full range
+        comment: X/Y correctly assigned; all 10 coefficients visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct (rendered output correct, code needs update);
-          legend labels clear
+        comment: Title correct format; legend labels match data categories
     data_quality:
       score: 15
       max: 15
@@ -168,23 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: significant and non-significant coefficients,
-          varied magnitudes, CIs crossing and not crossing zero'
+        comment: Shows positive/negative coefficients, significant/non-significant,
+          varying CI widths
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price regression with realistic standardized coefficients,
-          domain-appropriate variables
+        comment: Housing price regression is real, plausible, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proportions and values factually plausible for regression context
+        comment: Coefficient range (-0.22 to 0.45) realistic for standardized regression
     code_quality:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -192,58 +184,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward: imports → data → JS generation → screenshot'
+        comment: 'Linear flow: imports → data → chart → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42)) ensures deterministic output
+        comment: Sets np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (json, urllib, selenium, numpy, tempfile)
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, no over-engineering or fake functionality
+        passed: false
+        comment: Does not use highcharts_core Python API; manually constructs JavaScript
+          as string templates
       - id: CQ-05
         name: Output & API
-        score: 1
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and generates HTML artifacts
+        passed: false
+        comment: Saves as plot.png not plot-{THEME}.png; doesn't read ANYPLOT_THEME
+          environment variable
     library_mastery:
-      score: 8
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: Good use of Highcharts idioms (xrange for intervals, scatter for
-          points, custom tooltips, plotLines)
+        passed: false
+        comment: 'CRITICAL: Does not use highcharts_core library. Should use Chart()
+          + HighchartsOptions() per prompts/library/highcharts.md, not hand-coded
+          JavaScript strings'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 2
         max: 5
-        passed: true
-        comment: Leverages xrange series, plotLines, custom tooltip formatter—all
-          Highcharts-specific
+        passed: false
+        comment: Uses xrange series for CI (Highcharts-specific) but undermined by
+          non-idiomatic overall approach
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
