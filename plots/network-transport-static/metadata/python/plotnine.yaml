@@ -1,160 +1,186 @@
 library: plotnine
+language: python
 specification_id: network-transport-static
 created: '2026-01-10T01:56:09Z'
-updated: '2026-01-10T02:09:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20870862971
+updated: '2026-05-18T14:36:47Z'
+generated_by: claude-haiku
+workflow_run: 26039645880
 issue: 3463
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Clean implementation using plotnine grammar of graphics (ggplot + geom_segment
-    + geom_point)
-  - Good color scheme with meaningful route type coding (blue=Express, yellow=Regional,
-    red=Airport, green=Local)
-  - Effective use of arrow() for direction indication on edges
-  - Well-implemented edge offset calculation to separate overlapping routes
-  - Appropriate use of theme_void() for network visualization
-  - Realistic transport network data with meaningful station names and schedules
+  - Excellent theme-adaptive implementation with perfect readability in both light
+    and dark renders
+  - Well-designed network visualization with clear hub-and-spoke structure
+  - Thoughtful offset logic for parallel routes minimizes visual overlap
+  - Professional color hierarchy by route type aids understanding and follows Okabe-Ito
+    standards
+  - All specification requirements met with high-quality, realistic transportation
+    data
+  - Clean, maintainable code with deterministic seeding and idiomatic plotnine usage
   weaknesses:
-  - Edge labels near Central-East routes overlap slightly due to multiple routes on
-    same path
-  - Edge label font size (8pt) is somewhat small compared to other text elements
+  - Edge label crowding on densest routes (unavoidable given data complexity)
+  - Design excellence could be elevated with additional visual refinement elements
   image_description: |-
-    The plot displays a static transport network diagram showing 12 stations (nodes) connected by directed routes (edges). Stations are rendered as white circles with blue outlines (size=12, stroke=2), labeled with names like "Central", "North", "South", "East", "West", "Airport", "University", "Industrial", "Northeast", "Northwest", "Southeast", and "Southwest" in bold gray text positioned above each node.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title bold and centered in dark text (#1A1A17), station labels clear and readable, edge labels staggered with readable route IDs and times
+      Data: 12 stations with circular markers, 24 directed routes with arrows, color-coded by type (green #009E73 for S/Local, blue #0072B2 for RE/Express, orange #E69F00 for RB/Regional, vermillion #D55E00 for AE/Airport)
+      Legend: Right-aligned with clear labels on elevated light box
+      Legibility verdict: PASS - All text fully readable, no contrast issues
 
-    Directed edges show travel connections with color-coded route types:
-    - Blue (#306998) for Express routes (RE1-RE4)
-    - Yellow (#FFD43B) for Regional routes (RB1-RB4)
-    - Red (#E74C3C) for Airport Express (AE1)
-    - Green (#27AE60) for Local/S-Bahn routes (S1-S2)
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title and station labels rendered in light text (#F0EFE8), all readable against dark background, edge labels in light colors
+      Data: Route colors identical to light render (green, blue, orange, vermillion preserved), confirming theme-adaptive only chrome flips
+      Legend: Light text on dark elevated background box, excellent contrast
+      Legibility verdict: PASS - All text readable in light colors, no dark-on-dark failures detected
 
-    Each route displays a label with route ID and departure/arrival times in the format "RE1 | 06:30→06:55". The edges have arrowheads (closed type, angle=25) indicating travel direction. Multiple routes between the same stations are offset perpendicular to the route line to prevent complete overlap.
-
-    The title "network-transport-static · plotnine · pyplots.ai" appears centered at the top in 24pt bold text. A legend on the right side identifies the four route types with colored lines and labels (Airport, Regional, Express, Local).
-
-    The overall layout uses theme_void() for a clean presentation without axes, utilizing the full 16x9 canvas with the network centered and well-distributed across the available space. The geographic positioning places Central at the hub with peripheral stations arranged logically.
+    Both renders confirm: Data colors (positions 1-7) are identical between light and dark. Only chrome (background, text, legend frame) adapts. Both render themes achieve full legibility.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title 24pt bold, station labels 12pt bold readable, edge labels 8pt
-          visible but slightly small
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Minor overlaps on Central-East route where multiple edges converge;
-          edge labels mostly clear
-      - id: VQ-03
-        name: Element Visibility
         score: 8
         max: 8
         passed: true
-        comment: Nodes well-sized (size=12), arrows visible with proper closed arrowheads
+        comment: All font sizes explicitly set. Title 24pt, station labels size 12,
+          edge labels size 9. All fully readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal overlap on crowded edges due to staggered label positioning.
+          Main elements (stations, routes) remain clear.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All 12 stations and 24 routes optimally visible. Marker sizes adapt
+          well to layout density.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, red, green palette distinguishable; good contrast against
-          white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, network centered with legend on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for network diagram, theme_void appropriately removes axes
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette CVD-safe. Excellent contrast between route type
+          categories.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 format well-balanced. Plot fills 50-70% of canvas with generous
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend present and positioned on right; shows route types correctly
+        comment: Title formatted correctly (spec-id · python · plotnine · anyplot.ai).
+          Station labels serve as descriptive node identifiers.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73. Multi-series follows Okabe-Ito order (green,
+          vermillion, blue, orange). Backgrounds #FAF8F1 (light) and #1A1A17 (dark)
+          correct. Theme chrome adapts correctly in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional color hierarchy by route type. Clean, organized network
+          layout. Professional execution but not exceptionally innovative.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void() provides clean background. Understated, effective styling
+          with room for additional refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Hub-and-spoke structure visually apparent. Color coding reveals route
+          type patterns. Clear focal points with Central as the main hub.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct directed network visualization for transport system
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Stations as nodes with x/y coordinates, routes as directed edges
-          with times
-      - id: SC-03
+        comment: Correct directed network diagram with all required elements.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has arrows, edge labels with route ID and times, color-coding by
-          type; minor label overlap
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: station labels, directed edges with arrows,
+          edge labels with route ID and times, color-coding by type, offset routes
+          for multiple connections.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 stations and 24 routes visible within plot bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Coordinates correctly mapped from station data. All stations and
+          routes visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows route types but labels could be more descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: network-transport-static · plotnine · pyplots.ai'
+        comment: Title format correct. Legend labels match route types.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows Express, Regional, Airport, Local routes with variety of connections
+        comment: Shows all four route types (S, RE, RB, AE). Demonstrates hub-and-spoke
+          network structure with peripheral routes.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic regional rail network with plausible station names and
-          departure times
+        comment: Realistic regional rail network with plausible station names (Central,
+          North, Airport, University, etc.) and neutral business context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 12 stations, 24 routes within spec range; times span 06:00-10:35
+        comment: Times factually plausible (morning service 06:00-10:35, 15-25 min
+          travel times, realistic hourly frequency).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,51 +188,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script structure: imports, data, plot construction, save'
+        comment: 'Clean linear structure: imports → data → coordinate transformations
+          → plot definition → save. No unnecessary abstraction.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at top of script
+        comment: np.random.seed(42) set for deterministic execution.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported modules used in implementation
+        comment: Only necessary imports. numpy, pandas, and plotnine used appropriately.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Elegant offset logic for parallel routes. Thoughtful edge shortening
+          to avoid node overlap. No over-engineering or fake functionality.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine 0.15.2 API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300. Current API usage.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_segment, geom_point, geom_text, arrow(),
-          scale_color_manual, theme_void; network diagrams aren't plotnine's primary
-          strength but implementation is solid
+        comment: Proper ggplot() + geom_* pattern. Correct use of aes(), scale_color_manual(),
+          theme customization. High-level API usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses plotnine strengths effectively: geom_segment() with arrow()
+          for directed edges, manual coordinate positioning, multiple geom layers,
+          theme_void() with custom element_rect/element_text. Strong demonstration
+          of library capabilities.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - annotations
+  - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
