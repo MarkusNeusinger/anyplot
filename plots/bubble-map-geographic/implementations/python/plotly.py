@@ -1,13 +1,38 @@
-""" pyplots.ai
+"""anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: plotly | Python 3.13
+Quality: 91/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+LAND_COLOR = "#E8E4D8" if THEME == "light" else "#2E2E28"
+OCEAN_COLOR = "#D0E4F0" if THEME == "light" else "#1A2535"
+COAST_COLOR = "#B0A890" if THEME == "light" else "#4A4A40"
+COUNTRY_COLOR = "#C8C4B4" if THEME == "light" else "#3A3A34"
+
+# Okabe-Ito palette for regions (canonical order, first = #009E73)
+REGION_COLORS = {
+    "Asia": "#009E73",
+    "Europe": "#D55E00",
+    "North America": "#0072B2",
+    "South America": "#CC79A7",
+    "Africa": "#E69F00",
+    "Oceania": "#56B4E9",
+}
+REGION_ORDER = ["Asia", "Europe", "North America", "South America", "Africa", "Oceania"]
 
 # Data: Major world cities with population (in millions)
 np.random.seed(42)
@@ -47,38 +72,26 @@ cities = [
 
 df = pd.DataFrame(cities)
 
-# Scale bubble sizes: area proportional to population
-# Using sqrt to make area proportional (since marker size is diameter)
-min_size = 15
-max_size = 70
-df["marker_size"] = min_size + (max_size - min_size) * np.sqrt(
-    (df["pop"] - df["pop"].min()) / (df["pop"].max() - df["pop"].min())
-)
+# Bubble sizing: scale area proportional to population (sqrt of normalized value)
+min_size, max_size = 15, 70
+pop_min, pop_max = df["pop"].min(), df["pop"].max()
+df["marker_size"] = min_size + (max_size - min_size) * np.sqrt((df["pop"] - pop_min) / (pop_max - pop_min))
 
-# Color palette for regions (colorblind-safe)
-region_colors = {
-    "Asia": "#306998",  # Python Blue
-    "Europe": "#FFD43B",  # Python Yellow
-    "North America": "#2ca02c",  # Green
-    "South America": "#ff7f0e",  # Orange
-    "Africa": "#9467bd",  # Purple
-    "Oceania": "#17becf",  # Cyan
-}
-
-# Create figure with geo map
+# Plot
 fig = go.Figure()
 
-# Add traces for each region to create proper legend
-for region in df["region"].unique():
-    region_df = df[df["region"] == region]
+for region in REGION_ORDER:
+    rdf = df[df["region"] == region]
+    if rdf.empty:
+        continue
     fig.add_trace(
         go.Scattergeo(
-            lon=region_df["lon"],
-            lat=region_df["lat"],
-            text=region_df.apply(lambda x: f"{x['city']}<br>Population: {x['pop']:.1f}M", axis=1),
+            lon=rdf["lon"],
+            lat=rdf["lat"],
+            text=rdf.apply(lambda r: f"{r['city']}<br>Population: {r['pop']:.1f}M", axis=1),
             marker={
-                "size": region_df["marker_size"],
-                "color": region_colors[region],
+                "size": rdf["marker_size"],
+                "color": REGION_COLORS[region],
                 "opacity": 0.65,
                 "line": {"width": 1.5, "color": "white"},
                 "sizemode": "diameter",
@@ -88,75 +101,113 @@ for region in df["region"].unique():
         )
     )
 
-# Update layout for 4800x2700
+# Style
 fig.update_layout(
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     title={
-        "text": "World City Populations · bubble-map-geographic · plotly · pyplots.ai",
-        "font": {"size": 32, "color": "#333333"},
+        "text": "World City Populations · bubble-map-geographic · python · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     geo={
         "showland": True,
-        "landcolor": "rgb(243, 243, 243)",
+        "landcolor": LAND_COLOR,
         "showocean": True,
-        "oceancolor": "rgb(230, 240, 250)",
+        "oceancolor": OCEAN_COLOR,
         "showcoastlines": True,
-        "coastlinecolor": "rgb(150, 150, 150)",
+        "coastlinecolor": COAST_COLOR,
         "coastlinewidth": 1,
         "showframe": True,
-        "framecolor": "rgb(100, 100, 100)",
+        "framecolor": INK_SOFT,
         "framewidth": 1,
         "showcountries": True,
-        "countrycolor": "rgb(200, 200, 200)",
+        "countrycolor": COUNTRY_COLOR,
         "countrywidth": 0.5,
         "projection_type": "natural earth",
         "lataxis": {"range": [-60, 75]},
         "lonaxis": {"range": [-140, 180]},
+        "bgcolor": PAGE_BG,
     },
     legend={
-        "title": {"text": "Region", "font": {"size": 20}},
-        "font": {"size": 18},
+        "title": {"text": "Region", "font": {"size": 20, "color": INK}},
+        "font": {"size": 18, "color": INK_SOFT},
         "itemsizing": "constant",
         "x": 0.02,
-        "y": 0.35,
-        "bgcolor": "rgba(255,255,255,0.85)",
-        "bordercolor": "rgba(0,0,0,0.2)",
+        "y": 0.40,
+        "xanchor": "left",
+        "yanchor": "bottom",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
     margin={"l": 20, "r": 20, "t": 80, "b": 20},
-    template="plotly_white",
 )
 
-# Add size legend annotation
-fig.add_annotation(
-    text="Bubble size = Population (millions)",
+# Visual size legend: circle shapes in paper coordinates
+FIG_W, FIG_H = 1600, 900
+ref_pops = [35, 20, 5]
+ref_sizes_px = [min_size + (max_size - min_size) * np.sqrt((p - pop_min) / (pop_max - pop_min)) for p in ref_pops]
+
+fig.add_shape(
+    type="rect",
     xref="paper",
     yref="paper",
-    x=0.02,
-    y=0.15,
-    showarrow=False,
-    font={"size": 16, "color": "#555555"},
-    align="left",
+    x0=0.005,
+    y0=0.005,
+    x1=0.195,
+    y1=0.270,
+    fillcolor=ELEVATED_BG,
+    line={"color": INK_SOFT, "width": 1},
+    opacity=0.92,
 )
 
-# Example size indicators
-size_examples = [5, 20, 35]
-for i, pop_val in enumerate(size_examples):
-    size = min_size + (max_size - min_size) * np.sqrt((pop_val - df["pop"].min()) / (df["pop"].max() - df["pop"].min()))
-    fig.add_annotation(
-        text=f"  {pop_val}M",
+fig.add_annotation(
+    text="<b>Population scale</b>",
+    xref="paper",
+    yref="paper",
+    x=0.100,
+    y=0.252,
+    showarrow=False,
+    font={"size": 15, "color": INK},
+    align="center",
+    xanchor="center",
+    yanchor="top",
+)
+
+cx = 0.062
+y_centers = [0.075, 0.160, 0.220]
+labels = ["35M", "20M", "5M"]
+
+for size_px, y_c, label in zip(ref_sizes_px, y_centers, labels, strict=False):
+    rx = (size_px / 2) / FIG_W
+    ry = (size_px / 2) / FIG_H
+    fig.add_shape(
+        type="circle",
         xref="paper",
         yref="paper",
-        x=0.065,
-        y=0.09 - i * 0.028,
+        x0=cx - rx,
+        y0=y_c - ry,
+        x1=cx + rx,
+        y1=y_c + ry,
+        fillcolor=INK_SOFT,
+        line={"color": PAGE_BG, "width": 1},
+        opacity=0.55,
+    )
+    fig.add_annotation(
+        text=label,
+        xref="paper",
+        yref="paper",
+        x=cx + rx + 0.012,
+        y=y_c,
         showarrow=False,
-        font={"size": 14, "color": "#666666"},
+        font={"size": 15, "color": INK_SOFT},
         align="left",
+        xanchor="left",
+        yanchor="middle",
     )
 
-# Save as PNG (4800x2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=FIG_W, height=FIG_H, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
