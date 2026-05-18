@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-18
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,76 +12,127 @@ import pandas as pd
 import seaborn as sns
 
 
-# Data - Quarterly energy consumption by source with measurement uncertainty
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+COLORS = {"stocks": OKABE_ITO[0], "bonds": OKABE_ITO[1], "commodities": OKABE_ITO[2], "real_estate": OKABE_ITO[3]}
+
+# Data - Portfolio allocation over 6 years with confidence bands
 np.random.seed(42)
 
 quarters = pd.date_range("2020-01-01", periods=24, freq="QE")
 n = len(quarters)
 
-# Base values for each energy source (in TWh)
-solar_base = np.linspace(50, 150, n) + np.random.randn(n) * 8
-wind_base = np.linspace(80, 180, n) + np.random.randn(n) * 10
-hydro_base = np.linspace(100, 120, n) + np.random.randn(n) * 5
+# Base values for each asset class (in % of portfolio)
+stocks_base = np.linspace(45, 50, n) + np.random.randn(n) * 2
+bonds_base = np.linspace(30, 28, n) + np.random.randn(n) * 1.5
+commodities_base = np.linspace(15, 12, n) + np.random.randn(n) * 1
+real_estate_base = np.linspace(10, 10, n) + np.random.randn(n) * 0.8
 
-# Uncertainty grows over time (wider bands for projections)
-solar_uncertainty = np.linspace(10, 25, n)
-wind_uncertainty = np.linspace(12, 30, n)
-hydro_uncertainty = np.linspace(8, 15, n)
+# Uncertainty in allocation estimates (tighter in recent years)
+stocks_uncertainty = np.linspace(4, 2.5, n)
+bonds_uncertainty = np.linspace(3, 2, n)
+commodities_uncertainty = np.linspace(2.5, 1.5, n)
+real_estate_uncertainty = np.linspace(2, 1, n)
 
-# Create cumulative stacks for central values (bottom to top: Solar, Wind, Hydro)
-solar_cumsum = solar_base
-wind_cumsum = solar_base + wind_base
-hydro_cumsum = solar_base + wind_base + hydro_base
+# Create cumulative stacks for central values (bottom to top: Stocks, Bonds, Commodities, Real Estate)
+stocks_cumsum = stocks_base
+bonds_cumsum = stocks_base + bonds_base
+commodities_cumsum = stocks_base + bonds_base + commodities_base
+real_estate_cumsum = stocks_base + bonds_base + commodities_base + real_estate_base
 
 # Confidence bands for each layer (stacked properly)
-# Solar band (bottom layer)
-solar_lower = solar_base - solar_uncertainty
-solar_upper = solar_base + solar_uncertainty
+# Stocks band (bottom layer)
+stocks_lower = stocks_base - stocks_uncertainty
+stocks_upper = stocks_base + stocks_uncertainty
 
-# Wind band (cumulative from solar)
-wind_lower_cumsum = solar_cumsum + (wind_base - wind_uncertainty)
-wind_upper_cumsum = solar_cumsum + (wind_base + wind_uncertainty)
+# Bonds band (cumulative from stocks)
+bonds_lower_cumsum = stocks_cumsum + (bonds_base - bonds_uncertainty)
+bonds_upper_cumsum = stocks_cumsum + (bonds_base + bonds_uncertainty)
 
-# Hydro band (cumulative from wind)
-hydro_lower_cumsum = wind_cumsum + (hydro_base - hydro_uncertainty)
-hydro_upper_cumsum = wind_cumsum + (hydro_base + hydro_uncertainty)
+# Commodities band (cumulative from bonds)
+commodities_lower_cumsum = bonds_cumsum + (commodities_base - commodities_uncertainty)
+commodities_upper_cumsum = bonds_cumsum + (commodities_base + commodities_uncertainty)
+
+# Real Estate band (cumulative from commodities)
+real_estate_lower_cumsum = commodities_cumsum + (real_estate_base - real_estate_uncertainty)
+real_estate_upper_cumsum = commodities_cumsum + (real_estate_base + real_estate_uncertainty)
+
+# Set theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Create plot
-sns.set_theme(style="whitegrid")
 fig, ax = plt.subplots(figsize=(16, 9))
 
-# Colors - Python Blue for primary, with variations
-colors = {"solar": "#306998", "wind": "#FFD43B", "hydro": "#4A90A4"}
-
 # Plot from top to bottom for proper layering (back to front)
-# Hydro confidence band (top layer, drawn first to be in background)
-ax.fill_between(quarters, hydro_lower_cumsum, hydro_upper_cumsum, color=colors["hydro"], alpha=0.25, linewidth=0)
+# Real Estate confidence band (top layer, drawn first to be in background)
+ax.fill_between(
+    quarters, real_estate_lower_cumsum, real_estate_upper_cumsum, color=COLORS["real_estate"], alpha=0.25, linewidth=0
+)
 
-# Hydro main area
-ax.fill_between(quarters, wind_cumsum, hydro_cumsum, color=colors["hydro"], alpha=0.8, label="Hydro")
+# Real Estate main area
+ax.fill_between(
+    quarters, commodities_cumsum, real_estate_cumsum, color=COLORS["real_estate"], alpha=0.8, label="Real Estate"
+)
 
-# Wind confidence band
-ax.fill_between(quarters, wind_lower_cumsum, wind_upper_cumsum, color=colors["wind"], alpha=0.25, linewidth=0)
+# Commodities confidence band
+ax.fill_between(
+    quarters, commodities_lower_cumsum, commodities_upper_cumsum, color=COLORS["commodities"], alpha=0.25, linewidth=0
+)
 
-# Wind main area
-ax.fill_between(quarters, solar_cumsum, wind_cumsum, color=colors["wind"], alpha=0.8, label="Wind")
+# Commodities main area
+ax.fill_between(quarters, bonds_cumsum, commodities_cumsum, color=COLORS["commodities"], alpha=0.8, label="Commodities")
 
-# Solar confidence band
-ax.fill_between(quarters, solar_lower, solar_upper, color=colors["solar"], alpha=0.25, linewidth=0)
+# Bonds confidence band
+ax.fill_between(quarters, bonds_lower_cumsum, bonds_upper_cumsum, color=COLORS["bonds"], alpha=0.25, linewidth=0)
 
-# Solar main area (bottom layer)
-ax.fill_between(quarters, 0, solar_cumsum, color=colors["solar"], alpha=0.8, label="Solar")
+# Bonds main area
+ax.fill_between(quarters, stocks_cumsum, bonds_cumsum, color=COLORS["bonds"], alpha=0.8, label="Bonds")
+
+# Stocks confidence band
+ax.fill_between(quarters, stocks_lower, stocks_upper, color=COLORS["stocks"], alpha=0.25, linewidth=0)
+
+# Stocks main area (bottom layer)
+ax.fill_between(quarters, 0, stocks_cumsum, color=COLORS["stocks"], alpha=0.8, label="Stocks")
 
 # Add lines for central values to show boundaries
-ax.plot(quarters, solar_cumsum, color=colors["solar"], linewidth=2, alpha=0.9)
-ax.plot(quarters, wind_cumsum, color=colors["wind"], linewidth=2, alpha=0.9)
-ax.plot(quarters, hydro_cumsum, color=colors["hydro"], linewidth=2, alpha=0.9)
+ax.plot(quarters, stocks_cumsum, color=COLORS["stocks"], linewidth=2, alpha=0.9)
+ax.plot(quarters, bonds_cumsum, color=COLORS["bonds"], linewidth=2, alpha=0.9)
+ax.plot(quarters, commodities_cumsum, color=COLORS["commodities"], linewidth=2, alpha=0.9)
+ax.plot(quarters, real_estate_cumsum, color=COLORS["real_estate"], linewidth=2, alpha=0.9)
 
 # Styling
-ax.set_xlabel("Quarter", fontsize=20)
-ax.set_ylabel("Energy Consumption (TWh)", fontsize=20)
-ax.set_title("area-stacked-confidence \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="bold")
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xlabel("Quarter", fontsize=20, color=INK)
+ax.set_ylabel("Portfolio Allocation (%)", fontsize=20, color=INK)
+ax.set_title("area-stacked-confidence · Python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+
+# Remove top and right spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
 # Legend - reverse order so bottom layer is first in legend
 handles, labels = ax.get_legend_handles_labels()
@@ -88,13 +141,18 @@ legend = ax.legend(
     labels[::-1],
     loc="upper left",
     fontsize=16,
-    title="Energy Source\n(bands show 90% CI)",
+    title="Asset Class\n(shaded bands = 90% CI)",
     title_fontsize=14,
-    framealpha=0.9,
+    framealpha=0.95,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
+legend.get_title().set_color(INK)
+for text in legend.get_texts():
+    text.set_color(INK)
 
-# Grid
-ax.grid(True, alpha=0.3, linestyle="--")
+# Grid - y-axis only
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
 # Format x-axis dates
@@ -104,4 +162,4 @@ fig.autofmt_xdate(rotation=45)
 ax.set_ylim(bottom=0)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
