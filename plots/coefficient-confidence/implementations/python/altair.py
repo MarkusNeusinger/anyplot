@@ -1,7 +1,7 @@
 """ anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-18
+Quality: 88/100 | Updated: 2026-05-18
 """
 
 import altair as alt
