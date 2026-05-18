@@ -1,93 +1,99 @@
-""" pyplots.ai
+""" anyplot.ai
 range-interval: Range Interval Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-18
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-from matplotlib.lines import Line2D
 
 
-# Data - Monthly temperature ranges for a temperate city
+# Theme tokens (see prompts/default-style-guide.md)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
+SECONDARY = "#D55E00"  # Okabe-Ito position 2
+
+# Data - Salary ranges by job title in tech industry
 np.random.seed(42)
-months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+job_titles = [
+    "Junior Developer",
+    "Senior Developer",
+    "DevOps Engineer",
+    "Data Scientist",
+    "Product Manager",
+    "UX Designer",
+    "QA Engineer",
+    "Engineering Manager",
+]
 
-# Realistic temperature pattern (Northern Hemisphere temperate climate)
-base_temps = np.array([-2, 0, 5, 11, 16, 20, 23, 22, 17, 11, 5, 0])
-min_temps = base_temps + np.random.uniform(-3, 0, 12)
-max_temps = base_temps + np.random.uniform(5, 10, 12)
+# Realistic salary ranges (in thousands USD)
+min_salaries = np.array([65, 95, 85, 75, 80, 70, 60, 100])
+max_salaries = np.array([95, 160, 140, 130, 150, 120, 100, 180])
 
-# Create DataFrame for seaborn plotting
-df = pd.DataFrame({"Month": months, "Min Temperature": min_temps, "Max Temperature": max_temps, "month_idx": range(12)})
-
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Draw vertical range bars connecting min and max temperatures
-for i in range(len(df)):
-    ax.plot(
-        [i, i],
-        [df.iloc[i]["Min Temperature"], df.iloc[i]["Max Temperature"]],
-        color="#306998",
-        linewidth=12,
-        alpha=0.8,
-        solid_capstyle="round",
-        zorder=1,
-    )
-
-# Use seaborn scatterplot for min temperature markers
-sns.scatterplot(
-    data=df,
-    x="month_idx",
-    y="Min Temperature",
-    color="#306998",
-    s=250,
-    edgecolor="white",
-    linewidth=2,
-    ax=ax,
-    zorder=5,
-    label="Min Temperature",
+# Create DataFrame for plotting
+df = pd.DataFrame(
+    {"Job Title": job_titles, "Min Salary": min_salaries, "Max Salary": max_salaries, "idx": range(len(job_titles))}
 )
 
-# Use seaborn scatterplot for max temperature markers
+# Create plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+# Draw vertical range bars connecting min and max salaries
+for i, row in df.iterrows():
+    ax.plot(
+        [i, i],
+        [row["Min Salary"], row["Max Salary"]],
+        color=BRAND,
+        linewidth=14,
+        alpha=0.85,
+        solid_capstyle="round",
+        zorder=2,
+    )
+
+# Add min/max markers
+sns.scatterplot(
+    data=df, x="idx", y="Min Salary", color=BRAND, s=300, edgecolor=PAGE_BG, linewidth=2, ax=ax, zorder=3, legend=False
+)
+
 sns.scatterplot(
     data=df,
-    x="month_idx",
-    y="Max Temperature",
-    color="#FFD43B",
-    s=250,
-    edgecolor="white",
+    x="idx",
+    y="Max Salary",
+    color=SECONDARY,
+    s=300,
+    edgecolor=PAGE_BG,
     linewidth=2,
     ax=ax,
-    zorder=5,
-    label="Max Temperature",
+    zorder=3,
+    legend=False,
 )
 
 # Configure axes
-ax.set_xticks(range(len(months)))
-ax.set_xticklabels(months)
-ax.set_xlabel("Month", fontsize=20)
-ax.set_ylabel("Temperature (°C)", fontsize=20)
-ax.set_title("range-interval · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+ax.set_xticks(range(len(job_titles)))
+ax.set_xticklabels(job_titles, rotation=45, ha="right")
+ax.set_xlabel("Job Title", fontsize=20, color=INK)
+ax.set_ylabel("Annual Salary (thousands USD)", fontsize=20, color=INK)
+ax.set_title("range-interval · python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Add a horizontal reference line at freezing point
-ax.axhline(y=0, color="#888888", linestyle="--", linewidth=1.5, alpha=0.5)
+# Style spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ["left", "bottom"]:
+    ax.spines[spine].set_color(INK_SOFT)
 
-# Customize grid
-ax.grid(True, alpha=0.3, linestyle="--")
+# Grid styling
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Add legend with range bar explanation
-legend_elements = [
-    Line2D([0], [0], color="#306998", linewidth=8, label="Temperature Range"),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor="#306998", markersize=12, label="Min Temperature"),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor="#FFD43B", markersize=12, label="Max Temperature"),
-]
-ax.legend(handles=legend_elements, loc="upper right", fontsize=14)
-
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)

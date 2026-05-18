@@ -1,12 +1,26 @@
-""" pyplots.ai
+""" anyplot.ai
 range-interval: Range Interval Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-09
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 99/100 | Updated: 2026-05-18
 """
+
+import os
 
 import altair as alt
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # First series - always
+SECONDARY = "#D55E00"
+ACCENT = "#0072B2"
 
 # Data: Monthly temperature ranges (°C) for a temperate city
 data = pd.DataFrame(
@@ -32,8 +46,8 @@ base = alt.Chart(data).encode(
 bars = base.mark_bar(height=25, cornerRadius=4).encode(
     x=alt.X("min_temp:Q", title="Temperature (°C)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
     x2="max_temp:Q",
-    color=alt.value("#306998"),
-    opacity=alt.value(0.7),
+    color=alt.value(BRAND),
+    opacity=alt.value(0.8),
     tooltip=[
         alt.Tooltip("month:N", title="Month"),
         alt.Tooltip("min_temp:Q", title="Min Temp (°C)"),
@@ -43,28 +57,41 @@ bars = base.mark_bar(height=25, cornerRadius=4).encode(
 )
 
 # Min endpoint markers
-min_points = base.mark_point(size=200, filled=True, shape="circle").encode(x="min_temp:Q", color=alt.value("#1a4971"))
+min_points = base.mark_point(size=200, filled=True, shape="circle").encode(x="min_temp:Q", color=alt.value(SECONDARY))
 
 # Max endpoint markers
-max_points = base.mark_point(size=200, filled=True, shape="circle").encode(x="max_temp:Q", color=alt.value("#FFD43B"))
+max_points = base.mark_point(size=200, filled=True, shape="circle").encode(x="max_temp:Q", color=alt.value(ACCENT))
 
 # Midpoint markers
 mid_points = base.mark_point(size=80, filled=True, shape="diamond").encode(
-    x="mid_temp:Q", color=alt.value("#ffffff"), stroke=alt.value("#306998"), strokeWidth=alt.value(2)
+    x="mid_temp:Q", color=alt.value(INK), stroke=alt.value(INK_SOFT), strokeWidth=alt.value(2)
 )
 
 # Layer all elements
 chart = (
     alt.layer(bars, min_points, max_points, mid_points)
     .properties(
-        width=1600, height=900, title=alt.Title("range-interval · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("range-interval · python · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridOpacity=0.10,
+        gridColor=INK,
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1)
+    .configure_title(color=INK, fontSize=28)
 )
 
 # Save as PNG (scale_factor=3 for 4800x2700)
-chart.save("plot.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
 
 # Save as HTML for interactivity
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.html")
