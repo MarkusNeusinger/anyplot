@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-18
@@ -71,28 +71,36 @@ gas_upper = hydro_stack + (gas_base + gas_uncertainty)
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot stacked areas from bottom to top
+# Plot stacked areas from bottom to top with enhanced styling
 # Solar (bottom layer)
-ax.fill_between(quarters, 0, solar_stack, color=OKABE_ITO[0], alpha=0.8, label="Solar")
-ax.fill_between(quarters, solar_lower, solar_upper, color=OKABE_ITO[0], alpha=0.2, linewidth=0)
+ax.fill_between(quarters, 0, solar_stack, color=OKABE_ITO[0], alpha=0.85, label="Solar", zorder=3)
+ax.fill_between(quarters, solar_lower, solar_upper, color=OKABE_ITO[0], alpha=0.25, linewidth=0, zorder=2)
+ax.plot(quarters, solar_lower, color=OKABE_ITO[0], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.plot(quarters, solar_upper, color=OKABE_ITO[0], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
 
 # Wind (second layer)
-ax.fill_between(quarters, solar_stack, wind_stack, color=OKABE_ITO[1], alpha=0.8, label="Wind")
-ax.fill_between(quarters, wind_lower, wind_upper, color=OKABE_ITO[1], alpha=0.2, linewidth=0)
+ax.fill_between(quarters, solar_stack, wind_stack, color=OKABE_ITO[1], alpha=0.85, label="Wind", zorder=3)
+ax.fill_between(quarters, wind_lower, wind_upper, color=OKABE_ITO[1], alpha=0.25, linewidth=0, zorder=2)
+ax.plot(quarters, wind_lower, color=OKABE_ITO[1], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.plot(quarters, wind_upper, color=OKABE_ITO[1], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
 
 # Hydro (third layer)
-ax.fill_between(quarters, wind_stack, hydro_stack, color=OKABE_ITO[2], alpha=0.8, label="Hydro")
-ax.fill_between(quarters, hydro_lower, hydro_upper, color=OKABE_ITO[2], alpha=0.2, linewidth=0)
+ax.fill_between(quarters, wind_stack, hydro_stack, color=OKABE_ITO[2], alpha=0.85, label="Hydro", zorder=3)
+ax.fill_between(quarters, hydro_lower, hydro_upper, color=OKABE_ITO[2], alpha=0.25, linewidth=0, zorder=2)
+ax.plot(quarters, hydro_lower, color=OKABE_ITO[2], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.plot(quarters, hydro_upper, color=OKABE_ITO[2], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
 
 # Natural Gas (top layer)
-ax.fill_between(quarters, hydro_stack, gas_stack, color=OKABE_ITO[3], alpha=0.8, label="Natural Gas")
-ax.fill_between(quarters, gas_lower, gas_upper, color=OKABE_ITO[3], alpha=0.2, linewidth=0)
+ax.fill_between(quarters, hydro_stack, gas_stack, color=OKABE_ITO[3], alpha=0.85, label="Natural Gas", zorder=3)
+ax.fill_between(quarters, gas_lower, gas_upper, color=OKABE_ITO[3], alpha=0.25, linewidth=0, zorder=2)
+ax.plot(quarters, gas_lower, color=OKABE_ITO[3], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
+ax.plot(quarters, gas_upper, color=OKABE_ITO[3], linewidth=0.8, alpha=0.4, linestyle=":", zorder=1)
 
-# Add center lines for clarity
-ax.plot(quarters, solar_stack, color=OKABE_ITO[0], linewidth=2, alpha=0.9)
-ax.plot(quarters, wind_stack, color=OKABE_ITO[1], linewidth=2, alpha=0.9)
-ax.plot(quarters, hydro_stack, color=OKABE_ITO[2], linewidth=2, alpha=0.9)
-ax.plot(quarters, gas_stack, color=OKABE_ITO[3], linewidth=2, alpha=0.9)
+# Add prominent center lines for clarity and visual hierarchy
+ax.plot(quarters, solar_stack, color=OKABE_ITO[0], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
+ax.plot(quarters, wind_stack, color=OKABE_ITO[1], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
+ax.plot(quarters, hydro_stack, color=OKABE_ITO[2], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
+ax.plot(quarters, gas_stack, color=OKABE_ITO[3], linewidth=3, alpha=1.0, zorder=4, solid_capstyle="round")
 
 # Styling
 ax.set_xlabel("Quarter", fontsize=20, color=INK)
@@ -126,6 +134,30 @@ legend.get_title().set_color(INK)
 
 # Set y-axis to start at 0
 ax.set_ylim(bottom=0)
+
+# Add subtle interpretive annotations highlighting key trends
+solar_trend_idx = -1
+solar_trend_value = solar_stack[solar_trend_idx]
+gas_trend_idx = -1
+gas_trend_value = gas_stack[gas_trend_idx] - hydro_stack[gas_trend_idx]
+
+mid_idx = 15
+ax.annotate(
+    "Renewable expansion",
+    xy=(quarters[mid_idx], solar_stack[mid_idx] * 0.35),
+    xytext=(quarters[mid_idx + 4], solar_stack[mid_idx + 4] * 0.25),
+    fontsize=12,
+    color=INK_SOFT,
+    weight="500",
+    bbox={
+        "boxstyle": "round,pad=0.4",
+        "facecolor": ELEVATED_BG,
+        "edgecolor": INK_SOFT,
+        "alpha": 0.75,
+        "linewidth": 0.8,
+    },
+    arrowprops={"arrowstyle": "->", "connectionstyle": "arc3,rad=0.2", "color": INK_SOFT, "lw": 1.2, "alpha": 0.7},
+)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
