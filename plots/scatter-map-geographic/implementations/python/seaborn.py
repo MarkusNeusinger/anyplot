@@ -1,19 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-import pandas as pd
-import seaborn as sns
+import os
+import sys
 
 
-# Simplified world coastline polygons (major continents outline)
-# Each polygon is a list of (lon, lat) coordinates
+# Work around matplotlib.py shadowing (remove script dir from path)
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
+
+import matplotlib.pyplot as plt  # noqa: E402
+import pandas as pd  # noqa: E402
+import seaborn as sns  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always brand green)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Simplified world coastline polygons
 WORLD_COASTLINES = [
-    # North America (simplified)
+    # North America
     [
         (-168, 66),
         (-141, 70),
@@ -39,7 +55,7 @@ WORLD_COASTLINES = [
         (-145, 72),
         (-168, 66),
     ],
-    # South America (simplified)
+    # South America
     [
         (-82, 10),
         (-77, 0),
@@ -57,7 +73,7 @@ WORLD_COASTLINES = [
         (-80, -5),
         (-82, 10),
     ],
-    # Europe (simplified)
+    # Europe
     [
         (-10, 36),
         (-10, 45),
@@ -80,7 +96,7 @@ WORLD_COASTLINES = [
         (10, 38),
         (-10, 36),
     ],
-    # Africa (simplified)
+    # Africa
     [
         (-17, 15),
         (-17, 28),
@@ -101,7 +117,7 @@ WORLD_COASTLINES = [
         (-10, 5),
         (-17, 15),
     ],
-    # Asia (simplified, excluding Russia)
+    # Asia
     [
         (35, 30),
         (45, 42),
@@ -126,7 +142,7 @@ WORLD_COASTLINES = [
         (45, 45),
         (35, 30),
     ],
-    # Australia (simplified)
+    # Australia
     [
         (113, -22),
         (120, -18),
@@ -139,13 +155,9 @@ WORLD_COASTLINES = [
         (115, -35),
         (113, -22),
     ],
-    # Antarctica hint (just a line)
-    [(-180, -60), (-120, -65), (-60, -60), (0, -68), (60, -65), (120, -68), (180, -60)],
 ]
 
-# Data: Major world cities with population (earthquake epicenters scenario would also work)
-np.random.seed(42)
-
+# Data: Major world cities with population
 cities_data = {
     "city": [
         "Tokyo",
@@ -286,99 +298,124 @@ cities_data = {
 
 df = pd.DataFrame(cities_data)
 
-# Set seaborn theme
-sns.set_theme(style="whitegrid", context="talk", font_scale=1.1)
+# Create figure with seaborn styling
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+    },
+)
 
-# Create figure with appropriate size for 4800x2700 output
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
-# Set map extent (world map)
+# Set map extent
 ax.set_xlim(-180, 180)
 ax.set_ylim(-75, 85)
 ax.set_aspect("equal")
 
-# Draw simplified coastlines as background
+# Land background color (theme-adaptive)
+land_color = "#E8E8E0" if THEME == "light" else "#2A2A26"
+land_edge = "#A8A7A0" if THEME == "light" else "#505050"
+
+# Draw coastlines
 for coastline in WORLD_COASTLINES:
     if len(coastline) > 2:
         lons = [p[0] for p in coastline]
         lats = [p[1] for p in coastline]
-        ax.fill(lons, lats, color="#e8e8e8", edgecolor="#b0b0b0", linewidth=1, alpha=0.8, zorder=1)
+        ax.fill(lons, lats, color=land_color, edgecolor=land_edge, linewidth=0.8, alpha=0.7, zorder=1)
 
-# Draw ocean background
-ax.set_facecolor("#d4e8f7")
-
-# Create color palette for regions
-region_palette = {
-    "Asia": "#306998",  # Python Blue
-    "Europe": "#FFD43B",  # Python Yellow
-    "North America": "#E07B53",
-    "South America": "#5AAE61",
-    "Africa": "#9D6AB8",
-    "Oceania": "#2DB5AE",
+# Create color palette: Asia (position 1, green), Europe (2, orange), Africa (3, blue), Americas (4, purple), Oceania (5, sky blue)
+region_colors = {
+    "Asia": OKABE_ITO[0],  # #009E73 (brand green)
+    "Europe": OKABE_ITO[1],  # #D55E00 (orange)
+    "Africa": OKABE_ITO[2],  # #0072B2 (blue)
+    "South America": OKABE_ITO[3],  # #CC79A7 (reddish purple)
+    "North America": OKABE_ITO[1],  # #D55E00 (orange, same as Europe for Americas)
+    "Oceania": OKABE_ITO[5],  # #56B4E9 (sky blue)
 }
 
-# Scale population for marker sizes (visible at 4800x2700)
-# Population range: ~3 to ~37 million -> marker size 150-800
-min_pop, max_pop = df["population"].min(), df["population"].max()
-df["marker_size"] = 150 + (df["population"] - min_pop) / (max_pop - min_pop) * 650
+# Add region color to dataframe
+df["color"] = df["region"].map(region_colors)
 
-# Plot scatter points using seaborn
+# Scale population for marker sizes
+min_pop, max_pop = df["population"].min(), df["population"].max()
+df["marker_size"] = 100 + (df["population"] - min_pop) / (max_pop - min_pop) * 600
+
+# Plot points with seaborn
 sns.scatterplot(
     data=df,
     x="longitude",
     y="latitude",
     hue="region",
     size="population",
-    sizes=(150, 800),
-    palette=region_palette,
-    alpha=0.8,
-    edgecolor="white",
-    linewidth=1.5,
+    sizes=(100, 700),
+    palette=region_colors,
+    alpha=0.75,
+    edgecolor=PAGE_BG,
+    linewidth=1.2,
     ax=ax,
     zorder=3,
-    legend="full",
 )
 
-# Customize legend
+# Customize legend - only show region legend
 handles, labels = ax.get_legend_handles_labels()
-# Separate region and size legends
-legend = ax.legend(
-    handles[:7],
-    labels[:7],  # Region legend (includes title)
+# Get region legend items (skip title and size legend)
+legend1 = ax.legend(
+    handles[0:6],
+    labels[0:6],
     loc="lower left",
     fontsize=16,
     title="Region",
     title_fontsize=18,
-    framealpha=0.95,
-    edgecolor="#cccccc",
+    framealpha=0.9,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
-ax.add_artist(legend)
+ax.add_artist(legend1)
 
-# Add separate size legend
+# Add size legend
 size_legend_elements = [
-    plt.scatter([], [], s=150, c="gray", alpha=0.6, label="5M"),
-    plt.scatter([], [], s=400, c="gray", alpha=0.6, label="20M"),
-    plt.scatter([], [], s=800, c="gray", alpha=0.6, label="35M+"),
+    plt.scatter([], [], s=100, c=INK_SOFT, alpha=0.6, label="5M people"),
+    plt.scatter([], [], s=350, c=INK_SOFT, alpha=0.6, label="20M people"),
+    plt.scatter([], [], s=700, c=INK_SOFT, alpha=0.6, label="35M+ people"),
 ]
 size_legend = ax.legend(
     handles=size_legend_elements,
     loc="lower right",
-    fontsize=16,
+    fontsize=14,
     title="Population",
-    title_fontsize=18,
-    framealpha=0.95,
-    edgecolor="#cccccc",
+    title_fontsize=16,
+    framealpha=0.9,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
 
-# Labels and styling
-ax.set_xlabel("Longitude (°)", fontsize=20)
-ax.set_ylabel("Latitude (°)", fontsize=20)
-ax.set_title("scatter-map-geographic · seaborn · pyplots.ai", fontsize=26, fontweight="bold", pad=20)
-ax.tick_params(axis="both", labelsize=16)
+# Labels and title
+ax.set_xlabel("Longitude (°)", fontsize=20, color=INK)
+ax.set_ylabel("Latitude (°)", fontsize=20, color=INK)
+ax.set_title(
+    "scatter-map-geographic · python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20
+)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Subtle grid
-ax.grid(True, alpha=0.3, linestyle="--", color="#888888")
+# Grid styling
+ax.grid(True, alpha=0.10, linestyle="-", linewidth=0.6, color=INK_SOFT)
 ax.set_axisbelow(True)
 
+# Spine styling
+for spine in ["top", "right"]:
+    ax.spines[spine].set_visible(False)
+for spine in ["left", "bottom"]:
+    ax.spines[spine].set_color(INK_SOFT)
+
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+output_path = os.path.join(os.path.dirname(__file__), f"plot-{THEME}.png")
+plt.savefig(output_path, dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
