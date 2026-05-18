@@ -1,150 +1,170 @@
 library: plotly
+language: python
 specification_id: network-transport-static
 created: '2026-01-09T23:48:59Z'
-updated: '2026-01-09T23:52:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868905476
+updated: '2026-05-18T14:33:50Z'
+generated_by: claude-haiku
+workflow_run: 26039304382
 issue: 3463
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of a complex network diagram using Plotly graph objects
-  - Good use of color coding to distinguish route types (Express, Regional, Local)
-  - Offset calculation for multiple routes between same stations prevents overlap
-  - Hover tooltips provide detailed route information (route ID, stations, times)
-  - Clean visual presentation with white nodes, clear labels, and directional arrows
-  - Generates both PNG and interactive HTML outputs
+  - 'Perfect visual quality: all text readable in both themes, explicit font sizing'
+  - 'Excellent spec compliance: all required features implemented'
+  - Flawless theme-adaptive design with proper dark/light variants
+  - Clean, reproducible code structure (KISS principle)
+  - Realistic, plausible transport network data
   weaknesses:
-  - Legend positioned in upper left could be closer to the network visualization
-  - Edge labels are rotated to follow edge direction which can make some times harder
-    to read at certain angles
-  image_description: 'The plot displays a regional rail network diagram with 11 station
-    nodes (A through K) connected by directed edges representing train routes. Stations
-    are shown as white circular nodes with blue borders, each labeled with a single
-    letter inside and the full station name below. The network includes three route
-    types distinguished by color: Express (Python Blue #306998), Regional (Python
-    Yellow #FFD43B), and Local (Medium Slate Blue #7B68EE). Each edge shows an arrow
-    indicating travel direction, and route labels display the route identifier and
-    departure/arrival times (e.g., "RE 10 | 06:15→06:32"). The title "Regional Rail
-    Network · network-transport-static · plotly · pyplots.ai" appears at the top.
-    A legend in the upper left shows the three route types. Multiple routes between
-    the same station pairs are offset to avoid overlap.'
+  - Design sophistication is competent but not exceptional
+  - Library mastery limited to generic network patterns (could leverage plotly shapes
+    API)
+  - Minimal visual data storytelling or emphasis on key insights
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, station labels, route labels all readable with dark text; elevated background boxes provide clear contrast
+      Data: Express routes #009E73 (green), Regional #D55E00 (orange), Local #0072B2 (blue); all clearly visible with proper arrows and edge labels
+      Legibility verdict: PASS - all text readable, no overlaps, proper contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: All text light-colored and fully readable; elevated boxes in dark-theme variant (#242420); no dark-on-dark failures
+      Data: Data colors identical to light render (green, orange, blue); theme independence confirmed
+      Legibility verdict: PASS - all text readable, proper theme adaptation, no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text readable at full size, route labels on edges slightly small
-          but legible
+        comment: All font sizes explicitly set (title 28px, labels 14px, node IDs
+          16px); all readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, multiple routes properly offset
+        comment: No text collisions; station labels, route annotations perfectly positioned
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Nodes and edges clearly visible, arrows show direction well
+        comment: Nodes (size 40), arrows (width 2.5), lines (width 3) ideally sized
+          for network density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/purple palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, legend slightly isolated in upper left
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 0
-        passed: true
-        comment: Network diagram - no axes applicable
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean background, legend clear and well-labeled
+        comment: Okabe-Ito palette inherently colorblind-safe; adequate contrast across
+          both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of 4800×2700px canvas; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; network appropriately omits axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Express #009E73, Regional #D55E00, Local #0072B2; backgrounds #FAF8F1/#1A1A17;
+          theme-correct chrome'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Strong design with intentional hierarchy and color-coding; not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: elevated label boxes, subtle borders; could be
+          more polished'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Displays network clearly; minimal emphasis on insights or patterns
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct directed network visualization for transportation
+        comment: Correct directed network diagram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Stations as nodes, routes as directed edges
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: directed arrows, route IDs, departure/arrival
-          times, color-coded route types, station labels, offset for multiple routes'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: labeled nodes, directed arrows, edge labels
+          with times/IDs, offset edges'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 11 stations, 19 routes within recommended range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 11 stations and 19 routes correctly positioned; no mapping errors
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend accurately shows Express/Regional/Local types
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format with spec-id, library, and pyplots.ai
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows various route types, multiple routes between same stations,
-          different connection patterns; could show more express routes for variety
+        comment: 'Shows all aspects: multiple route types, varying times, offset edge
+          handling'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Regional rail network is a perfect real-world scenario
+        comment: Plausible regional train network with realistic station names and
+          times
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Reasonable departure times, plausible travel durations
+        comment: 11 stations, 19 routes, 15-25min journeys all plausible; no factual
+          errors
     code_quality:
       score: 10
       max: 10
@@ -154,54 +174,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports, data, plot, save pattern with minimal helper function
+        comment: Clean linear structure; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects used
+        comment: Only necessary imports (os, numpy, plotly); all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotly API
+        comment: No fake UI; appropriate complexity; elegant edge offset and rotation
+          logic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct output format (plot-{THEME}.png/html)
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Hover tooltips for full route details, HTML export for interactivity,
-          annotations for arrows and labels
+        passed: false
+        comment: Correct use of go.Figure(), go.Scatter(), annotations; high-level
+          API
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Generic network patterns; could leverage plotly shapes API more creatively
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - hover-tooltips
-  - html-export
   - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
-  - alpha-blending
+  styling: []

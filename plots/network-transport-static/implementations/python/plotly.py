@@ -1,12 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme-adaptive tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for route types
+OKABE_ITO = {
+    "express": "#009E73",  # Position 1 - brand green
+    "regional": "#D55E00",  # Position 2 - vermillion
+    "local": "#0072B2",  # Position 3 - blue
+}
 
 np.random.seed(42)
 
@@ -51,13 +68,6 @@ routes = [
     {"source": "J", "target": "K", "route_id": "RE 18", "dep": "08:05", "arr": "08:25", "type": "regional"},
 ]
 
-# Route type colors
-route_colors = {
-    "express": "#306998",  # Python Blue - Express routes
-    "regional": "#FFD43B",  # Python Yellow - Regional routes
-    "local": "#7B68EE",  # Medium slate blue - Local routes
-}
-
 # Create figure
 fig = go.Figure()
 
@@ -65,20 +75,21 @@ fig = go.Figure()
 edge_counts = {}
 
 
-# Function to calculate offset for multiple edges between same stations
 def get_edge_offset(source, target, route_idx):
     key = tuple(sorted([source, target]))
     if key not in edge_counts:
         edge_counts[key] = 0
     offset_idx = edge_counts[key]
     edge_counts[key] += 1
-    # Alternate offsets: 0, +0.03, -0.03, +0.06, -0.06...
     if offset_idx == 0:
         return 0
     sign = 1 if offset_idx % 2 == 1 else -1
     magnitude = ((offset_idx + 1) // 2) * 0.04
     return sign * magnitude
 
+
+# Track which route types we've added to legend
+legend_items = set()
 
 # Draw edges (routes) with arrows
 for i, route in enumerate(routes):
@@ -88,30 +99,27 @@ for i, route in enumerate(routes):
     x0, y0 = src["x"], src["y"]
     x1, y1 = tgt["x"], tgt["y"]
 
-    # Calculate perpendicular offset for multiple routes
     offset = get_edge_offset(route["source"], route["target"], i)
 
-    # Calculate perpendicular direction
     dx = x1 - x0
     dy = y1 - y0
     length = np.sqrt(dx**2 + dy**2)
-    # Perpendicular unit vector
     px, py = -dy / length, dx / length
 
-    # Apply offset
     x0_off = x0 + px * offset
     y0_off = y0 + py * offset
     x1_off = x1 + px * offset
     y1_off = y1 + py * offset
 
-    # Shorten line to not overlap with node circles
     shrink = 0.035
     x0_draw = x0_off + shrink * dx / length
     y0_draw = y0_off + shrink * dy / length
     x1_draw = x1_off - shrink * dx / length
     y1_draw = y1_off - shrink * dy / length
 
-    color = route_colors[route["type"]]
+    color = OKABE_ITO[route["type"]]
+    show_in_legend = route["type"] not in legend_items
+    legend_items.add(route["type"])
 
     # Draw edge line
     fig.add_trace(
@@ -122,7 +130,9 @@ for i, route in enumerate(routes):
             line=dict(color=color, width=3),
             hoverinfo="text",
             hovertext=f"{route['route_id']}: {src['label']} → {tgt['label']}<br>{route['dep']} → {route['arr']}",
-            showlegend=False,
+            showlegend=show_in_legend,
+            name=route["type"].capitalize(),
+            legendgroup=route["type"],
         )
     )
 
@@ -148,12 +158,11 @@ for i, route in enumerate(routes):
     mx = (x0_draw + x1_draw) / 2
     my = (y0_draw + y1_draw) / 2
 
-    # Slight offset for label to avoid line
-    label_offset = 0.025
+    # Increase label offset in central area to reduce overlap
+    label_offset = 0.035
     mx_label = mx + px * label_offset
     my_label = my + py * label_offset
 
-    # Calculate rotation angle for text
     angle = np.degrees(np.arctan2(dy, dx))
     if angle > 90:
         angle -= 180
@@ -165,8 +174,10 @@ for i, route in enumerate(routes):
         y=my_label,
         text=f"<b>{route['route_id']}</b><br>{route['dep']}→{route['arr']}",
         showarrow=False,
-        font=dict(size=11, color=color),
-        bgcolor="rgba(255,255,255,0.85)",
+        font=dict(size=12, color=color),
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
         borderpad=2,
         textangle=-angle,
     )
@@ -182,9 +193,9 @@ fig.add_trace(
         x=node_x,
         y=node_y,
         mode="markers+text",
-        marker=dict(size=40, color="white", line=dict(color="#306998", width=3)),
+        marker=dict(size=40, color=ELEVATED_BG, line=dict(color=INK, width=3)),
         text=node_ids,
-        textfont=dict(size=16, color="#306998", family="Arial Black"),
+        textfont=dict(size=16, color=INK, family="Arial Black"),
         textposition="middle center",
         hoverinfo="text",
         hovertext=[f"<b>{nid}</b>: {label}" for nid, label in zip(node_ids, node_labels)],
@@ -199,33 +210,19 @@ for station in stations:
         y=station["y"] - 0.055,
         text=f"<b>{station['label']}</b>",
         showarrow=False,
-        font=dict(size=14, color="#333333"),
-        bgcolor="rgba(255,255,255,0.8)",
+        font=dict(size=14, color=INK),
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
         borderpad=3,
     )
 
-# Add legend for route types
-legend_y_start = 0.95
-for i, (route_type, color) in enumerate(route_colors.items()):
-    fig.add_trace(
-        go.Scatter(
-            x=[0.02],
-            y=[legend_y_start - i * 0.06],
-            mode="markers+text",
-            marker=dict(size=15, color=color, symbol="line-ew", line=dict(width=4, color=color)),
-            text=[f"  {route_type.capitalize()}"],
-            textposition="middle right",
-            textfont=dict(size=16, color=color),
-            showlegend=False,
-            hoverinfo="skip",
-        )
-    )
 
 # Update layout
 fig.update_layout(
     title=dict(
-        text="Regional Rail Network · network-transport-static · plotly · pyplots.ai",
-        font=dict(size=28, color="#333333"),
+        text="network-transport-static · python · plotly · anyplot.ai",
+        font=dict(size=28, color=INK),
         x=0.5,
         xanchor="center",
     ),
@@ -233,13 +230,14 @@ fig.update_layout(
     yaxis=dict(
         showgrid=False, zeroline=False, showticklabels=False, range=[-0.02, 1.02], scaleanchor="x", scaleratio=1
     ),
-    template="plotly_white",
-    plot_bgcolor="rgba(248,248,248,1)",
-    paper_bgcolor="white",
+    plot_bgcolor=PAGE_BG,
+    paper_bgcolor=PAGE_BG,
+    font=dict(color=INK),
     margin=dict(l=40, r=40, t=80, b=40),
-    showlegend=False,
+    showlegend=True,
+    legend=dict(x=0.02, y=0.98, bgcolor="rgba(0,0,0,0)", borderwidth=0),
 )
 
 # Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
