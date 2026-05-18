@@ -1,166 +1,182 @@
 library: altair
+language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:10:00Z'
-updated: '2026-01-10T06:12:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20873958906
+updated: '2026-05-18T22:45:39Z'
+generated_by: claude-sonnet
+workflow_run: 26064205875
 issue: 3625
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/altair/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent use of Altair declarative grammar for geographic visualization
-  - Proper layering of basemap and bubble overlay with matching projections
-  - Good use of tooltips showing city, population, region, and coordinates
-  - Clean code structure with well-organized data definition
-  - Appropriate bubble sizing with scale domain matching data range
-  - White stroke outlines improve bubble distinction
-  - Both PNG and HTML outputs for static and interactive viewing
+  - Fully theme-adaptive implementation including land fill/stroke (not just chart
+    chrome), ensuring both renders look polished
+  - Real USGS earthquake data with authentic event names and coordinates produces
+    a credible, educational visualization
+  - 'Excellent spec compliance: all required features (size encoding, transparency,
+    basemap, tooltips, legends, minimum bubble size) implemented correctly'
+  - Exemplary use of Altair geographic stack (topo_feature, mark_geoshape, lat/lon
+    encoding) demonstrates library mastery
+  - Clean flat code structure with well-organized theme tokens at the top
   weaknesses:
-  - Size legend uses single color rather than showing how colors vary by region in
-    the actual bubbles
-  - Code lacks a reproducibility comment about data source
-  image_description: 'The plot displays a world map with an equirectangular projection
-    showing major city populations as sized circular markers. The base map shows country
-    boundaries in light gray (#E8E8E0) with subtle borders. Bubbles are positioned
-    at city locations with size proportional to population (5-40 million range). Colors
-    encode regions: blue for Asia, yellow for Europe, green for North America, red/coral
-    for South America, purple for Africa, and cyan for Oceania. Tokyo appears as the
-    largest bubble in Asia. A size legend on the bottom-left shows the population
-    scale (5-40 million), and a color legend on the bottom-right identifies regions.
-    The title "World City Populations · bubble-map-geographic · altair · pyplots.ai"
-    is displayed at the top center. White stroke outlines on bubbles (1.5px) provide
-    separation, and 70% opacity enables viewing of overlapping markers in dense areas
-    like East Asia.'
+  - Title font size (26px) and legend label font size (14px) are slightly below style
+    guide recommendations (28px and 16px respectively)
+  - No focal annotations or callouts on historically significant events (Valdivia
+    M9.5, Tohoku M9.1) — missed storytelling opportunity
+  - South Asian cluster has minor bubble crowding; slight opacity increase or jitter
+    could improve readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — matches style guide exactly
+      Chrome: Title "Major Earthquakes · bubble-map-geographic · python · altair · anyplot.ai" in dark ink (#1A1A17), clearly readable. Legend titles and labels in dark ink / ink-soft. No axis labels (geographic map). Legend boxes have rounded corners and elevated fill (#FFFDF6).
+      Data: 30 earthquake bubbles colored by tectonic region using Okabe-Ito positions 1-4: #009E73 (East & SE Asia), #D55E00 (Americas), #0072B2 (Middle East & C. Asia), #CC79A7 (South Asia). Bubble sizes range from small (M6.1) to very large (M9.5 Valdivia). Opacity 0.65 handles overlap. Land fill is warm taupe (#E8E4DC), land strokes in medium gray (#B0AFA8).
+      Legibility verdict: PASS — all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — matches style guide exactly
+      Chrome: Title in light cream (#F0EFE8), clearly readable. Legend text in secondary light (#B8B7B0). Legend boxes use elevated dark fill (#242420) with ink-soft border. No dark-on-dark failures detected.
+      Data: Data bubble colors are identical to light render — teal, orange, blue, and pink all clearly visible against dark background. Land fill switches to dark olive-gray (#2C2C28), land strokes to #4A4A44, providing geographic context without overwhelming data. Brand green #009E73 (East & SE Asia) clearly visible.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, legend titles at 16pt, labels at 14pt - all readable
-          at full resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No text overlap; bubble overlap is intentional and handled well with
-          alpha
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Bubbles well-sized for data density; white strokes help distinguish
-          overlapping markers; minor deduction for smaller markers being slightly
-          less prominent
+        comment: 'Title 26px (rec: 28px), legend labels 14px (rec: 16px); readable
+          but slightly undersized'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor clustering in South Asia and Andes; opacity=0.65 manages overlap
+          well
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bubbles clearly visible; size range 80-2800 produces strong magnitude
+          contrast
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Six distinct colors for regions are colorblind-safe; blue/yellow/green/red/purple/cyan
-          palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas; map is centered; slight imbalance with legends
-          on bottom corners
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for geographic maps, but legends are well-labeled with Population
-          (millions) and Region
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette; CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px correct; legends well-placed without data overlap
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Size legend uses consistent symbol color rather than showing varied
-          colors; legends well-positioned
+        comment: Descriptive title present; no traditional axis labels needed for
+          geographic map
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito positions 1-4 in order; correct
+          backgrounds both themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above baseline: theme-adaptive land colors, bubble PAGE_BG stroke,
+          rounded legend frames, curated magnitude tick values'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Theme-adaptive map background (LAND_FILL/LAND_STROKE flip on dark),
+          bubble strokes, stroke=None on view
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Ring of Fire pattern emerges naturally; M9+ events visually dominant;
+          no focal annotations on notable events
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bubble map with geographic projection
+        comment: Geographic bubble map with sized markers; correct plot type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Latitude/longitude correctly mapped to positions; population to size;
-          region to color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: size encoding, color categories, transparency,
-          basemap, tooltips, size legend'
-      - id: SC-04
-        name: Data Range
+        comment: Size encoding, transparency, basemap, tooltips, size legend, minimum
+          bubble size all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 30 cities visible within map bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: longitude/latitude correct; magnitude to size; region to color; full
+          tooltip data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both legends accurate and descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: World City Populations · bubble-map-geographic ·
-          altair · pyplots.ai'
+        comment: Title format {Descriptive} · {spec-id} · python · altair · anyplot.ai
+          correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good range of populations (5.4M to 37.4M), multiple regions,
-          various geographic distributions; minor deduction for Africa having only
-          2 cities
+        comment: Covers positioning, size encoding, color encoding, tooltips, legends,
+          multi-region coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real world cities with accurate populations and coordinates; neutral
-          educational topic
+        comment: Real USGS earthquake data with authentic names, coordinates, and
+          magnitudes; neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Population values are realistic; coordinates accurate; minor issue
-          with some values slightly dated
+        comment: 30 events; magnitude 6.1-9.5; size domain/range well-calibrated
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -168,44 +184,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → map → bubbles → combine → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but hardcoded data could
-          benefit from source comment
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully hardcoded deterministic data; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported
+        comment: os, sys, pandas, altair — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean layer composition; theme tokens well-organized at top
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Altair features: declarative encoding, topo_feature
-          for basemap, layered composition, interactive tooltips, vega-datasets URL
-          loading'
+        comment: alt.topo_feature, mark_geoshape, mark_circle with lat/lon encoding,
+          layer composition, .project(), .configure_*()
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Altair geographic stack (topo_feature, mark_geoshape, equirectangular
+          projection, basemap layering)
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -213,7 +234,6 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns: []
   dataprep: []
   styling:

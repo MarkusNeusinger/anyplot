@@ -1,154 +1,183 @@
 library: matplotlib
+language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:08:37Z'
-updated: '2026-01-10T06:11:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20873956323
+updated: '2026-05-18T22:46:55Z'
+generated_by: claude-sonnet
+workflow_run: 26063874474
 issue: 3625
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent geographic visualization without external dependencies (geopandas/cartopy)
-  - Creative use of manual polygon definitions for continent shapes
-  - Perfect size legend showing three reference GDP values
-  - Good transparency handling for overlapping bubbles
-  - Clean KISS code structure with well-organized data dictionary
+  - Full theme-adaptive implementation with correct PAGE_BG/INK/INK_SOFT tokens applied
+    to all chrome elements including ocean, land, legend frame, and text
+  - 'Professional cartographic design: custom continent polygons, subtle dotted graticule,
+    and theme-adaptive ocean/land colors give the map a polished, publication-ready
+    appearance'
+  - 'Spec compliance is complete: area-proportional scaling, size legend with quantitative
+    references, transparency, minimum bubble size, and continental basemap all present'
+  - Clean flat code structure with reproducible seed, proper API usage, and correct
+    output filename pattern
   weaknesses:
-  - Legend vertical spacing (labelspacing=1.8) creates excessive gaps between size
-    reference markers
-  - Continent polygons are simplified approximations rather than accurate coastlines
-  - No city labels shown (though optional per spec)
-  image_description: 'The plot displays a world map with a light blue ocean background
-    (#C8DDF0) and beige/gray landmasses (#E5E5E0). The map shows 25 major world cities
-    represented as bubbles sized proportionally to their metropolitan GDP. The bubbles
-    are colored in Python Blue (#306998) with 60% transparency and white edge borders.
-    Larger bubbles (Tokyo, New York) are clearly visible in their respective locations
-    - Tokyo cluster in Japan, New York/Chicago/Los Angeles in North America. Smaller
-    bubbles represent cities like Dubai, Jakarta, and Buenos Aires. A size legend
-    in the lower left shows three reference sizes: $250B, $750B, and $1.5T. The title
-    follows the correct format "City GDP by Location · bubble-map-geographic · matplotlib
-    · pyplots.ai". Graticule lines are shown as subtle dotted lines at 30° intervals.
-    The continents are rendered as simplified polygon shapes providing geographic
-    context.'
+  - Legend text fontsize=14 is below the recommended 16pt; the legend title (16pt)
+    is correct but body labels should match
+  - East Asian city cluster (Tokyo, Seoul, Osaka, Shanghai, Beijing, Hong Kong) creates
+    significant bubble overlap that alpha alone cannot fully resolve; consider slight
+    jitter or labeling only top cities
+  - 'LM-02 limited: the implementation draws its own continent polygons instead of
+    leveraging a proper geographic library or projection; this is intentional for
+    dependency-free code but limits geographic accuracy and distinctive library usage'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as expected — ocean is light blue (#C8DDF0), land is light grey (#E5E5E0)
+      Chrome: Title "City GDP by Location · bubble-map-geographic · python · matplotlib · anyplot.ai" in dark ink, clearly readable; axis labels "Latitude (°)" and "Longitude (°)" in dark ink; tick labels in secondary ink; all readable
+      Data: Okabe-Ito green (#009E73) bubbles sized by metro GDP; largest bubbles for Tokyo and New York; subtle dotted graticule; size legend shows $250B, $750B, $1.5T reference bubbles
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as expected — ocean is dark navy (#1E3050), land is dark grey (#3A3A34)
+      Chrome: Title and axis labels in light cream (#F0EFE8), clearly readable against dark background; tick labels in lighter secondary token (#B8B7B0); no dark-on-dark failures observed; legend frame uses elevated dark surface (#242420)
+      Data: Identical #009E73 green bubbles — data colors match light render exactly; only chrome elements flip; brand green clearly visible against both dark ocean and dark land surfaces
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 22pt bold, axis labels at 20pt, tick labels at 16pt - all
-          perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; bubbles have alpha for overlap handling
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Bubbles well-sized for 25 data points; some small cities like Frankfurt
-          are hard to distinguish
+        comment: Title/axis/tick sizes correct (24/20/16pt); legend body at 14pt (recommend
+          16); both renders fully legible
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: East Asian cluster (Tokyo, Seoul, Osaka, Shanghai, Beijing, Hong
+          Kong) has significant bubble overlap; alpha=0.6 mitigates but crowding remains
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bubbles visible; min_size=80 ensures smallest GDP cities remain
+          perceptible; green readable on both ocean/land surfaces
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme with size encoding; colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas well, balanced margins, legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude with degree units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single Okabe-Ito color with size encoding; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas, map fills well, legend positioned cleanly, tight_layout
+          applied
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend labelspacing is excessive creating too much vertical space
+        passed: true
+        comment: Latitude/Longitude with degree units; title matches required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 for all bubbles; PAGE_BG #FAF8F1 light / #1A1A17 dark; chrome
+          tokens correctly adaptive'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom theme-adaptive ocean/land colors, professional cartographic
+          styling, thoughtful size legend, warm background surfaces
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dotted graticule, alpha-blended bubbles with PAGE_BG edge
+          highlights, styled legend with elevated background
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Global GDP distribution legible; East Asian dominance and regional
+          clusters clearly visible; size legend allows quantitative reading
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bubble map with sized markers on geographic coordinates
+        comment: Correct geographic bubble map with size as primary encoding
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/Lon correctly mapped to Y/X, GDP to bubble size
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: size encoding, transparency, basemap,
-          size legend'
-      - id: SC-04
-        name: Data Range
+        comment: Area-proportional scaling, size legend, alpha=0.6, continental basemap,
+          minimum bubble size all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full world view shows all data points
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude X, latitude Y, GDP bubble size; all 25 cities rendered
+          within correct bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows $250B, $750B, $1.5T reference sizes
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows correct title format with spec-id and library
+        comment: Title matches required format; size legend labels match data domain
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows range from small to large GDP with good geographic spread;
-          minor deduction for lack of category grouping
+        comment: 25 cities covering all populated continents; full GDP range demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real city GDP data with plausible values matching known rankings
+        comment: Real-world metro GDP figures, correct geographic coordinates, neutral
+          economic dataset
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: GDP values are realistic approximations
+        comment: 25 points within spec range; GDP values plausible for major metro
+          areas
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -156,11 +185,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -168,30 +197,38 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported
+        comment: Only os, matplotlib.pyplot, numpy; all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable; no fake UI; appropriate complexity for a geographic
+          map
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: facecolor parameter added but output filename correct'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300; current matplotlib 3.10 API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of Polygon patches and zorder management; could use Basemap/Cartopy
-          for better accuracy
+        comment: ax.scatter not plt.scatter, ax.add_patch for Polygon continents,
+          ax.axhline/axvline for graticule, custom legend handles
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: plt.Polygon + ax.add_patch for geographic polygons and custom-size
+          legend handles noteworthy; lacks proper geographic projections
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -200,9 +237,9 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep:
   - normalization
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling

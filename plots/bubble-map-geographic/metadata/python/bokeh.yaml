@@ -1,215 +1,266 @@
 library: bokeh
+language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:09:10Z'
-updated: '2026-01-10T06:11:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20873957946
+updated: '2026-05-18T22:45:09Z'
+generated_by: claude-sonnet
+workflow_run: 26064122800
 issue: 3625
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Bokeh tile mapping capabilities with CartoDB Positron basemap
-  - Well-implemented Web Mercator coordinate transformation for accurate geographic
-    positioning
-  - Interactive tooltips showing city name, population, region, and coordinates
-  - 'Dual legend system: region colors + size reference bubbles'
-  - Good color palette that distinguishes 5 regions while remaining colorblind-safe
-  - Area-proportional sizing (using sqrt) for accurate visual perception of population
-    differences
+  - Theme-adaptive CARTO tile basemap (light_all vs dark_all URL swap) is a polished
+    and distinctively Bokeh approach to geographic visualization
+  - 'Correct Okabe-Ito palette with Asia (first region) mapped to brand green #009E73
+    and subsequent regions following canonical order'
+  - Custom size reference legend built with ColumnDataSource + LabelSet at Pacific
+    Ocean coordinates — adds significant value beyond auto-generated legends
+  - Real-world city population data with accurate coordinates and plausible 2024 estimates;
+    excellent data choice for the bubble map spec
+  - All font sizes explicitly set (title 32pt, axis labels 22pt, tick labels 18pt,
+    legend 20pt) with full theme-adaptive chrome tokens throughout
+  - 'Idiomatic Bokeh usage: WMTSTileSource for tiles, per-region ColumnDataSource
+    for grouped hover tooltips, LegendItem for manual legend control'
+  - Correct sqrt-based bubble sizing (area proportional to population) as required
+    by the spec for perceptual accuracy
   weaknesses:
-  - Helper function lat_lon_to_mercator adds complexity (though arguably necessary
-    for coordinate conversion)
-  - Axis labels lack explicit units (could be Longitude and Latitude with degree symbols)
-  image_description: 'The plot displays a geographic bubble map showing world cities
-    by population. It uses a CartoDB Positron tile basemap showing country boundaries
-    and coastlines in light gray tones. Bubbles are placed at city locations with
-    sizes proportional to population (using square root scaling for area-proportional
-    encoding). The color scheme distinguishes regions: blue (#306998) for Asia, yellow
-    (#FFD43B) for Americas, light blue (#4B8BBE) for Europe, purple (#9B59B6) for
-    Africa, and green (#27AE60) for Oceania. Tokyo appears as the largest bubble in
-    Asia. The map shows the world from approximately -15000km to 22000km in x-coordinates
-    (Web Mercator). A region legend is positioned on the right side, and a size legend
-    showing reference bubbles for 5M, 15M, 25M, and 35M populations is also visible
-    on the right. The title "World Cities by Population · bubble-map-geographic ·
-    bokeh · pyplots.ai" appears at the top left in blue. Axis labels show "Longitude"
-    and "Latitude".'
+  - 'Tooltip bug: @lat and @lon are referenced in tooltips but not included in the
+    per-region ColumnDataSource — the Coordinates row will render as ''(???°, ???°)''
+    in the interactive HTML. Fix: add lat/lon arrays to each rsrc ColumnDataSource.'
+  - 'Design Excellence could be elevated: no spine removal (not applicable to maps,
+    but the grid lines over tile map are unusual and could be removed entirely since
+    the basemap already provides geographic structure)'
+  - Bubble crowding in East/South Asia (9 cities in the region) creates visual density
+    that alpha handles but could be further mitigated with a slightly smaller max
+    bubble size or a 'jitter-free' note
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white border fill (#FAF8F1) surrounds the plot area; inside the axes, the CARTO light_all tile basemap renders with a light grey/white map on which country boundaries are softly visible — this is the expected behavior for tile-based maps (tiles cover the plot background).
+      Chrome: Title "World Cities by Population · bubble-map-geographic · python · bokeh · anyplot.ai" is bold and clearly readable in dark ink at top. Axis labels "Longitude (°)" and "Latitude (°)" are dark-colored and readable. Tick labels along both axes are legible in dark secondary ink. Region legend on the right has "Region" header in dark ink with labeled colored swatches; Population size-reference legend shows four graduated bubble sizes labeled "5M", "15M", "25M", "35M" in dark secondary ink, with a "Population" header in bold dark ink.
+      Data: Bubbles are color-coded by region — Asia in #009E73 (brand green, first series), Americas in #D55E00 (orange), Europe in #0072B2 (blue), Africa in #CC79A7 (pink/purple), Oceania in #E69F00 (yellow). Tokyo is the largest bubble, clearly visible in East Japan. Dense clustering of bubbles in South/East Asia; transparent at fill_alpha=0.65.
+      Legibility verdict: PASS — all text is readable against the light background; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Near-black border fill (#1A1A17) surrounds the plot area; inside the axes, the CARTO dark_all tile basemap renders as a very dark grey map with light country outlines — matches the dark theme expectation.
+      Chrome: Title text is light-colored (#F0EFE8) and clearly readable against the near-black border. Axis labels and tick labels are light-colored (#B8B7B0) and readable. Region legend header and labels are light-colored, readable. Population reference legend uses light ink tokens — all text is visible against the dark elevated background (#242420) of the legend box. No dark-on-dark text failures observed.
+      Data: Bubble colors are identical to the light render — #009E73 Asia, #D55E00 Americas, #0072B2 Europe, #CC79A7 Africa, #E69F00 Oceania. The CARTO dark tiles provide strong contrast for the saturated Okabe-Ito colors, making the bubbles pop visually on the dark map. Data colors confirmed identical between light and dark renders.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt are well-sized
-          but legend text could be slightly larger for the image size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, bubbles have appropriate spacing for
-          most cities
+        comment: 'All font sizes explicitly set: title 32pt, axis labels 22pt, tick
+          labels 18pt, legend 20pt. Readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Dense bubble cluster in East/South Asia (9 cities); fill_alpha=0.65
+          handles overlap but visual crowding remains.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bubbles are well-sized with alpha=0.6, but some smaller cities have
-          relatively small markers
+        comment: Bubbles range 20–90px with alpha 0.65. Clearly visible against both
+          CARTO light and dark basemaps.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Good colorblind-safe palette using blue, yellow, purple, green
+        comment: Okabe-Ito palette is CVD-safe. Five regions well-distinguished without
+          hue-only reliance.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Map fills canvas well, legends are positioned on the right with good
-          spacing
+        comment: World map fills the 4800x2700 canvas well. Legends proportionate
+          and well-placed on the right.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels say Longitude and Latitude but no units
+        comment: 'Axis labels include units: ''Longitude (°)'' and ''Latitude (°)''.
+          Title follows correct format with descriptive prefix.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Region legend is clear, size legend is useful but positioned slightly
-          far from map
+        comment: 'Asia (first region) = #009E73; canonical Okabe-Ito order followed.
+          Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Theme-correct chrome in both
+          renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: theme-adaptive CARTO tile URL switching, custom
+          size reference legend, consistent Okabe-Ito on geographic context. Not quite
+          FiveThirtyEight level but clearly deliberate design choices.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid alpha=0.10 (very subtle), legend semi-transparent background
+          and border, proper theme tokens. Grid lines over tile map are slightly unusual
+          but nearly invisible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Geographic layout creates inherent visual hierarchy — Asia cluster
+          with large bubbles is immediately apparent. Size encoding makes Tokyo's
+          dominance unmistakable. No annotations but visual structure guides the viewer.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct bubble map with geographic tile basemap
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Latitude/longitude correctly mapped to Web Mercator, size correctly
-          maps population
-      - id: SC-03
+        comment: Correct bubble map with geographic markers on tile basemap.
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has size legend, region color grouping, tooltips, transparency -
-          missing explicit city name labels on map
-      - id: SC-04
-        name: Data Range
+        comment: 'Area-proportional sizing (sqrt), size legend, alpha transparency,
+          tile basemap, hover tooltips, color grouping — all present. Minor: @lat/@lon
+          not in per-region ColumnDataSource, so Coordinates tooltip row shows ''???''
+          in HTML.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: View range shows all 25 cities properly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Lat/lon correctly converted to Web Mercator; population mapped to
+          bubble size; region mapped to color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both region and size legends accurately reflect the data
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as spec-id · library · pyplots.ai
+        comment: 'Title: ''World Cities by Population · bubble-map-geographic · python
+          · bokeh · anyplot.ai'' — correct format. Region legend and size reference
+          legend both present with correct labels.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied populations from 3.6M to 37.4M, good geographic spread,
-          multiple regions
+        comment: 25 cities across 5 continents, population range 3.6M–37.4M. Shows
+          full spectrum of bubble sizes and geographic spread.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real world cities with accurate 2024 population estimates
+        comment: Real world city populations with accurate names, coordinates, and
+          2024 estimates. Neutral geography/demographics topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Population values are realistic with minor variations
+        comment: Population values consistent with real-world data (Tokyo ~37M, Delhi
+          ~33M, etc.). Geographic coordinates accurate.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Code has a helper function lat_lon_to_mercator which adds slight
-          complexity
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: 'Flat: sys.path fix → theme tokens → data → projection → sizing →
+          plot → legends → style → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Fully deterministic: hardcoded city data, no random elements.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used appropriately
+        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting,
+          bokeh.resources, selenium, os, time, sys, pathlib.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean iteration over regions for per-renderer legend. sys.path manipulation
+          is a documented necessity (script named bokeh.py). No over-engineering.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also saves plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Uses current Bokeh
+          API (WMTSTileSource, ColumnDataSource, etc.).
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of Bokeh WMTSTileSource, ColumnDataSource, HoverTool
-          with custom tooltips, interactive tools, HTML export with CDN
+        comment: WMTSTileSource for tile maps, ColumnDataSource for per-renderer data,
+          LegendItem for manual legend construction, figure(x_axis_type='mercator')
+          for geo mapping — all idiomatic Bokeh patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: WMTSTileSource (couldn't replicate in matplotlib without cartopy),
+          Mercator projection handling, per-renderer tooltip sources, LegendItem grouping.
+          Solid Bokeh-specific geo capabilities but not at the ceiling.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
+  - html-export
   - custom-legend
   - annotations
-  - html-export
   patterns:
-  - data-generation
   - columndatasource
   - iteration-over-groups
   dataprep:
