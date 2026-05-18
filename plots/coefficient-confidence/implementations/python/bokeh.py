@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 90/100 | Updated: 2026-05-18
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-18
 """
 
 import os
