@@ -1,0 +1,255 @@
+library: ggplot2
+language: r
+specification_id: bar-stacked-labeled
+created: '2026-05-18T02:03:03Z'
+updated: '2026-05-18T02:06:27Z'
+generated_by: claude-haiku
+workflow_run: 26009527053
+issue: 3504
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - 'Perfect color palette: first series correctly #009E73 (Okabe-Ito green), with
+    proper sequential colors'
+  - 'Excellent text legibility: all font sizes explicitly set (title 24pt, labels
+    20pt, ticks 16pt, annotations 6pt size with bold)'
+  - 'Theme-adaptive chrome perfectly implemented: both light and dark renders readable
+    with correct text colors and backgrounds'
+  - 'Comprehensive visual hierarchy: bold title and axis labels, clear legend, total
+    labels emphasize key summary metrics'
+  - Clean stacked bar implementation with proper data mapping, no overlapping elements,
+    well-balanced layout
+  weaknesses:
+  - 'DE-02: Could add subtle grid styling refinement (e.g., alpha parameter for more
+    control)'
+  - 'LM-02: Uses standard ggplot2 patterns; could leverage distinctive features like
+    facet_wrap for comparison or stat transformations'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct per spec
+      Chrome: Title "bar-stacked-labeled · R · ggplot2 · anyplot.ai" in bold dark text (24pt); X-axis "Quarter" and Y-axis "Revenue ($)" in dark text (20pt); tick labels in soft dark gray (16pt) - all clearly readable against light background
+      Data: Three stacked bar segments per quarter showing Electronics (orange #D55E00), Apparel (green #009E73 - first series correct!), and Home (blue #0072B2) with white edge lines for definition. Total labels ("$1M", "$1.2M", "$1.4M", "$1.5M") positioned above bars in bold dark text
+      Grid: Subtle horizontal grid lines (Y-axis only) visible but not dominant
+      Legend: Right-aligned showing Product with three categories; text readable on light background
+      Caption: "Total quarterly revenue by product category" in small text below
+      Legibility verdict: PASS - all elements clearly readable with proper contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct per spec
+      Chrome: Same title, axis labels, tick labels now in light text (light gray #B8B7B0) - all clearly readable against dark background; no dark-on-dark failures detected
+      Data: Stacked bars with identical data colors to light render (Apparel green #009E73, Electronics orange #D55E00, Home blue #0072B2); white edge lines maintained. Total labels in light text
+      Grid: Same subtle horizontal grid lines now visible against dark background
+      Legend: Same right-aligned layout with light-colored text on dark background
+      Caption: Visible in light text
+      Legibility verdict: PASS - all text is light-colored on dark background, excellent readability, zero dark-on-dark issues
+
+    Both renders confirm: data colors are 100% identical between themes (only chrome is theme-adaptive), all text is readable in both modes, proper Okabe-Ito palette compliance.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
+          16pt, annotations 6pt + bold. All perfectly readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Total labels positioned with vjust=-0.3
+          above bars, legend isolated to right.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bar segments clearly visible with distinct colors. White edge
+          lines provide definition. Data well-adapted to canvas size.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe. Good contrast between all three colors.
+          No red-green dependency.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas. Balanced margins. Legend positioned
+          right, not isolated. Good whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title is ''bar-stacked-labeled · R · ggplot2 · anyplot.ai'' (spec-compliant).
+          X: Quarter, Y: Revenue ($) with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Apparel = #009E73 (green, correct). Colors follow Okabe-Ito
+          order: #D55E00, #0072B2. Light background #FAF8F1, dark #1A1A17. Theme-adaptive
+          text (INK/INK_SOFT). Both renders identical data colors.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Uses Okabe-Ito palette professionally with intentional typography
+          hierarchy. Bold fonts and custom sizes show design thought beyond defaults,
+          but not groundbreaking.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Grid styled subtly (Y-axis only), spines removed via theme_minimal.
+          Legend background matches plot. Generous margins and whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Total labels above bars create visual emphasis on cumulative values.
+          Color contrast and stacked layout guide viewer through quarterly progression
+          and component breakdown.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked bar chart with all components clearly visible.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Multiple series (Electronics, Apparel, Home) stacked. Total labels
+          above each bar stack as required.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Quarter, Y=Revenue, fill=Product. All data visible, axes show full
+          range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''bar-stacked-labeled · R · ggplot2 · anyplot.ai'' (correct
+          format). Legend shows Product categories.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: multiple quarters (Q1-Q4), three product lines,
+          growth trend, component variation.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly revenue by product category. Real-world business scenario,
+          neutral and plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'Values plausible: $280K-$650K per product, totals $1M-$1.5M per
+          quarter. Proportions realistic.'
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → theme tokens → data → plot → save. No functions/classes.
+          Straightforward.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures deterministic data generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used. No unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized. Appropriate complexity. No over-engineering
+          or fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with ragg device. Current API.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Proper ggplot2 grammar: geom_col(), scale_fill_manual(), theme customization,
+          geom_text() for annotations. Follows best practices.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses standard ggplot2 patterns (dplyr groupby, basic theme override).
+          Most features could be replicated in other libraries. No distinctive ggplot2-specific
+          leverage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep: []
+  styling: []
