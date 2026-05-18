@@ -1,7 +1,7 @@
 """ anyplot.ai
 density-rug: Density Plot with Rug Marks
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-18
+Quality: 94/100 | Updated: 2026-05-18
 """
 
 import os
