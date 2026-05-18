@@ -28,10 +28,10 @@ const THANKS_TIMEOUT_MS = 1200;
 const miniFabSx = {
   width: 40,
   height: 40,
-  bgcolor: 'background.default',
-  color: 'text.primary',
+  bgcolor: 'var(--bg-surface)',
+  color: 'var(--ink)',
   opacity: 0.85,
-  '&:hover, &:focus-visible': { opacity: 1, bgcolor: 'action.hover' },
+  '&:hover, &:focus-visible': { opacity: 1, bgcolor: 'var(--bg-elevated)' },
 } as const;
 
 const REACTIONS = [
@@ -288,12 +288,12 @@ export function FeedbackWidget() {
           width: { xs: 40, sm: 48 },
           height: { xs: 40, sm: 48 },
           minHeight: { xs: 40, sm: 48 },
-          bgcolor: 'background.default',
+          bgcolor: 'var(--bg-surface)',
           color: 'primary.main',
           opacity: { xs: 0.75, sm: 0.85 },
           transform: liftTransform,
           transition: 'transform 120ms ease-out',
-          '&:hover, &:focus-visible': { opacity: 1, bgcolor: 'action.hover' },
+          '&:hover, &:focus-visible': { opacity: 1, bgcolor: 'var(--bg-elevated)' },
         }}
       >
         <ForumIcon />
@@ -361,9 +361,9 @@ export function FeedbackWidget() {
             position: 'fixed',
             right: { xs: 60, sm: 76 },
             bottom: { xs: 16, sm: 22 },
-            bgcolor: 'background.paper',
+            bgcolor: 'var(--bg-elevated)',
             transform: liftTransform,
-            color: 'text.primary',
+            color: 'var(--ink)',
             px: 1.5,
             py: 0.5,
             borderRadius: 1,
@@ -384,13 +384,41 @@ export function FeedbackWidget() {
         onClose={handleClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        slotProps={{ paper: { sx: { width: { xs: 'calc(100vw - 12px)', sm: 360 }, maxWidth: 400, p: 1.5 } } }}
+        slotProps={{
+          paper: {
+            sx: {
+              width: { xs: 'calc(100vw - 12px)', sm: 360 },
+              maxWidth: 400,
+              p: 1.5,
+              bgcolor: 'var(--bg-elevated)',
+              color: 'var(--ink)',
+              '& .MuiOutlinedInput-root': {
+                color: 'var(--ink)',
+                '& fieldset': { borderColor: 'var(--rule)' },
+                '&:hover fieldset': { borderColor: 'var(--ink-muted)' },
+                '&.Mui-focused fieldset': { borderColor: 'primary.main' },
+              },
+              '& .MuiOutlinedInput-input::placeholder': {
+                color: 'var(--ink-muted)',
+                opacity: 1,
+              },
+              '& .MuiToggleButton-root': {
+                color: 'var(--ink)',
+                borderColor: 'var(--rule)',
+                '&.Mui-selected': {
+                  bgcolor: 'var(--bg-surface)',
+                  '&:hover': { bgcolor: 'var(--bg-surface)' },
+                },
+              },
+            },
+          },
+        }}
       >
         {submitted ? (
           <Box sx={{ py: 3, textAlign: 'center' }} role="status" aria-live="polite">
             <Box sx={{ fontSize: 28, mb: 1 }}>🙏</Box>
             <Box sx={{ fontWeight: 600 }}>Thanks!</Box>
-            <Box sx={{ fontSize: 13, color: 'text.secondary', mt: 0.5 }}>
+            <Box sx={{ fontSize: 13, color: 'var(--ink-muted)', mt: 0.5 }}>
               We read every note.
             </Box>
           </Box>
@@ -409,7 +437,7 @@ export function FeedbackWidget() {
               minRows={3}
               maxRows={6}
               fullWidth
-              placeholder="Typo, weird chart, feature idea…"
+              placeholder="Bug, idea, typo, anything…"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               slotProps={{ htmlInput: { maxLength: MAX_MESSAGE_LENGTH, 'aria-label': 'Feedback message' } }}
@@ -446,7 +474,7 @@ export function FeedbackWidget() {
             <Box
               sx={{
                 fontSize: 11,
-                color: 'text.secondary',
+                color: 'var(--ink-muted)',
                 mb: 1.5,
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
@@ -476,7 +504,7 @@ export function FeedbackWidget() {
             )}
 
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box sx={{ fontSize: 12, color: 'text.secondary' }}>
+              <Box sx={{ fontSize: 12, color: 'var(--ink-muted)' }}>
                 {message.length}/{MAX_MESSAGE_LENGTH}
               </Box>
               <Button
