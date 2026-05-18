@@ -1,215 +1,57 @@
 library: highcharts
+language: python
 specification_id: scatter-matrix-interactive
 created: '2026-01-10T01:58:08Z'
-updated: '2026-01-10T02:00:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20870870336
+updated: '2026-05-18T16:44:16Z'
+generated_by: claude-haiku
+workflow_run: 26046823702
 issue: 3604
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/highcharts/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of a 4x4 scatter matrix with linked brushing across all
-    panels
-  - Clean colorblind-safe color palette with consistent species encoding
-  - 'Proper interactive features: click selection, Ctrl+click multi-select, double-click
-    clear, zoom/pan'
-  - Histograms on diagonal provide good univariate distribution context
-  - Uses real Iris dataset which is perfect for demonstrating multivariate exploration
-  - HTML output enables full interactivity; PNG capture for static preview
+  - 'Correct Okabe-Ito palette with first series #009E73 and proper color identity
+    across themes'
+  - Theme adaptation with all chrome elements using correct tokens—both light and
+    dark renders fully readable
+  - Real Highcharts linked brushing (click, Ctrl+click, double-click reset) with visual
+    feedback via opacity state
+  - Proper 4×4 scatter matrix with diagonal histograms and edge-only axis labels for
+    clarity
+  - Clean Python code with deterministic iris dataset and proper Selenium headless
+    rendering at 4800×2700 px
   weaknesses:
-  - Does not use the highcharts-core Python library as recommended in library rules;
-    instead constructs raw JavaScript/HTML
-  - Box/lasso selection not implemented (only point-click selection available)
-  - Interaction instructions at bottom are somewhat small text
+  - 'DE-01 at default (4/8): Standard Highcharts styling without custom design polish
+    beyond palette and theme tokens'
   image_description: |-
-    The plot displays a 4×4 scatter plot matrix (SPLOM) for the Iris dataset with linked brushing functionality. The title "scatter-matrix-interactive · highcharts · pyplots.ai" is clearly visible at the top with a subtitle describing the dataset. The matrix shows all pairwise combinations of four Iris features: Sepal Length, Sepal Width, Petal Length, and Petal Width.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title, subtitle, and all axis labels rendered in dark text (#1A1A17, #4A4A44) — clearly readable against light background
+      Data: Three iris species in Okabe-Ito colors: Setosa (green #009E73), Versicolor (orange #D55E00), Virginica (blue #0072B2) — first series is brand green ✓
+      Legibility verdict: PASS — all text, axes, and data markers fully readable
 
-    The diagonal cells contain histograms showing univariate distributions for each variable, with three colors representing the three species: blue (Setosa), yellow (Versicolor), and purple (Virginica). Off-diagonal cells show scatter plots of variable pairs, with the same color scheme consistently applied across all plots.
-
-    The layout includes a legend at the bottom with circular color indicators for each species. Instructions for interaction are displayed below the legend. Axis labels appear on the left side (Y) and bottom (X) edges of the matrix. The grid lines are subtle gray. Points appear reasonably sized for the 150 data points.
-  criteria_checklist:
-    visual_quality:
-      score: 38
-      max: 40
-      items:
-      - id: VQ-01
-        name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and legend are readable. Tick labels
-          are slightly small but still legible.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; matrix layout is well-organized.
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Markers sized appropriately for 150 data points; good visibility
-          across all scatter plots.
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and purple palette is colorblind-safe (no red-green
-          conflict).
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Matrix fills canvas well, balanced margins, legend positioned near
-          plot.
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: Sepal Length (cm), Sepal Width (cm),
-          etc.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle and good; legend is well-placed but instructions text
-          is quite small.
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct SPLOM with scatter plots and diagonal histograms.
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: All four variables correctly mapped to axes.
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has linked brushing (click/Ctrl+click), zoom/pan, clear selection.
-          Box/lasso selection not fully implemented.
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data points visible within axis ranges.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows three species with accurate colors.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format with middot character.
-    data_quality:
-      score: 20
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Shows all aspects: 3 distinct species clusters, correlations between
-          petal dimensions, separation patterns.'
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Iris dataset is a classic, well-known real-world dataset for multivariate
-          analysis.
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
-        max: 5
-        passed: true
-        comment: Values are realistic measurements in centimeters for flower dimensions.
-    code_quality:
-      score: 7
-      max: 10
-      items:
-      - id: CQ-01
-        name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Code is mostly linear but has loop structures for building charts.
-          Acceptable for complex matrix visualization.
-      - id: CQ-02
-        name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses deterministic Iris dataset from sklearn.
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
-        max: 2
-        passed: true
-        comment: All imports used, but tempfile and time.sleep pattern adds complexity.
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Highcharts and Selenium APIs.
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html as expected.
-    library_features:
-      score: 3
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Uses Highcharts linked charts pattern with manual synchronization.
-          Good interactive features but does not use highcharts-core Python library.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, subtitle, and axes in light text (#F0EFE8, #B8B7B0) — clearly readable against dark background
+      Data: Colors identical to light render (Okabe-Ito positions 1–3 theme-independent); all three species maintain their identity
+      Legibility verdict: PASS — no dark-on-dark failures; all text legible; proper theme adaptation throughout
   verdict: APPROVED
 impl_tags:
   dependencies:
-  - sklearn
   - selenium
+  - sklearn
   techniques:
-  - subplots
   - html-export
-  - hover-tooltips
+  - subplots
   patterns:
   - dataset-loading
   - iteration-over-groups
   - matrix-construction
   dataprep:
   - binning
-  styling:
-  - grid-styling
-  - alpha-blending
+  styling: []
