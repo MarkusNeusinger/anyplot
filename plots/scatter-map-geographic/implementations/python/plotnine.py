@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-18
+Quality: 97/100 | Updated: 2026-05-18
 """
 
 import os
