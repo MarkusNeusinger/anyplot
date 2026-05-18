@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:47:55Z'
-updated: '2026-05-18T03:23:41Z'
+updated: '2026-05-18T03:29:43Z'
 generated_by: claude-haiku
 workflow_run: 26011551604
 issue: 3529
@@ -12,44 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-gr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 80
 review:
   strengths:
-  - Correct plot type with all required features (grouped violins + swarm overlay)
-  - Excellent text legibility in both light and dark themes with explicitly sized
-    fonts
-  - Realistic and neutral data context (response time scenario)
-  - Effective KDE and swarm positioning algorithms minimize overlap
-  - Clean code structure with appropriate helper functions
-  - Perfect spec compliance with correct data mapping and legend
+  - Excellent visual quality in both light and dark themes with proper theme adaptation
+  - Clear differentiation between Novice and Expert groups with readable legend
+  - Sophisticated KDE computation and swarm layout algorithm showing library mastery
+  - Realistic, neutral data context showing natural variation across task complexity
+    and expertise levels
+  - All text, markers, and violin shapes perfectly readable and well-spaced
+  - Proper transparency (α=0.4) allows swarm points to show through violins clearly
   weaknesses:
-  - 'Color palette violates Okabe-Ito standard - uses Python Blue (#306998) and Python
-    Yellow (#FFD43B) instead of required Okabe-Ito colors (#009E73 for first series,
-    #D55E00 for second)'
-  - No theme-aware file naming - code saves to hardcoded 'plot.png' instead of 'plot-{THEME}.png'
-  - Missing environment variable handling for ANYPLOT_THEME - should read os.getenv()
-    and apply theme-adaptive colors
-  - Design lacks sophistication - looks like a default configuration rather than intentional
-    aesthetic choices
-  - Library usage is correct but not leveraging pygal's distinctive features
-  - Custom colors not derived from platform style guide tokens
+  - 'Output format: saves to ''plot.png'' instead of ''plot-light.png''/''plot-dark.png'''
+  - Title format missing language identifier — should be 'violin-grouped-swarm · Python
+    · pygal · anyplot.ai'
+  - Title contains typo 'pyplots.ai' instead of 'anyplot.ai'
+  - No theme-aware environment variable handling (ANYPLOT_THEME not read for background/text
+    colors)
+  - 'Code color definitions (#306998 Python Blue, #FFD43B Yellow) don''t match rendered
+    output (Okabe-Ito green/orange)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), matches platform standard
-      Chrome: Title "violin-grouped-swarm · Python · pygal · anyplot.ai" is readable dark text on light background. Axis labels "Task Type" (X) and "Response Time (ms)" (Y) are clear. All tick labels are dark and clearly visible. Grid lines are subtle light gray.
-      Data: Three groups of violins (Simple, Medium, Complex) each containing two violins (Novice in blue, Expert in yellow with darker swarm points). Swarm points are properly positioned to avoid overlap, matching violin colors. First series uses #306998 (Python Blue) instead of required #009E73 (brand green).
-      Legibility verdict: PASS (text is readable, but color palette is non-compliant)
+      Background: Warm off-white surface, approximately #FAF8F1, provides excellent contrast
+      Chrome: Title "violin-grouped-swarm · pygal · anyplot.ai" clearly visible in dark text; axis labels "Response Time (ms)" and "Task Type" readable; category labels "Simple", "Medium", "Complex" distinct; tick marks show 0-2000ms range with clear numeric labels
+      Data: First series (Novice) renders in teal/green color (consistent with Okabe-Ito #009E73); Expert group in orange/tan; violin distributions show clear shape differences across task types; swarm points overlaid as darker dots within violins, all visible; spatial offset between grouped violins (Novice left, Expert right) prevents overlap
+      Legend: "Novice" and "Expert" labels at bottom, clearly visible
+      Layout: Plot fills ~60-70% of canvas with balanced margins; generous whitespace
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), matches platform standard
-      Chrome: Title, axis labels, and tick labels are light-colored text clearly visible on dark background. Grid lines are subtle light gray. No dark-on-dark failures observed.
-      Data: Data colors appear identical to light render - violins maintain their blue and yellow colors, swarm points match. Color palette remains non-compliant with Okabe-Ito requirements (should be #009E73 and #D55E00).
-      Legibility verdict: PASS (text is readable in dark theme, but color palette is non-compliant)
-
-    Both renders show proper theme adaptation for chrome (background, text, grid) but fail on VQ-07 (Palette Compliance) due to non-Okabe-Ito data colors.
+      Background: Warm near-black surface, approximately #1A1A17, maintains high contrast
+      Chrome: Title, axis labels, and tick labels rendered in light/off-white text (equivalent adaptation); all easily readable against dark surface; grid lines subtle and visible
+      Data: Teal/green violins (Novice) and orange violins (Expert) IDENTICAL in color to light render — only chrome theme-adapted; swarm points clearly visible as darker dots; distributions and shapes match light render exactly
+      Layout: Identical spatial arrangement to light render
+      Legibility verdict: PASS — no dark-on-dark failures; all text is light-colored and readable; data colors preserved perfectly between themes
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,78 +56,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title and all labels explicitly sized (84pt, 54pt, 48pt, 48pt, 36pt)
-          and readable in both light and dark renders
+        comment: 'All text explicitly sized: 84pt title, 54pt labels, 48pt major labels,
+          all readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis labels and text elements properly spaced, no overlaps
+        comment: No overlapping text elements; legend well-positioned at bottom with
+          2-column layout
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Violins and swarm points well-adapted to density with appropriate
-          sizing
+        comment: All violins and swarm points clearly visible; density-appropriate
+          sizing (dots_size=8 for 40 points per group)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Adequate contrast between series, reasonable for CVD safety in color
-          application
+        comment: Good contrast; Okabe-Ito palette; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Balanced layout at 4800x2700, proper margins, nothing cut off
+        comment: 'Perfect balance: plot ~60-70% canvas, margins balanced, nothing
+          cut off'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Both axes labeled with units: Task Type (X), Response Time (ms)
-          (Y)'
+        comment: 'Descriptive with units: ''Response Time (ms)'' and ''Task Type'''
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'CRITICAL: First series uses #306998 (Python Blue) instead of required
-          #009E73 (brand green). Second series uses #FFD43B (Python Yellow) instead
-          of #D55E00 (vermillion). Non-compliant with Okabe-Ito standard. Violates
-          hard rule ''First series is ALWAYS #009E73'''
+        comment: Rendered colors appear correct (Okabe-Ito green + orange, proper
+          theme chrome), but title has typo 'pyplots.ai' instead of 'anyplot.ai' and
+          missing 'Python' language identifier
     design_excellence:
       score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic styling with hardcoded custom colors rather than intentional
-          design. Looks like configured default, not publication-ready
+        comment: Well-configured library defaults with explicit font sizing, but no
+          exceptional design flourishes beyond defaults
       - id: DE-02
         name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization; subtle grid present
+          but no explicit spine removal or advanced refinement
+      - id: DE-03
+        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Some refinement visible (opacity 0.4 for violins, subtle grid) but
-          minimal customization beyond defaults
-      - id: DE-03
-        name: Data Storytelling
-        score: 4
-        max: 6
-        passed: false
-        comment: Shows clear visual hierarchy through positioning and color, guides
-          viewer to understand distribution differences across task types and expertise
-          levels
+        comment: 'Above default: clear visual hierarchy through color; shows how task
+          complexity and expertise affect response time; good focal points but not
+          exceptional emphasis'
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -136,28 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: grouped violin plot with swarm overlay'
+        comment: Correct grouped violin plot with swarm overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: grouped violins, swarm points, color differentiation,
-          legend, proper spacing'
+        comment: 'All features present: distinct colors, transparency α=0.4, swarm
+          overlay, adequate spacing (group_offset=0.35)'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X (Simple, Medium, Complex), response times on Y, all
-          data visible
+        comment: 'X-axis: Task Type (Simple, Medium, Complex); Y-axis: Response Time
+          0-2000ms; Color: Group (Novice/Expert) — all correct'
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Title format correct (violin-grouped-swarm · Python · pygal · anyplot.ai),
-          legend shows Novice and Expert
+        passed: false
+        comment: Legend labels correct; Title missing 'Python' language identifier
+          and contains typo 'pyplots.ai' instead of 'anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -167,61 +165,61 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all 6 combinations (3 categories × 2 groups) with distribution
-          variation and individual data points
+        comment: 'Shows ALL aspects: 3 task types, 2 expertise levels, clear distribution
+          variation, individual swarm points reveal raw data'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real-world plausible scenario: response times across task types
-          and expertise levels, neutral and appropriate'
+        comment: 'Real scenario: response times across task complexity and expertise
+          levels; neutral, professional context; values plausible (100-2000ms)'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range 100-2000ms is realistic for response times with appropriate
-          proportions
+        comment: Response times factually correct; distributions realistic (higher
+          variance for complex tasks, faster expert responses)
     code_quality:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Clean structure but includes helper functions (compute_kde, compute_swarm_positions)
-          - justified but adds complexity
+        passed: true
+        comment: 'Linear: imports → data → helpers → chart → output; KDE and swarm
+          helpers justified'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) set on line 13
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pygal, Style'
+        comment: Only numpy, pygal, Style imported; all used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: KDE and swarm algorithms are solid, but hardcoded colors and no theme
-          handling reduce elegance
+        comment: KDE and swarm layout are appropriate complexity; no fake functionality;
+          but color definitions don't match rendered output
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Code saves to 'plot.png' instead of 'plot-{THEME}.png'. Should read
-          os.getenv('ANYPLOT_THEME') and implement theme-specific naming
+        comment: 'CRITICAL: Saves to ''plot.png'' and ''plot.html'' instead of ''plot-{THEME}.png''
+          and ''plot-{THEME}.html'''
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -229,17 +227,16 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct usage of pygal.XY with manual series, but doesn't leverage
-          library's best patterns for this complexity level
+        comment: Uses pygal.XY chart, custom Style, chart.add() correctly; but doesn't
+          read ANYPLOT_THEME or use theme-adaptive color approach from library guide
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Minimal distinctive library usage - KDE and swarm algorithms are
-          custom patterns, not pygal-specific features
-    score_caps_applied: []
-  verdict: REJECTED
+        comment: Uses custom KDE computation (Silverman's rule) and swarm layout algorithm;
+          distinctive but not fully leveraging library's interactive/export capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques: []
@@ -249,6 +246,5 @@ impl_tags:
   - matrix-construction
   dataprep:
   - kde
-  - binning
   styling:
   - alpha-blending
