@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
-Library: pygal 3.1.0 | Python 3.13.11
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-18
 """
 
 import os
