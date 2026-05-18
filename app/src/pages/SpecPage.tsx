@@ -43,10 +43,12 @@ export function SpecPage() {
   const { trackPageview, trackEvent } = useAnalytics();
   const { librariesData } = useAppData();
 
-  // Language tokens are canonical lowercase (`python`/`r`) everywhere they're
-  // compared against impl data, written back to URLs, or rendered. Force-lowercase
-  // at the read site so a mixed-case route like /Python/matplotlib or
-  // ?language=Python doesn't desync title, filtering, canonical URL, and analytics.
+  // Language ids are canonical lowercase (`python`/`r`) wherever they're
+  // compared against impl data, written back to URLs, or used in analytics.
+  // Force-lowercase at the read site so a mixed-case route like
+  // /Python/matplotlib or ?language=Python doesn't desync title, filtering,
+  // canonical URL, and analytics. Title-cased display labels for UI surfaces
+  // (e.g. breadcrumbs) still go through LANG_DISPLAY.
   const urlLanguage = urlLanguageRaw?.toLowerCase();
 
   const [specData, setSpecData] = useState<SpecDetail | null>(null);
