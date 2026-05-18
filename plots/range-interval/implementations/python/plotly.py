@@ -1,12 +1,26 @@
-""" pyplots.ai
+""" anyplot.ai
 range-interval: Range Interval Chart
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # Primary series
+SECONDARY = "#D55E00"  # Secondary series
 
 # Data: Monthly temperature ranges (°C) for a temperate climate city
 np.random.seed(42)
@@ -29,7 +43,7 @@ for i, month in enumerate(months):
             x=[month, month],
             y=[min_temps[i], max_temps[i]],
             mode="lines",
-            line=dict(color="#306998", width=18),
+            line={"color": BRAND, "width": 18},
             showlegend=False,
             hoverinfo="skip",
         )
@@ -41,7 +55,7 @@ fig.add_trace(
         x=months,
         y=min_temps,
         mode="markers",
-        marker=dict(color="#FFD43B", size=18, line=dict(color="#306998", width=3)),
+        marker={"color": SECONDARY, "size": 18, "line": {"color": BRAND, "width": 3}},
         name="Min Temperature",
         hovertemplate="%{x}<br>Min: %{y:.1f}°C<extra></extra>",
     )
@@ -53,7 +67,7 @@ fig.add_trace(
         x=months,
         y=max_temps,
         mode="markers",
-        marker=dict(color="#FFD43B", size=18, line=dict(color="#306998", width=3)),
+        marker={"color": SECONDARY, "size": 18, "line": {"color": BRAND, "width": 3}},
         name="Max Temperature",
         hovertemplate="%{x}<br>Max: %{y:.1f}°C<extra></extra>",
     )
@@ -66,35 +80,47 @@ fig.add_trace(
         x=months,
         y=midpoints,
         mode="markers",
-        marker=dict(color="white", size=10, line=dict(color="#306998", width=2)),
+        marker={"color": INK, "size": 10, "line": {"color": BRAND, "width": 2}},
         name="Midpoint",
         hovertemplate="%{x}<br>Mid: %{y:.1f}°C<extra></extra>",
     )
 )
 
-# Update layout
+# Update layout with theme-adaptive styling
 fig.update_layout(
-    title=dict(text="range-interval · plotly · pyplots.ai", font=dict(size=28), x=0.5, xanchor="center"),
-    xaxis=dict(
-        title=dict(text="Month", font=dict(size=22)),
-        tickfont=dict(size=18),
-        categoryorder="array",
-        categoryarray=months,
-    ),
-    yaxis=dict(
-        title=dict(text="Temperature (°C)", font=dict(size=22)),
-        tickfont=dict(size=18),
-        gridcolor="rgba(0,0,0,0.1)",
-        gridwidth=1,
-        zeroline=True,
-        zerolinecolor="rgba(0,0,0,0.3)",
-        zerolinewidth=2,
-    ),
-    template="plotly_white",
-    legend=dict(font=dict(size=16), x=0.02, y=0.98, bgcolor="rgba(255,255,255,0.8)"),
-    margin=dict(l=80, r=40, t=80, b=60),
+    title={
+        "text": "range-interval · python · plotly · anyplot.ai", "font": {"size": 28, "color": INK}, "x": 0.5, "xanchor": "center"
+    },
+    xaxis={
+        "title": {"text": "Month", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "categoryorder": "array",
+        "categoryarray": months,
+        "showgrid": False,
+        "linecolor": INK_SOFT,
+        "linewidth": 2,
+    },
+    yaxis={
+        "title": {"text": "Temperature (°C)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "zeroline": True,
+        "zerolinecolor": INK_SOFT,
+        "zerolinewidth": 2,
+        "linecolor": INK_SOFT,
+        "linewidth": 2,
+    },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    legend={
+        "font": {"size": 16, "color": INK_SOFT}, "x": 0.02, "y": 0.98, "bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "borderwidth": 1
+    },
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    hovermode="closest",
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
