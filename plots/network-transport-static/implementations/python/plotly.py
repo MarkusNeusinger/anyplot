@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 network-transport-static: Static Transport Network Diagram
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-18
+Quality: 88/100 | Updated: 2026-05-18
 """
 
 import os
