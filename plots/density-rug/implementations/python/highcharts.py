@@ -1,7 +1,7 @@
 """ anyplot.ai
 density-rug: Density Plot with Rug Marks
 Library: highcharts unknown | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-18
+Quality: 90/100 | Updated: 2026-05-18
 """
 
 import os
