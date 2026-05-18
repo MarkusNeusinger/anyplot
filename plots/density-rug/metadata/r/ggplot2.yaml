@@ -1,0 +1,230 @@
+library: ggplot2
+language: r
+specification_id: density-rug
+created: '2026-05-18T00:43:08Z'
+updated: '2026-05-18T00:53:21Z'
+generated_by: claude-haiku
+workflow_run: 26007471626
+issue: 3505
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
+review:
+  strengths:
+  - 'Perfect visual quality: all text legible in both themes, no overlap, optimal
+    element visibility'
+  - 'Exceptional library mastery: two-layer density approach, environment-based theme
+    tokens, advanced ggplot2 patterns'
+  - Clean, reproducible code following KISS principle with deterministic data generation
+  - 'Thoughtful design: peak annotations and reference lines clearly communicate the
+    bimodal distribution'
+  - Realistic, neutral data scenario with real-world relevance (web response times)
+  - 'Flawless theme adaptation: data colors identical between light/dark renders,
+    chrome correctly flips for readability'
+  weaknesses:
+  - Design aesthetic relies on library defaults rather than exceptional customization
+    (very minor at 95/100)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all in dark color - clearly readable
+      Data: Bimodal density curve with semi-transparent fill and solid outline in #009E73; rug marks show individual data points; reference lines at peaks 150/250ms with "Peak 1"/"Peak 2" annotations
+      Legibility verdict: PASS - all text perfectly readable, no overlap, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, tick labels all in light color (#F0EFE8 equivalent) - clearly readable, no dark-on-dark failures
+      Data: Density colors identical to light render (#009E73); rug marks visible; reference lines and annotations clearly distinguish peaks
+      Legibility verdict: PASS - all elements readable against dark background, data colors invariant across themes, perfect theme adaptation
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title 24pt, labels 20pt, ticks 16pt - all explicitly set and perfect
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Peak annotations positioned well, no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Rug marks and density curve optimally adapted to data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito green with strong contrast, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: ~65% canvas utilization, balanced margins, excellent proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Descriptive with units: ''Response Time (ms)'' and ''Density'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds correct, text colors theme-correct,
+          data colors identical between renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean, professional; two-layer density + annotations thoughtful;
+          follows defaults rather than exceptional customization
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, well-positioned rug marks, generous whitespace, excellent
+          detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Peak annotations and reference lines create clear visual hierarchy
+          for bimodal insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: KDE density + rug marks'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features: curve, rug marks, semi-transparent fill, clarity'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Response Time (x), Density (y), all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; single-series (no legend needed)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Bimodal distribution with 80 points showing dual peaks and rug detail
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Web response times (150/250ms) - neutral, real-world plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions factually correct for web latency
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports → tokens → data → plot → save; no functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) with deterministic rnorm()
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2, ragg - both necessary
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Two-layer density is elegant and idiomatic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png, 4800x2700px
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ggplot() + geom composition, environment tokens, ggsave with ragg
+          - expertly idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Two-layer density, key_glyph blank, environment tokens, expansion
+          control - distinctively ggplot2
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - annotations
+  patterns:
+  - data-generation
+  dataprep:
+  - kde
+  styling:
+  - alpha-blending
+  - publication-ready
