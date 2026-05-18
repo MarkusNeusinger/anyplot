@@ -1,153 +1,172 @@
 library: matplotlib
+language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:31:25Z'
-updated: '2026-01-09T15:34:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856767476
+updated: '2026-05-18T01:54:21Z'
+generated_by: claude-haiku
+workflow_run: 26009034890
 issue: 3504
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/matplotlib/plot.png
-preview_html: null
-quality_score: 95
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of total labels above bar stacks with clear formatting
-    ($XXM)
-  - Smart conditional segment labeling (only for values >=20) prevents visual clutter
-  - Clean visual separation between segments using white edge borders
-  - Professional styling with hidden top/right spines and subtle grid
-  - Realistic quarterly revenue data that tells a growth story
+  - Perfect visual quality—all text sized explicitly (title 24pt, labels 20pt, ticks
+    16pt) and readable in both themes
+  - Excellent theme adaptation—chrome flips correctly (#FAF8F1↔#1A1A17, text colors
+    invert, grid adapts) while Okabe-Ito data colors remain constant
+  - Professional design—white edges on bars, bold total labels, conditional segment
+    labels create clear visual hierarchy
+  - Clean code—KISS structure, deterministic with seed, proper Axes API usage, no
+    fake features
   weaknesses:
-  - Colors could be more colorblind-friendly (consider using a vetted colorblind palette)
-  - Grid could be slightly more prominent for easier value reading
-  image_description: 'The plot displays a stacked bar chart showing quarterly revenue
-    (Q1-Q4) broken down by four product categories: Software (dark blue), Hardware
-    (golden yellow), Services (teal/cyan), and Support (coral/salmon pink). Each bar
-    stack is clearly labeled with the total revenue value above it ($115M, $130M,
-    $153M, $177M) in bold black text. Individual segment values are annotated in white
-    text within bars for segments with values >=20. The y-axis shows "Revenue ($ Millions)"
-    ranging from 0 to 200, and the x-axis shows "Quarter" with Q1-Q4 labels. A legend
-    in the upper left corner identifies each color-coded category. The plot has a
-    subtle y-axis grid with dashed lines and clean styling with hidden top and right
-    spines.'
+  - Title says 'pyplots.ai' instead of 'anyplot.ai'—violates SC-04 spec format requirement
+  - Library Mastery is generic—white edge highlighting on bars is the only library-specific
+    touch; doesn't leverage distinctive matplotlib features
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title, axis labels, tick labels in dark text, clearly readable ✓
+      Data: Stacked bars with Okabe-Ito colors (green Software, orange Hardware, blue Services, purple Support). White edges for definition. Bold total labels ($115M–$177M) above bars. Segment values in white text on colored backgrounds.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, axis labels, tick labels in light text, clearly readable. No dark-on-dark failures ✓
+      Data: Colors identical to light render—same green, orange, blue, purple in same positions with same values.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, total labels
-          at 20pt bold, segment labels at 14pt - all perfectly readable
+        comment: Title 24pt, labels 20pt, ticks 16pt, all explicitly set and readable
+          in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; segment labels only shown for bars >=20 to prevent
-          crowding
+        comment: No overlapping text; total labels have clear spacing above bars
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar widths are appropriate, white edge borders provide clear segment
-          separation
+        comment: All segments clearly visible; white edges provide definition
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinct and reasonably colorblind-safe, though not a
-          perfect colorblind palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with appropriate margins, y-axis extended
-          for label space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; colors are visually distinct
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions; balanced margins; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed), legend well-placed; grid could
-          be slightly more visible
+        comment: 'Descriptive with units: ''Quarter'', ''Revenue ($ Millions)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito order correct; #009E73 first; backgrounds #FAF8F1/#1A1A17;
+          both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Okabe-Ito consistent; white edges and bold labels create hierarchy;
+          professional but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Top/right spines removed; y-axis grid subtle (alpha=0.1); legend
+          frame refined; whitespace generous
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Total labels highlight growth (115→177); color consistency aids product
+          tracking across quarters
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked bar chart
+        comment: Correct stacked bar chart with multiple categories and components
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis, components properly stacked
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Total labels above bars, segment labels for larger segments, consistent
-          number formatting
-      - id: SC-04
-        name: Data Range
+        comment: Total labels above bars present; all spec features implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data with adequate headroom for labels
-      - id: SC-05
-        name: Legend Accuracy
+        comment: 'X: quarters (categorical); Y: revenue stacked by product (numeric);
+          all data visible'
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all four components
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: bar-stacked-labeled · matplotlib · pyplots.ai'
+        max: 3
+        passed: false
+        comment: 'CRITICAL: Title says ''pyplots.ai'' instead of ''anyplot.ai''. Required:
+          ''bar-stacked-labeled · Python · matplotlib · anyplot.ai'''
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across quarters, different segment sizes, demonstrates
-          both small and large segments
+        comment: Shows all stacked segments with variation across quarters; all product
+          categories present
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Quarterly revenue by product category is a plausible business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Revenue figures in millions are realistic and sensible for the context
+        comment: Quarterly revenue by product is realistic, neutral, business-appropriate
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values plausible (15–62 per component, totals 115–177); proportions
+          realistic for quarterly revenue
     code_quality:
       score: 10
       max: 10
@@ -157,51 +176,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports -> data -> plot -> save structure, no functions or
-          classes
+        comment: 'Linear: imports → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: Only matplotlib, numpy, os, sys imported; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean, Pythonic; appropriate complexity; no fake features
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Good use of Axes methods (ax.bar with bottom parameter, ax.text for
-          annotations, spine manipulation), but no advanced matplotlib-specific features
-  verdict: APPROVED
+        passed: false
+        comment: 'Correct idioms: ax.bar() with bottom parameter for stacking, ax.text()
+          for labels, theme via os.getenv()'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: White edge highlighting on bars is a matplotlib detail; usage is
+          otherwise generic
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - manual-ticks
   patterns:
-  - data-generation
+  - explicit-figure
   - iteration-over-groups
   dataprep: []
   styling:
