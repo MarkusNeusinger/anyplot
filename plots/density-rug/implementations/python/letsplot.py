@@ -1,7 +1,7 @@
 """ anyplot.ai
 density-rug: Density Plot with Rug Marks
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-18
+Quality: 85/100 | Updated: 2026-05-18
 """
 
 import os
