@@ -1,163 +1,187 @@
 library: letsplot
+language: python
 specification_id: scatter-map-geographic
 created: '2026-01-10T04:05:15Z'
-updated: '2026-01-10T04:08:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20872460254
+updated: '2026-05-18T18:08:28Z'
+generated_by: claude-haiku
+workflow_run: 26051072375
 issue: 3617
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/letsplot/plot.html
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/letsplot/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Excellent use of lets-plot grammar of graphics with clean layer composition (basemap
-    polygons + scatter points)
-  - Colorblind-safe color palette with good contrast against gray basemap
-  - Interactive tooltips showing city name, population, and region
-  - Realistic data with 50 real world cities and accurate coordinates
-  - Proper 16:9 aspect ratio output with 3x scaling for high resolution
+  - Perfect theme-adaptive rendering with zero legibility failures in both light and
+    dark renders
+  - 'Excellent palette compliance: Okabe-Ito colors correctly applied with theme chrome
+    properly adapted'
+  - Real-world geographic data with accurate city coordinates and populations across
+    all continents
+  - Clean, reproducible, idiomatic letsplot code using the library's distinctive features
+    effectively
+  - 'Comprehensive feature coverage: basemap, color legends, size legends, interactive
+    tooltips, proper transparency handling'
+  - 'All visual quality metrics perfect (30/30): no text overlap, ideal marker sizing,
+    balanced layout, correct axis labels'
   weaknesses:
-  - Title format should be exactly "{spec-id} · {library} · pyplots.ai" without prefix
-  - Australia/Oceania region missing from both continents basemap and city data
-  - Legend position slightly crowds the right side; could use legend_position within
-    plot area
-  image_description: 'The plot displays a geographic scatter map of 50 major world
-    cities positioned on simplified continent outlines. The basemap shows gray-filled
-    polygons representing North America, South America, Europe, Africa, and Asia with
-    light gray borders. City points are colored by region using a colorblind-friendly
-    palette: blue for Asia, yellow for South America, green for North America, red
-    for Africa, and purple for Europe. Point sizes vary by population from approximately
-    7 million (smallest) to 37 million (largest - Tokyo). The map uses longitude (-180
-    to 180) on the x-axis and latitude (-60 to 80) on the y-axis with a 1:1 fixed
-    aspect ratio. Two legends appear on the right: a size legend showing Population
-    (M) from 10-35 and a color legend for Region. The title "World Major Cities ·
-    scatter-map-geographic · letsplot · pyplots.ai" is displayed at the top in bold.
-    The background is light gray (#F5F5F5) with subtle grid lines.'
+  - 'Design Excellence could be improved: basemap styling is functional but could
+    be more visually refined'
+  - Could leverage additional visual emphasis techniques to highlight geographic patterns
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white or dark
+      Chrome: Title, axis labels (Longitude/Latitude), tick labels all clearly visible in dark INK text
+      Data: 50 cities positioned by geographic coordinates, colored by region using Okabe-Ito palette (Asia=#009E73 first, then orange, blue, pink, yellow, sky blue), sized by population with alpha=0.85
+      Basemap: Subtle continental outlines in light gray providing geographic context
+      Grid: Subtle light grid lines visible for reference
+      Legend: Region color legend and Population size legend clearly readable at bottom
+      Legibility verdict: PASS - all text and data elements fully readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black or light
+      Chrome: Title, axis labels, tick labels all clearly visible in light INK text (#F0EFE8)
+      Data: Identical colors to light render (Asia=#009E73 confirmed - no color shift), sizes maintained
+      Basemap: Dark-colored continental outlines appropriately adapted for dark theme
+      Grid: Subtle light grid lines with proper opacity for visibility on dark surface
+      Legend: Region and Population legends fully readable with proper dark-theme styling
+      Theme consistency: Only chrome has flipped; data colors are identical across both renders
+      Dark-on-dark check: Zero failures observed - all text, labels, and elements are light-colored and readable
+      Legibility verdict: PASS - no theme-adaptation failures, perfect readability in dark mode
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 26pt bold, axis titles at 20pt, axis text at 16pt, legend
-          text at 14-18pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; city points have some overlap in dense
-          regions but alpha handles it well
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping text; clean legend positioning; all elements spaced
+          appropriately
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points sized appropriately with size range 3-18; good visibility
-          though some smaller cities could be slightly larger
+        comment: Marker sizes 4-18 perfectly adapted to 50-point density; alpha=0.85
+          ensures visibility
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette using distinct hues (blue, yellow, green,
-          red, purple)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; slight imbalance with extra whitespace
-          at bottom
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude are descriptive and appropriate for geographic
-          coordinates
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; good luminance contrast; no red-green-only
+          signals
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 70-80% of canvas with balanced margins; optimal layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Longitude and Latitude are descriptive; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series follows Okabe-Ito; backgrounds
+          correct; both renders theme-perfect'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle, but legends positioned outside plot area slightly
-          crowds the layout
+        comment: Well-configured color mapping with meaningful basemap; professional
+          but uses library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Theme_minimal() removes spines; subtle grid; generous whitespace;
+          basemap adds context
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear geographic narrative; color and size create visual hierarchy;
+          viewer understands patterns
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct geographic scatter plot with basemap
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Latitude/longitude correctly mapped to y/x, color to region, size
-          to population
-      - id: SC-03
+        comment: Correct scatter-map-geographic implementation
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has basemap, color encoding, size encoding, tooltips; all major features
-          present
-      - id: SC-04
-        name: Data Range
+        comment: Basemap, color legend, size legend, tooltips, transparency all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full world view with appropriate limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly map to longitude/latitude; all 50 cities visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both region color and population size legends present and accurate
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Title includes spec-id, library, pyplots.ai but adds 'World Major
-          Cities' prefix
+        comment: Title format correct; legend labels descriptive
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 50 major cities across all continents; could include Australia/Oceania
-          for complete coverage
+        comment: Real cities from all 6 continents; population range comprehensive
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real city data with accurate coordinates and plausible population
-          figures
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Population values in millions are realistic (7-37M range for megacities)
+        comment: Real-world city data with accurate coordinates; neutral scientific
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Population values factually accurate; coordinates correct; no impossible
+          data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,43 +189,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → continent polygons → plot →
-          save'
+        comment: Linear structure with no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) though data is deterministic
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; from lets_plot import * is standard for this library
+        comment: All imports actively used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code; no over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses unconventional import alias for ggsave
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot() + geom_*() composition; proper aes() and theme()
+          usage
+      - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: Uses layer_tooltips for interactive tooltips, geom_polygon for basemap,
-          scale_size for point scaling, coord_fixed for map projection
+        passed: false
+        comment: Uses layer_tooltips(), geom_polygon, coord_fixed(), HTML export;
+          good feature leverage
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -210,7 +240,7 @@ impl_tags:
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
+  - matrix-construction
   dataprep: []
   styling:
   - alpha-blending
