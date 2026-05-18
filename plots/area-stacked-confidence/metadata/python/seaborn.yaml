@@ -1,156 +1,172 @@
 library: seaborn
+language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:54:03Z'
-updated: '2026-01-09T21:56:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866593511
+updated: '2026-05-18T06:42:48Z'
+generated_by: claude-haiku
+workflow_run: 26017358068
 issue: 3549
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/seaborn/plot.png
-preview_html: null
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
 review:
   strengths:
-  - Excellent visual hierarchy with three distinct stacked areas and matching confidence
-    bands
-  - Realistic energy consumption scenario with widening uncertainty over time for
-    projections
-  - Clean code structure with proper cumulative stacking calculations
-  - Title and legend properly formatted with CI explanation
-  - Good use of alpha transparency for confidence bands (0.25) and main areas (0.8)
+  - Perfect visual quality with flawless theme compliance in both light and dark renders
+  - Excellent spec compliance and data quality with realistic portfolio allocation
+    scenario
+  - Professional design with thoughtful use of Okabe-Ito palette and appropriate alpha
+    transparency
+  - Effective confidence band visualization elegantly communicates uncertainty evolution
+  - Clean, reproducible code with proper theme-adaptive tokens for all chrome elements
   weaknesses:
-  - Heavy reliance on matplotlib fill_between rather than seaborn-native functions
-    (though seaborn lacks native stacked area support)
-  - Grid legend comment says it shows 90% CI but the legend could have a separate
-    entry for bands rather than in title
-  image_description: The plot displays a stacked area chart showing energy consumption
-    by source (Solar, Wind, Hydro) over quarterly periods from 2020 to 2026. Solar
-    is shown in deep blue (#306998) at the bottom, Wind in yellow (#FFD43B) in the
-    middle, and Hydro in teal (#4A90A4) at the top. Each stacked area is surrounded
-    by lighter semi-transparent confidence bands (approximately 25% opacity) that
-    widen over time, representing growing uncertainty in future projections. The y-axis
-    shows "Energy Consumption (TWh)" ranging from 0 to approximately 450, and the
-    x-axis shows "Quarter" with yearly markers. The title follows the correct format
-    "area-stacked-confidence · seaborn · pyplots.ai". A legend in the upper left explains
-    the energy sources and notes that bands show 90% CI. The grid is subtle with dashed
-    lines and appropriate transparency.
+  - Limited use of seaborn-specific features; implementation relies on matplotlib
+    for core plotting
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), perfect for readability
+      Chrome: Title, axis labels ("Quarter", "Portfolio Allocation (%)"), and tick labels all clearly visible in dark text with good sizing (24pt, 20pt, 16pt)
+      Data: Four stacked asset classes in Okabe-Ito colors (#009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 pink) with semi-transparent confidence bands (alpha=0.25), boundary lines visible
+      Legend: "Asset Class (shaded bands = 90% CI)" positioned upper left with light background
+      Legibility verdict: PASS - all elements readable and well-balanced
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), NOT pure black, enabling good contrast
+      Chrome: Title, axis labels, tick labels all clearly visible in light colors; no dark-on-dark failures present; legend uses elevated background (#242420) with light text
+      Data: Okabe-Ito colors identical to light render (perfect consistency); confidence bands and boundary lines equally visible
+      Grid: Y-axis grid subtle and visible in both renders
+      Legibility verdict: PASS - all text readable, theme adaptation perfect, no readability issues on dark surface
+  verdict: APPROVED
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, labels at 20pt, ticks at 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legend well-positioned
+        comment: All sizes explicitly set (24pt, 20pt, 16pt), perfectly readable in
+          both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; x-axis labels rotated with clear separation
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Areas and confidence bands clearly visible, though some bands overlap
-          visually where series meet
+        comment: Stacked areas and bands clearly visible with appropriate alpha layering
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and teal provide good differentiation; not a classic
-          colorblind-safe palette but distinguishable
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend near data
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Energy Consumption (TWh), Quarter'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette CVD-safe; good contrast between all series
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% canvas, balanced margins, legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle with alpha 0.3, legend well-placed but CI explanation
-          is in legend title rather than separate entry
+        comment: Descriptive labels with units (Portfolio Allocation %)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, colors follow Okabe-Ito order, backgrounds
+          correct (#FAF8F1 light, #1A1A17 dark), all chrome theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional use of Okabe-Ito, intentional hierarchy with main areas
+          and bands; above defaults but not fully custom
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle grid, generous whitespace, refined legend
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear narrative: portfolio composition + uncertainty evolution creates
+          visual hierarchy'
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct stacked area chart with confidence bands
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X is datetime (quarters), Y shows cumulative stacked values
-      - id: SC-03
+        comment: Correct stacked area with confidence bands
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has stacked areas with confidence bands, bands properly stacked
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: multiple series, bands, legend with explanation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y starts at 0
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correct, all data visible in proper range (0-100%)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies energy sources and band meaning
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: area-stacked-confidence · seaborn · pyplots.ai'
+        comment: Title format correct, legend labels match data
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows stacking, confidence bands widening over time for projection
-          uncertainty, multiple series
+        comment: 'Shows all aspects: four distinct asset classes, varying uncertainty,
+          temporal change'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Energy consumption by source is a real, neutral, comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: TWh values are realistic for energy consumption, uncertainty ranges
-          are plausible
+        comment: Real portfolio allocation scenario with realistic proportions (~45-50%
+          stocks, ~28-30% bonds)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values sum to 100%, uncertainty 2-4% appropriate, no impossible values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,50 +174,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: 'Simple flow: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only uses matplotlib, numpy, pandas, seaborn - all needed
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses seaborn primarily for styling, plotting done with matplotlib
-          fill_between
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png with current API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper sns.set_theme() and theme tokens, but could use sns.set_context()
+      - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses sns.set_theme() for styling, but actual plotting uses matplotlib
-          fill_between. Seaborn lacks native stacked area support.
-  verdict: APPROVED
+        comment: Relies heavily on matplotlib; limited seaborn-specific patterns
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - cumulative-sum
   - time-series
