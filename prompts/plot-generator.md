@@ -118,7 +118,7 @@ ax.scatter(study_hours, exam_scores, alpha=0.7, s=200,
 # Style
 ax.set_xlabel('Study Hours per Day', fontsize=20, color=INK)
 ax.set_ylabel('Exam Score (%)', fontsize=20, color=INK)
-ax.set_title('scatter-basic · Python · matplotlib · anyplot.ai',
+ax.set_title('scatter-basic · python · matplotlib · anyplot.ai',
              fontsize=24, fontweight='medium', color=INK)
 ax.tick_params(axis='both', labelsize=16, colors=INK_SOFT)
 ax.spines['top'].set_visible(False)
@@ -138,26 +138,26 @@ plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight', facecolor=PAGE_BG
 **Always use this format for the plot title:**
 
 ```
-{spec-id} · {Language} · {library} · anyplot.ai
+{spec-id} · {language} · {library} · anyplot.ai
 ```
 
-`{Language}` is the implementation's language, capitalized: `Python` or `R`. The language token is **required** — viewers cannot tell from `ggplot2` alone whether a chart is Python or R (`plotnine` is the Python ggplot port), and going forward every rendered title must surface the runtime language.
+`{language}` is the implementation's language, lowercase: `python` or `r`. The language token is **required** — viewers cannot tell from `ggplot2` alone whether a chart is Python or R (`plotnine` is the Python ggplot port), and going forward every rendered title must surface the runtime language. Keep it lowercase to match the lowercase `{spec-id}` and `{library}` tokens.
 
 Examples:
-- `scatter-basic · Python · matplotlib · anyplot.ai`
-- `bar-grouped · Python · seaborn · anyplot.ai`
-- `heatmap-correlation · Python · plotly · anyplot.ai`
-- `biplot-pca · R · ggplot2 · anyplot.ai`
+- `scatter-basic · python · matplotlib · anyplot.ai`
+- `bar-grouped · python · seaborn · anyplot.ai`
+- `heatmap-correlation · python · plotly · anyplot.ai`
+- `biplot-pca · r · ggplot2 · anyplot.ai`
 
 **Optional descriptive prefix**: If the spec-id alone doesn't explain the example data well, add a descriptive title before it:
 
 ```
-{Descriptive Title} · {spec-id} · {Language} · {library} · anyplot.ai
+{Descriptive Title} · {spec-id} · {language} · {library} · anyplot.ai
 ```
 
 Examples:
-- `Tesla Stock 2024 · candle-ohlc · Python · matplotlib · anyplot.ai`
-- `Sales by Region · bar-grouped · Python · seaborn · anyplot.ai`
+- `Tesla Stock 2024 · candle-ohlc · python · matplotlib · anyplot.ai`
+- `Sales by Region · bar-grouped · python · seaborn · anyplot.ai`
 
 Only add the descriptive prefix when it adds value - most basic plots don't need it.
 

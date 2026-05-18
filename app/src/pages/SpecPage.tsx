@@ -37,11 +37,19 @@ interface SpecDetail {
 type Mode = 'hub' | 'detail';
 
 export function SpecPage() {
-  const { specId, language: urlLanguage, library: urlLibrary } = useParams();
+  const { specId, language: urlLanguageRaw, library: urlLibrary } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { trackPageview, trackEvent } = useAnalytics();
   const { librariesData } = useAppData();
+
+  // Language ids are canonical lowercase (`python`/`r`) wherever they're
+  // compared against impl data, written back to URLs, or used in analytics.
+  // Force-lowercase at the read site so a mixed-case route like
+  // /Python/matplotlib or ?language=Python doesn't desync title, filtering,
+  // canonical URL, and analytics. Title-cased display labels for UI surfaces
+  // (e.g. breadcrumbs) still go through LANG_DISPLAY.
+  const urlLanguage = urlLanguageRaw?.toLowerCase();
 
   const [specData, setSpecData] = useState<SpecDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -61,7 +69,7 @@ export function SpecPage() {
   // through ALL impls (cross-language). With it, the carousel stays scoped to
   // that language. This is also what lets a future python.anyplot.ai-style
   // subdomain pin the scope without users having to manually re-filter.
-  const carouselLanguage = searchParams.get('language');
+  const carouselLanguage = searchParams.get('language')?.toLowerCase() ?? null;
   const languageFilter = mode === 'hub' ? carouselLanguage : null;
 
   const getLibraryMeta = useCallback(
@@ -354,11 +362,12 @@ export function SpecPage() {
       : `https://anyplot.ai/${specId}`;
 
   // Page title surfaces language alongside library so the browser tab matches
-  // the rendered image-title format `{spec-id} · {Language} · {library}`. Hub
+  // the rendered image-title format `{spec-id} · {language} · {library}`. Hub
   // mode under a `?language=` filter also surfaces the language so users see
-  // what's been narrowed down.
-  const detailLanguage = mode === 'detail' && urlLanguage ? (LANG_DISPLAY[urlLanguage] || urlLanguage) : null;
-  const hubFilterLanguage = languageFilter ? (LANG_DISPLAY[languageFilter] || languageFilter) : null;
+  // what's been narrowed down. `urlLanguage` / `languageFilter` are already
+  // normalised to canonical lowercase at the read site.
+  const detailLanguage = mode === 'detail' && urlLanguage ? urlLanguage : null;
+  const hubFilterLanguage = languageFilter ?? null;
   const titleSuffix =
     mode === 'detail' && detailLanguage && selectedLibrary
       ? ` · ${detailLanguage} · ${selectedLibrary}`

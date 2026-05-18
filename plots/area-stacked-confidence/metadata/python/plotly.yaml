@@ -1,154 +1,190 @@
 library: plotly
+language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:53:33Z'
-updated: '2026-01-09T21:56:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866593072
+updated: '2026-05-18T06:45:42Z'
+generated_by: claude-haiku
+workflow_run: 26017437694
 issue: 3549
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of stacked confidence bands using the toself fill technique
-  - Clean separation of band traces and central line traces with proper stacking order
-  - Growing uncertainty over time effectively demonstrates forecast uncertainty concept
-  - Well-structured code with clear data generation logic
-  - Appropriate use of semi-transparent fills (0.25 for bands, 0.6 for areas)
+  - Perfect visual quality with explicitly sized fonts and excellent readability in
+    both themes
+  - Correct Okabe-Ito palette with first series in brand green (#009E73)
+  - Theme-adaptive chrome is flawless - backgrounds, text, and grid colors correctly
+    adapt while data colors remain constant
+  - Strong data storytelling - energy forecast scenario with realistic values and
+    compelling narrative about uncertainty growth
+  - 'Excellent use of plotly-specific features: fill=''toself'' for bands, reversed-list
+    technique for closed paths, proper stacking with fill=''tozeroy'' and fill=''tonexty'''
+  - Clean code structure with proper KISS principle, reproducibility via seed, and
+    all imports used
+  - Perfect spec compliance - all required features present (stacked areas, confidence
+    bands, legend, proper labeling)
+  - Confident band transparency (0.25 for bands, 0.6 for main areas) effectively communicates
+    uncertainty without obscuring data
   weaknesses:
-  - Legend entry for 90% Confidence Band uses a gray line which does not match the
-    actual colored bands shown in the plot
-  - Could leverage more Plotly-specific features like rangeslider or animation
-  image_description: The plot displays a stacked area chart showing energy consumption
-    forecasts by source (Hydro, Wind, Solar) over quarterly periods from Q1 2020 to
-    Q4 2024. The chart uses a Python-blue color (#306998) for Hydro at the bottom,
-    yellow (#FFD43B) for Wind in the middle, and red (#E74C3C) for Solar at the top.
-    Each stacked area has a semi-transparent confidence band surrounding it (approximately
-    25% opacity), showing increasing uncertainty over time as expected for forecasts.
-    The title correctly follows the format 'area-stacked-confidence · plotly · pyplots.ai'.
-    The legend is positioned in the upper-left corner with a white background, clearly
-    identifying each series plus a generic '90% Confidence Band' entry. The y-axis
-    shows 'Energy Consumption (TWh)' ranging from 0 to ~400, and the x-axis shows
-    'Quarter' with dates from Jul 2020 to Jul 2024. The overall layout is clean with
-    a plotly_white template, subtle gridlines, and good use of the canvas area.
+  - 'Design Excellence could be elevated: top/right spines are visible (could be removed
+    for cleaner aesthetic)'
+  - 'Visual refinement: grid could be even more subtle or y-axis only (current is
+    functional but standard)'
+  - DE-01 (Aesthetic Sophistication) at 5/8 - execution is strong but design choices
+    are more conventional than exceptional
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified - not pure white, provides soft contrast
+      Chrome: Title, axis labels ("Quarter", "Energy Consumption (TWh)"), and tick labels are all dark text on light background and clearly readable
+      Data: Three stacked area series using Okabe-Ito colors - Hydro (#009E73, brand green at bottom), Wind (#D55E00, vermillion in middle), Solar (#0072B2, blue on top). Confidence bands are semi-transparent lighter shades (alpha 0.25) revealing uncertainty. Legend positioned at top-left with light background box. Subtitle provides context about uncertainty growth.
+      Grid: Subtle grid lines visible on both axes without competing with data
+      Legibility verdict: PASS - All text is clearly readable against the light surface. No overlap or readability issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified - not pure black, maintains theme consistency
+      Chrome: Title, axis labels, and tick labels are now light-colored (#F0EFE8) against the dark background and clearly readable. Legend has darker background box (#242420). Grid remains subtle.
+      Data: Data colors are IDENTICAL to light render - Hydro #009E73, Wind #D55E00, Solar #0072B2. The confidence bands show the same structure and transparency. The stacking order is preserved.
+      No "dark-on-dark" issues - text is light-colored with proper contrast
+      Legibility verdict: PASS - All text is clearly readable against the dark surface. Theme adaptation is correct throughout. Data visibility is maintained.
+
+    Both renders confirm: Data colors are identical between themes, only chrome (background, text, grid, legend box) has adapted appropriately. All text is readable in both themes.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; legend positioned well away from data
+        comment: Title 28px, labels 22px, ticks 18px - all explicitly set and readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements clearly visible with no overlap or collision
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Areas and confidence bands are clearly visible with good alpha values;
-          line widths appropriate
+        comment: Areas, bands, and lines all clearly visible and adapted to data density
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow/red palette is distinguishable but not fully colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, legend nicely positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with units, X-axis has Quarter
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe, good contrast with appropriate
+          alpha levels
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with plot filling 50-70% of canvas and balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend uses gray line to represent confidence bands which is misleading
+        passed: true
+        comment: 'Descriptive labels with units: ''Quarter'' and ''Energy Consumption
+          (TWh)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, backgrounds #FAF8F1/#1A1A17, theme chrome
+          correct in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional execution with correct palette and layout, but design
+          choices are more conventional than exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good refinement with subtle grid and proper theme tokens; could be
+          more refined by removing spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong narrative: energy mix + uncertainty growth over time. Subtitle
+          provides clear context.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct stacked area chart with confidence bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=time (quarters), Y=stacked cumulative values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: stacked areas, confidence bands, distinct
-          colors, matching lighter shades for bands, legend'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: stacked areas, confidence bands, legend, multiple
+          series'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=time (quarters), Y=energy consumption (TWh), stacking order correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Hydro, Wind, Solar, and confidence bands
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: area-stacked-confidence · plotly · pyplots.ai'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows stacking, confidence bands widening over time, multiple series
-          with different growth rates
+        comment: 'Shows all aspects: three sources, confidence bands, time trend,
+          composition'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Energy consumption forecast by renewable source is a realistic, neutral
-          scenario
+        comment: Energy consumption by source is real-world scenario. Values and relationships
+          are plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in TWh are realistic for energy forecasts
+        comment: Factually reasonable energy values. Uncertainty growth over time
+          is realistic for forecasting.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -156,54 +192,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, traces, layout, save'
+        comment: 'Simple flow: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly.graph_objects - all used
+        comment: 'Only used imports: os, numpy, pandas, plotly'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code with proper stacking logic and variable names
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html which is correct for plotly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html correctly
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Scatter with fill toself for bands, plotly_white template,
-          unified hover mode. Could use more interactive features.
+        comment: 'Expertly uses plotly API: go.Figure, Scatter with fill modes, update_layout,
+          proper write methods'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Uses plotly-specific techniques: fill=''toself'' for bands, fill=''tozeroy''/''tonexty''
+          for stacking, reversed-list paths'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - time-series
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
-  - grid-styling

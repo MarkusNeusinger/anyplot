@@ -1,70 +1,92 @@
-""" pyplots.ai
+""" anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 62/100 | Created: 2026-01-09
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-18
 """
 
+import os
+import sys
+
 import numpy as np
-import pygal
-from pygal.style import Style
 
 
-# Data - Quarterly revenue forecasts by product line with 90% confidence intervals
+sys.path = [p for p in sys.path if p != ""]
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+if THEME == "light":
+    band_color_a = "#A0E0BB"
+    center_color_a = "#009E73"
+    band_color_b = "#F0C68A"
+    center_color_b = "#D55E00"
+    band_color_c = "#7FC4E8"
+    center_color_c = "#0072B2"
+else:
+    band_color_a = "#1FA862"
+    center_color_a = "#009E73"
+    band_color_b = "#C64500"
+    center_color_b = "#D55E00"
+    band_color_c = "#0058A3"
+    center_color_c = "#0072B2"
+
 np.random.seed(42)
 quarters = ["Q1'24", "Q2'24", "Q3'24", "Q4'24", "Q1'25", "Q2'25", "Q3'25", "Q4'25"]
-n_points = len(quarters)
 
-# Product line A (Core) - steady growth with narrow confidence band
 product_a = np.array([120.0, 125.0, 130.0, 140.0, 145.0, 150.0, 158.0, 165.0])
-uncertainty_a = np.random.uniform(8, 12, n_points)
+uncertainty_a = np.array([8.0, 9.0, 8.5, 10.0, 9.5, 11.0, 10.5, 12.0])
+a_lower = (product_a - uncertainty_a).tolist()
+a_upper = (product_a + uncertainty_a).tolist()
+a_center = product_a.tolist()
 
-# Product line B (Growth) - moderate growth with medium uncertainty
 product_b = np.array([80.0, 85.0, 88.0, 92.0, 95.0, 100.0, 105.0, 110.0])
-uncertainty_b = np.random.uniform(6, 10, n_points)
+uncertainty_b = np.array([6.0, 7.0, 7.5, 8.0, 8.5, 9.0, 9.5, 10.0])
+b_lower = (product_b - uncertainty_b).tolist()
+b_upper = (product_b + uncertainty_b).tolist()
+b_center = product_b.tolist()
 
-# Product line C (New) - new product ramping up with higher uncertainty
 product_c = np.array([30.0, 40.0, 55.0, 70.0, 85.0, 95.0, 105.0, 115.0])
-uncertainty_c = np.random.uniform(12, 18, n_points)
+uncertainty_c = np.array([12.0, 15.0, 18.0, 20.0, 22.0, 24.0, 25.0, 26.0])
+c_lower = (product_c - uncertainty_c).tolist()
+c_upper = (product_c + uncertainty_c).tolist()
+c_center = product_c.tolist()
 
-# Calculate cumulative bounds for y-axis range
-total_upper = product_a + product_b + product_c + uncertainty_a + uncertainty_b + uncertainty_c
-
-# Style: Alternating lighter bands and darker central values
-# Order: A_lower, A_center, A_upper, B_lower, B_center, B_upper, C_lower, C_center, C_upper
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#222222",
-    foreground_subtle="#555555",
-    guide_stroke_color="#dddddd",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_SOFT,
     colors=(
-        "#a8c4d9",  # Core lower band (lighter blue)
-        "#306998",  # Core central (blue)
-        "#a8c4d9",  # Core upper band (lighter blue)
-        "#e8d49c",  # Growth lower band (lighter gold)
-        "#c99000",  # Growth central (gold)
-        "#e8d49c",  # Growth upper band (lighter gold)
-        "#e8a8a3",  # New lower band (lighter red)
-        "#c0392b",  # New central (red)
-        "#e8a8a3",  # New upper band (lighter red)
+        band_color_a,
+        center_color_a,
+        band_color_a,
+        band_color_b,
+        center_color_b,
+        band_color_b,
+        band_color_c,
+        center_color_c,
+        band_color_c,
     ),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=44,
-    legend_font_size=44,
-    value_font_size=32,
-    opacity=".9",
-    opacity_hover=".95",
-    font_family="sans-serif",
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=2,
 )
 
-# Use StackedLine for proper stacking with visible confidence bands
 chart = pygal.StackedLine(
     width=4800,
     height=2700,
     style=custom_style,
-    title="area-stacked-confidence · pygal · pyplots.ai",
+    title="area-stacked-confidence · Python · pygal · anyplot.ai",
     x_title="Quarter",
     y_title="Revenue ($M)",
     fill=True,
@@ -72,32 +94,24 @@ chart = pygal.StackedLine(
     show_x_guides=False,
     show_y_guides=True,
     legend_at_bottom=True,
-    legend_box_size=36,
-    truncate_legend=-1,
-    margin=100,
+    margin=80,
     spacing=40,
-    range=(0, float(total_upper.max() + 30)),
-    stroke_style={"width": 2, "dasharray": "0"},
 )
 
 chart.x_labels = quarters
 
-# Stack order: for each product, show lower_band, central_value, upper_band
-# This creates visible confidence bands around each stacked area
-# Each band shows the uncertainty range, central shows the forecast
-# Legend shows only 3 entries (use None to hide CI bands from legend)
-chart.add(None, uncertainty_a.tolist())  # Core lower CI band
-chart.add("Core (with 90% CI)", (product_a - uncertainty_a).tolist())
-chart.add(None, uncertainty_a.tolist())  # Core upper CI band
+chart.add(None, a_lower)
+chart.add("Product A (with 90% CI)", a_center)
+chart.add(None, a_upper)
 
-chart.add(None, uncertainty_b.tolist())  # Growth lower CI band
-chart.add("Growth (with 90% CI)", (product_b - uncertainty_b).tolist())
-chart.add(None, uncertainty_b.tolist())  # Growth upper CI band
+chart.add(None, b_lower)
+chart.add("Product B (with 90% CI)", b_center)
+chart.add(None, b_upper)
 
-chart.add(None, uncertainty_c.tolist())  # New lower CI band
-chart.add("New (with 90% CI)", (product_c - uncertainty_c).tolist())
-chart.add(None, uncertainty_c.tolist())  # New upper CI band
+chart.add(None, c_lower)
+chart.add("Product C (with 90% CI)", c_center)
+chart.add(None, c_upper)
 
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())

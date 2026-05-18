@@ -1,153 +1,174 @@
 library: bokeh
+language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:55:21Z'
-updated: '2026-01-09T21:58:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866597056
+updated: '2026-05-18T06:39:59Z'
+generated_by: claude-haiku
+workflow_run: 26017510133
 issue: 3549
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of stacked areas with confidence bands using Bokeh Band
-    and varea
-  - Clear visual hierarchy with solid areas, semi-transparent bands, and center lines
-  - Professional styling with appropriate font sizes for the large canvas
-  - Realistic energy consumption scenario with meaningful data patterns
-  - Interactive legend allowing series hiding
+  - Perfect visual quality with exceptional readability in both light and dark themes
+  - Flawless specification compliance with correct plot type, features, data mapping,
+    and title
+  - Excellent code structure, reproducibility, and proper theme-adaptive styling with
+    correct color tokens
+  - Realistic energy consumption scenario with well-scaled, plausible values
+  - Strong idiomatic bokeh usage with effective Band implementation for confidence
+    intervals and interactive legend
+  - Both renders maintain identical data colors while correctly adapting theme-adaptive
+    chrome
   weaknesses:
-  - Legend positioned inside plot area overlaps with data in top-left corner
-  - No hover tooltips to show exact values (missed opportunity for Bokeh interactivity)
-  image_description: 'The plot displays a stacked area chart showing quarterly energy
-    consumption by source (Solar, Wind, Hydro) from 2020 to 2026. Each energy source
-    is represented with distinct colors: blue (#306998) for Solar at the bottom, yellow
-    (#FFD43B) for Wind in the middle, and green (#4DAF4A) for Hydro at the top. Each
-    stacked area is surrounded by semi-transparent confidence bands showing uncertainty
-    ranges. The chart uses a datetime x-axis labeled "Quarter" and a numeric y-axis
-    labeled "Energy Consumption (GWh)" ranging from 0 to approximately 270. The legend
-    is positioned in the top-left corner with entries indicating "(± uncertainty)"
-    for each source. The title correctly follows the format "area-stacked-confidence
-    · bokeh · pyplots.ai". Grid lines are subtle and dashed. Solar shows a growing
-    trend with increasing uncertainty, Wind displays seasonal variation, and Hydro
-    remains relatively stable.'
+  - 'Design sophistication uses conventional library defaults rather than distinctive
+    aesthetic choices (DE-01: 4/8)'
+  - 'Data storytelling could emphasize insights more through visual hierarchy, color
+    contrast variation, or strategic emphasis (DE-03: 3/6)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white around #FAF8F1 - perfect theme surface
+      Chrome: Title "area-stacked-confidence · Python · bokeh · anyplot.ai" clearly visible; axis labels "Quarter" and "Energy Consumption (GWh)" with units; all tick labels and legend text readable against light background
+      Data: Three stacked area series in Okabe-Ito colors - green #009E73 (Solar), orange #D55E00 (Wind), blue #0072B2 (Hydro); confidence bands visible as semi-transparent lighter regions around each series; center lines define boundaries clearly
+      Legibility verdict: PASS - all text elements perfectly readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black around #1A1A17 - perfect theme surface
+      Chrome: Title, axis labels, tick labels, and legend all visible with light text colors; no dark-on-dark failures; all elements properly legible against dark background
+      Data: Data colors identical to light render - same green, orange, blue series with matching confidence bands; proper theme-independent data color consistency
+      Legibility verdict: PASS - all text elements perfectly readable, no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt, legend at
-          24pt - all perfectly readable
+        comment: All sizes explicitly set; title 28pt, labels 22pt, ticks 18pt, legend
+          16pt; legend slightly compact but readable
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly visible
+        comment: Zero overlapping elements; all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Areas and bands well visible, some confidence band overlap slightly
-          hard to distinguish where series meet
+        comment: Areas, confidence bands, and center lines all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas usage, slight wasted space on right edge
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Energy Consumption (GWh) and Quarter'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe; good contrast; no red-green only differentiation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas; balanced margins; perfect layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title format correct; Y-axis labeled with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds perfect #FAF8F1/#1A1A17; first series #009E73; data
+          colors identical across themes; text theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend overlaps data area in top-left corner
+        comment: Well-configured defaults using Okabe-Ito palette correctly; conventional
+          approach without distinctive aesthetic innovation
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid 10% alpha, spines removed, generous whitespace; very
+          polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Trends visible (solar growth, wind seasonality, hydro stability)
+          but no explicit visual hierarchy emphasizing insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct stacked area chart with confidence bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is datetime (quarters), Y is numeric (cumulative energy), correct
-          stacking
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple series, confidence bands, stacking, distinct colors, semi-transparent
-          bands
-      - id: SC-04
-        name: Data Range
+        comment: Stacked areas, bands, legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Time on X, cumulative consumption on Y, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three series with uncertainty notation
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: area-stacked-confidence · bokeh · pyplots.ai'
+        comment: Title correct format; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple series, varying uncertainty, seasonal patterns, trends
+        comment: Three series with distinct trends; seasonal variation, growth, and
+          stability shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Energy consumption by renewable source is real and neutral scenario
+        comment: Energy consumption scenario real, neutral, and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in GWh are plausible for regional energy data
+        comment: Values 50-270 GWh plausible for energy mix; proportions realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,55 +176,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, stacking, plotting, styling, save'
+        comment: 'Linear flow: imports → data → plot → theme → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used appropriately
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code, appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png correctly but has unused output_file import side effect
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html correctly
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Band, varea, interactive legend but no hover
-          tooltips
+        comment: Expert use of ColumnDataSource, varea, Band, HoverTool, Legend with
+          click_policy, theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages Band for confidence intervals, interactive legend; strong
+          bokeh-specific features
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - layer-composition
-  - custom-legend
+  - hover-tooltips
   - html-export
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
-  dataprep:
-  - time-series
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
