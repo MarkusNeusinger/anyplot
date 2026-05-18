@@ -4,9 +4,6 @@
 #' Quality: 83/100 | Created: 2026-05-18
 
 library(ggplot2)
-library(dplyr)
-library(tidyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
