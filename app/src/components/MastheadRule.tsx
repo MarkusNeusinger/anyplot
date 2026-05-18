@@ -131,7 +131,11 @@ export function MastheadRule() {
   const parts = location.pathname.split('/').filter(Boolean);
   const isReserved = parts.length > 0 && RESERVED_TOP_LEVEL.has(parts[0]);
   const isSpecRoute = parts.length > 0 && !isReserved;
-  const centerVisible = isLanding || isSpecRoute;
+  // On impl pages (/:specId/:language/:library) the breadcrumb already shows
+  // all three parts; the center `""" specId.library """` echo is redundant
+  // and steals room that pushes the breadcrumb into truncation. Hide it.
+  const isImplPage = isSpecRoute && parts.length >= 3;
+  const centerVisible = (isLanding || isSpecRoute) && !isImplPage;
 
   let centerContent = 'the open plot catalogue';
   let centerDelim: { open: string; close: string } = COMMENT_POOL[randomIdx];
