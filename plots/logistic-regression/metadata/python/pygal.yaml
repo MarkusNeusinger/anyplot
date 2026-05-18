@@ -1,158 +1,171 @@
 library: pygal
+language: python
 specification_id: logistic-regression
 created: '2026-01-09T23:32:39Z'
-updated: '2026-01-09T23:35:42Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868565603
+updated: '2026-05-18T08:47:24Z'
+generated_by: claude-haiku
+workflow_run: 26022543980
 issue: 3550
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent sigmoid curve representation with clear S-shape transition
-  - Good use of custom pygal Style with appropriate font sizes for large canvas
-  - Realistic credit approval scenario with proper jittering of binary outcomes
-  - Clean implementation of gradient descent for logistic regression without external
-    dependencies
-  - Decision threshold line clearly visible at p=0.5
-  - Proper title format following pyplots.ai conventions
+  - Excellent theme adaptation with readable text in both light and dark renders
+  - 'All specification requirements met: curve, CI bounds, threshold line, jittered
+    data points'
+  - Professional typography and sizing for 4800×2700px canvas
+  - Effective visual hierarchy with logistic curve as focal point
+  - Correct Okabe-Ito palette implementation across all data series
+  - Clean code with deterministic data generation via seed
   weaknesses:
-  - Confidence interval shown as dashed lines rather than semi-transparent shaded
-    band (spec preference, though pygal has limited fill capabilities)
-  - All blue elements (logistic curve, CI bounds) use same color making them less
-    visually distinct
-  - Legend uses square markers for all items instead of line symbols for line-based
-    elements
-  image_description: 'The plot displays a logistic regression visualization for credit
-    approval based on credit score. It shows a characteristic S-shaped (sigmoid) curve
-    in blue representing the fitted logistic model. The x-axis displays "Credit Score"
-    ranging from 300 to 850, and the y-axis shows "Probability of Approval" from 0
-    to 1. Red dots represent rejected applicants (Class 0), clustered near y=0 with
-    jittering, while yellow/gold dots represent approved applicants (Class 1), clustered
-    near y=1. Two dashed blue lines show the 95% confidence interval bounds around
-    the main curve. A horizontal dashed gray line at y=0.5 indicates the decision
-    threshold. The legend at the bottom shows six items: Logistic Fit, 95% CI Upper,
-    95% CI Lower, Threshold (p=0.5), Rejected (0), and Approved (1). The title follows
-    the correct format: "logistic-regression · pygal · pyplots.ai".'
+  - 'Title format error on line 86: missing language identifier ''python'' and wrong
+    domain (''pyplots.ai'' instead of ''anyplot.ai'')'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - PASS
+      Chrome: Title and axis labels in dark text (#1A1A17), clearly readable. Y-axis labeled "Probability of Disease" (0-1 range), X-axis labeled "Biomarker Level" (0-100 range). Tick labels visible and properly positioned. - PASS
+      Data: Green logistic fit curve (Okabe-Ito #009E73) with dashed confidence interval bounds (same green). Orange/vermillion data points (Class 0, Okabe-Ito #D55E00) clustered around y≈0. Blue data points (Class 1, Okabe-Ito #0072B2) clustered around y≈1. Muted-tone horizontal threshold line at y=0.5. - PASS
+      Grid: Subtle, light gray grid visible on both axes. Does not dominate the plot. - PASS
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - PASS
+      Chrome: Title and axis labels in light text (#F0EFE8), clearly visible against dark background. No dark-on-dark failures. Tick labels properly positioned and readable. - PASS
+      Data: Green logistic fit curve identical to light render (#009E73). Orange and blue data points maintain identical colors (positions 2 and 3 of Okabe-Ito). Dashed CI bounds in green. Threshold line visible in muted tone. - PASS
+      Grid: Subtle gray grid remains visible without competing with data. - PASS
+      Legibility verdict: PASS
+
+    Both renders pass theme-readability check. Data colors are identical between renders (only chrome adapted). Excellent contrast in both themes.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable, good font sizes for large canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All text sizes and colors properly themed; readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Data points jittered effectively; no major overlaps or collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers visible with good size, though same color for all blue elements
-          makes CI bounds less distinct
+        comment: Curve, CI bounds, threshold, and data points all clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Red/yellow distinction is clear, but using same blue for all lines
-          reduces differentiation
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Clear descriptive labels Credit Score and Probability of Approval
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is colorblind-safe; adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions; nothing cut off; generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend at bottom is functional but legend items use colored squares
-          rather than line symbols
+        comment: Descriptive labels with semantic context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct (#FAF8F1 light, #1A1A17
+          dark); both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional custom Style with theme-adaptive colors and typography;
+          somewhat minimalist
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid; clean layout; could benefit from spine refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear hierarchy with logistic curve as focal point; CI and threshold
+          provide context
     spec_compliance:
-      score: 24
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct logistic regression curve with sigmoid shape
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: x=credit score, y=probability/binary outcome correctly mapped
-      - id: SC-03
+        comment: Correct logistic regression XY scatter
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has curve, CI, threshold line, jittered points; spec suggested semi-transparent
-          shading for CI but implementation uses dashed lines
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend labels correctly identify all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format logistic-regression · pygal · pyplots.ai
+        comment: X/Y mapping correct; full data range shown
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'Title format incorrect: missing ''python'' language identifier and
+          uses ''pyplots.ai'' instead of ''anyplot.ai'''
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both classes, sigmoid transition, but density of rejected cases
-          at higher scores could be more balanced
+        comment: All logistic regression aspects shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Credit score approval is a real, neutral, comprehensible scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Credit scores 300-850 and probability 0-1 are realistic ranges
+        comment: Medical diagnosis context is realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Biomarker and probability ranges appropriately scaled
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,53 +173,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script structure, no functions/classes
+        comment: Simple linear code; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html which is correct for pygal
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses XY chart, custom Style, stroke_style, but CI as dashed lines
-          rather than filled area (pygal limitation)
-  verdict: APPROVED
+        comment: Good use of pygal.XY and custom Style with theme tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Standard usage; stroke_style dasharray for CI bounds appropriate
+          but not particularly distinctive
+  verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
-  dataprep:
-  - normalization
-  - regression
-  styling:
-  - alpha-blending
-  - grid-styling
+  dataprep: []
+  styling: []
