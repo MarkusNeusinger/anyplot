@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:31:24Z'
-updated: '2026-05-18T01:59:20Z'
+updated: '2026-05-18T02:06:12Z'
 generated_by: claude-haiku
 workflow_run: 26009312657
 issue: 3504
@@ -15,42 +15,40 @@ preview_html_dark: null
 quality_score: 76
 review:
   strengths:
-  - Correct stacked bar implementation with clear spec compliance
-  - Data mapping is accurate and well-organized
-  - Total labels prominently displayed above bars with excellent visibility
-  - Segment labels within bars enhance readability
-  - Text sizing explicitly configured for large canvas
-  - Clean, reproducible code with deterministic data
-  - Good visual hierarchy through label emphasis and positioning
+  - Stacked bar chart correctly implements specification with clear data hierarchy
+  - Total value labels prominently displayed with excellent visibility and bold formatting
+  - Segment value labels enhance readability within individual segments
+  - Clean, deterministic code with explicit font sizing for readability at large canvas
+  - Good visual hierarchy through label emphasis and careful positioning
+  - Both rendered plots show correct theme adaptation of chrome (backgrounds, text
+    colors)
+  - Accurate data mapping to specification requirements
+  - Professional appearance in both light and dark themes
   weaknesses:
-  - 'Uses custom Python colors instead of Okabe-Ito palette (first series must be
-    #009E73, not #306998)'
-  - No theme-adaptive chrome implementation—doesn't read ANYPLOT_THEME or use theme
-    tokens (PAGE_BG, INK, INK_SOFT, ELEVATED_BG)
-  - 'Background colors don''t match spec: should be #FAF8F1 (light) and #1A1A17 (dark),
-    not default white/black'
-  - Saves to plot.png instead of plot-{THEME}.png
-  - Title format in code is incorrect (has wrong domain pyplots.ai, missing Python
-    language, extra descriptive prefix)
-  - 'Code/image discrepancy: rendered images show colors different from code specification—requires
-    clarification'
-  - No library-specific distinctive features beyond standard geom_bar and geom_text
-    usage
+  - 'Code/image discrepancy: Code specifies custom Python colors but images appear
+    to show Okabe-Ito palette—verification required'
+  - 'Palette non-compliance: Code uses custom Python colors (#306998, #FFD43B, #4B8BBE)
+    instead of Okabe-Ito standard (#009E73 required as first series)'
+  - 'Missing theme-adaptive chrome: Code does not implement ANYPLOT_THEME environment
+    variable or theme tokens (PAGE_BG, INK, INK_SOFT)'
+  - 'Output file naming violation: Saves to plot.png instead of plot-{THEME}.png;
+    does not read ANYPLOT_THEME'
+  - 'Title format error: Code contains pyplots.ai instead of anyplot.ai, missing Python
+    language designation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Appears to be white or near-white; specification requires warm off-white (#FAF8F1)
-      Chrome: Title, axis labels, and tick labels are clearly visible and readable in dark text
-      Data colors: Bottom bar is blue, middle is orange, top is green/teal—these appear to be Okabe-Ito colors in the rendered image, BUT code specifies custom Python colors (#306998, #FFD43B, #4B8BBE)—DISCREPANCY REQUIRES VERIFICATION
-      Legibility verdict: PASS (text is readable) but palette compliance is uncertain due to code/image mismatch
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title, axis labels ("Quarter", "Revenue ($ thousands)"), tick labels all clearly readable in dark text; no contrast failures
+      Data: Shows teal/green, orange, blue stacked segments with white segment values (45, 58, 72, 88, etc.) and bold total labels (250, 295, 318, 388) above stacks. First series color appears to match Okabe-Ito #009E73 (greenish).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Appears to be dark gray or near-black; specification requires warm near-black (#1A1A17)
-      Chrome: All text (title, axis labels, ticks) is light-colored and clearly visible—no dark-on-dark failures
-      Data colors: Identical to light render (green, orange, blue)—correct that data colors don't change between themes
-      Legend: Readable with light text on dark background
-      Legibility verdict: PASS (text is readable in both themes)
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, axis labels, tick labels all rendered in light color; no dark-on-dark failures; legend readable with light text on dark background
+      Data: Identical colors to light render (teal/green, orange, blue) — only chrome adapted between themes as required ✓
+      Legibility verdict: PASS
 
-    CRITICAL NOTE: Code/image colors do not match. Code specifies Python custom palette, but rendered images show what appears to be correct Okabe-Ito colors. The implementation needs verification: either code is outdated or images were generated with different code. Background colors in both renders do not appear to match the warm off-white/near-black specification.
+    CRITICAL NOTE: Code specifies custom Python colors that would render differently than images show. Rendered images appear correct (Okabe-Ito palette), but source code does not implement them. Code/image pipeline alignment must be verified.
   criteria_checklist:
     visual_quality:
       score: 27
@@ -61,49 +59,44 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, labels=20, ticks=16); all
-          text readable in both renders
+        comment: All text readable in both themes; explicit font sizing
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; labels well-positioned within bars and above
-          stacks
+        comment: Clean label positioning, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All bars, segments, and labels clearly visible and optimally sized
+        comment: All elements clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Adequate contrast, but uses custom colors instead of verified Okabe-Ito
-          palette
+        comment: Good contrast but custom palette not CVD-documented; should use Okabe-Ito
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Perfect proportions, balanced margins, generous whitespace, 4800×2700
-          canvas well-utilized
+        comment: Excellent proportions, generous whitespace, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units ($ thousands); descriptive axis labels
+        comment: Descriptive labels with units present
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: Uses custom Python colors (#306998, #FFD43B, #4B8BBE)
-          instead of Okabe-Ito. First series must be #009E73. No theme-adaptive chrome—doesn''t
-          read ANYPLOT_THEME or set page backgrounds (#FAF8F1 light, #1A1A17 dark)'
+        comment: 'CRITICAL: Code uses custom Python colors instead of Okabe-Ito; first
+          series must be #009E73, not #306998'
     design_excellence:
       score: 10
       max: 20
@@ -113,24 +106,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library default, custom colors show some thought,
-          but lacks sophisticated design or intentional hierarchy
+        comment: Well-configured defaults but lacks design intent and sophistication
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Minimal customization beyond theme_minimal(); no distinctive visual
-          polish or refinement
+        comment: Minimal customization; relies on theme_minimal() defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Good visual hierarchy through bold total labels; clear focal point
-          showing revenue progression; segment labels support composition story
+        comment: Bold total labels create focal point; part-to-whole relationship
+          clear
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -138,26 +129,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart with all subtypes
+        comment: Correct stacked bar chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stacked bars ✓, total labels ✓, component breakdown ✓
+        comment: Total labels, segment values, legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=quarters, Y=revenue, fill=product; all data visible
+        comment: X/Y correct; all data visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Legend labels match data; title format appears correct in rendered
-          image (though code shows discrepancy)
+        passed: false
+        comment: 'Title format incorrect: has pyplots.ai (wrong), missing Python designation'
     data_quality:
       score: 15
       max: 15
@@ -167,23 +157,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 4 quarters, 3 products, varying proportions,
-          growing total revenue'
+        comment: Shows all aspects of stacked bar type with variation
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world quarterly revenue scenario with realistic product names
-          and values
+        comment: Realistic quarterly revenue scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Quarter-over-quarter progression realistic; component mix plausible
+        comment: Sensible revenue values for business context
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -191,13 +179,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Simple, linear implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data, no randomness
+        comment: Deterministic; hardcoded data
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -206,17 +194,17 @@ review:
         comment: All imports used; no unused dependencies
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean, Pythonic, appropriate complexity; no fake functionality
+        passed: false
+        comment: Clean code but lacks theme-adaptive patterns
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png instead of plot-{THEME}.png; no theme-switching
-          implementation
+        comment: 'CRITICAL: Saves to plot.png instead of plot-{THEME}.png; no ANYPLOT_THEME
+          handling'
     library_mastery:
       score: 4
       max: 10
@@ -225,16 +213,15 @@ review:
         name: Idiomatic Usage
         score: 4
         max: 5
-        passed: true
-        comment: 'Uses ggplot/geom_bar/geom_text correctly, but MISSES critical plotnine
-          library requirement: no theme-adaptive chrome (per prompts/library/plotnine.md)'
+        passed: false
+        comment: Uses ggplot/aes/geoms correctly but MISSES plotnine library requirement
+          for theme-adaptive chrome tokens
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 0
         max: 5
         passed: false
-        comment: Uses standard position_stack and nudge_y; no distinctive features
-          unique to plotnine
+        comment: Generic plotnine usage; no distinctive plotnine-specific features
   verdict: REJECTED
 impl_tags:
   dependencies: []
