@@ -155,9 +155,15 @@ export function MastheadRule() {
       // xs+sm: left takes all remaining room, toggle hugs the right edge —
       // the center comment is hidden until md, so giving it its own balanced
       // 1fr column at sm just wastes ~half the bar on whitespace and forces
-      // the breadcrumb to truncate. md+: center slot appears, sides are
-      // balanced 1fr auto 1fr.
-      gridTemplateColumns: { xs: '1fr auto auto', md: '1fr auto 1fr' },
+      // the breadcrumb to truncate. md+: when the center comment actually
+      // shows (landing / spec hub / lang hub), use balanced 1fr auto 1fr so
+      // the comment sits visually centred. On impl pages the comment is
+      // hidden — collapse the right column to `auto` so the breadcrumb can
+      // claim the full row width instead of half.
+      gridTemplateColumns: {
+        xs: '1fr auto auto',
+        md: centerVisible ? '1fr auto 1fr' : '1fr auto auto',
+      },
       alignItems: 'center',
       columnGap: { xs: 1, sm: 2 },
       py: 1.25,
