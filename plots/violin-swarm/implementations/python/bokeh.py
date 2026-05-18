@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-swarm: Violin Plot with Overlaid Swarm Points
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 60/100 | Updated: 2026-05-18
 """
 
 import numpy as np
