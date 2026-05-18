@@ -6,7 +6,7 @@ title: Logistic Regression Curve Plot
 
 # Specification tracking
 created: 2026-01-09T21:45:54Z
-updated: null
+updated: 2026-05-18T08:20:15Z
 issue: 3550
 suggested: MarkusNeusinger
 
@@ -16,7 +16,7 @@ tags:
   plot_type:
     - scatter
     - line
-    - regression
+    - area
   data_type:
     - numeric
     - categorical
