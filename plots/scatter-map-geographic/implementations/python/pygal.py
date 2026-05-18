@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 61/100 | Created: 2026-05-18
+Quality: 77/100 | Created: 2026-05-18
 """
 
 import os
