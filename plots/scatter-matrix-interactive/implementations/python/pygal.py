@@ -1,7 +1,7 @@
 """ anyplot.ai
 scatter-matrix-interactive: Interactive Scatter Plot Matrix (SPLOM)
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 40/100 | Created: 2026-05-18
+Quality: 68/100 | Created: 2026-05-18
 """
 
 import os
