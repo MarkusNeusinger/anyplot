@@ -1,157 +1,169 @@
 library: bokeh
+language: python
 specification_id: range-interval
 created: '2026-01-09T23:48:38Z'
-updated: '2026-01-09T23:51:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868891483
+updated: '2026-05-18T10:43:35Z'
+generated_by: claude-haiku
+workflow_run: 26028295958
 issue: 3577
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/range-interval/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/range-interval/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of the range interval concept using segment glyphs with
-    rounded caps
-  - Perfect data scenario with realistic seasonal temperature variations
-  - Clean, well-structured code following KISS principles
-  - Good use of ColumnDataSource for data organization
-  - Comprehensive styling with appropriate font sizes for the large canvas
-  - All spec requirements met including endpoint markers and midpoints
-  weaknesses:
-  - Legend markers appear as tiny colored dots rather than showing the actual marker
-    shapes (circle, diamond)
-  - Missing Bokeh distinctive interactive features like HoverTool that could show
-    exact temperatures on hover
-  image_description: The plot displays a range interval chart showing monthly temperature
-    ranges for a city across all 12 months (Jan-Dec). Each month is represented by
-    a vertical blue bar (#306998) with rounded caps extending from the minimum to
-    maximum temperature. The bars have semi-transparency (alpha 0.7). At the bottom
-    of each bar is a dark blue circle marker indicating the minimum temperature, at
-    the top is a yellow circle with blue border indicating the maximum temperature,
-    and a white diamond with blue outline marks the midpoint. The title "range-interval
-    · bokeh · pyplots.ai" appears at the top left. The y-axis is labeled "Temperature
-    (°C)" and the x-axis is labeled "Month". A legend in the top-left corner identifies
-    the three marker types. The background is light gray (#fafafa) with subtle dashed
-    horizontal grid lines. The plot shows a realistic seasonal temperature pattern
-    with coldest months (Jan, Feb, Dec) having ranges around -2°C to 11°C and warmest
-    months (Jul, Aug) reaching up to 30°C.
+  - Pixel-perfect theme adaptation with light and dark renders both readable and data
+    colors maintained
+  - Explicit font sizing throughout (28pt title, 22pt labels, 18pt ticks) ensures
+    clarity at 4800x2700px
+  - Well-structured ColumnDataSource with multi-column data enabling endpoint/midpoint
+    differentiation
+  - Realistic, recognizable example data (monthly temperature ranges) with clear seasonal
+    narrative
+  - 'Idiomatic bokeh usage: segment glyph for ranges, multiple scatter layers for
+    visual hierarchy'
+  - 'Okabe-Ito palette compliance: brand green for primary ranges, accent orange for
+    endpoints'
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (correct light theme surface)
+      Chrome: Title "range-interval · python · bokeh · anyplot.ai" in dark ink (#1A1A17), axis labels "Month" and "Temperature (°C)" in dark ink, tick labels in soft ink (#4A4A44), all clearly readable on light background
+      Data: Twelve vertical range bars in brand green (#009E73), green circle markers at min endpoints, orange circle markers (#D55E00) at max endpoints, gray diamond markers at midpoints; legend top-left with light background
+      Legibility verdict: PASS - All text readable, no dark-on-light failures, data colors distinct
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (correct dark theme surface)
+      Chrome: Title in light ink (#F0EFE8), axis labels in light ink, tick labels in soft light (#B8B7B0), all readable on dark background
+      Data: Identical colors to light render - same green bars (#009E73), same orange endpoints (#D55E00) - confirming proper theme-independence of data colors; gray midpoints visible
+      Legibility verdict: PASS - All text readable, no dark-on-dark failures, chrome properly theme-flipped while data colors remain constant
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements
+        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt,
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, all text fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars and markers well-sized, though markers could be slightly larger
-          for the canvas size
+        comment: Range bars (line_width=40) and all markers clearly visible and well-adapted
+          to dataset
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/white color scheme is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight imbalance with legend in top-left corner
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Temperature (°C) and Month'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with good contrast, CVD-safe, no red-green-only
+          signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect utilization with 50-80% fill, balanced margins, no cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend markers appear as tiny dots instead of showing the actual
-          marker shapes; legend could be better positioned
+        passed: true
+        comment: 'Descriptive with units: Temperature (°C)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, endpoints #D55E00, backgrounds correct in
+          both themes, text colors theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured Okabe-Ito palette, clean typography, professional
+          but follows defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, customized legend styling, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear seasonal narrative, good visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct range interval chart with vertical bars showing min-max ranges
+        comment: Correct range interval chart
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories (months) on X-axis, values (temperature) on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: range bars, endpoint markers, midpoint
-          markers, semi-transparent fill'
-      - id: SC-04
-        name: Data Range
+        comment: Range bars, min/max endpoints, midpoint markers, 12 categories
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=months, Y=temperature, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Min Temperature, Max Temperature, and
-          Midpoint
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: range-interval · bokeh · pyplots.ai'
+        comment: Title format correct, legend labels descriptive
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying range sizes across months, seasonal pattern clearly
-          visible
+        comment: 'Shows all aspects: min, max, range, midpoint, seasonal variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature ranges is a perfect, neutral real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic for a temperate climate city
+        comment: Monthly temperature data, realistic, neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportions factually accurate for temperate climate
     code_quality:
       score: 10
       max: 10
@@ -161,54 +173,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: Linear flow, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Correct output format (plot-{THEME}.png/.html)
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Does not leverage Bokeh's interactive features (HoverTool, tooltips)
-          which are its main strength; the static PNG export doesn't showcase what
-          makes Bokeh special
+        passed: true
+        comment: ColumnDataSource, glyph methods, proper styling patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Segment glyph, Selenium export, HTML generation; static output justifies
+          simpler approach
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - columndatasource
   dataprep: []
-  styling:
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
+  styling: []
