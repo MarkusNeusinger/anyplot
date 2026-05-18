@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:33:20Z'
-updated: '2026-05-18T01:48:22Z'
+updated: '2026-05-18T01:55:07Z'
 generated_by: claude-haiku
 workflow_run: 26009089462
 issue: 3504
@@ -15,34 +15,37 @@ preview_html_dark: null
 quality_score: 86
 review:
   strengths:
-  - Perfect visual quality with all text explicitly sized and readable in both light
-    and dark themes
-  - Excellent spec compliance with all features present and correct title/legend formatting
-  - Strong realistic data quality with plausible quarterly revenue scenario and clear
-    growth narrative
-  - Clean KISS code structure with deterministic execution and idiomatic seaborn usage
-  - Thoughtful total-label annotations (bold, well-positioned) improve readability
-    without adding clutter
+  - Excellent legibility in both light and dark themes; all text explicitly sized
+    and readable
+  - 'Perfect color palette compliance: Okabe-Ito positions used correctly, first series
+    #009E73 consistent across renders'
+  - 'Total labels are the signature feature: bold positioning above bars, clear currency
+    formatting, emphasizes key insight'
+  - 'Proper theme-adaptive chrome: text colors, backgrounds, grid all correctly flip
+    between light/dark without affecting data colors'
+  - 'Clean code structure: deterministic seed, no unused imports, Pythonic and elegant'
+  - Balanced layout with appropriate whitespace and legend positioning
   weaknesses:
-  - 'Design excellence below median: relies on library defaults without additional
-    custom design sophistication or visual emphasis beyond straightforward data display'
-  - 'Limited library mastery: manual bar stacking with iteration is more matplotlib
-    than seaborn-specific; doesn''t leverage seaborn''s distinctive categorical plotting
-    or statistical features'
+  - 'SC-04 Title Format Non-Compliance: Image shows only descriptive title instead
+    of required format with spec-id · Python · seaborn · anyplot.ai - code appears
+    correct but image doesn''t reflect it, suggesting pipeline/regeneration issue'
+  - 'Design Excellence Below Default: Well-configured defaults rather than intentional
+    design sophistication; DE-01 (4/8) and DE-02 (4/6) indicate no custom styling
+    beyond palette'
+  - 'Limited Library Mastery: Mostly manual implementation; seaborn-specific strengths
+    (sns.barplot with hue, palette context) not leveraged; relies on matplotlib primitives'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with no pure white harshness
-      Chrome: Title (24pt, dark text), axis labels (20pt, dark text), tick labels (16pt, dark text), legend title and labels (14-16pt, dark text) — all clearly readable against light background
-      Data: Four stacked bars (Q1–Q4) with four product categories: green #009E73 (Electronics) at base, orange #D55E00 (Software), blue #0072B2 (Services), pink #CC79A7 (Hardware) at top. Bold total labels ($123M, $144M, $144M, $185M) in 18pt bold dark text positioned above each stack. Legend positioned upper right with elevated background (#FFFDF6).
-      Grid: Subtle horizontal y-axis grid (alpha=0.10, linewidth=0.8)
-      Legibility verdict: PASS — all text readable, no overlap, strong contrast, proper color distinction
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title reads "Quarterly Revenue by Product Category" (descriptive but format non-compliant - should include "bar-stacked-labeled · Python · seaborn · anyplot.ai"). Y-axis label "Revenue (Millions USD)" with units. X-axis label "Quarter". Tick labels readable. Legend positioned top-left with elevated background. All text is dark (#1A1A17) on light surface.
+      Data: Four bars (Q1-Q4) with four stacked segments using Okabe-Ito colors: #009E73 (Electronics, green first), #D55E00 (Software, orange), #0072B2 (Services, blue), #CC79A7 (Hardware, purple). Total labels ($123M, $143M, $144M, $184M) positioned boldly above each stack in 18pt bold font. All data colors are clearly visible and distinct.
+      Legibility verdict: PASS - All elements readable, no overlap, proper contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with no pure black harshness
-      Chrome: Title (24pt, light text #F0EFE8), axis labels (20pt, light text), tick labels (16pt, light text #B8B7B0), legend (light text on elevated background #242420) — all clearly readable against dark background; no dark-on-dark failures
-      Data: Four stacked bars with identical data colors to light render — green #009E73 (Electronics), orange #D55E00 (Software), blue #0072B2 (Services), pink #CC79A7 (Hardware). Bold total labels ($123M, $143M, $144M, $185M) in 18pt bold light text, matching light render positioning. Legend styling consistent.
-      Grid: Subtle horizontal grid visible on dark background
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures, colors identical to light render, strong contrast throughout
+      Background: Warm near-black (#1A1A17) - correct dark theme color
+      Chrome: Same title text displayed. Y-axis and X-axis labels now rendered in light color (#F0EFE8). Tick labels light and readable. Legend frame adapted to dark elevated background (#242420). All text is light-colored on dark surface.
+      Data: **Identical data colors to light render** - #009E73 green, #D55E00 orange, #0072B2 blue, #CC79A7 purple all perfectly preserved. Total labels identical formatting and positioning. Segment proportions and visual hierarchy match light render exactly.
+      Legibility verdict: PASS - All elements readable, no dark-on-dark failures, data colors preserved, theme chrome properly adapted
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,46 +56,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt, total labels bold
-          18pt, all explicitly set and perfectly readable in both themes
+        comment: 'All text explicitly sized: title 24pt, labels 20pt, ticks 16pt,
+          totals 18pt bold. Perfectly readable in both light and dark themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, all labels fully readable
+        comment: Total labels positioned 12pt above bars with clear spacing. Legend
+          top-left away from data. No overlapping elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars sized optimally for density, all four categories visible per
-          stack, data well-adapted
+        comment: All bar segments clearly visible and appropriately sized. Colors
+          distinct and readable. Optimal sizing for density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe, good contrast, no red-green sole signal
+        comment: Okabe-Ito palette ensures CVD safety. Excellent contrast between
+          categories. No red-green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas, balanced margins, legend well-positioned
+        comment: Balanced margins. Plot fills 50-70% of canvas. Legend positioned
+          near data, not isolated. No cut-off content
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (Revenue (Millions USD)), title standard format
+        comment: 'Y-axis: ''Revenue (Millions USD)'' with units. X-axis: ''Quarter''
+          descriptive. Both clear and informative'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
-          #FAF8F1 light / #1A1A17 dark, both renders theme-correct'
+        comment: 'First categorical series #009E73 correct. Okabe-Ito order exact.
+          Backgrounds #FAF8F1 light / #1A1A17 dark correct. Text colors theme-adaptive
+          in both renders'
     design_excellence:
       score: 12
       max: 20
@@ -102,25 +110,26 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses Okabe-Ito palette consistently with professional total-label
-          styling; legend has elevated background; but renders as well-configured
-          default rather than custom design with publication-ready flourishes
+        comment: Well-configured library defaults using brand palette. Clean professional
+          appearance but limited design thought beyond standard configuration. Lacks
+          custom typography hierarchy or sophisticated styling choices
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: true
-        comment: Spines removed, subtle grid, generous whitespace, bar edge definition;
-          good attention but not exceptional
+        passed: false
+        comment: Spines removed via despine(). Y-axis grid subtle. Elevated legend
+          background. Polished overall but minimal customization beyond library defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Real business scenario with visual hierarchy through bold total labels;
-          color progression guides eye; straightforward display without deeper emphasis
+        passed: false
+        comment: Total labels create focal point emphasizing cumulative insight. Segment
+          stacking shows composition breakdown. Q4 spike visible. Visual hierarchy
+          guides viewer but without exceptional emphasis or narrative design
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -128,25 +137,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart with all subtypes
+        comment: Correct stacked bar chart with all required structure and variants
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Stacked bars, total labels, legend, all categories
+        comment: 'All spec features present: stacked bars, total labels above stacks,
+          category breakdown, component visibility'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis quarters, Y-axis revenue, all data visible
+        comment: X-axis correctly shows quarters. Y-axis correctly shows revenue.
+          All data visible. Stacking order correct
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 1
         max: 3
-        passed: true
-        comment: Title correct format, legend labels match data
+        passed: false
+        comment: 'CRITICAL ISSUE: Image shows ''Quarterly Revenue by Product Category''
+          only. Required format: ''bar-stacked-labeled · Python · seaborn · anyplot.ai''
+          (optionally with descriptive prefix). Legend labels are correct. Code appears
+          to set correct title but image doesn''t reflect it'
     data_quality:
       score: 15
       max: 15
@@ -156,19 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all stacking aspects with variation and growth pattern
+        comment: Shows all quarters (Q1-Q4) and all four product categories. Varying
+          segment sizes demonstrate diversity across periods and categories
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real quarterly revenue by product scenario with plausible values
+        comment: Quarterly revenue scenario is real and comprehensible. Product categories
+          (Electronics, Software, Services, Hardware) are realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: All values proportional and factually sensible
+        comment: Values plausible ($123M-$184M range). Growth trajectory realistic
+          ($123M Q1 → $184M Q4). Proportions align with business domain expectations
     code_quality:
       score: 10
       max: 10
@@ -178,57 +195,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme → data → plot → save; no functions'
+        comment: 'Linear flow: imports → theme setup → data creation → plot generation
+          → save. No unnecessary functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic via np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output across runs
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: 'Only necessary imports: os, matplotlib.pyplot, numpy, pandas, seaborn.
+          All are used'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, no over-engineering, no fake functionality
+        comment: Clean, Pythonic code. Appropriate complexity for task. No over-engineering
+          or fake UI elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current API
+        comment: Correctly saves as plot-{THEME}.png. DPI set to 300. Theme-aware
+          rendering with environment variable
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: true
-        comment: 'Correct idiomatic seaborn: sns.set_theme(), sns.despine(), theme
-          tokens; correct but doesn''t leverage advanced patterns'
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
         passed: false
-        comment: Generic usage; manual bar stacking is more matplotlib than seaborn-specific;
-          doesn't leverage seaborn distinctive features
+        comment: Uses sns.set_theme() with rc params for consistent theming. Uses
+          sns.despine() for spine removal. Correct matplotlib axes-level API (plt.subplots,
+          ax.bar). Leverages some seaborn patterns but mostly manual
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Primarily manual bar stacking with loops rather than seaborn.barplot().
+          Annotations use matplotlib (ax.annotate) not seaborn. Limited use of seaborn-specific
+          features beyond theming system
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - custom-legend
   patterns:
-  - iteration-over-groups
+  - data-generation
+  - explicit-figure
   dataprep: []
   styling:
-  - grid-styling
   - edge-highlighting
