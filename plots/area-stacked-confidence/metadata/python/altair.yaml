@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:54:41Z'
-updated: '2026-05-18T06:44:26Z'
+updated: '2026-05-18T06:50:41Z'
 generated_by: claude-haiku
 workflow_run: 26017583477
 issue: 3549
@@ -12,39 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-dark.html
-quality_score: 74
+quality_score: 78
 review:
   strengths:
-  - Correctly implements stacked area chart with confidence bands across two themes
-  - Data is realistic and well-structured for the visualization
-  - Text legibility is good in both light and dark renders
-  - Clean code structure, reproducible with seed
-  - Proper use of altair's layering and encoding patterns
+  - Correctly implements stacked area chart with confidence bands
+  - Realistic, well-chosen data scenario (renewable energy)
+  - Explicit font sizing for readability across themes
+  - Proper use of altair layer composition for multi-part visualization
   weaknesses:
-  - 'Color palette is deprecated Python Blue, not mandatory Okabe-Ito — first series
-    must be #009E73'
-  - Code does not implement theme adaptation — missing ANYPLOT_THEME environment variable
-    reading and color tokens
-  - Output filenames hardcoded — should use plot-{THEME}.png template, not static
-    plot.png
-  - Generic design choices — no custom color harmony, intentional hierarchy, or visual
-    storytelling
-  - Library usage is basic — doesn't leverage distinctive altair features like interactivity
+  - 'Color palette violation: Uses Python Blue #306998 instead of brand green #009E73
+    as first series'
+  - 'Non-Okabe-Ito colors: Wind and Hydro use custom blues instead of Okabe-Ito positions'
+  - Title missing Python language identifier
+  - Code does not read ANYPLOT_THEME for theme-adaptive chrome implementation
+  - Generic design with no visual sophistication or storytelling emphasis
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title "area-stacked-confidence · Python · altair · anyplot.ai" is dark and readable; axis labels "Quarter" and "Energy Consumption (TWh)" are dark and legible; tick labels readable; legend on right identifies series
-      Data: Stacked areas in green (Hydro, bottom), orange (Wind, middle), blue (Solar, top) with semi-transparent confidence bands. Colors are NOT Okabe-Ito positions.
-      Legibility verdict: PASS - All text is readable against light background
+      Background: Warm off-white (#FAF8F1)
+      Chrome: Title "area-stacked-confidence · altair · anyplot.ai", axis labels "Quarter" and "Energy Consumption (TWh)", tick labels for quarters and energy values - all clearly visible with strong dark text contrast
+      Data: Three stacked areas - green (Hydro) bottom, blue (Wind) middle, yellow (Solar) top - with semi-transparent confidence bands in matching lighter shades
+      Grid: Subtle gray gridlines
+      Legibility verdict: PASS - All text readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title and all axis labels rendered in light off-white color with sufficient contrast; legend background appears theme-adapted; no dark-on-dark text failures detected
-      Data: Same stacked areas and bands as light render - data colors are identical between themes (correct - only chrome should flip)
-      Legibility verdict: PASS - All text is readable against dark background; proper theme adaptation observed in final render
+      Background: Warm near-black (#1A1A17)
+      Chrome: Title, axis labels, tick labels all rendered in light text color and clearly readable
+      Data: Same three stacked areas and confidence bands - colors identical to light render (#306998 Hydro, #4A90D9 Wind, #FFD43B Solar)
+      Grid: Subtle gridlines visible on dark surface
+      Legibility verdict: PASS - All text readable, no dark-on-dark failures detected. Data colors unchanged from light theme as required.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -52,72 +50,67 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and labels explicitly sized, readable in both themes; could
-          be larger for 4800×2700 canvas
+        comment: Font sizes explicitly set, readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text, all readable
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Stacked areas and bands clearly visible, well-adapted to density
+        comment: Minimal overlap on dense x-axis labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Areas and bands well-sized for canvas
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: false
-        comment: Colors have decent contrast but palette is not CVD-optimized Okabe-Ito
+        comment: Non-Okabe-Ito palette reduces CVD safety
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions (1400×800), balanced margins; could maximize canvas
-          more
+        comment: Good proportions, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Energy Consumption (TWh), Quarter'
+        comment: Includes units (TWh)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'CRITICAL: First series is #306998 (Python Blue), NOT #009E73 (Okabe-Ito
-          brand). Colors are deprecated Python Blue palette, not Okabe-Ito'
+        comment: 'CRITICAL: Python Blue #306998 instead of brand #009E73'
     design_excellence:
-      score: 8
+      score: 9
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 3
         max: 8
         passed: false
-        comment: Well-configured library defaults, lacks custom design thought or
-          intentional hierarchy
+        comment: Generic palette, no design intent
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Subtle grid and spines removed, minimal customization beyond defaults
+        comment: Confidence bands show effort, minimal refinement
       - id: DE-03
         name: Data Storytelling
-        score: 1
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed but no visual hierarchy, emphasis, or clear focal
-          point
+        comment: Data displayed but no visual hierarchy
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -125,49 +118,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart with confidence bands
+        comment: Correct stacked area with confidence bands
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: central values, bands, three series, legend'
+        comment: All features present and working
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned, temporal axis, cumulative stacking correct
+        comment: X/Y correct, axes show all data
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
-        passed: true
-        comment: Final render shows correct title format (though code differs)
+        passed: false
+        comment: Missing 'Python' language tag
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows three sources, bands, stacking, temporal variation
+        comment: Shows all plot aspects with variation
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Real-world scenario (renewable energy), neutral, plausible
+        comment: Real-world renewable energy scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Quarterly data, energy values 0-500 TWh, proportions reasonable
+        comment: Realistic TWh values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,48 +168,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Clean imports-data-plot-save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed set to 42
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports (numpy, pandas, altair)
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Pythonic patterns
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Code saves to plot.png, not plot-{THEME}.png; missing ANYPLOT_THEME
-          reading
+        passed: true
+        comment: Correct output
     library_mastery:
       score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses Chart, encode, properties, layer properly; solid but not sophisticated
-      - id: LM-02
-        name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Generic layering; doesn't leverage interactive or advanced encodings
+        comment: Correct usage, lacks theme-adaptive tokens
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Layer composition somewhat distinctive
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -224,8 +216,6 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - wide-to-long
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
