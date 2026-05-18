@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: logistic-regression
 created: '2026-01-09T21:55:53Z'
-updated: '2026-05-18T08:38:21Z'
+updated: '2026-05-18T08:43:38Z'
 generated_by: claude-haiku
 workflow_run: 26022355577
 issue: 3550
@@ -12,31 +12,28 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 89
 review:
   strengths:
-  - Perfect visual quality across both themes with explicit font sizing
-  - All spec features flawlessly implemented with clean data mapping
-  - Excellent theme adaptation maintaining equal readability in light and dark renders
-  - Data is realistic, well-scaled, and effectively demonstrates logistic regression
-  - Clean, reproducible code with proper random seeding
-  - Proper Okabe-Ito palette usage with correct brand color
-  weaknesses:
-  - Design excellence moderate—lacks aesthetic sophistication beyond technical correctness
-  - No visual emphasis or hierarchy to guide viewer interpretation
-  - Could benefit from refined design polish or custom visual refinements
+  - Correct Okabe-Ito palette with first series in brand green
+  - Both light and dark renders properly themed with no contrast failures
+  - All required spec features implemented (logistic curve, CI band, threshold line,
+    jittered points)
+  - Idiomatic altair usage with proper layering and configuration
+  - Clean, deterministic code with proper seed and theme-adaptive styling
+  weaknesses: []
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1)
-      Chrome: Title "logistic-regression · python · altair · anyplot.ai" in dark text (INK); axis labels "Study Hours (hrs)" and "Probability" in dark; tick labels all readable; legend box with light background showing "Exam Result" Fail/Pass labels
-      Data: Teal (#009E73) markers for Fail class (~60 points), orange (#D55E00) markers for Pass class (~90 points), jittered on y-axis; smooth dark sigmoid curve; gray semi-transparent confidence interval band; dashed decision threshold line at 0.5 with label
-      Legibility verdict: PASS - All text crisp and readable; grid subtle but visible; no light-on-light issues
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title, axis labels, tick labels all rendered in dark INK (#1A1A17), clearly readable
+      Data: Green (#009E73) markers for Fail class (bottom), orange (#D55E00) for Pass class (top), both at correct Okabe-Ito positions; logistic curve in dark ink; CI band in soft gray
+      Legibility verdict: PASS - all text readable, excellent contrast against light surface
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17)
-      Chrome: Title and all axis/tick labels now light (#F0EFE8); legend background transitions to elevated surface (#242420); all text light-colored and readable
-      Data: Teal and orange markers identical to light render (Okabe-Ito compliance verified); sigmoid curve renders white for contrast against dark background; gray confidence band maintained; threshold line clearly visible
-      Legibility verdict: PASS - All text light on dark with excellent contrast; no dark-on-dark issues; data colors identical across themes (only chrome adapts)
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title in light INK (#F0EFE8), axis/tick labels in INK_SOFT (#B8B7B0), all readable on dark surface with no dark-on-dark failures
+      Data: Green and orange data colors identical to light render; logistic curve rendered as light line for visibility; CI band and grid visible
+      Legibility verdict: PASS - all text readable, proper light-on-dark contrast, no theme adaptation failures
   criteria_checklist:
     visual_quality:
       score: 30
@@ -47,47 +44,49 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; perfectly readable in both themes
+        comment: All text explicitly sized and readable in both themes - title 28px,
+          labels 18-22px, tick labels 18px
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; threshold label well-positioned
+        comment: All text and elements properly spaced, no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 150 points well-adapted with size=200, opacity=0.6; curve and CI
-          clearly visible
+        comment: Markers with alpha=0.6 show density, curve is prominent, CI band
+          is visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette provides excellent CVD-safe contrast
+        comment: Okabe-Ito palette is CVD-safe, adequate contrast throughout
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800×2700px with ~60% canvas utilization and balanced margins
+        comment: 1600x900 properties with scale_factor=3.0 = 4800x2700px, proper proportions,
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Study Hours (hrs) includes units; Probability is descriptive
+        comment: Labels descriptive with units (Study Hours hrs), title follows convention
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; second #D55E00; backgrounds correct; chrome
-          properly adapts both themes'
+        comment: 'First series #009E73 ✓, second #D55E00 ✓, backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark) ✓, both renders theme-correct ✓'
     design_excellence:
-      score: 8
+      score: 10
       max: 20
       items:
       - id: DE-01
@@ -95,19 +94,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured defaults but lacks exceptional aesthetic design
+        comment: Follows standard style guide patterns with theme-adaptive colors,
+          no additional design polish
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Subtle grid but minimal customization
+        comment: Subtle grid (opacity 0.15), careful color configuration, legend styling
+          - some refinement evident
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Displays data correctly but lacks visual hierarchy or emphasis
+        comment: Clear visual hierarchy with logistic curve as focal point, supporting
+          elements in secondary roles
     spec_compliance:
       score: 15
       max: 15
@@ -117,26 +119,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct logistic regression with sigmoid curve
+        comment: Correct logistic regression sigmoid curve with data points
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: data points, curve, CI band, threshold line,
-          jittering, legend'
+        comment: 'All features present: colored classes, logistic curve, 95% CI band,
+          0.5 threshold line, jittered points'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Study Hours, Y=Probability; axes show all data
+        comment: X axis (Study Hours) and Y axis (Probability) correctly mapped, axes
+          show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels accurate
+        comment: 'Title format correct: logistic-regression · python · altair · anyplot.ai,
+          legend labels match (Exam Result)'
     data_quality:
       score: 15
       max: 15
@@ -146,19 +150,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Clear class separation with overlap region; density patterns visible
+        comment: 'All aspects of logistic regression shown: points, fitted curve,
+          CI band, decision threshold'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Study hours vs exam pass/fail is real, plausible, neutral
+        comment: Study hours vs exam pass/fail is real-world plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Study hours, binary outcome, logistic curve, CIs all factually correct
+        comment: Study hours 0-10.5 sensible, probability 0-1 correct for logistic
+          model
     code_quality:
       score: 10
       max: 10
@@ -168,31 +174,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear flow; no functions or classes
+        comment: No functions or classes, straightforward procedural implementation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: 'All imports used: os, sys, numpy, pandas, altair'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; appropriate complexity
+        comment: Appropriate complexity, no simulated interactivity, gradient descent
+          implementation is clear
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves correctly as plot-{THEME}.png/html
+        comment: Saves to plot-{THEME}.png and plot-{THEME}.html with scale_factor=3.0
     library_mastery:
       score: 9
       max: 10
@@ -202,24 +209,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expert use of alt.Chart(), mark_*(), layer composition, encoding,
-          configuration
+        comment: Uses alt.layer() for mark composition, alt.Color() with Scale, configure_axis/view/title
+          patterns, high-level API
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: false
-        comment: Uses layer composition, mark_area() for CI, mark_text() for annotations;
-          somewhat standard patterns
+        comment: Uses altair composition techniques and configuration well, but features
+          remain standard for the library
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
+  - matrix-construction
   dataprep:
   - regression
   styling:
   - alpha-blending
+  - edge-highlighting
