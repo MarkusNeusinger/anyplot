@@ -1,18 +1,41 @@
-""" pyplots.ai
+""" anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-18
 """
 
+import sys
+
+
+# Remove script directory from sys.path to avoid shadowing the installed bokeh package
+# (script is named bokeh.py, which would otherwise shadow the bokeh package on import)
+if sys.path and sys.path[0] not in ("", "-c"):
+    sys.path.pop(0)
+
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, LabelSet, Legend, LegendItem, WMTSTileSource
 from bokeh.plotting import figure
 from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - World cities with population (in millions)
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (canonical order)
+OKABE = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
+
+# Data - World cities with population (in millions, 2024 estimates)
 cities = {
     "name": [
         "Tokyo",
@@ -95,7 +118,6 @@ cities = {
         -3.70,
         28.04,
     ],
-    # Population in millions (2024 estimates)
     "population": [
         37.4,
         32.9,
@@ -123,7 +145,6 @@ cities = {
         6.7,
         5.8,
     ],
-    # Region for color grouping
     "region": [
         "Asia",
         "Asia",
@@ -153,197 +174,197 @@ cities = {
     ],
 }
 
-
-# Convert lat/lon to Web Mercator projection (required for tile maps)
-def lat_lon_to_mercator(lat, lon):
-    """Convert latitude/longitude to Web Mercator (EPSG:3857) coordinates."""
-    k = 6378137  # Earth radius in meters
-    x = lon * (k * np.pi / 180.0)
-    y = np.log(np.tan((90 + lat) * np.pi / 360.0)) * k
-    return x, y
-
-
+# Convert lat/lon to Web Mercator projection (EPSG:3857), inlined
+k = 6378137
 lats = np.array(cities["lat"])
 lons = np.array(cities["lon"])
-mercator_x, mercator_y = lat_lon_to_mercator(lats, lons)
+mercator_x = lons * (k * np.pi / 180.0)
+mercator_y = np.log(np.tan((90 + lats) * np.pi / 360.0)) * k
 
-# Population data
 populations = np.array(cities["population"])
 
-# Scale bubble area proportionally to population (not radius)
-# Using sqrt to make area proportional to value
-min_size = 20
-max_size = 90
+# Scale bubble area proportionally to population (sqrt for perceptually accurate encoding)
+min_size, max_size = 20, 90
 pop_normalized = (populations - populations.min()) / (populations.max() - populations.min())
 sizes = min_size + np.sqrt(pop_normalized) * (max_size - min_size)
 
-# Color mapping by region
-region_colors = {
-    "Asia": "#306998",  # Python Blue
-    "Americas": "#FFD43B",  # Python Yellow
-    "Europe": "#4B8BBE",  # Light Blue
-    "Africa": "#9B59B6",  # Purple
-    "Oceania": "#27AE60",  # Green
-}
-colors = [region_colors[r] for r in cities["region"]]
+# Okabe-Ito color by region — Asia first gets brand green #009E73
+region_order = ["Asia", "Americas", "Europe", "Africa", "Oceania"]
+region_colors = {region: OKABE[i] for i, region in enumerate(region_order)}
 
-# Create data source
-source = ColumnDataSource(
-    data={
-        "x": mercator_x,
-        "y": mercator_y,
-        "name": cities["name"],
-        "lat": lats,
-        "lon": lons,
-        "population": populations,
-        "region": cities["region"],
-        "size": sizes,
-        "color": colors,
-    }
+# Plot
+tile_url = (
+    "https://tiles.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
+    if THEME == "light"
+    else "https://tiles.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
 )
 
-# Create figure with tile map
 p = figure(
     width=4800,
     height=2700,
     x_axis_type="mercator",
     y_axis_type="mercator",
-    title="World Cities by Population · bubble-map-geographic · bokeh · pyplots.ai",
+    title="World Cities by Population · bubble-map-geographic · python · bokeh · anyplot.ai",
     tools="pan,wheel_zoom,box_zoom,reset,hover,save",
     tooltips=[
         ("City", "@name"),
         ("Population", "@population{0.0} million"),
         ("Region", "@region"),
-        ("Coordinates", "(@lat, @lon)"),
+        ("Coordinates", "(@lat{0.00}°, @lon{0.00}°)"),
     ],
 )
 
-# Add map tiles (CartoDB Positron for clean basemap)
-tile_url = "https://tiles.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-tile_source = WMTSTileSource(url=tile_url)
-p.add_tile(tile_source)
+p.add_tile(WMTSTileSource(url=tile_url))
 
-# Create separate renderers for each region to build legend
+# Bubbles per region, one renderer each for legend
 legend_items = []
-for region, color in region_colors.items():
-    region_mask = [r == region for r in cities["region"]]
-    if any(region_mask):
-        region_source = ColumnDataSource(
-            data={"x": mercator_x[region_mask], "y": mercator_y[region_mask], "size": sizes[region_mask]}
+for region in region_order:
+    color = region_colors[region]
+    mask = np.array([r == region for r in cities["region"]])
+    if mask.any():
+        rsrc = ColumnDataSource(
+            data={
+                "x": mercator_x[mask],
+                "y": mercator_y[mask],
+                "size": sizes[mask],
+                "name": [cities["name"][i] for i in range(len(cities["name"])) if mask[i]],
+                "population": populations[mask],
+                "region": [region] * mask.sum(),
+            }
         )
         renderer = p.scatter(
             x="x",
             y="y",
-            source=region_source,
+            source=rsrc,
             size="size",
             fill_color=color,
-            fill_alpha=0.6,
-            line_color="#333333",
-            line_width=2,
+            fill_alpha=0.65,
+            line_color=PAGE_BG,
+            line_width=1.5,
         )
         legend_items.append(LegendItem(label=region, renderers=[renderer]))
 
-# Add legend for regions
+# Region legend
 legend = Legend(
     items=legend_items,
-    location="top_left",
     title="Region",
     title_text_font_size="24pt",
+    title_text_color=INK,
     label_text_font_size="20pt",
+    label_text_color=INK_SOFT,
     glyph_height=40,
     glyph_width=40,
     spacing=15,
     padding=20,
-    background_fill_alpha=0.85,
-    background_fill_color="white",
-    border_line_color="#306998",
-    border_line_width=2,
+    background_fill_alpha=0.90,
+    background_fill_color=ELEVATED_BG,
+    border_line_color=INK_SOFT,
+    border_line_width=1,
 )
 p.add_layout(legend, "right")
 
-# Add size legend using reference bubbles (manual annotation)
-# Create reference points for size legend (placed off-map area)
-size_legend_pops = [5, 15, 25, 35]  # Reference populations in millions
-size_legend_x = 19500000  # Position to the right of the map
-size_legend_y_start = 6000000
-size_legend_y_spacing = 1800000
+# Size reference legend
+ref_pops = [5, 15, 25, 35]
+ref_x = 19500000
+ref_y0 = 6000000
+ref_dy = 1800000
 
-# Calculate sizes for legend bubbles
-size_legend_sizes = []
-for pop in size_legend_pops:
-    pop_norm = (pop - populations.min()) / (populations.max() - populations.min())
-    size_legend_sizes.append(min_size + np.sqrt(pop_norm) * (max_size - min_size))
-
-size_legend_source = ColumnDataSource(
+ref_sizes = [
+    min_size + np.sqrt((pop - populations.min()) / (populations.max() - populations.min())) * (max_size - min_size)
+    for pop in ref_pops
+]
+ref_source = ColumnDataSource(
     data={
-        "x": [size_legend_x] * len(size_legend_pops),
-        "y": [size_legend_y_start - i * size_legend_y_spacing for i in range(len(size_legend_pops))],
-        "size": size_legend_sizes,
-        "label": [f"{p}M" for p in size_legend_pops],
+        "x": [ref_x] * len(ref_pops),
+        "y": [ref_y0 - i * ref_dy for i in range(len(ref_pops))],
+        "size": ref_sizes,
+        "label": [f"{pop}M" for pop in ref_pops],
     }
 )
-
 p.scatter(
     x="x",
     y="y",
-    source=size_legend_source,
+    source=ref_source,
     size="size",
-    fill_color="#306998",
-    fill_alpha=0.6,
-    line_color="#333333",
-    line_width=2,
+    fill_color=OKABE[0],
+    fill_alpha=0.65,
+    line_color=PAGE_BG,
+    line_width=1.5,
 )
-
-# Add labels for size legend
-labels = LabelSet(
-    x="x",
-    y="y",
-    text="label",
-    source=size_legend_source,
-    x_offset=60,
-    y_offset=-10,
-    text_font_size="18pt",
-    text_color="#333333",
-    text_align="left",
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="label",
+        source=ref_source,
+        x_offset=60,
+        y_offset=-10,
+        text_font_size="18pt",
+        text_color=INK_SOFT,
+        text_align="left",
+    )
 )
-p.add_layout(labels)
-
-# Add "Population" title for size legend
 p.text(
-    x=[size_legend_x - 100000],
-    y=[size_legend_y_start + 1200000],
+    x=[ref_x - 100000],
+    y=[ref_y0 + 1200000],
     text=["Population"],
     text_font_size="22pt",
     text_font_style="bold",
-    text_color="#333333",
+    text_color=INK,
 )
 
-# Styling
+# Style
 p.title.text_font_size = "32pt"
-p.title.text_color = "#306998"
-p.xaxis.axis_label = "Longitude"
-p.yaxis.axis_label = "Latitude"
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
+p.title.text_color = INK
+p.title.text_font_style = "bold"
+
+p.xaxis.axis_label = "Longitude (°)"
+p.yaxis.axis_label = "Latitude (°)"
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
 p.xaxis.major_label_text_font_size = "18pt"
 p.yaxis.major_label_text_font_size = "18pt"
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
-p.xaxis.major_tick_line_width = 2
-p.yaxis.major_tick_line_width = 2
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Set view to show world with space for legends
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+
 p.x_range.start = -15000000
 p.x_range.end = 22000000
 p.y_range.start = -6000000
 p.y_range.end = 8500000
 
-# Background and border
-p.background_fill_color = None
-p.border_fill_color = "#ffffff"
-p.outline_line_color = "#306998"
-p.outline_line_width = 2
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="World Cities by Population · bubble-map-geographic · bokeh", resources=CDN)
+# Save
+output_file(f"plot-{THEME}.html")
+save(p, title="World Cities by Population · bubble-map-geographic · python · bokeh · anyplot.ai", resources=CDN)
+
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
