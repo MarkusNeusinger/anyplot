@@ -1,18 +1,35 @@
-""" pyplots.ai
+"""anyplot.ai
 scatter-matrix-interactive: Interactive Scatter Plot Matrix (SPLOM)
 Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Quality: pending | Created: 2026-05-18
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Remove current directory from path to avoid shadowing altair module
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Synthetic Iris-like multivariate data
 np.random.seed(42)
 
-# Generate 3 clusters representing different plant species
 n_per_species = 50
 species_data = []
 
@@ -57,14 +74,9 @@ species_data.append(
 
 df = pd.concat(species_data, ignore_index=True)
 
-# Variables for SPLOM
 variables = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"]
 
-# Color scale for species
-color_scale = alt.Scale(domain=["setosa", "versicolor", "virginica"], range=["#306998", "#FFD43B", "#E35F62"])
-
-# Build SPLOM manually as a grid of charts
-# Use simpler encoding without conditional opacity for PNG export
+# Static PNG version
 rows = []
 for row_idx, y_var in enumerate(variables):
     row_charts = []
@@ -79,37 +91,83 @@ for row_idx, y_var in enumerate(variables):
                     x=alt.X(
                         f"{x_var}:Q",
                         title=x_var if row_idx == len(variables) - 1 else "",
-                        axis=alt.Axis(labelFontSize=14, titleFontSize=14, labelAngle=-45),
+                        axis=alt.Axis(
+                            labelFontSize=18,
+                            titleFontSize=22,
+                            labelAngle=-45,
+                            labelColor=INK_SOFT,
+                            titleColor=INK,
+                            domainColor=INK_SOFT,
+                            tickColor=INK_SOFT,
+                            gridColor=INK,
+                            gridOpacity=0.10,
+                        ),
                     ),
                     y=alt.Y(
                         "density:Q",
                         title="Density" if col_idx == 0 else "",
-                        axis=alt.Axis(labelFontSize=14, titleFontSize=14),
+                        axis=alt.Axis(
+                            labelFontSize=18,
+                            titleFontSize=22,
+                            labelColor=INK_SOFT,
+                            titleColor=INK,
+                            domainColor=INK_SOFT,
+                            tickColor=INK_SOFT,
+                            gridColor=INK,
+                            gridOpacity=0.10,
+                        ),
                     ),
-                    color=alt.Color("Species:N", scale=color_scale, legend=None),
+                    color=alt.Color(
+                        "Species:N",
+                        scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=OKABE_ITO),
+                        legend=None,
+                    ),
                 )
-                .properties(width=230, height=230)
+                .properties(width=220, height=220)
             )
         else:
             # Off-diagonal: scatter plot
             chart = (
                 alt.Chart(df)
-                .mark_point(size=100, filled=True, opacity=0.7)
+                .mark_point(size=80, filled=True, opacity=0.7)
                 .encode(
                     x=alt.X(
                         f"{x_var}:Q",
                         title=x_var if row_idx == len(variables) - 1 else "",
-                        axis=alt.Axis(labelFontSize=14, titleFontSize=14, labelAngle=-45),
+                        axis=alt.Axis(
+                            labelFontSize=18,
+                            titleFontSize=22,
+                            labelAngle=-45,
+                            labelColor=INK_SOFT,
+                            titleColor=INK,
+                            domainColor=INK_SOFT,
+                            tickColor=INK_SOFT,
+                            gridColor=INK,
+                            gridOpacity=0.10,
+                        ),
                     ),
                     y=alt.Y(
                         f"{y_var}:Q",
                         title=y_var if col_idx == 0 else "",
-                        axis=alt.Axis(labelFontSize=14, titleFontSize=14),
+                        axis=alt.Axis(
+                            labelFontSize=18,
+                            titleFontSize=22,
+                            labelColor=INK_SOFT,
+                            titleColor=INK,
+                            domainColor=INK_SOFT,
+                            tickColor=INK_SOFT,
+                            gridColor=INK,
+                            gridOpacity=0.10,
+                        ),
                     ),
-                    color=alt.Color("Species:N", scale=color_scale, legend=None),
+                    color=alt.Color(
+                        "Species:N",
+                        scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=OKABE_ITO),
+                        legend=None,
+                    ),
                     tooltip=["Species:N"] + [alt.Tooltip(v, format=".2f") for v in variables],
                 )
-                .properties(width=230, height=230)
+                .properties(width=220, height=220)
             )
         row_charts.append(chart)
     rows.append(alt.hconcat(*row_charts, spacing=10))
@@ -120,33 +178,38 @@ legend_chart = (
     .mark_point(size=150, filled=True)
     .encode(
         y=alt.Y("Species:N", title="", axis=alt.Axis(labelFontSize=18, orient="right")),
-        color=alt.Color("Species:N", scale=color_scale, legend=None),
+        color=alt.Color(
+            "Species:N", scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=OKABE_ITO), legend=None
+        ),
     )
-    .properties(width=50, height=150, title=alt.Title("Species", fontSize=20))
+    .properties(width=50, height=150, title=alt.Title("Species", fontSize=22))
 )
 
 # Combine all rows vertically
 matrix = alt.vconcat(*rows, spacing=10).properties(
     title=alt.Title(
-        "scatter-matrix-interactive · altair · pyplots.ai",
+        "scatter-matrix-interactive · python · altair · anyplot.ai",
         fontSize=28,
         anchor="middle",
-        subtitle="Interactive Scatter Plot Matrix | Brush to select in HTML version",
+        color=INK,
+        subtitle="Interactive Scatter Plot Matrix",
         subtitleFontSize=18,
     )
 )
 
-# Final chart with legend
-final_chart = (
+# Final static chart with legend and styling
+static_chart = (
     alt.hconcat(matrix, legend_chart, spacing=40)
-    .configure_axis(grid=True, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .properties(background=PAGE_BG)
+    .configure_axis(grid=True, gridOpacity=0.10)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT)
 )
 
-# Save PNG version (static) - target 3600x3600 for square format
-final_chart.save("plot.png", scale_factor=3.0)
+# Save PNG version (static)
+static_chart.save(f"plot-{THEME}.png", scale_factor=3.0)
 
-# Create interactive HTML version with brush selection
+# Interactive HTML version with brush selection
 brush = alt.selection_interval(name="brush", resolve="global")
 
 interactive_chart = (
@@ -154,17 +217,42 @@ interactive_chart = (
     .mark_point(size=80, filled=True)
     .encode(
         alt.X(
-            alt.repeat("column"), type="quantitative", axis=alt.Axis(labelFontSize=14, titleFontSize=14, labelAngle=-45)
+            alt.repeat("column"),
+            type="quantitative",
+            axis=alt.Axis(
+                labelFontSize=18,
+                titleFontSize=22,
+                labelAngle=-45,
+                labelColor=INK_SOFT,
+                titleColor=INK,
+                domainColor=INK_SOFT,
+                tickColor=INK_SOFT,
+                gridColor=INK,
+                gridOpacity=0.10,
+            ),
         ),
-        alt.Y(alt.repeat("row"), type="quantitative", axis=alt.Axis(labelFontSize=14, titleFontSize=14)),
+        alt.Y(
+            alt.repeat("row"),
+            type="quantitative",
+            axis=alt.Axis(
+                labelFontSize=18,
+                titleFontSize=22,
+                labelColor=INK_SOFT,
+                titleColor=INK,
+                domainColor=INK_SOFT,
+                tickColor=INK_SOFT,
+                gridColor=INK,
+                gridOpacity=0.10,
+            ),
+        ),
         color=alt.condition(
             brush,
             alt.Color(
                 "Species:N",
-                scale=color_scale,
+                scale=alt.Scale(domain=["setosa", "versicolor", "virginica"], range=OKABE_ITO),
                 legend=alt.Legend(titleFontSize=18, labelFontSize=16, orient="right", title="Species"),
             ),
-            alt.value("lightgray"),
+            alt.value(INK_SOFT),
         ),
         opacity=alt.condition(brush, alt.value(0.8), alt.value(0.15)),
         tooltip=["Species:N"] + [alt.Tooltip(v, format=".2f") for v in variables],
@@ -173,16 +261,21 @@ interactive_chart = (
     .add_params(brush)
     .repeat(row=variables, column=variables)
     .properties(
+        background=PAGE_BG,
         title=alt.Title(
-            "scatter-matrix-interactive · altair · pyplots.ai",
+            "scatter-matrix-interactive · python · altair · anyplot.ai",
             fontSize=28,
             anchor="middle",
+            color=INK,
             subtitle="Brush any subplot to select points across all panels",
             subtitleFontSize=18,
-        )
+        ),
     )
-    .configure_axis(grid=True, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_axis(grid=True, gridOpacity=0.10)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
+    .configure_title(color=INK)
 )
 
-interactive_chart.save("plot.html")
+# Save HTML version (interactive)
+interactive_chart.save(f"plot-{THEME}.html")
