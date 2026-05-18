@@ -1,13 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 density-rug: Density Plot with Rug Marks
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-09
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-18
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import gaussian_kde
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - Response times (ms) for a web service with bimodal distribution
 np.random.seed(42)
@@ -22,34 +31,31 @@ kde = gaussian_kde(response_times, bw_method="scott")
 x_range = np.linspace(response_times.min() - 10, response_times.max() + 10, 500)
 density = kde(x_range)
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # KDE curve with fill
-ax.fill_between(x_range, density, alpha=0.4, color="#306998", label="KDE Density")
-ax.plot(x_range, density, color="#306998", linewidth=3)
+ax.fill_between(x_range, density, alpha=0.4, color=BRAND)
+ax.plot(x_range, density, color=BRAND, linewidth=3)
 
 # Rug marks along x-axis
-rug_height = 0.015 * density.max()  # Height relative to density
+rug_height = 0.015 * density.max()
 for val in response_times:
-    ax.plot([val, val], [0, rug_height], color="#306998", alpha=0.6, linewidth=2)
+    ax.plot([val, val], [0, rug_height], color=BRAND, alpha=0.6, linewidth=2)
 
-# Add a horizontal line at y=0 for visual clarity
-ax.axhline(y=0, color="black", linewidth=0.5)
-
-# Labels and styling
-ax.set_xlabel("Response Time (ms)", fontsize=20)
-ax.set_ylabel("Density", fontsize=20)
-ax.set_title("density-rug · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--", axis="y")
+# Style
+ax.set_xlabel("Response Time (ms)", fontsize=20, color=INK)
+ax.set_ylabel("Density", fontsize=20, color=INK)
+ax.set_title("density-rug · Python · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
 
 # Set y-axis to start at 0 with some padding at top
 ax.set_ylim(bottom=-0.0005, top=density.max() * 1.1)
 
-# Remove top and right spines for cleaner look
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
