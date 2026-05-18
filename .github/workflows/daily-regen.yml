@@ -1,5 +1,5 @@
 name: "Scheduled: Regen oldest specs"
-run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.event.inputs.count || '1' }} / ${{ github.event.inputs.model || 'haiku' }})"
+run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.event.inputs.count || '1' }} / ${{ github.event.inputs.model || 'sonnet' }})"
 
 # Picks the N oldest specs (by most-recent implementation `updated` timestamp)
 # and re-dispatches `bulk-generate.yml` for each. Default N=1 per cron tick.
@@ -10,11 +10,10 @@ run-name: "Scheduled regen (${{ github.event.inputs.specification_id || github.e
 # All other UTC hours run, giving 20 ticks per day.
 #
 # bulk-generate is serialised via its own concurrency group. Default model is
-# Haiku, so a single spec completes well within an hour, leaving the user
-# window clean. The model can be overridden per manual run.
+# Sonnet for higher implementation quality; can be overridden per manual run.
 #
 # Triggers:
-#   - schedule: 20× daily (UTC, every hour except 18:00–21:00 UTC) → Haiku
+#   - schedule: 20× daily (UTC, every hour except 18:00–21:00 UTC) → Sonnet
 #   - workflow_dispatch: manual, with inputs for spec id, model, count, dry-run
 
 on:
@@ -30,7 +29,7 @@ on:
         description: "Claude model to use across all generate / review / repair steps"
         required: false
         type: choice
-        default: 'haiku'
+        default: 'sonnet'
         options:
           - haiku
           - sonnet
@@ -281,7 +280,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SPEC_ID: ${{ matrix.spec_id }}
-          MODEL: ${{ inputs.model || 'haiku' }}
+          MODEL: ${{ inputs.model || 'sonnet' }}
           CHANGE_REQUESTS: ${{ steps.collect.outputs.change_requests }}
         run: |
           echo "::notice::Dispatching bulk-generate for ${SPEC_ID} (all libs, model=${MODEL})"
