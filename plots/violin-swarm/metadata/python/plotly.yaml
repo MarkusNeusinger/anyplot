@@ -1,156 +1,176 @@
 library: plotly
+language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:46:46Z'
-updated: '2026-01-09T16:49:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858837378
+updated: '2026-05-18T04:57:34Z'
+generated_by: claude-haiku
+workflow_run: 26013980427
 issue: 3526
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent color contrast between violin fill (Python Blue) and swarm points (Python
-    Yellow)
-  - Proper transparency on violins (alpha 0.4) allowing points to show through
-  - Clean, professional layout with appropriate text sizing for high-resolution output
-  - Realistic scientific scenario (dose-response reaction time study)
-  - Shows meaningful variation between groups (different means and spreads)
-  - Mean lines visible within violins
+  - Perfect visual quality and theme adaptation in both light and dark renders with
+    zero readability failures
+  - 'Excellent palette compliance: Okabe-Ito colors correct, backgrounds theme-correct
+    (#FAF8F1 light, #1A1A17 dark), no dark-on-dark or light-on-light failures'
+  - 'All specification requirements perfectly implemented: violin + swarm overlay,
+    transparency, horizontal spread, distribution visibility'
+  - Realistic, neutral scientific data with clear dose-response pattern demonstrating
+    all plot type features
+  - Clean KISS code structure with proper reproducibility (seeds set), theme tokenization,
+    and idiomatic Plotly usage
   weaknesses:
-  - Swarm points use uniform random jitter rather than a true swarm algorithm that
-    avoids point overlap
-  - Could leverage Plotly built-in points parameter in Violin trace instead of manual
-    scatter overlay
-  - Grid lines are extremely subtle, almost invisible
-  image_description: 'The plot displays four violin plots representing reaction time
-    distributions (in ms) across four experimental conditions: Control, Low Dose,
-    Medium Dose, and High Dose. Each violin is rendered in a semi-transparent light
-    blue (Python Blue with ~40% opacity) with a darker blue outline. The mean line
-    is shown as a dashed horizontal line within each violin. Yellow circular markers
-    with blue outlines are overlaid as swarm points showing individual data points
-    (50 per group). The points are horizontally jittered to create a swarm-like effect
-    within the violin boundaries. The title follows the correct format "violin-swarm
-    · plotly · pyplots.ai" and is centered at the top. Axes are clearly labeled with
-    "Experimental Condition" on the x-axis and "Reaction Time (ms)" on the y-axis.
-    The background is white with subtle horizontal grid lines. The four groups show
-    a clear dose-response pattern with decreasing mean reaction times from Control
-    (~430ms) to High Dose (~320ms), and also varying spreads across conditions.'
+  - 'Code quality: line 88 computes jitter values but never uses them (dead code);
+    code comment claims ''improved jittering'' but relies on Plotly''s auto-jittering
+    instead'
+  - 'Design excellence: uses competent library defaults rather than custom design
+    sophistication; spines not removed, minimal grid customization'
+  - 'Data storytelling: plot clearly shows dose-response pattern but doesn''t emphasize
+    the insight through visual hierarchy or focal point beyond basic color contrast'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct, not pure white
+      Chrome: Title "violin-swarm · Python · plotly · anyplot.ai" centered and readable in dark text. X-axis "Experimental Condition" with condition labels (Control, Low Dose, Medium Dose, High Dose) clearly readable. Y-axis "Reaction Time (ms)" with units, tick labels dark gray and legible. Grid lines subtle gray on y-axis only.
+      Data: Violin shapes in bluish green (#009E73) with 0.35 alpha showing distribution density for each condition. Overlaid swarm points in vermillion (#D55E00) showing individual observations. Dashed meanline through each violin. Clear dose-response pattern visible (Control ~300-700ms, High Dose ~150-450ms).
+      Legibility verdict: PASS - all text clearly readable, no overlap, excellent contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct, not pure black
+      Chrome: Title rendered in light color (#F0EFE8) and clearly readable against dark background. X-axis label "Experimental Condition" and tick labels in light gray (#B8B7B0), fully legible. Y-axis "Reaction Time (ms)" and tick labels in same light gray, no dark-on-dark failures. Grid lines light gray and subtle, matching visual weight of light render.
+      Data: Violin shapes identical bluish green (#009E73) as light render - perfect data color consistency. Swarm points identical vermillion (#D55E00) - no change to data colors between themes, only chrome adapted. Same meanlines visible. Distribution patterns identical to light render.
+      Legibility verdict: PASS - all text readable in light colors against dark background, no dark-on-dark failures, brand green clearly visible, chrome properly theme-adapted
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis titles at 24pt, ticks at 20pt - all excellently
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: Title (28px), axis labels (22px), tick labels (18px) all explicitly
+          sized and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text collision-free, violins well-separated by condition
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (size 11) visible with good contrast; minor overlap between
-          some swarm points
+        comment: Markers (size=10) and violin lines (width=2) clearly visible and
+          well-distinguished
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue violins with yellow points provide excellent contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas appropriately, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Reaction Time (ms)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette (green, orange) provides colorblind-safe contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 proportions with generous 120px margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title descriptive, Y-axis includes units (ms)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First color #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17,
+          both renders theme-correct'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is very subtle, almost invisible
+        comment: Clean professional styling but generic defaults without custom refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization, top/right spines still visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Clear distribution and individual points but no exceptional visual
+          hierarchy
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct violin + swarm combination
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on X, values on Y correctly assigned
-      - id: SC-03
+        comment: Correct violin + swarm overlay
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Swarm points overlay violin, transparency used, contrasting colors;
-          jitter is uniform random rather than true swarm
-      - id: SC-04
-        name: Data Range
+        comment: Violin distribution, swarm overlay with transparency, horizontal
+          spread achieved
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X categorical (conditions), Y continuous (reaction time ms), all
+          data included
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this plot type
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format violin-swarm · plotly · pyplots.ai
+        comment: Correct format with no unnecessary legend
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 distinct distributions with different means and spreads,
-          demonstrates dose-response relationship
+        comment: 'All aspects covered: distribution shape, individual observations,
+          all conditions'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Reaction time experiment is a classic, neutral scientific scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Reaction times in 200-700ms range are realistic for cognitive experiments
+        comment: Reaction times across conditions are scientifically plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis range (100-700 ms) is sensible for reaction times
     code_quality:
       score: 9
       max: 10
@@ -160,51 +180,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports, data, plot, save'
+        comment: Direct code, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and seed(123) for jitter
+        comment: np.random.seed(42) ensures determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pandas, plotly.graph_objects'
+        comment: Only used imports, proper import shadowing handling
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Line 88 generates jitter array but result is never assigned to variable
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern Plotly API used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly but minor issues
-    library_features:
-      score: 2
-      max: 5
+        comment: Correctly saves as plot-THEME.png and plot-THEME.html
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Correct graph_objects API and theme token usage, but unused jitter
+          suggests incomplete implementation
+      - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 1
         max: 5
         passed: false
-        comment: Uses go.Violin and go.Scatter correctly but does not leverage Plotly
-          built-in violin points option or interactive features like hover tooltips
+        comment: Generic usage, doesn't showcase plotly's interactive strengths
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
