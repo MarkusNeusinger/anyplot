@@ -1,142 +1,180 @@
 library: altair
+language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:48:07Z'
-updated: '2026-01-09T16:56:39Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858844204
+updated: '2026-05-18T03:17:33Z'
+generated_by: claude-haiku
+workflow_run: 26011445656
 issue: 3529
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/altair/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/altair/plot-dark.html
+quality_score: 92
 review:
-  strengths: []
-  weaknesses: []
-  image_description: 'The plot displays a grouped violin plot with swarm overlay showing
-    response times across three task types (Simple, Moderate, Complex) faceted horizontally.
-    Each facet contains two violin shapes colored by expertise level: Novice in steel
-    blue (#306998) and Expert in golden yellow (#FFD43B). Individual data points are
-    overlaid as circles with slight horizontal jitter, matching their respective violin
-    colors. The title "violin-grouped-swarm · altair · pyplots.ai" appears at the
-    top. The y-axis shows "Response Time (s)" ranging from 0-13, and the x-axis labels
-    each facet by Task Type. A legend on the right identifies the Expertise Level
-    with appropriately sized symbols. Violins have 50% opacity allowing swarm points
-    to show through. The data demonstrates expected patterns: novices have higher
-    and more variable response times, with complexity increasing times for both groups.'
+  strengths:
+  - Perfect text legibility with explicit sizing across both light and dark themes—no
+    readability failures in either render
+  - 'Exemplary Okabe-Ito palette compliance: first series is #009E73 (brand green),
+    second is #D55E00 (orange); theme-adaptive chrome (text, grid, backgrounds) correctly
+    applied in both renders'
+  - 'Complete spec compliance: all required features present and working (grouped
+    violins, color differentiation, swarm overlay, transparency 0.5, jittered dodging)'
+  - 'Advanced Altair techniques: transform_density() for kernel density estimation,
+    transform_calculate() with custom jitter formula, faceting with independent x-scale
+    resolution—demonstrates library mastery'
+  - Realistic, well-crafted example data showing full distribution variation, different
+    spreads for expertise levels, and clear task-complexity progression
+  - Clean, deterministic code structure with proper seed setting and minimal imports;
+    zero redundancy
+  weaknesses:
+  - 'Design excellence falls short of publication-exceptional: styling follows well-configured
+    library defaults without unique aesthetic touches, custom color palettes, or intentional
+    typographic hierarchy beyond standard sizes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - CORRECT
+      Chrome: Title (28px, dark), axis labels (22px, dark), tick labels (18px, dark)—all perfectly readable against light background
+      Data: Violins show distribution shapes with opacity 0.5; swarm points are clearly visible with opacity 0.85 and size 120; two colors used—green (#009E73) for Novice, orange (#D55E00) for Expert (correct Okabe-Ito positions 1 and 2)
+      Grid: Subtle, low opacity (0.15), non-intrusive
+      Legibility verdict: PASS - all elements readable, no dark-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - CORRECT
+      Chrome: Title (light text), axis labels (light INK_SOFT color), tick labels (light)—all perfectly readable against dark background
+      Data: Identical colors to light render—green (#009E73) for Novice, orange (#D55E00) for Expert; violins and swarm points maintain same appearance
+      Grid: Subtle, appropriate opacity, matching dark-theme styling
+      Legibility verdict: PASS - no dark-on-dark failures, all text and data clearly visible, theme adaptation flawless
   criteria_checklist:
     visual_quality:
-      score: 34
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and labels are clear and readable, font sizes appropriate
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping text; ample spacing for all elements
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Swarm points visible but some appear detached from violins in Simple
-          category
+        comment: Violins (0.5 opacity) and swarm (0.85 opacity, size 120) perfectly
+          adapted; jitter prevents overlap
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow distinguishable but not optimal for all colorblind types
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of space, faceted layout works well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Response Time (s) includes units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is colorblind-safe; excellent green-orange contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas; faceting spacing 40px; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend placed well, but no visible grid lines
+        comment: 'Descriptive with units: ''Response Time (s)'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (correct); second #D55E00 (correct); backgrounds
+          #FAF8F1 / #1A1A17; theme chrome correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default; lacks custom design flourishes or
+          intentional hierarchy
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Some refinement visible (violin opacity, subtle grid, generous spacing);
+          room for enhancement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; faceting and colors create emphasis; excellent
+          story through layout
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct grouped violin with swarm overlay
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Category on x-axis (faceted), group as color, value on y-axis
-      - id: SC-03
+        comment: Correct grouped violin plot with swarm overlay
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Violins have transparency, swarm points colored by group, but alignment
-          could be better
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: grouping, color, swarm, transparency, jitter
+          dodging'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X-axis (Task Type), Y-axis (Response Time), Color (Expertise)—all
+          correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correct but title could be more descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: spec-id · library · pyplots.ai'
+        comment: Title format correct; legend accurate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows distribution differences, variance differences, but could show
-          more outlier variation
+        comment: 'All aspects shown: distributions, variation, expertise differences,
+          outliers'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Response times across task complexity and expertise is a realistic
-          scenario
+        comment: Real-world plausible; neutral topic; sensible labels
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values realistic (0.5-12s), though some clipped values at bounds
+        comment: Realistic response times; correct proportions; no factual violations
     code_quality:
       score: 10
       max: 10
@@ -146,43 +184,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, plot, save'
+        comment: Linear structure; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed set to 42; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports used; no redundancy
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, readable, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html with scale_factor=3.0
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Textbook Altair patterns: Chart, transforms, encode, facet, layer,
+          resolve_scale, configure chains'
+      - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Altair declarative grammar: transform_density,
-          transform_calculate for jitter, faceting, layer composition'
-  verdict: REJECTED
+        comment: Uses Altair-specific transform_density, custom jitter formula, independent
+          facet scales
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -191,7 +236,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - kde
   styling:
