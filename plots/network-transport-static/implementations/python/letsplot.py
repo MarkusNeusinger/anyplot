@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-09
+Library: lets-plot 4.8.2 | Python 3.13.11
+Quality: pending | Created: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +13,7 @@ from lets_plot import (
     aes,
     arrow,
     coord_fixed,
+    element_rect,
     element_text,
     geom_point,
     geom_segment,
@@ -29,6 +32,17 @@ from lets_plot import (
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette for route types
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data: Regional rail network with stations and routes
 np.random.seed(42)
@@ -134,8 +148,9 @@ for r in routes:
 
 edges_df = pd.DataFrame(edges_data)
 
-# Color palette for route types
-route_colors = {"Express": "#306998", "Regional": "#B8860B", "Local": "#2E8B57"}
+# Map route types to Okabe-Ito colors
+route_type_order = ["Express", "Regional", "Local"]
+route_colors = {route_type_order[i]: OKABE_ITO[i] for i in range(len(route_type_order))}
 
 # Create tooltip specs for interactive hover
 edge_tooltips = (
@@ -170,24 +185,27 @@ plot = (
         size=12,
         color="white",
         shape=21,
-        fill="#303030",
+        fill=OKABE_ITO[0],
         stroke=2.5,
         tooltips=station_tooltips,
     )
     # Draw station labels (adjusted position to avoid edge label overlap)
     + geom_text(
-        aes(x="x", y="y", label="label"), data=stations_df, size=9, color="#202020", fontface="bold", nudge_y=-0.055
+        aes(x="x", y="y", label="label"), data=stations_df, size=9, color="white", fontface="bold", nudge_y=-0.055
     )
     # Color scale for route types
     + scale_color_manual(values=route_colors, name="Route Type")
     # Styling
-    + labs(title="network-transport-static · letsplot · pyplots.ai", x="", y="")
+    + labs(title="network-transport-static · python · letsplot · anyplot.ai", x="", y="")
     + theme_void()
     + theme(
-        plot_title=element_text(size=24, face="bold", hjust=0.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=24, face="bold", hjust=0.5, color=INK),
         legend_position="right",
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
     )
     + scale_x_continuous(limits=[0, 1])
     + scale_y_continuous(limits=[0, 1])
@@ -196,7 +214,7 @@ plot = (
 )
 
 # Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, "plot.png", scale=3, path=".")
+ggsave(plot, f"plot-{THEME}.png", scale=3, path=".")
 
 # Save as HTML for interactivity (tooltips work in HTML)
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
