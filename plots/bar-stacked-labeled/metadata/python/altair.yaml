@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:32:10Z'
-updated: '2026-05-18T01:54:47Z'
+updated: '2026-05-18T02:01:37Z'
 generated_by: claude-haiku
 workflow_run: 26009255681
 issue: 3504
@@ -12,38 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stack
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 89
 review:
   strengths:
-  - 'Perfect visual quality: readable at all zoom levels, excellent color accessibility'
-  - Flawless spec compliance with all features correctly implemented
-  - Clean, professional code structure with proper theme handling
-  - Data is realistic and well-chosen for quarterly revenue context
-  - Proper use of Okabe-Ito palette with correct theme-adaptive chrome
-  - Altair layer composition elegantly combines bars with total labels
+  - All text is explicitly sized and readable in both light and dark themes (8/8 VQ-01)
+  - Perfect palette compliance with correct Okabe-Ito ordering and theme-adaptive
+    chrome (2/2 VQ-07)
+  - 'Thoughtful design choices: white bar strokes for definition, bold total labels
+    for visual emphasis, reference line for context'
+  - Expert idiomatic use of Altair's layer composition (mark_bar + mark_text + mark_rule)
+    and theme-aware configuration
+  - Proper spec compliance with accurate data mapping, clear title format, and all
+    required total labels prominently displayed
   weaknesses:
-  - 'Design Excellence could be improved: currently uses library defaults without
-    distinctive styling'
-  - Visual storytelling could be enhanced through intentional hierarchy or emphasis
-  - No particularly distinctive Altair features; fairly standard library patterns
+  - 'Design Excellence could be elevated: reference line adds context but the overall
+    aesthetic is well-executed defaults rather than publication-grade sophistication'
+  - 'Library Mastery: while idiomatic, the implementation uses fairly standard Altair
+    patterns rather than distinctive library-specific techniques'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), correct for light theme
-      Chrome: Title (28px), axis labels (22px), tick labels (18px) all dark text—fully readable
-      Data: Three stacked segments—Software #009E73 (brand green), Hardware #D55E00 (vermillion), Services #0072B2 (blue)
-      Labels: Total revenue labels ($250K, $295K, $325K, $360K) in bold white text above bars
-      Legend: Product legend on right with proper contrast and spacing
-      Grid: Subtle horizontal grid at 10% opacity, aids readability without competing
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) with clean appearance
+      Chrome: Title "bar-stacked-labeled · Python · altair · anyplot.ai" in dark text (INK #1A1A17), axis labels "Quarter" and "Revenue ($K)" clearly visible with units, tick labels in soft gray (INK_SOFT #4A4A44), all fully readable against light background
+      Data: Three-color stacked bars (Software #009E73, Hardware #D55E00, Services #0072B2) with white strokes separating segments; total labels above each bar ($250K, $295K, $325K, $360K) in bold dark text (fontSize=24, fontWeight="bold"); legend on right showing product categories
+      Grid: Subtle dashed reference line at average total (~305K), providing context without overwhelming the visualization
+      Legibility verdict: PASS — all elements are clearly readable with excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), correct for dark theme
-      Chrome: Title, axis labels, tick labels all in light text—fully readable on dark background
-      Data: Colors identical to light render—Software #009E73, Hardware #D55E00, Services #0072B2 (data colors theme-independent)
-      Labels: Total labels remain visible in light text
-      Legend: Dark background fill (#242420) with light text, properly theme-adapted
-      Grid: Subtle lines visible, maintains visual clarity
-      Legibility verdict: PASS—no dark-on-dark failures; all text light-colored and readable
+      Background: Warm near-black (#1A1A17) with matching aesthetic
+      Chrome: Title in light text (INK #F0EFE8), axis labels and tick labels in light gray (INK_SOFT #B8B7B0), all easily readable against dark background; no dark-on-dark failures
+      Data: All three data colors are IDENTICAL to light render (#009E73, #D55E00, #0072B2) — only chrome adapted for dark theme; white bar strokes remain visible; total labels in light text with same bold styling
+      Grid: Same subtle dashed reference line, appropriate opacity for dark surface
+      Legibility verdict: PASS — theme adaptation is correct, all text readable, data colors maintain integrity across themes
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,68 +53,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks),
-          readable in both themes
+        comment: 'All fonts explicitly sized: title 28px, labels 22px, ticks 18px,
+          total labels 24px bold; perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements, clean spacing throughout
+        comment: No overlapping elements; clear spacing between all text
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars well-sized with white stroke edges for definition
+        comment: Bar segments clearly distinguishable with white strokes; all elements
+          visible and well-adapted to data
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with excellent contrast
+        comment: Okabe-Ito palette (colorblind-safe); adequate contrast; white strokes
+          provide definition
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills 70% of canvas with balanced margins
+        comment: Perfect proportions (1600×900); balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (Revenue $K)
+        comment: Title correct format; axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, colors follow Okabe-Ito; backgrounds correct;
-          theme chrome perfect'
+        comment: 'First series #009E73; positions 2-3 follow Okabe-Ito; theme chrome
+          correct; identical data colors both renders'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured defaults; functional but not exceptionally sophisticated
+        comment: Thoughtful choices (white strokes, reference line, bold labels) beyond
+          defaults; Okabe-Ito required; above generic but not publication-grade
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Library defaults with minimal customization
+        comment: White strokes and custom configuration show refinement; subtle reference
+          line; overall execution clean but uses mostly library patterns
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy or emphasis beyond
-          stacked format
+        comment: Total labels create focal point; reference line adds context; visual
+          hierarchy clear through color and bold emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +128,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked bar chart with total labels
+        comment: Correct stacked bar chart with all variants
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: stacks, totals, legend'
+        comment: Total labels prominently displayed above stacks; clear formatting
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly mapped; all data visible
+        comment: X=quarters, Y=revenue, stacked by product; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title and legend labels correct
+        comment: Title format correct; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -153,19 +156,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: multiple components, quarterly progression'
+        comment: 'Shows all aspects: 4 quarters, 3 product categories, varying revenues
+          with clear totals'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real quarterly revenue scenario; professional, neutral context
+        comment: Realistic scenario (quarterly revenue breakdown); neutral context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible and proportionally correct
+        comment: Values (120-185K) sensible; proportions plausible; no impossible
+          data
     code_quality:
       score: 10
       max: 10
@@ -175,7 +180,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Straightforward: imports → data → plot → save'
+        comment: Simple script; straightforward data→plot→save flow
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -187,21 +192,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only altair, pandas, os, sys; all necessary
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity
+        comment: Elegant; appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output format with scale_factor=3.0
+        comment: 'Correct: plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -209,20 +214,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of Altair patterns: Chart → mark_bar → encode'
+        comment: Expert use of mark_bar, mark_text, mark_rule; proper encoding channels;
+          theme-aware configuration; layer composition
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Layer composition is standard Altair technique
+        comment: Layer composition and custom color scales used; fairly standard Altair
+          patterns rather than distinctive techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
-  - html-export
+  - custom-legend
   patterns:
   - data-generation
   - groupby-aggregation
