@@ -1,21 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: highcharts unknown | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-10
+Library: highcharts unknown | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-18
 """
 
 import json
 import math
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
+import requests
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Regional Rail Network (normalized coordinates 0-100)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Data - Regional Rail Network
 stations = [
     {"id": "central", "label": "Central Station", "x": 50, "y": 50},
     {"id": "north", "label": "North Terminal", "x": 50, "y": 15},
@@ -140,13 +149,12 @@ routes = [
 # Build station lookup
 station_lookup = {s["id"]: s for s in stations}
 
-# Route type colors
+# Route type colors - Okabe-Ito palette: first series brand green, then orange, blue, purple
 route_colors = {
-    "EX": "#306998",  # Express - Python Blue
-    "RE": "#FFD43B",  # Regional - Python Yellow
-    "LC": "#9467BD",  # Local - Purple
+    "EX": "#0072B2",  # Express - Okabe-Ito blue
+    "RE": "#D55E00",  # Regional - Okabe-Ito orange
+    "LC": "#CC79A7",  # Local - Okabe-Ito reddish purple
 }
-
 
 # Build series data for routes
 route_series_list = []
@@ -178,7 +186,7 @@ for route in routes:
     ty = target["y"] + perp_y
 
     route_prefix = route["route_id"].split()[0]
-    color = route_colors.get(route_prefix, "#17BECF")
+    color = route_colors.get(route_prefix, "#E69F00")
     label_text = f"{route['route_id']} | {route['departure_time']} → {route['arrival_time']}"
 
     route_series_list.append(
@@ -195,7 +203,9 @@ for route in routes:
         }
     )
 
-# Build station series
+# Build station series with theme-adaptive marker color
+station_marker_color = "#FFFDF6" if THEME == "light" else "#2A2A27"
+
 station_data = []
 for station in stations:
     station_data.append({"x": station["x"], "y": station["y"], "name": station["label"]})
@@ -204,18 +214,24 @@ station_series = {
     "type": "scatter",
     "name": "Stations",
     "data": station_data,
-    "marker": {"radius": 22, "symbol": "circle", "fillColor": "#ffffff", "lineWidth": 5, "lineColor": "#306998"},
+    "marker": {
+        "radius": 22,
+        "symbol": "circle",
+        "fillColor": station_marker_color,
+        "lineWidth": 5,
+        "lineColor": "#009E73",
+    },
     "dataLabels": {
         "enabled": True,
         "format": "{point.name}",
-        "style": {"fontSize": "24px", "fontWeight": "bold", "textOutline": "3px white"},
+        "style": {"fontSize": "24px", "fontWeight": "bold", "color": INK},
         "y": -40,
     },
     "zIndex": 10,
     "showInLegend": False,
 }
 
-# Build annotations for route labels
+# Build annotations for route labels and arrows
 annotations_list = []
 route_pair_offset = {}
 
@@ -248,9 +264,12 @@ for route in routes:
     mid_y = (sy + ty) / 2
 
     route_prefix = route["route_id"].split()[0]
-    color = route_colors.get(route_prefix, "#17BECF")
-    text_color = "#ffffff" if color != "#FFD43B" else "#000000"
-    label_text = f"{route['route_id']} | {route['departure_time']} \u2192 {route['arrival_time']}"
+    color = route_colors.get(route_prefix, "#E69F00")
+
+    # Determine text color based on background brightness
+    text_color = "#1A1A17" if color not in ["#0072B2"] else "#FFFDF6"
+
+    label_text = f"{route['route_id']} | {route['departure_time']} → {route['arrival_time']}"
 
     annotations_list.append(
         {
@@ -260,7 +279,7 @@ for route in routes:
                     "text": label_text,
                     "backgroundColor": color,
                     "borderColor": color,
-                    "style": {"color": text_color, "fontSize": "16px", "fontWeight": "bold"},
+                    "style": {"color": text_color, "fontSize": "20px", "fontWeight": "bold"},
                     "padding": 5,
                     "borderRadius": 4,
                 }
@@ -269,19 +288,19 @@ for route in routes:
         }
     )
 
-    # Arrow at 75% - use HTML triangle symbols for reliable rendering
+    # Arrow at 75%
     arrow_x = sx + (tx - sx) * 0.75
     arrow_y = sy + (ty - sy) * 0.75
     angle = math.degrees(math.atan2(ty - sy, tx - sx))
 
     if -45 <= angle < 45:
-        arrow_html = "\u25b6"  # Right-pointing triangle
+        arrow_html = "▶"
     elif 45 <= angle < 135:
-        arrow_html = "\u25bc"  # Down-pointing triangle
+        arrow_html = "▼"
     elif -135 <= angle < -45:
-        arrow_html = "\u25b2"  # Up-pointing triangle
+        arrow_html = "▲"
     else:
-        arrow_html = "\u25c0"  # Left-pointing triangle
+        arrow_html = "◀"
 
     annotations_list.append(
         {
@@ -300,47 +319,46 @@ for route in routes:
         }
     )
 
-# Combine all series (no separate legend series - we'll use HTML for legend)
+# Combine all series
 all_series = route_series_list + [station_series]
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Download Highcharts JS from jsDelivr CDN
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+highcharts_js = requests.get(highcharts_url, timeout=30).text
 
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
+highcharts_more_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts-more.js"
+highcharts_more_js = requests.get(highcharts_more_url, timeout=30).text
 
-highcharts_annotations_url = "https://code.highcharts.com/modules/annotations.js"
-with urllib.request.urlopen(highcharts_annotations_url, timeout=30) as response:
-    highcharts_annotations_js = response.read().decode("utf-8")
+highcharts_annotations_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/modules/annotations.js"
+highcharts_annotations_js = requests.get(highcharts_annotations_url, timeout=30).text
 
-# Build Highcharts options as JSON
+# Build Highcharts options
 chart_options = {
     "chart": {
         "type": "scatter",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginBottom": 150,
         "spacingBottom": 50,
     },
     "title": {
-        "text": "network-transport-static · highcharts · pyplots.ai",
-        "style": {"fontSize": "52px", "fontWeight": "bold"},
+        "text": "network-transport-static · python · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "fontWeight": "medium", "color": INK},
     },
     "subtitle": {
-        "text": 'Regional Rail Network - 12 Stations, 19 Routes<br/><span style="font-size:26px;"><span style="color:#306998;">■</span> Express (EX) &nbsp;&nbsp;&nbsp; <span style="color:#FFD43B;">■</span> Regional (RE) &nbsp;&nbsp;&nbsp; <span style="color:#9467BD;">■</span> Local (LC)</span>',
+        "text": 'Regional Rail Network - 12 Stations, 19 Routes<br/><span style="font-size:20px;"><span style="color:#0072B2;">■</span> Express (EX) &nbsp;&nbsp;&nbsp; <span style="color:#D55E00;">■</span> Regional (RE) &nbsp;&nbsp;&nbsp; <span style="color:#CC79A7;">■</span> Local (LC)</span>',
         "useHTML": True,
-        "style": {"fontSize": "32px"},
+        "style": {"fontSize": "22px", "color": INK_SOFT},
     },
     "xAxis": {"min": 0, "max": 100, "visible": False, "gridLineWidth": 0},
     "yAxis": {"min": 0, "max": 100, "visible": False, "gridLineWidth": 0, "reversed": True},
     "legend": {"enabled": False},
     "tooltip": {
         "enabled": True,
-        "style": {"fontSize": "22px"},
+        "style": {"fontSize": "18px", "color": INK},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
         "headerFormat": "",
         "pointFormat": "<b>{series.name}</b>",
     },
@@ -351,7 +369,7 @@ chart_options = {
 
 options_json = json.dumps(chart_options)
 
-# Generate HTML with direct Highcharts.chart() call
+# Generate HTML with theme-adaptive colors
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -360,7 +378,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_more_js}</script>
     <script>{highcharts_annotations_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
         Highcharts.chart('container', {options_json});
@@ -369,7 +387,7 @@ html_content = f"""<!DOCTYPE html>
 </html>"""
 
 # Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Screenshot with Selenium
@@ -387,7 +405,7 @@ chrome_options.add_argument("--window-size=4800,2700")
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()

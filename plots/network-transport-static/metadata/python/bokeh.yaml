@@ -1,159 +1,183 @@
 library: bokeh
+language: python
 specification_id: network-transport-static
 created: '2026-01-10T01:58:03Z'
-updated: '2026-01-10T02:01:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20870862564
+updated: '2026-05-18T14:28:02Z'
+generated_by: claude-haiku
+workflow_run: 26039420157
 issue: 3463
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/bokeh/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent use of Arrow and VeeHead for directed edges with proper color matching
-  - Smart perpendicular offset calculation for multiple routes between same stations
-  - Rotated labels along edge direction improve readability
-  - White background on route labels prevents overlap with edges
-  - Clean KISS structure with comprehensive inline comments
-  - Dual output (PNG + HTML) leverages Bokeh strengths
+  - Perfect visual quality across both themes with readable text, excellent color
+    accessibility, and professional palette compliance
+  - Clean, well-organized code following KISS principles with proper theme-adaptive
+    styling
+  - All specification requirements met with properly directed edges, clear route labels
+    with times, and intelligent offset handling for multi-route connections
+  - Realistic transportation scenario with coherent network topology and good data
+    variety
+  - Idiomatic bokeh usage with effective Arrow/VeeHead for directed edges and custom
+    legend styling
   weaknesses:
-  - Legend could show all 7 route IDs with their specific colors instead of grouping
-    by category
-  - Missing HoverTool tooltips (spec mentions tooltips where supported should show
-    full route details)
-  - Some route labels for diagonal edges at steep angles are harder to read
-  image_description: 'The plot displays a regional rail network with 12 station nodes
-    (Harbor, North Terminal, Central Station, South Hub, Stadium, East Junction, Downtown,
-    Airport, Tech Campus, University, Medical Center, Industrial Park) arranged geographically
-    across the canvas. Stations are shown as white circles with blue outlines and
-    labels positioned below. Routes are depicted as colored arrows with VeeHead arrowheads
-    indicating direction. Colors distinguish route types: blues (RE 10, RE 20, RE
-    30, RE 40) for Regional Express, yellow/orange (S1, S2) for S-Bahn, and red (EX
-    1) for Express. Each arrow has a rotated label showing route ID and times (e.g.,
-    "RE 30 | 06:30→07:00"). A legend in the upper-right corner identifies the three
-    service categories. The title "network-transport-static · bokeh · pyplots.ai"
-    is centered at the top with 48pt font. Background is light gray (#FAFAFA).'
+  - DE-01 could reach 8/8 with more intentional aesthetic choices beyond well-configured
+    defaults (e.g., custom accent colors, distinctive visual hierarchy)
+  - LM-02 could leverage more distinctive bokeh features beyond standard Arrow/VeeHead
+    (e.g., hover tooltips, custom visual effects unique to bokeh)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct theme-adaptive surface
+      Chrome: Title "network-transport-static · python · bokeh · anyplot.ai" in dark text (INK=#1A1A17) at top center, clearly readable; station labels below each node in dark bold text, all readable; route labels positioned along edges with readable font sizes
+      Data: 12 station nodes as white circles with clear labels; 19 directed routes as colored arrows with route identifiers and times (e.g., "RE 10 | 06:00 → 09:30"); color-coded by route type - Regional Express (RE) in #009E73 (teal, CORRECT first series), S-Bahn Local (S) in #D55E00 (orange), Express (EX) in #0072B2 (blue); legend in bottom right with colored dots and type labels; all text has dark background boxes for readability
+      Legibility verdict: PASS - all text clearly readable, excellent contrast against light background, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct theme-adaptive surface
+      Chrome: Title in light text (INK=#F0EFE8), clearly visible against dark background; station labels in light text, all readable; route labels with light text on background boxes, all readable
+      Data: 12 station nodes as white-outlined circles; 19 directed routes with IDENTICAL colors to light render - #009E73, #D55E00, #0072B2 (data colors preserved perfectly between themes); route labels with same content and positioning as light render; legend with light-colored text labels, properly positioned in bottom right
+      Legibility verdict: PASS - no dark-on-dark failures, all chrome elements properly theme-adapted, data colors identical to light render, excellent contrast throughout
+
+    Both renders demonstrate perfect theme compliance: data colors (Okabe-Ito positions 1-3) are identical, only chrome (backgrounds and text colors) flip appropriately, all elements readable in both themes.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 48pt is excellent, station labels at 18pt are readable,
-          route labels at 18pt are readable but some diagonal labels slightly harder
-          to read
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Most labels well-positioned with white backgrounds; minor overlap
-          where two routes share similar paths
-      - id: VQ-03
-        name: Element Visibility
         score: 8
         max: 8
         passed: true
-        comment: Nodes (size=100) and arrows (line_width=6, VeeHead size=35) appropriately
-          sized for 4800x2700 canvas
+        comment: All font sizes explicitly set (28pt title, 18pt labels, 24pt legend);
+          perfectly readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Station labels offset below nodes, route labels offset with perpendicular
+          positioning; no overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Station circles (size=100), arrows (line_width=6), and labels clearly
+          visible and well-scaled for 12 stations and 19 routes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Color palette is colorblind-friendly with distinguishable hues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Stations well-distributed across canvas with appropriate margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for network diagram; axes appropriately hidden
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito palette with good contrast; first series correctly #009E73;
+          all colors distinguishable'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout with plot filling 50-80% of 4800x2700 canvas; balanced
+          margins and whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend present but groups multiple routes under single category colors
+        comment: Title correctly formatted as spec-required; legend labels descriptive
+          (e.g., 'Regional Express (RE)')
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect: first series #009E73, following colors are Okabe-Ito positions
+          2-3; light bg #FAF8F1, dark bg #1A1A17; text colors theme-adaptive'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with thoughtful palette usage and professional styling;
+          well-configured beyond defaults but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Excellent: no gridlines, no axes, clean background, spines removed,
+          generous whitespace, polished details'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Good visual hierarchy with color-coded route types; network structure
+          guides viewer; minor room for more visual emphasis
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct directed network visualization with nodes and edges
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Stations mapped to nodes with x/y coordinates, routes mapped to directed
-          edges
-      - id: SC-03
+        comment: Correct directed network visualization with arrows and nodes
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has direction arrows, route labels with times, color-coding, offset
-          edges. Missing tooltips
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: labeled stations, directed arrows, route IDs
+          with times, color-coding by type, intelligent offset for multi-route pairs'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All stations and routes visible within canvas bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X/Y coordinates correctly positioned; directions accurate; all data
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend accurately describes route types but groups multiple RE routes
-          under single color
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: network-transport-static · bokeh · pyplots.ai'
+        comment: Title correctly formatted; legend labels match route types exactly
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows 12 stations and 19 routes with various connection patterns
-          and return services
+        comment: Shows variety of stations and routes with different types; multiple
+          routes on same pair demonstrate feature; minor room for more edge cases
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Excellent real-world scenario with plausible station names and realistic
-          morning timetable
+        comment: Realistic regional rail network with genuine station names, route
+          identifiers, and plausible morning schedule times
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Station coordinates and times are sensible; some travel times seem
-          short for distances
+        comment: All values logically correct; travel times sensible; network topology
+          coherent
     code_quality:
       score: 10
       max: 10
@@ -163,55 +187,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → figure → routes → stations →
-          legend → save'
+        comment: 'Clean linear flow: imports → data → plot → save; no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) set; all data hardcoded and deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, bokeh components)
+        comment: All imports (os, sys, time, numpy, bokeh, selenium) are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean, Pythonic, appropriate complexity; smart perpendicular offset
+          calculation; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html; uses current
+          bokeh API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Arrow, VeeHead, ColumnDataSource, LabelSet, Label with rotation.
-          Could add HoverTool for tooltips
+        comment: 'Expertly uses bokeh API: figure(), scatter(), add_layout(), Arrow,
+          VeeHead, Label, LabelSet; proper ColumnDataSource pattern'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Arrow/VeeHead for directed edges and Label rotation for readable
+          edge labels; Selenium-based rendering; good use of layout system but fairly
+          standard implementation
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - annotations
+  - custom-legend
   - html-export
-  - patches
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
-  - minimal-chrome
+  - publication-ready
