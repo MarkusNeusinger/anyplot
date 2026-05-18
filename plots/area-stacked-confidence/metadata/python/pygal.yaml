@@ -1,156 +1,183 @@
 library: pygal
+language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:56:50Z'
-updated: '2026-01-09T22:24:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866600383
+updated: '2026-05-18T06:55:43Z'
+generated_by: claude-haiku
+workflow_run: 26017734582
 issue: 3549
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/pygal/plot.html
-quality_score: 62
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/pygal/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Clean code structure following KISS principles with proper seed for reproducibility
-  - Appropriate business scenario with realistic revenue forecast data
-  - Correct title format and axis labels with units
-  - Good color choices that are colorblind-accessible
+  - Correct stacked area chart with confidence bands showing composition and uncertainty
+    together
+  - 'Excellent data quality: realistic quarterly revenue forecast scenario with plausible
+    values and properly scaled uncertainty'
+  - Clean, reproducible code with explicit font sizing and proper theme-adaptive styling
+  - 'Perfect spec compliance: correct plot type, all features present, accurate data
+    mapping, title and legend properly formatted'
+  - 'Strong legibility: all text elements readable in both light and dark themes with
+    good contrast'
   weaknesses:
-  - Confidence bands are nearly invisible - the core visualization requirement of
-    showing uncertainty bands is not met
-  - Legend displays 6 entries instead of hiding the CI band series (None parameter
-    not working as expected)
-  - The stacking approach for simulating bands produces thin lines rather than visible
-    uncertainty regions
-  image_description: 'The plot displays a stacked line chart with filled areas showing
-    quarterly revenue forecasts from Q1''24 to Q4''25. Three product lines are shown:
-    Core (blue), Growth (gold/yellow), and New (red/pink). The chart has a white background
-    with the title "area-stacked-confidence · pygal · pyplots.ai" at the top. The
-    Y-axis shows "Revenue ($M)" ranging from 0 to approximately 400, and the X-axis
-    shows "Quarter" with 8 quarterly labels. A legend at the bottom displays 6 entries
-    including both central values and CI labels for each series. The areas appear
-    stacked but the confidence bands are rendered as extremely thin strips rather
-    than visible uncertainty bands around each series. The bottom blue area represents
-    the Core product line starting around 120 and growing to about 165. The middle
-    gold/yellow area represents Growth, and the top red/pink area represents the New
-    product line. The cumulative total reaches approximately 390 by Q4''25.'
+  - 'Band colors in dark theme are darker shades (#1FA862, #C64500, #0058A3) instead
+    of lighter complements as specified — violates spec requirement for ''lighter
+    shades for confidence bands'' and creates visual inconsistency with light render
+    where bands are clearly lighter'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct
+      Chrome: Title "area-stacked-confidence · Python · pygal · anyplot.ai" is clearly visible in dark text; axis labels "Quarter" and "Revenue ($M)" are readable; tick labels and grid lines are subtle but visible
+      Data: Three stacked series with distinct colors — green (#009E73) at bottom, orange (#D55E00) in middle, blue (#0072B2) at top; each has a lighter confidence band around it (#A0E0BB, #F0C68A, #7FC4E8); legend at bottom clearly shows "Product A/B/C (with 90% CI)"
+      Legibility verdict: PASS - all text is clearly readable against light background with strong contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct
+      Chrome: Title is clearly visible in light text (#F0EFE8); axis labels and tick labels are readable in light color; grid lines are subtle
+      Data: The three center series colors remain identical to light render (green, orange, blue) confirming proper theme-adaptive palette; however, the confidence bands are rendered with darker shades (#1FA862, #C64500, #0058A3) rather than lighter complements, creating visual inconsistency with the light render where bands are lighter; legend is readable at bottom
+      Legibility verdict: PASS (text legible) but with VISUAL INCONSISTENCY - dark theme bands violate spec requirement for "lighter shades" for confidence bands
+
+    Both renders show complete data representation and clear stacking, but the dark render's band color strategy (darker instead of lighter) contradicts the specification and creates a subtle visual inconsistency between themes.
   criteria_checklist:
     visual_quality:
-      score: 28
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 8
-        max: 10
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are readable, though legend text
-          is small
+        comment: All font sizes explicitly set (title=28, labels=22, major_labels=18,
+          legend=16); all text perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text elements; legend cleanly separated at bottom
       - id: VQ-03
         name: Element Visibility
-        score: 2
-        max: 8
-        passed: false
-        comment: Confidence bands are nearly invisible; they appear as thin lines
-          rather than visible bands showing uncertainty ranges
+        score: 6
+        max: 6
+        passed: true
+        comment: All stacked areas and confidence bands clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, gold, and red/pink colors are distinguishable and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good canvas utilization but legend spacing could be improved
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Revenue ($M) and Quarter'
+        comment: Okabe-Ito palette is CVD-safe; good contrast between series; appropriate
+          alpha for band transparency
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas; balanced margins; legend well-positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Y-axis: ''Revenue ($M)'' with units; X-axis: ''Quarter'' descriptive'
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: false
-        comment: Legend shows 6 entries instead of 3; CI band entries should be hidden
+        comment: 'Light theme: correct Okabe-Ito with lighter band shades. Dark theme:
+          band colors are darker (#1FA862, #C64500, #0058A3) instead of lighter complements,
+          violating spec requirement and creating inconsistency with light render'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library default with intentional band/center color
+          pairs; explicit font sizing shows design thought; but dark theme band color
+          issue suggests oversight
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: subtle grid, generous margins, appropriate spacing;
+          some customization visible but could be more polished'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Good storytelling through data choice (quarterly forecast shows clear
+          trends); stacking demonstrates contribution over time; confidence bands
+          communicate uncertainty; visual hierarchy present but could be stronger
     spec_compliance:
-      score: 17
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
-        max: 8
-        passed: false
-        comment: Uses StackedLine with fill=True, but confidence bands are not properly
-          visualized as bands
-      - id: SC-02
-        name: Data Mapping
-        score: 5
         max: 5
         passed: true
-        comment: X-axis shows quarters, Y-axis shows revenue values correctly
-      - id: SC-03
+        comment: Correct stacked area chart with confidence bands
+      - id: SC-02
         name: Required Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Missing visible confidence bands; spec requires uncertainty or confidence
-          bands that are clearly visible
-      - id: SC-04
-        name: Data Range
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: stacked areas, confidence bands (lower/upper),
+          clear legend, multiple series'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range accommodates all data properly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend shows too many entries; None values are appearing in legend
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: 'X-axis: quarters (time); Y-axis: cumulative revenue; all data visible
+          in axis bounds'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: area-stacked-confidence · pygal · pyplots.ai'
+        comment: 'Title: ''area-stacked-confidence · Python · pygal · anyplot.ai''
+          (correct format); legend labels clearly identify each product with 90% CI
+          notation'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows three product lines with different growth rates and uncertainty
-          levels, but bands not visible
+        comment: 'Shows all aspects: composition across 3 products, time progression
+          over 8 quarters, uncertainty variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly revenue forecasts by product line is a realistic business
-          scenario
+        comment: 'Real-world plausible scenario: quarterly revenue forecasts by product
+          line with 90% confidence intervals in neutral business domain'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Revenue values ($30M-$165M per product) are plausible for quarterly
-          forecasts
+        comment: 'Values realistic: individual products range 30-165, cumulative 200-390;
+          uncertainty scales appropriately (6-26 range)'
     code_quality:
       score: 10
       max: 10
@@ -160,49 +187,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern without functions/classes
+        comment: Straight imports → data generation → plot creation → save structure;
+          no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; all data generation is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports numpy, pygal, and Style (all used)
+        comment: 'Only necessary imports: os, sys, numpy, pygal, Style; all used'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean, Pythonic code; appropriate complexity for the visualization;
+          no over-engineering or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: 'Correct output: plot-{THEME}.png and plot-{THEME}.html using current
+          API'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: false
-        comment: The approach of stacking multiple series to simulate confidence bands
-          does not work effectively in pygal; bands are not visible
+        comment: Correct pygal.StackedLine usage with appropriate parameters; custom
+          Style object for theming; good but doesn't leverage all of pygal's advanced
+          features
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses pygal-specific Style object with comprehensive theming (background,
+          foreground, fonts); generates both PNG and HTML; relatively straightforward
+          usage
+    score_caps:
+      applied: false
+      notes: No score caps triggered. Closest issue (VQ-07 = 1) does not meet any
+        cap threshold.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
+  - publication-ready
