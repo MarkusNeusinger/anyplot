@@ -1,84 +1,126 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-10
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data: Global earthquake locations with magnitude
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+LAND_COLOR = "#E5E5E5" if THEME == "light" else "#3A3A36"
+OCEAN_COLOR = "#D4E8F2" if THEME == "light" else "#2A3F4D"
+COAST_COLOR = "#999999" if THEME == "light" else "#666666"
+COUNTRY_COLOR = "#CCCCCC" if THEME == "light" else "#555555"
+
+# Data: Global environmental sensor network monitoring air quality
 np.random.seed(42)
 
-# Earthquake epicenters distributed across tectonic zones
-n_points = 80
+# Sensor locations distributed across continents
+# Urban and industrial regions with higher sensor density
+n_points = 85
 
-# Pacific Ring of Fire
-n_pacific = 30
-pacific_lat = np.concatenate(
+# North America - Eastern US industrial corridor
+n_na = 25
+na_lat = np.concatenate(
     [
-        np.random.uniform(35, 45, 10),  # Japan
-        np.random.uniform(-5, 5, 10),  # Indonesia
-        np.random.uniform(-40, -20, 10),  # Chile
+        np.random.uniform(40, 45, 15),  # Northeast corridor
+        np.random.uniform(32, 38, 10),  # Southeast
     ]
 )
-pacific_lon = np.concatenate(
+na_lon = np.concatenate(
     [
-        np.random.uniform(135, 145, 10),  # Japan
-        np.random.uniform(100, 130, 10),  # Indonesia
-        np.random.uniform(-75, -70, 10),  # Chile
-    ]
-)
-
-# Mediterranean-Himalayan belt
-n_med = 20
-med_lat = np.concatenate(
-    [
-        np.random.uniform(35, 42, 10),  # Mediterranean
-        np.random.uniform(25, 35, 10),  # Himalayas
-    ]
-)
-med_lon = np.concatenate(
-    [
-        np.random.uniform(15, 35, 10),  # Mediterranean
-        np.random.uniform(75, 95, 10),  # Himalayas
+        np.random.uniform(-82, -70, 15),  # Northeast
+        np.random.uniform(-85, -75, 10),  # Southeast
     ]
 )
 
-# Mid-Atlantic Ridge
-n_atlantic = 15
-atlantic_lat = np.random.uniform(-30, 60, n_atlantic)
-atlantic_lon = np.random.uniform(-35, -25, n_atlantic)
+# Europe - Industrial centers
+n_eu = 20
+eu_lat = np.concatenate(
+    [
+        np.random.uniform(50, 55, 10),  # Central Europe
+        np.random.uniform(45, 50, 10),  # Mediterranean
+    ]
+)
+eu_lon = np.concatenate(
+    [
+        np.random.uniform(5, 15, 10),  # Central Europe
+        np.random.uniform(10, 25, 10),  # Mediterranean
+    ]
+)
 
-# Scattered other locations
-n_other = n_points - n_pacific - n_med - n_atlantic
-other_lat = np.random.uniform(-50, 60, n_other)
-other_lon = np.random.uniform(-120, 150, n_other)
+# Asia - Rapid development zones
+n_asia = 25
+asia_lat = np.concatenate(
+    [
+        np.random.uniform(30, 40, 12),  # China, India
+        np.random.uniform(10, 20, 8),  # Southeast Asia
+        np.random.uniform(-10, 10, 5),  # Indonesia
+    ]
+)
+asia_lon = np.concatenate(
+    [
+        np.random.uniform(100, 120, 12),  # China, India
+        np.random.uniform(95, 110, 8),  # Southeast Asia
+        np.random.uniform(110, 140, 5),  # Indonesia
+    ]
+)
+
+# Africa - Growing urban centers
+n_africa = 10
+africa_lat = np.random.uniform(-35, 20, n_africa)
+africa_lon = np.random.uniform(-20, 55, n_africa)
+
+# Australia-Pacific
+n_pac = 5
+pac_lat = np.random.uniform(-40, -15, n_pac)
+pac_lon = np.random.uniform(110, 180, n_pac)
 
 # Combine all data
-latitudes = np.concatenate([pacific_lat, med_lat, atlantic_lat, other_lat])
-longitudes = np.concatenate([pacific_lon, med_lon, atlantic_lon, other_lon])
+latitudes = np.concatenate([na_lat, eu_lat, asia_lat, africa_lat, pac_lat])
+longitudes = np.concatenate([na_lon, eu_lon, asia_lon, africa_lon, pac_lon])
 
-# Earthquake magnitudes (Richter scale) - higher in active zones
-magnitudes = np.concatenate(
+# Air quality index (AQI) values scaled 0-500 (higher = worse air)
+aqi_values = np.concatenate(
     [
-        np.random.uniform(4.5, 7.5, n_pacific),  # Pacific - stronger
-        np.random.uniform(4.0, 6.5, n_med),  # Mediterranean-Himalayan
-        np.random.uniform(3.5, 5.5, n_atlantic),  # Mid-Atlantic - moderate
-        np.random.uniform(3.0, 5.0, n_other),  # Other areas - weaker
+        np.random.uniform(20, 120, n_na),  # North America - moderate
+        np.random.uniform(25, 140, n_eu),  # Europe - moderate to high
+        np.random.uniform(30, 250, n_asia),  # Asia - wide range
+        np.random.uniform(15, 180, n_africa),  # Africa - growing industrial
+        np.random.uniform(20, 80, n_pac),  # Pacific - cleaner
     ]
 )
 
-# Depth in km
-depths = np.random.uniform(5, 300, n_points)
+# Measurement counts (number of readings per sensor in the last month)
+measurement_counts = np.concatenate(
+    [
+        np.random.uniform(15, 30, n_na),
+        np.random.uniform(20, 30, n_eu),
+        np.random.uniform(10, 30, n_asia),
+        np.random.uniform(8, 25, n_africa),
+        np.random.uniform(12, 28, n_pac),
+    ]
+)
 
-# Size scaling based on magnitude (larger = stronger earthquake)
-sizes = (magnitudes - magnitudes.min()) / (magnitudes.max() - magnitudes.min())
-sizes = sizes * 25 + 8  # Scale to 8-33 range for visibility
+# Scale point sizes based on measurement counts
+sizes = (measurement_counts - measurement_counts.min()) / (
+    measurement_counts.max() - measurement_counts.min()
+)
+sizes = sizes * 28 + 6  # Scale to 6-34 range for visibility
 
 # Create hover text
-hover_texts = [f"Mag: {m:.1f}, Depth: {d:.0f}km" for m, d in zip(magnitudes, depths, strict=True)]
+hover_texts = [
+    f"AQI: {aqi:.0f}<br>Readings: {count:.0f}"
+    for aqi, count in zip(aqi_values, measurement_counts, strict=True)
+]
 
 # Create figure with geographic scatter
 fig = go.Figure()
@@ -90,17 +132,17 @@ fig.add_trace(
         mode="markers",
         marker={
             "size": sizes,
-            "color": depths,
+            "color": aqi_values,
             "colorscale": "Viridis",
             "colorbar": {
-                "title": {"text": "Depth (km)", "font": {"size": 20}},
+                "title": {"text": "AQI", "font": {"size": 20}},
                 "tickfont": {"size": 16},
                 "len": 0.6,
                 "thickness": 25,
                 "x": 1.02,
             },
-            "line": {"width": 1, "color": "white"},
-            "opacity": 0.8,
+            "line": {"width": 1, "color": INK},
+            "opacity": 0.85,
         },
         text=hover_texts,
         hovertemplate="<b>Lat:</b> %{lat:.2f}°<br><b>Lon:</b> %{lon:.2f}°<br>%{text}<extra></extra>",
@@ -109,25 +151,32 @@ fig.add_trace(
 
 # Layout with geographic projection
 fig.update_layout(
-    title={"text": "scatter-map-geographic · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "scatter-map-geographic · python · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     geo={
         "projection_type": "natural earth",
         "showland": True,
-        "landcolor": "#E5E5E5",
+        "landcolor": LAND_COLOR,
         "showocean": True,
-        "oceancolor": "#D4E8F2",
+        "oceancolor": OCEAN_COLOR,
         "showcoastlines": True,
-        "coastlinecolor": "#666666",
+        "coastlinecolor": COAST_COLOR,
         "coastlinewidth": 1,
         "showcountries": True,
-        "countrycolor": "#999999",
+        "countrycolor": COUNTRY_COLOR,
         "countrywidth": 0.5,
         "showlakes": True,
-        "lakecolor": "#D4E8F2",
-        "bgcolor": "white",
+        "lakecolor": OCEAN_COLOR,
+        "bgcolor": PAGE_BG,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     margin={"l": 20, "r": 100, "t": 80, "b": 20},
+    font={"color": INK},
 )
 
 # Add size legend annotation
@@ -136,12 +185,15 @@ fig.add_annotation(
     y=0.15,
     xref="paper",
     yref="paper",
-    text="<b>Point Size</b><br>= Magnitude",
+    text="<b>Point Size</b><br>= # Readings",
     showarrow=False,
-    font={"size": 16},
+    font={"size": 16, "color": INK},
     align="left",
 )
 
 # Save as PNG and HTML
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+fig.write_image(
+    os.path.join(script_dir, f"plot-{THEME}.png"), width=1600, height=900, scale=3
+)
+fig.write_html(os.path.join(script_dir, f"plot-{THEME}.html"), include_plotlyjs="cdn")
