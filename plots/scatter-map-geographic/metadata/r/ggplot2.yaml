@@ -1,0 +1,244 @@
+library: ggplot2
+language: r
+specification_id: scatter-map-geographic
+created: '2026-05-18T18:05:11Z'
+updated: '2026-05-18T18:08:08Z'
+generated_by: claude-haiku
+workflow_run: 26051179303
+issue: 3617
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
+review:
+  strengths:
+  - Perfect Visual Quality (30/30) with all text explicitly sized and theme-adapted
+  - All spec features correctly implemented (geographic scatter with size and color
+    encoding)
+  - Realistic, scientifically plausible earthquake data with appropriate scales
+  - Clean, reproducible R code following ggplot2 idioms
+  - 'Flawless theme handling: light/dark chrome adaptation without affecting data
+    colors'
+  - 'Excellent accessibility: viridis colormap, high contrast, no overlaps'
+  - Both renders fully theme-correct and readable in light and dark modes
+  weaknesses:
+  - Design Excellence could be elevated with slightly more distinctive styling or
+    custom aesthetic choices
+  - Library Mastery (LM-02) uses standard ggplot2 techniques; could leverage more
+    library-specific features for publication-ready sophistication
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "scatter-map-geographic · r · ggplot2 · anyplot.ai" at 24pt, axis labels "Longitude"/"Latitude" at 20pt, tick labels at 16pt—all clearly readable in dark text (INK=#1A1A17)
+      Data: 20 earthquake points sized by magnitude (2-12px range) and colored by depth (viridis purple-to-yellow, 5-40km). Two legends (Magnitude, Depth) positioned on right. Grid subtle with low alpha. Markers clearly distinguishable; no overlaps.
+      Legibility verdict: PASS ✓
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title, axis labels, tick labels all clearly visible in light text (INK=#F0EFE8, INK_SOFT=#B8B7B0). Grid subtle but visible. Legends properly positioned and readable.
+      Data: Viridis colormap identical to light render (purple-to-yellow for depth); magnitude sizes unchanged. All markers clearly visible against dark surface.
+      Legibility verdict: PASS ✓
+      Theme verification: Data colors constant across themes (only chrome flipped). No dark-on-dark failures detected.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (24pt title, 20pt labels, 16pt ticks);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable; legends positioned without overlapping data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Marker sizes (2-12px) and alpha (0.75) well-adapted to 20-point dataset;
+          all clearly visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Viridis colormap perceptually uniform and CVD-safe; good contrast;
+          no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~60% of canvas with balanced margins; legend appropriately
+          positioned; no waste
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels (Longitude, Latitude); units not needed for geographic
+          coordinates
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background colors correct (#FAF8F1 light, #1A1A17 dark); viridis
+          for continuous depth; theme-adaptive chrome (INK/INK_SOFT); data colors
+          identical across themes'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional theme with thoughtful color tokens; well above defaults
+          but not exceptionally custom
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Panel border removed, grid subtle, spines minimized, generous whitespace;
+          polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Clear visualization of earthquake distribution; color/size create
+          hierarchy; could be stronger
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-map-geographic with lat/lon positioning
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: coordinates, size encoding, color encoding,
+          legends'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X (longitude) and Y (latitude) correct; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels clear and descriptive
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: multiple regions, magnitude variation, depth
+          variation, geographic spread'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real earthquake data; scientifically plausible; neutral, comprehensible
+          domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Latitude (-41.3 to 40.8), Longitude (-155.6 to 174.9), magnitude
+          (3.2-4.7), depth (5-40km) all factually correct
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → theme → data → plot → save; no unnecessary
+          functions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: ggplot2, dplyr (tibble), scales (alpha), ragg
+          (device)'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean R-idiomatic code; appropriate complexity; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via ggsave + ragg device; current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2: theme composition, geom_point(), scale_*(), high-level
+          API'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses coord_fixed(ratio), scales::alpha(), theme tokens; solid but
+          standard ggplot2 techniques
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - ragg
+  - scales
+  techniques: []
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - custom-colormap
+  - grid-styling

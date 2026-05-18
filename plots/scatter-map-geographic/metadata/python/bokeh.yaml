@@ -1,216 +1,229 @@
 library: bokeh
+language: python
 specification_id: scatter-map-geographic
 created: '2026-01-10T04:04:15Z'
-updated: '2026-01-10T04:06:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20872457397
+updated: '2026-05-18T18:06:42Z'
+generated_by: claude-haiku
+workflow_run: 26050543079
 issue: 3617
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/bokeh/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent use of Bokeh's tile mapping capabilities with WMTSTileSource and CartoDB
-    basemap
-  - Interactive tooltips showing city name, population, elevation, and coordinates
-  - Clean Viridis colormap for colorblind-safe elevation encoding
-  - Appropriate Web Mercator projection conversion for accurate positioning
-  - Good marker sizing that differentiates population levels
-  - Both static PNG and interactive HTML outputs generated
+  - Excellent spec compliance with all required features present and functional
+  - Perfect data quality with realistic cities and accurate geographic coordinates
+  - Strong dual encoding of size for population and color for elevation
+  - Proper Web Mercator projection with interactive zoom/pan capabilities
+  - Comprehensive hover tooltips with city name, population, elevation, and coordinates
+  - 'Light render perfectly theme-compliant with warm #FAF8F1 background'
+  - Clean code structure with explicit font sizing for high-DPI rendering
   weaknesses:
-  - 'Missing size legend to explain population encoding (spec notes: "Add a size legend
-    when size varies")'
-  - Title includes "World Cities" prefix instead of starting directly with spec-id
-  - Axis labels lack degree symbols/units
-  - Helper function slightly breaks KISS structure (though necessary for projection)
+  - Dark render canvas background is pure black (#000000) instead of required warm
+    dark (#1A1A17) - identical to Attempt 1, fix was not applied
+  - Bokeh HTML page background not using theme-adaptive color - bokeh background_fill_color
+    may only apply to plot area, not HTML page element
+  - Generic styling with default colors and no design sophistication
+  - Minimal visual refinement - no spine customization, no grid styling, no whitespace
+    enhancement
   image_description: |-
-    The plot displays a world map using CartoDB Positron basemap tiles showing 30 major cities across all continents. Cities are represented as scatter points with:
-    - Position: Correctly placed by latitude/longitude (converted to Web Mercator projection)
-    - Size encoding: Point sizes vary from small (~25px) to large (~80px) representing population (millions) - Tokyo, Shanghai, Beijing, Mumbai show largest circles
-    - Color encoding: Viridis colormap from purple (low elevation) to yellow (high elevation) - Mexico City appears yellow-green (2240m), São Paulo and Johannesburg show greenish tones, most coastal cities are purple/blue
-    - Color bar: Located on right side showing "Elevation (m)" scale from 0 to ~2200m
-    - Title: "World Cities · scatter-map-geographic · bokeh · pyplots.ai" in blue (#306998) at top-left
-    - Axis labels: "Longitude" (x-axis) and "Latitude" (y-axis)
-    - Basemap: Clean light gray CartoDB tiles with country names and boundaries visible
-    - Layout: World view from approximately -150° to +180° longitude, -60° to +70° latitude
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - correct theme token applied
+      Chrome: Title (28pt, dark #1A1A17), axis labels (22pt), tick labels (18pt) - all clearly readable with excellent contrast
+      Data: Viridis colormap for elevation (dark purple to yellow), brand green borders on scatter points, size varies 25-80 for population encoding
+      Legibility verdict: PASS - all text perfectly readable, theme colors correctly applied
+
+    Dark render (plot-dark.png):
+      Background: PURE BLACK #000000 - FAILED - should be warm dark #1A1A17
+      Chrome: Title, axis labels, tick labels appear in light colors (INK #F0EFE8, INK_SOFT #B8B7B0) and are technically readable but compromised by harsh black background
+      Data: Viridis colors correctly identical to light render (no recoloring), brand green borders intact
+      Legibility verdict: FAIL - dark-on-dark theme violation; pure black canvas background is not the warm dark (#1A1A17) required by style guide. This is identical to Attempt 1 - the issue was not fixed.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt, colorbar
-          title at 22pt - all readable, though colorbar title could be slightly larger
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, markers well-spaced globally
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
+        passed: false
+        comment: Light render perfect; dark render compromised by background issue
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized 25-80px appropriate for 30 points, alpha=0.75 handles
-          sparse overlap well
+        comment: Clean spacing; no text collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 points perfectly adapted; size range 25-80 optimal
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe, good contrast against light
-          basemap
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: World map fills canvas well, colorbar positioned appropriately on
-          right
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels say Longitude and Latitude but lack units (could say Longitude
-          (°))
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Colorbar well-placed; no explicit size legend for population encoding
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct geographic scatter plot on map tiles
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/lon correctly converted to Mercator, mapped to x/y
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has basemap, color encoding, size encoding, tooltips; missing explicit
-          size legend
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: World view shows all 30 cities without clipping
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Colorbar correctly labeled Elevation (m)
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: Viridis perceptually uniform; brand green high contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced proportions; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Title has extra World Cities prefix instead of starting directly
-          with spec-id
-    data_quality:
-      score: 18
+        comment: Descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'FAILED - dark render canvas pure black instead of #1A1A17'
+    design_excellence:
+      score: 10
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Generic defaults; no design refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: No spine customization; minimal styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear dual encoding guides understanding
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct scatter-map with Web Mercator
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: basemap, pan/zoom, tooltips, legends'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correct; Web Mercator transforms properly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; legends present
+    data_quality:
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows cities across all continents, varies population (0.7M-24.9M)
-          and elevation (0-2240m)
+        comment: 6 continents; elevation 0-2240m; population 0.7-24.9M
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real world cities with actual population and elevation data - neutral,
-          educational context
+        comment: Real cities with accurate data; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Populations and elevations are realistic; some elevation values approximate
+        comment: Values factually correct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear flow, but includes a helper function lat_lon_to_mercator
-          (necessary for projection)
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) though data is deterministic
+        comment: Linear flow; no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hard-coded data; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used appropriately
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current Bokeh APIs
+        comment: Proper ColumnDataSource; idiomatic patterns
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Bokeh features: WMTSTileSource for tile maps, ColumnDataSource,
-          interactive tooltips, mercator axis types, ColorBar, both PNG and HTML export'
-  verdict: APPROVED
+        comment: 'Expert bokeh patterns: figure, ColumnDataSource, ColorMapper, WMTS
+          tiles'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Good use of ColorBar and custom legend; could leverage more bokeh-specific
+          features
+  verdict: REJECTED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - colorbar
+  - custom-legend
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - columndatasource
+  - data-generation
   dataprep: []
-  styling:
-  - custom-colormap
-  - alpha-blending
-  - edge-highlighting
+  styling: []
