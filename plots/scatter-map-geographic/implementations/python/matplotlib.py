@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-18
@@ -401,11 +401,11 @@ continents = [
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Ocean color (theme-adaptive)
-ocean_bg = "#D4E4F5" if THEME == "light" else "#2A3A4A"
+# Ocean color (theme-adaptive) - sophisticated water tones
+ocean_bg = "#C5D9ED" if THEME == "light" else "#3A4E68"
 
-# Draw continents
-continent_color = "#E8E5DC" if THEME == "light" else "#3A3935"
+# Draw continents (theme-adaptive) - refined earth tones
+continent_color = "#D6CCBE" if THEME == "light" else "#4B4540"
 continent_edge = INK_SOFT
 for continent in continents:
     poly = plt.Polygon(continent, facecolor=continent_color, edgecolor=continent_edge, linewidth=0.6, zorder=1)
@@ -419,6 +419,20 @@ for lon in range(-150, 181, 30):
 
 # Plot cities
 ax.scatter(lons, lats, c=colors, s=sizes, alpha=0.8, edgecolors=PAGE_BG, linewidths=2.5, zorder=5)
+
+# Highlight Tokyo with subtle annotation for visual storytelling
+tokyo_lat, tokyo_lon = 35.6762, 139.6503
+ax.annotate(
+    "Tokyo\n(37.4M)",
+    xy=(tokyo_lon, tokyo_lat),
+    xytext=(tokyo_lon + 8, tokyo_lat + 6),
+    fontsize=12,
+    color=INK_SOFT,
+    weight="medium",
+    bbox={"boxstyle": "round,pad=0.5", "facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.85},
+    arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.2, "alpha": 0.7},
+    zorder=10,
+)
 
 # Set axis limits
 ax.set_xlim(-180, 180)
@@ -434,7 +448,7 @@ ax.set_title(
     color=INK,
     pad=15,
 )
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.tick_params(axis="both", labelsize=18, colors=INK_SOFT)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 ax.spines["top"].set_visible(False)
