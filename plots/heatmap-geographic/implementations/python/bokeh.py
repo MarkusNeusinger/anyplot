@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
-Library: bokeh | Python 3.13
-Quality: 91/100 | Updated: 2026-05-18
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-18
 """
 
 import sys
