@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
-Library: altair | Python 3.13
-Quality: 93/100 | Updated: 2026-05-18
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-18
 """
 
 import os
