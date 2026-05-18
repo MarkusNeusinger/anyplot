@@ -1,157 +1,164 @@
 library: altair
+language: python
 specification_id: density-rug
 created: '2026-01-09T15:34:39Z'
-updated: '2026-01-09T15:37:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856770750
+updated: '2026-05-18T00:37:27Z'
+generated_by: claude-haiku
+workflow_run: 26007212220
 issue: 3505
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-rug/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/density-rug/altair/plot.html
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/altair/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Excellent use of Altair layer composition to combine density area chart with rug
-    marks
-  - Clean, readable code with proper KDE computation using scipy
-  - Good data example showing bimodal distribution with outliers
-  - Proper title format and descriptive axis labels with units
-  - Semi-transparent fill under density curve as spec requested
-  - Effective visual communication of both distribution shape and individual data
-    points
+  - Excellent readability in both light and dark themes with perfectly explicit font
+    sizing
+  - Bimodal distribution is clearly communicated; rug marks add valuable data transparency
+  - Idiomatic Altair usage with proper layer composition
+  - Robust theme-adaptive chrome implementation across all elements (text, grid, background)
+  - Clean, reproducible code with appropriate data generation
   weaknesses:
-  - Rug marks use fixed pixel positions (y=900, y2=850) which could be fragile if
-    chart size changes; consider using data-driven positioning
-  - No interactivity added (Altair's strength); could benefit from .interactive()
-    or tooltips on rug marks
-  image_description: The plot displays a density plot with rug marks showing the distribution
-    of response times in milliseconds. The main density curve is rendered as a filled
-    area chart in blue (#306998) with approximately 50% opacity, showing a bimodal
-    distribution with a primary peak around 150ms and a secondary hump around 250ms.
-    The rug marks appear as short vertical blue tick marks along the bottom of the
-    plot (near y=0), positioned at each individual data point location. The title
-    "density-rug · altair · pyplots.ai" is displayed at the top center in a clear,
-    readable font. The x-axis is labeled "Response Time (ms)" ranging from approximately
-    50 to 500ms, and the y-axis is labeled "Density" ranging from 0 to about 0.0064.
-    The overall layout is clean with good use of the canvas space, and the plot effectively
-    demonstrates both the smoothed distribution and individual data point locations.
+  - Design Excellence limited to well-configured defaults; no custom styling beyond
+    brand colors
+  - Visual refinement could be enhanced (e.g., custom grid styling, spine removal,
+    typography variation)
+  - Data storytelling relies on natural hierarchy rather than deliberate emphasis
+    techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "density-rug · Python · altair · anyplot.ai" in dark ink, axis labels "Response Time (ms)" and "Density" clearly visible in dark text, tick labels readable
+      Data: Brand green (#009E73) density curve with 40% opacity showing bimodal distribution (peaks at ~150ms and ~250ms), green rug marks at 60% opacity showing individual data points
+      Legibility verdict: PASS - all text perfectly readable, data colors distinct from background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title in light ink (#F0EFE8), axis labels and tick labels in theme-adaptive light colors - all readable with no dark-on-dark failures
+      Data: Brand green (#009E73) identical to light render (only chrome colors flip between themes), both curve and rug marks maintain visibility
+      Legibility verdict: PASS - all text perfectly readable, no dark-on-dark failures, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and clear (fontSize=28), axis labels (titleFontSize=22)
-          and ticks (labelFontSize=18) are all readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All font sizes explicitly set; perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density curve and rug marks are visible, though rug marks could be
-          slightly more prominent
+        comment: Density curve and rug marks optimally visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme, excellent contrast against white background
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization with plot filling most of the space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units 'Response Time (ms)', Y-axis labeled 'Density'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, 70% canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Okabe-Ito, correct backgrounds, theme-adaptive chrome
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is present with alpha=0.3 which is good, but no legend is needed
-          for this single-series plot
+        comment: Well-configured default, not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Some refinement visible, minimal customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Good visual hierarchy guides reader
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct density plot with rug marks
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X-axis correctly shows response times, Y-axis shows density
-      - id: SC-03
+        comment: Correct density-rug plot
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: KDE curve with fill present, rug marks present; spec mentioned considering
-          jittering for thick ticks which is not implemented
-      - id: SC-04
-        name: Data Range
+        comment: KDE curve and rug marks present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible from ~50ms to ~500ms
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct X/Y mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format 'density-rug · altair · pyplots.ai'
+        comment: Title format correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bimodal distribution with primary peak, secondary cluster,
-          and outliers; effectively demonstrates KDE smoothing and rug mark data transparency
+        comment: Shows all aspects including bimodal distribution
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Response times scenario is realistic and neutral (technology/performance
-          context)
+        comment: Response times are realistic and comprehensible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 50-500ms are realistic for response times, though some uniform
-          outliers are slightly artificial
+        comment: Sensible values for response times
     code_quality:
       score: 10
       max: 10
@@ -161,43 +168,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → data → KDE computation → charts →
-          save'
+        comment: Clean flow, no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: Seed set for determinism
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (altair, numpy, pandas, scipy.stats)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean and Pythonic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair layer composition effectively, declarative encoding.
-          Could have used interactive() for added Altair-specific value.
+        comment: Expert high-level API usage
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses layer composition and interactivity
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -211,4 +222,3 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - grid-styling
