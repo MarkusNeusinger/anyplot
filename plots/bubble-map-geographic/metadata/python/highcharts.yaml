@@ -1,156 +1,187 @@
 library: highcharts
+language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:09:17Z'
-updated: '2026-01-10T06:11:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20873961014
+updated: '2026-05-18T23:02:56Z'
+generated_by: claude-sonnet
+workflow_run: 26064456933
 issue: 3625
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/highcharts/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent geographic bubble map using Highmaps mapbubble series type
-  - Colorblind-safe palette with clear continent differentiation
-  - 'Proper area-based scaling (sizeBy: area) for accurate value perception'
-  - Good transparency handling for overlapping bubbles
-  - Realistic, well-researched city population data across all continents
-  - Clean title format following specification requirements
+  - Perfect Okabe-Ito palette compliance in canonical continent order across both
+    themes
+  - Expertly handles Highmaps mapbubble with topology, inline JS, bubbleLegend, and
+    bubble area scaling
+  - 'Complete spec compliance: all features (basemap, size legend, tooltips, transparency,
+    category color) implemented'
+  - Theme-adaptive map land/border colors go beyond basic chrome adaptation
+  - Deterministic real-world data with accurate geographic coordinates and population
+    values
   weaknesses:
-  - Missing size legend to show bubble-to-value relationship (spec recommends a size
-    legend showing the relationship between bubble size and data values)
-  - Legend text is slightly small relative to the overall canvas size
-  image_description: 'The plot displays a world map bubble chart showing city populations
-    across continents. The map uses a light gray basemap with country boundaries.
-    Bubbles are colored by continent: blue for Asia, yellow for Africa, purple for
-    Europe, cyan for Americas, and brown for Oceania. Bubble sizes are proportional
-    to metropolitan population, with the largest bubbles appearing in Asia (Tokyo,
-    Delhi, Shanghai) and other major cities. The title reads "World City Populations
-    · bubble-map-geographic · highcharts · pyplots.ai" at the top, with a subtitle
-    explaining bubble size represents population in millions. A legend on the right
-    side shows continent categories with colored markers. The bubbles have white borders
-    and semi-transparency (0.6 opacity), allowing overlapping bubbles to remain distinguishable.'
+  - 'DE-03: No storytelling emphasis — adding a brief annotation for the largest city
+    (Tokyo 37.4M) or a callout noting Asia dominance would elevate the narrative'
+  - 'DE-01/DE-02: The map background (land + ocean) could benefit from a slightly
+    more refined aesthetic (e.g., subtle ocean color distinct from page background)'
+  - 'VQ-02: Minor bubble overlap in the South/East Asia cluster is inherent to this
+    data but could be reduced with slightly more aggressive minSize scaling'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "World City Populations · bubble-map-geographic · python · highcharts · anyplot.ai" in dark ink, clearly readable. Subtitle in INK_SOFT, readable. Legend labels in dark text, readable. All text legible.
+      Data: Asia teal/green (#009E73), Africa vermillion (#D55E00), Europe blue (#0072B2), Americas reddish-purple (#CC79A7), Oceania orange (#E69F00). Okabe-Ito canonical order. Bubbles semi-transparent (0.65). Tokyo is largest bubble, Auckland smallest but visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and subtitle render in light ink (F0EFE8/B8B7B0 range), clearly readable against dark background. Legend box has dark elevated background (#242420) with light text. No dark-on-dark failures detected.
+      Data: Colors are identical to light render — all five Okabe-Ito series colors unchanged between themes as required. Brand green #009E73 clearly visible on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and subtitle clearly readable; legend text is legible but slightly
-          small relative to the large canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; bubbles overlap slightly in dense regions but
-          transparency handles this well
+        comment: 'All font sizes explicitly set: title 44px, subtitle 32px, legend
+          items 34px, bubble legend labels 26px. Readable in both renders.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minimal bubble overlap in dense Asian cluster — expected and managed
+          with 0.65 opacity. City label text does not collide.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bubbles are well-sized with good differentiation; smallest bubbles
-          still visible
+        comment: Bubble sizes well-calibrated (minSize 25, maxSize 120). Smallest
+          bubble (Auckland 1.7M) still visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette used (blue, yellow, purple, cyan, brown)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas well with balanced margins; good use of space
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Not applicable for geographic maps
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed on right, titled Continent, clear category markers
+        comment: Okabe-Ito is CVD-safe. Semi-transparency handles overlap.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Map occupies canvas well, legend neatly positioned right-middle.
+          Slight vertical margin waste at top/bottom.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for a geographic map. Subtitle serves
+          as the axis-equivalent descriptor.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Asia) = #009E73. Subsequent continents follow Okabe-Ito
+          positions 2-5. Backgrounds #FAF8F1/#1A1A17. Chrome theme-adaptive.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic default: custom Okabe-Ito colors, theme-adaptive land/border
+          colors, bubble edge matching page background, generous spacing. Not yet
+          publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Theme-adaptive map land/border colors, elevated legend box, semi-transparent
+          bubbles, generous spacing. Good but no ocean color or further map texture.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Asia's dominance visually immediate through large green bubbles.
+          Size + color create hierarchy. No active storytelling emphasis or annotations.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct geographic bubble map using Highmaps mapbubble series
+        comment: 'Correct: Highmaps mapbubble series on world topology with bubble
+          size as primary encoding.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/lon correctly mapped to geographic positions; population mapped
-          to bubble size
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Size encoding, geographic context, transparency, continent categorization
-          all present
-      - id: SC-04
-        name: Data Range
+        comment: Lat/lon mapping, sizeBy area, size legend (bubbleLegend), transparency
+          0.65, world basemap, hover tooltips, minimum bubble size, category color
+          all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All cities visible on map; no clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Lat/lon correctly mapped to geography. Population as z value. Continent
+          as series color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows continents with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: {spec-id} · {library} · pyplots.ai'
+        comment: Title format correct with descriptive prefix. Legend shows continent
+          labels and bubble size reference.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows wide range of city sizes (1.7M Auckland to 37.4M Tokyo); multiple
-          continents; various geographic distributions
+        comment: 37 cities across 5 continents, population range 1.7M-37.4M, dense
+          and sparse regions, multi-series color grouping.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real world cities with accurate approximate population data; neutral,
-          factual topic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Population values are realistic (millions) for major metropolitan
-          areas
+        comment: Real-world metropolitan population data for major global cities.
+          Neutral geographic topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually accurate population values and geographic coordinates for
+          all 37 cities.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,51 +189,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → config → render → save'
+        comment: 'Linear flow: imports → data → grouping → config → HTML → screenshot.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: All data hardcoded. Fully deterministic, no random elements.
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: numpy imported but random seed is set without using random data generation
+        passed: true
+        comment: All imports actively used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code. setdefault grouping loop is elegant. Chart config
+          as a clean dict.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts Maps API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Outputs both plot.png and plot.html correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses Highmaps with mapbubble series, TopoJSON map data, proper sizeBy:
-          area scaling; could have used size legend for bubble values'
+        comment: Correctly uses Highmaps topology loading, inline JS for headless
+          Chrome, mapbubble series, bubbleLegend, multi-layer map architecture.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: mapbubble series, bubbleLegend with custom ranges, world topology
+          via @highcharts/map-collection, theme-adaptive nullColor/borderColor — strongly
+          distinctive Highmaps features.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - html-export
   - hover-tooltips
+  - html-export
+  - custom-legend
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:

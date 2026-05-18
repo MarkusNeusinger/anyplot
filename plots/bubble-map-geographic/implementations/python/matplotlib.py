@@ -1,12 +1,26 @@
-""" pyplots.ai
+""" anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-10
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-18
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+OCEAN = "#C8DDF0" if THEME == "light" else "#1E3050"
+LAND = "#E5E5E0" if THEME == "light" else "#3A3A34"
+LAND_EDGE = "#888888" if THEME == "light" else "#555550"
+GRATICULE = "#AAAAAA" if THEME == "light" else "#555550"
+BUBBLE_COLOR = "#009E73"  # Okabe-Ito position 1
 
 # Data - Major world cities with GDP (in billion USD) as primary value for bubble size
 np.random.seed(42)
@@ -45,8 +59,7 @@ lats = np.array([cities[c][0] for c in names])
 lons = np.array([cities[c][1] for c in names])
 gdp = np.array([cities[c][2] for c in names])
 
-# Scale bubble area proportionally to GDP (area = k * value)
-# Using sqrt scaling for area-proportional perception
+# Scale bubble area proportionally to GDP
 min_size = 80
 max_size = 900
 sizes = min_size + (gdp - gdp.min()) / (gdp.max() - gdp.min()) * (max_size - min_size)
@@ -374,61 +387,67 @@ continents = [
     ],
 ]
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Set background color (ocean)
-ax.set_facecolor("#C8DDF0")
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(OCEAN)
 
 # Draw continents
 for continent in continents:
-    poly = plt.Polygon(continent, facecolor="#E5E5E0", edgecolor="#888888", linewidth=0.6, zorder=1)
+    poly = plt.Polygon(continent, facecolor=LAND, edgecolor=LAND_EDGE, linewidth=0.6, zorder=1)
     ax.add_patch(poly)
 
-# Add graticule (grid lines)
+# Add graticule
 for lat in range(-60, 90, 30):
-    ax.axhline(y=lat, color="#AAAAAA", linewidth=0.4, linestyle=":", alpha=0.6, zorder=0)
+    ax.axhline(y=lat, color=GRATICULE, linewidth=0.4, linestyle=":", alpha=0.6, zorder=0)
 for lon in range(-150, 181, 30):
-    ax.axvline(x=lon, color="#AAAAAA", linewidth=0.4, linestyle=":", alpha=0.6, zorder=0)
+    ax.axvline(x=lon, color=GRATICULE, linewidth=0.4, linestyle=":", alpha=0.6, zorder=0)
 
-# Plot bubbles - using Python Blue with transparency for overlap handling
-scatter = ax.scatter(lons, lats, s=sizes, c="#306998", alpha=0.6, edgecolors="white", linewidths=2, zorder=5)
+# Plot bubbles — Okabe-Ito position 1 with edge matching page background
+ax.scatter(lons, lats, s=sizes, c=BUBBLE_COLOR, alpha=0.6, edgecolors=PAGE_BG, linewidths=2, zorder=5)
 
-# Set axis limits
 ax.set_xlim(-180, 180)
 ax.set_ylim(-60, 80)
 
-# Labels
-ax.set_xlabel("Longitude (°)", fontsize=20)
-ax.set_ylabel("Latitude (°)", fontsize=20)
+# Style
+ax.set_xlabel("Longitude (°)", fontsize=20, color=INK)
+ax.set_ylabel("Latitude (°)", fontsize=20, color=INK)
 ax.set_title(
-    "City GDP by Location · bubble-map-geographic · matplotlib · pyplots.ai", fontsize=22, fontweight="bold", pad=15
+    "City GDP by Location · bubble-map-geographic · python · matplotlib · anyplot.ai",
+    fontsize=24,
+    fontweight="medium",
+    color=INK,
+    pad=15,
 )
-ax.tick_params(axis="both", labelsize=16)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT, labelcolor=INK_SOFT)
+for spine in ax.spines.values():
+    spine.set_color(INK_SOFT)
 
-# Create size legend showing GDP values
-# Use reference values that map to the actual size scale
+# Size legend
 gdp_values = [250, 750, 1500]
 legend_sizes = [min_size + (v - gdp.min()) / (gdp.max() - gdp.min()) * (max_size - min_size) for v in gdp_values]
 size_labels = ["$250B", "$750B", "$1.5T"]
 
 size_handles = []
 for sz, label in zip(legend_sizes, size_labels, strict=True):
-    handle = ax.scatter([], [], s=sz, c="#306998", alpha=0.6, edgecolors="white", linewidths=1.5, label=label)
+    handle = ax.scatter([], [], s=sz, c=BUBBLE_COLOR, alpha=0.6, edgecolors=PAGE_BG, linewidths=1.5, label=label)
     size_handles.append(handle)
 
-ax.legend(
+leg = ax.legend(
     handles=size_handles,
     title="Metro GDP",
     loc="lower left",
     fontsize=14,
     title_fontsize=16,
-    framealpha=0.95,
-    edgecolor="#CCCCCC",
     fancybox=True,
-    labelspacing=1.8,
+    labelspacing=0.8,
     borderpad=1.2,
 )
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+leg.get_frame().set_alpha(0.95)
+plt.setp(leg.get_texts(), color=INK_SOFT)
+leg.get_title().set_color(INK)
 
+# Save
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
