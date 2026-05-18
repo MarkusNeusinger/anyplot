@@ -1,14 +1,23 @@
-""" pyplots.ai
+"""anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
-Library: plotly 6.5.1 | Python 3.13.11
+Library: plotly | Python 3.13
 Quality: 92/100 | Created: 2026-01-10
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data - Simulating activity density around San Francisco Bay Area
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MAP_STYLE = "carto-positron" if THEME == "light" else "carto-darkmatter"
+
+# Data - Activity density around San Francisco Bay Area
 np.random.seed(42)
 
 # Hotspot 1: Downtown SF
@@ -41,10 +50,9 @@ latitudes = np.concatenate([lat1, lat2, lat3, lat4, lat_bg])
 longitudes = np.concatenate([lon1, lon2, lon3, lon4, lon_bg])
 values = np.concatenate([val1, val2, val3, val4, val_bg])
 
-# Create the geographic heatmap using Densitymap (new API)
+# Plot
 fig = go.Figure()
 
-# Add density heatmap layer
 fig.add_trace(
     go.Densitymap(
         lat=latitudes,
@@ -55,8 +63,8 @@ fig.add_trace(
         opacity=0.7,
         showscale=True,
         colorbar={
-            "title": {"text": "Intensity", "font": {"size": 20}},
-            "tickfont": {"size": 16},
+            "title": {"text": "Intensity", "font": {"size": 20, "color": INK}},
+            "tickfont": {"size": 16, "color": INK_SOFT},
             "len": 0.6,
             "thickness": 25,
             "x": 1.02,
@@ -65,21 +73,18 @@ fig.add_trace(
     )
 )
 
-# Update layout for geographic display
 fig.update_layout(
     title={
-        "text": "Activity Density in SF Bay Area · heatmap-geographic · plotly · pyplots.ai",
-        "font": {"size": 28},
+        "text": "Activity Density · heatmap-geographic · python · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
-    map={"style": "carto-positron", "center": {"lat": 37.75, "lon": -122.35}, "zoom": 9.5},
+    map={"style": MAP_STYLE, "center": {"lat": 37.75, "lon": -122.35}, "zoom": 9.5},
+    paper_bgcolor=PAGE_BG,
     margin={"l": 20, "r": 100, "t": 80, "b": 20},
-    template="plotly_white",
 )
 
-# Save as PNG
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML version
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
