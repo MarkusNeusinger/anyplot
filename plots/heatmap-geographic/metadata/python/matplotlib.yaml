@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T08:15:03Z'
-updated: '2026-05-18T23:37:17Z'
+updated: '2026-05-18T23:55:16Z'
 generated_by: claude-sonnet
 workflow_run: 26066281533
 issue: 3638
@@ -12,96 +12,89 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 79
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (KDE, colorbar, geographic context,
-    transparency) implemented correctly'
-  - Realistic, compelling AQI + California monitoring scenario with accurate geographic
-    bounds
-  - 'Semantic colormap choice: YlOrRd visually communicates increasing severity, creating
-    natural data storytelling'
-  - Clean code structure with proper theme-adaptive chrome in both renders — no dark-on-dark
-    failures
-  - Strong canvas utilization and legend/colorbar placement
+  - 'Perfect spec compliance: all five required features implemented correctly'
+  - Full theme-adaptive chrome throughout both light and dark renders
+  - Realistic California AQI data with plausible geographic cluster placement
+  - Gaussian smoothing via manual convolution produces smooth density surface without
+    scipy
+  - Masked array usage ensures low-density areas remain transparent
   weaknesses:
-  - Legend (14pt) and colorbar tick labels (14pt) are below the 16pt minimum — increase
-    both to 16pt
-  - 'Axis labels missing degree symbol: use Longitude (°) and Latitude (°)'
-  - YlOrRd colormap is not on the approved list — switch to Reds (semantically appropriate
-    for AQI) or viridis/cividis
-  - Grid uses linestyle=-- (dashed) — style guide specifies solid thin lines for grids
-  - Blocky heatmap boundary artifact in dark render from masked near-zero cells —
-    increase grid_resolution to 200 or sigma to 4
-  - LM-02 is weak — add a more distinctively matplotlib feature (e.g., PathPatch for
-    California outline, or use contourf instead of imshow)
+  - Scatter markers s=25 far below recommended 150-300 range — nearly invisible at
+    full resolution
+  - YlOrRd colormap not in preferred viridis/cividis/BrBG list; viridis would be more
+    perceptually uniform and CVD-safe
+  - All four spines kept — top and right should be removed per library defaults
+  - Colorbar tick labels at 14pt below 16pt minimum
+  - No city/region annotations to contextualize density hotspots
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "heatmap-geographic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude" and "Latitude" in dark ink at 20pt. Tick labels dark at 16pt. Colorbar label "Air Quality Index (weighted density)" in INK_SOFT. Legend text in INK_SOFT with ELEVATED_BG frame.
-      Data: YlOrRd heatmap with three distinct clusters — NorCal (yellow-orange), Coast (orange), SoCal (deep red hotspot). Blue (#0072B2) sensor scatter dots overlay at s=25, alpha=0.45. California border outline in muted grey.
-      Legibility verdict: PASS — all text readable against light background
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "heatmap-geographic · python · matplotlib · anyplot.ai" in dark ink, readable. Axis labels "Longitude" / "Latitude" in dark ink, readable. Tick labels in medium gray, readable. Colorbar label "Air Quality Index (weighted density)" rotated, readable. Legend frame uses elevated bg (#FFFDF6) with gray text.
+      Data: YlOrRd heatmap with three California density clusters (NorCal, Central Coast, SoCal) in yellow-orange-red gradient. Blue (#0072B2) scatter dots for sensor locations. Gray coastline/border outline.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title, axis labels, and tick labels appear in light tones (INK = #F0EFE8 in dark mode). Colorbar label and ticks in INK_SOFT (#B8B7B0). Legend frame uses ELEVATED_BG (#242420). No dark-on-dark text failures detected.
-      Data: Heatmap data colors identical to light render (YlOrRd unchanged — only chrome flips). Blue sensor dots unchanged. One artifact: blocky heatmap boundary where masked near-zero cells expose visible 150×150 grid cells against the dark background, creating a pixelated edge effect more pronounced than in the light render.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light cream (#F0EFE8), readable. Axis labels in light cream, readable. Tick labels in light gray (#B8B7B0), readable. Colorbar ticks and label in light gray, readable. Legend frame uses #242420 elevated bg with gray text. No dark-on-dark failures detected.
+      Data: Heatmap colors identical to light render (YlOrRd unchanged). Blue scatter dots visible. Coastline outline in light gray. Low-density heatmap areas (pale yellow) slightly less visible on dark bg but masked appropriately.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt — all explicit. Legend (14pt)
-          and colorbar ticks (14pt) below 16pt minimum.
+        comment: All text readable in both themes; colorbar tick labels at 14pt slightly
+          below 16pt floor
       - id: VQ-02
         name: No Overlap
-        score: 6
-        max: 6
-        passed: true
-        comment: No overlapping text elements.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Heatmap clear. Sensor points s=25 slightly small for 500 pts. Dark
-          render shows blocky heatmap boundary from masked cells.
+        comment: Clean layout; legend close to lower-right data cluster but avoids
+          masking
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Heatmap and coastline clearly visible; scatter s=25 far below recommended
+          150-300
       - id: VQ-04
         name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: No red-green sole signal; YlOrRd has moderate CVD risk for deuteranopia
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions; eastern edge has notable empty space but represents
+          sparse data
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Blue sensor points contrast well with YlOrRd heatmap. No red-green-only
-          signaling.
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 4
-        max: 4
-        passed: true
-        comment: Map fills canvas well; colorbar and legend well-positioned.
-      - id: VQ-06
-        name: Axis Labels & Title
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels say Longitude and Latitude without degree units. Should be
-          Longitude (°) and Latitude (°).
+        comment: Standard geographic labels; colorbar label descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
-        passed: false
-        comment: 'Backgrounds (#FAF8F1 light / #1A1A17 dark) and chrome are correct.
-          YlOrRd is not on the approved colormap list (viridis/cividis/Reds/Blues).
-          Partial compliance.'
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17); scatter uses Okabe-Ito #0072B2;
+          heatmap uses YlOrRd not viridis/cividis'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -109,22 +102,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Semantic colormap choice, alpha layering, custom border — above library
-          defaults but not publication-ready.
+        comment: 'Above average: hand-drawn CA outline, Gaussian smoothing, theme-adaptive
+          colorbar'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Legend and colorbar frames styled, spines justified for map. Grid
-          uses dashed linestyle (should be solid per style guide).
+        comment: Theme-adaptive chrome correct; subtle dashed grid; all four spines
+          kept — top/right should be removed
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three hotspot clusters clearly visible; SoCal hotspot dominates as
-          focal point.
+        comment: Three geographic clusters tell regional story; no city labels to
+          anchor hotspots
     spec_compliance:
       score: 15
       max: 15
@@ -134,54 +127,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct geographic heatmap with 2D histogram + Gaussian smoothing
-          as KDE approximation.
+        comment: Correct geographic heatmap with spatial density
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: KDE-style interpolation, sequential colormap
-          with transparency, colorbar, geographic context, bandwidth parameter.'
+        comment: KDE approx, sequential cmap with transparency, colorbar, geographic
+          boundary, bandwidth param — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude X, latitude Y, AQI intensity on color. Full California
-          extent shown.
+        comment: Lat/lon correctly mapped; AQI as weights; California bounds appropriate
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend labels Coastline and Sensor
-          Locations are descriptive.
+        comment: Title matches required format; legend labels accurate
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows multiple clusters, varying intensity, sensor overlay, geographic
-          reference layer.
+        comment: Density gradient, individual points, boundary, colorbar scale; missing
+          secondary geographic layer
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: California AQI monitoring stations, three plausible regional clusters,
-          neutral scientific scenario.
+        comment: California AQI monitoring with gamma-distributed values (5-150) is
+          plausible and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: California lat/lon bounds accurate. AQI gamma distribution (0-150)
-          realistic.
+        comment: 500 points within spec range; AQI clipped to realistic bounds; geographic
+          extent correct
     code_quality:
       score: 10
       max: 10
@@ -191,35 +181,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → plot → save. No functions
-          or classes.'
+        comment: Top-level procedural, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy imported — all used.
+        comment: Only os, matplotlib.pyplot, numpy — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI. Custom Gaussian kernel is verbose but avoids scipy
-          dependency and is readable.
+        comment: Manual Gaussian kernel appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with bbox_inches=tight. No deprecated API.
+        comment: Saves plot-{THEME}.png at dpi=300 with correct facecolor
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -227,17 +215,16 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: 'Correct ax.imshow() with extent/origin/aspect. np.ma.masked_where()
-          for transparency. Minor: uses plt.colorbar() instead of fig.colorbar().'
+        comment: ax.imshow with extent, np.ma.masked_where, plt.colorbar — solid idiomatic
+          usage
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: ax.imshow() with geographic extent and masked array is characteristic.
-          Custom Gaussian kernel reinvents scipy. No PathPatch, ScalarMappable, contourf,
-          or other distinctively matplotlib features.
-  verdict: REJECTED
+        passed: true
+        comment: Masked array integration, imshow extent-based geographic positioning,
+          manual convolution KDE
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -247,6 +234,7 @@ impl_tags:
   - matrix-construction
   dataprep:
   - binning
+  - kde
   styling:
   - custom-colormap
   - alpha-blending
