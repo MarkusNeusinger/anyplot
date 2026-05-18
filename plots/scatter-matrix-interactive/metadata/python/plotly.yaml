@@ -1,154 +1,183 @@
 library: plotly
+language: python
 specification_id: scatter-matrix-interactive
 created: '2026-01-10T02:00:38Z'
-updated: '2026-01-10T02:11:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20870866097
+updated: '2026-05-18T16:22:28Z'
+generated_by: claude-haiku
+workflow_run: 26045702088
 issue: 3604
-python_version: 3.13.11
-library_version: 6.5.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Plotly interactive features with linked selection styling (selected/unselected
-    markers)
-  - Clean colorblind-accessible color palette with good visual distinction
-  - Proper axis labeling with units on edges only, avoiding clutter
-  - Dual output format (PNG + interactive HTML) maximizes usefulness
-  - Well-structured code following KISS principle
+  - Perfect theme adaptation with no dark-on-dark or light-on-light text failures
+  - Proper use of Plotly's native linked brushing and interactive selection (dragmode,
+    selected/unselected states)
+  - Well-structured SPLOM with histograms on diagonal and consistent Okabe-Ito color
+    coding across all subplots
+  - 'Excellent text legibility: all titles, axis labels, and tick labels sized appropriately
+    (28px, 22px, 18px) and readable in both light and dark themes'
+  - Clean, reproducible code with Iris dataset; no fake UI elements or unnecessary
+    complexity
   weaknesses:
-  - Title format includes "Iris Dataset" prefix instead of pure "{spec-id} · {library}
-    · pyplots.ai"
-  - Diagonal histograms overlap significantly making individual species distributions
-    harder to read
-  - No explicit random seed (though data is deterministic from dataset)
-  image_description: 'The plot shows a 4x4 scatter plot matrix (SPLOM) of the Iris
-    dataset with four variables: Sepal Length, Sepal Width, Petal Length, and Petal
-    Width (all in cm). Three species are color-coded: Setosa (dark blue #306998),
-    Versicolor (yellow #FFD43B), and Virginica (cyan/teal #4ECDC4). The diagonal cells
-    show overlaid histograms for each species. Off-diagonal cells show pairwise scatter
-    plots. The title reads "Iris Dataset · scatter-matrix-interactive · plotly · pyplots.ai"
-    at the top. A legend on the right shows the species color mapping. The layout
-    is well-organized with axis labels on edges only, and markers have appropriate
-    size with some transparency. Clear clustering patterns are visible, especially
-    separating Setosa from the other species.'
+  - 'Design Excellence could be elevated: consider custom styling refinements (e.g.,
+    spine removal, more sophisticated legend placement) to move from functional to
+    exceptional'
+  - Marker overlap in dense regions could be further mitigated with additional alpha
+    tuning or jitter, though current opacity (0.7) is acceptable
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white at #FAF8F1, correctly matches spec
+      Chrome: Title (28px, dark text), axis labels (22px, dark), tick labels (18px, gray) all clearly readable; legend has proper border and elevated background; grid is subtle but visible
+      Data: Okabe-Ito palette with green (#009E73) as first series; orange and blue for Versicolor and Virginica; histograms on diagonal with overlaid opacity 0.7; scatter plots show markers at size 10, opacity 0.7; all data points are clearly distinguishable from background
+      Legibility verdict: PASS - Excellent readability with proper contrast and sizing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black at #1A1A17, correctly matches spec
+      Chrome: Title, axis labels, and tick labels rendered in light text (INK tokens) with excellent contrast on dark surface; no dark-on-dark text failures; legend styling properly inverted; grid remains subtle and visible
+      Data: Okabe-Ito colors identical to light render (#009E73, #D55E00, #0072B2); theme adaptation perfect with only chrome changing
+      Legibility verdict: PASS - All text is readable on dark background; theme tokens properly applied throughout
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable, title and axis labels clear, tick labels slightly
-          small but legible
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: Title 28px, axis labels 22px, tick labels 18px; all explicitly set
+          and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Tight spacing in 4x4 grid is acceptable for matrix layout; no severe
+          collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized for 150 points, alpha=0.7 appropriate, histograms
-          slightly crowded
+        comment: Markers properly sized (10px default, 12px selected, 6px unselected);
+          all scatter points and histograms clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, teal palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight extra whitespace on right for legend
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (cm)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito palette used; first series is #009E73; all three colors
+          CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px output (1600x900x3 scale); good proportions; margins
+          appropriate; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend well-placed but grid slightly faint
+        comment: Title format correct; axis labels include units (cm)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; palette order Okabe-Ito compliant; backgrounds
+          #FAF8F1/#1A1A17; both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Uses standard Okabe-Ito palette; overlaid histograms show design
+          consideration; functional but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Legend styling with border; subtle grid; marker edge highlighting;
+          well-considered spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: SPLOM naturally guides exploration; color consistency aids tracking;
+          diagonal distributions add context; interactivity enables discovery narrative
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter plot matrix with diagonal histograms
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: All four variables correctly mapped pairwise
-      - id: SC-03
+        comment: Correct scatter plot matrix (SPLOM) implementation
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has linked selection styling, zoom, pan, histograms. Lasso available
-          in HTML only
-      - id: SC-04
-        name: Data Range
+        comment: Has linked selection (dragmode, selected/unselected states), zoom/pan
+          (Plotly native), diagonal distributions, consistent color encoding, reset
+          functionality
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly mapped; all data shown; 4 continuous variables
+          properly visualized
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Species correctly labeled and colored
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Has spec-id · library · pyplots.ai but prefixed with Iris Dataset
+        comment: Title format correct; legend labels match species names
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all Iris features, clear species separation, overlapping histograms
-          reduce clarity
+        comment: 'Shows all SPLOM aspects: matrix layout, diagonal distributions,
+          off-diagonal relationships, linked interactivity'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Classic Iris dataset, real biological measurements
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Authentic Iris measurements in centimeters
+        comment: Iris dataset is real-world standard, widely used for multivariate
+          analysis, neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Sepal/petal measurements in cm are sensible for iris flowers; scales
+          are well-proportioned
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -156,42 +185,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: No functions or classes; straightforward procedural code
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses deterministic dataset but no explicit seed shown
+        score: 2
+        max: 2
+        passed: true
+        comment: Uses fixed seaborn.load_dataset('iris'); deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (plotly, seaborn for data)
+        comment: 'Only imports needed: plotly.graph_objects, plotly.subplots, seaborn,
+          os'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly 6.x API
+        comment: No fake UI; uses Plotly native interactivity; appropriate complexity
+          for SPLOM
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of Plotly interactivity: dragmode select, selected/unselected
-          styling, legendgroup, HTML export with modeBar'
+        comment: Uses make_subplots for grid, go.Histogram and go.Scatter for traces,
+          proper layout methods; high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages Plotly's native linked brushing, dragmode selection, selected/unselected
+          marker states, HTML export with toolbar config
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -206,4 +244,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
