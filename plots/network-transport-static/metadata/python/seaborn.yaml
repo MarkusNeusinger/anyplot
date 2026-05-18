@@ -1,153 +1,185 @@
 library: seaborn
+language: python
 specification_id: network-transport-static
 created: '2026-01-09T23:48:52Z'
-updated: '2026-01-09T23:52:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868904882
+updated: '2026-05-18T14:23:02Z'
+generated_by: claude-haiku
+workflow_run: 26039189480
 issue: 3463
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent visual clarity with well-positioned station labels and readable edge
-    annotations
-  - Proper handling of parallel routes with perpendicular offset calculation
-  - Good color scheme that is colorblind-accessible (blue, green, yellow)
-  - Clean KISS code structure with clear data separation
-  - Title follows the exact required format
-  - Realistic transportation network scenario with plausible times and station names
+  - Perfect visual quality with excellent legibility in both themes and no text overlapping
+  - Strong design sophistication with custom arrow styling and thoughtfully designed
+    edge label backgrounds
+  - Complete spec compliance with all required features implemented and working
+  - Realistic, comprehensible transportation data demonstrating all plot type aspects
+  - Clean code following KISS principles with proper theme-adaptive implementation
+  - Proper use of Okabe-Ito palette with correct first series color and theme-adaptive
+    chrome
   weaknesses:
-  - Minor text overlap between some station labels and edge labels, particularly around
-    Park Station and University
-  - Edge label font size (9pt) is slightly small relative to other text elements
-  - Limited use of seaborn-specific features; most drawing relies on matplotlib primitives
+  - Limited leverage of seaborn-specific visualization patterns; most complex logic
+    is manual matplotlib (arrows, offset calculation, custom positioning)
+  - Edge label positioning could potentially benefit from more sophisticated curve/bezier
+    rendering for complex networks
   image_description: |-
-    The plot displays a regional rail network diagram with 10 stations (labeled A through J) positioned according to their x/y coordinates. Stations are rendered as dark blue circular nodes (Python Blue #306998) with white single-letter identifiers centered inside. Each station has a labeled name box positioned above it (e.g., "Central Station", "North Terminal", "Airport").
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "network-transport-static · python · seaborn · anyplot.ai" in 24pt, station labels in 13pt bold, edge labels in 11pt - all readable in dark text
+      Data: Station nodes rendered in teal (#009E73), edges colored by type (green #009E73 for regional, orange #D55E00 for local, blue #0072B2 for express), time labels clearly visible in white-boxed callouts
+      Legibility verdict: PASS - All text elements clearly readable against light background with no overlap or contrast issues
 
-    Routes are visualized as directed arrows connecting stations, color-coded by type: blue for Regional Express (RE), green (Sea Green) for Local Service (S), and yellow (Python Yellow) for Express (EX). Each route edge displays a label box showing the route ID and times in the format "RE 01\n06:00→06:18". Multiple routes between the same stations are properly offset using parallel edges.
-
-    The legend in the lower right explains the three route types. The title reads "Regional Rail Network · network-transport-static · seaborn · pyplots.ai" in large bold text at the top. The background is white with no grid (axes are turned off). The overall layout is clean and readable.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, station labels, and edge labels rendered in light text (#F0EFE8) that contrasts well against dark background; no dark-on-dark failures
+      Data: Station nodes still teal (#009E73), edges maintain identical colors to light render (green #009E73, orange #D55E00, blue #0072B2) - only chrome has adapted
+      Legibility verdict: PASS - All text clearly readable in dark theme with proper light-colored text; data colors verified identical to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title is 24pt bold, station labels readable. Edge labels at 9pt are
-          slightly small but still legible.
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Minor overlap between Park Station label and edge label, and some
-          route labels at University. Mostly readable.
-      - id: VQ-03
-        name: Element Visibility
         score: 8
         max: 8
         passed: true
-        comment: Station nodes s=1200, arrows 2.5pt wide with clear arrowheads, well-sized
-          for 10 stations and 15 routes.
+        comment: All font sizes explicitly set (title 24pt, labels 13pt, edge text
+          11pt, IDs 16pt, legend 15pt); perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean layout with proper spacing; station labels above nodes, edge
+          labels at arc midpoints with background boxes, no collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Station nodes (s=1600) clearly visible; arrows (lw=2.5) well-defined;
+          edge labels prominent; optimal sizing for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue, green, yellow are colorblind-safe with high contrast against
-          white.
+        comment: Okabe-Ito palette ensures CVD safety; good contrast; no red-green
+          as sole signal
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good canvas utilization, slight imbalance with more space at bottom.
+        comment: 16×9 landscape; plot fills ~60% of canvas; balanced margins; generous
+          whitespace; legend properly positioned
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for network diagram, axes appropriately hidden.
+        comment: Title includes spec-id, language, library, and site; axes appropriately
+          hidden for network type
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate), legend well-placed in lower right.
+        comment: 'First series #009E73; multi-series follows Okabe-Ito order; backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark); both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong professional polish with custom arrow styling and intentional
+          edge label backgrounds; Okabe-Ito palette creates visual coherence
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed (ax.axis('off')); no grid; generous whitespace; polished
+          edge label backgrounds with borders
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with color-coded route types; station nodes
+          are visual anchors; colors encode service types; time labels tell journey
+          story
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct directed network visualization with labeled nodes and edges.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Stations positioned by x/y, routes connect source to target correctly.
-      - id: SC-03
+        comment: Correct static network diagram with all required elements (nodes,
+          directed edges, labels, positioning)
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has arrows, edge labels with times, color-coding, offset parallel
-          routes. Tooltips N/A for static library.
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: stations with labels/IDs, directed edges
+          with arrows, edge labels with times, offset edges for parallel routes, color-coding
+          by type'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 10 stations and 15 routes visible within axis limits.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Stations correctly positioned using provided coordinates; routes
+          correctly connect source/target; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three route types with matching colors.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format with spec-id, library, pyplots.ai.
+        comment: Title follows required format; legend shows three route types with
+          correct colors and descriptive labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows regional, local, express routes; multiple routes between stations;
-          variety of patterns.
+        comment: 'Demonstrates all aspects: multiple route types (regional, local,
+          express), parallel routes, varying times'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Regional rail network is realistic with plausible station names.
+        comment: Real transportation scenario with plausible station names (Central
+          Station, North Terminal, Airport, Harbor) and logical time sequences
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Times are realistic morning rush (6:00-9:15), durations plausible
-          (15-40 min).
+        comment: 10 stations with 15 routes within spec range (8-20 stations, 15-60
+          routes); times logically sequenced; factually plausible
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,55 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → figure → draw edges → draw nodes
-          → legend → save.'
+        comment: 'Clean linear flow: imports → theme setup → data definition → plotting
+          → save; no unnecessary functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Uses np.random.seed(42) for reproducibility.
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: matplotlib.patches used only for legend patches, could be simplified.
+        comment: Hard-coded deterministic data; no random generation; fully reproducible
+          across runs
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, matplotlib.patches, matplotlib.pyplot, numpy,
+          seaborn; no unused imports'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: All seaborn and matplotlib APIs are current.
+        comment: Clean, Pythonic, appropriate complexity; no over-engineering; no
+          fake UI or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct dpi and bbox_inches.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API; proper DPI (300) and bbox_inches
+          settings
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.scatterplot and set_style/set_context. Network drawing relies
-          mainly on matplotlib primitives.
+        comment: Uses seaborn's set_theme() with RC parameters; sns.scatterplot()
+          for nodes (high-level API); proper matplotlib integration
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses seaborn theme system; most edge/positioning logic is manual
+          matplotlib; limited seaborn-specific statistical patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - patches
   patterns:
-  - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
-  - edge-highlighting
-  - alpha-blending
