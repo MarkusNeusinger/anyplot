@@ -1,164 +1,178 @@
 library: matplotlib
+language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:53:32Z'
-updated: '2026-01-09T21:56:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866593434
+updated: '2026-05-18T06:41:12Z'
+generated_by: claude-haiku
+workflow_run: 26017282700
 issue: 3549
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of the stacked area with confidence bands concept
-  - Clear visual hierarchy with solid areas (alpha=0.8) and lighter confidence bands
-    (alpha=0.25)
-  - Well-chosen realistic data scenario (energy consumption by source)
-  - Proper stacking of confidence bands relative to the stacked base values
-  - Good use of center lines to delineate series boundaries
-  - Clean, readable code structure
+  - Perfect palette compliance with correct Okabe-Ito sequence and theme-aware chrome
+  - Excellent data quality with realistic energy consumption scenario and visible
+    uncertainty bands
+  - All text explicitly sized and readable in both light and dark renders
+  - Clean code structure with proper matplotlib idioms and deterministic data generation
+  - Strong spec compliance with all required features present
+  - Sophisticated visual layering with zorder management and confidence band visualization
   weaknesses:
-  - Legend does not explicitly show what the lighter bands represent (only mentioned
-    in title)
-  - Grid only on y-axis could benefit from subtle x-axis grid lines for time reference
-  - Could use linewidth=0 more consistently or add edge lines to confidence bands
-  image_description: The plot displays a stacked area chart showing energy consumption
-    by source (Solar, Wind, Hydro, Natural Gas) from 2016 to 2024. Solar is at the
-    bottom in yellow (#FFD43B), Wind stacked above in dark blue (#306998), Hydro in
-    teal (#4ECDC4), and Natural Gas at the top in coral (#FF6B6B). Each series has
-    visible lighter-shaded confidence bands surrounding the main area (approximately
-    0.25 alpha). The title "area-stacked-confidence · matplotlib · pyplots.ai" is
-    clearly displayed at the top. The x-axis shows quarterly dates, the y-axis shows
-    "Energy Consumption (TWh)" ranging from 0-250. A legend in the upper left identifies
-    each energy source and notes "with 90% CI bands". The plot shows seasonal oscillation
-    patterns with solar and wind growing over time, hydro relatively stable, and natural
-    gas declining. Confidence bands are visible as lighter shades extending above
-    and below each stacked series boundary.
+  - Design Excellence could be elevated with more intentional visual hierarchy and
+    emphasis techniques
+  - Annotation placement is functional but not optimally positioned for focal point
+    guidance
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), perfect
+      Chrome: Title, axis labels, tick labels all clearly readable in dark text; grid is subtle at alpha=0.1
+      Data: Four stacked areas with correct Okabe-Ito colors (Solar green #009E73, Wind orange #D55E00, Hydro blue #0072B2, Natural Gas reddish-purple #CC79A7); confidence bands visible as lighter transparent fills with dotted boundary lines
+      Legibility verdict: PASS — all elements clearly readable at full resolution
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), perfect
+      Chrome: All text is light-colored and readable against dark background; no dark-on-dark failures; grid remains visible and subtle
+      Data: Okabe-Ito colors identical to light render (only chrome flips); confidence bands maintain visual hierarchy with proper transparency
+      Legibility verdict: PASS — all elements clearly readable; excellent theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, ticks at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, x-axis dates are rotated and spaced
-          well
+        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
+          perfect readability in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all elements distinct and readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Stacked areas and confidence bands are clearly visible, though some
-          band edges blend slightly where series overlap
+        comment: All stacked areas, confidence bands, and boundary lines clearly visible
+          and well-sized
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good color choices (yellow, blue, teal, coral), all distinguishable,
-          though yellow and teal could be slightly more distinct
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas, plot fills appropriately, legend positioned
-          well in upper left
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe with good contrast throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins and generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Energy Consumption (TWh)''; correct
+          title format'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect compliance: first series is #009E73, multi-series follows
+          Okabe-Ito order, backgrounds are #FAF8F1 (light) and #1A1A17 (dark), theme
+          chrome correct in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Legend only shows the main series colors, not the confidence bands
-          separately
+        comment: Okabe-Ito palette and theme-aware styling show professional polish,
+          but execution is more 'well-configured defaults' than exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: spines removed, subtle grid, generous whitespace,
+          legend and annotation styling; could be stronger'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Clear data display with annotation; visual hierarchy is present but
+          not compelling; lacks strong focal point or visual emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked area chart with confidence bands
+        comment: Correct stacked area chart with all confidence band subtypes
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Time on x-axis, consumption values stacked on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple stacked series with confidence bands, matching lighter shades
-          for bands, semi-transparent fills
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: stacked areas, confidence bands, distinct
+          colors, legend with band explanation'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis starts at 0, x-axis shows full time range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly assigned; all data visible and properly stacked
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four energy sources with CI band
-          note in title
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: area-stacked-confidence · matplotlib · pyplots.ai'
+        comment: Title format perfect; legend labels match data and explain confidence
+          bands
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple series with different trends (growing solar/wind,
-          stable hydro, declining gas), seasonal variation, and varying uncertainty
-          levels
+        comment: 'Shows all plot type aspects: stacking, uncertainty bands, growth
+          trends, different uncertainty levels'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Energy consumption by source is a highly relevant real-world application;
-          values are generally plausible though the declining gas trend is steep
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values in TWh are appropriate for quarterly energy data, 20-80 TWh
-          per source is realistic
+        comment: Real-world energy consumption scenario; neutral and comprehensible;
+          realistic patterns (renewable growth, gas decline)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: TWh values, proportions, and 8-year timeframe all realistic for energy
+          domain
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,54 +180,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports → tokens → data → plot → styling → save; no
+          functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) set; fully deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, pandas imported, all used
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses freq='QE' which is newer syntax but could have compatibility
-          issues with older pandas
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; matplotlib idioms correct; no fake functionality;
+          well-organized
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses high-level API with ax methods, proper zorder layering,
+          theme-aware implementation
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Good use of fill_between for both stacked areas and confidence bands,
-          autofmt_xdate for dates, but no advanced matplotlib features like custom
-          patches or path effects
+        passed: false
+        comment: Uses fill_between for stacked confidence bands and custom zorder;
+          theme-adaptive chrome; good but not maximal leverage of matplotlib uniqueness
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
   - explicit-figure
-  dataprep:
-  - time-series
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
   - grid-styling
