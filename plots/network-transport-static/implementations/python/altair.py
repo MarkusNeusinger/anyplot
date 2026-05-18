@@ -1,15 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: altair 6.0.0 | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
+
+
+# Handle naming conflict: remove script dir from path before importing
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
 
 
 np.random.seed(42)
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Station data - Regional rail network
 stations = [
@@ -117,8 +135,8 @@ for i, r in enumerate(routes):
 
 edges_df = pd.DataFrame(edges_data)
 
-# Color scheme for route types
-type_colors = {"Express": "#306998", "Regional": "#FFD43B", "Local": "#5DA5DA"}
+# Node fill color (adapt to theme for better contrast)
+node_fill = "#FFFDF6" if THEME == "light" else "#3A3A35"
 
 # Define scales with reversed Y axis (so North is at top, South at bottom)
 x_scale = alt.Scale(domain=[0, 850])
@@ -127,22 +145,22 @@ y_scale = alt.Scale(domain=[0, 850], reverse=True)
 # Station nodes
 nodes = (
     alt.Chart(stations_df)
-    .mark_circle(size=2000, stroke="#333333", strokeWidth=2)
-    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), color=alt.value("#ffffff"))
+    .mark_circle(size=2000, stroke=INK_SOFT, strokeWidth=2)
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), color=alt.value(node_fill))
 )
 
 # Station labels
 node_labels = (
     alt.Chart(stations_df)
     .mark_text(fontSize=15, fontWeight="bold", dy=-38)
-    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="label:N", color=alt.value("#333333"))
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="label:N", color=alt.value(INK))
 )
 
 # Station ID in center
 node_ids = (
     alt.Chart(stations_df)
     .mark_text(fontSize=18, fontWeight="bold")
-    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="id:N", color=alt.value("#306998"))
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.Y("y:Q", scale=y_scale), text="id:N", color=alt.value(OKABE_ITO[0]))
 )
 
 # Route edges (lines)
@@ -156,7 +174,7 @@ edges = (
         y2="y2:Q",
         color=alt.Color(
             "type:N",
-            scale=alt.Scale(domain=list(type_colors.keys()), range=list(type_colors.values())),
+            scale=alt.Scale(domain=["Express", "Regional", "Local"], range=OKABE_ITO),
             legend=alt.Legend(title="Route Type", titleFontSize=16, labelFontSize=14, orient="right"),
         ),
         tooltip=["route:N", "dep:N", "arr:N", "type:N"],
@@ -164,7 +182,6 @@ edges = (
 )
 
 # Arrow heads (triangles pointing in direction of travel)
-# Adjust angle for reversed Y axis
 edges_df["angle_adjusted"] = -edges_df["angle"]
 
 arrows = (
@@ -175,20 +192,19 @@ arrows = (
         y=alt.Y("ay:Q", scale=y_scale),
         angle=alt.Angle("angle_adjusted:Q"),
         color=alt.Color(
-            "type:N", scale=alt.Scale(domain=list(type_colors.keys()), range=list(type_colors.values())), legend=None
+            "type:N", scale=alt.Scale(domain=["Express", "Regional", "Local"], range=OKABE_ITO), legend=None
         ),
     )
 )
 
 # Route labels (only show for a subset to avoid clutter)
-# Select representative routes for labeling
 label_indices = [0, 2, 6, 12, 15, 18]
 labels_df = edges_df.iloc[label_indices].copy()
 
 route_labels = (
     alt.Chart(labels_df)
     .mark_text(fontSize=12, fontWeight="normal", align="center", baseline="middle", dy=-14)
-    .encode(x=alt.X("lx:Q", scale=x_scale), y=alt.Y("ly:Q", scale=y_scale), text="label:N", color=alt.value("#333333"))
+    .encode(x=alt.X("lx:Q", scale=x_scale), y=alt.Y("ly:Q", scale=y_scale), text="label:N", color=alt.value(INK_SOFT))
 )
 
 # Combine all layers
@@ -197,12 +213,16 @@ chart = (
     .properties(
         width=1600,
         height=900,
-        title=alt.Title("network-transport-static · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        background=PAGE_BG,
+        title=alt.Title(
+            "network-transport-static · python · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK
+        ),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_axis(grid=False, labels=False, ticks=False, domain=False, title=None)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save as PNG and HTML
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
