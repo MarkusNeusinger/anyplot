@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: scatter-map-geographic
 created: '2026-01-10T04:04:15Z'
-updated: '2026-05-18T17:58:06Z'
+updated: '2026-05-18T18:06:42Z'
 generated_by: claude-haiku
 workflow_run: 26050543079
 issue: 3617
@@ -12,92 +12,83 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 84
 review:
   strengths:
-  - Correct scatter-map implementation with all spec features present
-  - 'Excellent data quality: realistic cities with accurate coordinates and elevation
-    values'
-  - Proper geographic projection (Web Mercator) enabling pan/zoom interactivity
-  - 'Strong library mastery: uses ColorMapper, ColorBar, and WMTS tiles creatively'
-  - Clean code structure with explicit font sizing throughout
-  - Both size (population) and color (elevation) encodings work well together
-  - Comprehensive tooltips with city names, populations, elevations, and coordinates
+  - Excellent spec compliance with all required features present and functional
+  - Perfect data quality with realistic cities and accurate geographic coordinates
+  - Strong dual encoding of size for population and color for elevation
+  - Proper Web Mercator projection with interactive zoom/pan capabilities
+  - Comprehensive hover tooltips with city name, population, elevation, and coordinates
+  - 'Light render perfectly theme-compliant with warm #FAF8F1 background'
+  - Clean code structure with explicit font sizing for high-DPI rendering
   weaknesses:
-  - Dark render canvas background is pure black (#000000) instead of warm dark theme
-    color (#1A1A17) — breaks VQ-07 theme compliance; p.background_fill_color and p.border_fill_color
-    not applying correctly to dark theme
-  - 'Design lacks visual refinement: no spine removal, no grid customization, uses
-    library defaults'
-  - No visual hierarchy or emphasis — plot displays data without storytelling guidance
+  - Dark render canvas background is pure black (#000000) instead of required warm
+    dark (#1A1A17) - identical to Attempt 1, fix was not applied
+  - Bokeh HTML page background not using theme-adaptive color - bokeh background_fill_color
+    may only apply to plot area, not HTML page element
+  - Generic styling with default colors and no design sophistication
+  - Minimal visual refinement - no spine customization, no grid styling, no whitespace
+    enhancement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, provides neutral surface for data
-      Chrome: Title visible at top-left in dark text (28pt), axis labels (22pt) positioned clearly, tick labels readable (18pt), axis lines and border in INK_SOFT color — all legible and properly themed
-      Data: 30 scatter points colored by elevation via viridis palette (purple→blue→green→yellow), point borders are brand green (#009E73), size varies by population (25-80 size units), color bar legend on right shows elevation scale, size legend on left shows population buckets
-      Legibility: PASS — excellent contrast, all text clearly readable, data well-separated
+      Background: Warm off-white #FAF8F1 - correct theme token applied
+      Chrome: Title (28pt, dark #1A1A17), axis labels (22pt), tick labels (18pt) - all clearly readable with excellent contrast
+      Data: Viridis colormap for elevation (dark purple to yellow), brand green borders on scatter points, size varies 25-80 for population encoding
+      Legibility verdict: PASS - all text perfectly readable, theme colors correctly applied
 
     Dark render (plot-dark.png):
-      Background: ISSUE — right edge shows pure black (#000000) instead of warm dark (#1A1A17); should match the theme token
-      Chrome: Title, axis labels, and tick labels appear in light text color (INK/#F0EFE8) against map background; size legend text in light gray (#B8B7B0) — text is readable but canvas border violates theme
-      Data: Viridis colors identical to light render (no banding, colors preserved), point borders remain #009E73 brand green, size variation consistent with light render, color bar visible on right with same gradient
-      Legibility: PARTIAL — text is readable, but the pure-black canvas background (instead of #1A1A17) breaks theme adaptation, creating a "dark-on-dark" feel for the border area rather than the intentional warm dark surface specified in style guide
+      Background: PURE BLACK #000000 - FAILED - should be warm dark #1A1A17
+      Chrome: Title, axis labels, tick labels appear in light colors (INK #F0EFE8, INK_SOFT #B8B7B0) and are technically readable but compromised by harsh black background
+      Data: Viridis colors correctly identical to light render (no recoloring), brand green borders intact
+      Legibility verdict: FAIL - dark-on-dark theme violation; pure black canvas background is not the warm dark (#1A1A17) required by style guide. This is identical to Attempt 1 - the issue was not fixed.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
         score: 7
         max: 8
-        passed: true
-        comment: All font sizes explicitly set (28pt title, 22pt labels, 18pt ticks);
-          readable in light render; dark render text readable but impacted by canvas
-          background color issue
+        passed: false
+        comment: Light render perfect; dark render compromised by background issue
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; legend items clearly spaced; axis labels and
-          tick labels well-positioned
+        comment: Clean spacing; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 30 scatter points perfectly adapted to density; size range (25-80)
-          appropriate; no clipping or excessive overlap
+        comment: 30 points perfectly adapted; size range 25-80 optimal
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis palette perceptually uniform; brand green borders provide
-          contrast; no red-green as sole signal
+        comment: Viridis perceptually uniform; brand green high contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~75% of canvas; balanced margins; legend and color bar
-          well-positioned near data
+        comment: Balanced proportions; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°) with units; descriptive and contextual
+        comment: Descriptive with units
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: 'Palette correct: viridis for continuous data, brand green (#009E73)
-          for point borders ✓; Light render theme chrome perfect ✓; Dark render canvas
-          background pure black (#000000) instead of warm dark (#1A1A17) ✗ — breaks
-          theme-adaptive chrome requirement'
+        comment: 'FAILED - dark render canvas pure black instead of #1A1A17'
     design_excellence:
       score: 10
       max: 20
@@ -107,23 +98,19 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Uses viridis and brand green appropriately; professional layout;
-          but no custom palette or intentional design refinement beyond defaults
+        comment: Generic defaults; no design refinement
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Library defaults with minimal customization; no spine removal, no
-          grid styling, no whitespace refinement
+        comment: No spine customization; minimal styling
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy through size and color encoding; story emerges:
-          global distribution of major cities by population and elevation; viewer
-          understands dual encoding at a glance'
+        comment: Clear dual encoding guides understanding
     spec_compliance:
       score: 15
       max: 15
@@ -133,30 +120,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct scatter-map with lat/lon positioning; Web Mercator projection
-          enabled; geographic context via basemap
+        comment: Correct scatter-map with Web Mercator
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: coordinates, size encoding (population),
-          color encoding (elevation), basemap, zoom/pan interactivity, tooltips, legends'
+        comment: 'All features present: basemap, pan/zoom, tooltips, legends'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude, Y=latitude correctly mapped; Web Mercator projection
-          handles globe→flat transformation; all 30 cities visible within view bounds
+        comment: X/Y correct; Web Mercator transforms properly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: ''scatter-map-geographic · python · bokeh
-          · anyplot.ai''; size legend (1M, 10M, 25M) and color bar legend (Elevation
-          in m) both present and labeled'
+        comment: Correct title format; legends present
     data_quality:
       score: 15
       max: 15
@@ -166,23 +148,19 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: 6 continents represented; elevation 0m (Vancouver)
-          to 2240m (Mexico City); population 0.7M to 24.9M; demonstrates full range
-          of both encodings'
+        comment: 6 continents; elevation 0-2240m; population 0.7-24.9M
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world major cities with accurate coordinates and realistic population/elevation
-          values; neutral, educational context
+        comment: Real cities with accurate data; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Population values factually correct for major cities; elevation data
-          matches real-world geography; geographic coordinates accurate
+        comment: Values factually correct
     code_quality:
       score: 10
       max: 10
@@ -192,36 +170,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme tokens → data dict → projection → mappers
-          → figure → rendering; no unnecessary functions or classes'
+        comment: Linear flow; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hard-coded city data is deterministic; always produces same output;
-          no random generation
+        comment: Hard-coded data; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (theme), time (screenshot delay), numpy (arrays/projection),
-          pathlib (Path), bokeh (plotting), selenium (screenshot); no unused imports'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Proper ColumnDataSource usage; clean projection function; appropriate
-          use of theme tokens; no over-engineering or fake functionality
+        comment: Proper ColumnDataSource; idiomatic patterns
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; no deprecated functions;
-          follows bokeh current API
+        comment: Saves as plot-{THEME}.png and .html
     library_mastery:
       score: 9
       max: 10
@@ -231,31 +204,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of bokeh patterns: figure() with explicit parameters,
-          ColumnDataSource for data management, LinearColorMapper for continuous color
-          encoding, WMTS tiles for basemap, explicit layout management'
+        comment: 'Expert bokeh patterns: figure, ColumnDataSource, ColorMapper, WMTS
+          tiles'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
-        passed: true
-        comment: 'Uses bokeh-specific features: WMTSTileSource (CartoDB tiles), LinearColorMapper,
-          ColorBar layout addition; creative custom legend with scatter + text; hover
-          tooltips; interactive pan/zoom — features difficult to replicate in other
-          libraries'
-  verdict: APPROVED
+        passed: false
+        comment: Good use of ColorBar and custom legend; could leverage more bokeh-specific
+          features
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - colorbar
-  - html-export
+  - custom-legend
   - hover-tooltips
+  - html-export
   patterns:
   - columndatasource
   - data-generation
-  dataprep:
-  - normalization
-  styling:
-  - custom-colormap
-  - alpha-blending
+  dataprep: []
+  styling: []
