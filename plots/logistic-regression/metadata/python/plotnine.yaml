@@ -1,159 +1,180 @@
 library: plotnine
+language: python
 specification_id: logistic-regression
 created: '2026-01-09T21:55:08Z'
-updated: '2026-01-09T21:57:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866597588
+updated: '2026-05-18T08:47:08Z'
+generated_by: claude-haiku
+workflow_run: 26022450560
 issue: 3550
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/plotnine/plot.png
-preview_html: null
-quality_score: 93
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of the logistic regression specification with all required
-    elements
-  - Clean grammar of graphics composition using plotnine idioms (layered geoms, aesthetic
-    mappings)
-  - Proper use of statsmodels for logistic regression fitting with confidence intervals
-  - Good data generation with realistic exam score scenario including noise for authenticity
-  - Appropriate font scaling for high-resolution output (4800x2700 canvas)
-  - Decision threshold line at p=0.5 clearly visible
+  - Excellent theme-adaptive implementation with perfect legibility in both light
+    and dark renders
+  - 'Perfect visual quality: no overlap, legibility, or accessibility issues'
+  - 'All spec requirements met: logistic curve, confidence band, threshold line, jittered
+    points'
+  - Clean, reproducible code with proper seeding and idiomatic plotnine usage
+  - Realistic, educationally-sound data demonstrating the logistic regression concept
+    clearly
+  - Okabe-Ito palette correctly applied with proper theme-token chrome adaptation
   weaknesses:
-  - Axis labels lack units (could be "Exam Score (points)" though score may not need
-    units)
-  - Grid could be slightly more subtle (lower alpha)
-  - Library features score limited - uses standard plotnine without advanced features
-    like faceting or stat layers
-  image_description: The plot displays a logistic regression visualization with the
-    characteristic S-shaped (sigmoid) probability curve. It shows a blue logistic
-    curve (solid line, ~2px width) representing predicted probabilities from exam
-    score 20 to 100. A light blue semi-transparent confidence interval band (95% CI)
-    surrounds the curve. Red/coral data points are jittered near y≈0 representing
-    "Fail" outcomes, while green data points are jittered near y≈1 representing "Pass"
-    outcomes. A horizontal dashed gray line at probability = 0.5 indicates the decision
-    threshold. The x-axis is labeled "Exam Score" (range 20-100) and the y-axis "Probability
-    of Passing" (range 0-1). The title follows the correct format "logistic-regression
-    · plotnine · pyplots.ai". A legend on the right shows "Outcome" with Fail (red)
-    and Pass (green) categories. The plot uses a clean minimal theme with subtle grid
-    lines.
+  - Design Excellence could reach 8/8 with more distinctive visual refinement (custom
+    styling, enhanced visual hierarchy, or intentional emphasis techniques)
+  - Library Mastery LM-02 uses standard geom composition; could explore more plotnine-distinctive
+    patterns or advanced stat layers for next iteration
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt) all rendered in dark INK (#1A1A17) with perfect readability; legend cleanly positioned on right with styled background
+      Data: Orange Fail points (n≈75) clustered at y≈0; cyan Pass points (n≈75) clustered at y≈1; blue logistic curve (#0072B2) with semi-transparent confidence band; dashed decision threshold line at y=0.5
+      Grid: Subtle major/minor grid lines (alpha 0.08/0.04) visible but not dominant
+      Legibility verdict: PASS - all elements perfectly readable with high contrast
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: All text rendered in light INK (#F0EFE8) and INK_SOFT (#B8B7B0); no dark-on-dark failures; all labels equally readable as light render
+      Data: Orange and cyan data colors are identical to light render (only chrome adapts); blue curve maintains prominence
+      Grid: Grid lines visible with light opacity (theme-inverted but properly styled)
+      Legibility verdict: PASS - all elements readable, no dark-on-dark, colors perfectly theme-adapted
+
+    Both renders pass legibility and theme-adaptation validation. Data colors (positions 1-3 Okabe-Ito) are identical across themes; only backgrounds and text chrome flip as required.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and legend text all clearly readable
-          at full size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; jittered points separate well
+        comment: All sizes explicitly set (title 24pt, labels 20pt, ticks 16pt); perfect
+          readability in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlap; all text cleanly spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized (size=4), alpha=0.6 appropriate for ~150 points;
-          curve prominent
+        comment: 150 points at size=4 with alpha=0.6 optimally visible; curve and
+          ribbon prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Red/green but with distinct saturation levels; blue curve distinct;
-          acceptable for this context
+        comment: Okabe-Ito palette with CVD-safe colors; high contrast between series
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
+        comment: 4800×2700px at (16,9) figure; plot fills 60-70% with generous balanced
+          margins
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units
+        comment: Descriptive with units (Exam Score in points, Probability of Passing)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: 'Grid subtle, legend well placed; minor: grid could be slightly more
-          subtle'
+        comment: 'First series #009E73 ✓; backgrounds correct ✓; theme tokens on all
+          chrome ✓'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Well-configured colors with intentional hierarchy; professional polish.
+          Could reach 8 with more distinctive refinement.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent: spines removed, subtle grid, styled legend. Minor tweaks
+          possible.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong visual hierarchy: curve is focal point, points contextual,
+          threshold explains boundary. S-curve tells story clearly.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct logistic regression visualization with sigmoid curve
+        comment: 'Perfect logistic regression: sigmoid curve, binary classes, confidence
+          band, threshold'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=exam score (continuous), Y=probability/outcome (binary)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: sigmoid curve, confidence interval, decision
-          threshold, jittered points, distinct colors'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: jittered points, smooth curve, 95% CI, 0.5 threshold,
+          alpha=0.6'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 20-100 (exam scores), Y-axis 0-1 (probabilities) - all data
-          visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: scores 20-100; Y: 0-1 probability; all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Fail/Pass with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: logistic-regression · plotnine · pyplots.ai'
+        comment: Title format correct; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both classes, sigmoid transition, uncertainty; could show more
-          extreme misclassifications
+        comment: Shows full pass/fail separation, uncertainty region, outliers, realistic
+          variance
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Exam pass/fail scenario is realistic and neutral educational context
+        comment: 'Exam scores with outcomes: real, comprehensible, neutral, educational'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Exam scores 20-100 reasonable; some noise added for realism
+        comment: Scores 20-100 realistic; outcome proportions plausible; distributions
+          match real-world pattern
     code_quality:
       score: 10
       max: 10
@@ -163,43 +184,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → model → plot → save'
+        comment: Linear flow; no unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, including statsmodels for logistic regression
+        comment: Only necessary imports; all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine and statsmodels APIs
+        comment: Clean, Pythonic, appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct plot-{THEME}.png format; dpi=300
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses ggplot() + geom_*() pattern; proper aes(), theme(),
+          scale_color_manual()
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses plotnine grammar of graphics well (ggplot, aes, geom_ribbon,
-          geom_line, geom_point, position_jitter, scale_color_manual, theme_minimal);
-          standard usage but no advanced plotnine-specific features
+        passed: false
+        comment: Uses geom_ribbon() for CI and statsmodels integration; solid but
+          uses standard patterns. Could explore more distinctive plotnine features.
   verdict: APPROVED
 impl_tags:
   dependencies:

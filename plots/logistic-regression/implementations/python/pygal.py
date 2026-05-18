@@ -1,33 +1,44 @@
-""" pyplots.ai
+""" anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
-# Data - Credit approval example based on credit score
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Data - Medical diagnosis based on biomarker level
 np.random.seed(42)
 n_samples = 150
 
-# Generate credit scores (300-850 range)
-credit_scores = np.concatenate(
+# Generate biomarker levels (0-100 scale)
+biomarker_levels = np.concatenate(
     [
-        np.random.normal(520, 70, n_samples // 2),  # Lower scores (more rejections)
-        np.random.normal(720, 60, n_samples // 2),  # Higher scores (more approvals)
+        np.random.normal(30, 15, n_samples // 2),  # Lower levels (mostly negative)
+        np.random.normal(70, 15, n_samples // 2),  # Higher levels (mostly positive)
     ]
 )
-credit_scores = np.clip(credit_scores, 300, 850)
+biomarker_levels = np.clip(biomarker_levels, 0, 100)
 
 # Generate binary outcomes with logistic probability
-true_probs = 1 / (1 + np.exp(-0.015 * (credit_scores - 600)))
+true_probs = 1 / (1 + np.exp(-0.08 * (biomarker_levels - 50)))
 y = (np.random.random(n_samples) < true_probs).astype(int)
 
-# Fit logistic regression using gradient descent (numpy only)
-X = (credit_scores - credit_scores.mean()) / credit_scores.std()  # Normalize for stability
+# Fit logistic regression using gradient descent
+X = (biomarker_levels - biomarker_levels.mean()) / biomarker_levels.std()
 b0, b1 = 0.0, 0.0
 learning_rate = 0.1
 for _ in range(1000):
@@ -39,8 +50,8 @@ for _ in range(1000):
     b1 -= learning_rate * grad_b1
 
 # Generate smooth curve for predictions
-x_curve = np.linspace(300, 850, 100)
-x_curve_norm = (x_curve - credit_scores.mean()) / credit_scores.std()
+x_curve = np.linspace(0, 100, 100)
+x_curve_norm = (x_curve - biomarker_levels.mean()) / biomarker_levels.std()
 y_proba = 1 / (1 + np.exp(-np.clip(b0 + b1 * x_curve_norm, -500, 500)))
 
 # Confidence interval (approximate using binomial SE)
@@ -51,23 +62,20 @@ ci_upper = np.clip(y_proba + 1.96 * se, 0, 1)
 # Jitter y values for visibility
 y_jittered = y + np.random.uniform(-0.025, 0.025, n_samples)
 
-# Custom style for large canvas
+# Custom style for large canvas with theme-adaptive colors
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#306998", "#306998", "#888888", "#E74C3C", "#FFD43B"),
-    title_font_size=56,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=32,
-    value_font_size=24,
-    stroke_width=4,
-    opacity=0.7,
-    opacity_hover=0.95,
-    font_family="sans-serif",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
 # Create XY chart
@@ -76,16 +84,16 @@ chart = pygal.XY(
     height=2700,
     style=custom_style,
     title="logistic-regression · pygal · pyplots.ai",
-    x_title="Credit Score",
-    y_title="Probability of Approval",
+    x_title="Biomarker Level",
+    y_title="Probability of Disease",
     show_dots=True,
     stroke=True,
     show_x_guides=True,
     show_y_guides=True,
-    dots_size=10,
+    dots_size=8,
     stroke_style={"width": 4},
     range=(0, 1.05),
-    xrange=(280, 870),
+    xrange=(-5, 105),
     explicit_size=True,
     legend_at_bottom=True,
     legend_box_size=28,
@@ -93,30 +101,50 @@ chart = pygal.XY(
     print_values=False,
 )
 
-# Add logistic regression curve (main feature)
+# Add logistic regression curve (main feature) - Okabe-Ito position 1 (green)
 curve_points = [(float(x_curve[i]), float(y_proba[i])) for i in range(len(x_curve))]
-chart.add("Logistic Fit", curve_points, stroke_style={"width": 5}, dots_size=0, show_dots=False)
+chart.add("Logistic Fit", curve_points, stroke_style={"width": 5}, dots_size=0, show_dots=False, color=OKABE_ITO[0])
 
-# Add confidence interval bounds
+# Add confidence interval bounds - lighter/dashed variations
 ci_upper_pts = [(float(x_curve[i]), float(ci_upper[i])) for i in range(0, len(x_curve), 2)]
 ci_lower_pts = [(float(x_curve[i]), float(ci_lower[i])) for i in range(0, len(x_curve), 2)]
-chart.add("95% CI Upper", ci_upper_pts, stroke_style={"width": 2, "dasharray": "8,4"}, dots_size=0, show_dots=False)
-chart.add("95% CI Lower", ci_lower_pts, stroke_style={"width": 2, "dasharray": "8,4"}, dots_size=0, show_dots=False)
-
-# Add decision threshold line (y = 0.5)
-threshold_pts = [(300.0, 0.5), (850.0, 0.5)]
 chart.add(
-    "Threshold (p=0.5)", threshold_pts, stroke_style={"width": 3, "dasharray": "12,6"}, dots_size=0, show_dots=False
+    "95% CI Upper",
+    ci_upper_pts,
+    stroke_style={"width": 2, "dasharray": "8,4"},
+    dots_size=0,
+    show_dots=False,
+    color=OKABE_ITO[0],
+)
+chart.add(
+    "95% CI Lower",
+    ci_lower_pts,
+    stroke_style={"width": 2, "dasharray": "8,4"},
+    dots_size=0,
+    show_dots=False,
+    color=OKABE_ITO[0],
 )
 
-# Add data points - Rejected (Class 0)
-rejected_pts = [(float(credit_scores[i]), float(y_jittered[i])) for i in range(n_samples) if y[i] == 0]
-chart.add("Rejected (0)", rejected_pts, stroke=False, dots_size=14)
+# Add decision threshold line (y = 0.5)
+threshold_pts = [(0.0, 0.5), (100.0, 0.5)]
+chart.add(
+    "Threshold (p=0.5)",
+    threshold_pts,
+    stroke_style={"width": 3, "dasharray": "12,6"},
+    dots_size=0,
+    show_dots=False,
+    color=INK_MUTED,
+)
 
-# Add data points - Approved (Class 1)
-approved_pts = [(float(credit_scores[i]), float(y_jittered[i])) for i in range(n_samples) if y[i] == 1]
-chart.add("Approved (1)", approved_pts, stroke=False, dots_size=14)
+# Add data points - Negative (Class 0) - Okabe-Ito position 2 (vermillion)
+negative_pts = [(float(biomarker_levels[i]), float(y_jittered[i])) for i in range(n_samples) if y[i] == 0]
+chart.add("Negative (0)", negative_pts, stroke=False, dots_size=12, color=OKABE_ITO[1])
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Add data points - Positive (Class 1) - Okabe-Ito position 3 (blue)
+positive_pts = [(float(biomarker_levels[i]), float(y_jittered[i])) for i in range(n_samples) if y[i] == 1]
+chart.add("Positive (1)", positive_pts, stroke=False, dots_size=12, color=OKABE_ITO[2])
+
+# Save as PNG and HTML with theme suffix
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
