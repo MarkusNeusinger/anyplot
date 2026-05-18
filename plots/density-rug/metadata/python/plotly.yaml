@@ -1,153 +1,178 @@
 library: plotly
+language: python
 specification_id: density-rug
 created: '2026-01-09T15:32:27Z'
-updated: '2026-01-09T15:35:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856766361
+updated: '2026-05-18T00:31:28Z'
+generated_by: claude-haiku
+workflow_run: 26007111977
 issue: 3505
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-rug/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/density-rug/plotly/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/plotly/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent bimodal data demonstrates KDE behavior effectively
-  - Proper use of semi-transparent fill that does not obscure rug marks
-  - Clean code structure following KISS principles
-  - Good hover templates for interactivity (Plotly strength)
-  - Rug marks implemented creatively using line-ns marker symbol
+  - Perfect theme-adaptive chrome in both light and dark renders with identical data
+    colors across themes
+  - 'Excellent spec compliance: bimodal distribution clearly showcases both KDE curve
+    smoothing and rug mark transparency trade-off'
+  - All text explicitly sized (28px title, 22px labels, 18px ticks) and fully readable
+    in both renders
+  - Clean, Pythonic code with proper theme tokens and deterministic data generation
+  - 'Bimodal distribution data effectively demonstrates the plot type''s purpose:
+    individual observations (rug) + smoothed distribution (KDE)'
   weaknesses:
-  - Legend position overlaps with the data region (upper right corner); moving it
-    outside or to a less intrusive position would improve clarity
-  - Could use Plotly Express distplot or violin with rug for more idiomatic Plotly
-    usage
-  image_description: The plot displays a density plot with rug marks showing web application
-    response times. The KDE curve is rendered as a smooth blue line (#306998) with
-    semi-transparent fill (approximately 35% opacity) underneath. The distribution
-    is clearly bimodal with a larger peak around 120ms (fast responses) and a smaller
-    peak around 250ms (slower responses). Below the density curve, along the x-axis
-    at y≈0, blue vertical tick marks (rug marks) indicate the location of each individual
-    data point - they are clearly denser in the two modal regions. The title "density-rug
-    · plotly · pyplots.ai" is centered at the top in dark gray. The x-axis is labeled
-    "Response Time (ms)" and the y-axis is labeled "Density". A legend in the upper
-    right shows "Density" (line) and "Observations" (tick mark). The background is
-    clean white with subtle gray gridlines.
+  - 'Design Excellence modest (12/20): styling is well-configured library defaults
+    rather than custom palette or sophisticated refinement'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "density-rug · Python · plotly · anyplot.ai" in dark text (28px), X/Y axis labels "Response Time (ms)" and "Density" in dark text (22px), all tick labels readable in darker gray (18px). Grid subtle at ~10% opacity. Legend in top-left with light background.
+      Data: KDE curve in brand green (#009E73) with solid 3px line and 35% transparent fill. Rug marks below x-axis as small vertical ticks in same green (60% transparent), 14px marker size.
+      Legibility verdict: PASS - all elements perfectly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Same title, labels, and ticks in light text (#F0EFE8), clearly visible against dark background. Grid subtle with light color at ~10% opacity. Legend styling matches light render.
+      Data: KDE curve and rug marks in identical green (#009E73) to light render - data colors are theme-independent as required. Fill and transparency identical to light render.
+      Legibility verdict: PASS - all text readable in light colors, no dark-on-dark failures. Brand green maintains excellent visibility on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at size 32, axis labels at 24, ticks at 18 - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All fonts explicitly set with theme-aware colors; perfectly readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; legend, axes, and title all have adequate spacing
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: KDE curve and rug marks are well visible; rug marks could be slightly
-          taller for better visibility
+        comment: KDE curve (3px line) and rug marks (14px) perfectly adapted to 120
+          observations; all distinct and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has units 'Response Time (ms)', Y-axis 'Density' is appropriate
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Brand green with appropriate alpha (0.35 fill, 0.6 rug); good contrast
+          on both backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~70% of canvas with balanced margins (100, 60, 100, 100);
+          excellent utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: X-axis 'Response Time (ms)' and Y-axis 'Density' both descriptive
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; backgrounds are #FAF8F1 (light) / #1A1A17
+          (dark); text and grid are theme-adaptive; identical data colors across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend overlaps data region and has unnecessary border clutter
+        comment: Well-configured library defaults with intentional theme tokens; not
+          exceptional or custom palette
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtle grid, good whitespace, legend styled with background and border;
+          modest refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Bimodal distribution is clear; rug marks show clustering; combination
+          tells the story of shape + observation locations, but no additional emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: KDE plot with rug marks'
+        comment: 'Correct: KDE plot with rug marks as specified'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Continuous variable correctly mapped to x-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: KDE curve, filled area, rug marks along
-          x-axis'
-      - id: SC-04
-        name: Data Range
+        comment: KDE filled curve + rug marks + semi-transparent fill + subtle rug
+          visibility all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: response times; Y: density; axes show full data range'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Density and Observations
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as 'density-rug · plotly · pyplots.ai'
+        comment: 'Title format correct: ''density-rug · Python · plotly · anyplot.ai'';
+          legend labels ''Density'' and ''Observations'''
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bimodal distribution excellently demonstrates KDE smoothing behavior
-          and shows varied data density
+        comment: 'Bimodal distribution shows all aspects: peak shape variation, clustering,
+          observation density'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Web response times is a plausible, neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response times 50-350ms are realistic for web applications
+        comment: 'Real scenario: response times (50-380ms); neutral, plausible context'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values realistic for web application response times; proportions
+          and distributions make sense
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,42 +180,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean: imports → data → KDE → plot → save'
+        comment: 'Clear flow: theme tokens → data → KDE → plot → save; no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) set; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: 'All imports used: os, numpy, plotly, scipy.stats'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; appropriate complexity; no over-engineering or fake
+          functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current plotly API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Scatter with hover templates, but could leverage Plotly Express
-          distribution plots more
+        comment: go.Figure(), go.Scatter(), fig.add_trace(), update_layout(), update_yaxes(),
+          write_image/html all used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses fill='tozeroy', custom hover templates, symbol='line-ns' for
+          rug marks; distinctive but not extensively leveraged
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -204,4 +238,4 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - grid-styling
+  - custom-colormap
