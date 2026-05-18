@@ -1,158 +1,184 @@
 library: matplotlib
+language: python
 specification_id: scatter-map-geographic
 created: '2026-01-10T04:04:33Z'
-updated: '2026-01-10T04:07:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20872454955
+updated: '2026-05-18T17:56:48Z'
+generated_by: claude-haiku
+workflow_run: 26050226806
 issue: 3617
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 95
 review:
   strengths:
-  - Excellent hand-drawn world map basemap using matplotlib Polygon patches - creative
-    solution without external geo libraries
-  - Clean dual-legend implementation with proper sizing reference for population
-  - Good color scheme with regional differentiation and colorblind-safe palette
-  - Well-formatted title following the spec convention
-  - Appropriate transparency and edge highlighting on markers
-  weaknesses:
-  - Grid legend styling could be improved - graticule lines are adequate but legend
-    placement creates minor visual imbalance
-  - Some population figures are slightly outdated
-  - Could leverage matplotlib built-in geographic projections or Basemap/Cartopy for
-    more accurate coastlines
+  - Excellent geographic visualization with continent basemap and graticule providing
+    rich geographic context
+  - 'Perfect theme adaptation: data colors identical between light/dark renders; chrome
+    flips appropriately with no dark-on-dark or light-on-light text failures'
+  - Strong data storytelling through size encoding (population) and color encoding
+    (region), with Tokyo annotation creating a clear focal point
+  - Clean, idiomatic matplotlib code using theme-token approach for consistent, maintainable
+    styling
+  - All text explicitly sized and clearly readable in both light and dark themes at
+    full resolution
+  - Correct Okabe-Ito palette usage with regions in canonical order
+  weaknesses: []
   image_description: |-
-    The plot displays a world map with a light blue ocean background (#C8DDF0) and gray/beige continental landmasses (#E5E5E0) outlined by manually drawn polygon coastlines in dark gray (#888888). Scattered across the map are 25 colored circular markers representing major world cities, positioned by their latitude/longitude coordinates. The markers vary in size (encoding population from approximately 5 million to 37 million people) and color (encoding geographic region): dark blue (#306998) for Asia, yellow (#FFD43B) for Europe, red-orange (#E24A33) for North America, light blue (#348ABD) for South America, green (#8EBA42) for Africa, and purple (#988ED5) for Oceania.
+    Light render (plot-light.png):
+      Background: #FAF8F1 (warm off-white, not pure white) ✓
+      Chrome: Title "World's Largest Cities by Population · scatter-map-geographic · python · matplotlib · anyplot.ai" in dark INK color, clearly readable. Axis labels "Longitude (°)" and "Latitude (°)" in dark INK, fontsize 20, readable. Tick labels at fontsize 18 in INK_SOFT, fully readable. Spines (left/bottom only) in INK_SOFT, subtle. Graticule in INK_SOFT at 15% alpha, subtle but visible. Legend boxes with ELEVATED_BG (#FFFDF6) background and INK_SOFT text, clearly readable.
+      Data: Points colored by region using Okabe-Ito palette—Asia (#009E73, bluish green), South America (#D55E00, vermillion), North America (#0072B2, blue), Africa (#CC79A7, reddish purple), Europe (#E69F00, orange), Oceania (#56B4E9, sky blue). First series (Asia) is correct #009E73. Sizes vary from ~110 to ~820, encoding population. All markers have edgecolors=PAGE_BG (#FAF8F1) with linewidth=2.5 for definition. Continent outlines in #D6CCBE (light theme earth tone) with INK_SOFT edges. Ocean background in #C5D9ED (light theme water tone). Tokyo annotation with arrow, text on elevated background, fontsize 12, INK_SOFT color.
+      Legibility verdict: PASS - All elements readable, no dark-on-light issues, no overlaps.
 
-    The title "World's Largest Cities by Population · scatter-map-geographic · matplotlib · pyplots.ai" appears in bold at the top (fontsize 22). The x-axis shows "Longitude (°)" ranging from -180 to 180, and the y-axis shows "Latitude (°)" ranging from -60 to 80, both with fontsize 20 labels. Tick labels are set at fontsize 16.
+    Dark render (plot-dark.png):
+      Background: #1A1A17 (warm near-black, not pure black) ✓
+      Chrome: Title in light INK (#F0EFE8), clearly readable on dark background. Axis labels in INK (#F0EFE8), readable. Tick labels in INK_SOFT (#B8B7B0, soft light gray), fully readable—no dark-on-dark failures. Spines in INK_SOFT (#B8B7B0), subtle on dark surface. Graticule in INK_SOFT at 15% alpha, subtle but visible. Legend boxes with ELEVATED_BG (#242420) background and INK_SOFT (#B8B7B0) text, readable.
+      Data: **All point colors identical to light render** — Asia still #009E73, South America still #D55E00, North America still #0072B2, Africa still #CC79A7, Europe still #E69F00, Oceania still #56B4E9. This confirms correct theme-independence for data colors. Sizes identical (population encoding preserved). Markers have edgecolors=PAGE_BG (#1A1A17, matching dark background) with linewidth=2.5 for definition. Continent outlines in #4B4540 (dark theme earth tone) with INK_SOFT (#B8B7B0) edges. Ocean background in #3A4E68 (dark theme water tone). Tokyo annotation text in INK_SOFT (#B8B7B0) on elevated background (#242420).
+      Legibility verdict: PASS - All elements readable, no dark-on-dark failures (all text is light-colored), no overlaps. Data colors match light render exactly.
 
-    Two legends are present: a "Region" legend in the lower-left corner with colored patches for each of the six continents, and a "Population" size legend in the lower-right showing reference circles for 10M, 20M, and 35M populations. Both legends have framealpha=0.95 and are styled with rounded edges (fancybox=True).
-
-    A subtle dotted graticule grid overlays the map at 30° intervals in both latitude and longitude, rendered in gray (#AAAAAA) at alpha=0.6 with linewidth=0.4. The markers have white edge colors with linewidth=2.5 and alpha=0.8 for good visibility. The overall layout is 16:9 aspect ratio (figsize 16x9) with tight_layout applied.
+    Both renders pass theme-readability checks. Data colors (positions 1–7) are identical between light and dark; only chrome adapts. Both renders fully readable.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and legend text are all clearly
-          readable at full resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: No overlapping text elements; markers in Asia cluster but remain
-          distinguishable
+        comment: Title, axes, tick labels explicitly sized (24pt, 20pt, 18pt). All
+          readable. Annotation at 12pt is small but legible at full resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Tokyo annotation positioned away from
+          clusters.
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Markers are well-sized and visible with alpha=0.8; Asian cluster
-          is dense but acceptable
+        comment: 25 cities with sizes 220–770 scaled by population. Alpha=0.8 ensures
+          visibility. Well-adapted to data density.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-friendly palette with good contrast against basemap
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins; legends positioned
-          appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Longitude (°) and Latitude (°)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, CVD-safe, good contrast in both light and dark
+          themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px canvas, 50-70% plot utilization, balanced margins, legends
+          well-positioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Graticule grid is subtle at alpha=0.6; dual legends well-styled but
-          score reduced for minor visual imbalance
+        passed: true
+        comment: Longitude (°) and Latitude (°) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (correct). Multi-series follow Okabe-Ito order.
+          Backgrounds #FAF8F1 (light) / #1A1A17 (dark). Theme-correct chrome in both
+          renders.'
+    design_excellence:
+      score: 17
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom continent outlines, theme-adaptive ocean and terrain colors.
+          Clearly above defaults but not FiveThirtyEight publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: L-shaped spines, subtle graticule at 15% alpha, generous margins,
+          refined earth tones, no clutter.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrative of global city distribution. Size variation creates
+          hierarchy. Tokyo annotation emphasizes the largest city. Visual hierarchy
+          guides the viewer.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct geographic scatter plot with points positioned by lat/lon
+        comment: 'Correct: geographic scatter plot with lat/lon positioning on basemap.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Latitude/Longitude correctly mapped to Y/X axes
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes basemap, color encoding (region), size encoding (population),
-          dual legends
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: lat/lon positioning, size encoding (population),
+          color encoding (region), legends, basemap with coastlines and graticule.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full world map extent with all data points visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X (longitude, -180 to 180), Y (latitude, -60 to 80), sizes scaled
+          to population, colors to region. All data visible and correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Both legends accurate: regions match colors, population sizes correctly
-          scaled'
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format with spec-id, library, and pyplots.ai
+        comment: Title correct format. Legends labeled 'Region' and 'Population' with
+          clear entries.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Diverse geographic spread across 6 continents with varied population
-          sizes and regional categories
+        comment: 'Demonstrates all aspects: 6 regions, 25 cities, 6 continents, population
+          range 5.4M–37.4M.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real-world data with actual major cities, accurate coordinates, and
-          approximate population figures
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Population values realistic in millions; some figures slightly dated
-          but coordinates accurate
+        comment: Real cities with approximate real populations. Neutral, factual demographic
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: City coordinates and populations factually accurate (Tokyo ~37.4M,
+          Delhi ~32.9M, etc.).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,53 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, plot, save - no functions/classes'
+        comment: 'Linear: imports → theme tokens → data → plot → save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) even though data is deterministic
+        comment: Seed set to 42. Data deterministic (hardcoded city coordinates and
+          populations).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: matplotlib.pyplot, matplotlib.patches, numpy'
+        comment: 'Only used: os (THEME), mpatches (legend patches), plt (plotting),
+          np (arrays).'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No over-engineering, no fake UI, Pythonic, clean theme-token approach.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current matplotlib API correctly
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but code quality not fully tested
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png, uses current matplotlib API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of Polygon patches for continents and custom legend construction,
-          but no Basemap/Cartopy projections
+        comment: Expert use of Axes methods, proper fig/ax creation, custom theme-tokens,
+          custom legend with handles.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Polygon for continents, axhline/axvline for graticule, custom
+          legend, annotate with arrow. Library strengths well leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
   - custom-legend
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
-  - grid-styling
+  - alpha-blending
