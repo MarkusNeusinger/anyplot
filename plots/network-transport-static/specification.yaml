@@ -6,7 +6,7 @@ title: Static Transport Network Diagram
 
 # Specification tracking
 created: 2026-01-10T00:00:00Z
-updated: 2026-01-10T00:00:00Z
+updated: 2026-05-18T22:50:32Z
 issue: 3463
 suggested: camold
 
@@ -14,12 +14,11 @@ suggested: camold
 tags:
   plot_type:
     - network
-    - graph
-    - directed
   data_type:
     - network
     - relational
     - temporal
+    - directional
   domain:
     - transportation
     - logistics
