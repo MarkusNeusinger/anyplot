@@ -1,13 +1,25 @@
-""" pyplots.ai
+""" anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-18
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette for route types
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Seed for reproducibility
 np.random.seed(42)
@@ -28,48 +40,124 @@ stations = [
 # Route data with manual label positioning for clarity
 # t_pos: position along edge (0=source, 1=target)
 # offset: perpendicular offset multiplier (positive = left of direction)
+# type: route type (0=RE, 1=AIR, 2=S) for Okabe-Ito color mapping
 routes = [
     # Main lines from Central (RE = Regional Express) - outbound
-    {"source": 0, "target": 1, "route": "RE1", "dep": "06:00", "arr": "06:18", "t_pos": 0.58, "offset": 0.10},
-    {"source": 0, "target": 2, "route": "RE2", "dep": "06:10", "arr": "06:28", "t_pos": 0.58, "offset": 0.10},
-    {"source": 0, "target": 3, "route": "RE3", "dep": "06:20", "arr": "06:38", "t_pos": 0.58, "offset": -0.10},
-    {"source": 0, "target": 4, "route": "RE4", "dep": "06:15", "arr": "06:33", "t_pos": 0.58, "offset": 0.10},
+    {
+        "source": 0,
+        "target": 1,
+        "route": "RE1",
+        "dep": "06:00",
+        "arr": "06:18",
+        "t_pos": 0.58,
+        "offset": 0.12,
+        "type": 0,
+    },
+    {
+        "source": 0,
+        "target": 2,
+        "route": "RE2",
+        "dep": "06:10",
+        "arr": "06:28",
+        "t_pos": 0.58,
+        "offset": 0.12,
+        "type": 0,
+    },
+    {
+        "source": 0,
+        "target": 3,
+        "route": "RE3",
+        "dep": "06:20",
+        "arr": "06:38",
+        "t_pos": 0.58,
+        "offset": -0.12,
+        "type": 0,
+    },
+    {
+        "source": 0,
+        "target": 4,
+        "route": "RE4",
+        "dep": "06:15",
+        "arr": "06:33",
+        "t_pos": 0.58,
+        "offset": 0.12,
+        "type": 0,
+    },
     # Main lines - return to Central
-    {"source": 1, "target": 0, "route": "RE1", "dep": "06:30", "arr": "06:48", "t_pos": 0.42, "offset": 0.10},
-    {"source": 2, "target": 0, "route": "RE2", "dep": "06:40", "arr": "06:58", "t_pos": 0.42, "offset": 0.10},
-    {"source": 3, "target": 0, "route": "RE3", "dep": "06:50", "arr": "07:08", "t_pos": 0.42, "offset": -0.10},
-    {"source": 4, "target": 0, "route": "RE4", "dep": "06:45", "arr": "07:03", "t_pos": 0.42, "offset": 0.10},
+    {
+        "source": 1,
+        "target": 0,
+        "route": "RE1",
+        "dep": "06:30",
+        "arr": "06:48",
+        "t_pos": 0.42,
+        "offset": 0.12,
+        "type": 0,
+    },
+    {
+        "source": 2,
+        "target": 0,
+        "route": "RE2",
+        "dep": "06:40",
+        "arr": "06:58",
+        "t_pos": 0.42,
+        "offset": 0.12,
+        "type": 0,
+    },
+    {
+        "source": 3,
+        "target": 0,
+        "route": "RE3",
+        "dep": "06:50",
+        "arr": "07:08",
+        "t_pos": 0.42,
+        "offset": -0.12,
+        "type": 0,
+    },
+    {
+        "source": 4,
+        "target": 0,
+        "route": "RE4",
+        "dep": "06:45",
+        "arr": "07:03",
+        "t_pos": 0.42,
+        "offset": 0.12,
+        "type": 0,
+    },
     # Airport express (AIR)
-    {"source": 0, "target": 5, "route": "AIR", "dep": "05:30", "arr": "06:00", "t_pos": 0.40, "offset": 0.10},
-    {"source": 5, "target": 0, "route": "AIR", "dep": "22:00", "arr": "22:30", "t_pos": 0.60, "offset": 0.10},
+    {
+        "source": 0,
+        "target": 5,
+        "route": "AIR",
+        "dep": "05:30",
+        "arr": "06:00",
+        "t_pos": 0.40,
+        "offset": 0.12,
+        "type": 1,
+    },
+    {
+        "source": 5,
+        "target": 0,
+        "route": "AIR",
+        "dep": "22:00",
+        "arr": "22:30",
+        "t_pos": 0.60,
+        "offset": 0.12,
+        "type": 1,
+    },
     # Suburban lines (S-Bahn) - single direction only
-    {"source": 1, "target": 6, "route": "S1", "dep": "07:00", "arr": "07:15", "t_pos": 0.5, "offset": 0.08},
-    {"source": 1, "target": 5, "route": "S2", "dep": "07:05", "arr": "07:22", "t_pos": 0.5, "offset": -0.08},
-    {"source": 2, "target": 7, "route": "S3", "dep": "07:10", "arr": "07:25", "t_pos": 0.5, "offset": 0.08},
-    {"source": 3, "target": 7, "route": "S4", "dep": "07:20", "arr": "07:38", "t_pos": 0.5, "offset": -0.10},
-    {"source": 3, "target": 8, "route": "S5", "dep": "07:25", "arr": "07:43", "t_pos": 0.5, "offset": 0.08},
-    {"source": 4, "target": 8, "route": "S6", "dep": "07:15", "arr": "07:32", "t_pos": 0.5, "offset": 0.08},
-    {"source": 4, "target": 6, "route": "S7", "dep": "07:30", "arr": "07:48", "t_pos": 0.5, "offset": -0.08},
+    {"source": 1, "target": 6, "route": "S1", "dep": "07:00", "arr": "07:15", "t_pos": 0.5, "offset": 0.10, "type": 2},
+    {"source": 1, "target": 5, "route": "S2", "dep": "07:05", "arr": "07:22", "t_pos": 0.5, "offset": -0.10, "type": 2},
+    {"source": 2, "target": 7, "route": "S3", "dep": "07:10", "arr": "07:25", "t_pos": 0.5, "offset": 0.10, "type": 2},
+    {"source": 3, "target": 7, "route": "S4", "dep": "07:20", "arr": "07:38", "t_pos": 0.5, "offset": -0.10, "type": 2},
+    {"source": 3, "target": 8, "route": "S5", "dep": "07:25", "arr": "07:43", "t_pos": 0.5, "offset": 0.10, "type": 2},
+    {"source": 4, "target": 8, "route": "S6", "dep": "07:15", "arr": "07:32", "t_pos": 0.5, "offset": 0.10, "type": 2},
+    {"source": 4, "target": 6, "route": "S7", "dep": "07:30", "arr": "07:48", "t_pos": 0.5, "offset": -0.10, "type": 2},
 ]
 
-# Route type colors
-route_colors = {
-    "RE": "#306998",  # Python Blue - Regional Express
-    "AIR": "#FFD43B",  # Python Yellow - Airport service
-    "S": "#2E8B57",  # Sea Green - S-Bahn
-}
-
-
-def get_route_color(route_id):
-    """Get color based on route type prefix."""
-    for prefix, color in route_colors.items():
-        if route_id.startswith(prefix):
-            return color
-    return "#666666"
-
-
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
 # Set axis limits with padding
 ax.set_xlim(-0.05, 1.05)
@@ -103,7 +191,8 @@ for route in routes:
         else:
             curve = -0.2
 
-    color = get_route_color(route["route"])
+    # Get route color from Okabe-Ito palette based on type
+    color = OKABE_ITO[route["type"]]
 
     # Draw arrow
     arrow = mpatches.FancyArrowPatch(
@@ -112,8 +201,8 @@ for route in routes:
         connectionstyle=f"arc3,rad={curve}",
         arrowstyle="->,head_length=10,head_width=6",
         color=color,
-        linewidth=2.5,
-        alpha=0.85,
+        linewidth=3,
+        alpha=0.8,
         zorder=1,
     )
     ax.add_patch(arrow)
@@ -145,12 +234,18 @@ for route in routes:
     ax.annotate(
         label_text,
         (label_x, label_y),
-        fontsize=9,
+        fontsize=11,
         ha="center",
         va="center",
-        color="#333333",
+        color=INK,
         fontweight="bold",
-        bbox={"boxstyle": "round,pad=0.15", "facecolor": "white", "edgecolor": color, "linewidth": 1.5, "alpha": 0.95},
+        bbox={
+            "boxstyle": "round,pad=0.2",
+            "facecolor": ELEVATED_BG,
+            "edgecolor": color,
+            "linewidth": 1.5,
+            "alpha": 0.95,
+        },
         zorder=3,
     )
 
@@ -159,7 +254,7 @@ node_radius = 0.035
 for station in stations:
     # Node circle with fill
     circle = plt.Circle(
-        (station["x"], station["y"]), node_radius, facecolor="white", edgecolor="#306998", linewidth=3.5, zorder=4
+        (station["x"], station["y"]), node_radius, facecolor=PAGE_BG, edgecolor=INK_SOFT, linewidth=3.5, zorder=4
     )
     ax.add_patch(circle)
 
@@ -167,33 +262,43 @@ for station in stations:
     ax.annotate(
         station["label"],
         (station["x"], station["y"] - node_radius - 0.025),
-        fontsize=13,
+        fontsize=15,
         ha="center",
         va="top",
         fontweight="bold",
-        color="#222222",
+        color=INK,
         zorder=5,
     )
 
-# Create legend - place in upper left to avoid overlapping with routes
+# Create legend
 legend_elements = [
-    mpatches.Patch(facecolor="#306998", edgecolor="#306998", label="Regional Express (RE)"),
-    mpatches.Patch(facecolor="#FFD43B", edgecolor="#FFD43B", label="Airport Service (AIR)"),
-    mpatches.Patch(facecolor="#2E8B57", edgecolor="#2E8B57", label="S-Bahn (S)"),
+    mpatches.Patch(facecolor=OKABE_ITO[0], edgecolor=OKABE_ITO[0], label="Regional Express (RE)"),
+    mpatches.Patch(facecolor=OKABE_ITO[1], edgecolor=OKABE_ITO[1], label="Airport Service (AIR)"),
+    mpatches.Patch(facecolor=OKABE_ITO[2], edgecolor=OKABE_ITO[2], label="S-Bahn (S)"),
 ]
-ax.legend(handles=legend_elements, loc="upper left", fontsize=14, framealpha=0.95)
+leg = ax.legend(handles=legend_elements, loc="upper right", fontsize=16, framealpha=0.95)
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    leg.get_frame().set_linewidth(1)
 
 # Styling
-ax.set_title("network-transport-static · matplotlib · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
-ax.set_xlabel("Relative Position (West → East)", fontsize=18)
-ax.set_ylabel("Relative Position (South → North)", fontsize=18)
-ax.tick_params(axis="both", labelsize=14)
+ax.set_title(
+    "network-transport-static · python · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20
+)
+ax.set_xlabel("Relative Position (West → East)", fontsize=20, color=INK)
+ax.set_ylabel("Relative Position (South → North)", fontsize=20, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 ax.set_aspect("equal")
-ax.grid(True, alpha=0.25, linestyle="--")
 
-# Clean appearance - remove spines
-for spine in ax.spines.values():
-    spine.set_visible(False)
+# Subtle grid
+ax.grid(True, alpha=0.10, linewidth=0.8, color=INK_SOFT)
+
+# Remove spines
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+for spine in ["left", "bottom"]:
+    ax.spines[spine].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
