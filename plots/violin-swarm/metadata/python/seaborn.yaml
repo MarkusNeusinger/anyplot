@@ -1,152 +1,176 @@
 library: seaborn
+language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:46:05Z'
-updated: '2026-01-09T16:48:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858837574
+updated: '2026-05-18T04:48:06Z'
+generated_by: claude-haiku
+workflow_run: 26013922475
 issue: 3526
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/seaborn/plot.png
-preview_html: null
-quality_score: 94
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent combination of violin and swarm plots with proper layering
-  - Good use of transparency (alpha=0.4) allowing swarm points to be visible through
-    violins
-  - Contrasting darker colors for swarm points vs lighter violin fills
-  - Bimodal distribution in Medium Dose demonstrates varied distribution shapes
-  - Modern seaborn API usage with hue parameter for categorical coloring
-  - Clean, readable KISS code structure
+  - Perfect palette compliance with Okabe-Ito categorical colors
+  - Excellent theme adaptation with all chrome properly themed
+  - Clean, reproducible code with proper seaborn idioms
+  - Well-designed data showing distribution diversity (including bimodal pattern)
+  - Proper text sizing and legibility in both light and dark themes
+  - Intentional design choice of darker swarm points for contrast
   weaknesses:
-  - Could use seaborn set_theme() for more cohesive styling
-  - Grid styling could be slightly more refined
-  image_description: 'The plot displays a violin plot with overlaid swarm points showing
-    reaction time distributions across four experimental conditions (Control, Low
-    Dose, Medium Dose, High Dose). Each condition has a semi-transparent violin shape
-    in distinct colors: blue for Control, yellow for Low Dose, light teal for Medium
-    Dose, and tan/orange for High Dose. Swarm points are rendered in darker contrasting
-    shades of the same color palette, clearly visible against the transparent violin
-    fills. The Medium Dose condition shows a bimodal distribution with two density
-    peaks, while others show unimodal distributions. The title "violin-swarm · seaborn
-    · pyplots.ai" appears at the top, with "Condition" on the x-axis and "Reaction
-    Time (ms)" on the y-axis. A subtle horizontal grid with dashed lines aids readability.
-    The layout is well-balanced with appropriate spacing.'
+  - Could enhance design excellence with more sophisticated visual polish
+  - Library mastery could be higher with more distinctive seaborn features beyond
+    theme-setting
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title, axis labels ("Cell Type", "Expression Level"), and tick labels all clearly visible in dark text on light background. All readable without contrast issues.
+      Data: Four violins with overlaid swarm points using Okabe-Ito colors 1-4 (green, orange, blue, purple). Violin fills are semi-transparent (alpha 0.4), swarm points use darker variants for contrast. First series (Neuron) is correctly #009E73. Grid is subtle and appropriate.
+      Legibility verdict: PASS - All text readable, no dark-on-dark or light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title, axis labels, and tick labels all clearly visible in light text on dark background. No dark-on-dark failures detected.
+      Data: Identical colors to light render (Okabe-Ito palette preserved across themes). Violin and swarm point colors unchanged. Visualization is equally clear in dark theme.
+      Legibility verdict: PASS - All text readable, proper theme adaptation, excellent contrast throughout.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, x-axis labels well spaced
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements, swarm point overlap is intentional
+          and doesn't harm readability
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Swarm points appropriately sized (size=6), good alpha on violins
-          (0.4), points clearly visible
+        comment: Swarm points sized appropriately (size=6), violin shapes clearly
+          visible, optimal for 60 points per category
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors with good contrast, not relying on red-green
-          distinction
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units 'Reaction Time (ms)', X-axis is descriptive 'Condition'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe, good contrast between violin and swarm
+          points
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 4800x2700px layout with balanced margins and generous whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha=0.3, dashed), no legend needed but minor refinement
-          possible
+        comment: Title properly formatted, axis labels descriptive ('Cell Type', 'Expression
+          Level')
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series follows Okabe-Ito order (1-4),
+          backgrounds theme-correct, data colors consistent between renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional design choice with darker swarm point palette for contrast,
+          professional execution, above-default aesthetics
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines properly styled, subtle y-axis grid, good whitespace, well-refined
+          but room for polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with distinct violins, shows distribution
+          shape and individual values, bimodal pattern visible
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct hybrid violin + swarm plot
+        comment: Correct violin plot with overlaid swarm, all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, continuous values on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Violins with transparency, swarm points overlaid, contrasting colors
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features implemented: transparency (alpha 0.4), appropriate
+          sizing, contrasting colors, horizontal spread'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: categorical (Cell Type), Y: numeric (Expression Level), all data
+          visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, categories labeled on axis
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format 'violin-swarm · seaborn · pyplots.ai'
+        comment: Title format correct, legend omitted appropriately (clear x-axis
+          labels)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied distributions including bimodal, different means and
-          spreads
+        comment: 'Shows all aspects: 4 cell types, different distributions, bimodal
+          pattern for Oligodendrocyte'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Reaction times in ms for drug dosage study is plausible and neutral
+        comment: Gene expression levels across cell types - real, neutral, comprehensible
+          scientific scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in 200-650ms range reasonable for reaction times
+        comment: Values 20-130 plausible, 60 observations per type (within 20-200
+          range), proportions factually sensible
     code_quality:
       score: 10
       max: 10
@@ -156,42 +180,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → data → plot → save'
+        comment: 'Simple linear code: imports, theme, data, plot, save - no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42), deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, matplotlib, numpy, pandas, seaborn'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses modern seaborn API with hue parameter
+        comment: Appropriate complexity, no over-engineering, no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with proper dpi and facecolor, current
+          API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses seaborn's violinplot and swarmplot correctly with proper API
-          (hue+palette), but could leverage more seaborn features
+        comment: High-level API (violinplot, swarmplot), proper hue usage, sophisticated
+          sns.set_theme() for theme adaptation
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses sns.set_theme() for theme-adaptive styling, could leverage more
+          seaborn-specific features
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -199,7 +232,6 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
