@@ -354,11 +354,12 @@ export function SpecPage() {
       : `https://anyplot.ai/${specId}`;
 
   // Page title surfaces language alongside library so the browser tab matches
-  // the rendered image-title format `{spec-id} · {Language} · {library}`. Hub
+  // the rendered image-title format `{spec-id} · {language} · {library}`. Hub
   // mode under a `?language=` filter also surfaces the language so users see
-  // what's been narrowed down.
-  const detailLanguage = mode === 'detail' && urlLanguage ? (LANG_DISPLAY[urlLanguage] || urlLanguage) : null;
-  const hubFilterLanguage = languageFilter ? (LANG_DISPLAY[languageFilter] || languageFilter) : null;
+  // what's been narrowed down. Language is kept lowercase to match the
+  // lowercase library name (e.g. `matplotlib`, `ggplot2`).
+  const detailLanguage = mode === 'detail' && urlLanguage ? urlLanguage : null;
+  const hubFilterLanguage = languageFilter ? languageFilter : null;
   const titleSuffix =
     mode === 'detail' && detailLanguage && selectedLibrary
       ? ` · ${detailLanguage} · ${selectedLibrary}`
