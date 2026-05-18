@@ -16,9 +16,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.cache import clear_cache, get_cache_stats
 from api.dependencies import require_db
+from api.exceptions import raise_validation_error
 from core.config import settings
 from core.constants import SUPPORTED_LIBRARIES
-from core.database import SpecRepository
+from core.database import FEEDBACK_REACTIONS, FEEDBACK_STATUSES, FeedbackRepository, SpecRepository
 
 
 router = APIRouter(prefix="/debug", tags=["debug"])
@@ -504,4 +505,112 @@ async def invalidate_cache(x_cache_token: str | None = Header(default=None)) -> 
     clear_cache()
     return CacheInvalidateResponse(
         cleared=stats_before["size"], maxsize=stats_before["maxsize"], ttl=stats_before["ttl"]
+    )
+
+
+# ============================================================================
+# Feedback analytics + triage (issue #5662 follow-up)
+# ============================================================================
+
+
+class FeedbackTopPage(BaseModel):
+    """Aggregated count of one reaction per page path."""
+
+    path: str
+    count: int
+    last_seen: str | None  # ISO timestamp of the most recent entry on this path
+
+
+class FeedbackMessageItem(BaseModel):
+    """A feedback entry with free-text message — surfaced to admins for triage."""
+
+    id: str
+    message: str
+    reaction: str | None
+    contact: str | None
+    path: str | None
+    spec_id: str | None
+    viewport: str | None
+    status: str
+    created_at: str  # ISO timestamp
+
+
+class FeedbackStatusUpdate(BaseModel):
+    """Body of the PATCH endpoint."""
+
+    status: str
+
+
+@router.get("/feedback/top", response_model=list[FeedbackTopPage], dependencies=[Depends(require_admin)])
+async def feedback_top_pages(
+    reaction: str, limit: int = 20, db: AsyncSession = Depends(require_db)
+) -> list[FeedbackTopPage]:
+    """Top pages by reaction count (thumbs_up / thumbs_down / idea / bug)."""
+    if reaction not in FEEDBACK_REACTIONS:
+        raise_validation_error(f"reaction must be one of {FEEDBACK_REACTIONS}")
+    if not 1 <= limit <= 100:
+        raise_validation_error("limit must be between 1 and 100")
+    rows = await FeedbackRepository(db).top_paths_by_reaction(reaction, limit)
+    return [FeedbackTopPage(**row) for row in rows]
+
+
+@router.get("/feedback/messages", response_model=list[FeedbackMessageItem], dependencies=[Depends(require_admin)])
+async def feedback_messages(
+    status: str | None = None, limit: int = 50, db: AsyncSession = Depends(require_db)
+) -> list[FeedbackMessageItem]:
+    """List feedback entries that carry a free-text message, newest first.
+
+    `status="open"` is a pseudo-value mapping to `('new', 'in_progress')` — the
+    default view on /debug only shows the unresolved triage states.
+    """
+    if not 1 <= limit <= 200:
+        raise_validation_error("limit must be between 1 and 200")
+    if status == "open":
+        repo_status: str | tuple[str, ...] | None = ("new", "in_progress")
+    elif status is None:
+        repo_status = None
+    elif status in FEEDBACK_STATUSES:
+        repo_status = status
+    else:
+        raise_validation_error(f"status must be one of {FEEDBACK_STATUSES} or 'open'")
+    entries = await FeedbackRepository(db).list_with_message(repo_status, limit)
+    return [
+        FeedbackMessageItem(
+            id=str(e.id),
+            message=e.message or "",
+            reaction=e.reaction,
+            contact=e.contact,
+            path=e.path,
+            spec_id=e.spec_id,
+            viewport=e.viewport,
+            status=e.status,
+            # feedback.created_at is TIMESTAMP WITHOUT TIME ZONE in UTC — tag with Z
+            # so the browser parses it as UTC, not local time (otherwise "just now"
+            # entries render as "Nh ago" depending on the user's offset).
+            created_at=e.created_at.replace(tzinfo=timezone.utc).isoformat(),
+        )
+        for e in entries
+    ]
+
+
+@router.patch("/feedback/{entry_id}", response_model=FeedbackMessageItem, dependencies=[Depends(require_admin)])
+async def update_feedback_status(
+    entry_id: str, payload: FeedbackStatusUpdate, db: AsyncSession = Depends(require_db)
+) -> FeedbackMessageItem:
+    """Set the triage status on one feedback entry."""
+    if payload.status not in FEEDBACK_STATUSES:
+        raise_validation_error(f"status must be one of {FEEDBACK_STATUSES}")
+    updated = await FeedbackRepository(db).update_status(entry_id, payload.status)
+    if updated is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="feedback entry not found")
+    return FeedbackMessageItem(
+        id=str(updated.id),
+        message=updated.message or "",
+        reaction=updated.reaction,
+        contact=updated.contact,
+        path=updated.path,
+        spec_id=updated.spec_id,
+        viewport=updated.viewport,
+        status=updated.status,
+        created_at=updated.created_at.replace(tzinfo=timezone.utc).isoformat(),
     )

@@ -240,3 +240,100 @@ class TestHealthEndpoints:
         assert response.status_code == 200
         data = response.json()
         assert data["message"] == "Hello, World!"
+
+
+class TestFeedbackEndpoint:
+    """Integration tests for POST /feedback (issue #5662)."""
+
+    async def test_submit_minimal(self, client, test_db_with_data):
+        """Should accept a minimal feedback entry and persist it."""
+        response = await client.post("/feedback", json={"message": "Looks great!"})
+
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+
+        from sqlalchemy import select
+
+        from core.database.models import Feedback
+
+        result = await test_db_with_data.execute(select(Feedback))
+        rows = list(result.scalars().all())
+        assert len(rows) == 1
+        assert rows[0].message == "Looks great!"
+        assert rows[0].reaction is None
+
+    async def test_submit_with_context(self, client, test_db_with_data):
+        """Should persist all optional context fields."""
+        payload = {
+            "message": "Bug on mobile",
+            "reaction": "bug",
+            "contact": "user@example.com",
+            "path": "/scatter-basic",
+            "spec_id": "scatter-basic",
+            "viewport": "375x812",
+            "session_id": "abc-123",
+        }
+        response = await client.post("/feedback", json=payload)
+
+        assert response.status_code == 200
+
+        from sqlalchemy import select
+
+        from core.database.models import Feedback
+
+        result = await test_db_with_data.execute(select(Feedback))
+        row = result.scalars().one()
+        assert row.message == "Bug on mobile"
+        assert row.reaction == "bug"
+        assert row.contact == "user@example.com"
+        assert row.spec_id == "scatter-basic"
+        assert row.viewport == "375x812"
+        assert row.session_id == "abc-123"
+
+    async def test_honeypot_silently_dropped(self, client, test_db_with_data):
+        """Should return 200 but write nothing when the honeypot field is filled."""
+        response = await client.post("/feedback", json={"message": "spam", "website": "http://spam.example"})
+
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+
+        from sqlalchemy import select
+
+        from core.database.models import Feedback
+
+        result = await test_db_with_data.execute(select(Feedback))
+        assert list(result.scalars().all()) == []
+
+    async def test_empty_message_rejected(self, client):
+        """Should reject whitespace-only message with 400."""
+        response = await client.post("/feedback", json={"message": "   "})
+        assert response.status_code == 400
+
+    async def test_message_too_long_rejected(self, client):
+        """Should reject messages over 500 chars with 400."""
+        response = await client.post("/feedback", json={"message": "x" * 501})
+        assert response.status_code == 400
+
+    async def test_invalid_reaction_rejected(self, client):
+        """Should reject reactions outside the allow-list with 400."""
+        response = await client.post("/feedback", json={"message": "hello", "reaction": "fire"})
+        assert response.status_code == 400
+
+    async def test_empty_message_and_no_reaction_rejected(self, client):
+        """Submissions with neither message nor reaction should 400."""
+        response = await client.post("/feedback", json={})
+        assert response.status_code == 400
+
+    async def test_rate_limit_triggers_after_threshold(self, client):
+        """Should return 429 once a single IP exceeds the per-minute limit.
+
+        Each request uses a distinct message so the duplicate-suppression
+        filter (silent 200) doesn't mask the rate limiter under test.
+        """
+        headers = {"x-forwarded-for": "203.0.113.42"}
+        for i in range(5):
+            ok = await client.post("/feedback", json={"message": f"spam-{i}"}, headers=headers)
+            assert ok.status_code == 200
+
+        blocked = await client.post("/feedback", json={"message": "spam-blocked"}, headers=headers)
+        assert blocked.status_code == 429

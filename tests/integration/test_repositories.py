@@ -7,7 +7,7 @@ Tests Repository layer interaction with database (no HTTP layer).
 
 import pytest
 
-from core.database.repositories import ImplRepository, LibraryRepository, SpecRepository
+from core.database.repositories import FeedbackRepository, ImplRepository, LibraryRepository, SpecRepository
 
 
 pytestmark = pytest.mark.integration
@@ -359,3 +359,35 @@ class TestImplRepository:
         assert impl.spec_id == "scatter-basic"
         assert impl.library_id == "matplotlib"
         assert impl.quality_score == 98.0
+
+
+class TestFeedbackRepository:
+    """Integration tests for FeedbackRepository (issue #5662)."""
+
+    async def test_create_and_list_recent(self, test_session):
+        """Should persist an entry and return it via list_recent."""
+        repo = FeedbackRepository(test_session)
+
+        entry = await repo.create({"message": "Hello", "reaction": "thumbs_up", "ip_hash": "deadbeef"})
+        assert entry.id is not None
+        assert entry.message == "Hello"
+        assert entry.reaction == "thumbs_up"
+
+        recent = await repo.list_recent()
+        assert len(recent) == 1
+        assert recent[0].id == entry.id
+
+    async def test_count_recent_by_ip(self, test_session):
+        """Should count entries within the time window per ip_hash."""
+        from datetime import datetime, timedelta, timezone
+
+        repo = FeedbackRepository(test_session)
+
+        await repo.create({"message": "one", "ip_hash": "aaa"})
+        await repo.create({"message": "two", "ip_hash": "aaa"})
+        await repo.create({"message": "three", "ip_hash": "bbb"})
+
+        since = datetime.now(timezone.utc) - timedelta(minutes=1)
+        assert await repo.count_recent_by_ip("aaa", since) == 2
+        assert await repo.count_recent_by_ip("bbb", since) == 1
+        assert await repo.count_recent_by_ip("ccc", since) == 0

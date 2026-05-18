@@ -14,9 +14,20 @@ from core.database.connection import (
     init_db,
     is_db_configured,
 )
-from core.database.models import LANGUAGES_SEED, LIBRARIES_SEED, Impl, Language, Library, Spec
+from core.database.models import (
+    FEEDBACK_REACTIONS,
+    FEEDBACK_STATUSES,
+    LANGUAGES_SEED,
+    LIBRARIES_SEED,
+    Feedback,
+    Impl,
+    Language,
+    Library,
+    Spec,
+)
 from core.database.repositories import (
     BaseRepository,
+    FeedbackRepository,
     ImplRepository,
     LanguageRepository,
     LibraryRepository,
@@ -39,6 +50,9 @@ __all__ = [
     "Library",
     "Language",
     "Impl",
+    "Feedback",
+    "FEEDBACK_REACTIONS",
+    "FEEDBACK_STATUSES",
     "LIBRARIES_SEED",
     "LANGUAGES_SEED",
     # Repositories
@@ -47,4 +61,5 @@ __all__ = [
     "LibraryRepository",
     "LanguageRepository",
     "ImplRepository",
+    "FeedbackRepository",
 ]

@@ -26,6 +26,7 @@ from api.mcp.server import mcp_server  # noqa: E402
 from api.routers import (  # noqa: E402
     debug_router,
     download_router,
+    feedback_router,
     health_router,
     insights_router,
     languages_router,
@@ -153,6 +154,7 @@ app.include_router(seo_router)
 app.include_router(og_images_router)
 app.include_router(proxy_router)
 app.include_router(debug_router)
+app.include_router(feedback_router)
 
 
 # ASGI middleware to handle /mcp without trailing slash

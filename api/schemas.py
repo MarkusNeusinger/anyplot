@@ -152,3 +152,24 @@ class StatsResponse(BaseModel):
     libraries: int
     languages: int = 0
     lines_of_code: int = 0
+
+
+class FeedbackRequest(BaseModel):
+    """In-app quick feedback submission (issue #5662)."""
+
+    message: str | None = None
+    reaction: str | None = None
+    contact: str | None = None
+    path: str | None = None
+    spec_id: str | None = None
+    viewport: str | None = None
+    session_id: str | None = None
+    # Honeypot field — real users never fill this in. Bots auto-fill all
+    # text inputs and trip the guard server-side.
+    website: str | None = None
+
+
+class FeedbackResponse(BaseModel):
+    """Response confirming feedback was accepted (no entry id is returned)."""
+
+    status: str

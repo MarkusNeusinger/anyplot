@@ -202,6 +202,51 @@ class Impl(Base):
     )
 
 
+# Allowed reactions for in-app feedback widget (issue #5662).
+FEEDBACK_REACTIONS = ("thumbs_up", "thumbs_down", "bug", "idea")
+
+# Triage states for feedback entries — admins move them through these on
+# /debug as they read incoming feedback.
+FEEDBACK_STATUSES = ("new", "in_progress", "done", "wont_solve")
+
+
+class Feedback(Base):
+    """Lightweight in-app feedback entry (issue #5662).
+
+    Submitted via the floating widget on anyplot.ai by users without GitHub
+    accounts. Entries are immutable once written; triage happens manually.
+    """
+
+    __tablename__ = "feedback"
+
+    id: Mapped[str] = mapped_column(UniversalUUID, primary_key=True, default=lambda: str(uuid4()))
+    message: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    reaction: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Context captured automatically with the message
+    path: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    spec_id: Mapped[str | None] = mapped_column(String(MAX_SPEC_ID_LENGTH), nullable=True)
+    user_agent: Mapped[str | None] = mapped_column(String(500), nullable=True)
+    viewport: Mapped[str | None] = mapped_column(String(20), nullable=True)
+    session_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # SHA-256 of the client IP — used for rate limiting, not user identification.
+    ip_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
+
+    # Triage state — see FEEDBACK_STATUSES above. Updated from /debug.
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="new")
+
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
+
+    __table_args__ = (
+        CheckConstraint(
+            "reaction IS NULL OR reaction IN ('thumbs_up','thumbs_down','bug','idea')",
+            name="ck_feedback_reaction_valid",
+        ),
+        CheckConstraint("status IN ('new','in_progress','done','wont_solve')", name="ck_feedback_status_valid"),
+    )
+
+
 # Seed data for libraries + languages (re-exported from core.constants)
 LIBRARIES_SEED = LIBRARIES_METADATA
 LANGUAGES_SEED = LANGUAGES_METADATA

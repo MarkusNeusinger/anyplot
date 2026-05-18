@@ -4,13 +4,14 @@ Repository classes for database access.
 Provides abstraction layer between API and database models.
 """
 
+from datetime import datetime, timezone
 from typing import Generic, TypeVar
 
 from sqlalchemy import String, cast, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload, undefer
 
-from core.database.models import Impl, Language, Library, Spec
+from core.database.models import Feedback, Impl, Language, Library, Spec
 
 
 T = TypeVar("T")
@@ -347,3 +348,92 @@ class ImplRepository(BaseRepository[Impl]):
             return existing
         full_data = {**impl_data, "spec_id": spec_id, "library_id": library_id, "language_id": language_id}
         return await self.create(full_data)
+
+
+class FeedbackRepository(BaseRepository[Feedback]):
+    """Repository for in-app feedback entries (issue #5662). Message/reaction/contact
+    are immutable once written; only `status` can change as admins triage entries.
+    """
+
+    model = Feedback
+    updatable_fields = frozenset({"status"})
+
+    async def count_recent_by_ip(self, ip_hash: str, since: datetime) -> int:
+        """Count entries from this IP hash since the given UTC datetime — used for rate limiting.
+        `since` must be tz-naive UTC because feedback.created_at is TIMESTAMP WITHOUT TIME ZONE."""
+        result = await self.session.execute(
+            select(func.count(Feedback.id)).where(Feedback.ip_hash == ip_hash, Feedback.created_at >= since)
+        )
+        return result.scalar_one() or 0
+
+    async def list_recent(self, limit: int = 100) -> list[Feedback]:
+        """List most recent entries first — for admin/triage tooling."""
+        result = await self.session.execute(select(Feedback).order_by(Feedback.created_at.desc()).limit(limit))
+        return list(result.scalars().all())
+
+    async def top_paths_by_reaction(self, reaction: str, limit: int = 20) -> list[dict]:
+        """Group entries by path for one reaction and return path + count + last seen.
+
+        Used by the debug dashboard's "top thumbs-up / thumbs-down pages" sections.
+        Entries with no path are skipped — they can't be navigated to.
+        """
+        result = await self.session.execute(
+            select(
+                Feedback.path, func.count(Feedback.id).label("count"), func.max(Feedback.created_at).label("last_seen")
+            )
+            .where(Feedback.reaction == reaction, Feedback.path.is_not(None))
+            .group_by(Feedback.path)
+            .order_by(func.count(Feedback.id).desc(), func.max(Feedback.created_at).desc())
+            .limit(limit)
+        )
+        return [
+            {
+                "path": row.path,
+                "count": row.count,
+                # created_at is TIMESTAMP WITHOUT TIME ZONE in UTC — tag with Z so
+                # the browser doesn't interpret the naive ISO as local time.
+                "last_seen": (row.last_seen.replace(tzinfo=timezone.utc).isoformat() if row.last_seen else None),
+            }
+            for row in result.all()
+        ]
+
+    async def has_recent_duplicate(
+        self, message: str, ip_hash: str | None, session_id: str | None, since: datetime
+    ) -> bool:
+        """True iff the same message text was submitted since `since` AND matches
+        either the same IP hash or the same session id. The router uses this for
+        silent spam-drop so bots can't tell the difference between accepted and
+        suppressed submissions."""
+        identity_filters = []
+        if ip_hash:
+            identity_filters.append(Feedback.ip_hash == ip_hash)
+        if session_id:
+            identity_filters.append(Feedback.session_id == session_id)
+        if not identity_filters:
+            return False
+        result = await self.session.execute(
+            select(func.count(Feedback.id)).where(
+                Feedback.message == message, Feedback.created_at >= since, or_(*identity_filters)
+            )
+        )
+        return (result.scalar_one() or 0) > 0
+
+    async def list_with_message(self, status: str | tuple[str, ...] | None = None, limit: int = 50) -> list[Feedback]:
+        """List entries that carry a free-text message, filtered optionally by status.
+
+        `status` may be a single value, a tuple of values (matched with IN), or None
+        for all statuses. The router uses the tuple form for the "open" pseudo-filter
+        on /debug.
+        """
+        stmt = select(Feedback).where(Feedback.message.is_not(None))
+        if isinstance(status, str):
+            stmt = stmt.where(Feedback.status == status)
+        elif status:
+            stmt = stmt.where(Feedback.status.in_(status))
+        stmt = stmt.order_by(Feedback.created_at.desc()).limit(limit)
+        result = await self.session.execute(stmt)
+        return list(result.scalars().all())
+
+    async def update_status(self, entry_id: str, new_status: str) -> Feedback | None:
+        """Update only the triage status of one entry. Returns None if not found."""
+        return await self.update(entry_id, {"status": new_status})
