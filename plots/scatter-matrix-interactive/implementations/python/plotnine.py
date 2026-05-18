@@ -1,8 +1,14 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-matrix-interactive: Interactive Scatter Plot Matrix (SPLOM)
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 72/100 | Created: 2026-01-10
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-18
 """
+
+import os
+import sys
+
+
+sys.path.pop(0)
 
 import numpy as np
 import pandas as pd
@@ -24,17 +30,23 @@ from plotnine import (
 from sklearn.datasets import load_iris
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (first series #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+
 # Data: Iris dataset for multivariate analysis
-np.random.seed(42)
 iris = load_iris()
 df = pd.DataFrame(iris.data, columns=["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"])
 df["Species"] = pd.Categorical([iris.target_names[i] for i in iris.target])
 
-# Variables for the matrix (already include units)
 variables = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"]
-
-# Colorblind-safe palette (Dark2 inspired - teal, orange, purple)
-colors = ["#1B9E77", "#D95F02", "#7570B3"]
 
 # Create long-form data for scatter matrix
 scatter_data = []
@@ -43,17 +55,14 @@ density_data = []
 for i, var_y in enumerate(variables):
     for j, var_x in enumerate(variables):
         if i == j:
-            # Diagonal: Create normalized density data that fits within the variable's range
+            # Diagonal: histogram-based density
             var_min, var_max = df[var_x].min(), df[var_x].max()
             var_range = var_max - var_min
-            # Use baseline slightly above min for visual clarity
             baseline = var_min
 
             for species in df["Species"].unique():
                 species_vals = df[df["Species"] == species][var_x].values
-                # Simple histogram-based density
                 hist, edges = np.histogram(species_vals, bins=20, range=(var_min, var_max), density=True)
-                # Normalize to fit within the y-axis range (scale to var_range * 0.5)
                 max_density = hist.max() if hist.max() > 0 else 1
                 hist_scaled = hist / max_density * var_range * 0.5 + baseline
                 bin_centers = (edges[:-1] + edges[1:]) / 2
@@ -70,7 +79,7 @@ for i, var_y in enumerate(variables):
                         }
                     )
         else:
-            # Off-diagonal: scatter data
+            # Off-diagonal: scatter points
             for _, row in df.iterrows():
                 scatter_data.append(
                     {"x": row[var_x], "y": row[var_y], "Species": row["Species"], "var_x": var_x, "var_y": var_y}
@@ -88,34 +97,36 @@ density_df["var_y"] = pd.Categorical(density_df["var_y"], categories=variables[:
 # Sort density data for proper ribbon rendering
 density_df = density_df.sort_values(["var_x", "var_y", "Species", "x"])
 
-# Create scatter plot matrix with density ribbons on diagonal
+# Create scatter plot matrix
 plot = (
     ggplot(mapping=aes(x="x"))
     + geom_point(data=scatter_df, mapping=aes(y="y", color="Species"), size=3.5, alpha=0.7)
     + geom_ribbon(data=density_df, mapping=aes(ymin="ymin", ymax="ymax", fill="Species"), alpha=0.5)
     + facet_grid("var_y ~ var_x", scales="free")
-    + scale_color_manual(values=colors)
-    + scale_fill_manual(values=colors)
-    + labs(title="scatter-matrix-interactive · plotnine · pyplots.ai", x="", y="")
+    + scale_color_manual(values=OKABE_ITO)
+    + scale_fill_manual(values=OKABE_ITO)
+    + labs(title="scatter-matrix-interactive · python · plotnine · anyplot.ai", x="", y="")
     + theme_minimal()
     + theme(
         figure_size=(16, 16),
-        plot_title=element_text(size=24, weight="bold", ha="left"),
-        strip_text_x=element_text(size=14),
-        strip_text_y=element_text(size=14, angle=0),
-        axis_text=element_text(size=11),
-        axis_title_x=element_text(size=16),
-        axis_title_y=element_text(size=16),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_grid_major=element_line(color=INK_MUTED, size=0.3, alpha=0.10),
+        panel_grid_minor=element_line(color=INK_MUTED, size=0.2, alpha=0.05),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+        plot_title=element_text(size=24, color=INK, ha="left", weight="bold"),
+        strip_text_x=element_text(size=16, color=INK),
+        strip_text_y=element_text(size=16, color=INK, angle=0),
+        axis_text=element_text(size=14, color=INK_SOFT),
+        axis_title_x=element_text(size=16, color=INK),
+        axis_title_y=element_text(size=16, color=INK),
+        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=0.5),
         legend_position="bottom",
-        legend_background=element_rect(fill="white", alpha=0.9),
         panel_spacing=0.03,
-        panel_grid_major=element_line(color="#cccccc", alpha=0.3),
-        panel_grid_minor=element_line(color="#eeeeee", alpha=0.2),
-        panel_background=element_rect(fill="white"),
     )
 )
 
 # Save plot
-plot.save("plot.png", dpi=300, width=16, height=16, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, width=16, height=16, verbose=False)
