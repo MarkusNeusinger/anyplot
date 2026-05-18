@@ -1,7 +1,7 @@
 """ anyplot.ai
 range-interval: Range Interval Chart
 Library: highcharts unknown | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-18
+Quality: 88/100 | Updated: 2026-05-18
 """
 
 import os
