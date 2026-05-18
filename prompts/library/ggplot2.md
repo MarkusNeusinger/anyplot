@@ -222,7 +222,7 @@ df <- tibble::tibble(
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x, y)) +
   geom_point(color = OKABE_ITO[1], size = 4, alpha = 0.7) +
-  labs(title = "scatter-basic · R · ggplot2 · anyplot.ai", x = "X", y = "Y") +
+  labs(title = "scatter-basic · r · ggplot2 · anyplot.ai", x = "X", y = "Y") +
   theme_minimal(base_size = 14) +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
