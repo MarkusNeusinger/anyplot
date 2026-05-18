@@ -28,22 +28,70 @@ df <- data.frame(value = response_times)
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x = value)) +
   geom_density(
+    stat = "density",
     fill = OKABE_ITO[1],
     color = OKABE_ITO[1],
-    alpha = 0.4,
-    linewidth = 1.2
+    alpha = 0.35,
+    linewidth = 1.4,
+    bw = 20
+  ) +
+  geom_density(
+    stat = "density",
+    fill = NA,
+    color = OKABE_ITO[1],
+    alpha = 1,
+    linewidth = 2,
+    bw = 20,
+    key_glyph = "blank"
   ) +
   geom_rug(
     color = OKABE_ITO[1],
-    alpha = 0.6,
-    linewidth = 0.8,
-    length = unit(0.03, "npc")
+    alpha = 0.7,
+    linewidth = 0.9,
+    length = unit(0.035, "npc")
+  ) +
+  geom_vline(
+    xintercept = 150,
+    color = OKABE_ITO[1],
+    linewidth = 0.6,
+    alpha = 0.5,
+    linetype = "dashed"
+  ) +
+  geom_vline(
+    xintercept = 250,
+    color = OKABE_ITO[1],
+    linewidth = 0.6,
+    alpha = 0.5,
+    linetype = "dashed"
+  ) +
+  annotate(
+    "text",
+    x = 150,
+    y = Inf,
+    label = "Peak 1",
+    vjust = 1.5,
+    hjust = 0.5,
+    size = 5,
+    color = INK,
+    family = "sans"
+  ) +
+  annotate(
+    "text",
+    x = 250,
+    y = Inf,
+    label = "Peak 2",
+    vjust = 1.5,
+    hjust = 0.5,
+    size = 5,
+    color = INK,
+    family = "sans"
   ) +
   labs(
     title = "density-rug · R · ggplot2 · anyplot.ai",
     x = "Response Time (ms)",
     y = "Density"
   ) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.15))) +
   theme_minimal(base_size = 14) +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
