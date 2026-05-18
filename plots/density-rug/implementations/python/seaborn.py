@@ -1,42 +1,73 @@
-""" pyplots.ai
+""" anyplot.ai
 density-rug: Density Plot with Rug Marks
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-09
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-18
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 
-# Data - Response times (ms) for a web application
-np.random.seed(42)
-# Create a realistic bimodal distribution: most requests are fast, some are slower
-fast_responses = np.random.normal(loc=120, scale=25, size=180)
-slow_responses = np.random.normal(loc=280, scale=40, size=70)
-response_times = np.concatenate([fast_responses, slow_responses])
-# Clip to realistic bounds
-response_times = np.clip(response_times, 50, 400)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+
+# Data - Sensor measurement errors (single-peak exponential decay)
+np.random.seed(17)
+# Most measurements have small errors, few have large errors (exponential distribution)
+# This represents measurement precision in scientific instruments
+errors = np.random.exponential(scale=15, size=250)
+# Add a small noise component to make it slightly more realistic
+errors = errors + np.random.normal(0, 2, size=250)
+# Clip to realistic bounds (0-80)
+errors = np.clip(errors, 0, 80)
+
+# Configure seaborn theme
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+    },
+)
 
 # Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 
 # Plot KDE with fill
-sns.kdeplot(data=response_times, ax=ax, fill=True, alpha=0.4, color="#306998", linewidth=3, bw_adjust=0.8)
+sns.kdeplot(data=errors, ax=ax, fill=True, alpha=0.35, color=BRAND, linewidth=3, bw_adjust=0.9)
 
 # Add rug plot
-sns.rugplot(data=response_times, ax=ax, color="#306998", alpha=0.6, height=0.05, linewidth=1.5)
+sns.rugplot(data=errors, ax=ax, color=BRAND, alpha=0.5, height=0.04, linewidth=1.2)
 
 # Styling
-ax.set_xlabel("Response Time (ms)", fontsize=20)
-ax.set_ylabel("Density", fontsize=20)
-ax.set_title("density-rug · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-ax.grid(True, alpha=0.3, linestyle="--")
+ax.set_xlabel("Measurement Error (μm)", fontsize=20, color=INK)
+ax.set_ylabel("Density", fontsize=20, color=INK)
+ax.set_title("density-rug · Python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Remove top and right spines for cleaner look
+# Grid styling (y-axis only, subtle)
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.set_axisbelow(True)
+
+# Remove top and right spines
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
