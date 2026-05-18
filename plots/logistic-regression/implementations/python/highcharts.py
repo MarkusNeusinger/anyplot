@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
-Library: highcharts | Python 3.13
-Quality: pending | Created: 2026-05-18
+Library: highcharts unknown | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-18
 """
 
 import os
