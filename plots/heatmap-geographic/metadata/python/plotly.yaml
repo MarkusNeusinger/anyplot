@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T08:16:18Z'
-updated: '2026-05-18T23:40:45Z'
+updated: '2026-05-18T23:50:59Z'
 generated_by: claude-sonnet
 workflow_run: 26066433362
 issue: 3638
@@ -12,38 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Theme-adaptive basemap style switching (carto-positron vs carto-darkmatter) integrates
-    seamlessly with the light/dark theme system
-  - 'Perfect spec compliance: density heatmap, basemap, colorbar, transparency, interactivity
-    all present and working'
-  - Real SF Bay Area data with four geographically accurate hotspots creates an immediately
-    interpretable visualization
-  - Clean flat code with all theme tokens properly applied to colorbar elements
-  - HTML export provides interactive output alongside PNG renders
+  - Theme-adaptive basemap style selection (carto-positron / carto-darkmatter) elegantly
+    mirrors the page theme in both renders
+  - 'Full spec compliance: density map with colorbar, basemap, interactive zoom, and
+    realistic SF Bay Area data'
+  - Clean code structure with explicit font sizes and proper theme tokens throughout
+  - Realistic, well-placed hotspot centers with factually correct Bay Area coordinates
   weaknesses:
-  - YlOrRd colorscale is valid per spec but not the style guide default (viridis preferred);
-    yellow-end has lower CVD safety compared to viridis — switch to colorscale=Viridis
-  - 'Design sophistication (DE-01=5/8): no focal-point annotation on highest-density
-    hotspot, no colorbar frame styling using ELEVATED_BG token'
-  - Map tile text cannot be resized by implementation, slightly limiting VQ-01
+  - YlOrRd colorscale used instead of the default recommendation (viridis/cividis)
+    for sequential continuous data
+  - DE-01 could be pushed higher with a slightly more polished title font weight or
+    colorbar positioning refinement
+  - LM-01 could be more idiomatic by leveraging plotly's mapbox_style via px.density_mapbox
+    (Express API)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white carto-positron basemap with paper_bgcolor ~#FAF8F1 border area; basemap itself is light grey/white tile style
-      Chrome: Title "Activity Density · heatmap-geographic · python · plotly · anyplot.ai" at 28px in dark INK color — clearly readable; colorbar title "Intensity" at 20px, tick labels at 16px in INK_SOFT — all readable
-      Data: YlOrRd colorscale with opacity=0.7; four hotspots visible (Downtown SF largest/most intense in red, Oakland, Berkeley, South SF); background scatter in yellow; color gradient clearly shows density variation
+      Background: warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Activity Density · heatmap-geographic · python · plotly · anyplot.ai" at 28px, dark ink, centered — readable. Colorbar label "Intensity" at 20px, tick labels at 16px — all readable. Geographic basemap labels from carto-positron clearly visible.
+      Data: YlOrRd colorscale showing density from dark purple (low ~0.1) through blue-green to bright yellow (high ~1.0). Four distinct hotspots (Downtown SF, Oakland, Berkeley, South SF) clearly visible over light basemap. opacity=0.7 allows basemap context to show through.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black carto-darkmatter basemap with paper_bgcolor ~#1A1A17 border area; basemap itself is dark tile style
-      Chrome: Title text in light INK color (#F0EFE8) — clearly readable against dark background; colorbar title and ticks in INK_SOFT (#B8B7B0) — readable; map tile city labels appear in light/white text; NO dark-on-dark failures
-      Data: YlOrRd colorscale colors are identical to light render (same yellow→red gradient hotspots); data colors unchanged, only chrome flipped; hotspots pop vividly against the near-black basemap
+      Background: warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8) clearly readable against dark background. Colorbar label and tick labels rendered in INK/INK_SOFT light tokens — all readable. Basemap labels from carto-darkmatter visible. No dark-on-dark failures observed.
+      Data: YlOrRd colorscale colors identical to light render — only basemap and page chrome flip between themes. Hotspot density patterns identical.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -51,48 +50,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 28px, colorbar title 20px, colorbar ticks 16px all explicitly
-          set and readable; map tile labels from external service can't be controlled
+        comment: Title (28px), colorbar title (20px), colorbar ticks (16px) all explicitly
+          set; basemap labels uncontrollable but clear
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No text overlap; title, colorbar, and map labels all clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density hotspots distinct and well-contrasted; radius=15 appropriate
-          for data density
+        comment: Density hotspots clearly visible at radius=15; opacity=0.7 allows
+          basemap context to show through
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: YlOrRd yellow-end has lower luminance contrast and some CVD concerns
-          compared to viridis
+        passed: true
+        comment: Sequential colorscale with sufficient luminance range; basemap provides
+          geographic context
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Map fills canvas efficiently; explicit margins; colorbar well-positioned
-          outside map
+        comment: Map fills canvas well; colorbar proportioned correctly; generous
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title in correct format; colorbar labeled Intensity
+        comment: No traditional axes (geographic map); colorbar has Intensity label;
+          title is descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Correct theme chrome (#FAF8F1/#1A1A17 backgrounds, INK tokens); YlOrRd
-          is valid sequential but not default recommendation (viridis preferred)
+        comment: YlOrRd is sequential but not the default recommendation (viridis/cividis);
+          mentioned in spec but partial compliance only; both theme backgrounds correct
     design_excellence:
       score: 13
       max: 20
@@ -102,22 +102,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Theme-adaptive basemap styles (carto-positron/carto-darkmatter) is
-          above-default thinking; good but not strong design territory
+        comment: Theme-adaptive basemap selection is sophisticated; well-calibrated
+          radius and opacity; above configured default but not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean layout with explicit margins; good refinement for geographic
-          map context; no traditional spines/grids to remove
+        comment: Generous margins, well-sized colorbar, clean layout; geographic maps
+          have fewer refinement levers
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: SF Bay Area activity story immediately clear; color gradient focuses
-          on hotspots; no focal-point annotations to highlight specific insights
+        comment: Four distinct activity clusters create clear geographic narrative;
+          background scatter provides spatial context; realistic hotspot hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +127,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: go.Densitymap is the correct geographic density heatmap type
+        comment: Correct geographic heatmap using go.Densitymap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: KDE density, sequential colormap, transparency, basemap, colorbar,
-          interactivity, hover template all present
+        comment: Continuous color gradient, colorbar legend, basemap, interactive
+          zoom, KDE density all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Latitude, longitude, intensity (z) correctly mapped; all clusters
-          visible
+        comment: lat/lon correctly mapped to geographic coordinates; values mapped
+          to z for density weighting
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title Activity Density · heatmap-geographic · python · plotly · anyplot.ai
-          matches required format
+        comment: 'Title follows correct format with descriptive prefix: Activity Density
+          · heatmap-geographic · python · plotly · anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -158,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple distinct hotspots at varying intensities, background scatter,
-          clear density gradients — all aspects demonstrated
+        comment: Multiple distinct hotspots with varying intensity + scattered background;
+          demonstrates full density range
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real SF Bay Area geography with plausible urban activity density;
-          neutral, non-controversial
+        comment: SF Bay Area activity density is a real, neutral, comprehensible business/urban-planning
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Geographically accurate coordinates; 1500 points appropriate; intensity
-          0.1-1.0 realistic for relative activity
+        comment: Geographic coordinates accurate for target locations (37.79/-122.40
+          for downtown SF, etc.)
     code_quality:
       score: 10
       max: 10
@@ -183,14 +183,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → theme tokens → data → plot → save; no
-          functions or classes'
+        comment: 'Clean linear flow: theme tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random calls
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -202,14 +201,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Python; appropriate complexity; no over-engineering
+        comment: Clean, idiomatic; multiple hotspots organized clearly; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current go.Densitymap
-          API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 8
       max: 10
@@ -219,16 +217,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of go.Densitymap; proper layout/map configuration with
-          center/zoom; colorbar configured via trace dict
+        comment: go.Densitymap is correct plotly trace for geographic KDE; proper
+          map layout configuration
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: go.Densitymap is distinctly Plotly; CARTO tile integration with theme-adaptive
-          styles; interactive HTML export with hover templates
-  verdict: REJECTED
+        comment: go.Densitymap with basemap integration is distinctly plotly; interactive
+          hovertemplate; dual HTML+PNG output
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
