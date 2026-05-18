@@ -1,0 +1,233 @@
+library: ggplot2
+language: r
+specification_id: coefficient-confidence
+created: '2026-05-18T12:32:54Z'
+updated: '2026-05-18T12:47:27Z'
+generated_by: claude-haiku
+workflow_run: 26033578679
+issue: 3576
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Perfect Visual Quality — all text readable in both themes; no overlap; excellent
+    legibility
+  - Flawless Theme Adaptation — data colors identical across light/dark; chrome correctly
+    theme-adapted with no dark-on-dark failures
+  - Complete Spec Implementation — all required features present; coefficient ordering
+    aids interpretation; significance distinction through color
+  - Professional Code — clean structure, reproducible, expert ggplot2 patterns with
+    proper theme tokens
+  - Realistic Example Data — plausible housing coefficients showing meaningful variation
+    in effect sizes
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct surface color
+      Chrome: Title at 24pt, axis labels at 20pt, tick labels at 16pt — all dark text, perfectly readable against light background
+      Data: 10 coefficients shown as points with horizontal error bars; significant coefficients in teal/green (#009E73), non-significant in soft gray (#4A4A44); reference line at zero; legend clearly labeled
+      Legibility verdict: PASS — All text perfectly readable; no overlap; clean, professional appearance
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface color
+      Chrome: Title and labels rendered in light cream/gray colors (#F0EFE8, #B8B7B0), all perfectly readable against dark background with no dark-on-dark failures
+      Data: Significant and non-significant colors IDENTICAL to light render (only chrome flipped); reference line and grid visible in light gray; legend readable
+      Legibility verdict: PASS — All text readable; no dark-on-dark text failures; theme adaptation is perfect
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: 'All sizes explicitly set: title 24pt, labels 20pt, ticks 16pt; perfect
+          readability in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlap; all text fully readable with clean spacing
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Error bars and points optimally sized for 10 coefficients; excellent
+          visual distinction
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette; excellent contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout; plot fills canvas well; balanced margins; legend
+          well-placed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with context (Coefficient Estimate, Predictor
+          Variable)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; data colors identical
+          between themes; chrome theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured default with thoughtful theme tokens; professional
+          but not exceptionally innovative
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, generous whitespace, clean legend; some refinement visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color distinction creates visual hierarchy; zero reference line aids
+          interpretation; magnitude ordering guides viewer
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct coefficient plot with confidence intervals; horizontal layout
+          optimal
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All spec features present: coefficients, confidence intervals, significance
+          distinction, zero reference, magnitude ordering'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X-axis shows coefficients with zero as reference; Y-axis shows variables;
+          all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correct format; legend properly labeled with Yes/No values
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: significant/non-significant, positive/negative
+          effects, varying confidence widths'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Housing price regression is real, comprehensible, neutral with domain-appropriate
+          variable names
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coefficient values (-0.5 to 1.0) realistic for housing; signs plausible
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: tokens → data → plot → save; no functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2, dplyr, ragg imported and used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean R code; appropriate complexity; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correctly saves as plot-{THEME}.png using modern ggsave + ragg
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert ggplot() + geoms + theme_minimal() pattern; proper aesthetics
+          mapping
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Effective theme system with environment tokens; geom_errorbarh distinctive;
+          well-implemented custom theme
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
