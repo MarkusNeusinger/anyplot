@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 range-interval: Range Interval Chart
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-18
 """
 
 import os
