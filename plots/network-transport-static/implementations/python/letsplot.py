@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 network-transport-static: Static Transport Network Diagram
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 74/100 | Updated: 2026-05-18
@@ -190,9 +190,7 @@ plot = (
         tooltips=station_tooltips,
     )
     # Draw station labels (adjusted position to avoid edge label overlap)
-    + geom_text(
-        aes(x="x", y="y", label="label"), data=stations_df, size=9, color="white", fontface="bold", nudge_y=-0.055
-    )
+    + geom_text(aes(x="x", y="y", label="label"), data=stations_df, size=9, color=INK, fontface="bold", nudge_y=-0.055)
     # Color scale for route types
     + scale_color_manual(values=route_colors, name="Route Type")
     # Styling
