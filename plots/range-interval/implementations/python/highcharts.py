@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 range-interval: Range Interval Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: highcharts unknown | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-18
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,6 +17,15 @@ from highcharts_core.options.series.bar import ColumnRangeSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+BRAND = "#009E73"
 
 # Data: Monthly temperature ranges for a temperate city
 np.random.seed(42)
@@ -39,35 +49,41 @@ chart.options.chart = {
     "inverted": False,
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 200,
     "marginLeft": 150,
-    "style": {"fontFamily": "Arial, sans-serif"},
+    "marginTop": 100,
+    "style": {"fontFamily": "Arial, sans-serif", "color": INK},
 }
 
 # Title
 chart.options.title = {
-    "text": "range-interval · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "range-interval · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "normal", "color": INK},
 }
 
 # Subtitle for context
-chart.options.subtitle = {"text": "Monthly Temperature Ranges (°C)", "style": {"fontSize": "32px"}}
+chart.options.subtitle = {"text": "Monthly Temperature Ranges (°C)", "style": {"fontSize": "22px", "color": INK_SOFT}}
 
 # X-axis (categories)
 chart.options.x_axis = {
     "categories": months,
-    "title": {"text": "Month", "style": {"fontSize": "36px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "32px"}, "y": 40},
-    "crosshair": True,
+    "title": {"text": "Month", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}, "y": 40},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": GRID,
+    "crosshair": False,
 }
 
 # Y-axis (temperature values)
 chart.options.y_axis = {
-    "title": {"text": "Temperature (°C)", "style": {"fontSize": "36px"}, "margin": 20},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Temperature (°C)", "style": {"fontSize": "22px", "color": INK}, "margin": 20},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "#e0e0e0",
+    "gridLineColor": GRID,
 }
 
 # Plot options for column range
@@ -77,21 +93,38 @@ chart.options.plot_options = {
         "dataLabels": {
             "enabled": True,
             "format": "{y}°C",
-            "style": {"fontSize": "18px", "fontWeight": "normal", "textOutline": "none"},
+            "style": {"fontSize": "20px", "fontWeight": "normal", "textOutline": "none", "color": INK_SOFT},
         },
     }
 }
 
-# Legend configuration
-chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "24px"}, "verticalAlign": "top", "align": "right"}
+# Legend configuration - positioned at bottom for better integration
+chart.options.legend = {
+    "enabled": True,
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "verticalAlign": "bottom",
+    "align": "center",
+    "layout": "horizontal",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+}
 
 # Tooltip configuration
-chart.options.tooltip = {"valueSuffix": "°C", "style": {"fontSize": "20px"}}
+chart.options.tooltip = {
+    "valueSuffix": "°C",
+    "style": {"fontSize": "18px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+}
+
+# Colors
+chart.options.colors = [BRAND]
 
 # Create the column range series
 series = ColumnRangeSeries()
 series.name = "Temperature Range"
-series.color = "#306998"  # Python Blue
+series.color = BRAND
 
 # Data format for columnrange: [[low, high], [low, high], ...]
 series.data = [[round(min_temps[i], 1), round(max_temps[i], 1)] for i in range(len(months))]
@@ -100,12 +133,28 @@ chart.add_series(series)
 
 # Download Highcharts JS (required for headless Chrome)
 highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+req = urllib.request.Request(
+    highcharts_url,
+    headers={
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://highcharts.com/",
+        "Accept": "*/*",
+    },
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 # Download highcharts-more.js for columnrange support
 highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
+req_more = urllib.request.Request(
+    highcharts_more_url,
+    headers={
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Referer": "https://highcharts.com/",
+        "Accept": "*/*",
+    },
+)
+with urllib.request.urlopen(req_more, timeout=30) as response:
     highcharts_more_js = response.read().decode("utf-8")
 
 # Generate HTML with inline scripts
@@ -117,13 +166,17 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -137,12 +190,8 @@ chrome_options.add_argument("--window-size=4800,2800")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
-
-# Also save HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
+Path(temp_path).unlink()
