@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: network-transport-static
 created: '2026-01-09T23:51:50Z'
-updated: '2026-05-18T14:44:18Z'
+updated: '2026-05-18T14:49:46Z'
 generated_by: claude-haiku
 workflow_run: 26039987062
 issue: 3463
@@ -12,117 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-dark.html
-quality_score: 74
+quality_score: 88
 review:
   strengths:
-  - 'Excellent spec compliance: network diagram correctly visualizes transportation
-    routes with all required metadata'
-  - 'Strong data storytelling: color coding by route type and time labels provide
-    clear context'
-  - 'Proper Okabe-Ito palette usage: first series correctly green (#009E73), secondary
-    colors follow canonical order'
-  - Well-positioned station nodes with curve offset for multiple routes between same
-    pairs
-  - Clean, reproducible code structure
-  - Both light and dark renders preserve data colors (only chrome adapts), except
-    for the fatal label-color issue
+  - Perfect spec compliance with all required features implemented
+  - Excellent visual quality and theme adaptation with no readability failures
+  - Clean idiomatic letsplot code using proper ggplot2 grammar
+  - Proper handling of complex network topology with offset edges for multiple routes
+  - Correct Okabe-Ito palette compliance and theme tokens across both renders
   weaknesses:
-  - 'CRITICAL: Station labels hardcoded to white (color=''white'') are invisible on
-    warm off-white light background (#FAF8F1). Light render breaks node identification
-    — VQ-01 failure.'
-  - 'Theme-adaptive chrome incomplete: INK (primary text color) must be used for station
-    labels, not hardcoded white'
-  - Minimal visual refinement beyond library defaults; no custom grid styling or spine
-    work
-  - Limited exploration of letsplot distinctive features (faceting, advanced coordinate
-    systems)
+  - Edge label crowding in high-density areas around Central station causes slight
+    overlaps
+  - Design Excellence somewhat generic; lacks distinctive visual hierarchy or custom
+    refinement beyond defaults
+  - Color contrast for Regional (orange) and Local (blue) routes could be stronger
+    on dark theme for accessibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct
-      Chrome: Title and legend are readable; axis labels empty (theme_void)
-      Data: Colored edges (Express green #009E73, Regional orange #D55E00, Local blue #0072B2) are visible with route labels
-      Station labels: INVISIBLE - white text on warm off-white background creates no contrast
-      Legibility verdict: FAIL - station identification lost due to white label color on light background
+      Background: Warm off-white (#FAF8F1) providing excellent contrast for all elements
+      Chrome: Title in 24pt dark text, station labels in 9pt bold dark ink, clearly readable; legend with light background (#FFFDF6) with dark text
+      Data: 10 station nodes in green (#009E73), 17 colored directional arrows (green/orange/blue by route type), edge labels with route ID and times in matching colors, all elements clearly visible
+      Legibility verdict: PASS - All text readable, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct
-      Chrome: Title visible in light color; legend properly styled with elevated background color
-      Data: Colored edges identical to light render (green, orange, blue); all route labels visible
-      Station labels: Clearly visible - white text on dark background creates strong contrast
-      Legibility verdict: PASS - all elements readable; proper theme adaptation for chrome
+      Background: Warm near-black (#1A1A17) properly adapted for dark theme
+      Chrome: Title in light text, station labels in off-white (#F0EFE8), clearly visible; legend with elevated background (#242420) and light text
+      Data: Station nodes as green circles with white outlines, colored arrows identical to light render (#009E73, #D55E00, #0072B2), all labels visible and readable, no dark-on-dark failures
+      Legibility verdict: PASS - Perfect theme adaptation, no legibility issues, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 14
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Station labels white on warm off-white in light render - invisible,
-          critical failure
+        passed: true
+        comment: All text clearly readable in both renders; title 24pt, station labels
+          9pt, edge labels 6pt
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Labels positioned with nudge_y offset; minimal overlap
+        comment: Minor crowding around Central hub but all labels readable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers, arrows, and edges all clearly visible
+        comment: All markers, arrows, labels prominently visible; appropriate density
+          sizing
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Okabe-Ito palette ensures CVD safety with strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions; network spans well; balanced margins
+        comment: 4800×2700 resolution correct; balanced proportions, nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct
+        comment: Title format correct; X/Y empty labels appropriate for network
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Okabe-Ito correct but station label styling failed theme adaptation
+        passed: true
+        comment: 'Okabe-Ito order correct, backgrounds #FAF8F1/#1A1A17, both renders
+          theme-correct'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured defaults but not sophisticated; no custom design
-          beyond Okabe-Ito
+        comment: Clean professional execution; standard palette, functional but not
+          exceptional
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Theme_void(), custom legend styling, and tooltips present; no grid
-          or spine customization
+        comment: theme_void() and basic styling; minimal visual refinement beyond
+          defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: true
-        comment: Route type color coding and time labels provide effective visual
-          hierarchy
+        passed: false
+        comment: Color coding provides narrative; network structure clear but limited
+          emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -132,25 +123,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct directed network diagram
+        comment: Correct directed network graph with labeled nodes and edges
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: stations, routes, arrows, times, route types'
+        comment: 'All features present: labels, arrows, time info, offset edges, color
+          coding'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y mapping correct; all data visible
+        comment: Stations use x/y coords; routes display source→target correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format perfect; legend labels match
+        comment: Title format correct; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -160,20 +152,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Excellent: 10 stations, 16 routes, multiple route types and connections'
+        comment: 'All aspects covered: nodes, arrows, labels, time, types, multiple
+          routes'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible regional rail network with realistic station names and
-          times
+        comment: Plausible rail network; realistic names, times, route IDs
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Proper spacing and sizing for visibility
+        comment: 10 stations, 17 routes within spec; optimal size
     code_quality:
       score: 10
       max: 10
@@ -183,57 +175,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → plot → save'
+        comment: No functions/classes; direct execution
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set to 42
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; no unnecessary dependencies
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; appropriate complexity
+        comment: Appropriate complexity; no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: 'Correct: plot-light.png, plot-dark.png, plus HTML versions'
+        comment: Correct plot-{THEME}.png/.html output with scale=3
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Exemplary ggplot2-style grammar with clean layer composition
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses layer_tooltips() and custom arrow(); could explore more letsplot
-          features
-  verdict: REJECTED
+        comment: Proper ggplot grammar, geom composition, aes mappings, theme customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: layer_tooltips, arrow, ggsize, HTML export used; could showcase more
+          capabilities
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
+  - annotations
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - minimal-chrome
+  styling: []
