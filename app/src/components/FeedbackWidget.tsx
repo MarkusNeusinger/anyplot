@@ -106,7 +106,7 @@ export function FeedbackWidget() {
       const r = footer.getBoundingClientRect();
       setLift(Math.max(0, window.innerHeight - r.top));
     };
-    const onScroll = () => {
+    const schedule = () => {
       if (rafId) return;
       rafId = window.requestAnimationFrame(() => {
         rafId = 0;
@@ -114,12 +114,20 @@ export function FeedbackWidget() {
       });
     };
     update();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    // On a direct deep link to a spec page the page is initially short — data
+    // and images stream in over the next ~hundred ms — so on first paint the
+    // footer sits high in the layout and the FAB lifts dramatically before
+    // settling. Watch the body for size changes so the FAB drops back to the
+    // corner once content stabilises.
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(schedule) : null;
+    ro?.observe(document.body);
     return () => {
       if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      ro?.disconnect();
     };
   }, []);
   // Default FAB center on xs is 32px from viewport bottom (bottom 12 + half of
