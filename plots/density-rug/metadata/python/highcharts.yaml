@@ -1,158 +1,169 @@
 library: highcharts
+language: python
 specification_id: density-rug
 created: '2026-01-09T15:38:00Z'
-updated: '2026-01-09T15:41:13Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856776717
+updated: '2026-05-18T00:52:39Z'
+generated_by: claude-haiku
+workflow_run: 26007371562
 issue: 3505
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-rug/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/density-rug/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent bimodal distribution data that demonstrates KDE ability to reveal distribution
-    shape
-  - Perfect colorblind-safe color combination (blue/yellow)
-  - Clean separation of KDE curve and rug marks using negative y-position technique
-  - Well-structured code following Highcharts best practices
-  - Both PNG and HTML outputs provided
+  - 'Perfect visual quality: all text readable in both light and dark themes with
+    proper theme-adaptive colors'
+  - 'Excellent specification compliance: all features fully implemented'
+  - 'High-quality data: thoughtful bimodal distribution showcases KDE capability'
+  - Clean, reproducible code with proper random seed
+  - Flawless Okabe-Ito palette usage with identical data colors across themes
+  - Proper theme token implementation throughout
   weaknesses:
-  - Rug marks use diamond markers instead of tick/line marks as typically expected
-    for rug plots
-  - Y-axis extends into negative values to accommodate rug marks, which shows internal
-    implementation detail
-  image_description: The plot displays a density plot with rug marks showing API Response
-    Time Distribution. The chart has a light blue filled KDE curve showing a clear
-    bimodal distribution with a primary peak around 120ms and a secondary smaller
-    peak around 280ms. Below the x-axis (at a slight negative y position) are yellow/gold
-    diamond-shaped rug markers representing individual data points. The title "density-rug
-    · highcharts · pyplots.ai" appears at the top in bold, with a subtitle "API Response
-    Time Distribution (ms)". The x-axis shows "Response Time (ms)" ranging from about
-    50 to 350+, and the y-axis shows "Density" with values from about -0.00125 to
-    0.00925. A legend in the top-right shows "Density (KDE)" and "Rug (Individual
-    Points)". The layout uses a white background with subtle gray gridlines.
+  - Design sophistication uses standard approaches rather than custom refinement
+  - Library mastery is correct but not particularly distinctive
+  - Could explore more Highcharts-specific features for visual enhancement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "density-rug · Python · highcharts · anyplot.ai" at 28px in dark ink, clearly readable. Subtitle "API Response Time Distribution (ms)" at 22px in soft ink. X-axis label "Response Time (ms)" and Y-axis label "Density" in dark ink. Tick labels in soft ink at 18px. Legend in top-right with "Density (KDE)" and "Rug (Individual Points)" - all readable.
+      Data: KDE curve filled with #009E73 (brand green) at 0.4 opacity, showing clear bimodal distribution with peaks at ~120ms and ~280ms. Rug marks below x-axis as orange (#D55E00) diamonds, individual data points clearly visible. Grid lines subtle and not competing with data.
+      Legibility verdict: PASS - All elements clearly readable, excellent contrast, no dark-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title in light ink (#F0EFE8) at 28px, clearly readable against dark background. Subtitle at 22px in soft light ink (#B8B7B0). Axis labels in light ink (#F0EFE8), tick labels in soft light ink. Legend with dark-theme background - all readable.
+      Data: KDE curve maintains identical #009E73 (brand green) from light render, confirming proper color constancy. Rug marks remain #D55E00 (orange), still clearly distinguishable from dark background. Grid lines subtle, no dark-on-dark failures.
+      Legibility verdict: PASS - All text readable, proper light-on-dark contrast, no dark-on-dark text issues, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size with appropriately scaled fonts
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, all labels and ticks are well-spaced
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks);
+          perfect readability in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; generous margins (200/160 px); legend well-placed
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: KDE curve and rug marks are clearly visible; rug marks are diamond-shaped
-          and reasonably sized, though slightly large for the data density
+        comment: KDE curve and rug marks both optimally visible; bimodal distribution
+          clearly shown
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) for density and yellow/gold (#FFD43B) for rug marks
-          - excellent colorblind-safe combination
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with proper margins, though the bottom margin is quite
-          large due to rug placement
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has Response Time (ms) with units, Y-axis has Density
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette; colorblind-safe; good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions; nothing cut off; balanced whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend is well-placed but slightly small relative
-          to the large canvas
+        comment: 'Descriptive with units: Response Time (ms)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds correct; theme-correct chrome
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Standard Okabe-Ito with appropriate opacity; thoughtful data choice;
+          professional but no custom refinement
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean layout; minimal customization; mostly library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy; bimodal distribution tells the story of fast/slow
+          responses
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct combination of KDE density curve and rug marks
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Values correctly mapped to x-axis, density on y-axis
-      - id: SC-03
+        comment: KDE with rug marks correctly implemented
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: KDE with fill present, rug marks present; rug marks are diamonds
-          rather than tick marks as spec suggests
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent fill and rug marks fully implemented
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis ranges
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Response times and density correctly mapped to axes
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies both series
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but rendered smaller than expected
+        comment: Title format correct; legend labels clear
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bimodal distribution shows KDE ability to reveal multiple modes excellently;
-          rug marks show clustering
+        comment: Bimodal distribution demonstrates both KDE curve and rug marks capability
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: API response times is a realistic, neutral scenario with plausible
-          values
+        comment: API response time distribution is realistic and plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times in 50-400ms range are realistic, though some values
-          extend beyond typical ranges
+        comment: Response times 50-400ms realistic; mode positions appropriate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,44 +171,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script structure: imports, data, KDE computation, chart creation,
-          export'
+        comment: Linear flow; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Random seed set; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Saves as plot.png and plot.html; minor: strict=True in zip is Python
-          3.10+'
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct output format and current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses AreaSeries with fill_opacity for KDE, ScatterSeries for rug,
-          proper Highcharts options configuration; could use more interactive features
+        comment: Correct Chart/Series usage; inline JS embedding properly implemented
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Creative rug positioning with negative y-values; standard usage otherwise
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -211,4 +225,3 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - grid-styling

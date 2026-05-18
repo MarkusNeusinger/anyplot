@@ -1,13 +1,23 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 # Data: Response times across task types and expertise levels
 np.random.seed(42)
@@ -37,8 +47,8 @@ for cat in categories:
 
 df = pd.DataFrame(data)
 
-# Colors
-colors = {"Novice": "#306998", "Expert": "#FFD43B"}
+# Okabe-Ito colors
+colors = {"Novice": "#009E73", "Expert": "#D55E00"}
 
 # Create figure
 fig = go.Figure()
@@ -102,39 +112,51 @@ for grp in groups:
             )
         )
 
-# Update layout
+# Update layout with theme-adaptive styling
 fig.update_layout(
-    title={"text": "violin-grouped-swarm · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "violin-grouped-swarm · plotly · pyplots.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Task Complexity", "font": {"size": 22}},
-        "tickfont": {"size": 18},
+        "title": {"text": "Task Complexity", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
         "tickmode": "array",
         "tickvals": [0, 1, 2],
         "ticktext": ["Simple", "Moderate", "Complex"],
         "range": [-0.6, 2.6],
+        "gridcolor": GRID,
+        "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Response Time (ms)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Response Time (ms)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     legend={
-        "title": {"text": "Expertise Level", "font": {"size": 18}},
-        "font": {"size": 16},
+        "title": {"text": "Expertise Level", "font": {"size": 18, "color": INK}},
+        "font": {"size": 16, "color": INK_SOFT},
         "x": 0.98,
         "y": 0.98,
         "xanchor": "right",
         "yanchor": "top",
-        "bgcolor": "rgba(255,255,255,0.8)",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
     },
-    template="plotly_white",
-    plot_bgcolor="white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     margin={"l": 100, "r": 100, "t": 120, "b": 100},
 )
 
-# Save as PNG (4800 x 2700 px)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save as PNG (4800 x 2700 px) and HTML
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

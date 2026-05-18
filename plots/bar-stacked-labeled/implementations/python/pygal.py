@@ -1,83 +1,96 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-09
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-18
 """
 
-import pygal
-from pygal.style import Style
+import os
+import sys
+from pathlib import Path
 
+
+# Remove the script's directory from sys.path to avoid conflict with pygal.py filename
+script_dir = str(Path(__file__).parent)
+sys.path = [p for p in sys.path if p != script_dir]
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens (Okabe-Ito palette, theme-adaptive chrome)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
 
 # Data - Quarterly revenue by product category (in thousands)
-# Shows diverse proportions across quarters to demonstrate stacking
 categories = ["Q1", "Q2", "Q3", "Q4"]
 products = {
-    "Electronics": [180, 95, 140, 220],  # Variable - strong in Q4
-    "Furniture": [45, 130, 85, 75],  # Peak in Q2
-    "Clothing": [55, 60, 145, 90],  # Strong in Q3 (seasonal)
-    "Accessories": [32, 45, 38, 115],  # Growth trend, peak in Q4
+    "Electronics": [180, 95, 140, 220],
+    "Furniture": [45, 130, 85, 75],
+    "Clothing": [55, 60, 145, 90],
+    "Accessories": [32, 45, 38, 115],
 }
 
 # Calculate totals for labels
 totals = [sum(products[product][i] for product in products) for i in range(len(categories))]
 
-# Custom style for large canvas
+# Custom style for large canvas with theme-adaptive tokens
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#4ECDC4", "#E74C3C"),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
-    value_font_size=44,
-    value_label_font_size=44,
-    tooltip_font_size=36,
-    stroke_width=2,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=16,
+    stroke_width=3,
 )
 
-# Create stacked bar chart
+# Create stacked bar chart with proper legend positioning
 chart = pygal.StackedBar(
     width=4800,
     height=2700,
     style=custom_style,
-    title="bar-stacked-labeled · pygal · pyplots.ai",
+    title="bar-stacked-labeled · Python · pygal · anyplot.ai",
     x_title="Quarter",
     y_title="Revenue ($K)",
     show_y_guides=True,
     show_x_guides=False,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=4,  # Display legend in a single row to prevent truncation
-    legend_box_size=28,
+    legend_at_bottom=False,  # Move legend to side to avoid truncation
+    legend_at_bottom_columns=None,
     print_values=True,
     print_values_position="top",
-    value_formatter=lambda x: "",  # Hide default values, use per-series formatter
-    margin=80,  # Increased margin for legend space
-    margin_bottom=300,  # Significantly increased for full legend visibility
+    value_formatter=lambda x: "",  # Hide default values
+    margin=80,
+    margin_right=150,  # Extra space for legend on right
+    margin_bottom=200,
     spacing=80,
-    truncate_legend=-1,
-    x_label_rotation=0,
-    range=(0, max(totals) * 1.15),  # Extra headroom for total labels
 )
 
 # Set x-axis labels
 chart.x_labels = categories
 
-# Add data series - only show labels on the top (last) series
+# Add data series with total labels on top
 product_list = list(products.items())
 for idx, (product, values) in enumerate(product_list):
     is_top = idx == len(product_list) - 1
     if is_top:
         # Top series: show total labels above each bar
-        data = [{"value": v, "formatter": lambda x, i=i: f"Total: ${totals[i]}K"} for i, v in enumerate(values)]
+        data = [{"value": v, "formatter": lambda x, i=i: f"${totals[i]}K"} for i, v in enumerate(values)]
     else:
         # Other series: no labels
         data = values
     chart.add(product, data)
 
 # Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+chart.render_to_file(f"plot-{THEME}.html")

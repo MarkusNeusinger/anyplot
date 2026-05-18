@@ -1,14 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-09
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-18
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem, Span
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Regression coefficients for housing price prediction model
 np.random.seed(42)
@@ -45,10 +58,9 @@ ci_lower = ci_lower[sort_idx]
 ci_upper = ci_upper[sort_idx]
 significant = significant[sort_idx]
 
-# Strong color contrast for significant vs non-significant distinction
-# Using vivid blue (#2171b5) for significant vs muted gray (#969696) for non-significant
-SIG_COLOR = "#2171b5"
-NONSIG_COLOR = "#969696"
+# Okabe-Ito palette - using brand green for significant, neutral for non-significant
+SIG_COLOR = "#009E73"
+NONSIG_COLOR = INK_SOFT
 
 colors = [SIG_COLOR if sig else NONSIG_COLOR for sig in significant]
 
@@ -57,13 +69,13 @@ p = figure(
     width=4800,
     height=2700,
     y_range=variables,
-    title="coefficient-confidence · bokeh · pyplots.ai",
+    title="coefficient-confidence · python · bokeh · anyplot.ai",
     x_axis_label="Coefficient Estimate (Standardized)",
     y_axis_label="Predictor Variable",
 )
 
 # Add vertical reference line at zero
-zero_line = Span(location=0, dimension="height", line_color="#333333", line_width=3, line_dash="dashed")
+zero_line = Span(location=0, dimension="height", line_color=INK_SOFT, line_width=3, line_dash="dashed")
 p.add_layout(zero_line)
 
 # Draw confidence interval segments (error bars) with distinct colors
@@ -99,12 +111,12 @@ nonsig_source = ColumnDataSource(
     }
 )
 
-# Render significant points with vivid blue
+# Render significant points with brand green
 sig_renderer = p.scatter(
     x="coefficients", y="variables", source=sig_source, size=30, color=SIG_COLOR, line_color="white", line_width=3
 )
 
-# Render non-significant points with muted gray
+# Render non-significant points with muted color
 nonsig_renderer = p.scatter(
     x="coefficients", y="variables", source=nonsig_source, size=30, color=NONSIG_COLOR, line_color="white", line_width=3
 )
@@ -129,41 +141,72 @@ legend = Legend(
     ],
     location="top_right",
     label_text_font_size="24pt",
+    label_text_color=INK_SOFT,
     glyph_width=40,
     glyph_height=40,
-    border_line_color="#666666",
+    border_line_color=INK_SOFT,
     border_line_width=2,
-    background_fill_color="white",
+    background_fill_color=ELEVATED_BG,
     background_fill_alpha=0.95,
     padding=20,
     margin=30,
 )
 p.add_layout(legend)
 
-# Style text sizes for large canvas (increased for better readability)
-p.title.text_font_size = "36pt"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
+# Style text sizes for large canvas (scaled for 4800x2700)
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
 # Grid styling
-p.xgrid.grid_line_alpha = 0.3
+p.xgrid.grid_line_alpha = 0.10
 p.xgrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_alpha = 0.3
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_dash = "dashed"
+p.ygrid.grid_line_color = INK
 
-# Background styling
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "white"
+# Background styling (theme-adaptive)
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Increase axis line width for visibility
+# Axis styling
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.axis_line_width = 2
 p.yaxis.axis_line_width = 2
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 p.xaxis.major_tick_line_width = 2
 p.yaxis.major_tick_line_width = 2
 
-# Save plot (PNG and HTML for interactive)
-export_png(p, filename="plot.png")
-output_file("plot.html", title="Coefficient Plot with Confidence Intervals")
+# Save plot (HTML and PNG via Selenium)
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome via Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

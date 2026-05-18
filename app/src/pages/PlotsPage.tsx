@@ -18,7 +18,7 @@ import { colors } from '../theme';
 export function PlotsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { specsData, librariesData } = useAppData();
+  const { specsData, librariesData, languagesData } = useAppData();
   const { homeStateRef, saveScrollPosition } = useHomeState();
 
   // Disable browser's automatic scroll restoration so we can restore from
@@ -125,9 +125,14 @@ export function PlotsPage() {
       }
       saveScrollPosition();
       const specId = img.spec_id || '';
-      navigate(specPath(specId, img.language, img.library));
+      // If the user is browsing under an active language filter, propagate it
+      // as `?language=…` so the destination impl-page carousel stays scoped to
+      // that language. Without the filter, the carousel walks all impls.
+      const langActive = activeFilters.some((f) => f.category === 'lang');
+      const qs = langActive && img.language ? `?language=${encodeURIComponent(img.language)}` : '';
+      navigate(`${specPath(specId, img.language, img.library)}${qs}`);
     },
-    [navigate, saveScrollPosition]
+    [navigate, saveScrollPosition, activeFilters]
   );
 
   const handleContainerClick = useCallback(
@@ -205,6 +210,7 @@ export function PlotsPage() {
         isLoadingMore={false}
         isTransitioning={false}
         librariesData={librariesData}
+        languagesData={languagesData}
         specsData={specsData}
         openTooltip={openImageTooltip}
         loadMoreRef={loadMoreRef}

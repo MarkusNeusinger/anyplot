@@ -4,7 +4,7 @@ import Grid from '@mui/material/Grid';
 import Alert from '@mui/material/Alert';
 import { ImageCard } from './ImageCard';
 import { LoaderSpinner } from './LoaderSpinner';
-import type { PlotImage, LibraryInfo, SpecInfo } from '../types';
+import type { PlotImage, LibraryInfo, LanguageInfo, SpecInfo } from '../types';
 import type { ImageSize } from '../constants';
 
 interface ImagesGridProps {
@@ -16,6 +16,7 @@ interface ImagesGridProps {
   isLoadingMore: boolean;
   isTransitioning: boolean;
   librariesData: LibraryInfo[];
+  languagesData?: LanguageInfo[];
   specsData: SpecInfo[];
   openTooltip: string | null;
   loadMoreRef: React.RefObject<HTMLDivElement | null>;
@@ -34,6 +35,7 @@ export function ImagesGrid({
   isLoadingMore,
   isTransitioning,
   librariesData,
+  languagesData,
   specsData,
   openTooltip,
   loadMoreRef,
@@ -56,6 +58,12 @@ export function ImagesGrid({
     librariesData.forEach(lib => map.set(lib.id, lib));
     return map;
   }, [librariesData]);
+
+  const languageMap = useMemo(() => {
+    const map = new Map<string, LanguageInfo>();
+    (languagesData || []).forEach(lang => map.set(lang.id, lang));
+    return map;
+  }, [languagesData]);
 
   const specMap = useMemo(() => {
     const map = new Map<string, SpecInfo>();
@@ -119,6 +127,7 @@ export function ImagesGrid({
             >
             {images.map((image, index) => {
               const lib = libraryMap.get(image.library);
+              const lang = languageMap.get(image.language);
               const spec = specMap.get(image.spec_id || '');
               return (
                 <Grid
@@ -132,6 +141,8 @@ export function ImagesGrid({
                     selectedSpec={selectedSpec}
                     libraryDescription={lib?.description}
                     libraryDocUrl={lib?.documentation_url}
+                    languageDescription={lang?.description}
+                    languageDocUrl={lang?.documentation_url}
                     specDescription={spec?.description}
                     openTooltip={openTooltip}
                     imageSize={imageSize}

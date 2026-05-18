@@ -12,7 +12,7 @@ import CheckIcon from '@mui/icons-material/Check';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { useTheme } from '@mui/material/styles';
 import type { PlotImage } from '../types';
-import { BATCH_SIZE, type ImageSize } from '../constants';
+import { BATCH_SIZE, LANG_DISPLAY, LANG_EXT, type ImageSize } from '../constants';
 import { useCodeFetch } from '../hooks';
 import { buildSrcSet, getResponsiveSizes, getFallbackSrc } from '../utils/responsiveImage';
 import { useThemedPreviewUrl } from '../utils/themedPreview';
@@ -38,6 +38,8 @@ interface ImageCardProps {
   selectedSpec: string;
   libraryDescription?: string;
   libraryDocUrl?: string;
+  languageDescription?: string;
+  languageDocUrl?: string;
   specDescription?: string;
   openTooltip: string | null;
   imageSize: ImageSize;
@@ -53,6 +55,8 @@ export const ImageCard = memo(function ImageCard({
   selectedSpec,
   libraryDescription,
   libraryDocUrl,
+  languageDescription,
+  languageDocUrl,
   specDescription,
   openTooltip,
   imageSize,
@@ -70,11 +74,17 @@ export const ImageCard = memo(function ImageCard({
   const [copyState, setCopyState] = useState<'idle' | 'loading' | 'copied'>('idle');
 
   // Library display: in compact mode - hidden on xs, abbreviated otherwise
-  // In normal mode - always show full name
+  // In normal mode - always show full name. Compact mode embeds the language
+  // as a file-extension suffix on the abbreviation (e.g. "mpl.py", "ggplot2.r")
+  // so the row stays as two tokens — normal mode shows language as a separate
+  // middot-token between spec-id and library.
   const showLibrary = imageSize === 'normal' || !isXs;
+  const langExt = LANG_EXT[image.language];
   const libraryDisplay = imageSize === 'compact'
-    ? (LIBRARY_ABBR[image.library] || image.library)
+    ? `${LIBRARY_ABBR[image.library] || image.library}${langExt ? '.' + langExt : ''}`
     : image.library;
+  const languageDisplay = LANG_DISPLAY[image.language] || image.language;
+  const showLanguageToken = imageSize === 'normal' && !!image.language && showLibrary;
 
   // Stable click handler - calls onClick with image
   const handleClick = useCallback(() => {
@@ -87,8 +97,10 @@ export const ImageCard = memo(function ImageCard({
 
     setCopyState('loading');
     try {
-      // Use cached code if available, otherwise fetch
-      const code = image.code ?? await fetchCode(image.spec_id, image.library);
+      // Use cached code if available, otherwise fetch. Pass `image.language`
+      // so R impls (ggplot2 today) hit the right DB row — the code endpoint
+      // defaults to Python and would 404 on an R artifact otherwise.
+      const code = image.code ?? await fetchCode(image.spec_id, image.library, image.language);
       if (code) {
         await navigator.clipboard.writeText(code);
         setCopyState('copied');
@@ -100,13 +112,15 @@ export const ImageCard = memo(function ImageCard({
     } catch {
       setCopyState('idle');
     }
-  }, [image.spec_id, image.library, image.code, copyState, fetchCode, onTrackEvent]);
+  }, [image.spec_id, image.library, image.language, image.code, copyState, fetchCode, onTrackEvent]);
 
   const cardId = `${image.spec_id}-${image.library}`;
   const specTooltipId = `spec-${cardId}`;
   const libTooltipId = `lib-${cardId}`;
+  const langTooltipId = `lang-${cardId}`;
   const isSpecTooltipOpen = openTooltip === specTooltipId;
   const isLibTooltipOpen = openTooltip === libTooltipId;
+  const isLangTooltipOpen = openTooltip === langTooltipId;
 
   // Animate first batch only (initial load), subsequent batches appear instantly
   const isFirstBatch = index < BATCH_SIZE;
@@ -281,6 +295,80 @@ export const ImageCard = memo(function ImageCard({
             {image.spec_id}
           </Typography>
         </Tooltip>
+
+        {showLanguageToken && (
+          <>
+            <Typography sx={{ color: 'var(--ink-muted)', fontSize: labelFontSize }}>·</Typography>
+
+            {/* Clickable Language — same visual weight as spec/library tokens.
+                Tooltip body shows the language description (from /languages)
+                and a link to the upstream homepage. */}
+            <Tooltip
+              title={
+                <Box>
+                  <Typography sx={{ fontSize: '0.8rem', mb: languageDocUrl ? 1 : 0 }}>
+                    {languageDescription || 'No description available'}
+                  </Typography>
+                  {languageDocUrl && (
+                    <Link
+                      href={languageDocUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 0.5,
+                        fontSize: '0.75rem',
+                        color: colors.tooltipLight,
+                        textDecoration: 'underline',
+                        '&:hover': { color: '#fff' },
+                      }}
+                    >
+                      {languageDocUrl.replace(/^https?:\/\//, '')} <OpenInNewIcon sx={{ fontSize: 12 }} />
+                    </Link>
+                  )}
+                </Box>
+              }
+              arrow
+              placement="bottom"
+              open={isLangTooltipOpen}
+              disableFocusListener
+              disableHoverListener
+              disableTouchListener
+              slotProps={{
+                tooltip: {
+                  sx: {
+                    maxWidth: { xs: '80vw', sm: 400 },
+                    fontFamily: typography.fontFamily,
+                    fontSize: labelFontSize,
+                  },
+                },
+              }}
+            >
+              <Typography
+                data-description-btn
+                aria-label={`Language: ${languageDisplay}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onTooltipToggle(isLangTooltipOpen ? null : langTooltipId);
+                }}
+                sx={{
+                  fontSize: labelFontSize,
+                  letterSpacing: labelLetterSpacing,
+                  fontWeight: 600,
+                  fontFamily: typography.fontFamily,
+                  color: isLangTooltipOpen ? colors.primary : semanticColors.labelText,
+                  cursor: 'pointer',
+                  '&:hover': {
+                    color: colors.primary,
+                  },
+                }}
+              >
+                {languageDisplay}
+              </Typography>
+            </Tooltip>
+          </>
+        )}
 
         {showLibrary && (
           <>

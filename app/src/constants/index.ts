@@ -44,3 +44,18 @@ export const LIB_TO_LANG: Record<string, string> = {
   pygal: 'python',
   seaborn: 'python',
 };
+
+// Display label for a language id (e.g. used in titles, breadcrumbs, chips).
+export const LANG_DISPLAY: Record<string, string> = {
+  python: 'Python',
+  r: 'R',
+};
+
+// File-extension token for a language id (e.g. used as the suffix in compact
+// plot cards: "mpl.py", "ggplot2.r"). The .R extension is uppercase on disk
+// for R scripts, but the suffix here mirrors the language id for symmetry
+// with "py" — display only, not a filesystem reference.
+export const LANG_EXT: Record<string, string> = {
+  python: 'py',
+  r: 'r',
+};

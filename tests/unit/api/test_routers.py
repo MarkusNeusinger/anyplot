@@ -131,6 +131,19 @@ def mock_lib():
     return mock_lib
 
 
+@pytest.fixture
+def mock_lang():
+    """Create a mock language row (Python)."""
+    mock_lang = MagicMock()
+    mock_lang.id = "python"
+    mock_lang.name = "Python"
+    mock_lang.file_extension = ".py"
+    mock_lang.runtime_version = "3.13"
+    mock_lang.documentation_url = "https://www.python.org"
+    mock_lang.description = "General-purpose programming language."
+    return mock_lang
+
+
 class TestStatsRouter:
     """Tests for stats router."""
 
@@ -184,6 +197,58 @@ class TestStatsRouter:
             data = response.json()
             assert data["specs"] == 5
             assert data["plots"] == 10
+
+
+class TestLanguagesRouter:
+    """Tests for languages router."""
+
+    def test_languages_without_db(self, client: TestClient) -> None:
+        """Languages should return seed data when DB not configured."""
+        with patch(DB_CONFIG_PATCH, return_value=False):
+            response = client.get("/languages")
+            assert response.status_code == 200
+            data = response.json()
+            assert "languages" in data
+            ids = {lang["id"] for lang in data["languages"]}
+            # SUPPORTED_LANGUAGES = {"python", "r"} — both must surface
+            assert {"python", "r"}.issubset(ids)
+
+    def test_languages_with_db(self, db_client, mock_lang) -> None:
+        """Languages should return data from DB when configured."""
+        client, _ = db_client
+
+        mock_lang_repo = MagicMock()
+        mock_lang_repo.get_all = AsyncMock(return_value=[mock_lang])
+
+        with (
+            patch("api.routers.languages.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.languages.LanguageRepository", return_value=mock_lang_repo),
+        ):
+            response = client.get("/languages")
+            assert response.status_code == 200
+            data = response.json()
+            assert "languages" in data
+            assert len(data["languages"]) == 1
+            lang = data["languages"][0]
+            assert lang["id"] == "python"
+            assert lang["documentation_url"] == "https://www.python.org"
+            assert lang["runtime_version"] == "3.13"
+            assert lang["description"] == "General-purpose programming language."
+
+    def test_languages_cache_hit(self, db_client) -> None:
+        """Languages should return cached data when available."""
+        client, _ = db_client
+
+        cached_data = {"languages": [{"id": "cached_lang", "name": "Cached"}]}
+
+        async def _return_cached(key, factory, **kwargs):
+            return cached_data
+
+        with patch("api.routers.languages.get_or_set_cache", side_effect=_return_cached):
+            response = client.get("/languages")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["languages"][0]["id"] == "cached_lang"
 
 
 class TestLibrariesRouter:
@@ -1015,6 +1080,42 @@ class TestPlotsRouter:
             data = response.json()
             assert data["total"] == 1
 
+    def test_filter_with_lang_param_includes_python(self, client: TestClient, mock_spec) -> None:
+        """`?lang=python` should pass through the filter dispatch and surface in the counts."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.plots.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.plots.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/plots/filter?lang=python")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 1
+            # The lang category is populated in the counts dict so the
+            # frontend FilterBar can render it as a chip.
+            assert "lang" in data["globalCounts"]
+            assert data["globalCounts"]["lang"].get("python") == 1
+
+    def test_filter_with_lang_param_excludes_other_languages(self, client: TestClient, mock_spec) -> None:
+        """`?lang=r` against a Python-only impl should yield zero matches but still report counts."""
+        mock_spec_repo = MagicMock()
+        mock_spec_repo.get_all = AsyncMock(return_value=[mock_spec])
+
+        with (
+            patch(DB_CONFIG_PATCH, return_value=True),
+            patch("api.routers.plots.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.plots.SpecRepository", return_value=mock_spec_repo),
+        ):
+            response = client.get("/plots/filter?lang=r")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["total"] == 0
+            # globalCounts still reports the one Python impl under lang=python
+            assert data["globalCounts"]["lang"].get("python") == 1
+
     def test_filter_cached(self, client: TestClient) -> None:
         """Filter should return cached response when available."""
         cached_response = MagicMock()
@@ -1042,6 +1143,7 @@ class TestPlotsRouter:
         # Add a second impl to have 2 images
         mock_impl2 = MagicMock()
         mock_impl2.library_id = "seaborn"
+        mock_impl2.library.language = "python"
         mock_impl2.preview_url = TEST_IMAGE_URL
         mock_impl2.preview_html = None
         mock_impl2.quality_score = 85.0
@@ -1068,6 +1170,7 @@ class TestPlotsRouter:
         """Filter with offset should skip images."""
         mock_impl2 = MagicMock()
         mock_impl2.library_id = "seaborn"
+        mock_impl2.library.language = "python"
         mock_impl2.preview_url = TEST_IMAGE_URL
         mock_impl2.preview_html = None
         mock_impl2.quality_score = 85.0
@@ -1093,12 +1196,14 @@ class TestPlotsRouter:
         """Filter with limit and offset combined."""
         mock_impl2 = MagicMock()
         mock_impl2.library_id = "seaborn"
+        mock_impl2.library.language = "python"
         mock_impl2.preview_url = TEST_IMAGE_URL
         mock_impl2.preview_html = None
         mock_impl2.quality_score = 85.0
         mock_impl2.impl_tags = {}
         mock_impl3 = MagicMock()
         mock_impl3.library_id = "plotly"
+        mock_impl3.library.language = "python"
         mock_impl3.preview_url = TEST_IMAGE_URL
         mock_impl3.preview_html = None
         mock_impl3.quality_score = 80.0
@@ -1145,103 +1250,103 @@ class TestPlotsHelperFunctions:
     def test_image_matches_groups_empty(self) -> None:
         """Empty groups should match any image."""
         spec_lookup = {"scatter-basic": {"tags": {"plot_type": ["scatter"]}}}
-        assert _image_matches_groups("scatter-basic", "matplotlib", [], spec_lookup, {}) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", [], spec_lookup, {}) is True
 
     def test_image_matches_groups_lib_match(self) -> None:
         """Library filter should match correct library."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         groups = [{"category": "lib", "values": ["matplotlib"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is True
 
     def test_image_matches_groups_lib_no_match(self) -> None:
         """Library filter should not match wrong library."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         groups = [{"category": "lib", "values": ["seaborn"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is False
 
     def test_image_matches_groups_spec_match(self) -> None:
         """Spec filter should match correct spec."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         groups = [{"category": "spec", "values": ["scatter-basic"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is True
 
     def test_image_matches_groups_plot_type_match(self) -> None:
         """Plot type filter should match correct tag."""
         spec_lookup = {"scatter-basic": {"tags": {"plot_type": ["scatter"]}}}
         groups = [{"category": "plot", "values": ["scatter"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is True
 
     def test_image_matches_groups_data_type_match(self) -> None:
         """Data type filter should match correct tag."""
         spec_lookup = {"scatter-basic": {"tags": {"data_type": ["numeric"]}}}
         groups = [{"category": "data", "values": ["numeric"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is True
 
     def test_image_matches_groups_domain_match(self) -> None:
         """Domain filter should match correct tag."""
         spec_lookup = {"scatter-basic": {"tags": {"domain": ["statistics"]}}}
         groups = [{"category": "dom", "values": ["statistics"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is True
 
     def test_image_matches_groups_features_match(self) -> None:
         """Features filter should match correct tag."""
         spec_lookup = {"scatter-basic": {"tags": {"features": ["basic"]}}}
         groups = [{"category": "feat", "values": ["basic"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is True
 
     def test_image_matches_groups_spec_not_in_lookup(self) -> None:
         """Spec not in lookup should not match."""
         spec_lookup = {}
-        assert _image_matches_groups("unknown", "matplotlib", [], spec_lookup, {}) is False
+        assert _image_matches_groups("unknown", "matplotlib", "python", [], spec_lookup, {}) is False
 
     def test_image_matches_groups_dep_match(self) -> None:
         """Dependencies filter should match impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"dependencies": ["scipy", "sklearn"]}}
         groups = [{"category": "dep", "values": ["scipy"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is True
 
     def test_image_matches_groups_dep_no_match(self) -> None:
         """Dependencies filter should not match if not in impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"dependencies": ["scipy"]}}
         groups = [{"category": "dep", "values": ["networkx"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is False
 
     def test_image_matches_groups_tech_match(self) -> None:
         """Techniques filter should match impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"techniques": ["annotations", "colorbar"]}}
         groups = [{"category": "tech", "values": ["annotations"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is True
 
     def test_image_matches_groups_pat_match(self) -> None:
         """Patterns filter should match impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"patterns": ["data-generation", "iteration-over-groups"]}}
         groups = [{"category": "pat", "values": ["data-generation"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is True
 
     def test_image_matches_groups_prep_match(self) -> None:
         """Dataprep filter should match impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"dataprep": ["kde", "binning"]}}
         groups = [{"category": "prep", "values": ["kde"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is True
 
     def test_image_matches_groups_style_match(self) -> None:
         """Styling filter should match impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"styling": ["alpha-blending", "minimal-chrome"]}}
         groups = [{"category": "style", "values": ["alpha-blending"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is True
 
     def test_image_matches_groups_impl_not_in_lookup(self) -> None:
         """Impl not in lookup should not match impl-level filters."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {}  # Empty - no impl data
         groups = [{"category": "dep", "values": ["scipy"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is False
 
     def test_calculate_global_counts(self) -> None:
         """Global counts should tally all implementations."""
@@ -1493,59 +1598,59 @@ class TestPlotsHelperFunctions:
         """Spec filter should not match wrong spec_id."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         groups = [{"category": "spec", "values": ["bar-basic"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is False
 
     def test_image_matches_groups_plot_no_match(self) -> None:
         """Plot type filter should not match wrong type."""
         spec_lookup = {"scatter-basic": {"tags": {"plot_type": ["scatter"]}}}
         groups = [{"category": "plot", "values": ["bar"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is False
 
     def test_image_matches_groups_data_no_match(self) -> None:
         """Data type filter should not match wrong type."""
         spec_lookup = {"scatter-basic": {"tags": {"data_type": ["numeric"]}}}
         groups = [{"category": "data", "values": ["categorical"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is False
 
     def test_image_matches_groups_dom_no_match(self) -> None:
         """Domain filter should not match wrong domain."""
         spec_lookup = {"scatter-basic": {"tags": {"domain": ["statistics"]}}}
         groups = [{"category": "dom", "values": ["finance"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is False
 
     def test_image_matches_groups_feat_no_match(self) -> None:
         """Features filter should not match wrong feature."""
         spec_lookup = {"scatter-basic": {"tags": {"features": ["basic"]}}}
         groups = [{"category": "feat", "values": ["advanced"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, {}) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, {}) is False
 
     def test_image_matches_groups_tech_no_match(self) -> None:
         """Techniques filter should not match if not in impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"techniques": ["annotations"]}}
         groups = [{"category": "tech", "values": ["colorbar"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is False
 
     def test_image_matches_groups_pat_no_match(self) -> None:
         """Patterns filter should not match if not in impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"patterns": ["data-generation"]}}
         groups = [{"category": "pat", "values": ["iteration-over-groups"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is False
 
     def test_image_matches_groups_prep_no_match(self) -> None:
         """Dataprep filter should not match if not in impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"dataprep": ["kde"]}}
         groups = [{"category": "prep", "values": ["binning"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is False
 
     def test_image_matches_groups_style_no_match(self) -> None:
         """Styling filter should not match if not in impl_tags."""
         spec_lookup = {"scatter-basic": {"tags": {}}}
         impl_lookup = {("scatter-basic", "matplotlib"): {"styling": ["alpha-blending"]}}
         groups = [{"category": "style", "values": ["minimal-chrome"]}]
-        assert _image_matches_groups("scatter-basic", "matplotlib", groups, spec_lookup, impl_lookup) is False
+        assert _image_matches_groups("scatter-basic", "matplotlib", "python", groups, spec_lookup, impl_lookup) is False
 
 
 class TestInsightsRouter:

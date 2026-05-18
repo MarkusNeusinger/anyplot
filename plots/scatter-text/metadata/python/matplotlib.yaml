@@ -1,159 +1,172 @@
 library: matplotlib
+language: python
 specification_id: scatter-text
 created: '2026-01-09T14:24:52Z'
-updated: '2026-01-09T14:34:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854875289
+updated: '2026-05-17T23:30:07Z'
+generated_by: claude-haiku
+workflow_run: 26005641879
 issue: 3482
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-text/matplotlib/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 93
 review:
   strengths:
-  - Excellent real-world scenario using programming languages positioned by paradigm
-    similarity
-  - Color encoding by category (Dynamic, Functional, Systems, JVM) adds meaningful
-    information
-  - Clean, well-structured code following KISS principles
-  - Title format is correct and professional
-  - Legend clearly identifies all four categories
-  - Good use of alpha transparency (0.9) and bold font weight for visibility
+  - 'Perfect theme compliance: both light and dark renders maintain legibility and
+    identical data colors'
+  - Excellent color-driven visual storytelling with intentional spatial clustering
+    of language paradigms
+  - Flawless Okabe-Ito palette usage with brand green correctly positioned
+  - Clean, professional matplotlib code with proper theme-token integration
+  - Strong legend styling with theme-adaptive frame and text colors
+  - Complete spec compliance with all required features present
   weaknesses:
-  - Minor text overlap in center-left region where Python, F#, Crystal, and Julia
-    cluster
-  - Could benefit from slightly more spread in coordinates to reduce label proximity
-  - Legend uses Patch rectangles rather than showing sample text in each color
-  image_description: 'The plot displays 30 programming language names positioned in
-    a 2D embedding space, simulating dimensionality reduction output. Each language
-    name serves as a text label (no markers/points), colored by category: Dynamic/Scripting
-    languages (blue, e.g., Python, JavaScript, Ruby), Functional languages (golden
-    yellow, e.g., Haskell, Clojure, OCaml), Systems languages (teal, e.g., Go, Rust,
-    C++), and JVM-based languages (coral, e.g., Java, Kotlin, Scala). The title "scatter-text
-    · matplotlib · pyplots.ai" appears at the top. Axes are labeled "Embedding Dimension
-    1" (x) and "Embedding Dimension 2" (y) with tick marks from 0-8 and 0-7 respectively.
-    A legend with colored patches is positioned in the upper right. A subtle dashed
-    grid is visible. Some text overlap occurs in the center-left region where Python,
-    F#, Crystal, and Julia cluster together.'
+  - Slight overlap in center region (Java, Groovy, Kotlin cluster) — very minor, all
+    labels still readable
+  - Could explore more matplotlib-distinctive techniques (e.g., custom text effects,
+    advanced annotation styling)
+  - Design excellence slightly below maximum — additional refinement in visual emphasis
+    possible
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), exactly per spec
+      Chrome: Title, axis labels ("Embedding Dimension 1/2"), tick labels all dark gray and clearly readable
+      Data: 30 programming language labels in four Okabe-Ito colors (green #009E73, orange #D55E00, blue #0072B2, purple #CC79A7); bold 18pt font ensures all text readable; legend frame matches background color with soft text
+      Legibility verdict: PASS — all elements readable, strong contrast, no text-on-text issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), exactly per spec
+      Chrome: Title, axis labels, tick labels all light gray and fully readable; legend frame inverted to dark; all non-data elements properly theme-adapted
+      Data: All 30 language labels maintain identical colors to light render (Okabe-Ito palette unchanged); no color adaptation, only chrome changes as required
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable against dark background, data colors vibrant and distinct
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Text is bold and readable at fontsize=16, though slightly smaller
-          than ideal for some labels
+        comment: 18pt bold font ensures all labels readable in both themes
       - id: VQ-02
         name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor clustering in center region; all labels still readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All text vibrant and clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Balanced proportions; axis limits with padding; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title complete; axis labels descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First category is #009E73; Okabe-Ito order maintained; backgrounds
+          correct; both renders theme-correct'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 6
         max: 8
         passed: true
-        comment: Minor overlap in center-left cluster (Python/F#/Crystal/Julia area)
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Text labels are well-sized with alpha=0.9 for good visibility
-      - id: VQ-04
-        name: Color Accessibility
+        comment: Color-driven categorization; logical spatial clustering; professional
+          beyond defaults
+      - id: DE-02
+        name: Visual Refinement
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Four distinct colors with good contrast, colorblind-friendly palette
-      - id: VQ-05
-        name: Layout Balance
+        comment: Spines removed; subtle grid; theme-adaptive legend; generous whitespace
+      - id: DE-03
+        name: Data Storytelling
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Plot fills canvas well, good margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive but no units (dimensionless is acceptable for embedding
-          space)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle (alpha=0.3), legend uses Patch which is less ideal
-          than text samples
+        comment: Clear hierarchy through color; spatial clustering communicates paradigm
+          relationships
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly uses text labels instead of points as specified
+        comment: Text-based scatter plot correctly implemented
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly position each text label
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Text labels, alpha transparency, color encoding for categories all
-          present
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: labels, positioning, color encoding,
+          legibility, density handling'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 30 labels visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y coordinates accurate; full data range displayed with padding
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format {spec-id} · {library} · pyplots.ai
+        comment: Title correct format; legend matches data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clustering, color encoding, varied positions, but some labels
-          too close
+        comment: 30 languages across 4 categories demonstrate full capability
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Programming languages positioned by paradigm similarity is excellent,
-          neutral, real-world scenario
+        comment: Real languages; logical positioning; neutral educational context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Embedding dimensions 0-8 are plausible, though could use more spread
-          to reduce overlap
+        comment: 30 points ideal; sensible ranges; no extreme values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,42 +174,48 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Single script; no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Deterministic hardcoded arrays
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.pyplot, numpy, Patch)
+        comment: Only necessary imports; all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake UI; zip(strict=True)
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: fig/ax pattern; theme tokens; ax methods; solid idiomatic use
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ax.text() appropriately, custom legend with Patch, but could
-          leverage more matplotlib features like text rotation or bbox
+        comment: Custom Patch legend; theme-adaptive styling; solid but limited distinctive
+          techniques
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -208,5 +227,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
   - grid-styling
+  - alpha-blending

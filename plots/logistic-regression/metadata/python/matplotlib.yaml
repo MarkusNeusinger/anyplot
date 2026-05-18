@@ -1,155 +1,164 @@
 library: matplotlib
+language: python
 specification_id: logistic-regression
 created: '2026-01-09T21:54:26Z'
-updated: '2026-01-09T21:57:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866593605
+updated: '2026-05-18T08:32:14Z'
+generated_by: claude-haiku
+workflow_run: 26022127199
 issue: 3550
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent real-world application (credit risk scoring) that clearly demonstrates
-    logistic regression
-  - Complete implementation of all spec requirements including CI band, decision threshold,
-    and model metrics annotation
-  - Clean, readable code following KISS principles
-  - Proper text sizing for high-resolution output
-  - Well-balanced layout with informative legend
+  - Perfect text legibility and theme adaptation across both renders
+  - Excellent spec compliance with all required features present and well-executed
+  - Strong data quality with realistic business scenario and appropriate scales
+  - Clean, reproducible code with proper theme-token architecture
+  - Well-balanced visual design with clear focal point (logistic curve)
+  - Effective use of annotations for model interpretability
   weaknesses:
-  - Color choice (red/yellow) could be more colorblind-friendly; consider using blue/orange
-    palette
-  - Axis labels missing units (though Credit Score and Probability are inherently
-    unitless, could add ranges)
-  - Does not leverage distinctive matplotlib features beyond basics
-  image_description: 'The plot displays a logistic regression visualization for credit
-    score-based loan approval. The horizontal axis shows "Credit Score" ranging from
-    300 to 850. The vertical axis shows "Probability of Approval" from 0 to 1. The
-    characteristic S-shaped (sigmoid) logistic curve is rendered as a thick blue line
-    (#306998), with a light blue semi-transparent 95% confidence interval band surrounding
-    it. Data points are jittered along the y-axis: red/coral markers represent rejected
-    applications (class 0) clustered near y=0, and yellow/gold markers represent approved
-    applications (class 1) clustered near y=1. A gray dashed horizontal line at y=0.5
-    indicates the decision threshold. An annotation box in the upper-left displays
-    model metrics: Accuracy 78.0%, Coefficient 0.0190, and Intercept -11.78. The legend
-    in the lower-right clearly identifies all elements. The title follows the required
-    format: "logistic-regression · matplotlib · pyplots.ai".'
+  - 'Design excellence limited by standard aesthetic patterns (DE-01: 5/8)'
+  - 'Library mastery limited to common matplotlib techniques (LM-02: 1/5)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title (24pt), axis labels (20pt), tick labels (16pt), annotation box - all clearly readable with dark text (INK tokens)
+      Data: Orange markers (#D55E00, class 0) and teal markers (#009E73, class 1), logistic curve (green, 3.5pt), confidence interval (light green fill, alpha 0.25), decision threshold (dashed line at 0.5)
+      Legibility verdict: PASS - All text readable, no light-on-light failures, grid subtle but visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title, axis labels, tick labels, annotation box - all clearly readable with light text (INK/F0EFE8 tokens)
+      Data: Orange (#D55E00) and green (#009E73) markers identical to light render, logistic curve and CI identical
+      Legibility verdict: PASS - All text readable, no dark-on-dark failures, proper light-on-dark contrast
+
+    Data colors identical across renders: YES ✓
+    Theme adaptation complete: YES ✓
+    Both renders legible: YES ✓
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set; perfect readability in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text perfectly spaced; no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers sized appropriately (s=120) with alpha=0.6 for 200 points;
-          slight overlap in dense regions
+        comment: Markers and curves perfectly visible and appropriately sized
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Red-yellow distinction acceptable but not ideal for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels but no units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha=0.3), legend well placed
+        comment: Okabe-Ito palette with good contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect 60-70% canvas utilization with balanced whitespace
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with domain context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Perfect Okabe-Ito colors and theme-correct chrome in both renders
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful design with annotations; clean professional appearance
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed; custom grid and legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Clear narrative with visual hierarchy and context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct logistic regression curve with sigmoid shape
+        comment: Correct logistic regression curve
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X=credit score, Y=probability correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: S-curve, jittered points, CI band, threshold
-          line, annotations'
-      - id: SC-04
-        name: Data Range
+        comment: All spec requirements present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis 300-850, Y-axis shows all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly describes all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: logistic-regression · matplotlib · pyplots.ai'
+        comment: Title format and legend labels correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both classes, sigmoid relationship; separation is clean but
-          could show more ambiguous cases
+        comment: All aspects represented; clear distribution patterns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Credit risk scoring is a classic real-world application
+        comment: Real, neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Credit scores 300-850 realistic; 78% accuracy reasonable
+        comment: Factually correct proportions
     code_quality:
       score: 10
       max: 10
@@ -159,54 +168,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → model → plot → save'
+        comment: Linear flow; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: Seed set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Pythonic; well-structured
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png format
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ax methods; standard patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
         max: 5
         passed: false
-        comment: Uses standard matplotlib features but no advanced library-specific
-          APIs
+        comment: Generic usage; standard matplotlib techniques
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
+  - fill-between
   patterns:
   - data-generation
   - explicit-figure
   dataprep:
   - regression
   styling:
-  - alpha-blending
-  - edge-highlighting
   - grid-styling
+  - alpha-blending

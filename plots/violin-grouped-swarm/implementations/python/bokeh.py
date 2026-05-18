@@ -1,16 +1,39 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-18
 """
 
-import numpy as np
-from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource, Legend, LegendItem
-from bokeh.plotting import figure
-from bokeh.resources import CDN
-from scipy import stats
+import os
+import sys
+import time
+from pathlib import Path
 
+import numpy as np
+from scipy import stats
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+
+
+# noqa: E402 - imports after sys.path manipulation to fix shadowing
+_cwd = os.getcwd()
+sys.path = [p for p in sys.path if os.path.abspath(p) != os.path.dirname(__file__)]
+from bokeh.io import output_file, save  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, Legend, LegendItem  # noqa: E402
+from bokeh.plotting import figure  # noqa: E402
+
+
+sys.path.insert(0, os.path.dirname(__file__))
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Response times (ms) across 3 task types and 2 expertise levels
 np.random.seed(42)
@@ -32,14 +55,14 @@ for cat_idx, category in enumerate(categories):
         for val in values:
             data.append({"category": category, "group": group, "value": val})
 
-# Colors
-colors = {"Novice": "#306998", "Expert": "#FFD43B"}
+# Color mapping
+colors = {group: OKABE_ITO[i] for i, group in enumerate(groups)}
 
 # Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="violin-grouped-swarm · bokeh · pyplots.ai",
+    title="violin-grouped-swarm · Python · bokeh · anyplot.ai",
     x_axis_label="Task Type",
     y_axis_label="Response Time (ms)",
     x_range=[-0.5, 2.5],
@@ -48,19 +71,31 @@ p = figure(
     toolbar_location=None,
 )
 
-# Styling
-p.title.text_font_size = "36pt"
-p.title.align = "center"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "20pt"
+# Theme-adaptive styling
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
 # Grid styling
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_dash = "dashed"
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 
 # Positioning
 cat_positions = {cat: i for i, cat in enumerate(categories)}
@@ -120,13 +155,21 @@ for _grp_idx, group in enumerate(groups):
             swarm_x.append(base_x + offset)
             value_bins[bin_key] += 1
 
-        swarm_source = ColumnDataSource(data={"x": swarm_x, "y": values})
+        swarm_source = ColumnDataSource(
+            data={"x": swarm_x, "y": values, "group": [group] * len(values), "category": [category] * len(values)}
+        )
+
+        # Add hover tool for swarm points
+        hover = HoverTool(
+            tooltips=[("Task Type", "@category"), ("Expertise", "@group"), ("Response Time", "@y{0.0f} ms")]
+        )
+        p.add_tools(hover)
 
         p.scatter(
             "x",
             "y",
             source=swarm_source,
-            size=14,
+            size=15,
             fill_color=colors[group],
             fill_alpha=0.75,
             line_color="white",
@@ -140,23 +183,42 @@ for _grp_idx, group in enumerate(groups):
 p.xaxis.ticker = list(range(len(categories)))
 p.xaxis.major_label_overrides = dict(enumerate(categories))
 
-# Add legend
+# Add legend with larger sizing
 legend = Legend(
     items=legend_items,
     location="top_right",
-    label_text_font_size="22pt",
-    glyph_width=40,
-    glyph_height=40,
-    spacing=15,
-    padding=20,
-    background_fill_alpha=0.8,
-    border_line_color="#cccccc",
+    label_text_font_size="20pt",
+    label_text_color=INK_SOFT,
+    glyph_width=50,
+    glyph_height=50,
+    spacing=20,
+    padding=25,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.95,
+    border_line_color=INK_SOFT,
     border_line_width=2,
 )
 p.add_layout(legend, "right")
 
-# Save PNG
-export_png(p, filename="plot.png")
+# Save HTML
+output_file(f"plot-{THEME}.html")
+save(p)
 
-# Save HTML for interactive version
-save(p, filename="plot.html", resources=CDN, title="violin-grouped-swarm · bokeh · pyplots.ai")
+# Screenshot with Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

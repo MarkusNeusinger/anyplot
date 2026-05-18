@@ -1,160 +1,182 @@
 library: letsplot
+language: python
 specification_id: scatter-text
 created: '2026-01-09T14:26:05Z'
-updated: '2026-01-09T14:36:09Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854886535
+updated: '2026-05-17T23:41:48Z'
+generated_by: claude-haiku
+workflow_run: 26005994047
 issue: 3482
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-text/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-text/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/letsplot/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent text positioning with no overlapping labels
-  - Creative use of layer_tooltips() for interactive hover information showing language
-    details
-  - Meaningful data context with programming languages positioned by paradigm/abstraction
-  - Good color palette with clear category differentiation
-  - Bold text formatting enhances readability
-  - Properly generates both PNG and interactive HTML versions
+  - Excellent visual quality with perfect theme adaptation in both renders
+  - Thoughtful data design with programming languages meaningfully positioned by paradigm
+    and abstraction
+  - Clean code with proper use of letsplot API and theme tokens
+  - Correct scatter-text implementation with excellent spec compliance
+  - Distinctive use of letsplot's interactive tooltip feature
   weaknesses:
-  - Duplicate legends appear on the right (category with circles + Primary Use with
-    colored circles) creating visual confusion
-  - The category legend shows circles of increasing size which is misleading since
-    size is not used as a data encoding
-  image_description: 'The plot displays 30 programming language names positioned as
-    text labels in a 2D space. The x-axis represents the programming paradigm spectrum
-    (Object-Oriented ← Paradigm → Functional, ranging 0-1), and the y-axis represents
-    Abstraction Level (Low → High, ranging 0.1-0.95). Each language name is colored
-    according to its category: General (blue), Web (yellow/gold), Systems (teal),
-    Mobile (magenta/pink), Functional (orange), Scripting (red), Data Science (light
-    blue), Scientific (olive green), and Legacy (gray). The title "scatter-text ·
-    letsplot · pyplots.ai" appears at the top in bold. Two legends appear on the right
-    side - one showing "category" with circles of increasing size (incorrectly showing
-    circles instead of just colors), and one showing "Primary Use" with colored circles
-    correctly mapping to categories. The layout uses a minimal theme with subtle orange
-    gridlines. Languages like Assembly, COBOL, and Fortran cluster in the low-abstraction,
-    object-oriented corner, while Haskell, Ruby, and Elixir appear in the high-abstraction,
-    functional corner. All text labels are legible with bold formatting and appropriate
-    spacing.'
+  - Minor label overlaps in dense regions (though still readable due to bold text)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white — correct light theme surface
+      Chrome: Title ("scatter-text · Python · letsplot · anyplot.ai") in bold dark text (24pt). X-axis label "Object-Oriented ← Paradigm → Functional" and y-axis label "Abstraction Level (Low → High)" clearly visible in dark text (20pt). Tick labels in soft gray (16pt, INK_SOFT). Legend on right with light elevated background. All text readable.
+      Data: 30 programming language labels positioned meaningfully. Colors follow Okabe-Ito palette: General (green #009E73), Web (vermillion #D55E00), Systems (blue #0072B2), Mobile (reddish purple #CC79A7), Functional (orange #E69F00), Scripting (sky blue #56B4E9), Data Science (yellow #F0E442), Scientific/Legacy (soft gray). All labels bold with alpha=0.9, well-spaced despite some minor overlaps in dense regions. Grid is subtle and non-dominant.
+      Legibility verdict: PASS — all text is readable against the light background with excellent contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black — correct dark theme surface
+      Chrome: Title and axis labels clearly visible in light text (INK token #F0EFE8 for dark theme). Tick labels in light soft gray (INK_SOFT #B8B7B0). Legend with dark elevated background (#242420). All text readable against dark background with no dark-on-dark failures.
+      Data: Language labels show identical Okabe-Ito colors to light render — only chrome (background, text, grid) has flipped to dark theme. Brand green (#009E73) and all categorical colors remain clearly distinguishable and vibrant. Grid remains subtle.
+      Legibility verdict: PASS — all text is readable against the dark background with excellent theme adaptation.
+
+    Both renders are fully readable and properly themed. Data colors are theme-independent and identical between light and dark.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All language names clearly readable with bold formatting, title is
-          large and prominent
+        comment: All text legible in both themes — explicit font sizes (title 24pt,
+          labels 20pt, ticks 16pt), proper INK tokens, bold geom_text
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text labels, good spacing between all language names
+        comment: Text well-spaced with only minor overlaps in dense regions; bold
+          text and alpha=0.9 maintain readability
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Text labels well-sized for 30 data points, bold font enhances readability
+        comment: All 30 language labels clearly visible; text size 11pt appropriate
+          for density; no clipping
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Good color differentiation between categories, colorblind-friendly
-          palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: false
-        comment: Two redundant legends take up space; the category legend with circles
-          is confusing
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels explaining the paradigm and abstraction dimensions
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette colorblind-safe; good contrast on both light and
+          dark backgrounds
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape 1600×900 (scaled 3x = 4800×2700px) — correct dimensions,
+          good proportions, generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Duplicate legends are confusing; one shows circles by size, one shows
-          colored circles
+        passed: true
+        comment: 'X: ''Object-Oriented ← Paradigm → Functional''; Y: ''Abstraction
+          Level (Low → High)''; title follows spec format'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series ''General''=#009E73; Okabe-Ito order respected; backgrounds
+          #FAF8F1/#1A1A17; both renders properly themed'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional category mapping with meaningful language positioning
+          by paradigm and abstraction; custom data arrangement shows design thought;
+          Okabe-Ito colors used thoughtfully
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal() removes clutter; subtle grid (major only); proper
+          legend styling with ELEVATED_BG; generous margins and whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Axis positioning guides interpretation of language paradigm spectrum;
+          color categories add meaning; visual hierarchy created by layout and labels
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements scatter plot with text labels instead of points
+        comment: Correctly implements scatter plot with text labels (geom_text); text
+          itself is the visual element, not markers
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly map language positions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Text labels displayed at coordinates, color encoding for categories
-      - id: SC-04
-        name: Data Range
+        comment: x/y coordinates, label text, color encoding by category; legible
+          font size (size=11, bold)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 30 languages visible within the plot area
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis paradigm scores (0-1); Y-axis abstraction levels (0-1); all
+          30 data points visible; axes encompass data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Category colors are accurately mapped
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: scatter-text · letsplot · pyplots.ai'
+        comment: 'Title: ''scatter-text · Python · letsplot · anyplot.ai'' ✓; Legend:
+          ''Primary Use'' categories with correct colors and labels'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variety of positions across the 2D space, multiple categories
+        comment: Shows full scatter-text feature spectrum; 30 programming languages
+          representing diverse categories (General, Web, Systems, Mobile, Functional,
+          Scripting, Data Science, Scientific, Legacy)
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Programming language paradigm/abstraction positioning is a realistic,
-          neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 0-1 normalized scales are appropriate for paradigm spectrum
+        comment: Programming language positioning by paradigm and abstraction is real-world
+          meaningful; neutral and plausible; useful data story
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalized 0-1 value ranges appropriate for 2D positioning; 30 languages
+          balanced density (not sparse, not overcrowded)
     code_quality:
-      score: 5
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,51 +184,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure
+        comment: No functions/classes; straightforward linear code flow; clear and
+          simple
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42); paradigm_scores dictionary hardcoded; fully deterministic
+          and reproducible
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Imports geom_point but uses it only for invisible legend hack
+        passed: true
+        comment: 'Imports only used libraries: os, numpy, pandas, lets_plot modules;
+          no unnecessary imports'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; tooltips used appropriately for HTML export;
+          clear variable naming; appropriate complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: -2
-        max: 1
-        passed: false
-        comment: Score adjustment for code quality issues
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; ggsave with correct
+          scale=3; current API usage (LetsPlot.setup_html())
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of lets-plot layer_tooltips() for interactive HTML
-          export with hover information
+        comment: ggplot2-style grammar of graphics; geom_text for visualization; scale_color_manual;
+          comprehensive theme() customization; proper aes() mappings; LetsPlot.setup_html()
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses letsplot's distinctive layer_tooltips() feature with custom
+          hover information (label, category, paradigm, abstraction); distinctive
+          from base ggplot2
+    score_caps_applied: []
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - alpha-blending
+  styling: []

@@ -1,150 +1,189 @@
 library: letsplot
+language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:50:05Z'
-updated: '2026-01-09T23:54:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868896071
+updated: '2026-05-18T12:45:41Z'
+generated_by: claude-haiku
+workflow_run: 26033477465
 issue: 3576
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/letsplot/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent use of geom_pointrange for coefficient + CI visualization
-  - Clean horizontal layout with coord_flip() for long variable names
-  - Perfect title format and axis labeling
-  - Appropriate colorblind-safe color scheme (blue/gray)
-  - Variables properly sorted by coefficient magnitude
-  - Well-constructed significance labeling with ordered categorical
+  - Perfectly correct specification implementation with all required features (error
+    bars, reference line, significance distinction, horizontal layout, ordered by
+    magnitude)
+  - Flawless theme adaptation - both light and dark renders are readable with proper
+    color tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG) threaded throughout
+  - Excellent visual quality - all text sizes explicitly set (24pt title, 20pt labels,
+    16pt ticks) and readable in both themes
+  - 'Correct Okabe-Ito palette usage - significant coefficients use #009E73 (brand
+    green), non-significant use adaptive neutral (#1A1A1A light / #E8E8E0 dark)'
+  - Clean, reproducible code with np.random.seed(42), proper imports, and KISS structure
+  - Realistic and plausible housing price prediction dataset with sensible coefficient
+    values and standard errors
+  - Idiomatic letsplot usage with ggplot2-style grammar, geom_pointrange for error
+    bars, and coord_flip for horizontal layout
   weaknesses:
-  - Grid styling could be improved (panel_grid_major_x is blanked, reducing readability)
-  - Could leverage more lets-plot interactive features in HTML export (e.g., tooltips)
-  image_description: 'The plot displays a coefficient plot for a housing price prediction
-    model with 12 predictor variables arranged vertically on the y-axis in order of
-    coefficient magnitude. Each variable shows a point estimate (circle marker) with
-    horizontal error bars representing 95% confidence intervals. The x-axis shows
-    "Coefficient Estimate (Standardized)" ranging from approximately -0.5 to 0.6.
-    A vertical dashed gray reference line at zero clearly indicates the null hypothesis
-    threshold. Variables are color-coded by statistical significance: Python Blue
-    (#306998) for significant coefficients (CI does not cross zero) and gray (#999999)
-    for non-significant ones. The title correctly uses the format "coefficient-confidence
-    · letsplot · pyplots.ai". A well-positioned bottom legend shows "Statistical Significance"
-    with entries for "Significant (p < 0.05)" and "Not Significant". The minimal theme
-    provides clean presentation with subtle gridlines only on the y-axis.'
+  - Design Excellence could be elevated with more sophisticated visual refinement
+    - legend background is customized but could benefit from additional polish or
+    distinctive styling elements
+  - Library Mastery uses idiomatic patterns but could showcase more distinctive letsplot
+    features beyond basic geoms
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and well-implemented
+      Chrome: Title "coefficient-confidence · python · letsplot · anyplot.ai" uses dark bold text (INK color), axis labels "Predictor Variable" and "Coefficient Estimate" are readable, tick labels on both axes are clear and properly spaced
+      Data: Green circles (#009E73) for significant coefficients, dark gray circles (#1A1A1A) for non-significant, horizontal error bars extending from each point showing 95% confidence intervals, dashed vertical reference line at zero
+      Grid: Subtle major x-axis gridlines (INK_SOFT color with low opacity), no y-axis grid
+      Legibility verdict: PASS - all elements clearly readable against light surface, good contrast, no text-on-text collisions
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and well-implemented
+      Chrome: Title uses light bold text (#F0EFE8), axis labels render in light text, tick labels use secondary text color (#B8B7B0) - all clearly readable against dark background
+      Data: Green circles (#009E73) are IDENTICAL to light render - confirming correct theme-independent palette, light gray circles (#E8E8E0) for non-significant - properly theme-adapted, error bars and reference line equally visible
+      Grid: Same subtle gridline styling as light render, easily visible on dark surface
+      Legibility verdict: PASS - no dark-on-dark failures, brand green (#009E73) remains highly visible and distinguishable, excellent theme adaptation throughout, all text readable
+  verdict: APPROVED
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt bold, axis titles at 20pt, tick labels at 16pt - all
-          perfectly readable
+        comment: 'All font sizes explicitly set: 24pt title, 20pt labels, 16pt ticks.
+          All text perfectly readable in both light and dark themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all variable names clear and well-spaced
+        comment: Variable names appropriately spaced on y-axis. No overlapping text
+          elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Point markers well-sized (size=1.5, fatten=4), confidence intervals
-          clearly visible
+        comment: Markers (size=4, fatten=4) and error bars are clearly visible and
+          well-adapted to 12-coefficient density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/gray distinction is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight excess whitespace on right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units indication (Standardized)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito #009E73 for significant, adaptive neutral for non-significant.
+          Good contrast, CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 base (4800x2700 at 3x scale). Perfect proportions, nothing
+          cut off, balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive labels: ''Coefficient Estimate'' and ''Predictor Variable''.
+          Required title format included'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 ✓. Backgrounds correct (#FAF8F1 light, #1A1A17
+          dark) ✓. Both renders theme-correct ✓'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend well-placed but major x-grid is blanked reducing readability
+        comment: Professional polish with custom theme colors and sizing. Well-configured
+          defaults but not distinctive beyond required customization
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid styling (major x-axis only), custom legend background,
+          appropriate margins, good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Zero reference line creates focal point. Color differentiation guides
+          visual hierarchy. Magnitude-based ordering aids comparison
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct coefficient/dot plot with confidence intervals
+        comment: Coefficient plot with horizontal error bars - correct chart type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables on y-axis, coefficients on x-axis (horizontal layout)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Zero reference line, ordered by magnitude, color by significance
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: vertical reference line at zero, error bars,
+          significance distinction, horizontal layout'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All coefficients and confidence intervals fully visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis shows coefficient values, y-axis shows variables. All 12 coefficients
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly describes significance categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format {spec-id} · {library} · pyplots.ai
+        comment: Title format correct. Legend shows significance categories
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows significant and non-significant, positive and negative values,
-          varying CI widths
+        comment: Shows all aspects of coefficient plots - estimates, intervals, significance,
+          reference value
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Housing price prediction is realistic and neutral
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standardized coefficients in reasonable range
+        comment: Housing price prediction regression with realistic predictor names
+          (Square Footage, Bedrooms, etc.) and plausible coefficients
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coefficient range (-0.32 to 0.45) and standard errors are sensible.
+          12 variables appropriate for readability
     code_quality:
       score: 10
       max: 10
@@ -154,47 +193,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Simple script: imports, data generation, plotting, save. No unnecessary
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and lets_plot used
+        comment: Only necessary imports (os, numpy, pandas, letsplot) - all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic code with appropriate complexity. No over-engineering
+          or fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Current letsplot
+          4.9.0 API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2-style grammar usage: ggplot → geom_pointrange → coord_flip
+          → theme_minimal with custom theming'
+      - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses ggplot grammar and geom_pointrange appropriately but could leverage
-          more interactive features
-  verdict: APPROVED
+        comment: Uses standard letsplot features (coord_flip, geom_pointrange) appropriately
+          but doesn't showcase distinctive library capabilities beyond basics
 impl_tags:
   dependencies: []
-  techniques:
-  - layer-composition
+  techniques: []
   patterns:
   - data-generation
   dataprep: []

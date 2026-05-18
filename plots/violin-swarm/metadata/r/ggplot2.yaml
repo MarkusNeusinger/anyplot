@@ -1,0 +1,229 @@
+library: ggplot2
+language: r
+specification_id: violin-swarm
+created: '2026-05-18T05:04:40Z'
+updated: '2026-05-18T05:14:30Z'
+generated_by: claude-haiku
+workflow_run: 26014476416
+issue: 3526
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
+review:
+  strengths:
+  - Correct plot type with violin + swarm combination working well
+  - Perfect theme-adaptive chrome implementation (backgrounds, text colors)
+  - Excellent text legibility - all sizes explicitly set (24pt title, 20pt labels,
+    16pt ticks)
+  - Clean code structure following ggplot2 idiomatic patterns
+  - Realistic and neutral data (reaction times across experimental conditions)
+  - All spec requirements met accurately
+  weaknesses:
+  - geom_jitter approximates swarm behavior but isn't true swarm algorithm (no ggbeeswarm
+    integration)
+  - Design sophistication is solid but not exceptional - standard ggplot2 defaults
+    with careful theming
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white surface (#FAF8F1) - exactly as specified.
+      Chrome: Title "violin-swarm · R · ggplot2 · anyplot.ai" in dark text (INK color) at 24pt.
+        X-axis label "Experimental Condition" and Y-axis label "Reaction Time (ms)" in dark text at 20pt.
+        Tick labels (Control, Treatment A/B/C, and numeric values 200-450) in soft gray (INK_SOFT) at 16pt.
+        All text is crisp and fully readable against the light background.
+      Data: Four violin shapes in brand green (#009E73) with alpha=0.4 transparency, allowing individual swarm points to show through.
+        Swarm points overlay the violins in the same green color with alpha=0.7, spread horizontally (width=0.2) to avoid overlap.
+        Y-axis grid lines are subtle and visible.
+      Legibility verdict: PASS - All text elements readable, excellent contrast, no overlaps.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black surface (#1A1A17) - exactly as specified.
+      Chrome: Title in light text (F0EFE8) at 24pt - fully readable against dark background.
+        Axis labels in light text at 20pt - fully readable.
+        Tick labels in soft light gray (B8B7B0) at 16pt - all readable, no dark-on-dark failures.
+        Grid lines remain subtle and visible.
+      Data: Violin shapes and swarm points are identical green (#009E73) as in light render - data colors unchanged between themes, only chrome adapted.
+        Violins and points are clearly distinguishable from the dark background.
+      Legibility verdict: PASS - All text elements readable, proper contrast, no dark-on-dark failures, data colors identical to light render.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps, clean spacing
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Violins and points optimally sized and visible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito #009E73 is CVD-safe with adequate contrast'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions and margin balance
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct Okabe-Ito, proper theme colors, identical data across themes
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured default, professional but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid customization and subtle styling, some refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Violin+swarm tells story of distribution and observations
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct violin plot with overlaid swarm
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: transparency, swarm spread, proper sizing'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X/Y correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format, no legend needed
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: KDE, individual points, variation'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real scenario (reaction times), neutral and plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and proportions factually correct for domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear flow, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures deterministic output
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Minor: dplyr imported but not heavily used'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png output with current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert ggplot2 patterns: aes, geom_*, theme composition, ragg device'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: geom_jitter is practical but generic; solid theme-adaptive chrome
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive-chrome

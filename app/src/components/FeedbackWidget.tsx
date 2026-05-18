@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -138,10 +138,12 @@ export function FeedbackWidget() {
     return fresh;
   };
 
-  const currentPath = useMemo(
-    () => (typeof window !== 'undefined' ? window.location.pathname + window.location.search : ''),
-    [mode]
-  );
+  // Read freshly at each call site so client-side navigations (which don't
+  // remount the widget) don't poison the next `feedback_opened` track or the
+  // submitted `path` field — useMemo with [mode] would only refresh on open,
+  // not on the route changes that happened while the widget was closed.
+  const getCurrentPath = (): string =>
+    typeof window !== 'undefined' ? window.location.pathname + window.location.search : '';
 
   // Auto-reset the full-form thank-you state and clear inputs.
   useEffect(() => {
@@ -168,7 +170,7 @@ export function FeedbackWidget() {
     if (mode === 'closed') {
       setMode('quick');
       setError(null);
-      trackEvent('feedback_opened', { path: currentPath || undefined });
+      trackEvent('feedback_opened', { path: getCurrentPath() || undefined });
     } else {
       setMode('closed');
     }
@@ -192,7 +194,7 @@ export function FeedbackWidget() {
     message: overrides.message,
     reaction: overrides.reaction,
     contact: overrides.contact,
-    path: currentPath,
+    path: getCurrentPath(),
     spec_id: specIdFromPath(window.location.pathname),
     viewport: `${window.innerWidth}x${window.innerHeight}`,
     session_id: ensureSessionId(),
@@ -200,26 +202,29 @@ export function FeedbackWidget() {
   });
 
   const submitQuickReaction = async (r: Reaction) => {
-    // Optimistic close + toast: the FAB returns to its quiet state immediately,
-    // so the interaction feels instant even if the network is slow.
+    // Close the FAB immediately so the interaction feels instant, then show the
+    // Thanks toast only after the server confirms — otherwise a 429/500 (or a
+    // silently dropped spam-filter response) would still flash "Thanks" while
+    // the row was never written.
     setMode('closed');
-    setThanksVisible(true);
     try {
-      await fetch(`${API_URL}/feedback`, {
+      const response = await fetch(`${API_URL}/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(buildPayload({ message: null, reaction: r, contact: null })),
       });
+      if (!response.ok) return;
+      setThanksVisible(true);
       trackEvent('feedback_submitted', {
-        path: currentPath || undefined,
+        path: getCurrentPath() || undefined,
         reaction: r,
         has_contact: 'false',
         spec_id: specIdFromPath(window.location.pathname),
         mode: 'quick',
       });
     } catch {
-      // The user already saw the toast; we don't undo it. A retried network
-      // failure here is acceptable lossage for a one-tap reaction.
+      // Network failure — drop silently. The quick interaction has no error UI
+      // surface (we closed the FAB optimistically); the user can retry.
     }
   };
 
@@ -252,7 +257,7 @@ export function FeedbackWidget() {
       }
 
       trackEvent('feedback_submitted', {
-        path: currentPath || undefined,
+        path: getCurrentPath() || undefined,
         reaction: reaction ?? undefined,
         has_contact: contact.trim() ? 'true' : 'false',
         spec_id: specIdFromPath(window.location.pathname),
@@ -447,9 +452,9 @@ export function FeedbackWidget() {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
               }}
-              title={currentPath || undefined}
+              title={getCurrentPath() || undefined}
             >
-              Page: {currentPath || '/'}
+              Page: {getCurrentPath() || '/'}
             </Box>
 
             {/* Honeypot — real users never see this, bots will fill it and trip the server-side guard. */}

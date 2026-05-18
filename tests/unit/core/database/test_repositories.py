@@ -10,9 +10,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from core.database.models import Library, Spec
 from core.database.repositories import (
     IMPL_UPDATABLE_FIELDS,
+    LANGUAGE_UPDATABLE_FIELDS,
     LIBRARY_UPDATABLE_FIELDS,
     SPEC_UPDATABLE_FIELDS,
     ImplRepository,
+    LanguageRepository,
     LibraryRepository,
     SpecRepository,
 )
@@ -36,6 +38,14 @@ class TestUpdatableFieldConstants:
         assert "name" in LIBRARY_UPDATABLE_FIELDS
         assert "version" in LIBRARY_UPDATABLE_FIELDS
         assert "id" not in LIBRARY_UPDATABLE_FIELDS
+
+    def test_language_fields(self) -> None:
+        assert "name" in LANGUAGE_UPDATABLE_FIELDS
+        assert "file_extension" in LANGUAGE_UPDATABLE_FIELDS
+        assert "runtime_version" in LANGUAGE_UPDATABLE_FIELDS
+        assert "documentation_url" in LANGUAGE_UPDATABLE_FIELDS
+        assert "description" in LANGUAGE_UPDATABLE_FIELDS
+        assert "id" not in LANGUAGE_UPDATABLE_FIELDS
 
     def test_impl_fields_includes_review(self) -> None:
         assert "quality_score" in IMPL_UPDATABLE_FIELDS
@@ -176,6 +186,52 @@ class TestLibraryRepository:
     @pytest.mark.asyncio
     async def test_upsert_without_id_raises(self, test_session: AsyncSession) -> None:
         repo = LibraryRepository(test_session)
+        with pytest.raises(ValueError, match="must include 'id'"):
+            await repo.upsert({"name": "No ID"})
+
+
+class TestLanguageRepository:
+    """Tests for LanguageRepository."""
+
+    @pytest.mark.asyncio
+    async def test_create_and_get_all_ordered_by_name(self, test_session: AsyncSession) -> None:
+        repo = LanguageRepository(test_session)
+        await repo.create({"id": "python", "name": "Python", "file_extension": ".py"})
+        await repo.create({"id": "r", "name": "R", "file_extension": ".R"})
+
+        langs = await repo.get_all()
+        assert [lang.id for lang in langs] == ["python", "r"]
+
+    @pytest.mark.asyncio
+    async def test_upsert_creates_with_all_fields(self, test_session: AsyncSession) -> None:
+        repo = LanguageRepository(test_session)
+        lang = await repo.upsert(
+            {
+                "id": "python",
+                "name": "Python",
+                "file_extension": ".py",
+                "runtime_version": "3.13",
+                "documentation_url": "https://www.python.org",
+                "description": "General-purpose language.",
+            }
+        )
+        assert lang.id == "python"
+        assert lang.runtime_version == "3.13"
+        assert lang.documentation_url == "https://www.python.org"
+
+    @pytest.mark.asyncio
+    async def test_upsert_updates_existing(self, test_session: AsyncSession) -> None:
+        repo = LanguageRepository(test_session)
+        await repo.create({"id": "python", "name": "Python", "file_extension": ".py", "runtime_version": "3.12"})
+        updated = await repo.upsert(
+            {"id": "python", "name": "Python", "runtime_version": "3.13", "description": "Updated."}
+        )
+        assert updated.runtime_version == "3.13"
+        assert updated.description == "Updated."
+
+    @pytest.mark.asyncio
+    async def test_upsert_without_id_raises(self, test_session: AsyncSession) -> None:
+        repo = LanguageRepository(test_session)
         with pytest.raises(ValueError, match="must include 'id'"):
             await repo.upsert({"name": "No ID"})
 

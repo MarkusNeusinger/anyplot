@@ -5,6 +5,7 @@ from api.routers.download import router as download_router
 from api.routers.feedback import router as feedback_router
 from api.routers.health import router as health_router
 from api.routers.insights import router as insights_router
+from api.routers.languages import router as languages_router
 from api.routers.libraries import router as libraries_router
 from api.routers.og_images import router as og_images_router
 from api.routers.plots import router as plots_router
@@ -20,6 +21,7 @@ __all__ = [
     "feedback_router",
     "health_router",
     "insights_router",
+    "languages_router",
     "libraries_router",
     "og_images_router",
     "plots_router",

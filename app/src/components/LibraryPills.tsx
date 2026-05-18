@@ -21,6 +21,7 @@ const LIBRARY_ABBREV: Record<string, string> = {
 interface Implementation {
   library_id: string;
   library_name: string;
+  language: string;
   quality_score: number | null;
 }
 

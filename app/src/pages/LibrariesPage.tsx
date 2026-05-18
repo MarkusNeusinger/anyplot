@@ -32,12 +32,12 @@ export function LibrariesPage() {
         <title>libraries | anyplot.ai</title>
         <meta
           name="description"
-          content="Nine Python plotting libraries — matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot. Same specs, every library."
+          content="Ten plotting libraries across Python and R — matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot, ggplot2. Same specs, every library."
         />
         <meta property="og:title" content="libraries | anyplot.ai" />
         <meta
           property="og:description"
-          content="Nine Python plotting libraries — same specs, every library."
+          content="Ten plotting libraries across Python and R — same specs, every library."
         />
         <link rel="canonical" href="https://anyplot.ai/libraries" />
       </Helmet>
@@ -59,7 +59,7 @@ export function LibrariesPage() {
             const meta = byId.get(name);
             return (
               <Box key={name} sx={{ position: 'relative' }}>
-                <LibraryCard name={name} onClick={() => handleLibraryClick(name)} />
+                <LibraryCard name={name} language={meta?.language} onClick={() => handleLibraryClick(name)} />
                 {meta?.documentation_url && (
                   <Box sx={{
                     display: 'flex',

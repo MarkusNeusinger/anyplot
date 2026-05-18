@@ -1,44 +1,48 @@
-""" pyplots.ai
+""" anyplot.ai
 range-interval: Range Interval Chart
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-18
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource
-from bokeh.plotting import figure, output_file, save
+from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Monthly temperature ranges for a city
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # Okabe-Ito position 1
+ACCENT = "#D55E00"  # Okabe-Ito position 2
+
+# Data - Temperature ranges across months
 np.random.seed(42)
 
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-
-# Realistic temperature ranges (daily low/high in Celsius)
 base_temps = [2, 4, 8, 12, 16, 20, 23, 22, 18, 13, 7, 3]
+
 min_temps = [base - np.random.uniform(3, 6) for base in base_temps]
 max_temps = [base + np.random.uniform(5, 10) for base in base_temps]
-
-# Calculate midpoints for reference
 mid_temps = [(min_t + max_t) / 2 for min_t, max_t in zip(min_temps, max_temps, strict=True)]
 
-# Create ColumnDataSource
-source = ColumnDataSource(
-    data={
-        "month": months,
-        "min_temp": min_temps,
-        "max_temp": max_temps,
-        "mid_temp": mid_temps,
-        "x": list(range(len(months))),
-    }
-)
+source = ColumnDataSource(data={"month": months, "min_temp": min_temps, "max_temp": max_temps, "mid_temp": mid_temps})
 
-# Create figure - 4800x2700 for 16:9 landscape
+# Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="range-interval · bokeh · pyplots.ai",
+    title="range-interval · python · bokeh · anyplot.ai",
     x_axis_label="Month",
     y_axis_label="Temperature (°C)",
     x_range=months,
@@ -46,7 +50,7 @@ p = figure(
     toolbar_location=None,
 )
 
-# Draw range bars using segment glyph (vertical lines showing min to max)
+# Range bars (segment glyphs)
 p.segment(
     x0="month",
     y0="min_temp",
@@ -54,80 +58,110 @@ p.segment(
     y1="max_temp",
     source=source,
     line_width=40,
-    line_color="#306998",
+    line_color=BRAND,
     line_alpha=0.7,
     line_cap="round",
 )
 
-# Add markers at min and max endpoints for emphasis
+# Min endpoint markers
 p.scatter(
     x="month",
     y="min_temp",
     source=source,
-    size=30,
-    color="#1a4971",
-    line_color="white",
-    line_width=4,
+    size=20,
+    color=BRAND,
+    line_color=PAGE_BG,
+    line_width=3,
     legend_label="Min Temperature",
 )
 
+# Max endpoint markers
 p.scatter(
     x="month",
     y="max_temp",
     source=source,
-    size=30,
-    color="#FFD43B",
-    line_color="#306998",
-    line_width=4,
+    size=20,
+    color=ACCENT,
+    line_color=PAGE_BG,
+    line_width=3,
     legend_label="Max Temperature",
 )
 
-# Add midpoint markers
+# Midpoint markers
 p.scatter(
     x="month",
     y="mid_temp",
     source=source,
-    size=18,
+    size=12,
     marker="diamond",
-    color="white",
-    line_color="#1a4971",
-    line_width=3,
+    color=INK_SOFT,
+    line_color=PAGE_BG,
+    line_width=2,
     legend_label="Midpoint",
 )
 
-# Style the plot - larger sizes for 4800x2700 canvas
-p.title.text_font_size = "36pt"
-p.title.text_font_style = "bold"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
+# Title styling
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+
+# Axis label styling
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+
+# Tick label styling
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
 # Grid styling
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.10
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_dash = "dashed"
+
+# Axis and spine styling
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.axis.axis_line_width = 2
+p.outline_line_color = INK_SOFT
+
+# Background
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 
 # Legend styling
-p.legend.label_text_font_size = "22pt"
 p.legend.location = "top_left"
-p.legend.background_fill_alpha = 0.9
-p.legend.border_line_color = "#306998"
-p.legend.border_line_width = 2
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.label_text_font_size = "16pt"
+p.legend.label_text_color = INK_SOFT
 p.legend.padding = 15
 p.legend.spacing = 10
 
-# Background
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "white"
-
-# Axis styling
-p.xaxis.major_tick_line_color = "#306998"
-p.yaxis.major_tick_line_color = "#306998"
-p.axis.axis_line_width = 2
-p.axis.axis_line_color = "#306998"
-
-# Save outputs
-export_png(p, filename="plot.png")
-output_file("plot.html")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with Selenium
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

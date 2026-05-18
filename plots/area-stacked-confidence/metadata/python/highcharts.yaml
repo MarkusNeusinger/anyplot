@@ -1,162 +1,183 @@
 library: highcharts
+language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:57:41Z'
-updated: '2026-01-09T22:00:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866600918
+updated: '2026-05-18T07:08:09Z'
+generated_by: claude-haiku
+workflow_run: 26017916251
 issue: 3549
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/highcharts/plot-dark.html
+quality_score: 72
 review:
   strengths:
-  - Excellent implementation of stacked areas with confidence bands using Highcharts
-    areaspline and arearange series types
-  - Clean professional visual appearance with good color choices and gradient fills
-  - Realistic data scenario with seasonal patterns that make sense for renewable energy
-  - Proper use of linkedTo to associate confidence bands with their parent series
-  - Good use of Highcharts-specific features like shared tooltips crosshair and gradient
-    fills
+  - 'Excellent visual quality in both renders: all text is readable, no overlaps,
+    clean layout'
+  - Correct Okabe-Ito palette in output with proper theme-dependent chrome (light/dark
+    text, backgrounds, grid)
+  - 'Effective data visualization: stacked areas with confidence bands clearly communicate
+    composition and uncertainty'
+  - 'Realistic data scenario: renewable energy with plausible seasonal patterns (solar
+    summer peak, wind winter peak)'
+  - 'Deterministic reproducibility: seed is set, all imports are used, no unnecessary
+    dependencies'
   weaknesses:
-  - Legend does not explain what the confidence bands represent
-  - Confidence bands for stacked series show absolute ranges rather than symmetric
-    bands around each layer
-  image_description: The plot displays a stacked area chart showing renewable energy
-    consumption by source (Solar, Wind, Hydro) over 8 quarters from Q1 2023 to Q4
-    2024. The three main series are stacked with Solar (gold/yellow) at the bottom,
-    Wind (dark blue) in the middle, and Hydro (cyan/teal) at the top. Each series
-    has a visible lighter-shaded confidence band extending above and below the main
-    area. The areas use smooth spline interpolation (areaspline). The Y-axis shows
-    "Energy Consumption (GWh)" ranging from 0 to approximately 115, and the X-axis
-    shows "Quarter" with categorical labels for each quarter. The title follows the
-    required format "area-stacked-confidence · highcharts · pyplots.ai" with a subtitle
-    explaining the data as "Renewable Energy Consumption by Source (GWh) with 90%
-    Confidence Bands". A legend is positioned in the top-right corner with a white
-    background showing all three series (Solar, Wind, Hydro). The color palette uses
-    yellow, blue, and cyan which are colorblind-friendly. Data markers with white
-    borders are visible on each data point. Grid lines are subtle gray. The overall
-    layout is well-balanced with the chart filling most of the canvas area.
+  - Code does not read ANYPLOT_THEME environment variable - all colors hardcoded instead
+    of using theme tokens (PAGE_BG, INK, INK_SOFT, GRID, ELEVATED_BG)
+  - Output files saved as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html
+    - breaks artifact naming convention
+  - Title missing 'Python' language identifier - should be 'area-stacked-confidence
+    · Python · highcharts · anyplot.ai'
+  - 'Color values hardcoded (#FFD43B, #306998, #17BECF) instead of using Okabe-Ito
+    palette constants - reduces code maintainability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "area-stacked-confidence · highcharts · anyplot.ai" is bold and prominent. Subtitle descriptive. Axis labels and tick labels render in dark text. Legend positioned in top-right. Grid lines subtle. All text readable against light background.
+      Data: Three stacked areas - Solar (green #009E73 top), Wind (orange #D55E00 middle), Hydro (blue #0072B2 bottom). Semi-transparent confidence bands clearly visible around each layer. Markers appear on spline curves.
+      Legibility verdict: PASS - all text readable, no dark-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Same title and labels now render in light text. Text color has adapted correctly. Grid lines subtle. Legend readable. All chrome elements show proper theme adaptation.
+      Data: Data colors are IDENTICAL to light render - same green, orange, blue (Okabe-Ito palette preserved). Semi-transparent confidence bands are clearly visible. Markers visible on curves.
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures. Okabe-Ito palette colors preserved between renders as required.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and tick labels are all clearly readable
-          at full resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; legend is well-positioned and doesn't
-          cover data
+        comment: All font sizes explicitly set; readable at full size in both light
+          and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title, axes, legend, and data clearly separated with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Markers visible with white borders, confidence bands distinguishable
-          but could have slightly higher contrast
+        comment: All three stacked areas and confidence bands clearly distinguishable
+          and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow/Blue/Cyan palette is colorblind-safe, avoids red-green combinations
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good proportions, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; contrast adequate; no red-green sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-balanced proportions; generous margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive with units; clearly explain the visualization
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73; multi-series follows Okabe-Ito; backgrounds
+          are #FAF8F1 light / #1A1A17 dark; both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is appropriately subtle, but legend only shows main series -
-          missing confidence band explanation
+        comment: Functional design with standard palette; hierarchy is straightforward,
+          not exceptionally polished
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid is subtle; whitespace is generous; spines appropriately styled
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Stacked composition with confidence bands tells clear story; narrative
+          is direct
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct stacked area chart with confidence bands
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X-axis correctly shows time periods, Y-axis shows cumulative stacked
-          values
-      - id: SC-03
+        comment: Correctly rendered as stacked area chart with spline curves
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: All main features present; legend could better identify what bands
-          represent
-      - id: SC-04
-        name: Data Range
+        comment: Stacked areas, confidence bands, and legend all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X-axis (quarters), Y-axis (GWh), stacking, and data visibility all
+          correct
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies Solar, Wind, Hydro
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title format is correct with middle-dot separators
+        max: 3
+        passed: false
+        comment: Title missing 'Python' language identifier - should be 'area-stacked-confidence
+          · Python · highcharts · anyplot.ai'. Legend labels clear and correct.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows seasonal variation, different magnitudes across sources, confidence
-          bands of varying widths
+        comment: 'All aspects demonstrated: three sources, confidence intervals, seasonal
+          variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Renewable energy consumption is a realistic, neutral scenario with
-          plausible seasonal patterns
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: GWh values are realistic for regional energy consumption
+        comment: Renewable energy scenario is plausible; quarterly data and values
+          realistic; seasonal patterns authentic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis range (0-120+ GWh) appropriate for stacked composition; values
+          don't exaggerate
     code_quality:
-      score: 10
+      score: 6
       max: 10
       items:
       - id: CQ-01
@@ -164,53 +185,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports to data to chart config to series to export structure
+        comment: No functions or classes; straightforward inline approach
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at the beginning
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports (tempfile, urllib, selenium, numpy, highcharts_core)
+          are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current highcharts-core API
+        max: 2
+        passed: false
+        comment: Code does not read ANYPLOT_THEME env var or use theme-adaptive color
+          tokens. All colors hardcoded.
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        passed: false
+        comment: 'Code saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html.
+          Critical: breaks artifact naming convention.'
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Chart() and HighchartsOptions() correctly; areaspline + arearange;
+          proper stacking; missing theme integration reduces score
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses areaspline for smooth curves, arearange for confidence bands,
-          gradient fills, shared tooltips, linkedTo for band association
-  verdict: APPROVED
+        comment: Uses arearange (Highcharts-specific), gradient fills, linkedTo, spline
+          curves; standard for this chart type but could be more creative
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
   - gradient-fill
-  - hover-tooltips
   patterns:
   - data-generation
   dataprep: []
   styling:
-  - gradient-fill
   - alpha-blending

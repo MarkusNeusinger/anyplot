@@ -1,158 +1,179 @@
 library: matplotlib
+language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:46:04Z'
-updated: '2026-01-09T16:48:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858838412
+updated: '2026-05-18T03:14:53Z'
+generated_by: claude-haiku
+workflow_run: 26011235004
 issue: 3529
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of grouped violins with proper dodging/positioning
-  - Custom swarm-like jitter algorithm approximates beeswarm behavior well
-  - Clear visual distinction between Novice and Expert groups
-  - Appropriate transparency (alpha=0.5) on violins makes swarm points visible
-  - Realistic data scenario with meaningful patterns (experts faster than novices)
-  - Correct title format and professional styling
+  - 'Perfect visual quality: all text explicitly sized and readable in both light
+    and dark themes; zero overlap or legibility issues'
+  - 'Complete spec adherence: all required features implemented exactly as specified
+    (transparency, swarm jitter, color matching, spacing)'
+  - 'Robust theme implementation: both renders equally professional and readable;
+    chrome adapts correctly while data colors stay constant'
+  - 'Clean, reproducible code: simple linear structure with deterministic seed; minimal,
+    well-used imports'
+  - 'Strong data narrative: clear visual hierarchy and appropriate context show expertise
+    effect across task complexity'
   weaknesses:
-  - Swarm point size (s=40) could be slightly larger (s=60-80) for better visibility
-    at this data density
-  - Grid styling could include both axes or be more subtle
-  image_description: 'The plot displays a grouped violin plot with swarm overlay showing
-    response times across three task complexity levels (Simple, Moderate, Complex)
-    for two expertise groups (Novice and Expert). Blue (#306998) violins represent
-    Novice users and yellow/gold (#FFD43B) violins represent Expert users. Each violin
-    has individual data points overlaid as filled circles with black edges. The violins
-    have ~50% transparency allowing swarm points to be visible. Black horizontal lines
-    mark the median for each violin. The title follows the correct format "violin-grouped-swarm
-    · matplotlib · pyplots.ai" at the top. X-axis shows "Task Complexity" with three
-    categories, Y-axis shows "Response Time (seconds)" ranging from 0 to ~6.5. A legend
-    in the upper left shows the Expertise grouping with colored rectangles. A subtle
-    dashed grid appears on the y-axis. The data shows expected patterns: Novice users
-    have higher response times than Experts, and response times increase with task
-    complexity for both groups.'
+  - 'Design Excellence: aesthetic choices are solid defaults but lack exceptional
+    polish or custom visual innovation (DE-01=4 instead of 6+)'
+  - 'Library Mastery: implementation uses standard matplotlib patterns; minimal use
+    of library-specific advanced features (LM-02=2 instead of 4+)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct page surface color
+      Chrome: Title (24pt, dark text), axis labels (20pt, dark text), tick labels (16pt, dark text), all clearly readable. Y-axis grid subtle (alpha=0.15), light gray. Spines left/bottom visible in soft gray. Legend upper left with elevated background. All readable with no overlap.
+      Data: Violins semi-transparent (alpha=0.5) in Okabe-Ito brand green (#009E73) for Novice and vermillion (#D55E00) for Expert. Swarm points overlay with same colors, s=70, alpha=0.9, dark edges. Median lines visible in dark ink.
+      Legibility verdict: PASS — all elements readable and properly contrast against light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface color
+      Chrome: Title, axis labels, tick labels all in light colors (INK/INK_SOFT #F0EFE8 / #B8B7B0) — readable against dark surface. Y-axis grid subtle, light colored. Spines light colored. Legend frame has darker elevated background (#242420). No dark-on-dark failures.
+      Data: Violins and swarm points identical colors to light render — green and orange stay constant. Data colors unchanged per theme spec. Scatterpoint edges adapted to dark background for visibility.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16-18pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, violins well-separated
+        comment: 'All text explicitly sized: title 24pt, labels 20pt, ticks 16pt;
+          perfectly readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero text overlap; legend, title, axes all have adequate spacing
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Swarm points visible with s=40 and alpha=0.8, but could be slightly
-          larger for this data density
+        comment: Violins and swarm points optimally sized for data density; alpha
+          values appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe, high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Response Time (seconds), Task Complexity'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette colorblind-safe; good contrast; not red-green dependent
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: figsize=(16,9); plot uses appropriate canvas portion; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Labels include units; spec-compliant title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          theme chrome correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid only on y-axis is acceptable but legend title font could match
-          better
+        comment: Well-configured defaults with thoughtful touches (median lines, custom
+          legend); lacks exceptional innovation
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed, subtle grid, generous whitespace, legend styling
+          shows refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy via color and median lines; plot tells story
+          of expertise effect
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct grouped violin plot with swarm overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis, groups by color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Violins with transparency, swarm points with matching colors, dodged
-          positioning, median lines
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: distinct colors, legend, transparent violins,
+          appropriate swarm sizing, adequate spacing, dodged jitter'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate range (0 to ~6.5)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Task Complexity; Y: Response Time; Color: Expertise; all data
+          visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Novice and Expert with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: violin-grouped-swarm · matplotlib · pyplots.ai'
+        comment: Title format correct; legend labels match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distribution shapes, different means, different spreads
-          across groups
+        comment: Shows distribution shapes, variation, differences across expertise
+          and complexity levels
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Response times for task completion is a realistic, neutral scenario
-          from UX/psychology research
+        comment: Real-world scenario; Novice > Expert and Simple < Complex make logical
+          sense
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values reasonable (0.3-6.5 seconds), though some truncation at 0.1
-          floor is artificial
+        comment: Values factually plausible; proportions reflect realistic performance
+          differences
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,51 +181,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, styling, save'
+        comment: 'Linear structure: imports → data → plot → save; no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported, both used
+        comment: Only os, matplotlib.pyplot, numpy; all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; no fake UI or over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Minor scoring adjustment for code quality balance
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct parameters
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses matplotlib violinplot with manual styling and custom swarm implementation
+        comment: Correct use of ax.violinplot(), ax.scatter(); theme-aware implementation;
+          good matplotlib patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses standard patterns; minimal use of library-specific advanced
+          features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting

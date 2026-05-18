@@ -29,6 +29,7 @@ from core.database.repositories import (
     BaseRepository,
     FeedbackRepository,
     ImplRepository,
+    LanguageRepository,
     LibraryRepository,
     SpecRepository,
 )
@@ -58,6 +59,7 @@ __all__ = [
     "BaseRepository",
     "SpecRepository",
     "LibraryRepository",
+    "LanguageRepository",
     "ImplRepository",
     "FeedbackRepository",
 ]

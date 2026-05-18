@@ -267,7 +267,7 @@ class TestFeedbackEndpoint:
         payload = {
             "message": "Bug on mobile",
             "reaction": "bug",
-            "email": "user@example.com",
+            "contact": "user@example.com",
             "path": "/scatter-basic",
             "spec_id": "scatter-basic",
             "viewport": "375x812",
@@ -285,7 +285,7 @@ class TestFeedbackEndpoint:
         row = result.scalars().one()
         assert row.message == "Bug on mobile"
         assert row.reaction == "bug"
-        assert row.email == "user@example.com"
+        assert row.contact == "user@example.com"
         assert row.spec_id == "scatter-basic"
         assert row.viewport == "375x812"
         assert row.session_id == "abc-123"
@@ -319,17 +319,21 @@ class TestFeedbackEndpoint:
         response = await client.post("/feedback", json={"message": "hello", "reaction": "fire"})
         assert response.status_code == 400
 
-    async def test_invalid_email_rejected(self, client):
-        """Should reject obviously malformed emails with 400."""
-        response = await client.post("/feedback", json={"message": "hello", "email": "not-an-email"})
+    async def test_empty_message_and_no_reaction_rejected(self, client):
+        """Submissions with neither message nor reaction should 400."""
+        response = await client.post("/feedback", json={})
         assert response.status_code == 400
 
     async def test_rate_limit_triggers_after_threshold(self, client):
-        """Should return 429 once a single IP exceeds the per-minute limit."""
+        """Should return 429 once a single IP exceeds the per-minute limit.
+
+        Each request uses a distinct message so the duplicate-suppression
+        filter (silent 200) doesn't mask the rate limiter under test.
+        """
         headers = {"x-forwarded-for": "203.0.113.42"}
-        for _ in range(5):
-            ok = await client.post("/feedback", json={"message": "spam"}, headers=headers)
+        for i in range(5):
+            ok = await client.post("/feedback", json={"message": f"spam-{i}"}, headers=headers)
             assert ok.status_code == 200
 
-        blocked = await client.post("/feedback", json={"message": "spam"}, headers=headers)
+        blocked = await client.post("/feedback", json={"message": "spam-blocked"}, headers=headers)
         assert blocked.status_code == 429

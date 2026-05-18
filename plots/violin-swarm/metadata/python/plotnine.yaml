@@ -1,154 +1,170 @@
 library: plotnine
+language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:45:51Z'
-updated: '2026-01-09T16:48:41Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858844024
+updated: '2026-05-18T04:55:33Z'
+generated_by: claude-haiku
+workflow_run: 26014153155
 issue: 3526
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/plotnine/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent data generation showing diverse distribution shapes (unimodal, bimodal,
-    different spreads)
-  - Clean, readable code following plotnine grammar of graphics
-  - Good color contrast between violin fill (blue) and points (yellow)
-  - Appropriate transparency on violin to maintain point visibility
-  - Correct title format and descriptive axis labels with units
+  - Perfect visual quality and readability in both light and dark themes
+  - Flawless palette compliance with proper Okabe-Ito colors and theme tokens
+  - Excellent data representation showing meaningful variation across conditions
+  - Clean, reproducible code with proper theme-adaptive styling
+  - All specification requirements met perfectly
   weaknesses:
-  - Uses geom_jitter instead of a true swarm plot (points spread randomly rather than
-    avoiding overlap algorithmically)
-  - Grid styling is minimal/absent - could benefit from subtle gridlines for value
-    reading
-  - Some points extend slightly outside violin boundaries due to jitter width
-  image_description: 'The plot displays four violin plots arranged horizontally for
-    the conditions "Control", "Treatment A", "Treatment B", and "Treatment C" on the
-    x-axis. The y-axis shows "Reaction Time (ms)" ranging from approximately 200 to
-    600 ms. Each violin is rendered in a light blue (#306998) with transparency (alpha
-    ~0.4), showing the kernel density estimate of the distribution. Yellow/gold jittered
-    points (#FFD43B) are overlaid on each violin, representing individual data observations.
-    The title "violin-swarm · plotnine · pyplots.ai" appears at the top. The violins
-    show distinct distribution shapes: Control has a wide unimodal distribution centered
-    around 420-450ms; Treatment A shows a narrower distribution around 370-400ms;
-    Treatment B displays a bimodal distribution (visible in the wider, rounder shape)
-    spanning 350-630ms; and Treatment C shows a wide distribution with spread from
-    210-600ms. The swarm points effectively reveal the individual observations within
-    each violin boundary.'
+  - 'Design Excellence could be higher: styling is competent but relies on defaults
+    rather than custom refinement (e.g., could experiment with more sophisticated
+    grid styling or visual hierarchy)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with clear contrast
+      Chrome: Title "violin-swarm · Python · plotnine · anyplot.ai" in dark text (24pt, INK token); axis labels "Experimental Condition" and "Reaction Time (ms)" (20pt); tick labels (16pt) - all clearly readable against light background
+      Data: Violins in brand green (#009E73) at alpha 0.35 with dark outline; swarm points in Okabe-Ito orange (#D55E00) at alpha 0.75 with jitter; first series is correctly #009E73
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with clear contrast
+      Chrome: Title and labels in light text (INK/INK_SOFT tokens); all elements readable - no dark-on-dark failures; tick labels properly contrast
+      Data: Violins remain exactly #009E73 (identical to light render); swarm points remain exactly #D55E00 (identical to light render); colors are perfectly consistent
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, category labels well spaced
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfect readability in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully readable, no collisions or overlap detected
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Violins and points visible; points sized appropriately though some
-          overlap at dense regions
+        comment: Violins and swarm points perfectly adapted to 200 data points; opacity
+          and jitter optimal
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, slight whitespace imbalance on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Reaction Time (ms) includes units, Experimental Condition is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; strong contrast between teal violins
+          and orange points
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions; plot fills ~60% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive with units: Reaction Time (ms)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand); points #D55E00 (Okabe-Ito pos 2);
+          backgrounds correct; both renders theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: No legend needed, but grid is not visible (minimal theme removes
-          it)
+        comment: Well-configured library defaults; professional polish but not exceptional
+          customization
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Clean panel border, subtle grid (alpha 0.12/0.06); could be more
+          aggressive with spine removal
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Visual hierarchy is clear; violin shapes and swarm patterns effectively
+          show distribution differences
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct violin plot with overlaid swarm points
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on X, values on Y correctly assigned
-      - id: SC-03
+        comment: Correct violin plot with overlaid swarm
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Violin with swarm overlay present; points use jitter not true swarm
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: transparent violin fill, swarm points
+          overlaid, horizontal jitter'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: 'X-axis: condition categories; Y-axis: reaction times; all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single-color scheme
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format violin-swarm · plotnine · pyplots.ai
+        comment: 'Title format correct: violin-swarm · Python · plotnine · anyplot.ai'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows unimodal, bimodal, different spreads, and varying centers across
-          conditions
+        comment: 'Shows all distribution aspects: Control (centered), Treatment A
+          (narrow/left), Treatment B (bimodal), Treatment C (wide/low)'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Reaction time experiment is a realistic, neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Reaction times 200-600ms are realistic for cognitive tasks
+        comment: Reaction times across experimental conditions; realistic, neutral,
+          scientific scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values (200-650 ms) are plausible for reaction time data
     code_quality:
       score: 10
       max: 10
@@ -158,42 +174,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports, data, plot, save structure with no functions/classes
+        comment: 'Simple: imports → data generation → plot → save; no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Uses np.random.seed(42) for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only used imports: numpy, pandas, plotnine'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean Pythonic code; proper theme token usage
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ggplot() + geoms pattern; proper aes() mapping
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses ggplot grammar with geom layering, but geom_jitter instead of
-          true swarm
+        passed: false
+        comment: Uses plotnine-specific features (element_text/element_rect/element_line);
+          layer composition
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -201,7 +224,6 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending

@@ -1,0 +1,245 @@
+library: ggplot2
+language: r
+specification_id: area-stacked-confidence
+created: '2026-05-18T06:49:58Z'
+updated: '2026-05-18T06:59:01Z'
+generated_by: claude-haiku
+workflow_run: 26017968763
+issue: 3549
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Perfect Visual Quality (30/30) - all text readable in both themes with no overlaps
+    and correct colors
+  - Perfect Spec Compliance (15/15) - correct plot type with all required features
+    present and proper formatting
+  - Perfect Data Quality (15/15) - realistic energy scenario with neutral context
+    and comprehensive feature coverage
+  - Confidence bands effectively communicate forecast uncertainty through progressive
+    alpha transparency
+  - Theme-adaptive chrome working perfectly - data colors remain identical across
+    light/dark renders while chrome flips appropriately
+  weaknesses:
+  - Unused import tidyr - library imported but no pivot/gather/spread operations used
+    in code
+  - Design Excellence below median (12/20) - library defaults without exceptional
+    aesthetic or design choices
+  - Library Mastery below average (6/10) - correct but not distinctive ggplot2 usage;
+    pre-computed stacking is a workaround rather than distinctive feature
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct per style guide
+      Chrome: Title "area-stacked-confidence · R · ggplot2 · anyplot.ai" is bold 24pt dark text. Axis labels "Quarter" and "Energy (MWh)" are 20pt dark text. Tick labels 16pt dark text. All text clearly visible against light background.
+      Data: Four stacked areas in Okabe-Ito colors: Solar (#009E73 - brand green), Wind (#D55E00), Hydro (#0072B2), Battery (#CC79A7). Semi-transparent confidence bands (alpha 0.2) wrap each series showing increasing uncertainty over forecast horizon. Horizontal legend at top with proper styling.
+      Legibility verdict: PASS - All text is clearly readable. No overlaps. Confidence bands visible without obscuring data. Grid subtle and aids reading.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct per style guide
+      Chrome: All text rendered in light colors (title in #F0EFE8, secondary text in #B8B7B0). Title, axis labels, and tick labels all clearly visible against dark background. No dark-on-dark failures detected. Grid lines light and subtle.
+      Data: IDENTICAL colors to light render - Solar (#009E73), Wind (#D55E00), Hydro (#0072B2), Battery (#CC79A7) are exactly the same. Only chrome (background, text, grid) has flipped between themes as required.
+      Legibility verdict: PASS - All text is clearly readable in dark theme. Data colors preserved perfectly. No theme-adaptation failures.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt).
+          Perfectly readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend at top, all axis labels and title properly positioned. No
+          overlapping elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Four stacked areas clearly visible. Confidence bands appropriately
+          transparent (alpha 0.2). Density-appropriate sizing.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito palette correct. First series #009E73, followed by #D55E00,
+          #0072B2, #CC79A7. CVD-safe and high contrast.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-80% of canvas. Balanced margins. Legend near plot,
+          not isolated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Quarter'', Y: ''Energy (MWh)'' with units. Title in correct
+          format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito correct. Backgrounds #FAF8F1 (light) and #1A1A17 (dark).
+          Chrome theme-correct in both renders. Data colors identical.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults but no exceptional design choices
+          beyond proper palette and clean layout.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Grid subtly styled (linewidth 0.2), minor grid removed, spines handled
+          by theme_minimal. Some deliberate customization visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Stacking shows energy transitions. Confidence bands show uncertainty.
+          Visual hierarchy through color and positioning. Clear story but not exceptional.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct chart type: stacked area with confidence bands.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Stacking (geom_area), confidence bands (geom_ribbon alpha 0.2), semi-transparent
+          fills all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: quarters 1-20, Y: cumulative energy 0-13000 MWh. Bands correctly
+          mapped to upper/lower bounds.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''area-stacked-confidence · R · ggplot2 · anyplot.ai'' (correct).
+          Legend labels match data.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: stacking, bands, temporal trend, composition
+          across four sources.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Quarterly renewable energy forecast with uncertainty is real-world
+          plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Solar growth, wind stability, hydro decline, battery growth all realistic.
+          MWh values align with energy systems.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Imports, data, plot, save. No functions/classes. Linear and clean.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) ensures deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: tidyr imported but not used (no pivot/gather/spread calls).
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean dplyr syntax. Proper stacking calculation. No fake UI or over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png with ragg::agg_png. Correct API.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Proper ggplot() + geom_ribbon/geom_area usage with correct aesthetics
+          and theme composition.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Pre-computed stacking for bands is workaround for ggplot2 limitations,
+          not distinctive feature usage.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  - groupby-aggregation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending

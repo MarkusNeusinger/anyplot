@@ -27,66 +27,78 @@ from api.routers.plots import (
 class TestGetCategoryValues:
     """Tests for _get_category_values."""
 
+    def test_lang_category(self) -> None:
+        result = _get_category_values("lang", "scatter-basic", "matplotlib", "python", {}, {})
+        assert result == ["python"]
+
+    def test_lang_category_r(self) -> None:
+        result = _get_category_values("lang", "biplot-pca", "ggplot2", "r", {}, {})
+        assert result == ["r"]
+
+    def test_lang_category_empty(self) -> None:
+        result = _get_category_values("lang", "s", "m", "", {}, {})
+        assert result == []
+
     def test_lib_category(self) -> None:
-        result = _get_category_values("lib", "scatter-basic", "matplotlib", {}, {})
+        result = _get_category_values("lib", "scatter-basic", "matplotlib", "python", {}, {})
         assert result == ["matplotlib"]
 
     def test_spec_category(self) -> None:
-        result = _get_category_values("spec", "scatter-basic", "matplotlib", {}, {})
+        result = _get_category_values("spec", "scatter-basic", "matplotlib", "python", {}, {})
         assert result == ["scatter-basic"]
 
     def test_spec_level_category(self) -> None:
         spec_tags = {"plot_type": ["scatter", "line"]}
-        result = _get_category_values("plot", "s", "m", spec_tags, {})
+        result = _get_category_values("plot", "s", "m", "python", spec_tags, {})
         assert result == ["scatter", "line"]
 
     def test_impl_level_category(self) -> None:
         impl_tags = {"techniques": ["annotations", "colorbar"]}
-        result = _get_category_values("tech", "s", "m", {}, impl_tags)
+        result = _get_category_values("tech", "s", "m", "python", {}, impl_tags)
         assert result == ["annotations", "colorbar"]
 
     def test_unknown_category(self) -> None:
-        result = _get_category_values("unknown", "s", "m", {}, {})
+        result = _get_category_values("unknown", "s", "m", "python", {}, {})
         assert result == []
 
     def test_data_category(self) -> None:
         spec_tags = {"data_type": ["numeric"]}
-        result = _get_category_values("data", "s", "m", spec_tags, {})
+        result = _get_category_values("data", "s", "m", "python", spec_tags, {})
         assert result == ["numeric"]
 
     def test_dom_category(self) -> None:
         spec_tags = {"domain": ["statistics", "finance"]}
-        result = _get_category_values("dom", "s", "m", spec_tags, {})
+        result = _get_category_values("dom", "s", "m", "python", spec_tags, {})
         assert result == ["statistics", "finance"]
 
     def test_feat_category(self) -> None:
         spec_tags = {"features": ["basic", "3d"]}
-        result = _get_category_values("feat", "s", "m", spec_tags, {})
+        result = _get_category_values("feat", "s", "m", "python", spec_tags, {})
         assert result == ["basic", "3d"]
 
     def test_dep_category(self) -> None:
         impl_tags = {"dependencies": ["scipy"]}
-        result = _get_category_values("dep", "s", "m", {}, impl_tags)
+        result = _get_category_values("dep", "s", "m", "python", {}, impl_tags)
         assert result == ["scipy"]
 
     def test_pat_category(self) -> None:
         impl_tags = {"patterns": ["data-generation"]}
-        result = _get_category_values("pat", "s", "m", {}, impl_tags)
+        result = _get_category_values("pat", "s", "m", "python", {}, impl_tags)
         assert result == ["data-generation"]
 
     def test_prep_category(self) -> None:
         impl_tags = {"dataprep": ["binning"]}
-        result = _get_category_values("prep", "s", "m", {}, impl_tags)
+        result = _get_category_values("prep", "s", "m", "python", {}, impl_tags)
         assert result == ["binning"]
 
     def test_style_category(self) -> None:
         impl_tags = {"styling": ["minimal-chrome"]}
-        result = _get_category_values("style", "s", "m", {}, impl_tags)
+        result = _get_category_values("style", "s", "m", "python", {}, impl_tags)
         assert result == ["minimal-chrome"]
 
     def test_missing_key_in_tags(self) -> None:
         spec_tags = {"other_key": ["value"]}
-        result = _get_category_values("plot", "s", "m", spec_tags, {})
+        result = _get_category_values("plot", "s", "m", "python", spec_tags, {})
         assert result == []
 
 
@@ -94,21 +106,27 @@ class TestCategoryMatchesFilter:
     """Tests for _category_matches_filter."""
 
     def test_matching_lib(self) -> None:
-        assert _category_matches_filter("lib", ["matplotlib"], "s", "matplotlib", {}, {}) is True
+        assert _category_matches_filter("lib", ["matplotlib"], "s", "matplotlib", "python", {}, {}) is True
 
     def test_non_matching_lib(self) -> None:
-        assert _category_matches_filter("lib", ["seaborn"], "s", "matplotlib", {}, {}) is False
+        assert _category_matches_filter("lib", ["seaborn"], "s", "matplotlib", "python", {}, {}) is False
 
     def test_one_of_multiple_values_matches(self) -> None:
-        assert _category_matches_filter("lib", ["seaborn", "matplotlib"], "s", "matplotlib", {}, {}) is True
+        assert _category_matches_filter("lib", ["seaborn", "matplotlib"], "s", "matplotlib", "python", {}, {}) is True
 
     def test_matching_spec_tag(self) -> None:
         spec_tags = {"plot_type": ["scatter"]}
-        assert _category_matches_filter("plot", ["scatter"], "s", "m", spec_tags, {}) is True
+        assert _category_matches_filter("plot", ["scatter"], "s", "m", "python", spec_tags, {}) is True
 
     def test_matching_impl_tag(self) -> None:
         impl_tags = {"techniques": ["annotations"]}
-        assert _category_matches_filter("tech", ["annotations"], "s", "m", {}, impl_tags) is True
+        assert _category_matches_filter("tech", ["annotations"], "s", "m", "python", {}, impl_tags) is True
+
+    def test_matching_lang(self) -> None:
+        assert _category_matches_filter("lang", ["r"], "s", "ggplot2", "r", {}, {}) is True
+
+    def test_non_matching_lang(self) -> None:
+        assert _category_matches_filter("lang", ["r"], "s", "matplotlib", "python", {}, {}) is False
 
 
 class TestImageMatchesGroups:
@@ -117,40 +135,47 @@ class TestImageMatchesGroups:
     def test_empty_groups_matches_all(self) -> None:
         spec_lookup = {"s1": {"tags": {}}}
         impl_lookup = {}
-        assert _image_matches_groups("s1", "matplotlib", [], spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("s1", "matplotlib", "python", [], spec_lookup, impl_lookup) is True
 
     def test_single_group_match(self) -> None:
         spec_lookup = {"s1": {"tags": {"plot_type": ["scatter"]}}}
         impl_lookup = {}
         groups = [{"category": "plot", "values": ["scatter"]}]
-        assert _image_matches_groups("s1", "matplotlib", groups, spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("s1", "matplotlib", "python", groups, spec_lookup, impl_lookup) is True
 
     def test_single_group_no_match(self) -> None:
         spec_lookup = {"s1": {"tags": {"plot_type": ["bar"]}}}
         impl_lookup = {}
         groups = [{"category": "plot", "values": ["scatter"]}]
-        assert _image_matches_groups("s1", "matplotlib", groups, spec_lookup, impl_lookup) is False
+        assert _image_matches_groups("s1", "matplotlib", "python", groups, spec_lookup, impl_lookup) is False
 
     def test_multiple_groups_and_logic(self) -> None:
         spec_lookup = {"s1": {"tags": {"plot_type": ["scatter"], "domain": ["statistics"]}}}
         impl_lookup = {}
         groups = [{"category": "plot", "values": ["scatter"]}, {"category": "dom", "values": ["statistics"]}]
-        assert _image_matches_groups("s1", "matplotlib", groups, spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("s1", "matplotlib", "python", groups, spec_lookup, impl_lookup) is True
 
     def test_multiple_groups_one_fails(self) -> None:
         spec_lookup = {"s1": {"tags": {"plot_type": ["scatter"], "domain": ["finance"]}}}
         impl_lookup = {}
         groups = [{"category": "plot", "values": ["scatter"]}, {"category": "dom", "values": ["statistics"]}]
-        assert _image_matches_groups("s1", "matplotlib", groups, spec_lookup, impl_lookup) is False
+        assert _image_matches_groups("s1", "matplotlib", "python", groups, spec_lookup, impl_lookup) is False
 
     def test_spec_not_in_lookup(self) -> None:
-        assert _image_matches_groups("unknown", "matplotlib", [], {}, {}) is False
+        assert _image_matches_groups("unknown", "matplotlib", "python", [], {}, {}) is False
 
     def test_impl_tags_matching(self) -> None:
         spec_lookup = {"s1": {"tags": {}}}
         impl_lookup = {("s1", "matplotlib"): {"techniques": ["annotations"]}}
         groups = [{"category": "tech", "values": ["annotations"]}]
-        assert _image_matches_groups("s1", "matplotlib", groups, spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("s1", "matplotlib", "python", groups, spec_lookup, impl_lookup) is True
+
+    def test_lang_group_matching(self) -> None:
+        spec_lookup = {"s1": {"tags": {}}}
+        impl_lookup = {}
+        groups = [{"category": "lang", "values": ["r"]}]
+        assert _image_matches_groups("s1", "ggplot2", "r", groups, spec_lookup, impl_lookup) is True
+        assert _image_matches_groups("s1", "matplotlib", "python", groups, spec_lookup, impl_lookup) is False
 
 
 class TestCreateEmptyCounts:
@@ -158,7 +183,7 @@ class TestCreateEmptyCounts:
 
     def test_has_all_categories(self) -> None:
         counts = _create_empty_counts()
-        expected = {"lib", "spec", "plot", "data", "dom", "feat", "dep", "tech", "pat", "prep", "style"}
+        expected = {"lang", "lib", "spec", "plot", "data", "dom", "feat", "dep", "tech", "pat", "prep", "style"}
         assert set(counts.keys()) == expected
 
     def test_all_categories_empty(self) -> None:
@@ -174,8 +199,9 @@ class TestIncrementCategoryCounts:
         counts = _create_empty_counts()
         spec_tags = {"plot_type": ["scatter"], "domain": ["statistics"]}
         impl_tags = {"techniques": ["annotations"]}
-        _increment_category_counts(counts, "scatter-basic", "matplotlib", spec_tags, impl_tags)
+        _increment_category_counts(counts, "scatter-basic", "matplotlib", "python", spec_tags, impl_tags)
 
+        assert counts["lang"]["python"] == 1
         assert counts["lib"]["matplotlib"] == 1
         assert counts["spec"]["scatter-basic"] == 1
         assert counts["plot"]["scatter"] == 1
@@ -185,7 +211,7 @@ class TestIncrementCategoryCounts:
     def test_increments_existing_counts(self) -> None:
         counts = _create_empty_counts()
         counts["lib"]["matplotlib"] = 5
-        _increment_category_counts(counts, "s", "matplotlib", {}, {})
+        _increment_category_counts(counts, "s", "matplotlib", "python", {}, {})
         assert counts["lib"]["matplotlib"] == 6
 
 
@@ -382,11 +408,13 @@ class TestCalculateGlobalCounts:
         impl1.library_id = "matplotlib"
         impl1.preview_url = "https://example.com/img.png"
         impl1.impl_tags = {}
+        impl1.library.language = "python"
 
         impl2 = MagicMock()
         impl2.library_id = "seaborn"
         impl2.preview_url = "https://example.com/img2.png"
         impl2.impl_tags = {}
+        impl2.library.language = "python"
 
         spec = MagicMock()
         spec.id = "scatter-basic"
@@ -394,9 +422,32 @@ class TestCalculateGlobalCounts:
         spec.impls = [impl1, impl2]
 
         result = _calculate_global_counts([spec])
+        assert result["lang"]["python"] == 2
         assert result["lib"]["matplotlib"] == 1
         assert result["lib"]["seaborn"] == 1
         assert result["plot"]["scatter"] == 2
+
+    def test_counts_mixed_languages(self) -> None:
+        impl_py = MagicMock()
+        impl_py.library_id = "matplotlib"
+        impl_py.preview_url = "https://example.com/a.png"
+        impl_py.impl_tags = {}
+        impl_py.library.language = "python"
+
+        impl_r = MagicMock()
+        impl_r.library_id = "ggplot2"
+        impl_r.preview_url = "https://example.com/b.png"
+        impl_r.impl_tags = {}
+        impl_r.library.language = "r"
+
+        spec = MagicMock()
+        spec.id = "biplot-pca"
+        spec.tags = {"plot_type": ["biplot"]}
+        spec.impls = [impl_py, impl_r]
+
+        result = _calculate_global_counts([spec])
+        assert result["lang"]["python"] == 1
+        assert result["lang"]["r"] == 1
 
     def test_empty_specs(self) -> None:
         result = _calculate_global_counts([])

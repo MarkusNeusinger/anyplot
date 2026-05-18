@@ -1,152 +1,175 @@
 library: altair
+language: python
 specification_id: scatter-text
 created: '2026-01-09T14:24:37Z'
-updated: '2026-01-09T14:35:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854881873
+updated: '2026-05-17T23:40:11Z'
+generated_by: claude-haiku
+workflow_run: 26005815739
 issue: 3482
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-text/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-text/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent use of mark_text for text-based scatter visualization
-  - 'Good interactive features: hover highlight with color/size change, tooltips with
-    extra detail'
-  - Clean, readable layout with appropriate font sizing and spacing
-  - Viridis colormap provides both visual appeal and colorblind accessibility
-  - Realistic and engaging dataset (programming languages)
-  - Proper title format following spec-id · library · pyplots.ai convention
+  - Perfect visual quality across both light and dark themes with zero legibility
+    failures
+  - Excellent theme-adaptive chrome implementation with correct token mapping
+  - Clean, idiomatic altair code using conditional encoding and selections
+  - Realistic, neutral data demonstrating the scatter-text plot type effectively
+  - All specification requirements met with polished execution
   weaknesses:
-  - The selection_point parameter empty=False is deprecated in newer Altair versions
-  - Legend position in top-right corner overlaps slightly with data space (minor)
-  image_description: The plot displays a scatter plot with programming language names
-    as text labels instead of points. The x-axis shows "Language Age (Years Since
-    Creation)" ranging from -2 to 74, and the y-axis shows "Relative Popularity Score"
-    ranging from 0 to 105. Text labels are colored using the viridis colormap based
-    on popularity (legend on right shows gradient from ~10 purple to ~90 yellow).
-    Languages like Python (top, yellow), JavaScript, and Java appear with high popularity,
-    while COBOL, Lisp, and Fortran appear in the bottom right as old but less popular
-    languages (dark purple/blue). The title correctly reads "scatter-text · altair
-    · pyplots.ai" at the top. The layout is clean with good spacing between most labels,
-    a subtle grid, and properly sized text.
+  - 'Design Excellence moderate: lacks distinctive aesthetic touches or custom styling
+    beyond configured defaults'
+  - 'Visual storytelling minimal: no visual hierarchy or emphasis to guide interpretation'
+  - 'Library Mastery: doesn''t leverage advanced altair features like transforms or
+    custom interaction patterns'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct page surface tone
+      Chrome: Title "scatter-text · Python · altair · anyplot.ai" centered and readable; axis labels "Language Age (Years Since Creation)" and "Relative Popularity Score" descriptive with units; tick labels and legend all readable in dark text
+      Data: 28 programming language names positioned by age and popularity; colors follow viridis colormap (purple for low ~4, yellow for high ~98); bold text clearly distinguishable from background
+      Legibility verdict: PASS - all elements readable, good contrast, no dark-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark page surface tone
+      Chrome: Title, axis labels, tick labels all readable in light text colors (#F0EFE8 primary, #B8B7B0 secondary); no dark-on-dark failures; sufficient contrast against dark background
+      Data: Viridis colormap identical to light render (same purple-to-yellow gradient showing popularity distribution); only chrome adapted to theme; colors unchanged confirming proper theme handling
+      Legibility verdict: PASS - all text readable with proper light-on-dark contrast, no accessibility issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text labels readable, font is bold and appropriately sized
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Minimal overlap, most labels well spaced; slight proximity between
-          some labels like F#/Scala but not overlapping
-      - id: VQ-03
-        name: Element Visibility
         score: 8
         max: 8
         passed: true
-        comment: Text labels are bold and clearly visible throughout
+        comment: Font sizes explicitly set; all text readable in both light and dark
+          themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Text labels well-distributed across plot; no overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Labels appropriately sized for 4800×2700px canvas; fully visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space, good margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context (Years Since Creation)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Viridis is perceptually uniform; hover uses brand green #009E73'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent canvas utilization with balanced margins and legend placement
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Language Age (Years Since Creation)'',
+          ''Relative Popularity Score'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous data; backgrounds #FAF8F1 (light) / #1A1A17
+          (dark); text colors theme-adaptive; data colors identical across renders'
+    design_excellence:
+      score: 9
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha 0.3), but legend is in default position in
-          top-right corner
+        comment: Well-configured defaults with thoughtful viridis use; intentional
+          data choice; lacks distinctive custom styling—reads as library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Theme-aware colors and grid opacity configured; some refinement but
+          mostly library patterns
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy, focal point, or narrative
+          emphasis
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter-text implementation using mark_text
+        comment: Correct scatter plot with text labels per specification
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: x=age, y=popularity correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Text labels at coordinates, color encoding additional info
-      - id: SC-04
-        name: Data Range
+        comment: 'All features implemented: text labels at coordinates, legend, hover
+          interaction, tooltips'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X = language age, Y = popularity; axes correctly show all data
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows popularity gradient
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format scatter-text · altair · pyplots.ai
+        comment: Title format correct; legend properly labeled as 'Popularity'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in position and color; could show more clustering/outliers
+        comment: 28 languages with varied ages (4-68 years) and popularities (4-98)
+          demonstrate full feature coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Programming languages with age vs popularity is a real, comprehensible,
-          neutral scenario
+        comment: Programming languages by age and popularity is a real, neutral, comprehensible
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Ages and popularity scores are reasonable; minor quibble that some
-          popularity rankings seem arbitrary
+        comment: Language ages and popularities align with actual programming language
+          history
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -154,42 +177,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data → plot → save structure
+        comment: 'Simple linear structure: imports → data → plot → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Deterministic with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports
+        comment: Only used imports present
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: selection_point empty=False is deprecated in Altair 5+
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; conditional encoding with condition() is elegant;
+          selection_point() for hover is appropriate
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of altair's high-level API with proper encoding, conditional
+          expressions, and selection patterns
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses mark_text, hover selection with nearest=True, tooltips, and
-          conditional encoding which are Altair strengths; could leverage more layering
+        passed: false
+        comment: Uses conditional encoding and hover selections effectively; doesn't
+          leverage advanced features like transforms or custom properties
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -199,6 +230,4 @@ impl_tags:
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - custom-colormap
-  - grid-styling
+  styling: []

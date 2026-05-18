@@ -26,6 +26,7 @@ export const RESERVED_TOP_LEVEL = new Set([
   'mcp',
   'stats',
   'debug',
+  'map',
   'api',
   'og',
   'sitemap.xml',

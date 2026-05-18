@@ -1,150 +1,188 @@
 library: bokeh
+language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:26:17Z'
-updated: '2026-01-09T14:29:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854881236
+updated: '2026-05-17T22:36:05Z'
+generated_by: claude-haiku
+workflow_run: 26004469698
 issue: 3485
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/bokeh/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/bokeh/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of grouped lollipop pattern with clear visual separation
-    between groups
-  - 'Good use of Bokeh-specific features: ColumnDataSource, Legend construction, ticker
-    customization'
-  - Well-chosen colors that are colorblind-accessible
-  - Appropriate sizing for the 4800x2700 canvas with readable text at all sizes
-  - Clean, maintainable code structure
+  - Excellent text legibility across both light and dark themes with proper 4800×2700
+    font sizing (28pt title, 22pt axes, 18pt ticks)
+  - 'Correct Okabe-Ito palette usage with first series as #009E73, maintaining color
+    consistency between renders'
+  - Proper theme-adaptive chrome tokens applied to all elements (backgrounds, text
+    colors, grid lines, legend)
+  - Clean, readable code with deterministic seeding (np.random.seed(42)) and idiomatic
+    Bokeh patterns
+  - Well-structured grouped lollipop layout with clear visual separation between regional
+    categories and series
   weaknesses:
-  - Legend appears slightly clipped at the right edge of the plot
-  - Could leverage Bokeh interactive features like HoverTool for tooltips
-  - Data values are somewhat clustered (35-91 range), could show more dramatic differences
-  image_description: The plot displays a grouped lollipop chart showing quarterly
-    revenue by product line across four regions (North, South, East, West). Each region
-    has four vertical lollipops arranged side by side representing Electronics (blue),
-    Clothing (yellow), Food (green), and Home (purple). Thin stems extend from the
-    baseline (y=0) to circular markers at the respective revenue values. The legend
-    is positioned in the top-right corner with clear labels identifying each product
-    line. The title "lollipop-grouped · bokeh · pyplots.ai" appears at the top in
-    bold. Axes are labeled "Region" (x-axis) and "Revenue ($ Million)" (y-axis). Grid
-    lines are subtle and dashed with 0.3 alpha. The background is a light gray (#fafafa)
-    with white border fill. The plot fills the 4800x2700 canvas well with balanced
-    margins and good visual separation between the four regional groups.
+  - 'LM-02 LOW: No interactive features leveraged despite using Bokeh (an interactive
+    library) - consider adding hover tooltips to show exact values'
+  - 'DE-01/DE-03 LOW: Minimal design sophistication - follows defaults without distinctive
+    visual enhancements or data storytelling emphasis'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), exactly as specified.
+      Chrome: Title "lollipop-grouped · Python · bokeh · anyplot.ai" in dark text (INK token), axis labels "Region" and "Revenue ($ Million)" in dark text, x-axis category names and y-axis tick labels in softer gray (INK_SOFT token). All text is clearly readable against the light surface.
+      Data: Four Okabe-Ito colors used in correct order: #009E73 (Electronics, green), #D55E00 (Clothing, orange), #0072B2 (Food, blue), #CC79A7 (Home, pink). Thin colored stems (alpha 0.85) with circular markers (alpha 0.95, white edges). Four categories (North, South, East, West) with four series arranged side-by-side in groups.
+      Legend: Top-right corner, light elevated background (#FFFDF6), dark text labels, properly spaced with 15pt padding.
+      Grid: Subtle y-axis grid lines at 10% opacity, not competing with data.
+      Legibility verdict: PASS - all text readable, proper contrast, data colors distinct and saturated.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), exactly as specified.
+      Chrome: Title and axis labels in light text (INK token #F0EFE8), tick labels in gray (INK_SOFT token #B8B7B0). All text clearly visible against the dark surface. No dark-on-dark failures.
+      Data: Colors are **identical** to light render—#009E73, #D55E00, #0072B2, #CC79A7. Only chrome (background, text, grid) flips between themes. Stems and markers maintain their visual distinction and saturation.
+      Legend: Dark elevated background (#242420) with light text labels, properly contrasted and readable.
+      Grid: Subtle y-axis grid lines visible against dark background.
+      Legibility verdict: PASS - all text readable, no contrast failures, data colors match light render perfectly.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text clearly readable: title at 48pt, axis labels at 36pt, tick
-          labels at 28-32pt'
+        comment: Font sizes 28pt (title), 22pt (axes), 18pt (ticks) are properly scaled
+          for 4800×2700. All text readable in both light and dark themes.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: Lollipops well-spaced in grouped layout, no text collisions or marker
+          overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers (size 45) and stems (line_width 8) well-sized for data density
+        comment: All markers and stems clearly visible. Alpha transparency (0.85 stems,
+          0.95 markers) is density-appropriate.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green, purple palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, slight excess whitespace on left
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Revenue ($ Million)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe. No red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Good proportions, nothing cut off. Appropriate margins and whitespace
+          around plot area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title format correct. Axis labels are descriptive (Region, Revenue
+          $ Million).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓. Multi-series in canonical Okabe-Ito order
+          ✓. Backgrounds #FAF8F1 (light) and #1A1A17 (dark) ✓. Both renders theme-correct
+          ✓.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is subtle but legend partially clips at edge
+        comment: Uses Okabe-Ito palette and theme-adaptive styling (good fundamentals),
+          but design is straightforward without distinctive polish. Markers have white
+          edges (good), but no beyond-default refinements.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped frame, subtle 10% grid, generous whitespace, well-styled
+          legend with elevated background. Good baseline refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data presented clearly but lacks visual hierarchy or focal point.
+          No emphasis technique to guide viewer or reveal insight.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped lollipop chart with stems and circular markers
+        comment: Grouped lollipop chart correctly implemented with 4 categories and
+          4 series.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values on y-axis, series by color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, side-by-side grouping, legend included
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: thin stems, circular markers, distinct
+          colors per series, legend.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-105 covers all data points (35-91)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis = regions (categories), Y-axis = revenue values (numeric).
+          All data correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: lollipop-grouped · bokeh · pyplots.ai'
+        comment: 'Title format: ''lollipop-grouped · Python · bokeh · anyplot.ai''
+          ✓. Legend labels match series names.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and product lines, demonstrates grouping
-          well
+        comment: Shows all aspects of grouped lollipop type with 4 regions and 4 product
+          lines. Complete coverage.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Revenue by product line across regions is plausible business scenario
+        comment: Revenue by region and product line is realistic and neutral. Real-world
+          plausible scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 35-91 million reasonable, could show wider variation
+        comment: Values 35-91 for revenue millions is sensible. Y-axis 0-105 range
+          is appropriate.
     code_quality:
       score: 10
       max: 10
@@ -154,54 +192,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save'
+        comment: Straightforward code, no unnecessary functions. Loop-based multi-series
+          is clean and readable.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports. Path-shadowing workaround is documented and
+          justified.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: No fake UI or interactive faking. Appropriate complexity for the
+          task.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Uses Bokeh 3.9.0
+          current API.
+    library_mastery:
+      score: 5
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ColumnDataSource, figure creation, scatter/line methods idiomatically.
+          Custom x-axis ticks with major_label_overrides shows both good understanding
+          and some workaround behavior.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
         max: 5
         passed: false
-        comment: Uses ColumnDataSource, Legend, ticker overrides - good patterns but
-          no interactive features
+        comment: Bokeh is interactive but no distinctive interactive features used
+          (no hover tooltips, callbacks, selection). Treats interactive library as
+          static renderer. HTML+PNG output is basic.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - custom-legend
   - manual-ticks
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
-  - columndatasource
   dataprep: []
-  styling:
-  - alpha-blending
-  - edge-highlighting
-  - grid-styling
+  styling: []

@@ -29,6 +29,7 @@ from api.routers import (  # noqa: E402
     feedback_router,
     health_router,
     insights_router,
+    languages_router,
     libraries_router,
     og_images_router,
     plots_router,
@@ -119,7 +120,7 @@ async def add_cache_headers(request: Request, call_next):
     path = request.url.path
 
     # Static data — changes only on deploy (10 min cache, 1h stale-while-revalidate)
-    if path in ("/libraries", "/stats"):
+    if path in ("/libraries", "/languages", "/stats"):
         response.headers["Cache-Control"] = "public, max-age=600, stale-while-revalidate=3600"
     # Specs list (5 min cache, 1h stale-while-revalidate)
     elif path == "/specs":
@@ -145,6 +146,7 @@ app.include_router(health_router)
 app.include_router(stats_router)
 app.include_router(specs_router)
 app.include_router(libraries_router)
+app.include_router(languages_router)
 app.include_router(plots_router)
 app.include_router(insights_router)
 app.include_router(download_router)

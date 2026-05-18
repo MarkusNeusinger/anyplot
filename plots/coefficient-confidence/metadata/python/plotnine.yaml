@@ -1,161 +1,188 @@
 library: plotnine
+language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:47:49Z'
-updated: '2026-01-09T23:52:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868891994
+updated: '2026-05-18T12:35:00Z'
+generated_by: claude-haiku
+workflow_run: 26033183873
 issue: 3576
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/plotnine/plot.png
-preview_html: null
-quality_score: 93
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent horizontal layout with variables ordered by coefficient magnitude for
-    easy comparison
-  - Clear visual distinction between significant and non-significant coefficients
-    using color
-  - Proper use of plotnine grammar of graphics with layered geoms (vline, errorbarh,
-    point)
-  - Good sizing and typography for high-resolution output
-  - Realistic housing price regression context with diverse predictor types
+  - 'Perfect visual quality: all text explicitly sized and readable in both themes'
+  - 'Excellent spec compliance: all required features (reference line, error bars,
+    significance coloring, ordering) implemented correctly'
+  - 'High data quality: realistic housing regression scenario with good feature coverage
+    and plausible values'
+  - 'Proper theme adaptation: Okabe-Ito colors identical in both renders, chrome correctly
+    flips (backgrounds, text colors, grid lines)'
+  - 'Clean code: reproducible, no external dependencies, KISS structure with no over-engineering'
+  - Correct title format and legend labels
   weaknesses:
-  - Yellow color for non-significant coefficients could have slightly higher contrast
-    against white background
-  - Grid styling could be slightly more subtle (alpha could be lower)
-  image_description: 'The plot displays a horizontal coefficient plot with confidence
-    intervals for 12 housing price regression predictors. Variables are listed on
-    the y-axis, ordered by coefficient magnitude from bottom (Crime Index with the
-    most negative effect) to top (Living Area with the most positive effect). Horizontal
-    error bars show 95% confidence intervals, with blue (#306998) used for statistically
-    significant coefficients (those whose CIs do not cross zero) and yellow/gold (#FFD43B)
-    for non-significant coefficients. A vertical dashed gray reference line at x=0
-    clearly marks the null hypothesis threshold. The x-axis shows "Coefficient Estimate
-    (Standardized)" and the y-axis shows "Predictor Variable". The legend on the right
-    distinguishes "Significant" vs "Not Significant" categories. The title follows
-    the required format: "coefficient-confidence · plotnine · pyplots.ai".'
+  - 'Design Excellence limited: follows library defaults without custom aesthetic
+    touches or distinctive styling'
+  - 'Minimal visual refinement: standard grid and borders, no custom typography or
+    color sophistication'
+  - 'Generic library usage: could be replicated in most plotting libraries with minimal
+    syntax changes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), appropriate for light theme
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text (#1A1A17 INK). Vertical reference line at zero is dashed and visible. Legend positioned right with light background frame.
+      Data: Coefficients displayed as points with horizontal error bars. Significant coefficients (green #009E73), non-significant in gray (#4A4A44 INK_SOFT). Variables ordered by magnitude for easy comparison.
+      Legibility verdict: PASS - All text is readable, no contrast issues, data elements clearly distinguishable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), appropriate for dark theme
+      Chrome: Title, axis labels, tick labels all clearly visible in light text (#F0EFE8 INK). Reference line remains visible. Legend background adapted to dark (#242420 ELEVATED_BG).
+      Data: Identical colors to light render - significant coefficients in green (#009E73), non-significant in light gray (#B8B7B0 INK_SOFT). Grid lines visible but subtle at alpha=0.10.
+      Legibility verdict: PASS - No dark-on-dark failures. Text has excellent contrast, data colors identical to light render confirming proper theme adaptation. Both axes readable.
+
+    Both renders pass legibility checks. Data colors are identical across themes. Chrome properly flips between light and dark while maintaining readability.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text is clearly readable: title at 24pt, axis titles at 20pt,
-          tick labels at 14-16pt'
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; variable names are well-spaced
+        comment: All font sizes explicitly set (title=24pt, labels=20pt, ticks=16pt).
+          Perfectly readable in both light and dark themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Y-axis labels well-spaced, legend separate
+          from plot area.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points and error bars are well-sized; error bars have good height
-          and thickness
+        comment: 12 data points with error bars clearly visible. Points (size=5) and
+          error bars optimally scaled for visibility.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow is colorblind-friendly, though contrast between yellow
-          and white background could be slightly better
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space; plot fills ~70% of area with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: Coefficient Estimate (Standardized)
-          and Predictor Variable'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is colorblind-safe. Good contrast between green
+          (#009E73) and gray (#4A4A44/#B8B7B0).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout at 4800x2700px. Plot fills ~60-70% of canvas, balanced
+          margins, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend is well-placed; minor gridlines could be slightly
-          more subtle
+        comment: 'Descriptive with units: ''Coefficient Estimate (Standardized)''
+          and ''Predictor Variable''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First categorical series is #009E73 (Okabe-Ito). Backgrounds correct:
+          #FAF8F1 (light), #1A1A17 (dark). Chrome properly theme-adaptive.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults. Clean palette use but no custom
+          design touches or distinctive visual sophistication.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid (alpha=0.10), border present, good whitespace. Minimal
+          customization beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Variables ordered by magnitude and significance color-coded, creating
+          logical visual hierarchy. Follows standard practice but not exceptional.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct coefficient plot with horizontal error bars
+        comment: Correct coefficient plot with confidence intervals. All components
+          present.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Coefficients on x-axis, variables on y-axis (horizontal layout as
-          specified)
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: vertical zero line, variables ordered
-          by magnitude, color differentiation for significance'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: reference line at zero, error bars, ordered variables,
+          significance coloring.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y correctly assigned. Coefficients on X-axis, variables on Y-axis.
+          All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels significance categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: coefficient-confidence · plotnine · pyplots.ai'
+        comment: 'Title format: ''coefficient-confidence · python · plotnine · anyplot.ai''
+          (correct). Legend title and labels match data.'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows positive AND negative coefficients, significant AND non-significant,
-          varying CI widths
+        comment: 'Demonstrates all aspects: significant and non-significant coefficients,
+          positive and negative effects, varied CI widths.'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Housing price regression is a plausible real-world scenario; some
-          variable names could be slightly more professional
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Standardized coefficients in plausible range (-0.4 to +0.5)
+        comment: Real housing price regression scenario. Neutral, comprehensible,
+          plausible variables and relationships.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Standardized coefficients with reasonable values (-0.42 to 0.42).
+          Logical relationships (more area → higher price).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,50 +190,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Linear flow: imports → data → processing → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, numpy, pandas, plotnine. No unused imports.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code. Appropriate complexity for visualization. No
+          fake functionality or over-engineering.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but does not verify directory
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as 'plot-{THEME}.png'. Correct format and naming.
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
-        passed: true
-        comment: 'Good use of ggplot grammar: geom_errorbarh, geom_point, geom_vline,
-          scale_color_manual, theme_minimal with customization. Could have used faceting
-          or additional ggplot2-style features'
+        passed: false
+        comment: Correct plotnine patterns (ggplot + geom, aes, theme). Idiomatic
+          but doesn't leverage advanced features.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic usage of geom_errorbarh, geom_vline, scale_color_manual.
+          Could be replicated in most libraries with minor syntax changes.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - layer-composition
+  techniques: []
   patterns:
   - data-generation
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []

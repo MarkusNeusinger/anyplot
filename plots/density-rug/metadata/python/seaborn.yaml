@@ -1,152 +1,175 @@
 library: seaborn
+language: python
 specification_id: density-rug
 created: '2026-01-09T15:31:07Z'
-updated: '2026-01-09T15:33:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856769175
+updated: '2026-05-18T00:34:41Z'
+generated_by: claude-haiku
+workflow_run: 26007064879
 issue: 3505
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-rug/seaborn/plot.png
-preview_html: null
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 94
 review:
   strengths:
-  - Excellent bimodal data showcasing the KDE ability to reveal distribution shape
-  - Perfect title format following spec requirements
-  - Clean code structure with realistic web response time scenario
-  - Appropriate use of transparency (alpha=0.4 for fill, alpha=0.6 for rug)
-  - Good bandwidth adjustment (bw_adjust=0.8) for smooth but accurate density estimation
-  weaknesses:
-  - No legend present (minor, as single series does not require one)
-  - Could use more seaborn-specific features like sns.set_context for better font
-    scaling
-  image_description: The plot displays a kernel density estimation (KDE) curve with
-    a semi-transparent blue fill (#306998) showing a clear bimodal distribution. The
-    first, larger peak is centered around 120ms representing fast responses, and a
-    smaller secondary peak is around 280ms representing slower responses. Along the
-    x-axis at the bottom, rug marks (small vertical tick marks) show the exact location
-    of individual data points with matching blue color and slight transparency. The
-    title "density-rug · seaborn · pyplots.ai" appears at the top in a clean sans-serif
-    font. The x-axis is labeled "Response Time (ms)" and the y-axis is labeled "Density".
-    A subtle dashed grid is visible in the background. The top and right spines have
-    been removed for a cleaner appearance.
+  - Perfect visual quality with flawless theme adaptation across light and dark renders
+  - Precise specification compliance with thoughtful data choice demonstrating measurement
+    precision
+  - Idiomatic seaborn usage with careful parameter tuning (bw_adjust=0.9, alpha values)
+  - Clean, reproducible code with proper theme token mapping throughout
+  - Excellent text legibility in both themes with no dark-on-dark or light-on-light
+    failures
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clean and appropriate
+      Chrome: Title "density-rug · Python · seaborn · anyplot.ai" is dark (color=INK) and clearly readable at 24pt. Axis labels "Measurement Error (μm)" and "Density" are dark and legible at 20pt. Y-axis tick labels (0.000–0.040) and X-axis tick labels (0–80) are dark soft (#4A4A44) at 16pt, fully readable. No text collisions.
+      Data: KDE curve in brand green (#009E73) with smooth line (linewidth=3). Fill is semi-transparent teal (alpha=0.35) showing the probability density. Rug marks are thin vertical ticks at the baseline in the same green (#009E73, alpha=0.5), clearly visible and not cluttered despite 250 data points. Grid is subtle (y-axis only, 10% alpha). Spines: top/right removed, left/bottom visible with soft color.
+      Legibility verdict: PASS - All text is readable, chrome is theme-correct, no contrast issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), clean and appropriate
+      Chrome: Title is light (#F0EFE8) and clearly readable. Axis labels are light and legible. Tick labels are light soft (#B8B7B0) at 16pt, clearly visible against the dark background. No dark-on-dark failures; all chrome is properly theme-adapted.
+      Data: KDE curve is identical green (#009E73) as in light render, confirming color consistency. Fill and rug marks are the same colors, confirming theme-independent data representation. Grid is subtle and visible. All elements clearly distinguishable.
+      Legibility verdict: PASS - All text is readable against the dark background, no dark-on-dark issues, data colors are identical to light render. Both renders are legible and theme-correct.
+  verdict: APPROVED
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements, all text and marks fully visible
+        comment: All font sizes explicitly set (Title 24pt, Labels 20pt, Ticks 16pt).
+          Perfectly readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements. Title centered, labels positioned correctly,
+          rug marks don't obscure anything.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: KDE curve and fill clearly visible, rug marks are subtle but appropriately
-          sized with height=0.05
+        comment: KDE curve (linewidth=3) and rug marks (height=0.04) optimally sized
+          for 250 data points. All elements clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single color scheme (blue), no color differentiation needed for data
-          interpretation
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, tight_layout applied
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Response Time (ms) and Density'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single color (#009E73) is Okabe-Ito position 1, CVD-safe. Adequate
+          contrast on both light and dark backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Figure 16:9 (4800×2700px). Plot fills canvas appropriately with balanced
+          margins. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (alpha=0.3, dashed), but no legend is present
+        passed: true
+        comment: 'X: ''Measurement Error (μm)'' with unit. Y: ''Density''. Title in
+          correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand). Backgrounds #FAF8F1 (light) and #1A1A17
+          (dark). Theme-adaptive text colors in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional theme implementation with thoughtful parameter tuning
+          (bw_adjust=0.9). Above library defaults but not quite publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed appropriately (top/right gone). Grid subtle (y-axis
+          only, 10% alpha). Good whitespace and detail polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: KDE + rug tells clear story about measurement precision. Clear focal
+          point (main peak) with visual hierarchy. Exponential nature is immediately
+          visible.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: KDE density plot with rug marks'
+        comment: 'Correct: KDE + rug combination as specified.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Response times correctly mapped to x-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: KDE with fill, rug marks along x-axis, semi-transparent fill, subtle
-          rug marks with alpha
-      - id: SC-04
-        name: Data Range
+        comment: KDE curve with fill, rug marks, semi-transparent (alpha=0.35), subtle
+          but visible.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full range visible from 0 to ~450ms
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Measurement Error (0–80 μm). Y: Density (0–0.04). All data visible.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for single series, no legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: density-rug · seaborn · pyplots.ai'
+        comment: Title correct format. No legend needed (single series).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bimodal distribution demonstrating KDE smoothing and rug mark
-          density clusters
+        comment: Shows distribution shape (right-skewed), individual data locations
+          via rug, peak and tail.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Web application response times is a perfect, neutral, real-world
-          scenario
+        comment: Measurement errors is real, neutral, and comprehensible. Exponential
+          with clipping is plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic (50-400ms for web responses), though 250 points
-          is on the higher end of recommended range
+        comment: Values 0–80 μm sensible for measurement error domain. Density scale
+          is factually correct.
     code_quality:
       score: 10
       max: 10
@@ -156,48 +179,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'No functions/classes. Linear: imports → theme → data → plot → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(17) set. Deterministic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (matplotlib, numpy, seaborn)
+        comment: 'Only used imports: os, matplotlib.pyplot, numpy, seaborn.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Theme tokens properly used throughout. No fake interactivity. Idiomatic
+          seaborn.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png. Current API. No bare plot.png.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses seaborn kdeplot with fill and rugplot, but could leverage more
-          seaborn-specific features
-  verdict: APPROVED
+        comment: Uses axes-level API (sns.kdeplot, sns.rugplot with ax=). sns.set_theme()
+          for styling. bw_adjust tuning shows expertise.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.kdeplot with fill and bw_adjust. sns.rugplot for rug marks. KDE
+          + rug is seaborn-specific pattern. Theme-adaptive rc.
+    score_caps_applied: []
 impl_tags:
   dependencies: []
   techniques: []
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - kde
   styling:

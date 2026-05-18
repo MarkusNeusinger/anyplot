@@ -1,15 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 95/100 | Created: 2026-01-09
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-18
 """
 
-import numpy as np
+import os
+import sys
+
+
+# Work around naming conflict: remove current directory from import path
+sys.path.pop(0)
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette (first series is ALWAYS #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
 # Data: Quarterly revenue by product category
-np.random.seed(42)
 quarters = ["Q1 2024", "Q2 2024", "Q3 2024", "Q4 2024", "Q1 2025"]
 products = ["Software", "Hardware", "Services", "Maintenance"]
 
@@ -24,14 +39,11 @@ revenue_data = {
 # Calculate totals for labels
 totals = [sum(revenue_data[p][i] for p in products) for i in range(len(quarters))]
 
-# Colors - Python Blue primary, then complementary colors
-colors = ["#306998", "#FFD43B", "#4ECDC4", "#E07A5F"]
-
 # Create figure
 fig = go.Figure()
 
 # Add stacked bars for each product
-for product, color in zip(products, colors, strict=True):
+for product, color in zip(products, OKABE_ITO, strict=True):
     fig.add_trace(
         go.Bar(
             name=product,
@@ -49,31 +61,53 @@ for product, color in zip(products, colors, strict=True):
 for quarter, total in zip(quarters, totals, strict=True):
     fig.add_annotation(
         x=quarter,
-        y=total + 15,  # Position above the bar
+        y=total + 15,
         text=f"<b>${total}K</b>",
         showarrow=False,
-        font={"size": 18, "color": "#333333"},
+        font={"size": 18, "color": INK},
         yanchor="bottom",
     )
 
 # Layout for 4800x2700 px output
 fig.update_layout(
-    title={"text": "bar-stacked-labeled · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
-    xaxis={"title": {"text": "Quarter", "font": {"size": 22}}, "tickfont": {"size": 18}},
+    title={
+        "text": "bar-stacked-labeled · Python · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "title": {"text": "Quarter", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+    },
     yaxis={
-        "title": {"text": "Revenue ($ thousands)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "range": [0, max(totals) + 60],  # Leave space for total labels
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Revenue ($ thousands)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "range": [0, max(totals) + 60],
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     barmode="stack",
-    template="plotly_white",
-    legend={"orientation": "h", "yanchor": "bottom", "y": 1.02, "xanchor": "center", "x": 0.5, "font": {"size": 16}},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    legend={
+        "orientation": "h",
+        "yanchor": "bottom",
+        "y": 1.02,
+        "xanchor": "center",
+        "x": 0.5,
+        "font": {"size": 16, "color": INK_SOFT},
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+    },
     margin={"t": 120, "b": 80, "l": 80, "r": 40},
 )
 
-# Save as PNG (4800x2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save as PNG and HTML (4800x2700)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")

@@ -20,6 +20,7 @@ export interface PlotImage {
 // Spec-level categories describe WHAT is visualized
 // Impl-level categories describe HOW the code implements it (issue #2434)
 export type FilterCategory =
+  | 'lang'
   | 'lib'
   | 'spec'
   | 'plot'
@@ -35,6 +36,7 @@ export type FilterCategory =
 // Display labels for filter categories
 export const FILTER_LABELS: Record<FilterCategory, string> = {
   // Spec-level
+  lang: 'language',
   lib: 'library',
   spec: 'spec',
   plot: 'type',
@@ -52,7 +54,8 @@ export const FILTER_LABELS: Record<FilterCategory, string> = {
 // Tooltip descriptions for filter categories
 export const FILTER_TOOLTIPS: Record<FilterCategory, string> = {
   // Spec-level: WHAT is visualized
-  lib: 'python plotting library',
+  lang: 'programming language of the implementation (Python or R)',
+  lib: 'plotting library',
   spec: 'plot specification by identifier',
   plot: 'type of visualization or chart',
   data: 'structure of the input data',
@@ -69,6 +72,7 @@ export const FILTER_TOOLTIPS: Record<FilterCategory, string> = {
 // All filter categories in display order
 export const FILTER_CATEGORIES: FilterCategory[] = [
   // Spec-level
+  'lang',
   'lib',
   'spec',
   'plot',
@@ -110,6 +114,15 @@ export interface LibraryInfo {
   name: string;
   language: string;
   version?: string;
+  documentation_url?: string;
+  description?: string;
+}
+
+export interface LanguageInfo {
+  id: string;
+  name: string;
+  file_extension?: string;
+  runtime_version?: string;
   documentation_url?: string;
   description?: string;
 }

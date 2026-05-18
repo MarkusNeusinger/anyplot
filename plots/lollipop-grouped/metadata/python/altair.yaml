@@ -1,155 +1,182 @@
 library: altair
+language: python
 specification_id: lollipop-grouped
 created: '2026-01-09T14:24:09Z'
-updated: '2026-01-09T14:26:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854881653
+updated: '2026-05-17T22:39:10Z'
+generated_by: claude-haiku
+workflow_run: 26004517107
 issue: 3485
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/altair/plot.html
-quality_score: 94
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/python/altair/plot-dark.html
+quality_score: 99
 review:
   strengths:
-  - Excellent use of Altair's xOffset encoding to achieve grouped lollipop positioning
-  - Clean layer composition combining mark_rule (stems) and mark_circle (markers)
-  - Proper scale configuration with explicit domain ensures stems start from 0
-  - Well-configured styling with appropriate font sizes for all text elements
-  - Generates both PNG and HTML outputs as expected for Altair
+  - Excellent visual quality with all text explicitly sized and readable in both themes
+  - 'Perfect palette compliance: Okabe-Ito colors identical across light/dark, theme
+    chrome flips correctly'
+  - 'Sophisticated design: grouped lollipop positioning uses xOffset elegantly, creating
+    clear visual hierarchy'
+  - 'Strong data storytelling: quarterly progression and regional comparison immediately
+    clear through grouping and color'
+  - 'Idiomatic Altair usage: layered marks (stems + markers), proper encoding channels,
+    theme-adaptive configuration'
+  - 'Both renders pass theme-readability: no dark-on-dark or light-on-light failures,
+    all elements clearly distinguishable'
   weaknesses:
-  - Yellow (#FFD43B) in the color palette could be challenging for users with certain
-    types of color blindness; a more accessible palette like viridis or colorblind-safe
-    colors would be better
-  - Could add interactive tooltips to leverage Altair's strengths as an interactive
-    library
-  image_description: 'The plot displays a grouped lollipop chart with 4 regions (East,
-    North, South, West) on the x-axis and Performance Score (0-110) on the y-axis.
-    Each region contains 3 lollipops arranged side by side representing Q1 2024 (blue
-    #306998), Q2 2024 (yellow #FFD43B), and Q3 2024 (green #4CAF50). Thin vertical
-    stems extend from the baseline at 0 up to circular markers at each data point.
-    The markers are clearly visible solid circles with size=400. A legend titled "Quarter"
-    in the top-right corner identifies the three quarters with appropriately sized
-    symbols. The title "lollipop-grouped · altair · pyplots.ai" is centered at the
-    top at 28pt font size. Grid lines are subtle with 0.3 opacity. The plot uses the
-    full 1600x900 canvas effectively with balanced margins.'
+  - 'Code/image discrepancy on title: source code shows ''pyplots.ai'' but rendered
+    images show ''anyplot.ai'' — verify current state'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), not pure white
+      Chrome: Title "lollipop-grouped · Python · altair · anyplot.ai", axis labels "Region" and "Performance Score", tick labels in dark gray (#4A4A44) — all clearly readable against light surface
+      Data: Green (#009E73) Q1, Orange (#D55E00) Q2, Blue (#0072B2) Q3 lollipops grouped by region with subtle offset; Y-axis grid at 10% opacity in light gray; legend positioned top-right with quarter labels
+      Legibility verdict: PASS — all text readable, no overlap, data markers clear, colors distinct
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), not pure black
+      Chrome: Title in light text, axis labels and tick labels in light gray (#B8B7B0) — all clearly readable against dark surface; no dark-on-dark failures
+      Data: Colors identical to light render (same green, orange, blue); Y-axis grid subtle light gray at 10% opacity; legend visible with same quarter labels
+      Legibility verdict: PASS — all text readable on dark background, data colors unchanged from light render confirming proper theme handling
+  verdict: APPROVED
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt, legend at
-          16-18pt - all perfectly readable
+        comment: All sizes explicitly set (title 28px, labels 22px, ticks 18px); perfectly
+          readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements; grouped lollipops are well-spaced
-          with 0.25 offset
+        comment: No overlapping text; all category labels, axis labels, and legend
+          entries fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size=400 appropriate for 12 data points, stems strokeWidth=4
-          clearly visible
+        comment: Markers (400px) and stems (4px) optimally sized for 12-point dataset;
+          data density well-matched
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, green palette is distinguishable but yellow may be
-          challenging for some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, legend positioned in top-right without covering
-          data
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Region and Performance Score are descriptive labels
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is colorblind-safe; colors well-contrasted, no
+          red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape format with balanced margins; plot uses 50-80% of canvas;
+          legend appropriately positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid at alpha 0.3 is subtle, legend well-placed but could use better
-          spacing
+        comment: 'Descriptive labels: ''Region'' (X), ''Performance Score'' (Y); title
+          includes spec-id, language, library, domain'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, third #0072B2 following Okabe-Ito
+          order; backgrounds #FAF8F1 (light) and #1A1A17 (dark); theme chrome correct
+          in both renders'
+    design_excellence:
+      score: 20
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 8
+        max: 8
+        passed: true
+        comment: Professional polish with intentional hierarchy; thoughtful use of
+          Okabe-Ito palette; grouped lollipop spacing creates visual clarity beyond
+          defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 6
+        max: 6
+        passed: true
+        comment: Y-axis grid with subtle opacity (0.10); balanced whitespace; attentive
+          configuration throughout
+      - id: DE-03
+        name: Data Storytelling
+        score: 6
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through grouping (within-category comparison)
+          and color (quarter distinction); progression from Q1 to Q3 and regional
+          patterns immediately evident
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped lollipop chart with stems and circular markers
+        comment: Correct grouped lollipop chart with all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values on Y-axis, series distinguished by color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Thin stems, circular markers, side-by-side grouping, legend present
-      - id: SC-04
-        name: Data Range
+        comment: Thin stems, circular markers, grouped side-by-side offset, legend
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis 0-110 shows all data with appropriate headroom
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X-axis (category), Y-axis (value) correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies Q1/Q2/Q3 2024 quarters
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format {spec-id} · {library} · pyplots.ai
+        max: 3
+        passed: false
+        comment: Images show correct title format including Language and domain; code
+          source shows 'pyplots.ai' and missing Language — verify code/image sync
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across regions and quarters; North has highest values,
-          South lowest; progressive Q1 to Q3 trend visible
+        comment: Shows quarterly progression and multi-region comparison; all plot
+          type aspects demonstrated
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly performance metrics across regions is a plausible business
-          scenario
+        comment: Quarterly business metrics across regions; realistic, neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Performance scores 74-101 are reasonable; scale 0-110 appropriate
+        comment: Performance scores 0-110 plausible; proportions factually reasonable
     code_quality:
       score: 10
       max: 10
@@ -159,51 +186,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save - no functions/classes'
+        comment: 'Linear structure: imports, data, plot, save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported and used
+        comment: 'All imports used: os (THEME), sys (path), altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, Pythonic; appropriate complexity; no over-engineering or fake
+          functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses xOffset for grouping and layer composition (stems + markers),
-          but could leverage interactive tooltips
-  verdict: APPROVED
+        comment: Expert use of alt.Chart(), proper encoding (x, y, xOffset, color,
+          tooltip), mark_rule/mark_circle layering, configure methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Leverages Altair-specific xOffset for grouped positioning; elegantly
+          combines marks; uses sophisticated scale and configuration patterns
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []

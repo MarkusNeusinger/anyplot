@@ -1,158 +1,180 @@
 library: bokeh
+language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:48:14Z'
-updated: '2026-01-10T00:07:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868891789
+updated: '2026-05-18T12:25:07Z'
+generated_by: claude-haiku
+workflow_run: 26032982305
 issue: 3576
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/bokeh/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/bokeh/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Strong color contrast between significant (blue) and non-significant (gray) coefficients
-  - 'Excellent use of Bokeh-specific features: HoverTool with detailed tooltips showing
-    variable, coefficient, CI, and status'
-  - Clean horizontal layout matching spec preference for long variable names
-  - Professional styling with appropriate font sizes for large canvas
-  - Zero reference line clearly visible as dashed line
-  - Both PNG and HTML outputs generated for full interactivity
+  - Perfect visual quality in both light and dark themes with excellent text legibility
+  - Expert Bokeh library usage with distinctive interactive features (HoverTool, ColumnDataSource
+    renderers, Span)
+  - 'Flawless palette compliance with Okabe-Ito #009E73 for significant series and
+    theme-adaptive chrome'
+  - Publication-ready aesthetics with intentional typography, refined grid styling,
+    and clean spine removal
+  - Realistic housing price prediction scenario with meaningful variable names and
+    plausible data proportions
+  - All specification requirements met with semantic color coding (green = significant,
+    gray = non-significant)
   weaknesses:
-  - Legend placement in top-right slightly overlaps with the data region where Square
-    Footage coefficient extends
-  - Grid styling could be slightly more subtle (currently at alpha=0.3, could be 0.2)
-  image_description: The plot displays a horizontal coefficient plot with 10 predictor
-    variables for a housing price prediction model. Variables are listed on the y-axis
-    (Property Tax Rate, Age of House, Garage Size, Number of Bedrooms, Lot Size, Number
-    of Bathrooms, Distance to City Center, School Rating, Crime Rate Index, Square
-    Footage) ordered by coefficient magnitude. The x-axis shows "Coefficient Estimate
-    (Standardized)" ranging from approximately -0.4 to 0.6. A vertical dashed dark
-    gray reference line at x=0 indicates the null hypothesis threshold. Significant
-    coefficients (p < 0.05) are displayed in vivid blue (#2171b5) while non-significant
-    coefficients appear in muted gray (#969696). Each coefficient is represented by
-    a point marker with horizontal confidence interval bars. The legend in the top-right
-    corner clearly distinguishes "Significant (p < 0.05)" and "Not Significant" categories.
-    The background is light gray (#fafafa) with subtle dashed grid lines. The title
-    "coefficient-confidence · bokeh · pyplots.ai" appears at the top left.
+  - DE-01 could be elevated to 8/8 with additional custom sophistication (e.g., more
+    nuanced color harmonies, accent styling)
+  - LM-02 could reach 5/5 by leveraging additional Bokeh interactive patterns (e.g.,
+    selection callbacks, CrossFilter)
+  - DE-03 storytelling could be enhanced with additional visual emphasis techniques
+    (size variation, focal point highlighting)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all dark text (#1A1A17), fully readable
+      Data: Coefficient points with 95% CI error bars; significant coefficients in green (#009E73), non-significant in gray (INK_SOFT); reference line at zero (dashed, subtle); legend in top right with clear labels
+      Grid: Subtle dashed lines at 10% alpha
+      Legibility verdict: PASS - all text elements crisp and readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface, not pure black
+      Chrome: Same text elements now in light color (#F0EFE8), fully readable against dark background
+      Data: Identical green (#009E73) for significant series, identical gray for non-significant - data colors unchanged from light render
+      Grid: Subtle dashed lines visible and appropriately styled
+      Legend: Background correctly adapted to ELEVATED_BG (#242420)
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures
+
+    Both renders: Data colors are identical across themes. Only chrome (background, text, grid, legend box) adapted to theme. No legibility failures in either render.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt, tick labels at 22pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements, variable names fully visible
+        comment: All font sizes explicitly set; perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; long variable names fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size=30 and line_width=6 are appropriate, confidence intervals
-          clearly visible
+        comment: 30px markers and 6px lines well-adapted; all elements clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue vs gray is colorblind-safe, strong contrast between significant/non-significant
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good margins, legend positioned appropriately
-          inside plot
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has Coefficient Estimate (Standardized), Y-axis has Predictor
-          Variable
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Green vs. gray contrast excellent; CVD-safe Okabe-Ito palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot utilizes ~75% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend placement in top-right partially overlaps with data region
-          for Square Footage
+        passed: true
+        comment: Labels descriptive with units; title matches spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito #009E73 ✓; backgrounds correct ✓; theme-adaptive chrome
+          ✓; data colors identical across themes ✓'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Professional, intentional design; semantic color coding; publication-ready
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid, spines removed, refined legend styling, generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy through color; helps viewer understand effect
+          sizes and uncertainty
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct coefficient plot with horizontal error bars
+        comment: Correct coefficient plot with horizontal confidence intervals
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Variables on Y-axis, coefficients on X-axis per spec preference
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Zero reference line, color distinction for significance, confidence
-          intervals all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: points, CIs, zero line, significance
+          indicator'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Variables on Y-axis, coefficients on X-axis, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels significant vs non-significant
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: coefficient-confidence · bokeh · pyplots.ai'
+        comment: Title format correct; legend labels meaningful
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows mix of positive/negative coefficients, significant/non-significant,
-          varying CI widths
+        comment: 'Shows all aspects: significant and non-significant coefficients
+          with variety of effect sizes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Housing price prediction is a real, neutral scenario with sensible
-          predictors
+        comment: Housing price prediction model with realistic variable names and
+          neutral scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Standardized coefficients in reasonable range (-0.35 to 0.45)
+        comment: Coefficients and standard errors plausible for standardized regression
     code_quality:
       score: 10
       max: 10
@@ -162,45 +184,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, plot, save - no functions/classes'
+        comment: Linear flow without unnecessary functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set; deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, bokeh components)
+        comment: All imports used; Selenium appropriately included
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh 3.x API
+        comment: Clean Pythonic code; no over-engineering or fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Bokeh features: ColumnDataSource, HoverTool with
-          tooltips, Legend with custom items, Span for reference line, HTML export'
+        comment: 'Expert Bokeh patterns: figure, ColumnDataSource with separate renderers,
+          HoverTool, Span'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses HoverTool and ColumnDataSource renderer pattern; could leverage
+          more interactive features
+    score_caps:
+      applied: false
+      notes: No violations detected
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - hover-tooltips
   - custom-legend
@@ -213,4 +246,3 @@ impl_tags:
   styling:
   - edge-highlighting
   - grid-styling
-  - alpha-blending

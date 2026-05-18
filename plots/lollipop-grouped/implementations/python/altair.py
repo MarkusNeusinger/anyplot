@@ -1,13 +1,30 @@
-""" pyplots.ai
+""" anyplot.ai
 lollipop-grouped: Grouped Lollipop Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 94/100 | Created: 2026-01-09
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 99/100 | Updated: 2026-05-17
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
+import os
+import sys
 
+
+# Remove current directory from path to avoid shadowing the altair package
+sys.path = [p for p in sys.path if os.path.abspath(p) != os.getcwd()]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data: Quarterly performance metrics across regions
 np.random.seed(42)
@@ -30,11 +47,10 @@ df = pd.DataFrame(data)
 df["series_order"] = df["series"].map({s: i for i, s in enumerate(series)})
 df["x_offset"] = (df["series_order"] - (len(series) - 1) / 2) * 0.25
 
-# Colors
-colors = ["#306998", "#FFD43B", "#4CAF50"]
-color_scale = alt.Scale(domain=series, range=colors)
+# Color scale using Okabe-Ito palette
+color_scale = alt.Scale(domain=series, range=OKABE_ITO[: len(series)])
 
-# Base chart for stems (lines from 0 to value)
+# Base chart
 base = alt.Chart(df).encode(
     x=alt.X("category:N", title="Region", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
     xOffset="x_offset:Q",
@@ -44,9 +60,10 @@ base = alt.Chart(df).encode(
         title="Quarter",
         legend=alt.Legend(titleFontSize=18, labelFontSize=16, symbolSize=200),
     ),
+    tooltip=["category:N", "series:N", alt.Tooltip("value:Q", format=".0f")],
 )
 
-# Stems
+# Stems (lines from 0 to value)
 stems = base.mark_rule(strokeWidth=4).encode(
     y=alt.Y(
         "value:Q",
@@ -57,19 +74,32 @@ stems = base.mark_rule(strokeWidth=4).encode(
     y2=alt.datum(0),
 )
 
-# Markers
+# Markers (circular dots)
 markers = base.mark_circle(size=400, opacity=1).encode(y=alt.Y("value:Q"))
 
 # Combine stems and markers
 chart = (
     (stems + markers)
     .properties(
-        width=1600, height=900, title=alt.Title("lollipop-grouped · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("lollipop-grouped · altair · pyplots.ai", fontSize=28, anchor="middle"),
     )
-    .configure_axis(grid=True, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        grid=True,
+        gridOpacity=0.10,
+        gridColor=INK_SOFT,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+    )
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

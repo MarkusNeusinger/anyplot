@@ -1,158 +1,169 @@
 library: plotnine
+language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:48:57Z'
-updated: '2026-01-09T16:52:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858843569
+updated: '2026-05-18T03:26:10Z'
+generated_by: claude-haiku
+workflow_run: 26011497903
 issue: 3529
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent color palette with high contrast (blue/yellow) that is colorblind-safe
-  - Clean layered grammar of graphics approach with geom_violin + geom_jitter
-  - Realistic and well-thought-out data scenario with varying complexity levels and
-    expertise
-  - Proper use of position_dodge to align grouped elements
-  - Text sizing follows guidelines perfectly for 4800x2700 output
+  - 'Perfect visual quality: all text legible in both themes, proper font sizing,
+    no overlap or visibility issues'
+  - 'Flawless theme-adaptive implementation: Okabe-Ito data colors identical between
+    light/dark; chrome properly inverted'
+  - 'Complete spec compliance: grouped violins, swarm overlay, color-coding, proper
+    dodging all present'
+  - Clean, reproducible code with no extraneous logic
+  - 'Strong data storytelling: the plot effectively communicates both aggregate distributions
+    and individual performance variation'
   weaknesses:
-  - Legend appears with duplicate Expertise entries (both fill and color scales create
-    separate legend items)
-  - Uses geom_jitter for swarm points rather than true swarm positioning - plotnine
-    lacks native geom_beeswarm
-  - The guides() call with guide_legend() does not effectively merge the legends
-  image_description: 'The plot displays a grouped violin chart with swarm overlay
-    showing response times (in milliseconds) across three task types (Simple, Moderate,
-    Complex) and two expertise levels (Novice in steel blue, Expert in golden yellow).
-    Each violin shape effectively shows the distribution of data, with individual
-    data points rendered as jittered markers inside the violins. The Novice group
-    consistently shows higher response times than Expert across all task complexity
-    levels. Response times increase from Simple (~300-500ms) to Moderate (~400-900ms)
-    to Complex (~600-1400ms). The violins have semi-transparent fills (alpha ~0.5)
-    allowing the swarm points to remain visible. The title uses the correct format:
-    ''violin-grouped-swarm · plotnine · pyplots.ai''. The legend is positioned on
-    the right side, clearly labeling the two expertise levels with matching colors.'
+  - 'Design sophistication: uses standard library defaults without custom aesthetic
+    choices (DE-01 = 4)'
+  - 'Visual refinement: all four spines visible; could adopt L-shaped frame for more
+    polished appearance (DE-02 = 3)'
+  - 'Library mastery: solid but conventional grammar-of-graphics usage; no particularly
+    distinctive plotnine-specific techniques (LM-02 = 3)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title, axis labels, tick labels all in dark text (#1A1A17 for primary, #4A4A44 for secondary) - all readable and well-spaced
+      Data: Green violins/points (#009E73) for Novice, orange (#D55E00) for Expert - distinct and colorblind-safe; violin shapes clear with swarm points visible; proper dodging applied
+      Legibility verdict: PASS - all text perfectly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Title, axis labels, tick labels all in light text (#F0EFE8 for primary, #B8B7B0 for secondary) - all readable and well-spaced
+      Data: Green violins/points (#009E73), orange (#D55E00) - identical colors to light render; no dark-on-dark failures; contrast excellent
+      Legibility verdict: PASS - all text perfectly readable against dark background; no dark-on-dark text issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, violins well-spaced
+        comment: All font sizes explicitly set; perfectly readable at full resolution
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all elements well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Swarm points visible, though slightly small for the data density;
-          violins well-sized
+        comment: Markers optimally sized and visible; violins well-defined
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow palette is colorblind-safe, excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units 'Response Time (ms)', X-axis labeled 'Task
-          Type'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette; colorblind-safe; good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect layout; plot fills 60-70% with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito correct; theme-adaptive chrome perfect in both renders
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle (alpha 0.3), but legend shows duplicate entries (Expertise
-          appears twice with same colors)
+        comment: Well-configured defaults; lacks custom design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Some refinement visible; all spines present (not L-shaped)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Good visual hierarchy; clear narrative through design
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct grouped violin plot with swarm overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Category on x-axis, values on y-axis, grouping by color/hue
-      - id: SC-03
         name: Required Features
-        score: 3
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has violins, swarm points, grouping, transparency; however swarm
-          points use jitter rather than true swarm positioning
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: colors, transparency, swarm, dodging'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y/hue properly assigned and visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Novice and Expert groups
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format '{spec-id} · {library} · pyplots.ai'
+        comment: Title format correct; legend matches data
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying distributions across complexity levels and expertise,
-          different spreads visible
+        comment: Shows all aspects of plot type
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Response time across task complexity is a real, neutral, plausible
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response times in 200-1400ms range are realistic for cognitive tasks
+        comment: Real-world plausible scenario; neutral context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct proportions; sensible values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,42 +171,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports -> data -> plot -> save structure
+        comment: Linear flow; no unnecessary complexity
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports used, but guide_legend import may be unnecessary
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as 'plot.png'
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        comment: Seed set for deterministic output
+      - id: CQ-03
+        name: Clean Imports
         score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no bloat
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Pythonic; appropriate complexity; no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct format and current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper grammar of graphics; idiomatic patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
         max: 5
         passed: false
-        comment: Uses plotnine grammar of graphics with layered geoms and position_dodge,
-          but uses geom_jitter instead of proper swarm positioning
+        comment: Uses position_dodge and geom composition effectively; fairly conventional
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -207,4 +223,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling

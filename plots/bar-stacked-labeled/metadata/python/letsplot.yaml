@@ -1,149 +1,177 @@
 library: letsplot
+language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:32:09Z'
-updated: '2026-01-09T15:34:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856776433
+updated: '2026-05-18T02:12:35Z'
+generated_by: claude-haiku
+workflow_run: 26009474605
 issue: 3504
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/letsplot/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent use of lets-plot ggplot2 grammar with clean layer composition
-  - Total labels are bold and prominently displayed with proper currency formatting
-    ($XXM)
-  - Good color scheme with distinguishable segments
-  - Proper handling of lets-plot output directory quirk
-  - Clean theme with appropriate text sizing for 4800x2700 output
+  - Perfect stacked bar chart implementation with clear quarterly progression
+  - Excellent use of total labels (bold, positioned above bars) for immediate insight
+  - 'Flawless Okabe-Ito palette compliance - first series correctly #009E73 with proper
+    color ordering'
+  - Perfect theme-adaptive styling in both light (#FAF8F1) and dark (#1A1A17) renders
+    - text legible in both, data colors identical
+  - Clean, idiomatic letsplot code with explicit theme tokens and proper grammar-of-graphics
+    composition
+  - All text sizes explicitly set (title=24pt, labels=20pt, ticks=16pt) - perfectly
+    readable at 4800x2700px
+  - Strong visual hierarchy - totals emphasize key metric, legend positioned appropriately,
+    no overlapping elements
   weaknesses:
-  - Legend title says Product Category while data column is Product - minor cosmetic
-    inconsistency
-  image_description: 'The plot displays a stacked bar chart showing quarterly revenue
-    (Q1-Q4) broken down by three product categories: Electronics (blue/teal), Software
-    (yellow), and Services (green). Each bar is properly stacked with the segments
-    clearly visible. Total labels appear above each bar in bold black text with dollar
-    formatting (e.g., "$95M", "$112M", "$114M", "$131M"). The title reads "Quarterly
-    Revenue by Product · bar-stacked-labeled · lets-plot · pyplots.ai". The Y-axis
-    shows "Revenue (Millions USD)" with values from 0-130, and the X-axis shows "Quarter"
-    with Q1-Q4 labels. A legend on the right identifies the three product categories.
-    The plot uses a minimal theme with subtle gridlines.'
+  - Rendered title shows 'Quarterly Revenue by Product Category' instead of 'bar-stacked-labeled
+    · Python · letsplot · anyplot.ai' (code appears correct but images may need regeneration)
+  - Design excellence is solid but not exceptional - follows configured defaults rather
+    than custom aesthetic choices
+  - 'Limited leverage of letsplot''s distinctive features (uses basics: ggplot, geoms,
+    theme; could explore more specialized capabilities)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 - perfect match for light theme spec
+      Chrome: Title "Quarterly Revenue by Product Category" (note: code specifies bar-stacked-labeled · Python · letsplot · anyplot.ai - requires verification), axis labels "Quarter" and "Revenue (Millions USD)" in dark INK color are clearly visible, tick labels Q1-Q4 and numeric values are sharp and readable in INK_SOFT color
+      Data: Three stacked bar segments per quarter in Okabe-Ito colors - #009E73 (green, Electronics - bottom), #D55E00 (orange, Software - middle), #0072B2 (blue, Services - top). Total labels ($95M, $112M, $114M, $131M) positioned bold and clear above each bar
+      Legibility verdict: PASS - all text readable on light background, no dark-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 - perfect match for dark theme spec
+      Chrome: Same title text, axis labels in light INK color (#F0EFE8), tick labels in INK_SOFT (#B8B7B0) are clearly visible against dark background with good contrast
+      Data: Identical colors to light render - #009E73, #D55E00, #0072B2 confirm proper palette consistency. Total labels remain bold and visible in light text
+      Legibility verdict: PASS - all text readable on dark background, no dark-on-dark failures, strong contrast maintained between elements
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: 'All text clearly readable: title bold and prominent, axis labels
-          appropriately sized, total labels bold and well-sized'
+        comment: All text explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; total labels positioned cleanly above
-          bars
+        comment: Perfect spacing, legend positioned right, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments clearly visible with good sizing and contrast
+        comment: All segments clearly visible, excellent contrast and definition
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, green provide reasonable differentiation
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (Millions USD), X-axis labeled Quarter
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette, colorblind-safe, excellent contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions, balanced margins, 4800x2700px well-utilized
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive axis labels with units (Revenue in Millions USD)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, proper Okabe-Ito order, theme-correct backgrounds
+          and chrome'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend title 'Product Category' differs from data column 'Product'
+        comment: Well-configured defaults but not custom or exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle grid, reasonable whitespace, but minimal polish beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Total labels create clear focal point, emphasize key metrics, good
+          hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked bar chart type
+        comment: Perfect stacked bar chart implementation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Quarters on X, Revenue on Y, Product as fill - correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Total labels prominently displayed above bars with $XXM formatting
-      - id: SC-04
-        name: Data Range
+        comment: Total labels, multiple series, proper stacking
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range from 0 to above highest total
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all three product categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows required format with spec-id, library, pyplots.ai
+        comment: Axes correctly assigned, all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 1
+        max: 3
+        passed: false
+        comment: 'Title format violation: images show ''Quarterly Revenue by Product
+          Category'' instead of ''bar-stacked-labeled · Python · letsplot · anyplot.ai'';
+          legend correct'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows quarterly progression with varying totals; segment proportions
-          relatively similar
+        comment: 'Shows all aspects: quarterly breakdown, product distribution, stacking,
+          totals'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly revenue by product is a realistic business scenario
+        comment: 'Real business scenario: quarterly revenue by product category'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Revenue values in millions are realistic for business context
+        comment: Plausible quarterly revenue values, proper axis range
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -151,48 +179,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, data, totals, plot, save'
+        comment: 'Direct flow: data → plot → save, no functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded), no randomness to seed
+        comment: Hardcoded deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, shutil, pandas, lets_plot'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Theme tokens, clean composition, no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 5
-      max: 5
+        comment: 'Correct output format: plot-{THEME}.png and .html'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot2 grammar with geom_bar, geom_text, scale_fill_manual,
-          theme_minimal, ggsize
+        comment: Proper ggplot grammar, geom composition, aes mapping, scale_fill_manual
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses LetsPlot.setup_html, ggsize, ggsave with scale; could explore
+          more
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - layer-composition
   patterns:
   - groupby-aggregation
   dataprep: []

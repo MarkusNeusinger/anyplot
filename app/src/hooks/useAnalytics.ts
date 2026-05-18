@@ -53,10 +53,13 @@ function buildPlausibleUrl(): string {
     parts.length > 0 && !RESERVED_TOP_LEVEL.has(parts[0]) ? `/${parts.join("/")}` : "";
 
   // Definierte Reihenfolge der Filter-Kategorien (inkl. impl-level tags).
-  // `language` is included so the hub's ?language= filter is tracked as a
-  // distinct pageview path (/{spec}/language/python), matching the path-segment
-  // convention used for all other filter params.
+  // - `language` covers the spec-hub carousel scope (`/{spec}?language=python`)
+  //   that pre-dates the FilterBar lang category.
+  // - `lang` covers the new FilterBar category on `/plots?lang=python` —
+  //   without it, the lang filter would never show up as a distinct pageview
+  //   path in Plausible.
   const orderedKeys = [
+    "lang",
     "lib",
     "spec",
     "plot",

@@ -1,0 +1,249 @@
+library: ggplot2
+language: r
+specification_id: lollipop-grouped
+created: '2026-05-17T22:39:38Z'
+updated: '2026-05-17T22:48:21Z'
+generated_by: claude-haiku
+workflow_run: 26004740367
+issue: 3485
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/lollipop-grouped/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
+review:
+  strengths:
+  - Perfect visual quality across both renders (30/30) - all text legible, no overlaps,
+    optimal sizing
+  - Complete spec compliance (15/15) - correct plot type, all features present, proper
+    title and legend formatting
+  - Excellent data quality (15/15) - realistic revenue scenario with well-proportioned
+    values across regions and products
+  - Clean, idiomatic ggplot2 code (10/10) - KISS structure, proper reproducibility,
+    theme-adaptive chrome implementation
+  - Proper theme adaptation - both light and dark renders perfectly legible with correct
+    color preservation and chrome flipping
+  weaknesses:
+  - 'DE-02 below optimum (2/6): All four spines retained, minimal visual refinement
+    - consider removing top and right spines for cleaner appearance'
+  - 'DE-03 minimal (2/6): Data presented without visual hierarchy or storytelling
+    - consider using color contrast or size variation to emphasize patterns'
+  - 'LM-02 basic (1/5): Generic ggplot2 usage replicable in other grammar-of-graphics
+    libraries - could leverage distinctive ggplot2 features like geom_richtext or
+    custom stat functions'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) as specified
+      Chrome: Title, axis labels, tick labels all clearly visible in dark text. Y-axis grid lines are subtle and appropriate. X-axis grid absent (good design choice).
+      Data: Product A (first series) correctly uses brand green (#009E73), Product B uses vermillion (#D55E00), Product C uses blue (#0072B2). All Okabe-Ito colors correct.
+      Stems and markers: Thin stems connect baseline to markers; circular dots are clearly visible with size=5. Lollipops properly dodged side-by-side within each region group.
+      Legend: Right-positioned, properly labeled (Product A, B, C), matches data colors exactly.
+      Legibility verdict: PASS - All text readable at full resolution; no overlaps; proper contrast.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) as specified
+      Chrome: Title and all axis labels/tick labels appear in light text (light-colored), providing good contrast against the dark background. No dark-on-dark failures detected.
+      Data: All data colors (green, orange, blue) are identical to light render. Only chrome (background, text) has flipped appropriately.
+      Stems and markers: Same sizing and positioning as light render; equally visible on dark surface.
+      Legend: Same right position with light text on dark background; colors unchanged.
+      Legibility verdict: PASS - All text is readable; theme-adaptive chrome properly applied; strong contrast on both renders.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; position_dodge properly handles lollipop grouping;
+          legend isolated
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (size=5) and stems (linewidth=0.8) clearly visible; sizing
+          appropriate for 12 data points
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito colors 1-3; strong luminance contrast; CVD-safe; not relying
+          on red-green distinction
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px canvas (16:9@300dpi); plot fills ~65% with balanced margins;
+          legend properly positioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis includes units (Revenue $ Millions); X-axis descriptive (Region);
+          title matches spec format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 brand green; colors 1-3 correct Okabe-Ito order;
+          backgrounds #FAF8F1/#1A1A17; chrome properly theme-adaptive'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured library defaults; using Okabe-Ito but no custom palette
+          or exceptional design
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization; all four spines present; grid minimally adjusted;
+          mostly library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but without visual hierarchy or emphasis;
+          viewer must find own insights
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct grouped lollipop chart; all subtypes present
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: stems, markers, grouping, multiple series,
+          legend'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=region (categorical), Y=revenue (numeric), color=product (series);
+          all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct (lollipop-grouped · R · ggplot2 · anyplot.ai);
+          legend labels match data
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: grouped arrangement, value variation across regions
+          and products, realistic ranges'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world scenario (sales revenue by product and region); neutral;
+          descriptive labels
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values plausible for sales revenue (2.0-3.3M); logical proportions;
+          no impossible data
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear: imports → data → plot → save; no functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; deterministic data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used; no unnecessary imports
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity; no over-engineering or fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; current ggsave API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses ggplot2 idioms: geom_segment+geom_point for lollipop,
+          position_dodge for grouping, theme_minimal + theme override, scale_color_manual'
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic grammar-of-graphics approach replicable in plotnine/letsplot;
+          not using ggplot2-specific capabilities
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  - position-offset
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - theme-adaptive

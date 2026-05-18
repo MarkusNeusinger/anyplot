@@ -1,16 +1,20 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-text: Scatter Plot with Text Labels Instead of Points
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-09
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-17
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_blank,
+    element_line,
+    element_rect,
     element_text,
-    geom_point,
     geom_text,
     ggplot,
     ggsave,
@@ -24,6 +28,16 @@ from lets_plot import (
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Programming languages positioned by paradigm (functional vs object-oriented)
 # and level of abstraction (low vs high)
@@ -62,8 +76,7 @@ languages = [
     "Lisp",
 ]
 
-# Position languages with better spacing to reduce overlap
-# Adjusted coordinates for dense regions
+# Position languages with good spacing to minimize overlap
 paradigm_scores = {
     "Python": (0.58, 0.88),
     "JavaScript": (0.42, 0.72),
@@ -136,19 +149,7 @@ categories = [
 
 df = pd.DataFrame({"x": x_coords, "y": y_coords, "label": languages, "category": categories})
 
-# Define colors for categories
-color_palette = {
-    "General": "#306998",
-    "Web": "#E6A700",
-    "Systems": "#2E86AB",
-    "Mobile": "#A23B72",
-    "Functional": "#F18F01",
-    "Scripting": "#C73E1D",
-    "Data Science": "#3A86A9",
-    "Scientific": "#6B8E23",
-    "Legacy": "#708090",
-}
-
+# Map categories to Okabe-Ito colors
 category_order = [
     "General",
     "Web",
@@ -161,12 +162,21 @@ category_order = [
     "Legacy",
 ]
 
+color_palette = {
+    "General": OKABE_ITO[0],  # #009E73 (brand green)
+    "Web": OKABE_ITO[1],  # #D55E00 (vermillion)
+    "Systems": OKABE_ITO[2],  # #0072B2 (blue)
+    "Mobile": OKABE_ITO[3],  # #CC79A7 (reddish purple)
+    "Functional": OKABE_ITO[4],  # #E69F00 (orange)
+    "Scripting": OKABE_ITO[5],  # #56B4E9 (sky blue)
+    "Data Science": OKABE_ITO[6],  # #F0E442 (yellow)
+    "Scientific": INK_SOFT,  # Neutral for scientific
+    "Legacy": INK_SOFT,  # Neutral for legacy
+}
+
 # Create plot with interactive tooltips (lets-plot distinctive feature)
 plot = (
     ggplot(df, aes(x="x", y="y", color="category"))
-    # Invisible points for legend (show colored squares instead of 'a')
-    + geom_point(aes(size="category"), alpha=0, show_legend=True)
-    # Text labels with interactive tooltips
     + geom_text(
         aes(label="label"),
         size=11,
@@ -184,21 +194,27 @@ plot = (
     + labs(
         x="Object-Oriented ← Paradigm → Functional",
         y="Abstraction Level (Low → High)",
-        title="scatter-text · letsplot · pyplots.ai",
+        title="scatter-text · Python · letsplot · anyplot.ai",
     )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=28, face="bold"),
-        axis_title=element_text(size=22),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK, size=0.1),
+        panel_grid_minor=element_blank(),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        plot_title=element_text(size=24, color=INK, face="bold"),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
     )
     + ggsize(1600, 900)
 )
 
 # Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, "plot.png", path=".", scale=3)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
 # Save interactive HTML version with tooltips
-ggsave(plot, "plot.html", path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")

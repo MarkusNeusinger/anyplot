@@ -1,16 +1,32 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-swarm: Violin Plot with Overlaid Swarm Points
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-18
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource, FactorRange
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, FactorRange, HoverTool
 from bokeh.plotting import figure
 from bokeh.resources import CDN
 from scipy import stats
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data color (brand green, theme-independent)
+DATA_COLOR = "#009E73"
 
 # Data - Reaction times (ms) across 4 experimental conditions
 np.random.seed(42)
@@ -26,35 +42,47 @@ data = {
     "High Dose": np.random.normal(250, 40, n_per_group),
 }
 
-# Colors: Python Blue for violin, Python Yellow for points
-violin_color = "#306998"
-point_color = "#FFD43B"
-
 # Create figure with padding for violins
 p = figure(
     width=4800,
     height=2700,
-    title="violin-swarm · bokeh · pyplots.ai",
+    title="violin-swarm · Python · bokeh · anyplot.ai",
     x_range=FactorRange(*categories, range_padding=0.15),
     y_axis_label="Reaction Time (ms)",
     x_axis_label="Experimental Condition",
 )
 
+# Background and chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
 # Styling - larger text for 4800x2700 canvas
-p.title.text_font_size = "36pt"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "24pt"
-p.yaxis.major_label_text_font_size = "22pt"
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = [6, 4]
-p.outline_line_color = None
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.10
 
 # Build violin shapes and swarm points
 violin_patches_x = []
 violin_patches_y = []
 swarm_x = []
 swarm_y = []
+swarm_categories = []
 
 for i, cat in enumerate(categories):
     values = data[cat]
@@ -83,15 +111,37 @@ for i, cat in enumerate(categories):
         jitter = np.random.uniform(-jitter_range, jitter_range)
         swarm_x.append(i + jitter)
         swarm_y.append(val)
+        swarm_categories.append(cat)
 
 # Draw violins as patches (semi-transparent)
 for vx, vy in zip(violin_patches_x, violin_patches_y, strict=True):
-    p.patch(vx, vy, fill_color=violin_color, fill_alpha=0.4, line_color=violin_color, line_width=2)
+    p.patch(vx, vy, fill_color=DATA_COLOR, fill_alpha=0.4, line_color=DATA_COLOR, line_width=2)
 
-# Draw swarm points - larger size for visibility
-swarm_source = ColumnDataSource(data={"x": swarm_x, "y": swarm_y})
-p.scatter("x", "y", source=swarm_source, size=18, color=point_color, alpha=0.9, line_color="#333333", line_width=1.5)
+# Draw swarm points with HoverTool
+swarm_source = ColumnDataSource(data={"x": swarm_x, "y": swarm_y, "category": swarm_categories})
+hover = HoverTool(tooltips=[("Category", "@category"), ("Value (ms)", "@y{0.0}")])
+p.add_tools(hover)
+p.scatter("x", "y", source=swarm_source, size=12, color=DATA_COLOR, alpha=0.7, line_color=INK_SOFT, line_width=1)
 
-# Save PNG and HTML
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="violin-swarm · bokeh · pyplots.ai")
+# Save HTML
+output_file(f"plot-{THEME}.html")
+save(p, resources=CDN)
+
+# Screenshot with headless Chrome
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)  # let bokeh's JS render the canvas
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

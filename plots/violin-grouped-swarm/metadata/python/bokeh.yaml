@@ -1,159 +1,183 @@
 library: bokeh
+language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:49:54Z'
-updated: '2026-01-09T16:53:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858844359
+updated: '2026-05-18T03:16:23Z'
+generated_by: claude-haiku
+workflow_run: 26011392124
 issue: 3529
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/bokeh/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent visual clarity with well-sized text and well-spaced grouped violins
-  - Colorblind-safe blue/yellow color scheme with good contrast
-  - Custom KDE-based violin shapes using patches demonstrate advanced Bokeh usage
-  - Swarm point algorithm effectively places points within violin bounds
-  - Clean KISS code structure with good reproducibility
+  - Pristine theme adaptation with no dark-on-dark or light-on-light failures
+  - Excellent visual hierarchy through color grouping and transparency management
+  - 'Idiomatic Bokeh patterns: ColumnDataSource, custom Legend, HoverTool, Selenium
+    screenshot'
+  - Robust seed-based data generation with realistic task performance scenario
+  - 'Perfect specification compliance: all features (violins, swarms, dodging, spacing)
+    executed correctly'
+  - 'Refined polish: subtle grid styling, explicit font sizing, balanced layout'
   weaknesses:
-  - Legend appears small relative to the large canvas size; could use larger glyph
-    sizes
-  - Does not leverage Bokeh interactive features like HoverTool for tooltips on swarm
-    points
-  - Some unused loop variables (_grp_idx, _cat_idx) could be cleaner
-  image_description: 'The plot displays a grouped violin plot with swarm point overlay
-    showing response times (ms) across three task types (Simple, Moderate, Complex)
-    and two expertise levels (Novice in blue #306998 and Expert in yellow #FFD43B).
-    Six violin shapes are arranged in pairs for each task type, with Novice violins
-    positioned slightly left and Expert violins slightly right within each category.
-    The violin shapes show the distribution density computed via KDE, with 50% alpha
-    transparency. Individual data points are overlaid as small dots within each violin,
-    matching the hue of their corresponding group. The violins clearly show that Novice
-    users have higher response times than Experts across all task types, and that
-    response times increase with task complexity. The title "violin-grouped-swarm
-    · bokeh · pyplots.ai" appears at the top center. X-axis is labeled "Task Type"
-    and Y-axis is labeled "Response Time (ms)" ranging from 0-700. A legend on the
-    right side shows Novice (blue) and Expert (yellow) labels. The grid is subtle
-    with dashed lines and low alpha.'
+  - LM-02 could explore more distinctive Bokeh features (e.g., interactive callbacks,
+    CustomJSFilter) — minor
+  - DE-01 solid design but not exceptional; could emulate FiveThirtyEight-level sophistication
+    — minor
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title, axis labels, and tick labels are dark text (#1A1A17 for primary, #4A4A44 for secondary) — fully readable against light background
+      Data: 6 violin plots in brand green (#009E73, Novice) and orange (#D55E00, Expert); swarm points with white edges; grid at 10% opacity
+      Legibility verdict: PASS — all text readable; no contrast failures; grid subtle but visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title and labels now light text (#F0EFE8 for primary, #B8B7B0 for secondary) — fully readable against dark background; no dark-on-dark failures
+      Data: Identical data colors to light render (green, orange) — only chrome adapted
+      Legibility verdict: PASS — all text readable; no dark-on-dark failures; grid and legend properly styled for dark theme
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt/22pt, tick labels at 20pt+ - all
-          perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; violins well-spaced within categories
+        comment: All font sizes explicitly set (title 28pt, labels 22pt, ticks 18pt);
+          perfectly readable in both light and dark themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Category labels well-spaced; no text collisions; clean layout throughout
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Swarm points sized well at 14px with good alpha; slight deduction
-          as some points close together
+        comment: Swarm points optimally sized (size=15); violins transparent (alpha=0.5)
+          allowing points to show through; good density adaptation
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow provide excellent contrast and are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units Response Time (ms), X-axis has descriptive Task
-          Type
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito palette (#009E73, #D55E00); excellent contrast; CVD-safe;
+          no red-green-only signaling'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of 4800×2700 canvas; balanced margins; legend positioned
+          properly in top-right
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive with units (Response Time (ms)); categorical axis appropriate;
+          title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); second #D55E00 (Okabe-Ito pos.
+          2); backgrounds #FAF8F1 (light) and #1A1A17 (dark); all theme-adaptive chrome
+          correct in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Legend appears small relative to the large canvas size
+        comment: Professional Okabe-Ito palette choice; custom KDE violin rendering;
+          explicit typography; clean minimalist design; solid but not FiveThirtyEight-level
+          exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Subtle grid (alpha=0.10); white marker edges for definition; generous
+          whitespace; legend styled with background/border; highly polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear visual narrative: expertise effect (Novice slower) and complexity
+          effect (response time increase); color grouping and positioning create hierarchy'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct grouped violin plot with swarm overlay
+        comment: Correct grouped violin plot with swarm overlay; all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values on Y-axis, groups differentiated by
-          color
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: grouped violins, swarm points, transparency,
-          dodging'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: violins, swarm points, dodging, transparency,
+          distinct colors, clear legend, adequate spacing'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows 0-750, comfortably displaying all data points
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: categories; Y-axis: numeric values; Color: groups; all axes
+          show all data'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Novice and Expert with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format violin-grouped-swarm · bokeh · pyplots.ai
+        comment: 'Title format: violin-grouped-swarm · Python · bokeh · anyplot.ai
+          (correct); legend shows Novice/Expert matching data'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distributions, varying spreads across groups and
-          categories
+        comment: 'Shows all aspects: 3 task types, 2 expertise levels, clear distribution
+          variations across both dimensions'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Response times for cognitive tasks across expertise levels is realistic
+        comment: Real-world plausible task-performance scenario; neutral topic; comprehensible
+          domain; no controversial elements
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 50-700ms are realistic for UI tasks
+        comment: Response times 50-900 ms factually plausible; relationships correct
+          (expertise decreases time, complexity increases)
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,58 +185,71 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data, plot, save'
+        comment: 'Linear flow: imports → seed → data → plot → save; no unnecessary
+          functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set at line 39; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused dependencies; proper organization
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses unused loop variables (_grp_idx, _cat_idx)
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic code; appropriate complexity; KDE + jittering well-executed;
+          no fake functionality
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses current bokeh
+          API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ColumnDataSource, patch(), scatter(), HoverTool, custom
+          Legend, theme tokens, Selenium screenshot
+      - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
         passed: false
-        comment: Uses ColumnDataSource and custom Legend, but could leverage HoverTool
-          for interactivity
+        comment: Custom LegendItem rendering, HoverTool with tooltips, manual KDE
+          + patch primitives show Bokeh skill; could explore more advanced patterns
+          (callbacks, CustomJSFilter)
+    score_caps: []
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - selenium
   techniques:
-  - patches
+  - hover-tooltips
   - custom-legend
   - html-export
-  - manual-ticks
+  - patches
   patterns:
   - data-generation
-  - iteration-over-groups
   - columndatasource
+  - iteration-over-groups
   dataprep:
   - kde
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
+  - edge-highlighting

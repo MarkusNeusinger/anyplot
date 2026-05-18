@@ -1,14 +1,33 @@
-""" pyplots.ai
+""" anyplot.ai
 density-rug: Density Plot with Rug Marks
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-18
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
-from scipy.stats import gaussian_kde
+import os
+import sys
 
+
+# Remove current directory from path IMMEDIATELY to avoid import shadowing
+if sys.path[0] == "" or sys.path[0] == ".":
+    sys.path.pop(0)
+# Also remove the script directory if it's there
+script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != script_dir]
+
+import altair as alt  # noqa: E402
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from scipy.stats import gaussian_kde  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
 
 # Data - response times (ms) with realistic distribution
 np.random.seed(42)
@@ -30,23 +49,23 @@ density_values = kde(x_range)
 # Create DataFrames
 density_df = pd.DataFrame({"Response Time (ms)": x_range, "Density": density_values})
 
-rug_df = pd.DataFrame({"Response Time (ms)": response_times})
+# For rug marks, add a small y value to position marks above the x-axis
+rug_df = pd.DataFrame({"Response Time (ms)": response_times, "rug_y": [0.0] * len(response_times)})
 
 # Density curve with filled area
 density_chart = (
     alt.Chart(density_df)
-    .mark_area(opacity=0.5, color="#306998", line={"color": "#306998", "strokeWidth": 3})
+    .mark_area(opacity=0.4, color=BRAND, line={"color": BRAND, "strokeWidth": 3})
     .encode(x=alt.X("Response Time (ms):Q", title="Response Time (ms)"), y=alt.Y("Density:Q", title="Density"))
 )
 
-# Rug marks along x-axis using rule marks at y=0
+# Rug marks as tick marks along the bottom using a secondary layer
 rug_chart = (
     alt.Chart(rug_df)
-    .mark_rule(color="#306998", opacity=0.5, strokeWidth=1.5)
+    .mark_tick(color=BRAND, opacity=0.6, thickness=2, size=40)
     .encode(
         x=alt.X("Response Time (ms):Q"),
-        y=alt.value(900),  # Start from bottom of chart area
-        y2=alt.value(850),  # Extend up 50 pixels
+        y=alt.Y("rug_y:Q", scale=alt.Scale(domain=[density_values.min(), density_values.max()])),
     )
 )
 
@@ -54,12 +73,25 @@ rug_chart = (
 chart = (
     alt.layer(density_chart, rug_chart)
     .properties(
-        width=1600, height=900, title=alt.Title("density-rug · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("density-rug · Python · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=18,
+        titleFontSize=22,
+    )
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1)
+    .interactive()
 )
 
 # Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

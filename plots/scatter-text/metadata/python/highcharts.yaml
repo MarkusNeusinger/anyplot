@@ -1,152 +1,168 @@
 library: highcharts
+language: python
 specification_id: scatter-text
 created: '2026-01-09T14:28:29Z'
-updated: '2026-01-09T14:31:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20854885714
+updated: '2026-05-17T23:43:46Z'
+generated_by: claude-haiku
+workflow_run: 26005947992
 issue: 3482
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-text/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-text/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-text/python/highcharts/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of text-as-markers concept using Highcharts dataLabels
-  - Well-organized code with clear clustering of related tech terms
-  - Colorblind-safe palette with good visual distinction between categories
-  - Proper use of textOutline for text readability on white background
-  - Good canvas utilization and margins prevent clipping
-  - Realistic and engaging tech stack embedding scenario
+  - 'Flawless theme adaptation: data colors stay identical, chrome correctly swaps
+    between light/dark tokens'
+  - Text outline styling (2px PAGE_BG) elegantly solves overlap in dense regions while
+    maintaining readability
+  - Professional color palette and clear semantic clustering with meaningful domain
+    groupings
+  - 'Idiomatic Highcharts usage: ScatterSeries, dataLabels, and marker disabling correctly
+    implemented'
+  - Clean, reproducible data generation with meaningful category structure
   weaknesses:
-  - Minor text overlap in Data Science cluster (Keras/Pandas/Scikit-learn region)
-  - Axis labels could include context (e.g., Dimension 1 (UMAP component))
-  - Could leverage more Highcharts interactive features (zooming, click events)
-  image_description: 'The plot displays a scatter visualization where text labels
-    serve as data points instead of markers, positioned in a 2D space representing
-    tech stack word embeddings. The title "scatter-text · highcharts · pyplots.ai"
-    appears at the top in bold black text with a gray subtitle "Tech Stack Word Embeddings
-    (2D Projection)". Four distinct clusters are visible: Programming Languages (dark
-    blue/navy - Python, JavaScript, Java, C++, Ruby, Rust, Go, Swift) in the upper-left;
-    Data Science tools (yellow/gold - Pandas, NumPy, TensorFlow, PyTorch, Scikit-learn,
-    Keras) in the upper-right; Web Frameworks (purple - React, Vue, Angular, Django,
-    Flask, Node.js) in the lower-right; and Databases (cyan - PostgreSQL, MongoDB,
-    Redis, MySQL, SQLite, Cassandra) in the lower-left. A bordered legend in the top-right
-    identifies all four categories. Axes are labeled "Dimension 1" (x) and "Dimension
-    2" (y) with subtle gray grid lines. Minor text overlap occurs in the Data Science
-    cluster where "Keras", "Pandas", and "Scikit-learn" are close together.'
+  - Minor text overlap in lower-left cluster (MongoDB, Cassandra, Redis) acceptable
+    but could be reduced with label rotation or smaller font
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "scatter-text · Python · highcharts · anyplot.ai" in dark text (INK), axis labels "Dimension 1"/"Dimension 2" in INK, tick labels in INK_SOFT — all clearly readable against light background
+      Data: Four categories in Okabe-Ito order — Programming Languages #009E73 (upper-left), Data Science #D55E00 (upper-right), Web Frameworks #0072B2 (lower-right), Databases #CC79A7 (lower). All labels rendered at 24px with 2px white outline for clarity. No unreadable elements.
+      Legend: Right-aligned with category names and color indicators
+      Legibility verdict: PASS — all text clearly visible, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and axis labels now in light text (INK #F0EFE8), tick labels in INK_SOFT #B8B7B0, legend background in ELEVATED_BG #242420 — all clearly readable against dark background
+      Data: All four category colors identical to light render (#009E73, #D55E00, #0072B2, #CC79A7) — confirming theme-correct color preservation (only chrome changes)
+      Grid: Subtle lines visible with ~10% opacity
+      Legibility verdict: PASS — all text clearly visible, no dark-on-dark failures, no legibility issues
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text readable with good font sizes, slightly deducted for minor
-          crowding in Data Science cluster
+        comment: All text at appropriate sizes; readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap in dense regions mitigated by text outline; still readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All text labels clearly distinguishable from background
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Proper proportions; generous margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive axis labels; complete title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds; colors
+          identical between themes'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
         score: 6
         max: 8
         passed: true
-        comment: Minor overlap in Data Science cluster (Keras/Pandas area)
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Text labels are perfectly sized and visible as data elements
-      - id: VQ-04
-        name: Color Accessibility
+        comment: Professional Okabe-Ito usage; intentional text outline; clear hierarchy
+      - id: DE-02
+        name: Visual Refinement
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Colorblind-safe palette (blue, yellow, purple, cyan)
-      - id: VQ-05
-        name: Layout Balance
+        comment: Clean grid styling; generous whitespace; polished legend
+      - id: DE-03
+        name: Data Storytelling
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Excellent canvas utilization with good margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Descriptive labels but no units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Subtle grid, well-placed legend with border
+        comment: Clear semantic clustering; spatial grouping creates visual narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct scatter-text plot with text labels as visual elements
+        comment: Scatter plot with text labels correctly implemented
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly map text positions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Text labels visible, color encodes categorical info
-      - id: SC-04
-        name: Data Range
+        comment: All spec features present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y axes correctly mapped; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format {spec-id} · {library} · pyplots.ai
+        comment: Title format correct; legend labels match
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple clusters with different densities
+        comment: Complete scatter-text visualization with realistic clustering
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Tech stack word embeddings is realistic and neutral
+        comment: Simulated word embeddings; neutral, plausible tech domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Sensible values for dimensionality reduction output
+        comment: Embedding-appropriate dimensions; balanced density
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -154,53 +170,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart config → export'
+        comment: No functions or classes; direct script
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set; deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no redundant
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; clean category structure
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current highcharts-core API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Creates plot.html in addition to plot.png (minor issue)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and .html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Good use of dataLabels for text positioning, but no advanced interactive
-          features
+        comment: High-level Chart API; correct ScatterSeries pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Leverages dataLabels with textOutline; series.color for categorical
+          coloring
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
+  - publication-ready

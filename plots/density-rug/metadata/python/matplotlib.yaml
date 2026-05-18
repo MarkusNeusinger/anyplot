@@ -1,154 +1,165 @@
 library: matplotlib
+language: python
 specification_id: density-rug
 created: '2026-01-09T15:32:27Z'
-updated: '2026-01-09T15:35:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856765949
+updated: '2026-05-18T00:33:45Z'
+generated_by: claude-haiku
+workflow_run: 26007016311
 issue: 3505
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-rug/matplotlib/plot.png
-preview_html: null
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent bimodal distribution demonstrating the value of combining KDE with rug
-    marks
-  - Clean, publication-quality visual style with removed spines and subtle grid
-  - Realistic web service response time scenario with meaningful data story
-  - Proper use of alpha transparency for both fill (0.4) and rug marks (0.6)
-  - Good font sizing following matplotlib guidelines for 4800x2700 output
+  - Excellent visual quality across all dimensions—all text perfectly legible in both
+    light and dark themes
+  - Proper theme-adaptive implementation with all chrome elements correctly flipping
+    while data colors remain constant
+  - Well-executed example data showing realistic bimodal distribution (cache hits
+    vs. database queries)
+  - Clean, reproducible code with explicit font sizing and proper matplotlib patterns
+  - Correct Okabe-Ito palette usage and professional styling
   weaknesses:
-  - Legend label is defined in code but ax.legend() is never called to display it
-  - Rug marks could be slightly taller or use a different color for better visibility
-    against the fill
-  image_description: 'The plot displays a bimodal kernel density estimation (KDE)
-    curve with a semi-transparent light blue fill and a darker blue outline. The x-axis
-    represents "Response Time (ms)" ranging from approximately 10 to 200ms. The y-axis
-    shows "Density" ranging from 0.000 to about 0.013. The KDE reveals two distinct
-    peaks: a taller peak around 45ms (representing fast cache-hit responses) and a
-    shorter, wider peak around 120ms (representing slower database query responses).
-    Along the bottom of the plot at y=0, rug marks are displayed as small vertical
-    tick marks in dark blue with slight transparency, showing the exact location of
-    each individual data point. The rug marks clearly cluster around the two peak
-    regions, visually confirming the bimodal distribution. The title "density-rug
-    · matplotlib · pyplots.ai" appears at the top. The plot uses a clean style with
-    top and right spines removed, and subtle horizontal dashed grid lines.'
+  - Design excellence relies on library defaults rather than custom aesthetic choices
+  - Data storytelling is clear but not emphasized—could benefit from visual hierarchy
+    techniques
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), clearly distinct from pure white
+      Chrome: Title, axis labels (x: "Response Time (ms)", y: "Density"), and tick labels all in dark text; clearly readable against light background; top/right spines removed
+      Data: KDE curve in brand green (#009E73) with semi-transparent fill (alpha ~0.4); rug marks along x-axis showing individual data points; bimodal distribution visible
+      Legibility verdict: PASS - All elements readable; excellent contrast between data and background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), clearly distinct from pure black
+      Chrome: Title, axis labels, and tick labels all in light text; clearly readable against dark background; no dark-on-dark failures; spines properly colored
+      Data: KDE curve and rug marks are IDENTICAL in color and position to light render (#009E73); bimodal distribution preserved
+      Legibility verdict: PASS - All elements readable; proper theme adaptation with no legibility issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: All font sizes explicitly set; perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: KDE curve and fill clearly visible; rug marks visible but could be
-          slightly more prominent
+        comment: Rug marks and KDE curve optimally sized for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme (#306998) is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Both axes have descriptive labels with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Excellent contrast; Okabe-Ito palette is CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito #009E73; proper theme chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle but legend label defined without ax.legend() call
+        comment: Well-configured library default; professional but not custom
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed; clean whitespace; polished appearance
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal distribution clearly visible; visual hierarchy guides viewer
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct KDE + rug plot combination as specified
+        comment: KDE with rug marks correctly implemented
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly mapped to x-axis, density on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: KDE curve with fill, rug marks along
-          x-axis, semi-transparent fill'
-      - id: SC-04
-        name: Data Range
+        comment: Semi-transparent KDE fill and subtle rug marks present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Response times on x-axis; density on y-axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this single-series plot type
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format density-rug · matplotlib · pyplots.ai
+        comment: Title format correct; no legend needed for single-series
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bimodal distribution excellently; slight deduction as rug clustering
-          could be more varied
+        comment: Shows bimodal distribution and individual data points
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Web service response times is a real, comprehensible, neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Response times of 45ms and 120ms are realistic for web services
+        comment: Real-world scenario (web service response times)
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually correct proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -156,42 +167,47 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: Simple, direct implementation
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Seed set for deterministic data
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Label defined but legend not shown
+        passed: true
+        comment: Only used imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean, Pythonic, no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Correct output format
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper matplotlib patterns; standard usage
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses fill_between, axhline, spine manipulation, but relies on scipy
-          for KDE
+        comment: Uses scipy.stats.gaussian_kde and manual rug implementation
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -199,9 +215,8 @@ impl_tags:
   techniques: []
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - kde
   styling:
   - alpha-blending
-  - grid-styling

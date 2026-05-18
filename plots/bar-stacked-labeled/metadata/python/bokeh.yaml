@@ -1,151 +1,178 @@
 library: bokeh
+language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:33:41Z'
-updated: '2026-01-09T15:36:20Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856771877
+updated: '2026-05-18T01:53:14Z'
+generated_by: claude-haiku
+workflow_run: 26009201634
 issue: 3504
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/bokeh/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/bokeh/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent total label implementation with bold 36pt font and proper vertical offset
-  - Clean segment separation using white line borders (line_color="white", line_width=2)
-  - Proper use of ColumnDataSource pattern for data management
-  - Well-proportioned font sizes scaled appropriately for 4800x2700 canvas
-  - Y-axis range properly extended to accommodate labels above bars
+  - 'Flawless theme-adaptive rendering: data colors identical across light/dark, chrome
+    perfectly adjusted'
+  - 'Text legibility excellent in both themes: no dark-on-dark or light-on-light failures'
+  - Title/axis/tick font sizes explicitly set and clearly readable at high resolution
+  - Okabe-Ito palette compliance perfect — first series is brand green (#009E73),
+    order followed exactly
+  - White segment borders provide excellent visual definition between stacked components
+  - Bold total labels effectively highlight quarterly revenue trends
+  - 'Idiomatic bokeh usage: ColumnDataSource, HoverTool, LabelSet, proper theme tokens'
+  - Clean code structure with explicit styling and reproducible data
+  - Layout balanced with appropriate margins and no wasted canvas space
   weaknesses:
-  - Legend position in top right slightly crowds the Q4 bar label area
-  - Could use HoverTool to showcase Bokeh interactive capabilities
-  image_description: 'The plot displays a stacked bar chart with 4 quarterly categories
-    (Q1, Q2, Q3, Q4) on the x-axis. Each bar consists of 4 stacked segments representing
-    product categories: Electronics (dark blue #306998), Clothing (golden yellow #FFD43B),
-    Home & Garden (teal #4ECDC4), and Sports (coral #FF6B6B). Bold total value labels
-    are positioned above each bar stack: $123M (Q1), $157M (Q2), $173M (Q3), and $220M
-    (Q4). The title "bar-stacked-labeled · bokeh · pyplots.ai" appears at the top
-    left. A legend with all four categories is positioned in the top right corner
-    with a semi-transparent white background and gray border. The y-axis is labeled
-    "Revenue ($M)" and x-axis is labeled "Quarter". The plot has an off-white background
-    (#fafafa) with subtle dashed horizontal grid lines. White borders separate the
-    stacked segments for clarity.'
+  - Fourth legend item 'Sports' label may be partially cut off or difficult to read
+    in legend display
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct theme color
+      Chrome: Title "bar-stacked-labeled · Python · bokeh · anyplot.ai" in 28pt dark text; axis labels "Quarter" and "Revenue ($M)" in 22pt dark text; tick labels in 18pt dark text - all clearly readable against light background
+      Data: Four stacked bars (Q1-Q4) with segments: Electronics (green #009E73), Clothing (orange #D55E00), Home & Garden (blue #0072B2), Sports (reddish purple #CC79A7). White borders between segments provide excellent definition. Bold total labels ($123M, $157M, $173M, $220M) positioned above bars in 36pt dark bold text. Legend in bottom left with category labels visible.
+      Legibility verdict: PASS - all text fully readable, high contrast between text and background, no legibility failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct theme color
+      Chrome: Title in light 28pt text (#F0EFE8); axis labels in light 22pt text (#F0EFE8); tick labels in 18pt light secondary text (#B8B7B0) - all clearly readable against dark background
+      Data: Data segment colors identical to light render: green, orange, blue, reddish purple in exact same positions. White segment borders still visible and provide definition. Total labels now in light color and readable. Legend uses darker elevated background (#242420) with light text.
+      Legibility verdict: PASS - all text readable with excellent contrast; no dark-on-dark failures detected; brand green (#009E73) maintains excellent visibility on dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 42pt, axis labels at 32pt, tick labels at 24-28pt, total
-          labels at 36pt bold - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; labels well-spaced above bars
+        comment: 'All font sizes explicitly set: title 28pt, labels 22pt, ticks 18pt,
+          total labels 36pt. All readable in both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlapping text. Total labels positioned above bars with clear
+          spacing.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments well-sized with good width (0.7), white line borders
-          help distinguish segments
+        comment: Bar segments perfectly proportioned. White borders provide excellent
+          definition. Hover tooltips available.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good color distinction; blue/yellow/teal/coral palette is mostly
-          colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Revenue ($M) and Quarter'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is colorblind-safe. Excellent contrast. No red-green
+          as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~65% of canvas with balanced margins. No wasted space.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: X-axis descriptive, Y-axis includes units. Title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito: #009E73, #D55E00, #0072B2, #CC79A7 in order.
+          Light bg #FAF8F1, dark bg #1A1A17. Data colors identical across themes.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle but legend in top right slightly crowds Q4 bar label
-          area
+        comment: Well-configured defaults with professional Okabe-Ito palette and
+          segment borders. Solid but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Y-grid subtle and non-competing. White borders add definition. Legend
+          styled with custom colors. Good refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Total labels create focal point. Bar heights show growth trend. Color
+          consistency tracks products. Visual hierarchy guides reader.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked bar chart type
+        comment: Correct stacked bar chart with all required subtypes.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on x-axis, values properly stacked on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Total labels prominently displayed with bold formatting and dollar/M
-          notation
-      - id: SC-04
-        name: Data Range
+        comment: Stacking, total labels, multiple categories and components all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range extended to accommodate labels above tallest bar
-      - id: SC-05
-        name: Legend Accuracy
+        comment: X-axis (quarters) and Y-axis (revenue) correctly assigned. All data
+          visible.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly identifies all four product categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: bar-stacked-labeled · bokeh · pyplots.ai'
+        max: 3
+        passed: false
+        comment: Title format correct. Fourth legend category 'Sports' label may be
+          partially cut off (minor visibility issue).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in totals across quarters and different proportions
-          within stacks
+        comment: 'Shows all aspects: 4 quarters, 4 product lines, variation in sizes
+          and proportions.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly revenue by product category is a common business scenario
+        comment: Real business scenario (quarterly revenue by product). Neutral and
+          professional.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Revenue values are plausible for a mid-size company
+        comment: Revenue values realistic (18-72M per component, 123-220M totals).
+          Proportions make sense.
     code_quality:
       score: 10
       max: 10
@@ -155,53 +182,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → figure → plot → labels
-          → styling → save'
+        comment: 'Linear flow: imports → data → plot → save. No unnecessary functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: np.random.seed(42) set. Deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports from numpy and bokeh
+        comment: All imports used. No unused code.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Appropriate complexity. Clever bottoms-tracking. Idiomatic ColumnDataSource
+          and LabelSet usage.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png using export_png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-light.png/plot-dark.png and .html files. Current API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, LabelSet, categorical x_range, vbar method;
-          could leverage HoverTool for interactivity
+        comment: 'Expert bokeh: figure(), ColumnDataSource, vbar(), HoverTool, LabelSet,
+          theme tokens, Selenium screenshot pattern.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: false
+        comment: Uses bokeh-specific HoverTool, LabelSet, legend styling, Selenium
+          export. Standard implementation without groundbreaking techniques.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - annotations
+  - hover-tooltips
+  - html-export
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
   - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
+  styling: []

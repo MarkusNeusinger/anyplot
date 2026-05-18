@@ -1,13 +1,31 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-09
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-18
 """
 
-import altair as alt
+import os
+import sys
+from importlib.machinery import SourceFileLoader
+
 import numpy as np
 import pandas as pd
 
+
+venv_path = sys.executable
+site_packages = os.path.join(os.path.dirname(venv_path), "..", "lib", "python3.13", "site-packages")
+altair_init = os.path.join(site_packages, "altair", "__init__.py")
+
+loader = SourceFileLoader("altair", altair_init)
+alt = loader.load_module()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00"]
 
 # Data - Response times across task types and expertise levels
 np.random.seed(42)
@@ -19,9 +37,7 @@ n_per_group = 40
 data = []
 for cat in categories:
     for grp in groups:
-        # Base response time varies by task complexity
         base = {"Simple": 2.0, "Moderate": 4.5, "Complex": 8.0}[cat]
-        # Experts are faster with less variance
         if grp == "Expert":
             base *= 0.6
             spread = 0.8
@@ -29,28 +45,25 @@ for cat in categories:
             spread = 1.5
 
         values = np.random.normal(base, spread, n_per_group)
-        values = np.clip(values, 0.5, 15)  # Realistic bounds
+        values = np.clip(values, 0.5, 15)
 
         for v in values:
             data.append({"Task Type": cat, "Expertise": grp, "Response Time (s)": v})
 
 df = pd.DataFrame(data)
 
-# Color palette - Python colors
-colors = ["#306998", "#FFD43B"]
-
-# Create base chart with legend title matching data column
+# Create base chart with Okabe-Ito colors
 base = alt.Chart(df).encode(
     color=alt.Color(
         "Expertise:N",
-        scale=alt.Scale(domain=["Novice", "Expert"], range=colors),
+        scale=alt.Scale(domain=["Novice", "Expert"], range=OKABE_ITO[:2]),
         legend=alt.Legend(
             title="Expertise", titleFontSize=22, labelFontSize=20, orient="right", symbolSize=400, offset=20
         ),
     )
 )
 
-# Violin plot using density transform with horizontal orientation
+# Violin plot using density transform
 violin = (
     base.transform_density(
         "Response Time (s)", as_=["Response Time (s)", "density"], groupby=["Task Type", "Expertise"]
@@ -64,12 +77,11 @@ violin = (
             title=None,
             axis=alt.Axis(labels=False, values=[0], grid=False, ticks=False),
         ),
-        y=alt.Y("Response Time (s):Q", title="Response Time (s)", axis=alt.Axis(grid=True, gridOpacity=0.3)),
+        y=alt.Y("Response Time (s):Q", title="Response Time (s)", axis=alt.Axis(grid=True, gridOpacity=0.15)),
     )
 )
 
-# Swarm points with jitter transform - better aligned with violin positions
-# Using narrower jitter range and more precise offset to center points within violins
+# Swarm points with jitter
 swarm = (
     base.mark_circle(opacity=0.85, size=120)
     .encode(
@@ -80,14 +92,12 @@ swarm = (
             scale=alt.Scale(domain=[-1, 1]),
         ),
         y=alt.Y("Response Time (s):Q"),
-        color=alt.Color("Expertise:N", scale=alt.Scale(domain=["Novice", "Expert"], range=colors), legend=None),
+        color=alt.Color("Expertise:N", scale=alt.Scale(domain=["Novice", "Expert"], range=OKABE_ITO[:2]), legend=None),
     )
     .transform_calculate(jitter='(random() - 0.5) * 0.15 + (datum.Expertise === "Novice" ? -0.3 : 0.3)')
 )
 
-# Layer and then facet
-# Width and height sized to achieve ~4800x2700 at scale 3
-# 1600 x 3 = 4800, but faceted so each facet is smaller
+# Layer and facet
 chart = (
     alt.layer(violin, swarm)
     .facet(
@@ -98,13 +108,27 @@ chart = (
         )
     )
     .resolve_scale(x="independent")
-    .properties(title=alt.Title("violin-grouped-swarm · altair · pyplots.ai", fontSize=32, anchor="middle", offset=20))
-    .configure_axis(labelFontSize=20, titleFontSize=24)
-    .configure_view(strokeWidth=0, continuousWidth=400, continuousHeight=700)
+    .properties(
+        title=alt.Title(
+            "violin-grouped-swarm · Python · altair · anyplot.ai", fontSize=28, anchor="middle", offset=20, color=INK
+        ),
+        background=PAGE_BG,
+    )
+    .configure_axis(
+        labelFontSize=18,
+        titleFontSize=22,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+    )
+    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=400, continuousHeight=700)
     .configure_facet(spacing=40)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save as PNG and HTML
-# Target ~4800x2700: using scale_factor to achieve this
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG and HTML with theme-suffixed filenames
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")

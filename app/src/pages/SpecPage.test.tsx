@@ -182,4 +182,91 @@ describe('SpecPage', () => {
     const fetchUrl = (global.fetch as ReturnType<typeof vi.fn>).mock.calls[0][0] as string;
     expect(fetchUrl).toContain('/specs/scatter-basic');
   });
+
+  describe('language in document title', () => {
+    it('includes ` · python · matplotlib` in the document title in detail mode', async () => {
+      mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() => {
+        expect(document.title).toContain('Basic Scatter Plot · python · matplotlib');
+      });
+    });
+
+    it('includes ` · python` in the document title when ?language= is set in hub mode', async () => {
+      mockParams = { specId: 'scatter-basic' };
+      mockSearchParams.set('language', 'python');
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() => {
+        expect(document.title).toContain('Basic Scatter Plot · python');
+      });
+      mockSearchParams.delete('language');
+    });
+
+    it('lowercases a mixed-case path language token in detail mode', async () => {
+      mockParams = { specId: 'scatter-basic', language: 'Python', library: 'matplotlib' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() => {
+        expect(document.title).toContain('Basic Scatter Plot · python · matplotlib');
+      });
+      expect(document.title).not.toContain('Python');
+    });
+
+    it('lowercases a mixed-case ?language= query param in hub mode', async () => {
+      mockParams = { specId: 'scatter-basic' };
+      mockSearchParams.set('language', 'Python');
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() => {
+        expect(document.title).toContain('Basic Scatter Plot · python');
+      });
+      expect(document.title).not.toContain('Python');
+      mockSearchParams.delete('language');
+    });
+  });
+
+  describe('carousel-scope conflict drop', () => {
+    it('drops ?language= when it conflicts with the URL path language in detail mode', async () => {
+      // Spec has both a python/matplotlib and a python/seaborn impl. We put
+      // ?language=r on the URL so the carousel scope (r) conflicts with the
+      // path language (python) — the effect should call setSearchParams to
+      // strip the query.
+      mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
+      mockSearchParams.set('language', 'r');
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() => {
+        expect(mockSetSearchParams).toHaveBeenCalled();
+      });
+      // The drop call passes a URLSearchParams with no `language` key.
+      const lastCall = mockSetSearchParams.mock.calls.at(-1);
+      const params = lastCall?.[0] as URLSearchParams;
+      expect(params.get('language')).toBeNull();
+      mockSearchParams.delete('language');
+    });
+
+    it('does not drop ?language= when it matches the URL path language', async () => {
+      mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
+      mockSearchParams.set('language', 'python');
+      mockSetSearchParams.mockClear();
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() => {
+        expect(screen.getByTestId('spec-detail-view')).toBeInTheDocument();
+      });
+      // No drop call — the languages agree.
+      expect(mockSetSearchParams).not.toHaveBeenCalled();
+      mockSearchParams.delete('language');
+    });
+  });
 });

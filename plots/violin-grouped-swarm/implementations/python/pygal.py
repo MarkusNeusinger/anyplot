@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-18
 """
 
 import numpy as np

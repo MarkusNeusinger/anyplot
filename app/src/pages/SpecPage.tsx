@@ -8,7 +8,7 @@ import Skeleton from '@mui/material/Skeleton';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { NotFoundPage } from './NotFoundPage';
 
-import { API_URL, GITHUB_URL } from '../constants';
+import { API_URL, GITHUB_URL, LANG_DISPLAY } from '../constants';
 import { typography, colors, fontSize, semanticColors } from '../theme';
 import { useAnalytics, useCodeFetch } from '../hooks';
 import { useAppData } from '../hooks';
@@ -37,11 +37,19 @@ interface SpecDetail {
 type Mode = 'hub' | 'detail';
 
 export function SpecPage() {
-  const { specId, language: urlLanguage, library: urlLibrary } = useParams();
+  const { specId, language: urlLanguageRaw, library: urlLibrary } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { trackPageview, trackEvent } = useAnalytics();
   const { librariesData } = useAppData();
+
+  // Language ids are canonical lowercase (`python`/`r`) wherever they're
+  // compared against impl data, written back to URLs, or used in analytics.
+  // Force-lowercase at the read site so a mixed-case route like
+  // /Python/matplotlib or ?language=Python doesn't desync title, filtering,
+  // canonical URL, and analytics. Title-cased display labels for UI surfaces
+  // (e.g. breadcrumbs) still go through LANG_DISPLAY.
+  const urlLanguage = urlLanguageRaw?.toLowerCase();
 
   const [specData, setSpecData] = useState<SpecDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -55,7 +63,14 @@ export function SpecPage() {
 
   const mode: Mode = urlLibrary ? 'detail' : 'hub';
   const selectedLibrary = urlLibrary || null;
-  const languageFilter = mode === 'hub' ? searchParams.get('language') : null;
+  // Carousel scope. The `?language=` query param expresses user intent —
+  // "I'm browsing R impls" — independent of which impl is currently rendered.
+  // It's set in both hub and detail mode. Without it, the carousel walks
+  // through ALL impls (cross-language). With it, the carousel stays scoped to
+  // that language. This is also what lets a future python.anyplot.ai-style
+  // subdomain pin the scope without users having to manually re-filter.
+  const carouselLanguage = searchParams.get('language')?.toLowerCase() ?? null;
+  const languageFilter = mode === 'hub' ? carouselLanguage : null;
 
   const getLibraryMeta = useCallback(
     (libraryId: string) => librariesData.find((lib) => lib.id === libraryId),
@@ -104,11 +119,16 @@ export function SpecPage() {
     fetchSpec();
   }, [specId, urlLanguage, urlLibrary, navigate]);
 
-  // Implementations for the selected language (used in detail mode for library pills)
-  const langImpls = useMemo(() => {
-    if (!specData || !urlLanguage) return specData?.implementations || [];
-    return specData.implementations.filter((i) => i.language === urlLanguage);
-  }, [specData, urlLanguage]);
+  // Implementations the carousel cycles through. In detail mode, this is what
+  // `<LibraryPills>` walks via prev/next. ALL impls of the spec by default; if
+  // the user arrived via `?language=…` it stays scoped to that language. We
+  // deliberately do NOT filter by `urlLanguage` (the path segment) — that
+  // segment identifies the impl being viewed, not the user's chosen scope.
+  const carouselImpls = useMemo(() => {
+    if (!specData) return [];
+    if (!carouselLanguage) return specData.implementations;
+    return specData.implementations.filter((i) => i.language === carouselLanguage);
+  }, [specData, carouselLanguage]);
 
   // Languages present in this spec (for hub mode)
   const availableLanguages = useMemo(() => {
@@ -124,6 +144,19 @@ export function SpecPage() {
     params.delete('language');
     setSearchParams(params, { replace: true });
   }, [mode, specData, languageFilter, availableLanguages, searchParams, setSearchParams]);
+
+  // Detail mode: if `?language=…` conflicts with the URL path's language
+  // (e.g. `/biplot-pca/r/ggplot2?language=python` from a stale deep link),
+  // drop the query. The URL path is the source of truth for "what's being
+  // viewed"; the carousel filter would otherwise exclude the currently
+  // selected impl and centre the pills on the wrong library.
+  useEffect(() => {
+    if (mode !== 'detail' || !carouselLanguage || !urlLanguage) return;
+    if (carouselLanguage === urlLanguage) return;
+    const params = new URLSearchParams(searchParams);
+    params.delete('language');
+    setSearchParams(params, { replace: true });
+  }, [mode, carouselLanguage, urlLanguage, searchParams, setSearchParams]);
 
   // Get current implementation (only in detail mode)
   const currentImpl = useMemo(() => {
@@ -142,26 +175,36 @@ export function SpecPage() {
 
   const currentCode = specId && selectedLibrary ? getCode(specId, selectedLibrary, urlLanguage) : null;
 
-  // Handle library switch (in detail mode)
+  // Build a `?language=…` query string when the carousel scope is pinned.
+  // Empty otherwise — kept stable to avoid clutter in shareable URLs.
+  const carouselQuery = carouselLanguage ? `?language=${encodeURIComponent(carouselLanguage)}` : '';
+
+  // Handle library switch (in detail mode). Cross-language nav: the URL path's
+  // language segment follows the picked impl's *own* language, not whatever
+  // the current path says. The `?language=…` scope is preserved when set.
   const handleLibrarySelect = useCallback(
     (libraryId: string) => {
-      if (!specId || !urlLanguage) return;
+      if (!specId || !specData) return;
+      const impl = specData.implementations.find((i) => i.library_id === libraryId);
+      if (!impl) return;
       setImageLoaded(false);
-      navigate(specPath(specId, urlLanguage, libraryId), { replace: true });
+      navigate(`${specPath(specId, impl.language, libraryId)}${carouselQuery}`, { replace: true });
     },
-    [specId, urlLanguage, navigate]
+    [specId, specData, carouselQuery, navigate]
   );
 
-  // Handle implementation click (in language overview)
+  // Handle implementation click (in language overview). Preserves any active
+  // `?language=…` so the carousel on the detail page stays scoped to what the
+  // user was browsing.
   const handleImplClick = useCallback(
     (libraryId: string) => {
       if (!specId) return;
       const impl = specData?.implementations.find((i) => i.library_id === libraryId);
       const lang = impl?.language || urlLanguage;
       if (!lang) return;
-      navigate(specPath(specId, lang, libraryId));
+      navigate(`${specPath(specId, lang, libraryId)}${carouselQuery}`);
     },
-    [specId, urlLanguage, specData, navigate]
+    [specId, urlLanguage, specData, carouselQuery, navigate]
   );
 
   // Interactive view mode (driven by ?view=interactive)
@@ -262,7 +305,7 @@ export function SpecPage() {
     const handleKeyDown = (e: KeyboardEvent) => {
       const target = e.target as HTMLElement;
       if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
-      const sorted = [...langImpls].sort((a, b) => a.library_id.localeCompare(b.library_id));
+      const sorted = [...carouselImpls].sort((a, b) => a.library_id.localeCompare(b.library_id));
       const idx = sorted.findIndex((impl) => impl.library_id === selectedLibrary);
       if (idx < 0) return;
 
@@ -279,7 +322,7 @@ export function SpecPage() {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [mode, specData, langImpls, selectedLibrary, handleLibrarySelect]);
+  }, [mode, specData, carouselImpls, selectedLibrary, handleLibrarySelect]);
 
   // Loading state
   if (loading) {
@@ -318,7 +361,19 @@ export function SpecPage() {
       ? `https://anyplot.ai/${specId}/${urlLanguage}/${selectedLibrary}`
       : `https://anyplot.ai/${specId}`;
 
-  const titleSuffix = mode === 'detail' ? ` - ${selectedLibrary}` : '';
+  // Page title surfaces language alongside library so the browser tab matches
+  // the rendered image-title format `{spec-id} · {language} · {library}`. Hub
+  // mode under a `?language=` filter also surfaces the language so users see
+  // what's been narrowed down. `urlLanguage` / `languageFilter` are already
+  // normalised to canonical lowercase at the read site.
+  const detailLanguage = mode === 'detail' && urlLanguage ? urlLanguage : null;
+  const hubFilterLanguage = languageFilter ?? null;
+  const titleSuffix =
+    mode === 'detail' && detailLanguage && selectedLibrary
+      ? ` · ${detailLanguage} · ${selectedLibrary}`
+      : hubFilterLanguage
+        ? ` · ${hubFilterLanguage}`
+        : '';
 
   // Implementations to render in the grid: hub mode optionally filtered by ?language=
   const gridImpls =
@@ -332,7 +387,10 @@ export function SpecPage() {
     { name: specData.title, item: `https://anyplot.ai/${specId}` },
   ];
   if (mode === 'detail' && urlLanguage && selectedLibrary) {
-    breadcrumbItems.push({ name: urlLanguage, item: `https://anyplot.ai/${specId}/${urlLanguage}` });
+    breadcrumbItems.push({
+      name: LANG_DISPLAY[urlLanguage] || urlLanguage,
+      item: `https://anyplot.ai/${specId}/${urlLanguage}`,
+    });
     breadcrumbItems.push({ name: selectedLibrary, item: canonical });
   }
   const breadcrumbJsonLd = {
@@ -490,7 +548,7 @@ export function SpecPage() {
         ) : (
           <>
             <LibraryPills
-              implementations={langImpls}
+              implementations={carouselImpls}
               selectedLibrary={selectedLibrary || ''}
               onSelect={handleLibrarySelect}
               onAll={() => navigate(specPath(specId!))}
@@ -500,7 +558,7 @@ export function SpecPage() {
               specTitle={specData.title}
               selectedLibrary={selectedLibrary || ''}
               currentImpl={currentImpl}
-              implementations={langImpls}
+              implementations={carouselImpls}
               imageLoaded={imageLoaded}
               codeCopied={codeCopied}
               downloadDone={downloadDone}

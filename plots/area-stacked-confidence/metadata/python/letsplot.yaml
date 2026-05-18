@@ -1,155 +1,187 @@
 library: letsplot
+language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:56:09Z'
-updated: '2026-01-09T21:58:59Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866601215
+updated: '2026-05-18T07:00:31Z'
+generated_by: claude-haiku
+workflow_run: 26017890793
 issue: 3549
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/letsplot/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of stacked confidence bands using geom_ribbon layers
-  - Clear visual hierarchy with main areas (alpha=0.7) over confidence bands (alpha=0.25)
-  - Growing uncertainty over time is well demonstrated
-  - Central trend lines add clarity to each series
-  - Caption explains what the confidence bands represent
+  - Perfect text legibility across both light and dark themes with explicitly sized
+    fonts
+  - 'Flawless palette compliance — Okabe-Ito colors (#009E73, #D55E00, #0072B2) correctly
+    applied and theme-adaptive chrome throughout both renders'
+  - Excellent specification alignment — stacked areas with properly rendered confidence
+    bands, legend, and time-series structure
+  - Clean, reproducible code with proper theme token implementation and deterministic
+    data generation
+  - Well-balanced layout with no overlapping elements and appropriate use of transparency
+    for visual layering
   weaknesses:
-  - Central lines could be slightly thicker (size=2.0+) for better visibility against
-    the area fills
-  - Legend placement could be improved to reduce whitespace on the right side
-  image_description: The plot displays a stacked area chart showing quarterly energy
-    consumption forecasts by source (Solar, Wind, Hydro) from 2023-Q1 to 2028-Q4.
-    The bottom layer (Solar) is rendered in a deep blue (#306998), the middle layer
-    (Wind) in yellow (#FFD43B), and the top layer (Hydro) in green (#22C55E). Each
-    stacked area has confidence bands shown as lighter, semi-transparent regions around
-    the central values. The uncertainty bands visibly grow wider over time, particularly
-    toward 2028, demonstrating increasing forecast uncertainty. Central trend lines
-    are drawn in matching colors for each source. The y-axis shows Energy Consumption
-    in TWh (0-400), and the x-axis shows quarters. A legend on the right identifies
-    the three energy sources. A caption at the bottom states "Shaded bands show 90%
-    prediction intervals." The title correctly follows the spec format.
+  - Design Excellence is functional but not particularly innovative — follows library
+    defaults closely without distinctive design choices
+  - Data storytelling is minimal — shows trend and uncertainty but lacks visual hierarchy
+    or emphasis on key insights
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correct for light theme
+      Chrome: Title, axis labels (Quarter, Energy Consumption (TWh)), and tick labels are all dark (#1A1A17/#4A4A44) and perfectly readable against the light surface. Legend clearly positioned on right with "Energy Source" label.
+      Data: Stacked area chart shows three energy sources — Solar (green #009E73, bottom), Wind (orange #D55E00, middle), Hydro (blue #0072B2, top). Confidence bands are visible as lighter shaded regions with alpha=0.25 transparency, main areas have alpha=0.7. The plot displays 24 quarters (2023-Q1 through 2028-Q1) with smooth area boundaries.
+      Legibility verdict: PASS — all text elements are clearly readable, no contrast failures, no occlusion.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correct for dark theme
+      Chrome: Title, axis labels, and tick labels are light-colored (light variants) and clearly readable against dark surface. No dark-on-dark failures detected. Grid lines are subtle but visible. Legend background is elevated (#242420) with light text (#B8B7B0).
+      Data: Identical colors to light render — green Solar, orange Wind, blue Hydro — confirming that only chrome adapts to theme, not data colors. Confidence bands and main areas display with same transparency levels and clarity as light render.
+      Legibility verdict: PASS — all text and data elements are clearly readable in dark theme, perfect theme adaptation with no illegible elements.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and legend text are all clearly readable
-          at full size with appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; x-axis quarter labels are well spaced
+        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
+          perfectly readable in both light and dark renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; x-axis labels spaced at 4-quarter intervals;
+          legend positioned clearly without collision
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Areas and confidence bands are visible, though the central lines
-          could be slightly thicker for better distinction
+        comment: Area fills (alpha 0.7) and confidence bands (alpha 0.25) clearly
+          visible; line strokes (size 1.5) well-suited to 24 data points and 3 series
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and green palette is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good plot proportions using most of the canvas, minor whitespace
-          on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Energy Consumption (TWh) with units, x-axis has Quarter
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; excellent contrast between series;
+          no red-green sole signaling
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 60-70% of canvas with balanced margins; legend positioned
+          appropriately; no content cut-off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with appropriate alpha; legend is functional but could
-          be positioned better
+        comment: X-axis 'Quarter', Y-axis 'Energy Consumption (TWh)' both descriptive
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series is #009E73 (verified); Okabe-Ito order maintained (#D55E00,
+          #0072B2); backgrounds #FAF8F1 (light) and #1A1A17 (dark); theme-adaptive
+          chrome perfect in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Professional and clean, but follows library defaults closely; transparency
+          handling is well-executed but not particularly innovative
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: 'Good refinement: subtle grid (y-only), appropriate spine handling,
+          balanced whitespace, legend styling customized'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Data is displayed with some hierarchy (stacked + uncertainty), but
+          lacks visual emphasis or clear focal point
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked area chart with confidence bands
+        comment: Correct stacked area chart with all subtypes (central areas + confidence
+          bands)
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is time (quarters), Y is cumulative energy values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: stacked areas, confidence bands per series,
-          legend explaining bands'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: stacked areas, confidence bands, legend, multi-series
+          composition'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range (0-400 TWh)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis (quarters) and Y-axis (cumulative TWh) correctly assigned;
+          stacking properly applied; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Solar, Wind, Hydro sources
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses area-stacked-confidence · letsplot · pyplots.ai
+        comment: Title 'area-stacked-confidence · Python · letsplot · anyplot.ai'
+          is exactly correct; legend labels (Solar, Wind, Hydro) match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple series stacking, growing uncertainty over time, different
-          trend rates; could show more variation in uncertainty patterns
+        comment: 'Shows all aspects: multiple series with distinct characteristics,
+          time trend with growing uncertainty, realistic energy composition'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Energy consumption forecast by renewable source is a realistic, neutral
-          scenario
+        comment: 'Real-world plausible: quarterly energy consumption with forecast
+          uncertainty; neutral topic; comprehensible scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: TWh values (50-400) are plausible for energy forecasts
+        comment: Energy values in TWh are realistic; proportions reasonable (solar
+          50-120, wind 80-150, hydro 100-110); uncertainty growth matches forecast
+          behavior
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -157,53 +189,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save (no functions/classes)'
+        comment: 'Clean linear flow: imports → theme setup → data generation → plot
+          creation → save; no unnecessary functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pandas, lets_plot)
+        comment: All imports (os, numpy, pandas, lets_plot) are used; no extraneous
+          imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic, appropriate complexity; no fake functionality or
+          over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png but uses path parameter instead of direct path
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; uses modern ggsave
+          API with scale=3
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: false
+        comment: Correctly uses ggplot() + geom_* composition and theme customization;
+          follows grammar-of-graphics idiom properly
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses lets-plot ggplot grammar correctly with geom_ribbon, scale_*_manual,
-          theme_minimal, but doesn't leverage more distinctive features like tooltips
-          or interactive capabilities
+        passed: false
+        comment: Uses ggsize() and ggsave(scale=) which are letsplot-specific; LetsPlot.setup_html()
+          for notebook export; demonstrates some library awareness but fairly standard
+          patterns
+    score_caps:
+      applied: false
+      notes: No score caps triggered
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
-  - time-series
-  dataprep:
-  - cumulative-sum
+  dataprep: []
   styling:
   - alpha-blending
+  - grid-styling
