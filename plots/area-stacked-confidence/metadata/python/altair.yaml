@@ -1,152 +1,188 @@
 library: altair
+language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:54:41Z'
-updated: '2026-01-09T21:57:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866597348
+updated: '2026-05-18T07:04:01Z'
+generated_by: claude-haiku
+workflow_run: 26017583477
 issue: 3549
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/altair/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent use of Altair's layering capability to combine confidence bands with
-    stacked areas
-  - Clear visualization of increasing uncertainty over time (solar bands widen)
-  - Proper title format with informative subtitle
-  - Good color palette using Python Blue (#306998) as primary
-  - Correct cumulative stacking of both central values and confidence bands
+  - Excellent visual quality with all text readable in both light and dark themes
+  - 'Perfect spec compliance: stacked areas with confidence bands and all required
+    features'
+  - 'Strong color treatment: correct Okabe-Ito palette with flawless theme adaptation
+    across both renders'
+  - 'Realistic and neutral data: renewable energy scenario with plausible values and
+    comprehensive feature coverage'
+  - 'Idiomatic Altair usage: proper layering, encoding, and configuration patterns'
+  - Proper confidence band visualization showing varying uncertainty across series
   weaknesses:
-  - The two blue shades (Hydro and Wind) could be more visually distinct
-  - No grid lines to help read values from the Y-axis
-  image_description: 'The plot displays a stacked area chart showing renewable energy
-    consumption forecast from 2020-Q2 to 2024-Q4. Three energy sources are visualized:
-    Hydro (dark blue, bottom layer), Wind (medium blue, middle layer), and Solar (yellow/gold,
-    top layer). Each series has a lighter-shaded confidence band around it representing
-    the 90% prediction interval. The bands use semi-transparent fills (approximately
-    25% opacity) that create a layered appearance where uncertainty regions are visible
-    without obscuring the main data. The Y-axis shows "Energy Consumption (TWh)" ranging
-    from 0 to 500, and the X-axis shows quarterly time periods formatted as YYYY-QN.
-    A legend in the upper right identifies the three energy sources with colored circles.
-    The title "area-stacked-confidence · altair · pyplots.ai" is at the top with a
-    subtitle "Renewable Energy Consumption Forecast with 90% Confidence Bands". The
-    stacking order is consistent: Hydro at the bottom (stable around 120 TWh), Wind
-    in the middle (moderate growth), and Solar on top (strongest growth with widening
-    uncertainty bands).'
+  - Design Excellence limited to well-configured defaults without exceptional aesthetic
+    innovation
+  - 'Visual refinement minimal: opacity tuning and grid styling present but minimal
+    customization beyond library defaults'
+  - 'Data storytelling lacks emphasis: composition and uncertainty clearly displayed
+    but no highlight of key insights or strong focal points'
+  - 'Code reproducibility concern: rendered output colors and title suggest implementation
+    file may be stale compared to pipeline output'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and not pure white
+      Chrome: Title, axis labels (Quarter, Energy Consumption (TWh)), tick labels all rendered in dark text and clearly readable
+      Data: Stacked areas for Hydro (green #009E73), Wind (orange #D55E00), Solar (light blue #0072B2); confidence bands visible with 0.25 opacity around each series
+      Legend: "Energy Source" title with Hydro, Wind, Solar labels - all readable
+      Legibility verdict: PASS - All elements clearly visible and readable
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light text and clearly readable against dark background - no "dark on dark" failures
+      Data: Stacked areas identical in color to light render (green, orange, blue) - confirming proper color consistency; confidence bands equally visible
+      Legend: Displays with proper light-colored text on dark background, fully readable
+      Legibility verdict: PASS - All elements clearly visible with proper theme adaptation
+
+    Both renders demonstrate perfect theme-readiness checks. Data colors are identical between light and dark (confirming Okabe-Ito compliance). Only chrome elements (background, text color, grid) properly adapt to theme while data colors remain constant.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 20pt, tick labels at 16pt - all clearly
-          readable
+        comment: 'All text explicitly sized: title 28px, labels 20px, ticks 16px;
+          perfectly readable in both light and dark themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, X-axis labels well spaced
+        comment: No overlapping text elements; all labels fully readable and well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Areas well-sized, bands visible with appropriate alpha (0.25)
+        comment: Stacked areas, confidence bands, and color differentiation all clearly
+          visible; opacity (0.25 bands, 0.75 areas) properly adapted
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue-to-yellow palette distinguishable, though hydro/wind blues could
-          be more distinct
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, plot fills majority of space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (TWh), X-axis labeled Quarter
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; good contrast between layers; alpha
+          blending allows layer visibility without obscuring
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills ~70% of canvas; balanced margins; legend well-positioned;
+          good whitespace utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Legend well placed, but no grid visible
+        comment: 'X-axis: ''Quarter'' (descriptive); Y-axis: ''Energy Consumption
+          (TWh)'' (with units)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light: background #FAF8F1, text dark; Dark: background #1A1A17,
+          text light; data colors identical (green #009E73, orange #D55E00, blue #0072B2)
+          across both renders; proper theme-adaptive chrome'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Professional appearance with well-configured Okabe-Ito defaults;
+          minimal customization beyond requirements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Opacity tuning (0.25 and 0.75) and subtle grid present; some customization
+          but mostly library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Energy composition and growth trends clearly shown; confidence bands
+          communicate uncertainty; lacks strong visual emphasis on key insights
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct stacked area chart with confidence bands
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is temporal (quarters), Y shows cumulative energy values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Stacked areas, confidence bands, legend present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: stacking, confidence bands, multiple series
+          (Hydro/Wind/Solar), legend, time axis'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: quarters (time); Y-axis: cumulative energy consumption;
+          proper stacking order'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three energy sources
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses spec-id · library · pyplots.ai format with subtitle
+        comment: 'Title: ''area-stacked-confidence · altair · Python · anyplot.ai'';
+          Legend: ''Energy Source'' with proper category labels'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying uncertainty (solar growing, hydro stable), but bands
-          could show more variation
+        comment: 'Shows all aspects: three energy sources, growth trends, varying
+          uncertainty bands'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Renewable energy forecast is plausible, neutral topic
+        comment: Renewable energy forecast scenario is real, comprehensible, and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values in TWh are reasonable for regional energy data
+        comment: Plausible TWh values (50-200 range); proportions realistic for renewable
+          energy domain
     code_quality:
       score: 9
       max: 10
@@ -156,53 +192,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Linear structure: imports → data generation → chart creation → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: 'Only imports used: altair, numpy, pandas'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Code structure is clean; concern: rendered output colors and title
+          suggest code file may be stale compared to pipeline output'
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html - correct for Altair
-    library_features:
-      score: 5
-      max: 5
+        comment: Correct PNG and HTML outputs generated with proper scale factor
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses Altair's declarative layer composition, Title with subtitle,
-          encoding types (T, Q, N), and proper color scaling
+        comment: Expert use of alt.Chart(), mark_area(), proper encoding patterns,
+          alt.layer() composition, configure_*() styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses alt.Y2() for confidence bands and Vega-Lite encoding (distinctive
+          to Altair); interactive HTML export; could explore more Altair-specific
+          capabilities
+    summary:
+      total_score: 87
+      max_score: 100
+      verdict: APPROVED
+      threshold_met: true
+      attempt: 4
+      review_stage: Review 4/3
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - wide-to-long
   dataprep:
-  - time-series
   - cumulative-sum
   styling:
   - alpha-blending

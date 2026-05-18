@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-18
 """
-# ruff: noqa: F405
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -11,6 +12,16 @@ from lets_plot import *  # noqa: F403, F405
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series always #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Quarterly energy consumption forecast by source with uncertainty
 np.random.seed(42)
@@ -77,42 +88,44 @@ df_conf = pd.DataFrame(
     }
 )
 
-# Colors
-colors_main = ["#306998", "#FFD43B", "#22C55E"]  # Python Blue, Python Yellow, Green
+# Theme-adaptive plot styling
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major_y=element_line(color=INK, size=0.3),
+    panel_grid_minor=element_blank(),
+    axis_title=element_text(color=INK, size=20),
+    axis_text=element_text(color=INK_SOFT, size=16),
+    axis_line=element_line(color=INK_SOFT, size=0.4),
+    plot_title=element_text(color=INK, size=24),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(color=INK_SOFT, size=16),
+    legend_title=element_text(color=INK, size=18),
+    legend_position="right",
+)
 
 # Create plot with stacked areas and confidence ribbons
 plot = (
     ggplot()
-    # Confidence bands (lighter, behind main areas)
     + geom_ribbon(aes(x="x", ymin="y_lower", ymax="y_upper", fill="source"), data=df_conf, alpha=0.25)
-    # Main stacked areas
     + geom_ribbon(aes(x="x", ymin="y_min", ymax="y_max", fill="source"), data=df_areas, alpha=0.7)
-    # Central lines for clarity
     + geom_line(aes(x="x", y="y", color="source"), data=df_lines, size=1.5)
-    # Styling
-    + scale_fill_manual(values=colors_main, name="Energy Source")
-    + scale_color_manual(values=colors_main, guide="none")
+    + scale_fill_manual(values=OKABE_ITO, name="Energy Source")
+    + scale_color_manual(values=OKABE_ITO, guide="none")
     + scale_x_continuous(breaks=list(range(0, n, 4)), labels=[x_labels[i] for i in range(0, n, 4)])
     + labs(
-        title="area-stacked-confidence · letsplot · pyplots.ai",
+        title="area-stacked-confidence · Python · letsplot · anyplot.ai",
         x="Quarter",
         y="Energy Consumption (TWh)",
         caption="Shaded bands show 90% prediction intervals",
     )
     + theme_minimal()
-    + theme(
-        plot_title=element_text(size=24),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        legend_position="right",
-    )
+    + anyplot_theme
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
+# Save PNG (scale 3x for 4800x2700)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
 
-# Save as HTML for interactive viewing
-ggsave(plot, "plot.html", path=".")
+# Save HTML for interactive viewing
+ggsave(plot, f"plot-{THEME}.html", path=".")
