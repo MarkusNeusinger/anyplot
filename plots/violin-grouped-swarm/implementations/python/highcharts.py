@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: highcharts unknown | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-18
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -19,12 +20,22 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
+# Theme configuration
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
 # Data - Response times (ms) across task types and expertise levels
 np.random.seed(42)
 
 categories = ["Pattern Match", "Memory Recall", "Calculation"]
 groups = ["Novice", "Expert"]
-colors = {"Novice": "#306998", "Expert": "#FFD43B"}
+colors = {"Novice": "#009E73", "Expert": "#D55E00"}
 
 # Generate realistic response time data
 raw_data = {}
@@ -119,12 +130,15 @@ for i, cat in enumerate(categories):
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
+# Set color palette
+chart.options.colors = OKABE_ITO
+
 # Chart configuration
 chart.options.chart = {
     "type": "scatter",
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
+    "backgroundColor": PAGE_BG,
     "marginBottom": 250,
     "marginLeft": 300,
     "marginRight": 200,
@@ -133,34 +147,38 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "violin-grouped-swarm · highcharts · pyplots.ai",
-    "style": {"fontSize": "72px", "fontWeight": "bold"},
+    "text": "violin-grouped-swarm · Python · highcharts · anyplot.ai",
+    "style": {"fontSize": "72px", "fontWeight": "bold", "color": INK},
     "y": 60,
 }
 
 chart.options.subtitle = {
     "text": "Response Times by Task Type and Expertise Level",
-    "style": {"fontSize": "40px", "color": "#666666"},
+    "style": {"fontSize": "40px", "color": INK_SOFT},
     "y": 120,
 }
 
 # X-axis (categories)
 chart.options.x_axis = {
-    "title": {"text": "Task Type", "style": {"fontSize": "48px"}, "margin": 30},
-    "labels": {"style": {"fontSize": "40px"}, "y": 50},
+    "title": {"text": "Task Type", "style": {"fontSize": "48px", "color": INK}, "margin": 30},
+    "labels": {"style": {"fontSize": "40px", "color": INK_SOFT}, "y": 50},
     "min": -0.8,
     "max": 2.8,
     "tickPositions": [0, 1, 2],
     "categories": categories,
     "lineWidth": 2,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Y-axis (values)
 chart.options.y_axis = {
-    "title": {"text": "Response Time (ms)", "style": {"fontSize": "48px"}, "margin": 40},
-    "labels": {"style": {"fontSize": "40px"}},
+    "title": {"text": "Response Time (ms)", "style": {"fontSize": "48px", "color": INK}, "margin": 40},
+    "labels": {"style": {"fontSize": "40px", "color": INK_SOFT}},
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.12)",
+    "gridLineColor": RULE,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "min": 0,
 }
 
@@ -172,7 +190,7 @@ chart.options.legend = {
     "layout": "vertical",
     "x": -80,
     "y": 150,
-    "itemStyle": {"fontSize": "40px", "fontWeight": "normal"},
+    "itemStyle": {"fontSize": "40px", "fontWeight": "normal", "color": INK_SOFT},
     "symbolHeight": 24,
     "symbolWidth": 40,
     "itemMarginBottom": 15,
@@ -244,7 +262,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
@@ -256,7 +274,7 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     temp_path = f.name
 
 # Save HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     standalone_html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -264,7 +282,7 @@ with open("plot.html", "w", encoding="utf-8") as f:
     <script src="https://code.highcharts.com/highcharts.js"></script>
     <script src="https://code.highcharts.com/highcharts-more.js"></script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 100%; height: 100vh;"></div>
     <script>{html_str}</script>
 </body>
@@ -284,7 +302,7 @@ driver.get(f"file://{temp_path}")
 time.sleep(5)  # Wait for chart to render
 
 container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+container.screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()  # Clean up temp file

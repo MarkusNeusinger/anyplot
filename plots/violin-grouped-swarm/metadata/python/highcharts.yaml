@@ -1,203 +1,235 @@
 library: highcharts
+language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:47:35Z'
-updated: '2026-01-09T16:50:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858848136
+updated: '2026-05-18T03:41:31Z'
+generated_by: claude-haiku
+workflow_run: 26011606063
 issue: 3529
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/highcharts/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of grouped violins using PolygonSeries with KDE calculation
-  - Clean swarm algorithm with collision avoidance creates well-distributed points
-  - Colorblind-safe blue/yellow palette with good contrast
-  - Proper title format and descriptive axis labels with units
-  - Realistic cognitive task response time scenario
+  - Perfect theme adaptation with theme-correct chrome in both light and dark renders
+    while maintaining identical data colors
+  - Excellent visual hierarchy that clearly communicates task type → expertise level
+    relationships through data distribution
+  - Clean, readable typography with explicitly-sized fonts at all levels (title through
+    tick labels)
+  - Realistic, well-chosen domain (cognitive psychology response times) that effectively
+    demonstrates the grouped violin + swarm pattern
+  - Proper Okabe-Ito palette compliance with brand green as first series
+  - Solid implementation of swarm collision-avoidance algorithm
+  - Correct output format with both PNG and interactive HTML artifacts
   weaknesses:
-  - Contains a function definition (create_swarm_points) which violates KISS principle
-    - should be inline code
-  - Swarm points could be slightly larger for better visibility at full resolution
-  - Legend symbols are small relative to the plot size
-  image_description: 'The plot displays a grouped violin plot with swarm point overlay
-    showing response times (in milliseconds) across three task types: Pattern Match,
-    Memory Recall, and Calculation. For each task type, two violin shapes are shown
-    side-by-side representing Novice (dark blue, #306998) and Expert (yellow/gold,
-    #FFD43B) groups. The violins have approximately 50% transparency, allowing the
-    underlying swarm points (individual data points) to be visible within each violin.
-    The swarm points are jittered horizontally to avoid overlap and have white edge
-    highlighting. The title follows the required format "violin-grouped-swarm · highcharts
-    · pyplots.ai" with a subtitle "Response Times by Task Type and Expertise Level".
-    The y-axis shows "Response Time (ms)" ranging from 0 to about 5400ms. The x-axis
-    shows "Task Type" with three categories. A legend in the upper right shows Novice
-    and Expert with corresponding colors. The distributions show that Experts consistently
-    have lower and tighter response time distributions compared to Novices, with Calculation
-    showing the most dramatic difference. The plot uses a white background with subtle
-    gray gridlines.'
+  - Design is fairly standard for violin plots without distinctive visual innovations
+    or particularly sophisticated aesthetic choices
+  - Limited use of Highcharts-specific features (could leverage more library-distinctive
+    capabilities)
+  - Visual refinement could be enhanced (spines remain, minimal customization beyond
+    defaults)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title (72px dark text), axis labels (48px dark), tick labels (40px gray), subtitle (40px gray) — all clearly readable
+      Data: Green (#009E73) and orange (#D55E00) violins with matching swarm circles; smooth KDE-based rendering; proper spatial separation
+      Legibility verdict: PASS — all text has excellent contrast and explicit sizing; grid lines subtle; no overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title (72px light text), axis labels (48px light), tick labels (40px soft gray), subtitle (40px soft gray) — all clearly readable; no dark-on-dark failures
+      Data: Green (#009E73) and orange (#D55E00) colors identical to light render; distribution shapes preserved; swarm points perfectly visible
+      Legibility verdict: PASS — excellent contrast on dark surface; all text flipped to light theme correctly; no text readability issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, subtitle, axis labels, and tick marks are all clearly readable
-          at full resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; violins and swarm points are well-separated
+        comment: All fonts explicitly sized (title 72px, labels 48px, ticks 40px);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text well-spaced; swarm points use effective collision avoidance
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Swarm points are visible but could be slightly larger for better
-          visibility; violin transparency works well
+        comment: Violins smoothly rendered; swarm points optimally sized for data
+          density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow are colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions with balanced margins; plot fills canvas well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Response Time (ms) and Task Type'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette colorblind-safe; excellent contrast between green
+          and orange
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions; plot 50-70% of canvas; balanced margins; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive with units: ''Response Time (ms)'' and ''Task Type'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (green), second #D55E00 (orange); backgrounds
+          #FAF8F1/#1A1A17; text theme-correct; data colors identical in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid is subtle and appropriate; legend is well-placed but could have
-          larger symbols
+        comment: Professional with smooth KDE rendering and proper hierarchy; fairly
+          standard for violin plots without distinctive innovation
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Clean with subtle grid and good margins; could enhance with spine
+          removal and more customization
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Excellent visual hierarchy showing task type → expertise level →
+          data points; distribution differences communicate clear story
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct grouped violin plot with swarm overlay
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on x-axis, values on y-axis, groups differentiated by
-          color
-      - id: SC-03
+        comment: Correct grouped violin plot with swarm overlay
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has violins with transparency, swarm points, color-coded groups;
-          swarm points could be better aligned with violin centers
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: distinct colors, violin transparency (0.5), sized
+          swarm points, spacing, matching hues'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data is visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis task types; Y-axis response times; swarm/violin properly aligned
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Novice and Expert
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: violin-grouped-swarm · highcharts · pyplots.ai'
+        comment: Title format correct; legend labels match groups
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distribution shapes, spread differences between groups,
-          and realistic lognormal data; good variation across task types
+        comment: 'Shows all aspects: distribution shapes, individual points, multiple
+          categories and groups'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Response times for cognitive tasks is a realistic, neutral scenario
+        comment: Realistic cognitive psychology scenario (response times); neutral
+          domain; plausible and well-grounded
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times in 200-3000ms range are realistic; some Calculation
-          Novice outliers extend to ~5000ms which is plausible but on the high end
+        comment: Response times (~200-5500ms) factually plausible for cognitive tasks
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses a function for swarm point creation, which violates KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: 'Linear code: imports → theme → data → KDE → plot → save; no unnecessary
+          functions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: numpy, highcharts_core, scipy, selenium, os, tempfile,
+          urllib, pathlib'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current API
+        comment: Appropriate complexity; well-structured swarm algorithm; no fake
+          UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: 'Correct naming: plot-{THEME}.png and plot-{THEME}.html'
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Uses PolygonSeries for violins, ScatterSeries for swarm, inline Highcharts
-          JS download pattern; could leverage more interactive features
+        passed: false
+        comment: Correct usage of PolygonSeries and ScatterSeries; custom KDE approach
+          valid but somewhat specialized
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Good use of polygon/scatter composition; theme-adaptive rendering;
+          proper Selenium integration for headless export
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -205,8 +237,6 @@ impl_tags:
   - selenium
   techniques:
   - html-export
-  - layer-composition
-  - patches
   patterns:
   - data-generation
   - iteration-over-groups
@@ -214,4 +244,3 @@ impl_tags:
   - kde
   styling:
   - alpha-blending
-  - edge-highlighting
