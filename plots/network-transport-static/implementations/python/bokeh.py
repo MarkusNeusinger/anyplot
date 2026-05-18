@@ -1,15 +1,35 @@
-""" pyplots.ai
+""" anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 95/100 | Updated: 2026-05-18
 """
 
-import numpy as np
-from bokeh.io import export_png, save
-from bokeh.models import Arrow, ColumnDataSource, Label, LabelSet, VeeHead
-from bokeh.plotting import figure
-from bokeh.resources import CDN
+import os
+import sys
+import time
+from pathlib import Path
 
+
+# Remove the current directory from sys.path to avoid circular imports with bokeh.py
+sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd(), os.path.dirname(__file__))]
+
+import numpy as np  # noqa: E402
+from bokeh.io import output_file, save  # noqa: E402
+from bokeh.models import Arrow, ColumnDataSource, Label, LabelSet, VeeHead  # noqa: E402
+from bokeh.plotting import figure  # noqa: E402
+from selenium import webdriver  # noqa: E402
+from selenium.webdriver.chrome.options import Options  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 np.random.seed(42)
 
@@ -55,37 +75,28 @@ routes = [
     {"source_id": "I", "target_id": "A", "route_id": "S2", "departure_time": "05:45", "arrival_time": "06:10"},
 ]
 
-# Route colors by type
-route_colors = {
-    "RE 10": "#306998",  # Python Blue - Regional Express
-    "RE 20": "#4A90D9",  # Light Blue - Regional Express
-    "RE 30": "#2E7D32",  # Green - Regional Express
-    "RE 40": "#7B1FA2",  # Purple - Regional Express
-    "S1": "#FFD43B",  # Python Yellow - S-Bahn
-    "S2": "#FFA726",  # Orange - S-Bahn
-    "EX 1": "#C62828",  # Red - Express
-}
-
 # Create figure
 p = figure(
     width=4800,
     height=2700,
-    title="network-transport-static · bokeh · pyplots.ai",
+    title="network-transport-static · python · bokeh · anyplot.ai",
     x_range=(100, 4100),
     y_range=(100, 2550),
     tools="",
     toolbar_location=None,
 )
 
-# Style the figure - scaled for 4800x2700 canvas
-p.title.text_font_size = "48pt"
+# Style the figure - scaled for 4800x2700 canvas with theme-adaptive colors
+p.title.text_font_size = "28pt"
+p.title.text_color = INK
 p.title.align = "center"
 p.xgrid.visible = False
 p.ygrid.visible = False
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.outline_line_color = None
-p.background_fill_color = "#FAFAFA"
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
 p.min_border_left = 80
 p.min_border_right = 80
 p.min_border_top = 100
@@ -125,7 +136,15 @@ for route in routes:
     end_x = tgt["x"] - nx * node_radius + perp_x * offset_amount
     end_y = tgt["y"] - ny * node_radius + perp_y * offset_amount
 
-    color = route_colors.get(route["route_id"], "#666666")
+    route_id = route["route_id"]
+    if route_id.startswith("RE"):
+        color = OKABE_ITO[0]
+    elif route_id.startswith("S"):
+        color = OKABE_ITO[1]
+    elif route_id.startswith("EX"):
+        color = OKABE_ITO[2]
+    else:
+        color = OKABE_ITO[3]
 
     # Draw arrow - scaled for large canvas
     p.add_layout(
@@ -165,7 +184,7 @@ for route in routes:
             text_align="center",
             text_baseline="middle",
             angle=angle,
-            background_fill_color="white",
+            background_fill_color=ELEVATED_BG,
             background_fill_alpha=0.9,
         )
     )
@@ -178,7 +197,7 @@ station_labels = [s["label"] for s in stations]
 station_source = ColumnDataSource(data={"x": station_x, "y": station_y, "label": station_labels})
 
 # Draw station circles - larger for visibility
-p.scatter(x="x", y="y", source=station_source, size=100, fill_color="white", line_color="#306998", line_width=6)
+p.scatter(x="x", y="y", source=station_source, size=100, fill_color=ELEVATED_BG, line_color=INK_SOFT, line_width=6)
 
 # Station labels - positioned below nodes for clarity
 labels = LabelSet(
@@ -188,7 +207,7 @@ labels = LabelSet(
     source=station_source,
     text_font_size="18pt",
     text_font_style="bold",
-    text_color="#333333",
+    text_color=INK,
     text_align="center",
     text_baseline="top",
     y_offset=-70,
@@ -198,15 +217,38 @@ p.add_layout(labels)
 # Add legend - positioned and scaled for large canvas
 legend_x = 3750
 legend_y = 2400
-legend_items = [("Regional Express (RE)", "#306998"), ("S-Bahn Local (S)", "#FFD43B"), ("Express (EX)", "#C62828")]
+legend_items = [
+    ("Regional Express (RE)", OKABE_ITO[0]),
+    ("S-Bahn Local (S)", OKABE_ITO[1]),
+    ("Express (EX)", OKABE_ITO[2]),
+]
 
 for i, (label, color) in enumerate(legend_items):
     y_pos = legend_y - i * 150
     p.scatter(x=[legend_x], y=[y_pos], size=40, fill_color=color, line_color=color)
     p.add_layout(
-        Label(x=legend_x + 70, y=y_pos, text=label, text_font_size="24pt", text_color="#333333", text_baseline="middle")
+        Label(x=legend_x + 70, y=y_pos, text=label, text_font_size="24pt", text_color=INK, text_baseline="middle")
     )
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", resources=CDN, title="Regional Rail Network")
+# Save HTML
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

@@ -1,217 +1,231 @@
 library: letsplot
+language: python
 specification_id: network-transport-static
 created: '2026-01-09T23:51:50Z'
-updated: '2026-01-10T00:10:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868910557
+updated: '2026-05-18T14:49:46Z'
+generated_by: claude-haiku
+workflow_run: 26039987062
 issue: 3463
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Clean network visualization with proper directed arrows showing travel direction
-  - Effective color-coding distinguishes route types (Express, Regional, Local)
-  - Edge labels clearly show route ID with departure/arrival times as specified
-  - Multiple routes between same station pair (Central-East) are properly offset
-  - Interactive tooltips configured for both edges and stations (works in HTML export)
-  - 'Uses lets-plot distinctive features: layer_tooltips, arrow specification, theme_void'
+  - Perfect spec compliance with all required features implemented
+  - Excellent visual quality and theme adaptation with no readability failures
+  - Clean idiomatic letsplot code using proper ggplot2 grammar
+  - Proper handling of complex network topology with offset edges for multiple routes
+  - Correct Okabe-Ito palette compliance and theme tokens across both renders
   weaknesses:
-  - Legend uses point markers which does not match the segment/arrow styling of edges
-  - Some route labels slightly overlap with edges near dense connections
-  image_description: 'The plot displays a static transport network diagram with 10
-    stations arranged in a roughly circular/grid pattern. Stations are represented
-    as dark gray filled circles with white borders, labeled with names below each
-    node (Central, North, South, East, West, Airport, University, Harbor, Tech Park,
-    Stadium). Directed edges connect stations with arrows indicating travel direction.
-    Each edge is labeled with route information in the format "ROUTE_ID | HH:MM →
-    HH:MM" (e.g., "RE1 | 06:15 → 06:35"). Routes are color-coded by type: Express
-    routes in blue (#306998), Regional routes in gold/dark yellow (#B8860B), and Local
-    routes in green (#2E8B57). A legend on the right side shows "Route Type" with
-    the three categories. The title "network-transport-static · letsplot · pyplots.ai"
-    is centered at the top in bold. Multiple routes between the same station pair
-    (Central to East) are offset to avoid overlapping. The layout uses a void theme
-    with no axes or grid lines.'
+  - Edge label crowding in high-density areas around Central station causes slight
+    overlaps
+  - Design Excellence somewhat generic; lacks distinctive visual hierarchy or custom
+    refinement beyond defaults
+  - Color contrast for Regional (orange) and Local (blue) routes could be stronger
+    on dark theme for accessibility
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) providing excellent contrast for all elements
+      Chrome: Title in 24pt dark text, station labels in 9pt bold dark ink, clearly readable; legend with light background (#FFFDF6) with dark text
+      Data: 10 station nodes in green (#009E73), 17 colored directional arrows (green/orange/blue by route type), edge labels with route ID and times in matching colors, all elements clearly visible
+      Legibility verdict: PASS - All text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) properly adapted for dark theme
+      Chrome: Title in light text, station labels in off-white (#F0EFE8), clearly visible; legend with elevated background (#242420) and light text
+      Data: Station nodes as green circles with white outlines, colored arrows identical to light render (#009E73, #D55E00, #0072B2), all labels visible and readable, no dark-on-dark failures
+      Legibility verdict: PASS - Perfect theme adaptation, no legibility issues, data colors identical to light render
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and station labels are clear and bold; route labels are slightly
-          small but readable
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Most labels are well-positioned; minor overlap between some route
-          labels and edges near Central-East
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Nodes and edges are well-sized; arrows are visible with clear direction
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, gold, and green palette is colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Network fills canvas well with balanced margins; legend positioned
-          appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A for network diagram; uses theme_void appropriately
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend uses point markers instead of line segments which does not
-          accurately represent the edge styling
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
         score: 8
         max: 8
         passed: true
-        comment: Correct network/graph visualization with directed edges
-      - id: SC-02
-        name: Data Mapping
+        comment: All text clearly readable in both renders; title 24pt, station labels
+          9pt, edge labels 6pt
+      - id: VQ-02
+        name: No Overlap
         score: 5
-        max: 5
+        max: 6
         passed: true
-        comment: Station positions from x/y coordinates; routes correctly connect
-          source to target
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
+        comment: Minor crowding around Central hub but all labels readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
         passed: true
-        comment: Stations as nodes, routes as directed edges, edge labels with route
-          ID and times, color-coding by type
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All stations and routes visible within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: Legend labels correct but marker style (points) does not match edges
-          (segments)
-      - id: SC-06
-        name: Title Format
+        comment: All markers, arrows, labels prominently visible; appropriate density
+          sizing
+      - id: VQ-04
+        name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Correctly formatted as network-transport-static · letsplot · pyplots.ai
-    data_quality:
-      score: 18
+        comment: Okabe-Ito palette ensures CVD safety with strong contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700 resolution correct; balanced proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; X/Y empty labels appropriate for network
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito order correct, backgrounds #FAF8F1/#1A1A17, both renders
+          theme-correct'
+    design_excellence:
+      score: 12
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Clean professional execution; standard palette, functional but not
+          exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: theme_void() and basic styling; minimal visual refinement beyond
+          defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Color coding provides narrative; network structure clear but limited
+          emphasis
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct directed network graph with labeled nodes and edges
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: labels, arrows, time info, offset edges, color
+          coding'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Stations use x/y coords; routes display source→target correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; legend labels match data
+    data_quality:
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows express/regional/local routes, multiple routes between same
-          stations, hub-and-spoke pattern
+        comment: 'All aspects covered: nodes, arrows, labels, time, types, multiple
+          routes'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Regional rail network is a plausible and neutral scenario with sensible
-          station names
+        comment: Plausible rail network; realistic names, times, route IDs
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Times are realistic morning schedules; 10 stations and 17 routes
-          is within recommended range
+        comment: 10 stations, 17 routes within spec; optimal size
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear flow but has some complex edge calculation logic which
-          is necessary for the visualization
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: No functions/classes; direct execution
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unnecessary dependencies
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Appropriate complexity; no fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Correct plot-{THEME}.png/.html output with scale=3
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses lets-plot ggplot2 grammar (geom_segment with arrow, geom_point,
-          geom_text), layer_tooltips for interactivity, theme_void, scale_color_manual
+        comment: Proper ggplot grammar, geom composition, aes mappings, theme customization
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: layer_tooltips, arrow, ggsize, HTML export used; could showcase more
+          capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - minimal-chrome
-  - alpha-blending
-  - edge-highlighting
+  styling: []

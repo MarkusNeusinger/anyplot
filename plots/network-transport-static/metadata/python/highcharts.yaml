@@ -1,153 +1,178 @@
 library: highcharts
+language: python
 specification_id: network-transport-static
 created: '2026-01-10T02:02:23Z'
-updated: '2026-01-10T02:10:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20870863351
+updated: '2026-05-18T14:36:58Z'
+generated_by: claude-haiku
+workflow_run: 26039871699
 issue: 3463
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/highcharts/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/highcharts/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent use of Highcharts annotations module for route labels with colored badges
-  - Clear color-coding system distinguishing Express/Regional/Local routes
-  - Proper offset handling for routes connecting same station pairs
-  - Well-designed station markers with data labels positioned above
-  - Creative use of Unicode triangle symbols for directional arrows
+  - Perfect visual quality with zero overlap and optimal element sizing across both
+    themes
+  - 'Excellent palette compliance: brand green for stations, Okabe-Ito for routes,
+    perfect theme-chrome adaptation'
+  - Strong design with clear service-type hierarchy via color and thoughtful typography
+  - Realistic, well-chosen example data with plausible regional rail network
+  - Clean, deterministic code with proper theme-adaptation pattern
+  - Proper use of Highcharts annotations and offset curves to handle parallel routes
   weaknesses:
-  - Route labels (16px font) are slightly small relative to the high-resolution canvas;
-    could benefit from being 18-20px
-  - Some directional arrow symbols appear slightly disconnected from their route lines
-    at certain angles
-  image_description: 'The plot displays a regional rail network visualization with
-    12 stations represented as white circular nodes with blue borders, positioned
-    according to geographic layout. Stations are labeled with names such as North
-    Terminal, Central Station, Airport, University, etc. Routes are shown as colored
-    lines connecting stations: Express (EX) routes in blue (#306998), Regional (RE)
-    routes in yellow (#FFD43B), and Local (LC) routes in purple (#9467BD). Each route
-    segment has a directional arrow indicator and a colored label badge showing the
-    route ID and times (e.g., "RE 1 | 06:00 → 06:25"). The title reads "network-transport-static
-    · highcharts · pyplots.ai" with a subtitle showing "Regional Rail Network - 12
-    Stations, 19 Routes" followed by a color-coded legend. The network has a hub-and-spoke
-    pattern centered on Central Station with branches extending to peripheral stations
-    like Airport, University, and Industrial Zone.'
+  - Annotation styling is functional but could be more visually sophisticated (e.g.,
+    refined border-radius, shadow effects, better color contrast in labels)
+  - Uses some distinctive Highcharts features but misses opportunities to showcase
+    the library's most advanced capabilities (e.g., custom drilldown interactivity
+    patterns, advanced tooltip styling)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct light surface
+      Chrome: Title (28px), route times (20px), station names (24px) - all dark text, clearly readable against light background
+      Data: Station markers with #009E73 green borders (brand color) and white interiors; route lines in Okabe-Ito colors (#0072B2 blue, #D55E00 orange, #CC79A7 purple); route labels in colored boxes with dark text
+      Legibility verdict: PASS - all text readable, good contrast, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct dark surface
+      Chrome: Title, route times, station names - all light text (#F0EFE8), clearly readable against dark background; no dark-on-dark failures observed
+      Data: Station marker colors identical to light render (#009E73 green), route colors identical (#0072B2, #D55E00, #CC79A7) - only chrome adapted for theme
+      Legibility verdict: PASS - all text readable, good contrast, brand green visible on both surfaces, perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 52px is excellent, station labels at 24px are clearly readable,
-          route labels at 16px are legible but slightly small
-      - id: VQ-02
-        name: No Overlap
-        score: 7
-        max: 8
-        passed: true
-        comment: Most labels well-positioned; minimal overlap on offset routes
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Station markers radius 22 highly visible, route lines width 5 clearly
-          visible
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/Yellow/Purple palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas use, slight imbalance with more empty space at bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: N/A for network diagram, axes correctly hidden
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend in subtitle is clear, no grid needed
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
         score: 8
         max: 8
         passed: true
-        comment: Correct directed network with nodes and edges
-      - id: SC-02
-        name: Data Mapping
+        comment: All font sizes explicitly set (title 28px, labels 24px, route times
+          20px); perfectly readable at full size in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Station labels offset -40px, route labels in boxes, arrows at 75%
+          - zero overlap observed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Markers (radius 22), lines (width 5), arrows (32px) - optimal sizing
+          for data density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette with good contrast; CVD-safe throughout
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 70% of canvas, balanced margins, title and legend well-placed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; subtitle provides context and legend
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series Okabe-Ito; backgrounds #FAF8F1/#1A1A17;
+          theme chrome perfect in both'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Thoughtful color scheme with clear service-type hierarchy; clean
+          typography hierarchy - above defaults but not FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Offset curves for parallel routes, styled annotation boxes - refined
+          but could be more sophisticated
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear hub-and-spoke story with service-type hierarchy via color -
+          good visual hierarchy but lacks explicit emphasis techniques
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Station positions and route connections correct
-      - id: SC-03
+        comment: Correct directed network visualization with all required elements
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has arrows, labels, offsets; tooltips minimal
-      - id: SC-04
-        name: Data Range
+        comment: Stations, edges, arrows, route IDs, times, offset curves, color-coding
+          - all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 12 stations and 19 routes visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y positioning correct; all 12 stations and 19 routes visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies route types
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format used
+        comment: Title format correct; legend in subtitle
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows hub-and-spoke pattern, multiple route types, bidirectional
-          routes
+        comment: Shows hub-and-spoke with regional branches, multiple route types,
+          bidirectional routes, intermediate stops
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Plausible regional rail with realistic names and times
+        comment: Regional rail network with plausible station names and realistic
+          time schedule
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 12 stations and 19 routes within spec range
+        comment: Journey times (15-40 min), 12-station network, coordinates 0-100
+          - all realistic
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,49 +180,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows linear structure without functions/classes
+        comment: 'Linear flow: tokens → data → chart → HTML → screenshot; no unnecessary
+          abstractions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: Deterministic hardcoded data
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Fixed data; deterministic rendering; sleep(5) for consistent timing
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: json, requests, selenium, tempfile, time, pathlib'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; appropriate complexity for offset curve math; no
+          over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current APIs
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses annotations module, hover tooltips, HTML subtitle, scatter+line
-          combination
+        comment: Proper JSON options, good use of series and annotations; could leverage
+          more advanced patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses annotations, perpendicular offset math, theme-adaptive chrome
+          - distinctive but not the library's most advanced features
   verdict: APPROVED
 impl_tags:
   dependencies:
+  - requests
   - selenium
   techniques:
   - annotations
-  - hover-tooltips
   - html-export
   patterns:
   - data-generation
