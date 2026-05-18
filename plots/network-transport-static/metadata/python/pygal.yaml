@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: network-transport-static
 created: '2026-01-09T23:51:43Z'
-updated: '2026-05-18T14:31:59Z'
+updated: '2026-05-18T14:37:55Z'
 generated_by: claude-haiku
 workflow_run: 26039759434
 issue: 3463
@@ -12,84 +12,82 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/network-t
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/network-transport-static/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Light mode render is excellent with clear, readable typography and colors
-  - Perfect spec compliance with all required features present
-  - Excellent data quality with realistic, well-scaled example network
-  - Thoughtful color-coding by route type (RE/EX/LO) aids data storytelling
-  - SVG construction is clean and idiomatic; edge offsetting for parallel routes is
-    well-implemented
-  - Code is reproducible, deterministic, and defensive against circular imports
+  - Excellent visual design with professional polish and deliberate styling choices
+  - Perfect theme adaptation—both renders are readable and visually correct
+  - Perfect specification compliance—all required features present and well-implemented
+  - Clean, deterministic code that is easy to follow and reproduce
+  - Thoughtful color-coding by route type guides visual navigation
+  - Smart edge offset calculation prevents line overlap
   weaknesses:
-  - 'Dark mode background rendering appears pure/near-pure black instead of warm #1A1A17
-    - critical VQ-07 palette failure'
-  - Dark mode title and subtitle text nearly illegible - critical VQ-01 legibility
-    failure
-  - Theme environment variable may not be correctly passed during dark render or cairosvg
-    not preserving SVG colors
+  - Implementation uses ElementTree + cairosvg for raw SVG generation instead of pygal's
+    charting API; while pragmatic for a chart type outside pygal's native scope, this
+    reduces Library Mastery score. Consider investigating pygal SVG extension API
+    or using a different library for network visualizations in future attempts.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct and readable
-      Chrome: Title "network-transport-static · python · pygal · anyplot.ai" clearly visible in dark text; subtitle "Regional Rail Network - Morning Schedule" also readable; station labels and route labels all clearly legible
-      Data: Station nodes in brand green (#009E73); routes color-coded: RE in green, EX in orange, LO in blue (Okabe-Ito positions 1, 2, 3); all colors vibrant and distinguishable; arrows show direction clearly
-      Layout: 10 stations positioned spatially; 15 routes with directional arrows; edge labels show route ID and times (e.g., "RE 1 | 06:00 → 06:25"); legend in bottom-right with route types
-      Legibility verdict: PASS - All text fully readable; excellent contrast between text and backgrounds
+      Background: Warm off-white surface at #FAF8F1 (correct theme token)
+      Chrome: Title (56px bold) and subtitle (32px) in dark INK color, clearly readable; station labels (24px) and route labels (22px) all properly visible against light background
+      Data: 10 stations as green circles (#009E73), colored routes (green RE, orange EX, blue LO) with directed arrows; edge labels on elevated boxes with appropriate styling
+      Legibility verdict: PASS - all text fully readable, excellent contrast, no legibility failures
 
     Dark render (plot-dark.png):
-      Background: Appears to be pure or near-pure black - FAILS requirement for warm near-black (#1A1A17) - VQ-07 VIOLATION
-      Chrome: Title and subtitle are EXTREMELY FAINT/PALE and nearly illegible against dark background - VQ-01 CRITICAL FAILURE; station labels and route labels remain readable
-      Data: Node and edge colors are identical to light render, correctly preserving Okabe-Ito palette; #009E73 (green), #D55E00 (orange), #0072B2 (blue) all visible and correct
-      Legibility verdict: FAIL - Title/subtitle text colors not properly theme-adapted; background color wrong; text contrast insufficient
+      Background: Warm near-black surface at #1A1A17 (correct theme token)
+      Chrome: Title and subtitle flip to light text (#F0EFE8), clearly readable; station and route labels also adapt with light colors on dark elevated boxes; no dark-on-dark failures
+      Data: Route and node colors are IDENTICAL to light render (green #009E73, orange #D55E00, blue #0072B2); only chrome elements changed theme
+      Legibility verdict: PASS - all text readable, no dark-on-dark issues, perfect theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 19
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 0
+        score: 8
         max: 8
-        passed: false
-        comment: Dark mode title/subtitle nearly illegible - critical failure
+        passed: true
+        comment: Title (56px), subtitle (32px), station labels (24px), route labels
+          (22px) all explicitly sized and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Perfect positioning with no overlapping elements
+        comment: Station labels in boxes below nodes; route labels on edge midpoints;
+          edge offsets calculated for multiple routes
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: All nodes/edges visible; text faintness in dark mode slightly reduces
-          score
+        comment: Markers (radius 50) and lines (stroke 5) clearly visible and distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette correct; good contrast in light mode
+        comment: Okabe-Ito positions 1–3; colorblind-safe; no red-green only coding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent proportions, generous whitespace
+        comment: 4800×2700 landscape; 150px margins; well-proportioned
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format with spec ID; descriptive subtitle
+        comment: Title correct format; subtitle descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Dark background pure black not warm #1A1A17; chrome colors not theme-adaptive'
+        passed: true
+        comment: Brand green first series; Okabe-Ito order; correct backgrounds; data
+          colors identical theme-to-theme
     design_excellence:
       score: 16
       max: 20
@@ -99,19 +97,21 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Professional network diagram with thoughtful route type color-coding
+        comment: Professional custom implementation with route-type color coding,
+          thoughtful edge offsets, elevated label boxes with rounded corners
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Minimalist plot area, subtle styling, generous whitespace
+        comment: Subtle borders, no unnecessary decoration, generous whitespace
       - id: DE-03
         name: Data Storytelling
         score: 5
         max: 6
         passed: true
-        comment: Clear visual hierarchy; colors guide through network
+        comment: Clear visual hierarchy with stations as hubs; color guides navigation;
+          time labels tell travel story
     spec_compliance:
       score: 15
       max: 15
@@ -121,26 +121,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct static transport network with labeled nodes and directed
-          edges
+        comment: Correct directed network with station nodes and arrow-marked edges
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: labels, route IDs, times, arrows, color-coding'
+        comment: 'All features present: labels, directed edges, arrows, route IDs,
+          times, offset edges, color coding, legend'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Coordinates applied correctly; parallel routes properly offset
+        comment: Stations positioned by x/y; routes connect source→target; times shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend properly labeled
+        comment: Title format correct; legend shows RE/EX/LO with colors and arrows
     data_quality:
       score: 15
       max: 15
@@ -150,19 +150,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete: 10 stations, 15 routes, 3 route types'
+        comment: 10 stations, 15 routes, 3 route types, morning schedule context
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible regional rail network with realistic morning schedule
+        comment: Regional rail network plausible; realistic station names and times
+          (06:00–08:30)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Optimal network size for readability
+        comment: 10 stations and 15 routes optimal for readability
     code_quality:
       score: 10
       max: 10
@@ -172,59 +173,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean SVG construction with utility functions
+        comment: No functions/classes; straightforward SVG generation
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Theme tokens from environment; deterministic data
+        comment: Theme env var properly used; deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only used imports; no clutter
+        comment: All imports used; no dead code
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear naming; no fake UI or simulated interactivity
+        comment: Clear variable names; clean coordinate normalization
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct plot-{THEME}.png and .html outputs
+        comment: Outputs plot-{THEME}.html and plot-{THEME}.png
     library_mastery:
-      score: 8
+      score: 1
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 1
         max: 5
-        passed: true
-        comment: ElementTree idiomatic for custom SVG; proper markers and namespacing
+        passed: false
+        comment: Uses raw ElementTree SVG + cairosvg instead of pygal API. Pragmatic
+          for unsupported chart type, but not idiomatic.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 0
         max: 5
-        passed: true
-        comment: Custom edge offset calculation; SVG markers; tooltips; defensive
-          imports
-  verdict: REJECTED
+        passed: false
+        comment: No pygal-specific features leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
-  - html-export
-  - custom-legend
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure
   dataprep: []
   styling:
-  - minimal-chrome
+  - publication-ready
