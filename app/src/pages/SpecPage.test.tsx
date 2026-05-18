@@ -183,27 +183,52 @@ describe('SpecPage', () => {
     expect(fetchUrl).toContain('/specs/scatter-basic');
   });
 
-  describe('language in title + breadcrumb', () => {
-    it('includes ` · Python · matplotlib` in the document title in detail mode', async () => {
+  describe('language in document title', () => {
+    it('includes ` · python · matplotlib` in the document title in detail mode', async () => {
       mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
       mockSearchParams.delete('language');
       mockFetchSuccess();
       render(<SpecPage />);
 
       await waitFor(() => {
-        expect(document.title).toContain('Basic Scatter Plot · Python · matplotlib');
+        expect(document.title).toContain('Basic Scatter Plot · python · matplotlib');
       });
     });
 
-    it('includes ` · Python` in the document title when ?language= is set in hub mode', async () => {
+    it('includes ` · python` in the document title when ?language= is set in hub mode', async () => {
       mockParams = { specId: 'scatter-basic' };
       mockSearchParams.set('language', 'python');
       mockFetchSuccess();
       render(<SpecPage />);
 
       await waitFor(() => {
-        expect(document.title).toContain('Basic Scatter Plot · Python');
+        expect(document.title).toContain('Basic Scatter Plot · python');
       });
+      mockSearchParams.delete('language');
+    });
+
+    it('lowercases a mixed-case path language token in detail mode', async () => {
+      mockParams = { specId: 'scatter-basic', language: 'Python', library: 'matplotlib' };
+      mockSearchParams.delete('language');
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() => {
+        expect(document.title).toContain('Basic Scatter Plot · python · matplotlib');
+      });
+      expect(document.title).not.toContain('Python');
+    });
+
+    it('lowercases a mixed-case ?language= query param in hub mode', async () => {
+      mockParams = { specId: 'scatter-basic' };
+      mockSearchParams.set('language', 'Python');
+      mockFetchSuccess();
+      render(<SpecPage />);
+
+      await waitFor(() => {
+        expect(document.title).toContain('Basic Scatter Plot · python');
+      });
+      expect(document.title).not.toContain('Python');
       mockSearchParams.delete('language');
     });
   });
