@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-18
+Quality: 85/100 | Updated: 2026-05-18
 """
 
 import os
