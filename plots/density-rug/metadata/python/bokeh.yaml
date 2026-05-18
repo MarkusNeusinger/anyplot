@@ -1,151 +1,180 @@
 library: bokeh
+language: python
 specification_id: density-rug
 created: '2026-01-09T15:33:20Z'
-updated: '2026-01-09T15:36:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856770449
+updated: '2026-05-18T00:34:05Z'
+generated_by: claude-haiku
+workflow_run: 26007160814
 issue: 3505
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-rug/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/density-rug/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/bokeh/plot-dark.html
+quality_score: 95
 review:
   strengths:
-  - Excellent implementation of manual KDE calculation using Silverman's rule for
-    bandwidth selection
-  - Bimodal data effectively demonstrates the value of combining KDE with rug marks
-  - Proper use of ColumnDataSource pattern for Bokeh
-  - Clean, well-structured code following KISS principles
-  - Rug marks correctly placed below y=0 axis with appropriate transparency
+  - Flawless theme adaptation with clean chrome switching while maintaining data color
+    consistency across light and dark renders
+  - 'Perfect text legibility: all typography explicitly sized and readable on both
+    backgrounds with no contrast failures'
+  - 'Idiomatic Bokeh patterns: excellent use of ColumnDataSource, patch/line/segment
+    glyphs, and Selenium-based HTML export'
+  - Thoughtful data representation combining KDE distribution shape with individual
+    data point transparency via rug marks
+  - Clean, readable code with appropriate complexity and manual KDE calculation demonstrating
+    understanding
+  - Proper transparency handling with well-chosen alpha values for fill (35%) and
+    rug marks (50%)
   weaknesses:
-  - Grid lines are slightly too prominent (alpha 0.3 with dashed style; could use
-    0.2)
-  - Does not leverage Bokeh's interactive features like HoverTool
-  image_description: 'The plot displays a kernel density estimation (KDE) curve in
-    blue (#306998) with semi-transparent fill (alpha ~0.4) showing API response time
-    distribution. The distribution is clearly bimodal: a primary peak around 120ms
-    (normal operations) and a secondary smaller peak around 220ms (slow responses).
-    Rug marks appear as subtle vertical tick marks along the x-axis below y=0, showing
-    the exact location of each of the ~220 data points. The marks are denser in the
-    80-160ms range, matching the KDE peak. The title "density-rug · bokeh · pyplots.ai"
-    is in the top-left. Axes are labeled "Response Time (ms)" and "Density". Grid
-    lines are dashed and subtle. Background is light gray (#fafafa).'
+  - Design Excellence capped at 15/20 due to minimal refinement touches; could add
+    custom rug mark styling, more intentional whitespace, or visual hierarchy cues
+    through size variation for additional sophistication
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct and appropriate
+      Chrome: Title "density-rug · Python · bokeh · anyplot.ai" in dark INK (#1A1A17), axis labels "Response Time (ms)" and "Density" in dark INK, tick labels in INK_SOFT (#4A4A44) - all clearly readable with excellent contrast
+      Data: KDE curve with semi-transparent fill (35% alpha) and darker line overlay in brand green (#009E73), bimodal distribution with prominent peak at ~120ms and secondary peak at ~220ms, rug marks along x-axis in same brand green with 50% alpha showing individual observation locations
+      Legibility verdict: PASS - all elements clearly visible and readable, perfect theme adaptation
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) - correct and appropriate
+      Chrome: Title, axis labels, and tick labels adapted to light colors (INK becomes #F0EFE8, INK_SOFT becomes #B8B7B0) - all clearly readable with excellent contrast on dark surface, no dark-on-dark failures
+      Data: KDE curve, fill, and rug marks remain identical brand green (#009E73) as light render - only chrome has adapted, confirming proper theme switching
+      Legibility verdict: PASS - all text and data elements clearly readable on dark surface, no contrast failures, brand green maintains excellent visibility
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are readable, though tick labels
-          could be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements
+        comment: Title (28pt), axis labels (22pt), tick labels (18pt) explicitly sized
+          and readable in both themes with perfect contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text elements positioned without collisions; y-axis extended
+          below zero to accommodate rug marks
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: KDE curve and rug marks are visible; rug marks are appropriately
-          subtle but could be slightly more prominent
+        comment: KDE curve, fill, line overlay, and rug marks all clearly visible
+          and distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color, no accessibility issues
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Response Time (ms), Density'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Single brand green (#009E73) is Okabe-Ito position 1 (colorblind-safe)
+          with excellent contrast on both surfaces
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent proportions with generous margins; y-axis properly extended
+          to display rug marks; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is slightly too prominent with alpha 0.3
+        passed: true
+        comment: 'Title correct format; axis labels descriptive: ''Response Time (ms)''
+          and ''Density'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand), backgrounds #FAF8F1 (light) and #1A1A17
+          (dark), theme-adaptive chrome perfect, data colors identical across renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Clean professional design with intentional visual hierarchy; manual
+          KDE demonstrates sophistication; could reach 8 with additional design refinements
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (15% alpha) and intentional y-axis extension show purposeful
+          customization rather than generic defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Excellent visual hierarchy: dominant peak draws attention, secondary
+          peak visible, rug marks provide data transparency'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: KDE with rug marks'
+        comment: Correct KDE + rug mark combination
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Response times correctly mapped to x-axis, density to y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: KDE curve with fill, rug marks along
-          x-axis, semi-transparent fill'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: KDE with fill, line overlay, and rug marks'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X/Y mapping correct; axes show full data range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend required for single-series density plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: density-rug · bokeh · pyplots.ai'
+        comment: 'Title format correct: ''density-rug · Python · bokeh · anyplot.ai'''
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bimodal distribution which demonstrates KDE well; rug marks
-          show clustering
+        comment: 'Shows all aspects: KDE reveals distribution shape and modality,
+          rug marks show individual observations'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: API response times is a realistic, neutral scenario
+        comment: API response times (120-220ms bimodal) are realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Response times 50-350ms are realistic for API latency
+        comment: Values sensible for domain; bimodal structure typical of real latency
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -153,54 +182,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → KDE computation → plot
-          → save'
+        comment: Straightforward linear flow with no unnecessary functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Seed set with np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'Only necessary imports: os, time, pathlib, numpy, bokeh, selenium'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; manual KDE intentional and correct
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also creates plot.html (extra file, though
-          acceptable for Bokeh)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, patch for filled area, segment for rug marks,
-          export_png. Could leverage HoverTool for interactivity.
+        comment: 'Excellent Bokeh patterns: ColumnDataSource, patch/line/segment glyphs,
+          Selenium screenshot approach matches library-specific guidance'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Smart negative y-value trick for rug marks below x-axis; proper alpha
+          blending for overlapping marks
+    score_caps:
+      applied: false
+      details: No score cap conditions met
+    total:
+      score: 95
+      max: 100
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - html-export
   patterns:
   - data-generation
-  - columndatasource
   dataprep:
   - kde
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
