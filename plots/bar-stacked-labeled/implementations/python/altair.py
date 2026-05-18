@@ -1,12 +1,29 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-18
 """
 
-import altair as alt
-import pandas as pd
+import os
+import sys
 
+
+# Remove current directory from path to avoid shadowing altair library
+sys.path = [p for p in sys.path if not p.endswith("/python")]
+
+import altair as alt  # noqa: E402
+import pandas as pd  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Quarterly revenue by product category
 data = pd.DataFrame(
@@ -22,17 +39,17 @@ totals = data.groupby("quarter")["revenue"].sum().reset_index()
 totals.columns = ["quarter", "total"]
 totals["label"] = totals["total"].apply(lambda x: f"${x}K")
 
-# Create stacked bar chart
+# Create stacked bar chart with enhanced styling
 bars = (
     alt.Chart(data)
-    .mark_bar(strokeWidth=1, stroke="white")
+    .mark_bar(strokeWidth=2, stroke="white", opacity=0.95)
     .encode(
         x=alt.X("quarter:N", title="Quarter", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
         y=alt.Y("revenue:Q", title="Revenue ($K)", axis=alt.Axis(labelFontSize=18, titleFontSize=22)),
         color=alt.Color(
             "product:N",
             title="Product",
-            scale=alt.Scale(domain=["Software", "Hardware", "Services"], range=["#306998", "#FFD43B", "#4DAF4A"]),
+            scale=alt.Scale(domain=["Software", "Hardware", "Services"], range=OKABE_ITO),
             legend=alt.Legend(titleFontSize=20, labelFontSize=18, symbolSize=300),
         ),
         order=alt.Order("product:N", sort="ascending"),
@@ -40,25 +57,39 @@ bars = (
     )
 )
 
-# Total labels above bars
+# Total labels with improved styling for emphasis
 labels = (
     alt.Chart(totals)
-    .mark_text(fontSize=22, fontWeight="bold", dy=-15, color="#333333")
+    .mark_text(fontSize=24, fontWeight="bold", dy=-20, color=INK, align="center")
     .encode(x=alt.X("quarter:N"), y=alt.Y("total:Q"), text="label:N")
+)
+
+# Add visual hierarchy with a subtle reference line at average total
+avg_total = totals["total"].mean()
+reference_line = (
+    alt.Chart(pd.DataFrame({"avg": [avg_total]}))
+    .mark_rule(color=INK_SOFT, opacity=0.2, strokeWidth=2, strokeDash=[5, 5])
+    .encode(y=alt.Y("avg:Q"))
 )
 
 # Combine and configure
 chart = (
-    (bars + labels)
+    (reference_line + bars + labels)
     .properties(
-        width=1400,
-        height=800,
-        title=alt.Title("bar-stacked-labeled · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("bar-stacked-labeled · Python · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_axis(grid=True, gridOpacity=0.3, gridDash=[3, 3])
-    .configure_view(strokeWidth=0)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 # Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+script_dir = os.path.dirname(os.path.abspath(__file__))
+chart.save(os.path.join(script_dir, f"plot-{THEME}.png"), scale_factor=3.0)
+chart.save(os.path.join(script_dir, f"plot-{THEME}.html"))

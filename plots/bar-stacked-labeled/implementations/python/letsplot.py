@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-stacked-labeled: Stacked Bar Chart with Total Labels
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-09
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-18
 """
 
 import os
@@ -11,6 +11,8 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_line,
+    element_rect,
     element_text,
     geom_bar,
     geom_text,
@@ -25,6 +27,16 @@ from lets_plot import (
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Quarterly revenue by product category (in millions)
 data = {
@@ -65,36 +77,41 @@ plot = (
         vjust=-0.5,
         size=18,
         fontface="bold",
-        color="#333333",
+        color=INK,
     )
-    + scale_fill_manual(values=["#306998", "#FFD43B", "#5BA85B"])
+    + scale_fill_manual(values=OKABE_ITO)
     + labs(
-        title="Quarterly Revenue by Product · bar-stacked-labeled · lets-plot · pyplots.ai",
+        title="bar-stacked-labeled · Python · letsplot · anyplot.ai",
         x="Quarter",
         y="Revenue (Millions USD)",
-        fill="Product Category",
+        fill="Product",
     )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=24, face="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=24, face="bold", color=INK),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
     )
     + ggsize(1600, 900)
 )
 
-# Save as PNG (scale 3x for 4800 × 2700 px)
-ggsave(plot, "plot.png", scale=3)
-
-# Save as HTML for interactive viewing
-ggsave(plot, "plot.html")
+# Save as PNG and HTML with theme suffix (scale 3x for 4800 × 2700 px)
+ggsave(plot, f"plot-{THEME}.png", scale=3)
+ggsave(plot, f"plot-{THEME}.html")
 
 # Move files from lets-plot-images subdirectory to current directory (lets-plot quirk)
 if os.path.exists("lets-plot-images"):
-    for f in ["plot.png", "plot.html"]:
+    for f in [f"plot-{THEME}.png", f"plot-{THEME}.html"]:
         src = os.path.join("lets-plot-images", f)
         if os.path.exists(src):
             shutil.move(src, f)
-    shutil.rmtree("lets-plot-images")
+    # Clean up subdirectory if empty
+    if not os.listdir("lets-plot-images"):
+        shutil.rmtree("lets-plot-images")
