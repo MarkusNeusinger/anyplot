@@ -16,6 +16,7 @@ from core.database.connection import (
 )
 from core.database.models import (
     FEEDBACK_REACTIONS,
+    FEEDBACK_STATUSES,
     LANGUAGES_SEED,
     LIBRARIES_SEED,
     Feedback,
@@ -50,6 +51,7 @@ __all__ = [
     "Impl",
     "Feedback",
     "FEEDBACK_REACTIONS",
+    "FEEDBACK_STATUSES",
     "LIBRARIES_SEED",
     "LANGUAGES_SEED",
     # Repositories

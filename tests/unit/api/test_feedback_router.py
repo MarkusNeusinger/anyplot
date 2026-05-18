@@ -49,9 +49,25 @@ class TestFeedbackRouter:
         assert response.json() == {"status": "ok"}
         repo_cls.assert_not_called()
 
-    def test_empty_message_returns_400(self, client):
+    def test_empty_message_and_no_reaction_returns_400(self, client):
         response = client.post("/feedback", json={"message": "   "})
         assert response.status_code == 400
+
+    def test_reaction_only_is_accepted(self, client):
+        """Submitting just a reaction (no message) is allowed."""
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.has_recent_duplicate = AsyncMock(return_value=False)
+        instance.create = AsyncMock(return_value=None)
+
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post("/feedback", json={"reaction": "thumbs_up"})
+
+        assert response.status_code == 200
+        instance.create.assert_awaited_once()
+        kwargs = instance.create.await_args.args[0]
+        assert kwargs["message"] is None
+        assert kwargs["reaction"] == "thumbs_up"
 
     def test_message_over_500_chars_returns_400(self, client):
         response = client.post("/feedback", json={"message": "x" * 501})
@@ -61,14 +77,44 @@ class TestFeedbackRouter:
         response = client.post("/feedback", json={"message": "hello", "reaction": "fire"})
         assert response.status_code == 400
 
-    def test_invalid_email_returns_400(self, client):
-        response = client.post("/feedback", json={"message": "hello", "email": "no-at-symbol"})
+    def test_link_stuffing_message_is_silently_dropped(self, client):
+        """Messages with 2+ URLs return 200 but never reach the repository."""
+        with patch("api.routers.feedback.FeedbackRepository") as repo_cls:
+            response = client.post(
+                "/feedback",
+                json={"message": "check https://buy.example and https://promo.example now"},
+            )
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+        repo_cls.assert_not_called()
+
+    def test_duplicate_message_is_silently_dropped(self, client):
+        """Same message from the same session within the lookback window is suppressed."""
+        instance = AsyncMock()
+        instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.has_recent_duplicate = AsyncMock(return_value=True)
+        instance.create = AsyncMock(return_value=None)
+
+        with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
+            response = client.post(
+                "/feedback",
+                json={"message": "spam", "session_id": "abc"},
+            )
+
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+        instance.create.assert_not_awaited()
+
+    def test_heart_reaction_is_now_rejected(self, client):
+        """`heart` was removed from the allow-list — it should 400 now."""
+        response = client.post("/feedback", json={"message": "hi", "reaction": "heart"})
         assert response.status_code == 400
 
     def test_happy_path_calls_repo_create(self, client):
         """Valid payload should sanitize fields and forward them to FeedbackRepository.create."""
         instance = AsyncMock()
         instance.count_recent_by_ip = AsyncMock(return_value=0)
+        instance.has_recent_duplicate = AsyncMock(return_value=False)
         instance.create = AsyncMock(return_value=None)
 
         with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
@@ -76,8 +122,8 @@ class TestFeedbackRouter:
                 "/feedback",
                 json={
                     "message": "  Looks great!  ",
-                    "reaction": "heart",
-                    "email": "user@example.com",
+                    "reaction": "thumbs_up",
+                    "contact": "  @someone  ",
                     "path": "/scatter-basic",
                     "spec_id": "scatter-basic",
                     "viewport": "1920x1080",
@@ -91,8 +137,8 @@ class TestFeedbackRouter:
         instance.create.assert_awaited_once()
         kwargs = instance.create.await_args.args[0]
         assert kwargs["message"] == "Looks great!"  # trimmed
-        assert kwargs["reaction"] == "heart"
-        assert kwargs["email"] == "user@example.com"
+        assert kwargs["reaction"] == "thumbs_up"
+        assert kwargs["contact"] == "@someone"  # trimmed
         assert kwargs["spec_id"] == "scatter-basic"
         assert kwargs["ip_hash"]  # sha256 hex, not raw IP
         assert "198.51.100.7" not in kwargs["ip_hash"]

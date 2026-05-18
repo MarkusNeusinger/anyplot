@@ -1,13 +1,18 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Fab from '@mui/material/Fab';
 import IconButton from '@mui/material/IconButton';
 import Popover from '@mui/material/Popover';
 import TextField from '@mui/material/TextField';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import FeedbackIcon from '@mui/icons-material/Feedback';
+import Tooltip from '@mui/material/Tooltip';
+import ForumIcon from '@mui/icons-material/ForumOutlined';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutlineOutlined';
+import ThumbUpIcon from '@mui/icons-material/ThumbUpOutlined';
+import ThumbDownIcon from '@mui/icons-material/ThumbDownOutlined';
 import CloseIcon from '@mui/icons-material/Close';
 import { API_URL } from '../constants';
 import { useAnalytics } from '../hooks';
@@ -16,16 +21,28 @@ import { RESERVED_TOP_LEVEL } from '../utils/paths';
 
 const MAX_MESSAGE_LENGTH = 500;
 const SESSION_KEY = 'anyplot_feedback_session';
+const THANKS_TIMEOUT_MS = 1200;
+
+// Floating quick-action buttons sit on the page background so they read as
+// chips rather than coloured CTAs — the main FAB stays the only primary mark.
+const miniFabSx = {
+  width: 40,
+  height: 40,
+  bgcolor: 'background.default',
+  color: 'text.primary',
+  opacity: 0.85,
+  '&:hover, &:focus-visible': { opacity: 1, bgcolor: 'action.hover' },
+} as const;
 
 const REACTIONS = [
   { value: 'thumbs_up', label: 'thumbs up', glyph: '👍' },
   { value: 'thumbs_down', label: 'thumbs down', glyph: '👎' },
-  { value: 'bug', label: 'bug', glyph: '🐛' },
   { value: 'idea', label: 'idea', glyph: '💡' },
-  { value: 'heart', label: 'love it', glyph: '❤️' },
+  { value: 'bug', label: 'bug', glyph: '🪲' },
 ] as const;
 
 type Reaction = (typeof REACTIONS)[number]['value'];
+type Mode = 'closed' | 'quick' | 'full';
 
 function specIdFromPath(pathname: string): string | undefined {
   const segments = pathname.split('/').filter(Boolean);
@@ -50,23 +67,67 @@ function newSessionId(): string {
 }
 
 /**
- * Floating quick-feedback widget (issue #5662). Always-visible FAB in the
- * bottom-right corner opens a small popover with a free-text field, an optional
- * reaction, and an optional email. Submissions POST to `/feedback`. No GitHub
- * account or page navigation needed — the bar is "type one sentence and send."
+ * Floating quick-feedback widget (issue #5662). The FAB opens a small
+ * vertical stack of 👍 / 👎 / 💬: the thumbs submit a reaction-only entry
+ * (URL liked/disliked) and close immediately; the chat bubble expands the
+ * full popover form with free-text, all reactions, and an optional contact.
  */
 export function FeedbackWidget() {
   const { trackEvent } = useAnalytics();
   const anchorRef = useRef<HTMLButtonElement | null>(null);
-  const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<Mode>('closed');
+  const [thanksVisible, setThanksVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [reaction, setReaction] = useState<Reaction | null>(null);
-  const [email, setEmail] = useState('');
+  const [contact, setContact] = useState('');
   // Honeypot — kept in state but rendered off-screen so real users never see it.
   const [website, setWebsite] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Number of pixels the footer currently overlaps the viewport — used to lift
+  // the FAB stack so it cannot drift over the footer's last-line links once the
+  // page is fully scrolled. When the footer is offscreen, lift stays at 0 and
+  // the FAB sits at its normal corner position.
+  const [lift, setLift] = useState(0);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const footer = document.querySelector('footer');
+    if (!footer) return;
+    let rafId = 0;
+    const update = () => {
+      // Only narrow mobile viewports actually collide — at MUI's sm breakpoint
+      // and above the footer's last link sits well left of the FAB column.
+      if (window.innerWidth >= 600) {
+        setLift(0);
+        return;
+      }
+      const r = footer.getBoundingClientRect();
+      setLift(Math.max(0, window.innerHeight - r.top));
+    };
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        update();
+      });
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, []);
+  // Default FAB center on xs is 32px from viewport bottom (bottom 12 + half of
+  // 40). Once the footer enters far enough to cross that line, lift the stack
+  // so the footer's top edge runs exactly through the FAB centre.
+  const FAB_CENTER_FROM_BOTTOM_XS = 32;
+  const liftTransform =
+    lift > FAB_CENTER_FROM_BOTTOM_XS ? `translateY(-${lift - FAB_CENTER_FROM_BOTTOM_XS}px)` : 'none';
 
   const [sessionId, setSessionId] = useLocalStorage<string>(SESSION_KEY, '');
 
@@ -79,40 +140,94 @@ export function FeedbackWidget() {
 
   const currentPath = useMemo(
     () => (typeof window !== 'undefined' ? window.location.pathname + window.location.search : ''),
-    [open]
+    [mode]
   );
 
-  // Auto-close after a successful submission so the FAB returns to its quiet state.
+  // Auto-reset the full-form thank-you state and clear inputs.
   useEffect(() => {
     if (!submitted) return;
     const id = window.setTimeout(() => {
-      setOpen(false);
+      setMode('closed');
       setSubmitted(false);
       setMessage('');
       setReaction(null);
-      setEmail('');
+      setContact('');
       setWebsite('');
     }, 1500);
     return () => window.clearTimeout(id);
   }, [submitted]);
 
-  const handleOpen = () => {
-    setOpen(true);
-    setError(null);
-    trackEvent('feedback_opened', { path: currentPath || undefined });
+  // Auto-dismiss the quick-submit "Thanks" toast.
+  useEffect(() => {
+    if (!thanksVisible) return;
+    const id = window.setTimeout(() => setThanksVisible(false), THANKS_TIMEOUT_MS);
+    return () => window.clearTimeout(id);
+  }, [thanksVisible]);
+
+  const handleFabClick = () => {
+    if (mode === 'closed') {
+      setMode('quick');
+      setError(null);
+      trackEvent('feedback_opened', { path: currentPath || undefined });
+    } else {
+      setMode('closed');
+    }
+  };
+
+  const handleExpand = () => {
+    setMode('full');
   };
 
   const handleClose = () => {
     if (submitting) return;
-    setOpen(false);
+    setMode('closed');
     setError(null);
+  };
+
+  const handleQuickAway = () => {
+    if (mode === 'quick') setMode('closed');
+  };
+
+  const buildPayload = (overrides: { message: string | null; reaction: Reaction | null; contact: string | null }) => ({
+    message: overrides.message,
+    reaction: overrides.reaction,
+    contact: overrides.contact,
+    path: currentPath,
+    spec_id: specIdFromPath(window.location.pathname),
+    viewport: `${window.innerWidth}x${window.innerHeight}`,
+    session_id: ensureSessionId(),
+    website,
+  });
+
+  const submitQuickReaction = async (r: Reaction) => {
+    // Optimistic close + toast: the FAB returns to its quiet state immediately,
+    // so the interaction feels instant even if the network is slow.
+    setMode('closed');
+    setThanksVisible(true);
+    try {
+      await fetch(`${API_URL}/feedback`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(buildPayload({ message: null, reaction: r, contact: null })),
+      });
+      trackEvent('feedback_submitted', {
+        path: currentPath || undefined,
+        reaction: r,
+        has_contact: 'false',
+        spec_id: specIdFromPath(window.location.pathname),
+        mode: 'quick',
+      });
+    } catch {
+      // The user already saw the toast; we don't undo it. A retried network
+      // failure here is acceptable lossage for a one-tap reaction.
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = message.trim();
-    if (!trimmed) {
-      setError('Please add a short message.');
+    if (!trimmed && !reaction) {
+      setError('Please add a message or pick a reaction.');
       return;
     }
     if (trimmed.length > MAX_MESSAGE_LENGTH) {
@@ -123,23 +238,13 @@ export function FeedbackWidget() {
     setSubmitting(true);
     setError(null);
 
-    const spec_id = specIdFromPath(window.location.pathname);
-    const viewport = `${window.innerWidth}x${window.innerHeight}`;
-
     try {
       const response = await fetch(`${API_URL}/feedback`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: trimmed,
-          reaction,
-          email: email.trim() || null,
-          path: currentPath,
-          spec_id,
-          viewport,
-          session_id: ensureSessionId(),
-          website,
-        }),
+        body: JSON.stringify(
+          buildPayload({ message: trimmed || null, reaction, contact: contact.trim() || null })
+        ),
       });
 
       if (!response.ok) {
@@ -149,8 +254,9 @@ export function FeedbackWidget() {
       trackEvent('feedback_submitted', {
         path: currentPath || undefined,
         reaction: reaction ?? undefined,
-        has_email: email.trim() ? 'true' : 'false',
-        spec_id,
+        has_contact: contact.trim() ? 'true' : 'false',
+        spec_id: specIdFromPath(window.location.pathname),
+        mode: 'full',
       });
       setSubmitted(true);
     } catch {
@@ -165,26 +271,115 @@ export function FeedbackWidget() {
       <Fab
         ref={anchorRef}
         size="medium"
-        color="primary"
-        onClick={handleOpen}
+        color="default"
+        onClick={handleFabClick}
         aria-label="Open feedback"
+        aria-expanded={mode !== 'closed'}
         sx={{
           position: 'fixed',
           bottom: { xs: 12, sm: 16 },
           right: { xs: 12, sm: 16 },
           zIndex: 1300,
+          width: { xs: 40, sm: 48 },
+          height: { xs: 40, sm: 48 },
+          minHeight: { xs: 40, sm: 48 },
+          bgcolor: 'background.default',
+          color: 'primary.main',
+          opacity: { xs: 0.75, sm: 0.85 },
+          transform: liftTransform,
+          transition: 'transform 120ms ease-out',
+          '&:hover, &:focus-visible': { opacity: 1, bgcolor: 'action.hover' },
         }}
       >
-        <FeedbackIcon />
+        <ForumIcon />
       </Fab>
 
+      {mode === 'quick' && (
+        <ClickAwayListener onClickAway={handleQuickAway}>
+          <Box
+            role="menu"
+            aria-label="Quick feedback"
+            sx={{
+              position: 'fixed',
+              right: { xs: 12, sm: 20 },
+              bottom: { xs: 60, sm: 72 },
+              zIndex: 1301,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+              alignItems: 'center',
+              transform: liftTransform,
+            }}
+          >
+            <Tooltip title="Leave detailed feedback" placement="left">
+              <Fab
+                size="small"
+                color="default"
+                onClick={handleExpand}
+                aria-label="Open detailed feedback"
+                sx={miniFabSx}
+              >
+                <ChatBubbleOutlineIcon fontSize="small" />
+              </Fab>
+            </Tooltip>
+            <Tooltip title="I don't like this page" placement="left">
+              <Fab
+                size="small"
+                color="default"
+                onClick={() => submitQuickReaction('thumbs_down')}
+                aria-label="Quick thumbs down"
+                sx={miniFabSx}
+              >
+                <ThumbDownIcon fontSize="small" />
+              </Fab>
+            </Tooltip>
+            <Tooltip title="I like this page" placement="left">
+              <Fab
+                size="small"
+                color="default"
+                onClick={() => submitQuickReaction('thumbs_up')}
+                aria-label="Quick thumbs up"
+                sx={miniFabSx}
+              >
+                <ThumbUpIcon fontSize="small" />
+              </Fab>
+            </Tooltip>
+          </Box>
+        </ClickAwayListener>
+      )}
+
+      {thanksVisible && (
+        <Box
+          role="status"
+          aria-live="polite"
+          sx={{
+            position: 'fixed',
+            right: { xs: 60, sm: 76 },
+            bottom: { xs: 16, sm: 22 },
+            bgcolor: 'background.paper',
+            transform: liftTransform,
+            color: 'text.primary',
+            px: 1.5,
+            py: 0.5,
+            borderRadius: 1,
+            boxShadow: 3,
+            fontSize: 13,
+            fontWeight: 500,
+            zIndex: 1301,
+            pointerEvents: 'none',
+          }}
+        >
+          Thanks!
+        </Box>
+      )}
+
       <Popover
-        open={open}
+        open={mode === 'full'}
         anchorEl={anchorRef.current}
         onClose={handleClose}
         anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
         transformOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-        slotProps={{ paper: { sx: { width: { xs: 'calc(100vw - 24px)', sm: 360 }, maxWidth: 400, p: 2 } } }}
+        slotProps={{ paper: { sx: { width: { xs: 'calc(100vw - 12px)', sm: 360 }, maxWidth: 400, p: 1.5 } } }}
       >
         {submitted ? (
           <Box sx={{ py: 3, textAlign: 'center' }} role="status" aria-live="polite">
@@ -233,16 +428,29 @@ export function FeedbackWidget() {
             </ToggleButtonGroup>
 
             <TextField
-              type="email"
               fullWidth
               size="small"
-              placeholder="Email (optional, for follow-up)"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              slotProps={{ htmlInput: { maxLength: 255, 'aria-label': 'Email (optional)' } }}
+              placeholder="Name or email (optional)"
+              value={contact}
+              onChange={(e) => setContact(e.target.value)}
+              slotProps={{ htmlInput: { maxLength: 255, 'aria-label': 'Contact (optional)' } }}
               disabled={submitting}
-              sx={{ mb: 1.5 }}
+              sx={{ mb: 1 }}
             />
+
+            <Box
+              sx={{
+                fontSize: 11,
+                color: 'text.secondary',
+                mb: 1.5,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+              title={currentPath || undefined}
+            >
+              Page: {currentPath || '/'}
+            </Box>
 
             {/* Honeypot — real users never see this, bots will fill it and trip the server-side guard. */}
             <Box aria-hidden="true" sx={{ position: 'absolute', left: '-9999px', width: 1, height: 1, overflow: 'hidden' }}>
@@ -266,7 +474,12 @@ export function FeedbackWidget() {
               <Box sx={{ fontSize: 12, color: 'text.secondary' }}>
                 {message.length}/{MAX_MESSAGE_LENGTH}
               </Box>
-              <Button type="submit" variant="contained" size="small" disabled={submitting || !message.trim()}>
+              <Button
+                type="submit"
+                variant="contained"
+                size="small"
+                disabled={submitting || (!message.trim() && !reaction)}
+              >
                 {submitting ? 'Sending…' : 'Send'}
               </Button>
             </Box>

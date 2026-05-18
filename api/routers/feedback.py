@@ -1,12 +1,14 @@
 """Feedback endpoint — in-app quick feedback widget (issue #5662).
 
-Accepts a single POST with a short free-text message plus optional reaction,
-email, and page context. Guards against spam with a honeypot field, hard
-length cap, reaction allow-list, and per-IP rate limit.
+Accepts a single POST with an optional short free-text message and/or
+reaction, free-form contact handle, and page context. At least one of
+message or reaction must be present. Guards against spam with a honeypot
+field, hard length caps, reaction allow-list, and per-IP rate limit.
 """
 
 import hashlib
 import logging
+import re
 from datetime import datetime, timedelta, timezone
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -23,9 +25,16 @@ logger = logging.getLogger(__name__)
 router = APIRouter(tags=["feedback"])
 
 MAX_MESSAGE_LENGTH = 500
-MAX_EMAIL_LENGTH = 255
+MAX_CONTACT_LENGTH = 255
 RATE_LIMIT_WINDOW = timedelta(minutes=1)
 RATE_LIMIT_MAX = 5
+
+# Anti-spam heuristics — see _is_link_stuffed and the duplicate check below.
+# Both branches return 200 silently (mirroring the honeypot) so bots can't
+# distinguish accepted from suppressed submissions and adapt their payloads.
+_URL_RE = re.compile(r"https?://", re.IGNORECASE)
+MAX_URLS_IN_MESSAGE = 1  # 2+ links treated as link-stuffing SEO spam
+DUPLICATE_LOOKBACK = timedelta(minutes=10)
 
 
 def _client_ip(request: Request) -> str:
@@ -42,6 +51,13 @@ def _hash_ip(ip: str) -> str:
     return hashlib.sha256(ip.encode("utf-8")).hexdigest() if ip else ""
 
 
+def _is_link_stuffed(message: str | None) -> bool:
+    """True if the message reads as link-bait spam (≥2 http(s) URLs)."""
+    if not message:
+        return False
+    return len(_URL_RE.findall(message)) > MAX_URLS_IN_MESSAGE
+
+
 @router.post("/feedback", response_model=FeedbackResponse)
 async def submit_feedback(
     payload: FeedbackRequest, request: Request, db: AsyncSession = Depends(require_db)
@@ -52,29 +68,49 @@ async def submit_feedback(
     if payload.website:
         return FeedbackResponse(status="ok")
 
-    message = (payload.message or "").strip()
-    if not message:
-        raise_validation_error("message must not be empty")
-    if len(message) > MAX_MESSAGE_LENGTH:
+    message = (payload.message or "").strip() or None
+    if message is not None and len(message) > MAX_MESSAGE_LENGTH:
         raise_validation_error(f"message must be {MAX_MESSAGE_LENGTH} characters or fewer")
 
     reaction = payload.reaction
     if reaction is not None and reaction not in FEEDBACK_REACTIONS:
         raise_validation_error(f"reaction must be one of {FEEDBACK_REACTIONS}")
 
-    email = (payload.email or "").strip() or None
-    if email is not None:
-        if "@" not in email or len(email) > MAX_EMAIL_LENGTH:
-            raise_validation_error("email is not valid")
+    if message is None and reaction is None:
+        raise_validation_error("message or reaction must be provided")
+
+    contact = (payload.contact or "").strip() or None
+    if contact is not None and len(contact) > MAX_CONTACT_LENGTH:
+        raise_validation_error(f"contact must be {MAX_CONTACT_LENGTH} characters or fewer")
+
+    # Link-stuffing spam: drop silently with 200 so the bot can't tell its
+    # payload was rejected (same idea as the honeypot above).
+    if _is_link_stuffed(message):
+        return FeedbackResponse(status="ok")
 
     ip_hash = _hash_ip(_client_ip(request))
     repo = FeedbackRepository(db)
 
+    # `feedback.created_at` is TIMESTAMP WITHOUT TIME ZONE (UTC) in Postgres,
+    # so any cutoff used in WHERE clauses must be tz-naive UTC too.
+    now_utc_naive = datetime.now(timezone.utc).replace(tzinfo=None)
+
     if ip_hash:
-        since = datetime.now(timezone.utc) - RATE_LIMIT_WINDOW
+        since = now_utc_naive - RATE_LIMIT_WINDOW
         recent = await repo.count_recent_by_ip(ip_hash, since)
         if recent >= RATE_LIMIT_MAX:
             raise HTTPException(status_code=429, detail="Too many feedback submissions, please slow down")
+
+    # Silent duplicate suppression: same message text from the same IP or
+    # session id within DUPLICATE_LOOKBACK is dropped without an error — keeps
+    # repeated bot copy-paste out of the DB without revealing the filter.
+    if message and await repo.has_recent_duplicate(
+        message,
+        ip_hash or None,
+        (payload.session_id or None) and payload.session_id[:64],
+        now_utc_naive - DUPLICATE_LOOKBACK,
+    ):
+        return FeedbackResponse(status="ok")
 
     user_agent = request.headers.get("user-agent", "")[:500] or None
 
@@ -82,7 +118,7 @@ async def submit_feedback(
         {
             "message": message,
             "reaction": reaction,
-            "email": email,
+            "contact": contact,
             "path": (payload.path or None) and payload.path[:500],
             "spec_id": (payload.spec_id or None) and payload.spec_id[:100],
             "viewport": (payload.viewport or None) and payload.viewport[:20],

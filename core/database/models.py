@@ -203,7 +203,11 @@ class Impl(Base):
 
 
 # Allowed reactions for in-app feedback widget (issue #5662).
-FEEDBACK_REACTIONS = ("thumbs_up", "thumbs_down", "bug", "idea", "heart")
+FEEDBACK_REACTIONS = ("thumbs_up", "thumbs_down", "bug", "idea")
+
+# Triage states for feedback entries — admins move them through these on
+# /debug as they read incoming feedback.
+FEEDBACK_STATUSES = ("new", "in_progress", "done", "wont_solve")
 
 
 class Feedback(Base):
@@ -216,9 +220,9 @@ class Feedback(Base):
     __tablename__ = "feedback"
 
     id: Mapped[str] = mapped_column(UniversalUUID, primary_key=True, default=lambda: str(uuid4()))
-    message: Mapped[str] = mapped_column(String(500), nullable=False)
+    message: Mapped[str | None] = mapped_column(String(500), nullable=True)
     reaction: Mapped[str | None] = mapped_column(String(20), nullable=True)
-    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    contact: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Context captured automatically with the message
     path: Mapped[str | None] = mapped_column(String(500), nullable=True)
@@ -229,12 +233,19 @@ class Feedback(Base):
     # SHA-256 of the client IP — used for rate limiting, not user identification.
     ip_hash: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
+    # Triage state — see FEEDBACK_STATUSES above. Updated from /debug.
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="new")
+
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now(), nullable=False)
 
     __table_args__ = (
         CheckConstraint(
-            "reaction IS NULL OR reaction IN ('thumbs_up','thumbs_down','bug','idea','heart')",
+            "reaction IS NULL OR reaction IN ('thumbs_up','thumbs_down','bug','idea')",
             name="ck_feedback_reaction_valid",
+        ),
+        CheckConstraint(
+            "status IN ('new','in_progress','done','wont_solve')",
+            name="ck_feedback_status_valid",
         ),
     )
 

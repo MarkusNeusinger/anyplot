@@ -157,9 +157,9 @@ class StatsResponse(BaseModel):
 class FeedbackRequest(BaseModel):
     """In-app quick feedback submission (issue #5662)."""
 
-    message: str
+    message: str | None = None
     reaction: str | None = None
-    email: str | None = None
+    contact: str | None = None
     path: str | None = None
     spec_id: str | None = None
     viewport: str | None = None

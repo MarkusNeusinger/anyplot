@@ -639,3 +639,108 @@ class TestAdminAllowedEmailsParsing:
 
         s = Settings()
         assert s.admin_allowed_emails == []
+
+
+class TestFeedbackDebugEndpoints:
+    """Coverage for /debug/feedback/* — analytics + triage (issue #5662 follow-up)."""
+
+    def test_top_pages_rejects_invalid_reaction(self, db_client) -> None:
+        client, _ = db_client
+        response = client.get("/debug/feedback/top?reaction=fire")
+        assert response.status_code == 400
+
+    def test_top_pages_rejects_out_of_range_limit(self, db_client) -> None:
+        client, _ = db_client
+        response = client.get("/debug/feedback/top?reaction=thumbs_up&limit=999")
+        assert response.status_code == 400
+
+    def test_top_pages_returns_grouped_counts(self, db_client) -> None:
+        client, _ = db_client
+        repo = MagicMock()
+        repo.top_paths_by_reaction = AsyncMock(
+            return_value=[
+                {"path": "/scatter-basic", "count": 7, "last_seen": "2026-05-18T12:00:00"},
+                {"path": "/heatmap-basic", "count": 3, "last_seen": "2026-05-17T08:30:00"},
+            ]
+        )
+        with patch("api.routers.debug.FeedbackRepository", return_value=repo):
+            response = client.get("/debug/feedback/top?reaction=thumbs_up&limit=5")
+        assert response.status_code == 200
+        body = response.json()
+        assert [entry["path"] for entry in body] == ["/scatter-basic", "/heatmap-basic"]
+        assert body[0]["count"] == 7
+        repo.top_paths_by_reaction.assert_awaited_once_with("thumbs_up", 5)
+
+    def test_messages_filters_by_status(self, db_client) -> None:
+        client, _ = db_client
+        entry = MagicMock()
+        entry.id = "abc-123"
+        entry.message = "broken plot"
+        entry.reaction = "bug"
+        entry.contact = None
+        entry.path = "/scatter-basic"
+        entry.spec_id = "scatter-basic"
+        entry.viewport = "1920x1080"
+        entry.status = "new"
+        entry.created_at = datetime(2026, 5, 18, 12, 0, 0)
+
+        repo = MagicMock()
+        repo.list_with_message = AsyncMock(return_value=[entry])
+        with patch("api.routers.debug.FeedbackRepository", return_value=repo):
+            response = client.get("/debug/feedback/messages?status=new&limit=10")
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 1
+        assert body[0]["status"] == "new"
+        assert body[0]["message"] == "broken plot"
+        repo.list_with_message.assert_awaited_once_with("new", 10)
+
+    def test_messages_rejects_invalid_status(self, db_client) -> None:
+        client, _ = db_client
+        response = client.get("/debug/feedback/messages?status=archived")
+        assert response.status_code == 400
+
+    def test_messages_open_maps_to_new_and_in_progress(self, db_client) -> None:
+        """`status=open` is the default debug-page filter — server-side pseudo
+        value that expands to ('new', 'in_progress')."""
+        client, _ = db_client
+        repo = MagicMock()
+        repo.list_with_message = AsyncMock(return_value=[])
+        with patch("api.routers.debug.FeedbackRepository", return_value=repo):
+            response = client.get("/debug/feedback/messages?status=open&limit=10")
+        assert response.status_code == 200
+        repo.list_with_message.assert_awaited_once_with(("new", "in_progress"), 10)
+
+    def test_patch_status_happy_path(self, db_client) -> None:
+        client, _ = db_client
+        updated = MagicMock()
+        updated.id = "abc-123"
+        updated.message = "broken plot"
+        updated.reaction = "bug"
+        updated.contact = None
+        updated.path = "/scatter-basic"
+        updated.spec_id = "scatter-basic"
+        updated.viewport = None
+        updated.status = "done"
+        updated.created_at = datetime(2026, 5, 18, 12, 0, 0, tzinfo=timezone.utc)
+
+        repo = MagicMock()
+        repo.update_status = AsyncMock(return_value=updated)
+        with patch("api.routers.debug.FeedbackRepository", return_value=repo):
+            response = client.patch("/debug/feedback/abc-123", json={"status": "done"})
+        assert response.status_code == 200
+        assert response.json()["status"] == "done"
+        repo.update_status.assert_awaited_once_with("abc-123", "done")
+
+    def test_patch_status_rejects_unknown_value(self, db_client) -> None:
+        client, _ = db_client
+        response = client.patch("/debug/feedback/abc-123", json={"status": "archived"})
+        assert response.status_code == 400
+
+    def test_patch_status_returns_404_when_missing(self, db_client) -> None:
+        client, _ = db_client
+        repo = MagicMock()
+        repo.update_status = AsyncMock(return_value=None)
+        with patch("api.routers.debug.FeedbackRepository", return_value=repo):
+            response = client.patch("/debug/feedback/unknown", json={"status": "done"})
+        assert response.status_code == 404

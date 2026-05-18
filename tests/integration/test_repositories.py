@@ -368,10 +368,10 @@ class TestFeedbackRepository:
         """Should persist an entry and return it via list_recent."""
         repo = FeedbackRepository(test_session)
 
-        entry = await repo.create({"message": "Hello", "reaction": "heart", "ip_hash": "deadbeef"})
+        entry = await repo.create({"message": "Hello", "reaction": "thumbs_up", "ip_hash": "deadbeef"})
         assert entry.id is not None
         assert entry.message == "Hello"
-        assert entry.reaction == "heart"
+        assert entry.reaction == "thumbs_up"
 
         recent = await repo.list_recent()
         assert len(recent) == 1

@@ -75,6 +75,32 @@ interface WeaknessCount {
   count: number;
 }
 
+interface FeedbackTopPage {
+  path: string;
+  count: number;
+  last_seen: string | null;
+}
+
+type FeedbackStatus = 'new' | 'in_progress' | 'done' | 'wont_solve';
+const FEEDBACK_STATUS_OPTIONS: FeedbackStatus[] = ['new', 'in_progress', 'done', 'wont_solve'];
+
+// "" → all statuses, "open" → new + in_progress (server-side pseudo-filter).
+// Default view shows the open queue so resolved entries don't drown out triage.
+type FeedbackMessageFilter = '' | 'open' | FeedbackStatus;
+const DEFAULT_MESSAGE_FILTER: FeedbackMessageFilter = 'open';
+
+interface FeedbackMessageItem {
+  id: string;
+  message: string;
+  reaction: string | null;
+  contact: string | null;
+  path: string | null;
+  spec_id: string | null;
+  viewport: string | null;
+  status: FeedbackStatus;
+  created_at: string;
+}
+
 interface DebugStatus {
   total_specs: number;
   total_implementations: number;
@@ -183,11 +209,12 @@ const clearAdminToken = (): void => {
   try { sessionStorage.removeItem(ADMIN_TOKEN_KEY); } catch { /* noop */ }
 };
 
-const adminFetch = (url: string, token: string): Promise<Response> =>
-  fetch(url, {
-    credentials: 'include',
-    headers: token ? { 'X-Admin-Token': token } : undefined,
-  });
+const adminFetch = (url: string, token: string, init: RequestInit = {}): Promise<Response> => {
+  const headers: Record<string, string> = { ...((init.headers as Record<string, string>) || {}) };
+  if (token) headers['X-Admin-Token'] = token;
+  if (init.body && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
+  return fetch(url, { credentials: 'include', ...init, headers });
+};
 
 export function DebugPage() {
   const [data, setData] = useState<DebugStatus | null>(null);
@@ -207,6 +234,11 @@ export function DebugPage() {
 
   const [pings, setPings] = useState<Array<{ ms: number; ok: boolean }>>([]);
   const [prevFetchKey, setPrevFetchKey] = useState({ adminToken, reloadCounter });
+
+  const [topThumbsUp, setTopThumbsUp] = useState<FeedbackTopPage[]>([]);
+  const [topThumbsDown, setTopThumbsDown] = useState<FeedbackTopPage[]>([]);
+  const [feedbackMessages, setFeedbackMessages] = useState<FeedbackMessageItem[]>([]);
+  const [feedbackStatusFilter, setFeedbackStatusFilter] = useState<FeedbackMessageFilter>(DEFAULT_MESSAGE_FILTER);
 
   // React 19 "adjust state on prop change": reset loading/error when fetch deps change.
   if (prevFetchKey.adminToken !== adminToken || prevFetchKey.reloadCounter !== reloadCounter) {
@@ -287,6 +319,50 @@ export function DebugPage() {
     const id = setInterval(tick, PING_INTERVAL_MS);
     return () => { cancelled = true; clearInterval(id); };
   }, [adminToken, authRequired]);
+
+  useEffect(() => {
+    if (authRequired) return;
+    let cancelled = false;
+    const qs = feedbackStatusFilter ? `?status=${feedbackStatusFilter}&limit=50` : '?limit=50';
+    Promise.all([
+      adminFetch(`${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_up&limit=15`, adminToken).then(r =>
+        r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : []
+      ),
+      adminFetch(`${DEBUG_API_URL}/debug/feedback/top?reaction=thumbs_down&limit=15`, adminToken).then(r =>
+        r.ok ? (r.json() as Promise<FeedbackTopPage[]>) : []
+      ),
+      adminFetch(`${DEBUG_API_URL}/debug/feedback/messages${qs}`, adminToken).then(r =>
+        r.ok ? (r.json() as Promise<FeedbackMessageItem[]>) : []
+      ),
+    ])
+      .then(([up, down, msgs]) => {
+        if (cancelled) return;
+        setTopThumbsUp(Array.isArray(up) ? up : []);
+        setTopThumbsDown(Array.isArray(down) ? down : []);
+        setFeedbackMessages(Array.isArray(msgs) ? msgs : []);
+      })
+      .catch(() => {
+        /* /debug/status useEffect already surfaces auth/network errors */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [adminToken, authRequired, reloadCounter, feedbackStatusFilter]);
+
+  const updateFeedbackStatus = async (id: string, newStatus: FeedbackStatus) => {
+    // Optimistic update — revert on failure so the dropdown stays truthful.
+    const prev = feedbackMessages;
+    setFeedbackMessages(prev.map(m => (m.id === id ? { ...m, status: newStatus } : m)));
+    try {
+      const r = await adminFetch(`${DEBUG_API_URL}/debug/feedback/${id}`, adminToken, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!r.ok) throw new Error(`${r.status}`);
+    } catch {
+      setFeedbackMessages(prev);
+    }
+  };
 
   const handleTokenSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -773,6 +849,111 @@ export function DebugPage() {
         ))}
       </Box>
 
+      {/* Feedback: top pages + messages with triage (issue #5662) */}
+      <Box sx={{ mt: 4 }}>
+        <SectionHeader prompt="❯" title={<em>feedback · top pages</em>} />
+      </Box>
+      <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, mb: 1 }}>
+        grouped by URL — clickable
+      </Typography>
+      <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2 }}>
+        <FeedbackTopList title="👍 thumbs up" items={topThumbsUp} accent={colors.success} />
+        <FeedbackTopList title="👎 thumbs down" items={topThumbsDown} accent={colors.error} />
+      </Box>
+
+      <Box sx={{ mt: 4, display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
+        <SectionHeader prompt="❯" title={<em>feedback · messages</em>} />
+        <Box
+          component="select"
+          value={feedbackStatusFilter}
+          onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+            setFeedbackStatusFilter(e.target.value as FeedbackMessageFilter)
+          }
+          sx={{ ...nativeControlSx, cursor: 'pointer', ml: 'auto' }}
+        >
+          <option value="open">open (new + in progress)</option>
+          <option value="">all statuses</option>
+          {FEEDBACK_STATUS_OPTIONS.map(s => (
+            <option key={s} value={s}>{s.replace('_', ' ')}</option>
+          ))}
+        </Box>
+      </Box>
+      {feedbackMessages.length === 0 ? (
+        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: semanticColors.mutedText, py: 2 }}>
+          no messages{feedbackStatusFilter ? ` with status "${feedbackStatusFilter}"` : ''}
+        </Typography>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, mb: 4 }}>
+          {feedbackMessages.map(m => (
+            <Box
+              key={m.id}
+              sx={{
+                border: '1px solid var(--rule)', borderRadius: 1, p: 1.5,
+                display: 'grid',
+                gridTemplateColumns: { xs: '1fr', sm: 'auto 1fr auto' },
+                columnGap: 1.5, rowGap: 0.5,
+                alignItems: 'start',
+                bgcolor: m.status === 'new' ? 'var(--bg-surface)' : 'transparent',
+              }}
+            >
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, minWidth: 90 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Box component="span" sx={{ fontSize: 14 }}>
+                    {m.reaction === 'thumbs_up' ? '👍'
+                      : m.reaction === 'thumbs_down' ? '👎'
+                      : m.reaction === 'idea' ? '💡'
+                      : m.reaction === 'bug' ? '🪲'
+                      : '—'}
+                  </Box>
+                  <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+                    {timeAgo(m.created_at)}
+                  </Typography>
+                </Box>
+                {m.path && (
+                  <Link
+                    component={RouterLink}
+                    to={m.path}
+                    sx={{
+                      fontFamily: typography.fontFamily, fontSize: fontSize.xxs,
+                      color: colors.primary, textDecoration: 'none',
+                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                      '&:hover': { textDecoration: 'underline' },
+                    }}
+                  >
+                    {m.path}
+                  </Link>
+                )}
+              </Box>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography sx={{
+                  fontFamily: typography.fontFamily, fontSize: fontSize.xs, color: 'var(--ink)',
+                  whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+                }}>
+                  {m.message}
+                </Typography>
+                {m.contact && (
+                  <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText, mt: 0.5 }}>
+                    contact: {m.contact}
+                  </Typography>
+                )}
+              </Box>
+              <Box
+                component="select"
+                value={m.status}
+                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                  updateFeedbackStatus(m.id, e.target.value as FeedbackStatus)
+                }
+                sx={{ ...nativeControlSx, cursor: 'pointer', alignSelf: 'start' }}
+              >
+                {FEEDBACK_STATUS_OPTIONS.map(s => (
+                  <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                ))}
+              </Box>
+            </Box>
+          ))}
+        </Box>
+      )}
+
       {/* Spec Matrix */}
       <Box sx={{ mt: 4 }}>
         <SectionHeader prompt="❯" title={<em>specs</em>} />
@@ -1022,6 +1203,58 @@ export function DebugPage() {
 // ============================================================================
 // Sortable header helpers
 // ============================================================================
+
+function FeedbackTopList({ title, items, accent }: { title: string; items: FeedbackTopPage[]; accent: string }) {
+  return (
+    <Box sx={{ border: '1px solid var(--rule)', borderRadius: 1, p: 1.5 }}>
+      <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xs, fontWeight: 600, color: 'var(--ink-soft)', mb: 1 }}>
+        {title}
+      </Typography>
+      {items.length === 0 ? (
+        <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.xxs, color: semanticColors.mutedText }}>
+          no entries yet
+        </Typography>
+      ) : (
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
+          {items.map(it => (
+            <Box
+              key={it.path}
+              sx={{
+                display: 'grid',
+                gridTemplateColumns: '32px 1fr auto',
+                gap: 1, alignItems: 'baseline',
+                py: 0.4, borderBottom: '1px solid var(--rule)',
+                '&:last-of-type': { borderBottom: 'none' },
+              }}
+            >
+              <Typography sx={{
+                fontFamily: typography.fontFamily, fontSize: fontSize.xxs,
+                color: accent, fontWeight: 600, textAlign: 'right',
+              }}>
+                {it.count}
+              </Typography>
+              <Link
+                component={RouterLink}
+                to={it.path}
+                sx={{
+                  fontFamily: typography.fontFamily, fontSize: fontSize.xs,
+                  color: colors.primary, textDecoration: 'none',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                  '&:hover': { textDecoration: 'underline' },
+                }}
+              >
+                {it.path}
+              </Link>
+              <Typography sx={{ fontFamily: typography.fontFamily, fontSize: fontSize.micro, color: semanticColors.mutedText }}>
+                {it.last_seen ? timeAgo(it.last_seen) : ''}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      )}
+    </Box>
+  );
+}
 
 function HeaderCell({ children, center }: { children: React.ReactNode; center?: boolean }) {
   return (

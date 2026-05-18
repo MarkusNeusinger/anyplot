@@ -28,6 +28,10 @@ function SpecLanguageRedirect() {
 const router = createBrowserRouter([
   {
     element: <RootLayout />,
+    // Surface a small spinner while a lazy() route is resolving during initial
+    // hydration; without this React Router 6.4+ logs a noisy "No HydrateFallback
+    // element provided" warning on every load.
+    hydrateFallbackElement: <LazyFallback />,
     children: [
       {
         errorElement: <RouteErrorBoundary />,
