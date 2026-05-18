@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 coefficient-confidence: Coefficient Plot with Confidence Intervals
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-09
+Library: highcharts unknown | Python 3.13.13
+Quality: 79/100 | Updated: 2026-05-18
 """
 
 import json
