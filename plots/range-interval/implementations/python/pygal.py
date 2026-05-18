@@ -1,51 +1,64 @@
-""" pyplots.ai
+"""anyplot.ai
 range-interval: Range Interval Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
 
-import pygal
-from pygal.style import Style
+import os
+import sys
 
+
+# Avoid importing local pygal.py file; ensure we get the installed pygal package
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir in sys.path:
+    sys.path.remove(script_dir)
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Data: Monthly temperature ranges (daily high/low averages)
 months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-temp_min = [-2, 0, 4, 8, 13, 17, 19, 18, 14, 9, 4, 0]  # Average daily lows (°C)
-temp_max = [6, 8, 12, 16, 21, 25, 28, 27, 22, 16, 10, 7]  # Average daily highs (°C)
+temp_min = [-2, 0, 4, 8, 13, 17, 19, 18, 14, 9, 4, 0]
+temp_max = [6, 8, 12, 16, 21, 25, 28, 27, 22, 16, 10, 7]
 
-# Calculate the range (difference) for the visible portion
+# Calculate the range for stacked bar visualization
 temp_range = [high - low for low, high in zip(temp_min, temp_max, strict=True)]
 
-# Custom style for large canvas
-# The base (transparent) color needs to be invisible
+# Custom style with theme-adaptive tokens
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("rgba(0, 0, 0, 0)", "#306998"),  # First series invisible, second visible
-    title_font_size=56,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=36,
-    value_font_size=28,
-    tooltip_font_size=24,
-    opacity=1.0,
-    opacity_hover=1.0,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
-# Create stacked bar chart - first bar is invisible base, second is visible range
+# Create stacked bar chart (first series base, second series visible range)
 chart = pygal.StackedBar(
     width=4800,
     height=2700,
     style=custom_style,
-    title="range-interval · pygal · pyplots.ai",
+    title="range-interval · python · pygal · anyplot.ai",
     x_title="Month",
     y_title="Temperature (°C)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=2,
     show_y_guides=True,
     show_x_guides=False,
     print_values=False,
@@ -53,18 +66,18 @@ chart = pygal.StackedBar(
     margin=80,
     margin_bottom=150,
     margin_left=150,
-    truncate_legend=-1,
 )
 
 # Set x-axis labels
 chart.x_labels = months
 
-# Add invisible base (from 0 to min_value) - hidden from legend
+# Add invisible base (from 0 to min_value)
 chart.add("", temp_min, show_dots=False)
 
-# Add visible range bars (from min to max)
-chart.add("Temperature Range (°C)", temp_range)
+# Add visible range bars (from min to max) in brand color
+chart.add("Temperature Range (°C)", temp_range, show_dots=False)
 
 # Render to PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
