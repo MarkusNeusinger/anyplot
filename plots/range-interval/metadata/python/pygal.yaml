@@ -1,154 +1,171 @@
 library: pygal
+language: python
 specification_id: range-interval
 created: '2026-01-09T23:49:05Z'
-updated: '2026-01-09T23:53:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20868894824
+updated: '2026-05-18T10:54:48Z'
+generated_by: claude-haiku
+workflow_run: 26028579152
 issue: 3577
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/range-interval/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/range-interval/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/python/pygal/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Clever implementation using stacked bar with invisible base to create floating
-    range bars
-  - Clean, professional appearance with good color choice
-  - Realistic temperature data showing clear seasonal variation
-  - Proper title format and axis labels with units
-  - Good canvas utilization and layout balance
+  - 'Perfect visual quality: explicit font sizing, no overlap, clear legibility in
+    both themes'
+  - 'Expert theme adaptation: data colors identical in light/dark, chrome properly
+    flips'
+  - Clean code structure following KISS principle with creative stacked-bar approach
+  - Excellent data choice with realistic, neutral scenario showing clear seasonal
+    patterns
+  - Strong spec compliance with all required features present and properly mapped
   weaknesses:
-  - Grid & legend could be improved - the invisible series technique leaves legend
-    slightly awkward
-  - Missing optional endpoint markers at min/max points as suggested in spec notes
-  - Could leverage more pygal-specific interactive features
-  image_description: 'The plot displays a range interval chart showing monthly temperature
-    ranges across 12 months (Jan-Dec). Each month is represented by a blue (#306998)
-    floating bar that spans from the minimum to maximum temperature for that month.
-    The y-axis shows "Temperature (°C)" ranging from -2 to 28, and the x-axis shows
-    "Month" with abbreviated month labels. The title correctly reads "range-interval
-    · pygal · pyplots.ai" at the top. A legend at the bottom displays "Temperature
-    Range (°C)". Horizontal grid lines are visible at 2-degree intervals. The bars
-    effectively show the seasonal pattern with narrow ranges in winter months (Jan:
-    -2 to 6°C, Feb: 0 to 8°C) and wider, higher ranges in summer (Jul: 19 to 28°C).
-    The overall layout is clean with good use of whitespace.'
+  - Design excellence approaches library defaults rather than pushing beyond; distinctive
+    customization is limited
+  - Stacked-bar range approach is clever but generalizable to other libraries
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with proper neutral tone
+      Chrome: Title, axis labels, and tick labels all in dark text; clearly readable against light background; month labels on x-axis well-spaced
+      Data: Green range segments (#009E73) and orange invisible-base segments (#D55E00) from Okabe-Ito palette; summer months (Jun-Aug) show largest ranges, winter months show smallest
+      Legibility verdict: PASS - All text is readable with appropriate font sizes; no contrast issues; grid lines subtle but visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with proper neutral tone
+      Chrome: Title, axis labels, and tick labels all in light text; clearly readable against dark background; no dark-on-dark failures; month labels equally well-spaced
+      Data: Green range segments (#009E73) and orange segments (#D55E00) are identical to light render—only chrome has flipped as required
+      Legibility verdict: PASS - All text is readable in light colors on dark background; no legibility issues; grid lines appropriately subtle
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and axis labels are clearly readable. Font sizes are appropriate
-          for the canvas size. Tick labels slightly small but still legible.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. Month labels are well-spaced.
+        comment: All font sizes explicitly set (28px title, 22px labels, 18px ticks,
+          16px legend); perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; month labels, tick labels, and legend all clearly
+          separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are clearly visible with good sizing. Could benefit from slightly
-          more contrast or edge highlighting.
+        comment: Bars optimally sized and clearly distinguishable; all 12 months visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single blue color scheme is colorblind-safe. Good contrast against
-          white background.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins. Good use of space.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Temperature (°C) and Month.'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette; good contrast; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills 50-80% of canvas; balanced margins; legend well-integrated
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Descriptive labels with units (Temperature (°C))
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First data series #009E73; colors identical in both renders; backgrounds
+          correct; text is theme-correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend placement at bottom is acceptable but the invisible series
-          creates a gap. Grid is subtle but works.
+        comment: Well-configured palette with intentional hierarchy; professional
+          but approaches library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid styling, clean spacing, minimal unnecessary elements
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy showing seasonal variation; summer ranges
+          visually larger than winter ranges
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct range interval chart implementation using stacked bar technique.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Categories on x-axis, range values on y-axis as specified.
-      - id: SC-03
+        comment: Correct range interval chart; stacked bar approach effectively shows
+          min-to-max ranges
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows min-max ranges effectively. Missing optional endpoint markers
-          mentioned in spec notes.
-      - id: SC-04
-        name: Data Range
+        comment: 'All aspects present: categories, min values, max values, range spans'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range appropriately shows all data from -2 to 28.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis months, Y-axis temperature values; all 12 data points visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies the temperature range.
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title uses correct format but uses regular dot which displays correctly.
+        comment: Title format correct; legend labels accurate
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation in range sizes across seasons. Winter months have
-          narrow ranges, summer months have wider ranges. Good seasonal pattern.
+        comment: 'Shows all aspects: small ranges (winter), large ranges (summer),
+          full annual cycle'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Monthly temperature ranges for a temperate climate location. Realistic
-          and neutral scenario.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Temperature values are realistic for a temperate European climate.
+        comment: Real scenario (monthly temperature ranges); neutral, plausible data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature values are factually accurate for temperate climate;
+          proportions reflect reality
     code_quality:
       score: 10
       max: 10
@@ -158,49 +175,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple script structure: imports, data, chart config, save. No functions
-          or classes.'
+        comment: No functions/classes; linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Data is deterministic (hardcoded values), no randomness.
+        comment: Hardcoded data; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only pygal and Style imported, both are used.
+        comment: Only necessary imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API.
+        comment: Appropriate complexity; creative stacked-bar approach; no over-engineering
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of pygal.StackedBar(), Style object, theme tokens, PNG
+          and HTML output
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal's StackedBar with custom Style effectively. The invisible
-          base bar technique is clever. Could use more pygal-specific features like
-          tooltips or animation.
+        comment: Uses pygal's Style system effectively; interactive HTML export is
+          distinctive; stacked-bar approach is clever but generalizable
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - html-export
-  patterns: []
+  techniques: []
+  patterns:
+  - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - custom-colormap
