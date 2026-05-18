@@ -183,7 +183,7 @@ describe('SpecPage', () => {
     expect(fetchUrl).toContain('/specs/scatter-basic');
   });
 
-  describe('language in title + breadcrumb', () => {
+  describe('language in document title', () => {
     it('includes ` · python · matplotlib` in the document title in detail mode', async () => {
       mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
       mockSearchParams.delete('language');
