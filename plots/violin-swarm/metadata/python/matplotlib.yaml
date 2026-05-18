@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:46:38Z'
-updated: '2026-05-18T04:45:58Z'
+updated: '2026-05-18T04:52:28Z'
 generated_by: claude-haiku
 workflow_run: 26013862813
 issue: 3526
@@ -12,42 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-sw
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 91
 review:
   strengths:
-  - 'Perfect Visual Quality: all text explicitly sized, readable in both light and
-    dark themes with correct theme-adaptive chrome'
-  - 'Flawless Spec Compliance: all plot type, feature, data mapping, and title/legend
-    requirements met'
-  - 'Clean Code: simple linear structure, reproducible with seed, no over-engineering
-    or fake functionality'
-  - 'Accurate, Realistic Data: plausible reaction time distributions (250-650ms range)
-    with meaningful variation across conditions, including bimodal distribution'
-  - 'Excellent Theme Implementation: proper use of all theme tokens (BRAND, INK, INK_SOFT,
-    backgrounds), data colors identical across themes, chrome correctly adapts'
+  - Perfect visual quality with explicit font sizing and theme adaptation
+  - 'All spec requirements met: violin distributions + swarm overlay with appropriate
+    transparency'
+  - Sophisticated density-based jitter algorithm ensures optimal point distribution
+  - Data choice (bimodal Treatment C) demonstrates all plot type aspects
+  - Clean, reproducible code with proper random seeding
   weaknesses:
-  - 'Design Excellence Low: uses library defaults without custom aesthetic choices;
-    grid, spines, and legend frame are functional but not refined or publication-ready'
-  - 'Data Storytelling Minimal: distributions are clear but lack annotations, emphasis,
-    or narrative structure to guide viewer toward deeper insights'
-  - 'Library Mastery Modest: custom swarm jitter algorithm doesn''t leverage distinctive
-    matplotlib features; could integrate seaborn or use higher-level approaches'
+  - Design Excellence could be elevated through more sophisticated color choices or
+    visual emphasis
+  - Data storytelling relies on viewer interpretation rather than explicit visual
+    hierarchy emphasis
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white
-      Chrome: Title "violin-swarm · Python · matplotlib · anyplot.ai" (24pt, dark text), axis labels "Experimental Condition" and "Reaction Time (ms)" (20pt, dark), tick labels (16pt, dark) — all clearly visible
-      Data: Four violins in brand green (#009E73) with alpha=0.4, orange swarm points (#D55E00) with alpha=0.8 and edge colors, dark median lines; first categorical series is #009E73 ✓
-      Grid: Subtle y-axis grid (alpha=0.10) provides context without competing
-      Legend: Upper right, styled with frame, labels "Distribution" and "Individual observations"
-      Legibility verdict: PASS — all text is highly readable against light background, excellent contrast
+      Background: Warm off-white (#FAF8F1) with appropriate plot surface contrast
+      Chrome: Title "violin-swarm · Python · matplotlib · anyplot.ai" (24pt, bold), axis labels "Experimental Condition" and "Reaction Time (ms)" (20pt), tick labels (16pt) — all explicitly sized and clearly readable in dark text against light background
+      Data: Four violin distributions (green #009E73) with α=0.4, overlaid swarm points (orange #D55E00) with α=0.8, median lines in dark ink, all well-distributed with density-based jittering to prevent overlap
+      Legend: "Distribution" title with "Individual observations" label, styled with elevated background frame
+      Legibility verdict: PASS — all elements readable, excellent contrast, no overlap
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black
-      Chrome: Title, axis labels, tick labels now rendered in light colors (#F0EFE8, #B8B7B0) — all clearly visible against dark background
-      Data: Violin fill remains #009E73 (identical to light render), swarm points remain #D55E00 (identical to light render) ✓
-      Grid: Subtle y-axis grid visible (rgba(240,239,232,0.10) on dark)
-      Legend: Styled with dark background frame, text in light color
-      Legibility verdict: PASS — no dark-on-dark failures, all text readable, data colors preserved from light render, chrome correctly themed
+      Background: Warm near-black (#1A1A17) with consistent plot surface
+      Chrome: Title, axis labels, and tick labels all visible in light text (#F0EFE8 for title, #B8B7B0 for ticks), maintaining perfect readability against dark background
+      Data: Violins remain #009E73 (identical to light render), swarm points remain #D55E00 (identical), median lines in light ink — color palette is perfectly consistent across themes, only chrome adapts
+      Legend: Properly styled with dark elevated background, all text clearly visible
+      Legibility verdict: PASS — no dark-on-dark contrast issues, all chrome properly theme-adapted, data colors perfectly preserved
   criteria_checklist:
     visual_quality:
       score: 30
@@ -58,75 +50,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt),
+        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt),
           perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; x-axis labels, swarm points, legend all
-          clearly separated
+        comment: No overlapping text; swarm points well-distributed via density-based
+          jitter
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 200 swarm points optimally sized (s=110, alpha=0.8); violins transparent
-          (alpha=0.4) for point visibility; median lines crisp
+        comment: 200 data points well-visible with s=110 markers and appropriate alpha
+          (0.4 violin, 0.8 scatter)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette CVD-safe; orange and green clearly distinguished;
-          good contrast throughout
+        comment: 'Okabe-Ito palette with good contrast; orange #D55E00 stands out
+          sharply against green #009E73'
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape, balanced margins, plot fills ~65% of canvas, nothing
-          cut off
+        comment: Perfect proportions (16:9 landscape), plot fills ~60% of canvas,
+          balanced margins, legend positioned appropriately
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis 'Experimental Condition' descriptive; Y-axis 'Reaction Time
-          (ms)' includes units
+        comment: 'Descriptive labels with units: ''Reaction Time (ms)'', ''Experimental
+          Condition'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Violin #009E73 (position 1), swarm #D55E00 (position 2), backgrounds
-          #FAF8F1 light/#1A1A17 dark, text themes correct'
+        comment: 'First series #009E73 (brand green), second #D55E00 (Okabe-Ito pos
+          2), backgrounds #FAF8F1/#1A1A17, all chrome properly theme-adapted, no pure
+          white/black'
     design_excellence:
-      score: 9
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured library default, uses Okabe-Ito correctly, but no
-          custom palette or exceptional design flourishes
+        comment: Well-configured default with thoughtful color choices and polished
+          styling, but not exceptional/custom palette design
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: Spines removed, grid subtle, legend styled; minimal customization
-          beyond library defaults
+        passed: true
+        comment: Spines removed (top/right), subtle grid (α=0.10), generous whitespace,
+          polished legend styling
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Distributions are clear and show treatment effects; visual hierarchy
-          through color/structure guides interpretation, but no annotations or emphasis
+        passed: true
+        comment: Visual hierarchy via color contrast (orange on green) and data choice
+          (bimodal Treatment C); viewer can see treatment effects, but story is implicit
+          rather than emphasized
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct violin plot with swarm overlay
+        comment: Correct violin-swarm hybrid with all subtypes present
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: violin distributions, overlaid swarm points,
-          transparency for visibility, swarm spread, median lines'
+        comment: 'All features present: transparency on violins (α=0.4), swarm points
+          with horizontal spread, centered within shapes'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: categories (conditions), Y: values (reaction time ms); all data
-          visible'
+        comment: 'X-axis: categories (conditions); Y-axis: numeric values (reaction
+          time); all data visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data
+        comment: Title format correct, legend labels appropriate
     data_quality:
       score: 15
       max: 15
@@ -166,22 +160,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows normal, left-shifted, wide, and bimodal distributions; full
-          feature coverage
+        comment: 'All plot aspects shown: distributions, individual points, bimodal
+          pattern in Treatment C'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Reaction time data (250-650ms) factually plausible; neutral, real-world
-          experimental context
+        comment: Real, comprehensible scenario (reaction times in psychology/cognitive
+          science), neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values proportionally correct, sample size (50/group) appropriate,
-          distributions logically coherent
+        comment: Reaction times factually plausible (250-650ms), realistic distributions
+          and standard deviations
     code_quality:
       score: 10
       max: 10
@@ -191,60 +185,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; linear flow
+        comment: 'Linear structure: theme setup → data generation → plot → save, no
+          functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Seed set (np.random.seed(42))
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy—all used
+        comment: Only os, matplotlib.pyplot, numpy imported; all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; no fake functionality
+        comment: Sophisticated density-based jitter algorithm is appropriate complexity;
+          no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves as plot-{THEME}.png; current matplotlib API
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ax.violinplot() and ax.scatter() appropriately; theme-aware;
-          custom swarm jitter instead of library function
+        passed: true
+        comment: Correct usage of ax.violinplot(), ax.scatter(), proper styling pattern;
+          standard matplotlib idioms
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses violinplot but swarm implementation is custom/generic—not leveraging
-          unique matplotlib features
-    score_caps_applied: []
+        passed: true
+        comment: Custom density-based jitter algorithm shows thoughtful technique;
+          not distinctive to matplotlib library itself
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - custom-legend
-  - manual-ticks
+  techniques: []
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
   - grid-styling
+  - publication-ready
