@@ -1,151 +1,201 @@
 library: seaborn
+language: python
 specification_id: bubble-map-geographic
 created: '2026-01-10T06:09:12Z'
-updated: '2026-01-10T06:11:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20873957445
+updated: '2026-05-18T23:12:55Z'
+generated_by: claude-sonnet
+workflow_run: 26063957203
 issue: 3625
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bubble-map-geographic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
 review:
   strengths:
-  - Excellent geographic context with simplified coastline polygons as basemap
-  - Proper square-root scaling of bubble area (not radius) for accurate visual perception
-  - Two well-designed separate legends for continent and population size
-  - Clean color palette with six distinguishable continent colors
-  - Good transparency (alpha=0.6) handling overlapping bubbles
-  - Realistic dataset of 27 major world cities with accurate coordinates
+  - 'Excellent geographic context: simplified continent polygons and ocean fill (#d4e8f7)
+    create a convincing basemap without external libraries'
+  - Dual legend system (continent color + population size scale) is well-executed
+    and clearly communicates both data encodings
+  - Bubble size scaling uses sqrt(population) for area-proportional encoding, exactly
+    as the spec requires
+  - Real-world city dataset with accurate coordinates and plausible population values
+    (Tokyo 37.4M, Delhi 32.9M, etc.)
+  - Alpha=0.6 with white edgecolors provides good layering and definition for overlapping
+    bubbles
+  - Font sizes are explicitly set throughout (title=24pt, labels=20pt, ticks=16pt)
+    — consistent with the high-resolution rendering standard
+  - 'Full spec compliance: bubble sizing, transparency, basemap, size legend, category
+    color grouping all present'
   weaknesses:
-  - Grid line alpha (0.3) could be slightly more subtle for cleaner appearance
-  - Dense clustering of Asian cities makes individual comparison difficult
-  - Does not use more advanced seaborn features beyond basic scatterplot
-  image_description: 'The plot displays a world bubble map showing major city populations
-    across continents. The ocean is rendered in light blue (#d4e8f7), with simplified
-    continent outlines filled in light gray (#e8e8e8) with subtle gray borders. Twenty-seven
-    cities are represented as semi-transparent bubbles (alpha=0.6) with white edge
-    borders. Bubble sizes range from small (Sydney ~5.4M) to very large (Tokyo ~37M),
-    following square-root scaling for proper area perception. Colors distinguish continents:
-    Asia (blue #306998), South America (green), North America (orange), Africa (purple),
-    Europe (yellow), and Oceania (teal). Two well-placed legends appear: a continent
-    color legend in the lower left and a size legend showing 5M, 15M, and 30M reference
-    bubbles in the lower right. The title "World Major City Populations · bubble-map-geographic
-    · seaborn · pyplots.ai" is bold and properly formatted at the top. Axis labels
-    show "Longitude (°)" and "Latitude (°)" with proper degree symbols. A subtle dashed
-    grid (alpha=0.3) aids geographic orientation.'
+  - 'Palette non-compliant: continent_palette uses arbitrary custom hexes (#306998
+    Python Blue, #FFD43B Python Yellow, etc.) instead of Okabe-Ito. First series (Asia)
+    must be #009E73. Use OKABE_ITO = [''#009E73'', ''#D55E00'', ''#0072B2'', ''#CC79A7'',
+    ''#E69F00'', ''#56B4E9''] mapped to continents in order.'
+  - 'No theme adaptation: code does not read os.getenv(''ANYPLOT_THEME'') and hardcodes
+    ocean color (#d4e8f7) and figure style without adapting to dark mode. Must follow
+    the sns.set_theme RC pattern from the seaborn library guide.'
+  - 'Wrong output filename: plt.savefig(''plot.png'') should be plt.savefig(f''plot-{THEME}.png'').
+    Without ANYPLOT_THEME reading, both renders would produce identical output saved
+    to the same file.'
+  - 'Title in code is wrong: ''bubble-map-geographic · seaborn · pyplots.ai'' is missing
+    the ''python'' language token and uses ''pyplots.ai'' instead of ''anyplot.ai''.
+    Correct format: ''World Major City Populations · bubble-map-geographic · python
+    · seaborn · anyplot.ai''.'
+  - Legend body fontsize=14pt is below the 16pt minimum for the 4800x2700 canvas —
+    increase to fontsize=16.
+  - Top and right spines are not removed (seaborn whitegrid keeps them). For a map
+    plot a full border is defensible, but spines should be styled via ax.spines to
+    be theme-adaptive (edgecolor from INK_SOFT token).
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white figure background outside axes; axes area shows light blue (#d4e8f7) ocean with light gray continent polygons overlaid — a convincing geographic basemap.
+      Chrome: Title "World Major City Populations · bubble-map-geographic · python · seaborn · anyplot.ai" rendered in dark bold text, clearly readable. Axis labels "Longitude (°)" and "Latitude (°)" in dark text, readable. Tick labels in dark text, readable. Grid lines subtle (dashed, low alpha). Two legend boxes (Continent lower-left, Population size scale lower-right) with readable labels.
+      Data: Sized bubbles at city coordinates. Largest bubbles (Tokyo, Delhi, Shanghai) clustered in East/South Asia. Colors vary by continent with a teal/green hue dominant for Asia. All bubbles have white edges and 0.6 alpha. Size range is good — differences between 5M and 37M cities are immediately visible.
+      Legibility verdict: PASS — all text (title, labels, ticks, legends) is clearly readable against the light background. No "light-on-light" issues.
+
+    Dark render (plot-dark.png):
+      Background: Dark near-black figure background; axes area shows a very dark navy ocean with near-black continent fills. Both adapt correctly for dark mode.
+      Chrome: Title text appears in light color against dark background — clearly readable. Axis labels and tick labels render as light text on dark — no dark-on-dark failures observed. Legend boxes have dark semi-transparent backgrounds with light text. Grid lines are subtle and readable.
+      Data: Same bubble positions and relative sizes as the light render. Colors appear visually consistent with the light render (same hue distribution). White edgecolors on bubbles provide good contrast against the dark ocean background.
+      Legibility verdict: PASS — all text and data elements are readable in the dark render. No dark-on-dark failures. Data colors appear identical to the light render confirming only chrome flipped.
+
+    NOTE: Discrepancy observed — the code on disk uses a non-Okabe-Ito continent_palette (#306998, #FFD43B, etc.) and does not read ANYPLOT_THEME. The rendered images appear to use different colors (closer to Okabe-Ito) and show distinct light/dark theming, suggesting the images may have been generated from a different version of the code. The code title also reads "pyplots.ai" without the "python" language token, while the images correctly show "anyplot.ai" and "python". The code must be fixed to match the rendered output.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt bold, axis labels 20pt, ticks 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text, bubbles use transparency effectively
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Bubble sizes well-adapted, though some Asian cities cluster densely
+        comment: 'Font sizes explicitly set: title=24pt, labels=20pt, ticks=16pt.
+          Legend body at 14pt is below the 16pt standard.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap. Bubble overlap handled by alpha=0.6.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Good bubble visibility across population range. Smallest cities (Sydney
+          5.4M) remain visible but could be slightly larger.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 1
+        max: 2
         passed: true
-        comment: Six distinct colors, colorblind-safe palette choices
+        comment: Custom palette has reasonable contrast but was not designed for CVD
+          safety unlike Okabe-Ito.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins
+        comment: Map fills canvas well. Dual legends positioned non-overlapping at
+          lower corners.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Longitude (°), Latitude (°)'
+        comment: Longitude (°) and Latitude (°) — descriptive with degree unit symbols.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Grid alpha could be slightly more subtle
+        comment: 'Code uses non-Okabe-Ito custom palette (#306998 for Asia instead
+          of #009E73). No ANYPLOT_THEME reading in code. Images appear to show different
+          colors than code would produce — code must be corrected.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Geographic context (ocean fill, continent polygons) shows design
+          thought. Dual legend system is professional. Non-brand palette limits score.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle dashed grid with low alpha. Full border frame appropriate
+          for geographic map. Alpha and white edges on bubbles add polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Geographic positioning and bubble size hierarchy naturally communicate
+          the population story. East Asian megacities immediately stand out.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct bubble map with geographic markers
+        comment: Correct geographic bubble map with sized markers.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Latitude/longitude correctly mapped to x/y, population to size
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Size legend, category colors, coastlines basemap, transparency all
-          present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: sqrt-area scaling, size legend, transparency,
+          basemap, category color grouping.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full world extent visible (-180 to 180, -70 to 85)
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Longitude=x, Latitude=y, population=size, continent=color. All correct.
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
+        max: 3
         passed: true
-        comment: Both continent and population legends accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format with spec-id · library · pyplots.ai
+        comment: Images show correct title 'World Major City Populations · bubble-map-geographic
+          · python · seaborn · anyplot.ai'. Code has wrong title (missing 'python',
+          uses 'pyplots.ai'). Must fix code to match.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows range from 5M to 37M, multiple continents; could show more
-          variation in smaller cities
+        comment: 'Shows all bubble map features: varied sizes, geographic distribution,
+          multi-continent coverage, dense vs sparse regions.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real world cities with accurate population data
+        comment: Real world major cities — neutral, comprehensible, no controversy.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Population values accurate and current; minor rounding
+        comment: City coordinates and population values are factually accurate (Tokyo
+          37.4M, Delhi 32.9M, etc.).
     code_quality:
       score: 9
       max: 10
@@ -155,42 +205,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, plot, save'
+        comment: 'Clean linear flow: constants, data, plot, save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: Only matplotlib, numpy, pandas, seaborn — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current seaborn API
+        comment: Appropriate complexity. WORLD_COASTLINES constant is large but necessary.
+          Legend reconstruction is reasonable.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png correctly, but could include plt.close()
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as 'plot.png' not 'plot-{THEME}.png'. No ANYPLOT_THEME reading
+          means both pipeline runs produce identical output to the same file.
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn scatterplot with hue/size encoding - good but not using
-          advanced features like FacetGrid
+        comment: sns.scatterplot with hue and size parameters is idiomatic. But no
+          theme-adaptive setup via sns.set_theme RC params as shown in the seaborn
+          library guide.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Seaborn's automatic size-encoding via the sizes=(min, max) parameter
+          is library-distinctive. Geographic basemap elements are pure matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -199,7 +260,9 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting
