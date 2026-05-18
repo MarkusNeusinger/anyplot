@@ -1,15 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 area-stacked-confidence: Stacked Area Chart with Confidence Bands
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
+
+import os
+import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png, output_file, save
-from bokeh.models import Band, ColumnDataSource, Legend
+from bokeh.io import output_file, save
+from bokeh.models import Band, ColumnDataSource, HoverTool, Legend
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series is always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
 
 # Data - Quarterly energy consumption by source with uncertainty
 np.random.seed(42)
@@ -48,130 +64,153 @@ stack3_base = stack2_base + hydro_base
 stack3_lower = stack2_base + hydro_lower
 stack3_upper = stack2_base + hydro_upper
 
-# Create figure with larger dimensions to accommodate legend
+# Create figure with larger dimensions
 p = figure(
     width=4800,
     height=2700,
-    title="area-stacked-confidence · bokeh · pyplots.ai",
+    title="area-stacked-confidence · Python · bokeh · anyplot.ai",
     x_axis_label="Quarter",
     y_axis_label="Energy Consumption (GWh)",
     x_axis_type="datetime",
 )
 
-# Colors - Python Blue, Python Yellow, and Green
-colors = ["#306998", "#FFD43B", "#4DAF4A"]
-band_alpha = 0.3
-
 # Create data sources for each stacked area with bands
-source_hydro = ColumnDataSource(
-    data={"x": quarters, "y": stack3_base, "y_lower": stack3_lower, "y_upper": stack3_upper, "base": stack2_base}
+source_solar = ColumnDataSource(
+    data={"x": quarters, "y": stack1_base, "y_lower": stack1_lower, "y_upper": stack1_upper, "base": np.zeros(n)}
 )
 
 source_wind = ColumnDataSource(
     data={"x": quarters, "y": stack2_base, "y_lower": stack2_lower, "y_upper": stack2_upper, "base": stack1_base}
 )
 
-source_solar = ColumnDataSource(
-    data={"x": quarters, "y": stack1_base, "y_lower": stack1_lower, "y_upper": stack1_upper, "base": np.zeros(n)}
+source_hydro = ColumnDataSource(
+    data={"x": quarters, "y": stack3_base, "y_lower": stack3_lower, "y_upper": stack3_upper, "base": stack2_base}
 )
 
 # Plot confidence bands (back to front for proper layering)
-hydro_band = Band(
+solar_band = Band(
     base="x",
     lower="y_lower",
     upper="y_upper",
-    source=source_hydro,
-    fill_alpha=band_alpha,
-    fill_color=colors[2],
-    line_color=colors[2],
-    line_alpha=0.5,
+    source=source_solar,
+    fill_alpha=0.2,
+    fill_color=OKABE_ITO[0],
+    line_color=OKABE_ITO[0],
+    line_alpha=0.3,
 )
-p.add_layout(hydro_band)
+p.add_layout(solar_band)
 
 wind_band = Band(
     base="x",
     lower="y_lower",
     upper="y_upper",
     source=source_wind,
-    fill_alpha=band_alpha,
-    fill_color=colors[1],
-    line_color=colors[1],
-    line_alpha=0.5,
+    fill_alpha=0.2,
+    fill_color=OKABE_ITO[1],
+    line_color=OKABE_ITO[1],
+    line_alpha=0.3,
 )
 p.add_layout(wind_band)
 
-solar_band = Band(
+hydro_band = Band(
     base="x",
     lower="y_lower",
     upper="y_upper",
-    source=source_solar,
-    fill_alpha=band_alpha,
-    fill_color=colors[0],
-    line_color=colors[0],
-    line_alpha=0.5,
+    source=source_hydro,
+    fill_alpha=0.2,
+    fill_color=OKABE_ITO[2],
+    line_color=OKABE_ITO[2],
+    line_alpha=0.3,
 )
-p.add_layout(solar_band)
+p.add_layout(hydro_band)
 
 # Plot stacked areas using varea
-r_hydro = p.varea(x="x", y1="base", y2="y", source=source_hydro, fill_color=colors[2], fill_alpha=0.7)
-r_wind = p.varea(x="x", y1="base", y2="y", source=source_wind, fill_color=colors[1], fill_alpha=0.7)
-r_solar = p.varea(x="x", y1="base", y2="y", source=source_solar, fill_color=colors[0], fill_alpha=0.7)
+r_solar = p.varea(x="x", y1="base", y2="y", source=source_solar, fill_color=OKABE_ITO[0], fill_alpha=0.7)
+r_wind = p.varea(x="x", y1="base", y2="y", source=source_wind, fill_color=OKABE_ITO[1], fill_alpha=0.7)
+r_hydro = p.varea(x="x", y1="base", y2="y", source=source_hydro, fill_color=OKABE_ITO[2], fill_alpha=0.7)
 
 # Add center lines for each series for better visibility
-p.line(x="x", y="y", source=source_hydro, line_color=colors[2], line_width=4, line_alpha=0.9)
-p.line(x="x", y="y", source=source_wind, line_color=colors[1], line_width=4, line_alpha=0.9)
-p.line(x="x", y="y", source=source_solar, line_color=colors[0], line_width=4, line_alpha=0.9)
+p.line(x="x", y="y", source=source_solar, line_color=OKABE_ITO[0], line_width=3, line_alpha=0.8)
+p.line(x="x", y="y", source=source_wind, line_color=OKABE_ITO[1], line_width=3, line_alpha=0.8)
+p.line(x="x", y="y", source=source_hydro, line_color=OKABE_ITO[2], line_width=3, line_alpha=0.8)
 
-# Create legend inside plot area
+# Create legend outside plot area (bottom right)
 legend = Legend(
     items=[
-        ("Hydro (± uncertainty)", [r_hydro]),
-        ("Wind (± uncertainty)", [r_wind]),
         ("Solar (± uncertainty)", [r_solar]),
+        ("Wind (± uncertainty)", [r_wind]),
+        ("Hydro (± uncertainty)", [r_hydro]),
     ],
-    location="top_left",
+    location="bottom_right",
 )
 legend.click_policy = "hide"
 p.add_layout(legend)
-p.legend.location = "top_left"
-p.legend.background_fill_alpha = 0.8
 
-# Style settings for large canvas (4800x2700)
-p.title.text_font_size = "36pt"
-p.title.text_font_style = "bold"
-p.xaxis.axis_label_text_font_size = "28pt"
-p.yaxis.axis_label_text_font_size = "28pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
-p.legend.label_text_font_size = "24pt"
-p.legend.glyph_height = 40
-p.legend.glyph_width = 40
-p.legend.spacing = 15
-p.legend.padding = 20
+# Add hover tool for interactivity
+hover = HoverTool(tooltips=[("Date", "@x{%F}"), ("Value", "@y{0,0.0}")], formatters={"@x": "datetime"})
+p.add_tools(hover)
 
-# Grid styling - subtle dashed lines
-p.xgrid.grid_line_color = "gray"
-p.xgrid.grid_line_alpha = 0.3
-p.xgrid.grid_line_dash = "dashed"
-p.ygrid.grid_line_color = "gray"
-p.ygrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_dash = "dashed"
+# Theme-adaptive styling
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Axis styling
-p.axis.axis_line_width = 2
-p.axis.major_tick_line_width = 2
-p.axis.minor_tick_line_width = 1
+p.title.text_color = INK
+p.title.text_font_size = "28pt"
+
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.axis_label_text_font_size = "22pt"
+p.yaxis.axis_label_text_font_size = "22pt"
+
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.major_label_text_font_size = "18pt"
+p.yaxis.major_label_text_font_size = "18pt"
+
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.label_text_color = INK_SOFT
+p.legend.label_text_font_size = "16pt"
 
 # Set y-axis to start at 0
 p.y_range.start = 0
 
-# Add some padding
+# Add padding
 p.min_border_left = 100
-p.min_border_right = 50
+p.min_border_right = 100
 p.min_border_top = 50
-p.min_border_bottom = 80
+p.min_border_bottom = 100
 
 # Save output
-export_png(p, filename="plot.png")
-output_file("plot.html", title="area-stacked-confidence · bokeh · pyplots.ai")
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome
+W, H = 4800, 2700
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
