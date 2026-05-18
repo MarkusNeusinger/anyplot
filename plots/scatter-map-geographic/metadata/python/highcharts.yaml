@@ -1,156 +1,186 @@
 library: highcharts
+language: python
 specification_id: scatter-map-geographic
 created: '2026-01-10T04:02:39Z'
-updated: '2026-01-10T04:05:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20872459449
+updated: '2026-05-18T18:08:44Z'
+generated_by: claude-haiku
+workflow_run: 26050964939
 issue: 3617
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/highcharts/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent geographic positioning of earthquake data along realistic tectonic boundaries
-  - Effective use of Highmaps mapbubble series for geographic scatter visualization
-  - Clean exponential scaling for magnitude representation
-  - Well-organized legend with clear regional color coding
-  - Proper title format following pyplots.ai conventions
-  - Good use of alpha transparency on markers for overlapping regions
-  - Both PNG and interactive HTML outputs generated
+  - Professional design with consistent theme-adaptive styling applied throughout
+    (PAGE_BG, INK, INK_SOFT tokens correctly used)
+  - 'Excellent data storytelling: visualization clearly reveals earthquake patterns
+    along the Ring of Fire and tectonic boundaries'
+  - 'Complete feature implementation: geographic positioning, size encoding, region-based
+    colors, interactive tooltips, proper legend'
+  - High visual quality with no legibility issues in either theme — text sizes, colors,
+    and contrast all appropriate for 4800×2700px canvas
+  - Appropriate use of Highcharts Highmaps for rendering geographic bubbles with interactive
+    features
   weaknesses:
-  - Uses raw dictionary configuration instead of highcharts-core Python API (but this
-    is acceptable for complex map configurations)
-  - Legend text size could be slightly larger for the 4800x2700 canvas
-  image_description: 'The plot displays a world map (light gray basemap with country
-    boundaries) overlaid with colored bubble markers representing global earthquake
-    epicenters. Points are distributed across seismically active regions including
-    the Pacific Ring of Fire (Japan in red, North America/Alaska in emerald green,
-    South America in blue), Indonesia (amber), Mediterranean/Middle East (purple),
-    Central/South Asia (yellow), Pacific/New Zealand (cyan), and Caribbean (pink).
-    Point sizes vary according to earthquake magnitude using an exponential scale
-    - the largest bubbles represent magnitude 9+ earthquakes (Alaska, Japan, Indonesia,
-    Chile) while smaller bubbles represent magnitude 6-7 events. A vertical legend
-    on the right side identifies all 8 regions with corresponding colored symbols.
-    The title follows the correct format: "Global Earthquake Epicenters · scatter-map-geographic
-    · highcharts · pyplots.ai" with a subtitle explaining the size encoding.'
+  - 'Palette Color Duplication (VQ-07): 8 regions exceed the practical 7-color maximum
+    of Okabe-Ito palette. Caribbean region wraps to duplicate Japan''s color (#009E73),
+    reducing unique color identity. Fix: Reduce to 7 regions or group similar regions.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), appropriate surface tone for light theme
+      Chrome: Title (28px dark INK), subtitle (22px INK_SOFT), legend (18-22px with proper hierarchy) - all clearly readable against light background
+      Data: Eight regions color-coded with Okabe-Ito palette: Japan (brand green #009E73), South America (vermillion #D55E00), Indonesia (blue #0072B2), North America (sky blue #56B4E9), Mediterranean (reddish purple #CC79A7), Asia (orange #E69F00), Pacific (yellow #F0E442), Caribbean (wraps to #009E73). Bubble sizes represent earthquake magnitude (6.2-9.2), positioned by lat/lon. Charcoal continents provide context.
+      Legibility verdict: PASS - All text is clearly visible and readable against the light surface. Strong contrast between text and background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), appropriate for dark theme
+      Chrome: Title and subtitle text are light-colored (INK_SOFT/F0EFE8), legend has elevated background (#242420) and light text - all clearly readable. No dark-on-dark failures detected.
+      Data: Data colors are identical to light render (confirming proper theme-adaptive implementation) - only chrome colors flip between themes. All bubbles remain clearly distinguishable from the darker background. Brand green #009E73 remains visible and prominent.
+      Legibility verdict: PASS - Both text and data elements are clearly visible against the dark surface. Theme adaptation is correct.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and subtitle readable; legend text slightly small relative
-          to canvas
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or markers
+        comment: All text sizes explicitly set (title 28px, subtitle 22px, legend
+          18-22px) and rendered in theme-appropriate colors. Readable in both light
+          and dark renders.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Bubbles positioned by lat/lon with no collisions. Legend floats without
+          overlapping data. Title and subtitle properly spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers well-sized with good opacity; some smaller markers could
-          be slightly larger
+        comment: Bubble size range (minSize 20, maxSize 100) clearly shows magnitude
+          variation. fillOpacity 0.7 handles transparency. ~29 points at global scale
+          maintain clarity.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Eight distinct colors with good differentiation; no problematic red-green
-          only contrasts
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Maps do not have traditional axes; subtitle provides context instead
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-positioned with good styling and regional title
+        comment: 'Okabe-Ito palette is colorblind-safe. First region (Japan) is brand
+          green #009E73. Good contrast against map.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800×2700px landscape appropriate for global data. Spacing [100,100,100,100]
+          provides clean margins. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct. Subtitle describes magnitude encoding. Region
+          labels via legend. Appropriate for map-based plot.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: '8 regions exceed 7-color palette maximum. Caribbean wraps to duplicate
+          Japan''s #009E73. Backgrounds correct (#FAF8F1 light, #1A1A17 dark), both
+          theme-correct.'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Goes beyond defaults with theme-adaptive colors, intentional marker
+          styling, generous spacing. Legend with elevated background shows design
+          intent.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Floating legend layout with custom styling, proper padding and margins,
+          refined typography hierarchy.
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Reveals geographic patterns (Ring of Fire, tectonic boundaries).
+          Bubble size and color create visual hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct geographic scatter/bubble map using Highmaps
+        comment: Correctly implements geographic scatter map with mapbubble series.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/lon correctly positioned; magnitude encoded as bubble size
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Basemap, color by category, size encoding all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features implemented: positioning, size encoding, value encoding,
+          labels, basemap, legend, interactive tooltips.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible on world map
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude/latitude map to x/y. Magnitude encoded in size. Region
+          in color. Global extent covers all data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all 8 regions
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: scatter-map-geographic · highcharts · pyplots.ai'
+        comment: Title matches spec format. Legend labels match region names.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple regions, varying magnitudes, and depth data; could
-          include more variation in some regions
+        comment: Realistic earthquake data with magnitudes 6.2–9.2, depths 5–112 km.
+          Covers major seismic zones. ~29 points demonstrate good coverage.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Earthquake epicenters along tectonic boundaries is scientifically
-          accurate
+        comment: Synthetic but realistic earthquake epicenters. Magnitudes and depths
+          plausible. Geographic distribution matches known seismic activity.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Magnitude 6-9 range is realistic; some depth values could be refined
+        comment: Global map scale appropriate. Magnitude range realistic. Point count
+          suitable for visualization density.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,53 +188,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → config → HTML → screenshot'
+        comment: 'No functions or classes. Straight imperative: generate data → build
+          config → render → screenshot.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic data. time.sleep(6) allows
+          proper Selenium rendering.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used. No unused imports.
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Using raw dict config instead of highcharts-core Python API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear, readable, idiomatic code. No fake interactivity. HTML generation
+          is straightforward.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Highcharts
+          12.6.0.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highmaps with mapbubble series and world topology; could leverage
-          more interactive features
+        comment: Uses JSON configuration with Selenium (necessary for Highmaps support).
+          Appropriate for plot type. Custom tooltip HTML shows library knowledge.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Excellent use of mapbubble series, Highmaps geographic base, floating
+          legend, HTML tooltip formatting. Strong library familiarity.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - alpha-blending
-  - edge-highlighting
+  styling: []

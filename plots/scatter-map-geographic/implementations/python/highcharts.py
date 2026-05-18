@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: highcharts unknown | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-18
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -14,6 +15,25 @@ import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for region colors
+OKABE_ITO = [
+    "#009E73",  # 1: brand green
+    "#D55E00",  # 2: vermillion
+    "#0072B2",  # 3: blue
+    "#CC79A7",  # 4: reddish purple
+    "#E69F00",  # 5: orange
+    "#56B4E9",  # 6: sky blue
+    "#F0E442",  # 7: yellow
+]
 
 # Data - Major earthquake epicenters (synthetic but realistic data)
 np.random.seed(42)
@@ -62,17 +82,9 @@ earthquakes = [
     {"lat": 52.5, "lon": -169.0, "mag": 7.4, "depth": 40, "region": "North America"},
 ]
 
-# Assign colors by region for visual distinction
-region_colors = {
-    "Japan": "#DC2626",  # Red
-    "South America": "#306998",  # Python Blue
-    "Indonesia": "#F59E0B",  # Amber
-    "North America": "#10B981",  # Emerald
-    "Mediterranean": "#8B5CF6",  # Purple
-    "Asia": "#FFD43B",  # Python Yellow
-    "Pacific": "#06B6D4",  # Cyan
-    "Caribbean": "#EC4899",  # Pink
-}
+# Assign colors by region using Okabe-Ito palette (first 7 regions)
+region_list = ["Japan", "South America", "Indonesia", "North America", "Mediterranean", "Asia", "Pacific", "Caribbean"]
+region_colors = {region: OKABE_ITO[i % len(OKABE_ITO)] for i, region in enumerate(region_list)}
 
 # Prepare data for mapbubble series - group by region
 regions_data = {}
@@ -80,8 +92,7 @@ for eq in earthquakes:
     region = eq["region"]
     if region not in regions_data:
         regions_data[region] = []
-    # Calculate z (size) based on magnitude - exponential scale
-    z_size = 10 ** (eq["mag"] - 5)  # Exponential scaling
+    z_size = 10 ** (eq["mag"] - 5)
     regions_data[region].append(
         {"lat": eq["lat"], "lon": eq["lon"], "z": z_size, "magnitude": eq["mag"], "depth": eq["depth"]}
     )
@@ -94,8 +105,8 @@ for region, data in regions_data.items():
             "type": "mapbubble",
             "name": region,
             "data": data,
-            "color": region_colors.get(region, "#306998"),
-            "marker": {"fillOpacity": 0.7, "lineWidth": 2, "lineColor": "#ffffff"},
+            "color": region_colors.get(region, OKABE_ITO[0]),
+            "marker": {"fillOpacity": 0.7, "lineWidth": 2, "lineColor": PAGE_BG},
             "minSize": 20,
             "maxSize": 100,
         }
@@ -103,22 +114,16 @@ for region, data in regions_data.items():
 
 # Create JavaScript configuration for Highmaps with mapbubble
 chart_config = {
-    "chart": {
-        "map": None,  # Will be set by topology
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#ffffff",
-        "spacing": [100, 100, 100, 100],
-    },
+    "chart": {"map": None, "width": 4800, "height": 2700, "backgroundColor": PAGE_BG, "spacing": [100, 100, 100, 100]},
     "title": {
-        "text": "Global Earthquake Epicenters \u00b7 scatter-map-geographic \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "56px", "fontWeight": "bold"},
-        "y": 60,
+        "text": "scatter-map-geographic · python · highcharts · anyplot.ai",
+        "style": {"fontSize": "28px", "color": INK},
+        "y": 40,
     },
     "subtitle": {
-        "text": "Point size represents earthquake magnitude (exponential scale)",
-        "style": {"fontSize": "40px", "color": "#666666"},
-        "y": 110,
+        "text": "Point size represents earthquake magnitude; colored by region",
+        "style": {"fontSize": "22px", "color": INK_SOFT},
+        "y": 80,
     },
     "mapNavigation": {"enabled": False},
     "legend": {
@@ -128,12 +133,12 @@ chart_config = {
         "verticalAlign": "middle",
         "floating": True,
         "x": -50,
-        "backgroundColor": "rgba(255, 255, 255, 0.95)",
-        "borderColor": "#cccccc",
-        "borderWidth": 2,
-        "padding": 25,
-        "itemStyle": {"fontSize": "32px"},
-        "title": {"text": "Region", "style": {"fontSize": "36px", "fontWeight": "bold"}},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
+        "borderWidth": 1,
+        "padding": 20,
+        "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+        "title": {"text": "Region", "style": {"fontSize": "22px", "color": INK}},
         "symbolRadius": 10,
         "symbolHeight": 24,
         "symbolWidth": 24,
@@ -141,11 +146,11 @@ chart_config = {
     },
     "tooltip": {
         "useHTML": True,
-        "headerFormat": '<span style="font-size: 32px; font-weight: bold;">{series.name}</span><br/>',
-        "pointFormat": '<span style="font-size: 28px;">'
-        "Magnitude: <b>{point.magnitude}</b><br/>"
-        "Depth: <b>{point.depth} km</b><br/>"
-        "Location: ({point.lat:.1f}\u00b0, {point.lon:.1f}\u00b0)"
+        "headerFormat": '<span style="font-size: 18px; font-weight: bold; color: {0};">{series.name}</span><br/>',
+        "pointFormat": f'<span style="font-size: 16px; color: {INK};">'
+        "Magnitude: <b>{{point.magnitude}}</b><br/>"
+        "Depth: <b>{{point.depth}} km</b><br/>"
+        "Location: ({{point.lat:.1f}}°, {{point.lon:.1f}}°)"
         "</span>",
     },
     "plotOptions": {"mapbubble": {"sizeBy": "area", "zMin": 1, "zMax": 10000}},
@@ -154,8 +159,8 @@ chart_config = {
             "type": "map",
             "name": "World",
             "showInLegend": False,
-            "nullColor": "#e8e8e8",
-            "borderColor": "#aaaaaa",
+            "nullColor": INK_SOFT,
+            "borderColor": INK_SOFT,
             "borderWidth": 1,
             "states": {"inactive": {"opacity": 1}},
         }
@@ -166,9 +171,10 @@ chart_config = {
 # Convert to JSON for JavaScript
 chart_json = json.dumps(chart_config)
 
-# Download required JavaScript files
-highmaps_url = "https://code.highcharts.com/maps/highmaps.js"
-world_url = "https://code.highcharts.com/mapdata/custom/world.topo.json"
+# Download required JavaScript files from jsdelivr CDN
+# Map data from GitHub (more reliable than Highcharts CDN which may be blocked)
+highmaps_url = "https://cdn.jsdelivr.net/npm/highcharts@12.6.0/highmaps.js"
+world_url = "https://raw.githubusercontent.com/highcharts/map-collection-dist/master/custom/world.topo.json"
 
 with urllib.request.urlopen(highmaps_url, timeout=60) as response:
     highmaps_js = response.read().decode("utf-8")
@@ -176,7 +182,7 @@ with urllib.request.urlopen(highmaps_url, timeout=60) as response:
 with urllib.request.urlopen(world_url, timeout=60) as response:
     world_topo = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts
+# Generate HTML with inline scripts for PNG export
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -201,7 +207,7 @@ standalone_html = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script src="https://code.highcharts.com/maps/highmaps.js"></script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 100%; height: 100vh;"></div>
     <script>
         fetch('https://code.highcharts.com/mapdata/custom/world.topo.json')
@@ -215,7 +221,7 @@ standalone_html = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(standalone_html)
 
 # Write temp HTML and take screenshot
@@ -232,8 +238,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(6)  # Wait for chart to render (maps need more time)
-driver.save_screenshot("plot.png")
+time.sleep(6)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
