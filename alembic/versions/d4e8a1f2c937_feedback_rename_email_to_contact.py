@@ -30,8 +30,7 @@ def upgrade() -> None:
         batch_op.alter_column("message", existing_type=sa.String(500), nullable=True)
         batch_op.drop_constraint("ck_feedback_reaction_valid", type_="check")
         batch_op.create_check_constraint(
-            "ck_feedback_reaction_valid",
-            "reaction IS NULL OR reaction IN ('thumbs_up','thumbs_down','bug','idea')",
+            "ck_feedback_reaction_valid", "reaction IS NULL OR reaction IN ('thumbs_up','thumbs_down','bug','idea')"
         )
 
 

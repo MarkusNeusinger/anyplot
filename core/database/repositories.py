@@ -379,9 +379,7 @@ class FeedbackRepository(BaseRepository[Feedback]):
         """
         result = await self.session.execute(
             select(
-                Feedback.path,
-                func.count(Feedback.id).label("count"),
-                func.max(Feedback.created_at).label("last_seen"),
+                Feedback.path, func.count(Feedback.id).label("count"), func.max(Feedback.created_at).label("last_seen")
             )
             .where(Feedback.reaction == reaction, Feedback.path.is_not(None))
             .group_by(Feedback.path)
@@ -394,19 +392,13 @@ class FeedbackRepository(BaseRepository[Feedback]):
                 "count": row.count,
                 # created_at is TIMESTAMP WITHOUT TIME ZONE in UTC — tag with Z so
                 # the browser doesn't interpret the naive ISO as local time.
-                "last_seen": (
-                    row.last_seen.replace(tzinfo=timezone.utc).isoformat() if row.last_seen else None
-                ),
+                "last_seen": (row.last_seen.replace(tzinfo=timezone.utc).isoformat() if row.last_seen else None),
             }
             for row in result.all()
         ]
 
     async def has_recent_duplicate(
-        self,
-        message: str,
-        ip_hash: str | None,
-        session_id: str | None,
-        since: datetime,
+        self, message: str, ip_hash: str | None, session_id: str | None, since: datetime
     ) -> bool:
         """True iff the same message text was submitted since `since` AND matches
         either the same IP hash or the same session id. The router uses this for
@@ -421,18 +413,12 @@ class FeedbackRepository(BaseRepository[Feedback]):
             return False
         result = await self.session.execute(
             select(func.count(Feedback.id)).where(
-                Feedback.message == message,
-                Feedback.created_at >= since,
-                or_(*identity_filters),
+                Feedback.message == message, Feedback.created_at >= since, or_(*identity_filters)
             )
         )
         return (result.scalar_one() or 0) > 0
 
-    async def list_with_message(
-        self,
-        status: str | tuple[str, ...] | None = None,
-        limit: int = 50,
-    ) -> list[Feedback]:
+    async def list_with_message(self, status: str | tuple[str, ...] | None = None, limit: int = 50) -> list[Feedback]:
         """List entries that carry a free-text message, filtered optionally by status.
 
         `status` may be a single value, a tuple of values (matched with IN), or None

@@ -243,10 +243,7 @@ class Feedback(Base):
             "reaction IS NULL OR reaction IN ('thumbs_up','thumbs_down','bug','idea')",
             name="ck_feedback_reaction_valid",
         ),
-        CheckConstraint(
-            "status IN ('new','in_progress','done','wont_solve')",
-            name="ck_feedback_status_valid",
-        ),
+        CheckConstraint("status IN ('new','in_progress','done','wont_solve')", name="ck_feedback_status_valid"),
     )
 
 

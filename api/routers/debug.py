@@ -541,15 +541,9 @@ class FeedbackStatusUpdate(BaseModel):
     status: str
 
 
-@router.get(
-    "/feedback/top",
-    response_model=list[FeedbackTopPage],
-    dependencies=[Depends(require_admin)],
-)
+@router.get("/feedback/top", response_model=list[FeedbackTopPage], dependencies=[Depends(require_admin)])
 async def feedback_top_pages(
-    reaction: str,
-    limit: int = 20,
-    db: AsyncSession = Depends(require_db),
+    reaction: str, limit: int = 20, db: AsyncSession = Depends(require_db)
 ) -> list[FeedbackTopPage]:
     """Top pages by reaction count (thumbs_up / thumbs_down / idea / bug)."""
     if reaction not in FEEDBACK_REACTIONS:
@@ -560,15 +554,9 @@ async def feedback_top_pages(
     return [FeedbackTopPage(**row) for row in rows]
 
 
-@router.get(
-    "/feedback/messages",
-    response_model=list[FeedbackMessageItem],
-    dependencies=[Depends(require_admin)],
-)
+@router.get("/feedback/messages", response_model=list[FeedbackMessageItem], dependencies=[Depends(require_admin)])
 async def feedback_messages(
-    status: str | None = None,
-    limit: int = 50,
-    db: AsyncSession = Depends(require_db),
+    status: str | None = None, limit: int = 50, db: AsyncSession = Depends(require_db)
 ) -> list[FeedbackMessageItem]:
     """List feedback entries that carry a free-text message, newest first.
 
@@ -605,15 +593,9 @@ async def feedback_messages(
     ]
 
 
-@router.patch(
-    "/feedback/{entry_id}",
-    response_model=FeedbackMessageItem,
-    dependencies=[Depends(require_admin)],
-)
+@router.patch("/feedback/{entry_id}", response_model=FeedbackMessageItem, dependencies=[Depends(require_admin)])
 async def update_feedback_status(
-    entry_id: str,
-    payload: FeedbackStatusUpdate,
-    db: AsyncSession = Depends(require_db),
+    entry_id: str, payload: FeedbackStatusUpdate, db: AsyncSession = Depends(require_db)
 ) -> FeedbackMessageItem:
     """Set the triage status on one feedback entry."""
     if payload.status not in FEEDBACK_STATUSES:

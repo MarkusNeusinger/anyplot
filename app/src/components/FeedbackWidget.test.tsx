@@ -113,6 +113,66 @@ describe('FeedbackWidget', () => {
     expect(textarea).toHaveValue('try me');
   });
 
+  it('a second FAB click closes the mini-stack', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
+    render(<FeedbackWidget />);
+
+    const fab = screen.getByRole('button', { name: /open feedback/i });
+    await user.click(fab);
+    expect(await screen.findByRole('button', { name: /quick thumbs up/i })).toBeInTheDocument();
+
+    await user.click(fab);
+    expect(screen.queryByRole('button', { name: /quick thumbs up/i })).toBeNull();
+  });
+
+  it('clicking outside the mini-stack closes it via ClickAwayListener', async () => {
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
+    render(
+      <div>
+        <button type="button">outside</button>
+        <FeedbackWidget />
+      </div>
+    );
+
+    await user.click(screen.getByRole('button', { name: /open feedback/i }));
+    expect(await screen.findByRole('button', { name: /quick thumbs up/i })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /outside/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /quick thumbs up/i })).toBeNull()
+    );
+  });
+
+  it('quick-submit does not show Thanks when the server returns 500', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response('boom', { status: 500 }));
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
+
+    render(<FeedbackWidget />);
+    await user.click(screen.getByRole('button', { name: /open feedback/i }));
+    await user.click(await screen.findByRole('button', { name: /quick thumbs up/i }));
+
+    // Wait for the fetch to resolve, then assert no Thanks toast appeared.
+    await waitFor(() => expect(screen.queryByText(/^Thanks!/)).toBeNull());
+  });
+
+  it('full-dialog submit sends the chosen reaction in the payload', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ status: 'ok' }), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    );
+    const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
+
+    render(<FeedbackWidget />);
+    await user.click(screen.getByRole('button', { name: /open feedback/i }));
+    await user.click(await screen.findByRole('button', { name: /open detailed feedback/i }));
+    await user.click(screen.getByRole('button', { name: /^bug$/i }));
+    await user.click(screen.getByRole('button', { name: /^send$/i }));
+
+    await waitFor(() => expect(fetchSpy).toHaveBeenCalledTimes(1));
+    const body = JSON.parse((fetchSpy.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.reaction).toBe('bug');
+    expect(body.message).toBeNull();
+  });
+
   it('honeypot input is hidden from assistive tech', async () => {
     const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime.bind(vi) });
     render(<FeedbackWidget />);

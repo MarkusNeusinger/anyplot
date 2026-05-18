@@ -81,8 +81,7 @@ class TestFeedbackRouter:
         """Messages with 2+ URLs return 200 but never reach the repository."""
         with patch("api.routers.feedback.FeedbackRepository") as repo_cls:
             response = client.post(
-                "/feedback",
-                json={"message": "check https://buy.example and https://promo.example now"},
+                "/feedback", json={"message": "check https://buy.example and https://promo.example now"}
             )
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}
@@ -96,10 +95,7 @@ class TestFeedbackRouter:
         instance.create = AsyncMock(return_value=None)
 
         with patch("api.routers.feedback.FeedbackRepository", return_value=instance):
-            response = client.post(
-                "/feedback",
-                json={"message": "spam", "session_id": "abc"},
-            )
+            response = client.post("/feedback", json={"message": "spam", "session_id": "abc"})
 
         assert response.status_code == 200
         assert response.json() == {"status": "ok"}

@@ -39,12 +39,9 @@ def upgrade() -> None:
         op.execute("ALTER TABLE feedback ALTER COLUMN id TYPE uuid USING id::uuid")
 
     with op.batch_alter_table("feedback") as batch_op:
-        batch_op.add_column(
-            sa.Column("status", sa.String(20), nullable=False, server_default="new")
-        )
+        batch_op.add_column(sa.Column("status", sa.String(20), nullable=False, server_default="new"))
         batch_op.create_check_constraint(
-            "ck_feedback_status_valid",
-            "status IN ('new','in_progress','done','wont_solve')",
+            "ck_feedback_status_valid", "status IN ('new','in_progress','done','wont_solve')"
         )
 
     # Drop the server default after the existing rows are backfilled — new
