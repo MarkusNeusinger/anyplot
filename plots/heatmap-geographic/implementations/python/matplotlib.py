@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-18
 """
 
 import os
