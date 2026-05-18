@@ -1,52 +1,70 @@
-""" pyplots.ai
+"""anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-09
+Library: plotly | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
 
-import numpy as np
-import plotly.graph_objects as go
-from sklearn.linear_model import LogisticRegression
+import os
+import sys
 
 
-# Data - exam study hours vs pass/fail
+# Remove current directory from path to avoid importing local plotly.py
+sys.path = [p for p in sys.path if p not in ("", ".", os.path.dirname(__file__))]
+
+import numpy as np  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+from sklearn.linear_model import LogisticRegression  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+BRAND = "#009E73"  # First series - bluish green
+ACCENT = "#D55E00"  # Second series - vermillion
+
+# Data - medical biomarker vs disease diagnosis
 np.random.seed(42)
 n_samples = 150
 
-# Generate study hours (predictor)
-study_hours = np.concatenate(
+# Generate biomarker values (e.g., cholesterol, glucose level)
+biomarker = np.concatenate(
     [
-        np.random.normal(3, 1.5, n_samples // 2),  # Students who failed
-        np.random.normal(7, 1.5, n_samples // 2),  # Students who passed
+        np.random.normal(150, 25, n_samples // 2),  # Patients without disease
+        np.random.normal(220, 30, n_samples // 2),  # Patients with disease
     ]
 )
-study_hours = np.clip(study_hours, 0, 12)
+biomarker = np.clip(biomarker, 80, 300)
 
-# Binary outcome (0=fail, 1=pass)
+# Binary outcome (0=no disease, 1=disease present)
 y = np.array([0] * (n_samples // 2) + [1] * (n_samples // 2))
 
 # Shuffle data
-shuffle_idx = np.random.permutation(len(study_hours))
-study_hours = study_hours[shuffle_idx]
+shuffle_idx = np.random.permutation(len(biomarker))
+biomarker = biomarker[shuffle_idx]
 y = y[shuffle_idx]
 
 # Fit logistic regression
-X = study_hours.reshape(-1, 1)
+X = biomarker.reshape(-1, 1)
 model = LogisticRegression()
 model.fit(X, y)
 
 # Generate smooth curve for predictions
-x_curve = np.linspace(0, 12, 200)
+x_curve = np.linspace(80, 300, 200)
 y_proba = model.predict_proba(x_curve.reshape(-1, 1))[:, 1]
 
 # Calculate confidence intervals (approximate using standard error)
-# SE = sqrt(p(1-p)/n) for binomial proportion
 se = np.sqrt(y_proba * (1 - y_proba) / n_samples) * 1.96
 y_upper = np.clip(y_proba + se, 0, 1)
 y_lower = np.clip(y_proba - se, 0, 1)
 
-# Jitter y values for visibility
-y_jittered = y + np.random.uniform(-0.03, 0.03, len(y))
+# Jitter y values for visibility (constrained to [0, 1])
+y_jittered = y + np.random.uniform(-0.02, 0.02, len(y))
+y_jittered = np.clip(y_jittered, 0, 1)
 
 # Model accuracy
 accuracy = model.score(X, y)
@@ -60,7 +78,7 @@ fig.add_trace(
         x=np.concatenate([x_curve, x_curve[::-1]]),
         y=np.concatenate([y_upper, y_lower[::-1]]),
         fill="toself",
-        fillcolor="rgba(48, 105, 152, 0.2)",
+        fillcolor="rgba(0, 158, 115, 0.2)",
         line={"color": "rgba(0,0,0,0)"},
         name="95% CI",
         showlegend=True,
@@ -70,79 +88,100 @@ fig.add_trace(
 
 # Logistic regression curve
 fig.add_trace(
-    go.Scatter(x=x_curve, y=y_proba, mode="lines", line={"color": "#306998", "width": 4}, name="Logistic Curve")
+    go.Scatter(
+        x=x_curve,
+        y=y_proba,
+        mode="lines",
+        line={"color": BRAND, "width": 4},
+        name="Logistic Curve",
+        hovertemplate="<b>Biomarker:</b> %{x:.1f}<br><b>Probability:</b> %{y:.3f}<extra></extra>",
+    )
 )
 
 # Decision threshold line at 0.5
 fig.add_trace(
     go.Scatter(
-        x=[0, 12],
+        x=[80, 300],
         y=[0.5, 0.5],
         mode="lines",
-        line={"color": "#888888", "width": 2, "dash": "dash"},
+        line={"color": INK_SOFT, "width": 2, "dash": "dash"},
         name="Decision Threshold (0.5)",
+        hoverinfo="skip",
     )
 )
 
-# Data points - Class 0 (Failed)
+# Data points - Class 0 (No Disease)
 mask_0 = y == 0
 fig.add_trace(
     go.Scatter(
-        x=study_hours[mask_0],
+        x=biomarker[mask_0],
         y=y_jittered[mask_0],
         mode="markers",
-        marker={"size": 14, "color": "#306998", "opacity": 0.6, "line": {"width": 1, "color": "white"}},
-        name="Failed (0)",
+        marker={"size": 12, "color": BRAND, "opacity": 0.6, "line": {"width": 1, "color": PAGE_BG}},
+        name="No Disease (0)",
+        hovertemplate="<b>Biomarker:</b> %{x:.1f}<br><b>Outcome:</b> No Disease<extra></extra>",
     )
 )
 
-# Data points - Class 1 (Passed)
+# Data points - Class 1 (Disease Present)
 mask_1 = y == 1
 fig.add_trace(
     go.Scatter(
-        x=study_hours[mask_1],
+        x=biomarker[mask_1],
         y=y_jittered[mask_1],
         mode="markers",
-        marker={"size": 14, "color": "#FFD43B", "opacity": 0.6, "line": {"width": 1, "color": "#333333"}},
-        name="Passed (1)",
+        marker={"size": 12, "color": ACCENT, "opacity": 0.6, "line": {"width": 1, "color": PAGE_BG}},
+        name="Disease Present (1)",
+        hovertemplate="<b>Biomarker:</b> %{x:.1f}<br><b>Outcome:</b> Disease Present<extra></extra>",
     )
 )
 
 # Layout
 fig.update_layout(
-    title={"text": "logistic-regression · plotly · pyplots.ai", "font": {"size": 32}, "x": 0.5, "xanchor": "center"},
+    title={
+        "text": "logistic-regression · python · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={
-        "title": {"text": "Study Hours", "font": {"size": 24}},
-        "tickfont": {"size": 18},
-        "range": [-0.5, 12.5],
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Biomarker Level (mg/dL)", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "range": [75, 305],
+        "gridcolor": "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)",
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Probability of Passing", "font": {"size": 24}},
-        "tickfont": {"size": 18},
-        "range": [-0.08, 1.08],
-        "gridcolor": "rgba(0,0,0,0.1)",
+        "title": {"text": "Disease Probability", "font": {"size": 22, "color": INK}},
+        "tickfont": {"size": 18, "color": INK_SOFT},
+        "range": [-0.05, 1.05],
+        "gridcolor": "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)",
         "gridwidth": 1,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
     },
-    template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     legend={
-        "font": {"size": 18},
+        "font": {"size": 16, "color": INK_SOFT},
         "x": 0.02,
         "y": 0.98,
-        "bgcolor": "rgba(255,255,255,0.8)",
-        "bordercolor": "rgba(0,0,0,0.2)",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
     annotations=[
         {
-            "x": 10.5,
+            "x": 265,
             "y": 0.15,
             "text": f"Accuracy: {accuracy:.1%}",
             "showarrow": False,
-            "font": {"size": 20, "color": "#306998"},
-            "bgcolor": "rgba(255,255,255,0.8)",
-            "bordercolor": "#306998",
+            "font": {"size": 18, "color": INK},
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
             "borderwidth": 1,
             "borderpad": 6,
         }
@@ -151,7 +190,7 @@ fig.update_layout(
 )
 
 # Save as PNG (4800x2700)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
 
 # Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
