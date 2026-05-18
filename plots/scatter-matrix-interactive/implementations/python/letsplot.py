@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 scatter-matrix-interactive: Interactive Scatter Plot Matrix (SPLOM)
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-18
@@ -38,6 +38,8 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = "#E8E5DB" if THEME == "light" else "#2A2925"
+ACCENT_COLOR = "#009E73"
 
 # Okabe-Ito palette - first series (#009E73) is always first
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
@@ -95,20 +97,22 @@ for i, var_y in enumerate(variables):
             # Diagonal: histogram showing distribution
             p = (
                 ggplot(df, aes(x=var_x, fill="Species"))
-                + geom_histogram(alpha=0.7, bins=15, position="identity")
+                + geom_histogram(alpha=0.75, bins=16, position="identity")
                 + scale_fill_manual(values=OKABE_ITO)
                 + labs(x=var_x if show_x_label else "", y="")
                 + theme_minimal()
                 + theme(
                     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
                     panel_background=element_rect(fill=PAGE_BG),
-                    panel_grid_major=element_line(color=INK, size=0.2),
+                    panel_grid_major=element_line(color=GRID_COLOR, size=0.25),
+                    panel_grid_minor=element_line(color=GRID_COLOR, size=0.12),
                     axis_title_x=element_text(size=16, color=INK) if show_x_label else element_blank(),
                     axis_title_y=element_blank(),
                     axis_text=element_text(size=13, color=INK_SOFT),
-                    axis_line=element_line(color=INK_SOFT, size=0.3),
+                    axis_line=element_line(color=GRID_COLOR, size=0.4),
+                    axis_ticks=element_line(color=GRID_COLOR, size=0.3),
                     legend_position="none",
-                    plot_margin=[5, 5, 5, 5],
+                    plot_margin=[6, 6, 6, 6],
                 )
             )
         else:
@@ -116,9 +120,10 @@ for i, var_y in enumerate(variables):
             p = (
                 ggplot(df, aes(x=var_x, y=var_y, color="Species", fill="Species"))
                 + geom_point(
-                    size=4,
-                    alpha=0.7,
+                    size=4.5,
+                    alpha=0.72,
                     shape=21,
+                    stroke=0.6,
                     tooltips=layer_tooltips()
                     .line("Species: @Species")
                     .line(f"{var_x}: @{{{var_x}}}")
@@ -131,13 +136,15 @@ for i, var_y in enumerate(variables):
                 + theme(
                     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
                     panel_background=element_rect(fill=PAGE_BG),
-                    panel_grid_major=element_line(color=INK, size=0.2),
+                    panel_grid_major=element_line(color=GRID_COLOR, size=0.25),
+                    panel_grid_minor=element_line(color=GRID_COLOR, size=0.12),
                     axis_title_x=element_text(size=16, color=INK) if show_x_label else element_blank(),
                     axis_title_y=element_text(size=16, color=INK) if show_y_label else element_blank(),
                     axis_text=element_text(size=13, color=INK_SOFT),
-                    axis_line=element_line(color=INK_SOFT, size=0.3),
+                    axis_line=element_line(color=GRID_COLOR, size=0.4),
+                    axis_ticks=element_line(color=GRID_COLOR, size=0.3),
                     legend_position="none",
-                    plot_margin=[5, 5, 5, 5],
+                    plot_margin=[6, 6, 6, 6],
                 )
             )
         plots.append(p)
@@ -163,6 +170,7 @@ title_plot = (
         axis_ticks=element_blank(),
         axis_title=element_blank(),
         panel_grid=element_blank(),
+        plot_margin=[8, 10, 4, 10],
     )
 )
 
@@ -170,7 +178,7 @@ title_plot = (
 legend_df = pd.DataFrame({"x": [1, 2, 3], "y": [0, 0, 0], "Species": ["Setosa", "Versicolor", "Virginica"]})
 legend_plot = (
     ggplot(legend_df, aes(x="x", y="y", color="Species", fill="Species"))
-    + geom_point(size=6, shape=21, alpha=0.8)
+    + geom_point(size=8, shape=21, alpha=0.85, stroke=0.5)
     + scale_color_manual(values=OKABE_ITO)
     + scale_fill_manual(values=OKABE_ITO)
     + theme_minimal()
@@ -179,12 +187,13 @@ legend_plot = (
         legend_position="bottom",
         legend_direction="horizontal",
         legend_title=element_text(size=18, color=INK),
-        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_text=element_text(size=16, color=INK),
         axis_line=element_blank(),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_title=element_blank(),
         panel_grid=element_blank(),
+        plot_margin=[4, 10, 8, 10],
     )
 )
 
