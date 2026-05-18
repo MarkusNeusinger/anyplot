@@ -1,12 +1,12 @@
-""" pyplots.ai
+"""anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
 
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -19,6 +19,17 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from sklearn.linear_model import LogisticRegression
 
+
+# Theme-adaptive colors
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 
 # Data - Generate binary classification data
 np.random.seed(42)
@@ -66,12 +77,12 @@ y_class1 = y_jittered[y == 1].tolist()
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
+# Chart configuration with theme-adaptive colors
 chart.options.chart = {
     "width": 4800,
     "height": 2700,
-    "backgroundColor": "#ffffff",
-    "style": {"fontFamily": "Arial, sans-serif"},
+    "backgroundColor": PAGE_BG,
+    "style": {"fontFamily": "Arial, sans-serif", "color": INK},
     "spacingBottom": 100,
     "spacingLeft": 50,
     "spacingTop": 50,
@@ -80,40 +91,42 @@ chart.options.chart = {
 
 # Title
 chart.options.title = {
-    "text": "logistic-regression · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "logistic-regression · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "28px", "fontWeight": "medium", "color": INK},
 }
-
-chart.options.subtitle = {"text": "Exam Pass Probability vs Study Hours", "style": {"fontSize": "32px"}}
 
 # X-axis
 chart.options.x_axis = {
-    "title": {"text": "Study Hours", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Study Hours", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": 0,
     "max": 10,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
 }
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Probability", "style": {"fontSize": "36px"}},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Probability", "style": {"fontSize": "22px", "color": INK}},
+    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
     "min": -0.05,
     "max": 1.05,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
+    "gridLineColor": GRID,
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "plotLines": [
         {
             "value": 0.5,
-            "color": "#888888",
+            "color": INK_SOFT,
             "width": 3,
             "dashStyle": "Dash",
             "label": {
                 "text": "Decision Threshold (0.5)",
                 "align": "right",
-                "style": {"fontSize": "24px", "color": "#888888"},
+                "style": {"fontSize": "18px", "color": INK_SOFT},
                 "x": -10,
                 "y": -10,
             },
@@ -125,7 +138,10 @@ chart.options.y_axis = {
 # Legend
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "28px"},
+    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
     "symbolRadius": 6,
     "symbolHeight": 20,
     "symbolWidth": 20,
@@ -133,42 +149,42 @@ chart.options.legend = {
 
 # Plot options
 chart.options.plot_options = {
-    "scatter": {"marker": {"radius": 14, "symbol": "circle"}},
-    "spline": {"lineWidth": 6, "marker": {"enabled": False}},
+    "scatter": {"marker": {"radius": 8}},
+    "spline": {"lineWidth": 3, "marker": {"enabled": False}},
     "arearange": {"fillOpacity": 0.25, "lineWidth": 0, "marker": {"enabled": False}},
 }
 
-# Confidence interval (arearange series)
+# Confidence interval (arearange series) - use first Okabe-Ito color with transparency
 ci_data = [[float(x_curve[i]), float(ci_lower[i]), float(ci_upper[i])] for i in range(len(x_curve))]
 ci_series = AreaRangeSeries()
 ci_series.data = ci_data
 ci_series.name = "95% CI"
-ci_series.color = "rgba(48, 105, 152, 0.3)"
-ci_series.fill_opacity = 0.3
+ci_series.color = OKABE_ITO[0]
+ci_series.fill_opacity = 0.2
 chart.add_series(ci_series)
 
-# Logistic curve
+# Logistic curve - use third color for distinction from scatter points
 curve_data = [[float(x_curve[i]), float(y_prob[i])] for i in range(len(x_curve))]
 curve_series = SplineSeries()
 curve_series.data = curve_data
 curve_series.name = "Logistic Curve"
-curve_series.color = "#306998"
+curve_series.color = OKABE_ITO[2]
 chart.add_series(curve_series)
 
-# Class 0 points (Fail)
+# Class 0 points (Fail) - first Okabe-Ito color
 scatter_class0 = ScatterSeries()
 scatter_class0.data = [[x_class0[i], y_class0[i]] for i in range(len(x_class0))]
 scatter_class0.name = "Fail (0)"
-scatter_class0.color = "rgba(48, 105, 152, 0.6)"
-scatter_class0.marker = {"radius": 14, "symbol": "circle"}
+scatter_class0.color = OKABE_ITO[0]
+scatter_class0.marker = {"radius": 8}
 chart.add_series(scatter_class0)
 
-# Class 1 points (Pass)
+# Class 1 points (Pass) - second Okabe-Ito color
 scatter_class1 = ScatterSeries()
 scatter_class1.data = [[x_class1[i], y_class1[i]] for i in range(len(x_class1))]
 scatter_class1.name = "Pass (1)"
-scatter_class1.color = "rgba(255, 212, 59, 0.8)"
-scatter_class1.marker = {"radius": 14, "symbol": "circle"}
+scatter_class1.color = OKABE_ITO[1]
+scatter_class1.marker = {"radius": 8}
 chart.add_series(scatter_class1)
 
 # Add model accuracy annotation
@@ -179,9 +195,9 @@ chart.options.annotations = [
             {
                 "point": {"x": 8.5, "y": 0.15, "xAxis": 0, "yAxis": 0},
                 "text": f"Accuracy: {accuracy:.1%}",
-                "style": {"fontSize": "28px"},
-                "backgroundColor": "rgba(255, 255, 255, 0.8)",
-                "borderColor": "#306998",
+                "style": {"fontSize": "18px", "color": INK},
+                "backgroundColor": ELEVATED_BG,
+                "borderColor": INK_SOFT,
                 "borderWidth": 2,
                 "padding": 15,
             }
@@ -193,20 +209,11 @@ chart.options.annotations = [
 # Credits
 chart.options.credits = {"enabled": False}
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
-
-# Download highcharts-more for arearange
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
-    highcharts_more_js = response.read().decode("utf-8")
-
-# Download annotations module
-annotations_url = "https://code.highcharts.com/modules/annotations.js"
-with urllib.request.urlopen(annotations_url, timeout=30) as response:
-    annotations_js = response.read().decode("utf-8")
+# Load Highcharts JS from local npm package (CDN blocked in CI)
+HC_NPM = Path("/tmp/hc-tmp/node_modules/highcharts")
+highcharts_js = (HC_NPM / "highcharts.js").read_text(encoding="utf-8")
+highcharts_more_js = (HC_NPM / "highcharts-more.js").read_text(encoding="utf-8")
+annotations_js = (HC_NPM / "modules/annotations.js").read_text(encoding="utf-8")
 
 # Generate HTML with inline scripts
 html_str = chart.to_js_literal()
@@ -218,13 +225,17 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_more_js}</script>
     <script>{annotations_js}</script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save interactive HTML (both themes)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -234,30 +245,12 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4900,2800")
+chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Save interactive HTML (using CDN scripts for standalone viewing)
-html_export = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Logistic Regression - Highcharts</title>
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/highcharts-more.js"></script>
-    <script src="https://code.highcharts.com/modules/annotations.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_export)
