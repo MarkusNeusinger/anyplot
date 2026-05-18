@@ -6,7 +6,7 @@ title: Stacked Area Chart with Confidence Bands
 
 # Specification tracking
 created: 2026-01-09T21:45:47Z
-updated: null
+updated: 2026-05-18T00:00:00Z
 issue: 3549
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - area
-    - stacked
   data_type:
     - numeric
     - timeseries
