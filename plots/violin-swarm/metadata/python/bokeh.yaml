@@ -1,159 +1,176 @@
 library: bokeh
+language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:49:31Z'
-updated: '2026-01-09T16:52:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858842134
+updated: '2026-05-18T05:03:32Z'
+generated_by: claude-haiku
+workflow_run: 26014125713
 issue: 3526
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/bokeh/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent implementation of KDE-based violin shapes using scipy.stats.gaussian_kde
-    with proper normalization
-  - Smart swarm point jittering algorithm that respects violin boundaries by scaling
-    jitter to local density
-  - Good color contrast between semi-transparent blue violins and opaque yellow points
-  - Proper text sizing for 4800x2700 canvas with all elements clearly readable
-  - Clean, KISS code structure with good reproducibility (seed=42)
-  - Both PNG and HTML outputs provided
+  - Perfect visual quality and theme consistency
+  - Correct spec compliance with all features implemented
+  - Realistic data scenario with clear distribution differences
+  - Proper text legibility and element visibility at high resolution
+  - Clean, reproducible code with appropriate use of library patterns
   weaknesses:
-  - Missing HoverTool for interactive tooltips on swarm points (would showcase Bokeh
-    interactivity strength)
-  - Small Bokeh toolbar visible in corner is not very useful for PNG output
-  - Could benefit from slight median/quartile indicators within the violins
-  image_description: 'The plot displays four violin shapes arranged horizontally representing
-    different experimental conditions (Control, Low Dose, Medium Dose, High Dose)
-    for reaction time data. Each violin is rendered in Python Blue (#306998) with
-    approximately 40% transparency (semi-transparent light blue appearance). Yellow/gold
-    circular markers (Python Yellow #FFD43B) with dark gray outlines are overlaid
-    as swarm points within each violin, showing individual data observations. The
-    title "violin-swarm · bokeh · pyplots.ai" appears at the top-left. The Y-axis
-    shows "Reaction Time (ms)" ranging from approximately 150-450ms, and the X-axis
-    shows "Experimental Condition" with the four category labels. The violins display
-    different distribution shapes - Control and Low Dose are more symmetric, Medium
-    Dose has a wider spread, and High Dose is more compact and lower on the scale.
-    Grid lines are subtle with dashed styling. There is a small Bokeh toolbar visible
-    in the top-right corner.'
+  - Generic design with standard library defaults
+  - Limited visual hierarchy or data storytelling
+  - No distinctive library features beyond standard usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1), correctly styled
+      Chrome: Title clearly visible at top; Y-axis label "Reaction Time (ms)" and X-axis label "Experimental Condition" are readable; Y-axis ticks (100-450) and X-axis category labels (Control, Low Dose, Medium Dose, High Dose) all clearly visible
+      Data: Four violin shapes with overlaid swarm points, all rendered in brand green (#009E73); violins have alpha=0.4 allowing underlying points to show; swarm points have alpha=0.7 with appropriate jitter within violin boundaries
+      Legibility verdict: PASS - All text is dark and readable against light background; grid lines are subtle but visible; no overlap or legibility issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17), correctly styled
+      Chrome: Title clearly visible; axis labels and all tick labels are light-colored and readable against dark background; no dark-on-dark issues found
+      Data: Identical green data colors to light render (#009E73 for both violins and swarm points); violins and points clearly visible against dark background; only chrome (background, text, grid) changes between themes as expected
+      Legibility verdict: PASS - All text is light-colored and readable; no dark-on-dark failures; strong contrast between data and background
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt, axis labels at 28pt/22pt, tick labels at 24pt/22pt
-          - all perfectly readable at 4800x2700
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements, category labels well-spaced
+        comment: All font sizes explicitly set (28pt title, 22pt labels, 18pt ticks);
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; all category labels and tick labels clearly
+          spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers size=18 with alpha=0.9 are clearly visible, violin alpha=0.4
-          provides good contrast; slightly dense in some areas
+        comment: Violin shapes and 200 swarm points optimally sized for 4800×2700
+          canvas; appropriate alpha blending
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is excellent and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, violins well-distributed, slight extra whitespace
-          on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Reaction Time (ms), Experimental Condition'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito green (#009E73) has excellent contrast on both light and
+          dark backgrounds; CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot uses 50-70% of canvas with balanced margins; excellent utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Y-axis with units: ''Reaction Time (ms)''; X-axis: ''Experimental
+          Condition''; descriptive and clear'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series uses #009E73; backgrounds are #FAF8F1 (light) and #1A1A17
+          (dark); data colors identical across themes; all chrome theme-adaptive'
+    design_excellence:
+      score: 8
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle but no legend present; not strictly needed for this
-          plot type but could help identify violin vs swarm
+        comment: Well-configured library default; professional but not publication-level
+          design; uses standard Okabe-Ito palette without custom enhancements
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Library defaults with minimal customization; grid styling is correct
+          but no intentional refinement; spines not removed
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed clearly but no visual hierarchy or emphasis; viewer
+          must discover the story rather than being guided to it
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct violin plot with overlaid swarm points
+        comment: Correct violin plot with overlaid swarm points; KDE-based density
+          with individual data visibility
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, continuous values on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Violin shows KDE distribution, swarm points overlaid and centered
-          within violin shape, transparency applied, contrasting colors used
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: transparency on violins (alpha 0.4), swarm points
+          with appropriate sizing (size=12), horizontal jitter within boundaries'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: categorical (4 conditions); Y: continuous (reaction time in ms);
+          correct mapping; axes show all data'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this single-series plot
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: violin-swarm · bokeh · pyplots.ai'
+        comment: 'Title: ''violin-swarm · Python · bokeh · anyplot.ai'' matches spec
+          format exactly; no legend needed for single-series'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 different distributions with varying means, spreads, and
-          shapes; could show more extreme outliers
+        comment: 'Shows all aspects: different means (350→250ms), different spreads,
+          clear dose-response pattern; excellent feature coverage'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Reaction time drug dose study is a realistic scientific scenario
+        comment: Realistic experimental scenario (reaction times across dose conditions);
+          neutral, plausible domain; not abstract
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Reaction times 150-450ms are plausible; decreasing reaction time
-          with increasing dose makes scientific sense
+        comment: Reaction times 150-450ms realistic; normal distributions with appropriate
+          SD (40-60ms); proportions factually sound
     code_quality:
       score: 10
       max: 10
@@ -163,57 +180,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save - no functions/classes'
+        comment: Imports → data → figure → plotting → save; no functions or classes;
+          linear flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; deterministic data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, bokeh modules, scipy.stats)
+        comment: 'All imports used: os (theme), time (screenshot wait), Path (file
+          ops), numpy, scipy.stats, selenium'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Using current Bokeh API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Pythonic, appropriate complexity; jitter calculation is clear; no
+          over-engineering or fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.html and plot-{THEME}.png; correct naming;
+          current bokeh 3.9.0 API
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: false
-        comment: Uses ColumnDataSource and patch() for violins, but does not leverage
-          Bokeh's distinctive interactivity (HoverTool could show point values on
-          hover)
+        comment: Good use of figure(), ColumnDataSource, patch(), scatter(), HoverTool;
+          correct but doesn't leverage advanced patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses ColumnDataSource and HoverTool (bokeh-specific) and Selenium
+          screenshot (appropriate workaround); generic overall usage
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - selenium
   techniques:
   - patches
+  - hover-tooltips
   - html-export
+  - columndatasource
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
   dataprep:
   - kde
   styling:
   - alpha-blending
-  - grid-styling
-  - edge-highlighting
