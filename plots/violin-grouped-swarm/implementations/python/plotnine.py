@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 violin-grouped-swarm: Grouped Violin Plot with Swarm Overlay
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-05-18
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-18
 """
 
 import os
