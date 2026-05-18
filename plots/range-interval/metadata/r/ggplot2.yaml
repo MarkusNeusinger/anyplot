@@ -1,0 +1,233 @@
+library: ggplot2
+language: r
+specification_id: range-interval
+created: '2026-05-18T10:55:06Z'
+updated: '2026-05-18T11:05:38Z'
+generated_by: claude-haiku
+workflow_run: 26028997536
+issue: 3577
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/range-interval/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/range-interval/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - Perfect theme-readability in both light and dark renders with zero dark-on-dark
+    failures
+  - Idiomatic use of geom_linerange() with endpoint markers—exactly how ggplot2 implements
+    range visualization
+  - 'Flawless palette compliance: first series #009E73, backgrounds correct, theme-adaptive
+    chrome properly implemented'
+  - Clean, minimal design with thoughtful spine removal and subtle grid
+  - Excellent seasonal temperature data demonstrating feature coverage and realistic
+    context
+  - Proper explicit text sizing (24pt title, 20pt labels, 16pt ticks) ensuring readability
+    at full resolution
+  weaknesses:
+  - Design Excellence could be elevated through more sophisticated aesthetic choices
+    (custom typography, refined color interplay, or intentional visual hierarchy beyond
+    defaults)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme-adaptive surface
+      Chrome: Title "range-interval · r · ggplot2 · anyplot.ai" in dark ink #1A1A17 at 24pt, fully readable. Axis labels "Month" and "Temperature (°C)" in dark ink at 20pt, clearly legible. Tick labels in secondary ink #4A4A44 at 16pt, all visible. Subtle horizontal grid lines in INK_SOFT (#4A4A44) at low opacity guide reading without competing with data.
+      Data: 12 vertical line ranges in Okabe-Ito #009E73 with 0.85 alpha, linewidth 5.5, clearly visible. Endpoint circles in identical #009E73 at size 3.5 with 0.95 alpha mark min/max bounds.
+      Legibility verdict: PASS — All text readable, no contrast failures, grid appropriately subtle.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light ink #F0EFE8 at 24pt, fully readable against dark surface. Axis labels in light ink #F0EFE8 at 20pt, clearly legible. Tick labels in secondary light ink #B8B7B0 at 16pt, all visible. Subtle horizontal grid lines in light secondary ink (#B8B7B0) at low opacity, no dark-on-dark failures.
+      Data: 12 vertical line ranges in identical Okabe-Ito #009E73 (matching light render perfectly) with 0.85 alpha and 5.5 linewidth, clearly visible against dark background. Endpoint circles in identical #009E73 at size 3.5 with 0.95 alpha.
+      Legibility verdict: PASS — All text readable against dark surface, no dark-on-dark issues, data colors identical to light render, chrome correctly theme-adaptive.
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: Title, labels, ticks explicitly sized (24pt, 20pt, 16pt); all readable
+          in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: All text fully visible, no collisions or overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Linerange (5.5 linewidth, 0.85 alpha) and endpoints (size 3.5, 0.95
+          alpha) perfectly adapted
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito #009E73 with proper alpha; single color enhances accessibility'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Excellent canvas utilization, balanced margins, well-positioned content
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Month and Temperature (°C) with units, fully descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17 correct; text
+          colors theme-adaptive; data colors identical across themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: false
+        comment: Well-configured design with spine removal and token-based theming;
+          polished defaults rather than exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid lines, removed spines, good whitespace, alpha blending
+          adds polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear seasonal pattern; summer peak and winter valley visually prominent
+          through range spans
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct range interval chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: min/max ranges, categories, endpoints'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Month (categorical), Y=Temperature (numeric), ymin/ymax correctly
+          mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format correct; no legend needed (single series)
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Full range visualization; variable widths demonstrate feature breadth
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Monthly temperatures real-world, neutral, comprehensible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Realistic values (-2 to 35°C) with correct seasonal proportions
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → data → plot → save; no unnecessary abstractions'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) included
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: ggplot2, dplyr, ragg all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity, no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png using current API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: geom_linerange() is canonical ggplot2 approach; proper layer composition
+          with endpoint markers
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses layer-composition and alpha blending; theme-adaptive tokens;
+          solid but straightforward
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep: []
+  styling:
+  - alpha-blending
+  - minimal-chrome
