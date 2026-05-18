@@ -6,7 +6,7 @@ title: Interactive Scatter Plot Matrix (SPLOM)
 
 # Specification tracking
 created: 2026-01-10T01:47:09Z
-updated: null
+updated: 2026-05-18T16:09:05Z
 issue: 3604
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - scatter
-    - matrix
     - pairplot
   data_type:
     - numeric
