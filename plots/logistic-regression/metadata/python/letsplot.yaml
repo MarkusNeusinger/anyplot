@@ -1,213 +1,226 @@
 library: letsplot
+language: python
 specification_id: logistic-regression
 created: '2026-01-09T21:56:15Z'
-updated: '2026-01-09T21:59:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866601825
+updated: '2026-05-18T08:47:40Z'
+generated_by: claude-haiku
+workflow_run: 26022732956
 issue: 3550
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/letsplot/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent sigmoid curve representation with proper confidence interval visualization
-  - Clean, minimal theme with good use of lets-plot grammar of graphics
-  - Realistic study hours vs exam outcome scenario that clearly demonstrates logistic
-    regression
-  - Proper jittering of binary outcome points for visibility
-  - Correct title format and proper 16:9 aspect ratio output
+  - 'Perfect visual quality across both themes: all text explicit, readable, no overlap'
+  - 'Complete theme adaptation: data colors identical between renders, chrome properly
+    flipped, backgrounds correct'
+  - 'All spec features present: logistic curve, confidence intervals, decision threshold,
+    jittered points, proper legend'
+  - Clean, reproducible code with explicit font sizing and theme tokens
+  - Idiomatic letsplot with custom theme and proper geom composition
   weaknesses:
-  - Code uses custom functions (sigmoid, fit_logistic) violating KISS principle -
-    consider using sklearn or statsmodels
-  - Red-yellow color scheme could be improved for colorblind accessibility (consider
-    blue-orange)
-  - Missing model coefficient or accuracy annotation as suggested in spec notes
-  - Axis labels lack units (could use Study Hours (hours) though units are implicit)
-  image_description: 'The plot displays a logistic regression visualization showing
-    the relationship between Study Hours (x-axis, ranging from -0.5 to 10.5) and Probability
-    (y-axis, ranging from 0 to 1). The characteristic S-shaped sigmoid curve is rendered
-    as a solid blue line (~2.5px width) with the Python blue color (#306998). A semi-transparent
-    light blue confidence interval band surrounds the curve. Data points are shown
-    as circles with two colors: red/coral (#DC2626) for "Fail" outcomes (class 0)
-    and yellow (#FFD43B) for "Pass" outcomes (class 1). Points are jittered around
-    their binary y-values (0 and 1) for visibility. A horizontal dashed gray line
-    at y=0.5 indicates the decision threshold. The legend is positioned on the right
-    side labeled "Outcome" with Fail and Pass entries. The title correctly shows "logistic-regression
-    · letsplot · pyplots.ai". The minimal theme provides a clean appearance with subtle
-    gridlines.'
+  - Design Excellence is good but not exceptional (well-configured defaults rather
+    than publication-ready styling)
+  - Data storytelling could emphasize key insights more (though this is minor)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle grid
+      Chrome: Title and labels in dark text (#1A1A17), clearly readable; subtitle with coefficients visible
+      Data: Teal/green (Pass, #009E73) and orange (Fail, #D55E00) points properly jittered; smooth S-shaped logistic curve with light confidence interval ribbon; dashed decision threshold at 0.5
+      Legibility verdict: PASS - all elements crisp and readable on light surface
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with subtle grid
+      Chrome: Title and labels in light text (#F0EFE8 / #B8B7B0), clearly readable; no dark-on-dark failures; subtitle visible
+      Data: Identical data colors to light render (same teal #009E73 and orange #D55E00); curve and CI ribbon match light render exactly
+      Legibility verdict: PASS - all elements crisp and readable on dark surface; perfect theme adaptation with data colors constant
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, legend text
-          at 16pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, jittered points avoid overlap
+        comment: 'All sizes explicit: 24pt title, 20pt labels, 16pt ticks, all readable
+          in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Zero overlap, all elements clearly separated
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points are well-sized (size=4) with alpha=0.6, visible but slightly
-          small for 200 points
+        comment: 200 points with alpha=0.65 optimally adapted; curve prominent at
+          size=2.5
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Red and yellow are distinguishable but red-yellow is not optimal
-          for colorblind users
+        comment: Okabe-Ito palette, good contrast, CVD-safe
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well, good margins, legend well-placed
+        comment: Plot fills 60-70% of canvas with balanced margins, no wasted space
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units
+        comment: Descriptive labels with context; full spec-id title + metric annotations
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend well-placed but labeled Outcome instead of
-          Class
+        comment: 'Perfect: #009E73 first series, #D55E00 second, correct backgrounds,
+          theme-adapted chrome'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured defaults with custom theme, not publication-ready
+          or exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid, careful spacing, good refinement visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through color and curve prominence, some emphasis
+          on key insights
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct logistic regression curve with sigmoid shape
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: X is continuous predictor, Y is probability, binary outcomes shown
-          correctly
-      - id: SC-03
+        comment: 'Correct: logistic curve with all subtypes'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has curve, CI band, threshold line, jittered points; missing model
-          coefficient annotation
-      - id: SC-04
-        name: Data Range
+        comment: 'All present: curve, CI, threshold, jitter, colors, annotations'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis properly 0-1, X-axis shows all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Study Hours, Y=Probability (0-1), all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Pass/Fail classes
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: logistic-regression · letsplot · pyplots.ai'
+        comment: Perfect format with subtitle metrics
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows sigmoidal relationship, both classes, uncertainty band
+        comment: Shows separation, uncertainty, threshold, density
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Study hours vs exam pass/fail is a classic, neutral educational scenario
+        comment: Real scenario (study hours → pass/fail), neutral, educational
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Study hours 0-10 is reasonable; probability 0-1 is correct
+        comment: Plausible values (0-10 hours, 90% accuracy)
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code includes custom functions (sigmoid, fit_logistic) instead of
-          pure KISS structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set
+        comment: Clean linear flow, no unnecessary functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used (numpy, pandas, letsplot, sklearn, os, shutil)
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Pythonic, appropriate complexity, no fake features
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: 'Correct: plot-{THEME}.png + .html'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Uses lets-plot ggplot2 grammar effectively: geom_ribbon, geom_line,
-          geom_point, geom_hline, scale_color_manual, theme_minimal, ggsize with scale
-          export'
+        comment: Expert ggplot() + geom composition, proper theme(), ggsave()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Good use of theme tokens and geoms, but not distinctive to letsplot
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - sklearn
   techniques:
   - layer-composition
-  - html-export
   patterns:
   - data-generation
   dataprep:
   - regression
   styling:
-  - alpha-blending
+  - publication-ready
