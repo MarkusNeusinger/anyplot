@@ -1,15 +1,17 @@
-""" pyplots.ai
+""" anyplot.ai
 network-transport-static: Static Transport Network Diagram
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-10
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
     arrow,
-    element_blank,
+    element_rect,
     element_text,
     geom_point,
     geom_segment,
@@ -23,6 +25,12 @@ from plotnine import (
 
 
 np.random.seed(42)
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Station data - regional rail network
 stations = pd.DataFrame(
@@ -93,7 +101,7 @@ routes["yend"] = routes["target"].map(station_coords["y"])
 # Route type for coloring
 routes["route_type"] = routes["route_id"].str.extract(r"([A-Z]+)")[0]
 
-# Offset overlapping routes - larger offset to separate labels
+# Offset overlapping routes
 route_pairs = routes.groupby(["source", "target"]).cumcount()
 offset_amount = 0.025
 
@@ -120,7 +128,6 @@ routes["xend"] = routes["xend"] - dx / length * shorten
 routes["yend"] = routes["yend"] - dy / length * shorten
 
 # Calculate edge label positions - stagger along edge to reduce overlaps
-# Use 40%-60% position alternating based on index to spread labels
 label_offset = np.where(routes.index % 2 == 0, 0.4, 0.6)
 routes["label_x"] = routes["x"] + (routes["xend"] - routes["x"]) * label_offset
 routes["label_y"] = routes["y"] + (routes["yend"] - routes["y"]) * label_offset
@@ -128,10 +135,10 @@ routes["edge_label"] = routes["route_id"] + " | " + routes["dep"] + "→" + rout
 
 # Color palette for route types
 route_colors = {
-    "RE": "#306998",  # Python Blue - Express
-    "RB": "#FFD43B",  # Python Yellow - Regional
-    "AE": "#E74C3C",  # Red - Airport
-    "S": "#27AE60",  # Green - Local
+    "RE": "#0072B2",  # Blue - Express
+    "RB": "#E69F00",  # Orange - Regional
+    "AE": "#D55E00",  # Vermillion - Airport
+    "S": "#009E73",  # Green - Local (first series brand color)
 }
 
 # Create the plot
@@ -145,26 +152,21 @@ plot = (
         arrow=arrow(length=0.15, type="closed", angle=25),
     )
     # Draw station nodes
-    + geom_point(data=stations, mapping=aes(x="x", y="y"), size=12, fill="white", color="#306998", stroke=2)
+    + geom_point(data=stations, mapping=aes(x="x", y="y"), size=12, fill=PAGE_BG, color=INK, stroke=2)
     # Station labels
     + geom_text(
-        data=stations,
-        mapping=aes(x="x", y="y", label="label"),
-        size=12,
-        fontweight="bold",
-        color="#333333",
-        nudge_y=0.06,
+        data=stations, mapping=aes(x="x", y="y", label="label"), size=12, fontweight="bold", color=INK, nudge_y=0.06
     )
-    # Edge labels (route and times) - larger size and better positioning
+    # Edge labels (route and times) - improved size and positioning
     + geom_text(
         data=routes,
         mapping=aes(x="label_x", y="label_y", label="edge_label", color="route_type"),
-        size=8,
+        size=9,
         nudge_y=0.04,
         fontweight="bold",
         show_legend=False,
     )
-    # Color scale using raw route codes as per spec for legend accuracy
+    # Color scale
     + scale_color_manual(
         values=route_colors,
         name="Route Type",
@@ -172,17 +174,19 @@ plot = (
         limits=["RE", "RB", "AE", "S"],
     )
     # Labels and theme
-    + labs(title="network-transport-static · plotnine · pyplots.ai")
+    + labs(title="network-transport-static · python · plotnine · anyplot.ai")
     + theme_void()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center", weight="bold"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=24, ha="center", weight="bold", color=INK),
         legend_position="right",
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
-        legend_background=element_blank(),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_title=element_text(size=16, weight="bold", color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
