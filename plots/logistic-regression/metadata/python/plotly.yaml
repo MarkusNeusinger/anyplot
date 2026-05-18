@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: logistic-regression
 created: '2026-01-09T21:54:47Z'
-updated: '2026-05-18T08:34:12Z'
+updated: '2026-05-18T08:40:30Z'
 generated_by: claude-haiku
 workflow_run: 26022162093
 issue: 3550
@@ -12,38 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/plotly/plot-dark.html
-quality_score: 88
+quality_score: 93
 review:
   strengths:
-  - Perfect theme adaptation with no readability issues in either light or dark render
-  - Excellent specification compliance - all required features present and correctly
-    implemented
-  - Clean, reproducible code with proper seed management and idiomatic Plotly usage
-  - Strong visual hierarchy with the logistic curve as clear focal point
-  - Realistic medical context (biomarker/disease diagnosis) with appropriate data
-    distributions
-  - Professional styling with semi-transparent confidence interval band and custom
-    hover templates
-  - Proper use of Okabe-Ito palette with correct color assignments for both data series
+  - Perfect visual quality with all text sizes explicitly set and readable in both
+    themes; no overlap or legibility issues
+  - Complete spec compliance with all required features present and correctly implemented
+  - Strong design execution with theme tokens properly applied and confidence interval
+    band elegantly styled
+  - Excellent data quality with realistic medical context and appropriate scale
+  - Clean, reproducible code with zero technical debt
+  - Idiomatic plotly usage demonstrating solid library mastery
   weaknesses:
-  - Design Excellence could be enhanced - styling is functional but somewhat conventional
-    for Plotly
-  - Library Mastery is solid but could leverage more advanced Plotly features (secondary
-    axes, range sliders, or more sophisticated interactivity patterns)
+  - Logistic curve could emphasize the sigmoid transition more dramatically through
+    color intensity or emphasis annotation
+  - Some distinctive plotly features not leveraged (e.g., interactive selection, custom
+    buttons)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), not pure white. Plot is bright and clean.
-      Chrome: Title, axis labels ("Biomarker Level (mg/dL)", "Disease Probability"), and tick labels are all clearly readable in dark text (#1A1A17). Legend positioned in top-left with styled background box. Accuracy annotation in lower-right is readable. Grid lines are subtle and appropriate.
-      Data: First series (No Disease) uses #009E73 (green), second series (Disease Present) uses #D55E00 (orange). Okabe-Ito colors are correct and vibrant. Logistic curve is a prominent solid line in green. Confidence interval band is semi-transparent green (0.2 alpha) and clearly visible. Decision threshold dashed line at 0.5 is visible. Data markers are appropriately sized with 0.6 opacity, showing point density without obscuring the curve.
-      Legibility verdict: PASS - All elements readable with excellent contrast.
+      Background: Warm off-white #FAF8F1 - correct, not pure white
+      Chrome: Title "logistic-regression · python · plotly · anyplot.ai" in dark text (28px), axis labels "Biomarker Level (mg/dL)" and "Disease Probability" in dark text (22px), tick labels dark (18px), legend with light background frame, accuracy annotation in dark text - all clearly readable
+      Data: Teal sigmoid curve (#009E73) with semi-transparent confidence interval band, teal Class 0 markers with alpha 0.6, orange (#D55E00) Class 1 markers with alpha 0.6, horizontal dashed threshold line, jittered points clearly visible
+      Grid: Subtle gridlines visible without competing with data
+      Legibility verdict: PASS - all elements readable, excellent contrast
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), not pure black. Plot is dark but not harsh.
-      Chrome: Title, axis labels, and tick labels are all clearly readable in light text (#F0EFE8). Legend box and annotation box both use the elevated dark background (#242420) with light borders. No dark-on-dark failures - all text has proper contrast. Grid lines are subtle and visible against the dark background.
-      Data: Colors are identical to light render - green and orange data points maintain their identity. Logistic curve is the same green, equally prominent. Confidence interval band maintains transparency and visibility. Decision threshold line is visible with appropriate dashing. All data markers are distinguishable from the dark background.
-      Legibility verdict: PASS - All elements readable with excellent contrast. No dark-on-dark issues.
-
-    Both renders demonstrate flawless theme adaptation with consistent data colors and proper chrome inversion.
+      Background: Warm near-black #1A1A17 - correct, not pure black
+      Chrome: Title in light text (#F0EFE8, 28px), axis labels in light text (22px), tick labels in secondary light text (#B8B7B0, 18px), legend with dark elevated background (#242420), accuracy annotation in light text - all clearly readable with no dark-on-dark failures
+      Data: Sigmoid curve identical teal color (#009E73) as light render, confidence interval band identical, Class 0 and Class 1 markers identical colors and opacity, threshold line visible in light color, jittered points clearly distinguishable
+      Grid: Subtle gridlines adapted with theme-aware rgba opacity
+      Legibility verdict: PASS - all elements readable, excellent theme adaptation, no chrome errors
   criteria_checklist:
     visual_quality:
       score: 30
@@ -54,72 +52,74 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 28px, axis labels 22px, tick labels 18px - all readable in
-          both themes with proper contrast
+        comment: 'All font sizes explicitly set: title 28px, labels 22px, ticks 18px;
+          perfectly readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend well-positioned, annotation clearly placed, jittered points
-          avoid collisions
+        comment: No overlapping text elements; legend and annotation well-positioned
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers 12px with 0.6 opacity, curve 4px width, confidence band with
-          0.2 alpha - all elements prominent
+        comment: Markers optimally sized (12px) with alpha 0.6; logistic curve prominent
+          (4px width); CI band visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 and #D55E00 from Okabe-Ito, colorblind-safe, adequate contrast'
+        comment: Okabe-Ito palette is colorblind-safe; teal and orange have strong
+          contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Proper margins, nothing cut off, good proportions, generous whitespace
+        comment: Plot fills 60-70% of canvas; balanced margins; legend positioned
+          near plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive title, axes labeled with units, clear and informative
+        comment: 'Descriptive labels with units: Biomarker Level (mg/dL), Disease
+          Probability'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito order), backgrounds
-          correct, data colors match between renders'
+        comment: 'First series #009E73; second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          all text theme-correct'
     design_excellence:
-      score: 12
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
-        passed: false
-        comment: Clean and professional with styled legend and annotation boxes, but
-          styling is somewhat conventional
+        passed: true
+        comment: Strong professional design with intentional color choices and typography
+          hierarchy
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Subtle grid, legend box with border, adequate whitespace - could
-          have more polish
+        passed: true
+        comment: Subtle grid; legend with border/background; annotation box styled
+          with elevated background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Clear focal point with S-curve and visual hierarchy, good class separation
-          display, but threshold emphasis could be stronger
+        passed: true
+        comment: Clear visual hierarchy with curve as focal point; CI emphasizes uncertainty;
+          threshold provides context
     spec_compliance:
       score: 15
       max: 15
@@ -129,26 +129,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct logistic regression curve with confidence intervals
+        comment: Correct logistic regression; S-shaped sigmoid; binary classification
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: colored data points, fitted curve, CI band,
-          threshold line, jittering, distinction, smooth curve, accuracy annotation'
+        comment: 'All features present: data by class, fitted curve, 95% CI, threshold,
+          jitter, accuracy'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis predictor, Y-axis probability, correct ranges, all data visible
+        comment: X-axis (80-300), Y-axis (0-1) correct; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct, legend accurate and complete
+        comment: Title format correct; legend labels match data
     data_quality:
       score: 15
       max: 15
@@ -158,20 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete visualization of logistic regression with all key aspects
+        comment: 'Shows all aspects: sigmoid, both classes, CIs, threshold, raw data,
+          accuracy'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Medical biomarker example is realistic, plausible, and neutral
+        comment: Medical scenario (biomarker vs disease) is real, neutral, scientifically
+          sound
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Biomarker values, sample size, and probability scales all sensible
-          for medical domain
+        comment: Biomarker range plausible; distributions realistic; 150 samples appropriate;
+          90% accuracy credible
     code_quality:
       score: 10
       max: 10
@@ -181,63 +183,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple linear code, no unnecessary functions
+        comment: 'Clean flow: imports → data → model → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: Seed set to 42; fully reproducible
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports, all used
+        comment: 'All imports used: os, sys, numpy, plotly, sklearn'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake interactivity, appropriate complexity, good naming
+        comment: Pythonic, appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correct output files (plot-{THEME}.png and .html), current Plotly
-          API
+        comment: Saves as plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
-        passed: false
-        comment: Proper use of go.Figure() and add_trace(), custom hover templates,
-          theme handling via os.getenv()
+        passed: true
+        comment: Expert use of go.Figure(), add_trace(), custom hover templates, theme-aware
+          layout
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses fill='toself' for CI band and custom hover templates, but could
-          leverage more advanced Plotly features
+        passed: true
+        comment: Uses fill=toself for CI band, interactive tooltips; techniques somewhat
+          replicable
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - annotations
-  - html-export
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - regression
   styling:
   - alpha-blending
-  - edge-highlighting
+  - publication-ready
