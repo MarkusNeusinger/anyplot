@@ -1,16 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-map-geographic: Scatter Map with Geographic Points
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot import ggsave
 
 
 LetsPlot.setup_html()  # noqa: F405
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette - first series always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
 
 # Data: Major world cities with population and region
 np.random.seed(42)
@@ -65,8 +77,7 @@ cities_data = {
         "Kuala Lumpur",
         "Hong Kong",
         "Hangzhou",
-        "Riyadh",
-        "Santiago",
+        "Sydney",
     ],
     "latitude": [
         35.68,
@@ -117,8 +128,7 @@ cities_data = {
         3.14,
         22.32,
         30.27,
-        24.71,
-        -33.45,
+        -33.87,
     ],
     "longitude": [
         139.69,
@@ -169,8 +179,7 @@ cities_data = {
         101.69,
         114.17,
         120.15,
-        46.68,
-        -70.67,
+        151.21,
     ],
     "population": [
         37.4,
@@ -221,8 +230,7 @@ cities_data = {
         8.3,
         7.5,
         8.2,
-        7.7,
-        6.8,
+        5.3,
     ],
     "region": [
         "Asia",
@@ -273,14 +281,13 @@ cities_data = {
         "Asia",
         "Asia",
         "Asia",
-        "Asia",
-        "S. America",
+        "Oceania",
     ],
 }
 
 df = pd.DataFrame(cities_data)
 
-# Simplified continent outlines for basemap (closed polygons)
+# Continent basemap with Australia/Oceania
 continents = []
 
 # North America
@@ -335,16 +342,27 @@ as_lat = [55, 70, 75, 70, 55, 45, 35, 30, 0, 5, 10, 25, 30, 35, 42, 55, 70, 70, 
 for i in range(len(as_lon)):
     continents.append({"continent": "Asia", "order": i, "lon": as_lon[i], "lat": as_lat[i]})
 
+# Australia/Oceania
+au_lon = [112, 130, 155, 168, 155, 145, 130, 115, 112]
+au_lat = [-10, -10, -5, 0, -20, -35, -40, -30, -10]
+for i in range(len(au_lon)):
+    continents.append({"continent": "Oceania", "order": i, "lon": au_lon[i], "lat": au_lat[i]})
+
 df_continents = pd.DataFrame(continents)
 
-# Define region colors using colorblind-safe palette
+# Region color mapping using Okabe-Ito
 region_colors = {
-    "Asia": "#306998",
-    "Europe": "#FFD43B",
-    "N. America": "#2CA02C",
-    "S. America": "#D62728",
-    "Africa": "#9467BD",
+    "Asia": OKABE_ITO[0],  # #009E73
+    "Europe": OKABE_ITO[1],  # #D55E00
+    "N. America": OKABE_ITO[2],  # #0072B2
+    "S. America": OKABE_ITO[3],  # #CC79A7
+    "Africa": OKABE_ITO[4],  # #E69F00
+    "Oceania": OKABE_ITO[5],  # #56B4E9
 }
+
+# Basemap color
+basemap_fill = "#FFFDF6" if THEME == "light" else "#242420"
+basemap_border = "#B0B0B0" if THEME == "light" else "#6B6A63"
 
 # Create the geographic scatter map
 plot = (
@@ -352,10 +370,10 @@ plot = (
     + geom_polygon(  # noqa: F405
         aes(x="lon", y="lat", group="continent"),  # noqa: F405
         data=df_continents,
-        fill="#E8E8E8",
-        color="#B0B0B0",
+        fill=basemap_fill,
+        color=basemap_border,
         size=0.3,
-        alpha=0.7,
+        alpha=0.6,
     )
     + geom_point(  # noqa: F405
         aes(x="longitude", y="latitude", color="region", size="population"),  # noqa: F405
@@ -367,28 +385,31 @@ plot = (
         .line("Region|@region"),
     )
     + scale_color_manual(values=list(region_colors.values()), name="Region")  # noqa: F405
-    + scale_size(range=[3, 18], name="Population (M)")  # noqa: F405
+    + scale_size(range=[4, 18], name="Population (M)")  # noqa: F405
     + labs(  # noqa: F405
-        title="World Major Cities · scatter-map-geographic · letsplot · pyplots.ai", x="Longitude", y="Latitude"
+        title="scatter-map-geographic · python · letsplot · anyplot.ai", x="Longitude", y="Latitude"
     )
     + coord_fixed(ratio=1.0, xlim=[-180, 180], ylim=[-60, 80])  # noqa: F405
     + ggsize(1600, 900)  # noqa: F405
     + theme_minimal()  # noqa: F405
     + theme(  # noqa: F405
-        plot_title=element_text(size=26, face="bold"),  # noqa: F405
-        axis_title=element_text(size=20),  # noqa: F405
-        axis_text=element_text(size=16),  # noqa: F405
-        legend_title=element_text(size=18),  # noqa: F405
-        legend_text=element_text(size=14),  # noqa: F405
-        legend_position="right",
-        panel_grid_major=element_line(color="#DDDDDD", size=0.3),  # noqa: F405
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
+        panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
+        plot_title=element_text(size=24, color=INK),  # noqa: F405
+        axis_title=element_text(size=20, color=INK),  # noqa: F405
+        axis_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
+        axis_line=element_line(color=INK_SOFT, size=0.5),  # noqa: F405
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
+        legend_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
+        legend_title=element_text(size=18, color=INK),  # noqa: F405
+        legend_position="bottom",
+        panel_grid_major=element_line(color=INK_SOFT, size=0.2),  # noqa: F405
         panel_grid_minor=element_blank(),  # noqa: F405
-        plot_background=element_rect(fill="#F5F5F5"),  # noqa: F405
     )
 )
 
 # Save PNG (scale 3x to get 4800 x 2700 px)
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
+ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=3)
 
 # Save HTML for interactive version
-export_ggsave(plot, filename="plot.html", path=".")
+ggsave(plot, filename=f"plot-{THEME}.html", path=".")

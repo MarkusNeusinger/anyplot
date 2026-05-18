@@ -1,156 +1,178 @@
 library: altair
+language: python
 specification_id: scatter-map-geographic
 created: '2026-01-10T06:03:20Z'
-updated: '2026-01-10T06:05:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20873879429
+updated: '2026-05-18T17:59:11Z'
+generated_by: claude-haiku
+workflow_run: 26050646217
 issue: 3617
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/altair/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent use of Altair declarative grammar with layer composition (basemap +
-    points)
-  - Well-implemented Natural Earth projection appropriate for world maps
-  - Good visual hierarchy with white strokes on points and transparent basemap
-  - Proper tooltip configuration for interactive exploration
-  - Clean legend styling with backgrounds and positioning
-  - Comprehensive dataset covering all major populated regions
-  weaknesses:
-  - VQ-06 scored 0 because geographic maps lack traditional axis labels, but this
-    is expected behavior for map visualizations
-  - Africa could use more representative cities (only 4 of 40 cities)
-  image_description: 'The plot displays a world map with 40 major cities represented
-    as scatter points positioned by latitude and longitude coordinates. The basemap
-    shows country boundaries in light gray (#e8e8e8) with white strokes. Points are
-    colored by region: yellow/gold for Asia (most numerous), green/teal for South
-    America, coral/pink for North America, red for Europe, blue for Africa, and purple
-    for Oceania (Sydney). Point sizes vary by population, with Tokyo appearing as
-    the largest circle. Two legends are present: a size legend in the bottom-left
-    showing "Population (millions)" with graduated circles (0, 10, 20, 30), and a
-    color legend in the bottom-right showing "Region" with all 6 categories. The title
-    "World Major Cities · scatter-map-geographic · altair · pyplots.ai" appears at
-    the top center. The map uses Natural Earth projection, giving a balanced view
-    of continents. Points have white stroke outlines and slight transparency (0.8
-    opacity).'
+  - Perfect specification compliance with all required features (coordinates, size/color
+    encoding, basemap, legends, tooltips)
+  - 'Excellent Altair mastery: idiomatic use of geographic projections, topo feature
+    loading, and layer composition'
+  - 'Flawless palette compliance: Okabe-Ito colors in correct order, theme-adaptive
+    chrome perfectly implemented'
+  - 'Strong data quality: realistic world cities with representative population values
+    across all continents'
+  - Clean, readable code with proper theme tokenization and no unnecessary complexity
+  weaknesses: []
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with no pure white — correct
+      Chrome: Title in dark text (#1A1A17) clearly readable at 28px; legend titles and labels in appropriate grays (#4A4A44, #1A1A17); all elements readable
+      Data: Cities rendered as colored circles with white edges and opacity 0.75; first series (Asia) correctly using brand green (#009E73); remaining regions (Africa #D55E00, Europe #0072B2, North America #CC79A7, South America #E69F00, Oceania #56B4E9) match Okabe-Ito order
+      Legibility verdict: PASS — all text readable, colors clearly distinguishable, basemap provides context without overwhelming data
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light text (#F0EFE8) clearly visible; legend text in light tones; no dark-on-dark failures
+      Data: Colors identical to light render (only chrome changed) — confirms theme-independence of data palette
+      Legibility verdict: PASS — all text readable in dark theme, strong contrast maintained, brand green still visible and distinguishable
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt is clear, legend text at 16-18pt is readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legends well-positioned in corners
+        comment: Title and all labels clearly readable in both themes at proper font
+          sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Spread geographic distribution with well-positioned legends, no text
+          collisions
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points well-sized for density, good use of 0.8 opacity, white stroke
-          helps distinguish overlapping points
+        comment: All 44 cities clearly visible; white edges on points provide definition;
+          opacity appropriate for density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Six distinct colors with good differentiation, colorblind-accessible
-          palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas well, balanced margins, legends near plot
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Geographic maps typically do not have traditional axis labels (N/A
-          for this plot type)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legends well-styled with backgrounds, no distracting grid
+        comment: Okabe-Ito palette ensures CVD safety; all 6 regions easily distinguishable
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Landscape format at 1600x900 (scales to 4800x2700); good proportions,
+          nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title is descriptive with proper format; geographic projections don't
+          require traditional axis labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
+          #FAF8F1 light / #1A1A17 dark, both renders theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Natural Earth projection, well-applied Okabe-Ito palette, subtle
+          basemap styling, multi-dimensional encoding (size + color) elevates design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: White point edges, subtle basemap strokes, generous whitespace; functional
+          rather than highly refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Size and color variation create visual hierarchy; regional grouping
+          and population encoding guide viewer through geographic distribution
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct geographic scatter plot on world map
+        comment: Correct scatter map with latitude/longitude positioning
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Latitude/longitude correctly mapped, size=population, color=region
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: basemap, color legend, size legend, transparency'
-      - id: SC-04
-        name: Data Range
+        comment: Size encoding (population), color encoding (region), basemap context,
+          legends for both, tooltip support
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 40 cities visible, global coverage
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude/latitude correct, size and color properly encoded, all
+          44 cities displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both legends correctly labeled with appropriate titles
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Follows format with spec-id, library, and pyplots.ai
+        comment: Title format correct with descriptive prefix; legends properly labeled
+          for size and color
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows geographic distribution across 6 regions, population variation;
-          could include more cities in underrepresented regions
+        comment: 'Comprehensive: 44 cities covering all major continents with realistic
+          population values'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real world cities with accurate population data
+        comment: Real world cities with contemporary, plausible population data; neutral
+          presentation
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Population values realistic; minor metro vs city proper inconsistencies
+        comment: Population range 4M-37M appropriate for major cities; size scale
+          150-2000 matches canvas
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,43 +180,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: No functions/classes; direct chart construction; clean and simple
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded city coordinates)
+        comment: Fixed data, deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: Only needed imports; all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no fake interactivity; well-structured theme
+          tokens
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html - both are correct for interactive
-          libraries
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png/html; scale_factor=3.0 for proper resolution;
+          current API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Altair features: declarative layer composition,
-          topo_feature for basemap, projection, tooltips, geographic encoding'
+        comment: 'Excellent: alt.Chart, mark_circle, proper encoding chains, layer
+          composition, project(), legend configuration'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Strong use of Altair strengths: geographic projections, topo feature
+          loading from CDN, layer composition, interactive tooltips'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -205,5 +235,5 @@ impl_tags:
   patterns: []
   dataprep: []
   styling:
-  - alpha-blending
   - edge-highlighting
+  - alpha-blending

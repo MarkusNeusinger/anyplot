@@ -5,6 +5,7 @@ import { typography, colors } from '../theme';
 import { ThemeToggle } from './ThemeToggle';
 import { useTheme, useLatestRelease, useAnalytics } from '../hooks';
 import { RESERVED_TOP_LEVEL } from '../utils/paths';
+import { LIB_ABBREV, LANG_EXT } from '../constants';
 
 // Symmetric block-comment delimiters used when no language context is in the URL.
 // One is picked on mount so each page load reveals a different classic.
@@ -51,6 +52,10 @@ const staticSx = {
 interface Segment {
   label: string;
   to?: string;
+  // Shorthand label used on xs viewports — the masthead would otherwise
+  // truncate the spec-id and cut off language/library entirely (the parts the
+  // user is actively looking at). Falls back to `label` when absent.
+  short?: string;
 }
 
 /**
@@ -83,10 +88,10 @@ function pathSegments(pathname: string): Segment[] {
   }
   if (language) {
     if (library) {
-      segs.push({ label: language, to: `/${specId}/${language}` });
-      segs.push({ label: library });
+      segs.push({ label: language, to: `/${specId}/${language}`, short: LANG_EXT[language] });
+      segs.push({ label: library, short: LIB_ABBREV[library] });
     } else {
-      segs.push({ label: language });
+      segs.push({ label: language, short: LANG_EXT[language] });
     }
   }
   return segs;
@@ -126,7 +131,11 @@ export function MastheadRule() {
   const parts = location.pathname.split('/').filter(Boolean);
   const isReserved = parts.length > 0 && RESERVED_TOP_LEVEL.has(parts[0]);
   const isSpecRoute = parts.length > 0 && !isReserved;
-  const centerVisible = isLanding || isSpecRoute;
+  // On impl pages (/:specId/:language/:library) the breadcrumb already shows
+  // all three parts; the center `""" specId.library """` echo is redundant
+  // and steals room that pushes the breadcrumb into truncation. Hide it.
+  const isImplPage = isSpecRoute && parts.length >= 3;
+  const centerVisible = (isLanding || isSpecRoute) && !isImplPage;
 
   let centerContent = 'the open plot catalogue';
   let centerDelim: { open: string; close: string } = COMMENT_POOL[randomIdx];
@@ -143,9 +152,18 @@ export function MastheadRule() {
   return (
     <Box sx={{
       display: 'grid',
-      // xs: left takes all remaining room, toggle hugs the right edge.
-      // sm+: center slot appears (auto), sides are balanced 1fr auto 1fr.
-      gridTemplateColumns: { xs: '1fr auto auto', sm: '1fr auto 1fr' },
+      // xs+sm: left takes all remaining room, toggle hugs the right edge —
+      // the center comment is hidden until md, so giving it its own balanced
+      // 1fr column at sm just wastes ~half the bar on whitespace and forces
+      // the breadcrumb to truncate. md+: when the center comment actually
+      // shows (landing / spec hub / lang hub), use balanced 1fr auto 1fr so
+      // the comment sits visually centred. On impl pages the comment is
+      // hidden — collapse the right column to `auto` so the breadcrumb can
+      // claim the full row width instead of half.
+      gridTemplateColumns: {
+        xs: '1fr auto auto',
+        md: centerVisible ? '1fr auto 1fr' : '1fr auto auto',
+      },
       alignItems: 'center',
       columnGap: { xs: 1, sm: 2 },
       py: 1.25,
@@ -162,19 +180,23 @@ export function MastheadRule() {
         overflow: 'hidden',
         textOverflow: 'ellipsis',
       }}>
-        {/* Always-visible root marker */}
+        {/* Root marker — hidden on xs (where the NavBar logo `any.plot()` below
+            already anchors the brand) so the breadcrumb has room for the
+            spec-id + lang + lib without truncating. */}
         <Box
           component={RouterLink}
           to="/"
           onClick={() => trackEvent('nav_click', { source: 'masthead_logo', target: '/' })}
-          sx={linkSx}
+          sx={{ ...linkSx, display: { xs: 'none', sm: 'inline' } }}
         >
           ~/anyplot.ai
         </Box>
 
         {isLanding ? (
           <>
-            {' · '}
+            <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+              {' · '}
+            </Box>
             <Box
               component="a"
               href={`${REPO_URL}/tree/main`}
@@ -198,25 +220,46 @@ export function MastheadRule() {
             </Box>
           </>
         ) : (
-          segments.map((seg, i) => (
-            <Box key={`${seg.label}-${i}`} component="span">
-              {' · '}
-              {seg.to ? (
-                <Box
-                  component={RouterLink}
-                  to={seg.to}
-                  onClick={() => trackEvent('nav_click', { source: 'breadcrumb', target: seg.to })}
-                  sx={linkSx}
-                >
+          segments.map((seg, i) => {
+            const hasShort = seg.short && seg.short !== seg.label;
+            const labelEl = hasShort ? (
+              <>
+                {/* xs+sm show the shorthand (`py`, `p9`); md+ has room for the
+                    full name. Matches NavBar's md-breakpoint convention. */}
+                <Box component="span" sx={{ display: { xs: 'inline', md: 'none' } }} title={seg.label}>
+                  {seg.short}
+                </Box>
+                <Box component="span" sx={{ display: { xs: 'none', md: 'inline' } }}>
                   {seg.label}
                 </Box>
-              ) : (
-                <Box component="span" sx={{ ...staticSx, color: 'var(--ink-soft)' }}>
-                  {seg.label}
+              </>
+            ) : (
+              seg.label
+            );
+            return (
+              <Box key={`${seg.label}-${i}`} component="span">
+                {/* First separator hides on xs because the logo is hidden too;
+                    later separators always show. */}
+                <Box component="span" sx={i === 0 ? { display: { xs: 'none', sm: 'inline' } } : undefined}>
+                  {' · '}
                 </Box>
-              )}
-            </Box>
-          ))
+                {seg.to ? (
+                  <Box
+                    component={RouterLink}
+                    to={seg.to}
+                    onClick={() => trackEvent('nav_click', { source: 'breadcrumb', target: seg.to })}
+                    sx={linkSx}
+                  >
+                    {labelEl}
+                  </Box>
+                ) : (
+                  <Box component="span" sx={{ ...staticSx, color: 'var(--ink-soft)' }}>
+                    {labelEl}
+                  </Box>
+                )}
+              </Box>
+            );
+          })
         )}
       </Box>
 

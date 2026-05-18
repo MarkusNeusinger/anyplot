@@ -1,157 +1,202 @@
 library: matplotlib
+language: python
 specification_id: scatter-matrix-interactive
 created: '2026-01-10T01:57:21Z'
-updated: '2026-01-10T02:00:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20870865993
+updated: '2026-05-18T16:26:19Z'
+generated_by: claude-haiku
+workflow_run: 26045487922
 issue: 3604
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
 review:
   strengths:
-  - Excellent use of the Iris dataset with clear species separation visible across
-    all pairwise comparisons
-  - Well-organized matrix layout with labels only on edges to reduce clutter
-  - Appropriate note about matplotlib static limitation with guidance toward interactive
-    alternatives
-  - Good color palette that is both aesthetically pleasing and colorblind-accessible
-  - Histograms on diagonal effectively show univariate distributions by species
+  - Theme-adaptive styling correctly applied in both light and dark renders with proper
+    color tokens (INK, INK_SOFT, ELEVATED_BG)
+  - Scatter matrix structure is clean and well-organized with 4x4 grid layout showing
+    all pairwise relationships plus univariate histograms on diagonal
+  - Okabe-Ito palette (positions 1-3) correctly implemented with first series as brand
+    green (#009E73), identical across light and dark themes
+  - Text legibility is excellent with all font sizes explicitly set (title 26pt, axis
+    labels 18pt, tick labels 14pt) and readable in both themes
+  - White edges on scatter markers provide clear definition on overlapping points,
+    alpha values (0.7 scatter, 0.65 histogram) appropriate for data density
+  - Transparent acknowledgment of matplotlib limitations with clear note about static
+    visualization, properly directing users to interactive alternatives
+  - Comprehensive use of theme tokens throughout eliminates any dark-on-dark or light-on-light
+    readability issues
   weaknesses:
-  - Font sizes slightly undersized for the target resolution (labels at 14pt instead
-    of 20pt recommended)
-  - No explicit random seed in code (though data is deterministic from sklearn)
-  - Legend and title slightly crowded at top of figure
-  image_description: 'The plot displays a 4×4 scatter plot matrix (SPLOM) of the Iris
-    dataset with all four numeric variables: Sepal Length, Sepal Width, Petal Length,
-    and Petal Width (all in cm). The three species (Setosa, Versicolor, Virginica)
-    are color-coded using blue (#306998), yellow (#FFD43B), and coral/red (#E55B3C)
-    respectively. Diagonal cells show overlapping histograms for each species, while
-    off-diagonal cells display scatter plots comparing variable pairs. The legend
-    is positioned at the top, just below the title. Axis labels are placed on the
-    left and bottom edges only, reducing clutter. A note at the bottom explains matplotlib''s
-    static output limitation, directing users to interactive libraries for linked
-    brushing. The overall layout is well-balanced with subtle grid lines.'
+  - Title format missing required elements (language, library, anyplot.ai) - should
+    be 'Iris Dataset · scatter-matrix-interactive · python · matplotlib · anyplot.ai'
+    per SC-04 specification
+  - Design could be more sophisticated with removal of top/right spines (currently
+    keeps all four spines) and refined grid styling on scatter plots
+  - No advanced matplotlib-specific features leveraged (e.g., inset_axes, custom artists,
+    or matplotlib-unique visualization patterns) - implementation is functional but
+    generic
+  - Interactive specification features (brushing, selection, zoom, pan) not implementable
+    in static matplotlib, though limitation is properly acknowledged
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with subtle contrast
+      Chrome: Title "Iris Dataset · scatter-matrix-interactive" in dark text (fontsize 26), clearly readable. Axis labels ("Sepal Length (cm)", etc.) in dark text at fontsize 18. Tick labels at fontsize 14 are easily readable. Grid lines are subtle at alpha=0.12. Spines are visible in soft gray (#4A4A44).
+      Data: Three species in Okabe-Ito colors - Setosa (#009E73 - bluish green), Versicolor (#D55E00 - vermillion), Virginica (#0072B2 - blue). Scatter points have white edges for definition. Histograms on diagonal show overlapping distributions with alpha=0.65. All data elements are clearly visible.
+      Legend: Three entries at top center with proper species labels and color coding.
+      Legibility verdict: PASS - All text is readable at full resolution, no dark-on-light issues, excellent contrast throughout.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) consistent with light theme
+      Chrome: Title in light text (#F0EFE8), clearly readable on dark background. Axis labels in light text at fontsize 18, fully legible. Tick labels at fontsize 14, readable against dark background. Grid lines remain subtle at alpha=0.12 with light coloring. Spines properly rendered in #B8B7B0 (INK_SOFT).
+      Data: Identical colors to light render - #009E73, #D55E00, #0072B2 remain consistent across both themes, proving proper Okabe-Ito implementation. White edges on markers maintain definition. Histogram bars show same color distribution.
+      Legend: Properly styled with dark background (#242420) frame and light text, consistent with theme.
+      Legibility verdict: PASS - No dark-on-dark failures observed. All text is light-colored and readable. Brand green remains visible and consistent.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 22pt, labels at 14pt, ticks at 11pt. All readable but labels
-          slightly smaller than ideal for 3600x3600
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; axis labels only on edges
+        comment: All font sizes explicitly set (title 26pt, labels 18pt, ticks 14pt).
+          Perfectly readable in both light and dark themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Excellent layout with labels only on edges, tight_layout prevents
+          overlap, legend properly positioned at top.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers s=80 with alpha=0.75 is good for 150 points, though slightly
-          large for dense scatter cells
+        comment: Marker size s=120 with alpha=0.7 and white edges perfectly adapted
+          for 50 points per species. Histogram bins clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/coral palette is colorblind-friendly, distinct hues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of 12x12 figure for square matrix; slight crowding in some
-          cells
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: All labels include units (cm) - excellent
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette ensures CVD safety. Good contrast between series.
+          No red-green as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format (3600x3600px) optimal for symmetric scatter matrix.
+          Plot fills canvas appropriately with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid alpha=0.25 is good; legend placement works but slightly crowds
-          title area
+        comment: 'All axes labeled with units in parentheses: ''Sepal Length (cm)'',
+          ''Petal Width (cm)'', etc.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Perfect Okabe-Ito implementation. First series is #009E73. Background
+          #FAF8F1 (light)/#1A1A17 (dark). All chrome is theme-adaptive.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured design with intentional color scheme and typography.
+          Professional appearance but uses standard approaches, not exceptional design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Good refinement with subtle grid (alpha=0.12), white marker edges
+          for definition, generous whitespace. Could improve by removing top/right
+          spines (L-shaped preferred).
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Plot effectively displays multivariate relationships through standard
+          scatter matrix pattern. Data is presented clearly but without additional
+          visual emphasis or narrative depth.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 11
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct scatter matrix with histograms on diagonal
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: All four variables correctly mapped to rows/columns
-      - id: SC-03
+        comment: 'Perfect scatter plot matrix (SPLOM) with 4x4 grid: off-diagonal
+          scatter plots, diagonal histograms, proper variable pairing.'
+      - id: SC-02
         name: Required Features
         score: 3
-        max: 5
+        max: 4
         passed: false
-        comment: Histograms on diagonal and color encoding present. No interactivity
-          (noted as limitation), no zoom/pan, no brushing
-      - id: SC-04
-        name: Data Range
+        comment: Interactive features (brushing, selection, zoom/pan) not implementable
+          in static matplotlib. Implementation provides best static alternative and
+          clearly notes limitation per spec guidance for matplotlib.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes show full data range appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Species names correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Iris Dataset - scatter-matrix-interactive - matplotlib - pyplots.ai
-          follows format
+        comment: X/Y axes correctly assigned throughout matrix. All data visible and
+          properly scaled. Pairwise relationships clearly shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 0
+        max: 3
+        passed: false
+        comment: Title 'Iris Dataset · scatter-matrix-interactive' is missing required
+          format elements (language, library, anyplot.ai). Should be 'Iris Dataset
+          · scatter-matrix-interactive · python · matplotlib · anyplot.ai'. Legend
+          labels (Setosa, Versicolor, Virginica) are correct.
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all aspects: clear species separation in petal dimensions,
-          overlap in sepal dimensions, different distribution shapes'
+        comment: 'Iris dataset shows all features: 4 numeric variables, 3 species
+          with distinct distributions, all pairwise relationships visible.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Classic Iris dataset, well-known scientific benchmark
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Realistic botanical measurements
+        comment: Iris dataset is classic scientific dataset, neutral context, well-known
+          for multivariate analysis education.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Measurements in cm are factually correct for iris flowers. 150 samples
+          (50 per species) provides good distribution representation.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,56 +204,70 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> data -> plot -> save'
+        comment: 'Clean linear flow: imports → theme tokens → data loading → plot
+          construction → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Uses load_iris() which is deterministic, but no explicit random seed
-          shown
+        comment: Uses deterministic Iris dataset. No randomness. Fully reproducible.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and sklearn.datasets used, both necessary
+        comment: 'Only essential imports: os, matplotlib.pyplot, sklearn.datasets.
+          All used.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Code is clean and Pythonic. Proper loop iteration for subplot filling.
+          No fake UI or over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 3
-      max: 5
+        comment: Correctly saves as plot-{THEME}.png with DPI 300. Uses current matplotlib
+          API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: true
-        comment: Uses subplots grid effectively, histogram with species separation.
-          Could use more advanced features like tight subplot spacing or shared axes
-          configuration
+        passed: false
+        comment: Correct use of plt.subplots(), ax.scatter(), ax.hist(), fig.legend().
+          Proper theme token integration. Good idiomatic usage but doesn't leverage
+          advanced matplotlib patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Implementation uses standard matplotlib patterns. No distinctive
+          features unique to matplotlib that set it apart from other libraries. Straightforward
+          loop-based subplot construction.
+    score_caps_applied: []
+    total_score: 82
+    max_total: 100
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   techniques:
   - subplots
-  - annotations
+  - custom-legend
   patterns:
   - dataset-loading
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
+  - theme-adaptive-chrome
   - edge-highlighting
   - grid-styling

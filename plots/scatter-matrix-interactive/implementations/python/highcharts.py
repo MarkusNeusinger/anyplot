@@ -1,10 +1,11 @@
-""" pyplots.ai
+""" anyplot.ai
 scatter-matrix-interactive: Interactive Scatter Plot Matrix (SPLOM)
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-10
+Library: highcharts unknown | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-18
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,28 +17,36 @@ from selenium.webdriver.chrome.options import Options
 from sklearn.datasets import load_iris
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette - first color is always #009E73
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2"]
+COLORS = OKABE_ITO[:3]
+
 # Data - Iris dataset (4 variables for a 4x4 matrix)
 iris = load_iris()
 data = iris.data
 feature_names = ["Sepal Length (cm)", "Sepal Width (cm)", "Petal Length (cm)", "Petal Width (cm)"]
 species = iris.target
 species_names = ["Setosa", "Versicolor", "Virginica"]
-colors = ["#306998", "#FFD43B", "#9467BD"]
 
 n_vars = 4
 n_points = len(data)
 
 # Build chart configuration manually for scatter matrix with linked brushing
-# Using synchronized charts in a grid layout
-
-# Build series data for each cell in the matrix
 chart_configs = []
 
 for row in range(n_vars):
     for col in range(n_vars):
         if row == col:
             # Diagonal: histogram for univariate distribution
-            # Create histogram data for each species
             series_data = []
             for sp_idx, sp_name in enumerate(species_names):
                 sp_mask = species == sp_idx
@@ -51,7 +60,7 @@ for row in range(n_vars):
                     {
                         "name": sp_name,
                         "data": hist_data,
-                        "color": colors[sp_idx],
+                        "color": COLORS[sp_idx],
                         "type": "column",
                         "pointPadding": 0,
                         "groupPadding": 0,
@@ -78,7 +87,7 @@ for row in range(n_vars):
                 points = []
                 for i, (x, y) in enumerate(zip(x_vals, y_vals, strict=True)):
                     points.append({"x": float(x), "y": float(y), "id": f"p{np.where(sp_mask)[0][i]}"})
-                series_data.append({"name": sp_name, "data": points, "color": colors[sp_idx], "type": "scatter"})
+                series_data.append({"name": sp_name, "data": points, "color": COLORS[sp_idx], "type": "scatter"})
             chart_configs.append(
                 {
                     "type": "scatter",
@@ -90,20 +99,21 @@ for row in range(n_vars):
                 }
             )
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+# Download Highcharts JS with proper headers (using jsDelivr CDN for better availability)
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@11.4.0/highcharts.js"
+req = urllib.request.Request(
+    highcharts_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
 # Download Highcharts More for extended features
-highcharts_more_url = "https://code.highcharts.com/highcharts-more.js"
-with urllib.request.urlopen(highcharts_more_url, timeout=30) as response:
+highcharts_more_url = "https://cdn.jsdelivr.net/npm/highcharts@11.4.0/highcharts-more.js"
+req = urllib.request.Request(
+    highcharts_more_url, headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+)
+with urllib.request.urlopen(req, timeout=30) as response:
     highcharts_more_js = response.read().decode("utf-8")
-
-# Download exporting module for selection handling
-exporting_url = "https://code.highcharts.com/modules/exporting.js"
-with urllib.request.urlopen(exporting_url, timeout=30) as response:
-    exporting_js = response.read().decode("utf-8")
 
 # Build JavaScript for all charts in the matrix
 charts_js = ""
@@ -115,30 +125,35 @@ for config in chart_configs:
     # Common chart options
     chart_options = {
         "chart": {
-            "backgroundColor": "#ffffff",
+            "backgroundColor": PAGE_BG,
             "animation": False,
             "zoomType": "xy",
             "panning": {"enabled": True, "type": "xy"},
             "panKey": "shift",
-            "resetZoomButton": {"position": {"x": -10, "y": 10}, "theme": {"style": {"fontSize": "14px"}}},
-            "marginLeft": 80 if col == 0 else 40,
-            "marginBottom": 60 if row == n_vars - 1 else 30,
+            "resetZoomButton": {"position": {"x": -10, "y": 10}, "theme": {"style": {"fontSize": "18px"}}},
+            "marginLeft": 100 if col == 0 else 50,
+            "marginBottom": 80 if row == n_vars - 1 else 40,
+            "style": {"color": INK},
         },
         "title": {"text": None},
         "credits": {"enabled": False},
         "legend": {"enabled": False},
         "exporting": {"enabled": False},
         "xAxis": {
-            "title": {"text": config["xTitle"], "style": {"fontSize": "18px", "fontWeight": "bold"}},
-            "labels": {"style": {"fontSize": "16px"}},
+            "title": {"text": config["xTitle"], "style": {"fontSize": "22px", "color": INK}},
+            "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
             "gridLineWidth": 1,
-            "gridLineColor": "rgba(0,0,0,0.15)",
+            "gridLineColor": GRID,
+            "lineColor": INK_SOFT,
+            "tickColor": INK_SOFT,
         },
         "yAxis": {
-            "title": {"text": config["yTitle"], "style": {"fontSize": "18px", "fontWeight": "bold"}},
-            "labels": {"style": {"fontSize": "16px"}},
+            "title": {"text": config["yTitle"], "style": {"fontSize": "22px", "color": INK}},
+            "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
             "gridLineWidth": 1,
-            "gridLineColor": "rgba(0,0,0,0.15)",
+            "gridLineColor": GRID,
+            "lineColor": INK_SOFT,
+            "tickColor": INK_SOFT,
         },
         "plotOptions": {
             "scatter": {
@@ -146,21 +161,23 @@ for config in chart_configs:
                     "radius": 8,
                     "symbol": "circle",
                     "states": {
-                        "hover": {"enabled": True, "lineColor": "#000000", "lineWidth": 2},
-                        "select": {"fillColor": None, "lineWidth": 3, "lineColor": "#000000"},
+                        "hover": {"enabled": True, "lineColor": INK, "lineWidth": 2},
+                        "select": {"fillColor": None, "lineWidth": 3, "lineColor": INK},
                     },
                 },
                 "allowPointSelect": True,
                 "cursor": "pointer",
-                "states": {"inactive": {"opacity": 0.3}},
+                "states": {"inactive": {"opacity": 0.2}},
             },
             "column": {"borderWidth": 0, "groupPadding": 0.05, "pointPadding": 0},
         },
         "series": config["series"],
         "tooltip": {
-            "headerFormat": "<b>{series.name}</b><br>",
+            "headerFormat": "<b style='color: " + INK + "'>{series.name}</b><br>",
             "pointFormat": "x: {point.x:.2f}, y: {point.y:.2f}" if config["type"] == "scatter" else "Count: {point.y}",
-            "style": {"fontSize": "16px"},
+            "style": {"fontSize": "16px", "color": INK},
+            "backgroundColor": ELEVATED_BG,
+            "borderColor": INK_SOFT,
         },
     }
 
@@ -191,7 +208,7 @@ function syncSelection(sourceChart, selectedIds) {
                         point.graphic && point.graphic.attr({opacity: 1});
                     } else {
                         point.setState('');
-                        point.graphic && point.graphic.attr({opacity: 0.15});
+                        point.graphic && point.graphic.attr({opacity: 0.2});
                     }
                 }
             });
@@ -251,48 +268,47 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
     <script>{highcharts_more_js}</script>
-    <script>{exporting_js}</script>
     <style>
         body {{
             margin: 0;
-            padding: 20px;
-            background: #ffffff;
+            padding: 24px;
+            background: {PAGE_BG};
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }}
         .title {{
             text-align: center;
-            font-size: 36px;
-            font-weight: bold;
-            margin-bottom: 8px;
-            color: #333;
+            font-size: 32px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: {INK};
         }}
         .subtitle {{
             text-align: center;
-            font-size: 22px;
-            color: #666;
-            margin-bottom: 15px;
+            font-size: 24px;
+            color: {INK_SOFT};
+            margin-bottom: 24px;
         }}
         .matrix-container {{
             display: grid;
             grid-template-columns: repeat({n_vars}, 1fr);
             grid-template-rows: repeat({n_vars}, 1fr);
             gap: 8px;
-            width: 4760px;
-            height: 2350px;
+            width: 4752px;
+            height: 2625px;
             margin: 0 auto;
         }}
         .chart-cell {{
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 4px;
+            background: {PAGE_BG};
+            border: 1px solid {INK_SOFT};
             overflow: hidden;
         }}
         .legend-container {{
             display: flex;
             justify-content: center;
             gap: 60px;
-            margin-top: 20px;
-            font-size: 24px;
+            margin-top: 24px;
+            font-size: 22px;
+            color: {INK};
         }}
         .legend-item {{
             display: flex;
@@ -306,14 +322,14 @@ html_content = f"""<!DOCTYPE html>
         }}
         .instructions {{
             text-align: center;
-            font-size: 20px;
-            color: #666;
-            margin-top: 15px;
+            font-size: 18px;
+            color: {INK_SOFT};
+            margin-top: 12px;
         }}
     </style>
 </head>
 <body>
-    <div class="title">scatter-matrix-interactive &middot; highcharts &middot; pyplots.ai</div>
+    <div class="title">scatter-matrix-interactive · python · highcharts · anyplot.ai</div>
     <div class="subtitle">Iris Dataset - Interactive Scatter Plot Matrix with Linked Brushing</div>
 
     <div class="matrix-container">
@@ -330,19 +346,19 @@ html_content += f"""
 
     <div class="legend-container">
         <div class="legend-item">
-            <div class="legend-color" style="background-color: {colors[0]};"></div>
+            <div class="legend-color" style="background-color: {COLORS[0]};"></div>
             <span>Setosa</span>
         </div>
         <div class="legend-item">
-            <div class="legend-color" style="background-color: {colors[1]};"></div>
+            <div class="legend-color" style="background-color: {COLORS[1]};"></div>
             <span>Versicolor</span>
         </div>
         <div class="legend-item">
-            <div class="legend-color" style="background-color: {colors[2]};"></div>
+            <div class="legend-color" style="background-color: {COLORS[2]};"></div>
             <span>Virginica</span>
         </div>
     </div>
-    <div class="instructions">Click to select points | Ctrl+Click for multi-select | Double-click to clear | Drag to zoom | Shift+Drag to pan</div>
+    <div class="instructions">Click points to select | Ctrl+Click to multi-select | Double-click to clear | Drag to zoom | Shift+Drag to pan</div>
 
     <script>
     {linked_brushing_js}
@@ -356,7 +372,7 @@ html_content += f"""
 </html>"""
 
 # Save HTML for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
 # Export to PNG using Selenium
@@ -373,8 +389,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(6)  # Wait for all charts to render
-driver.save_screenshot("plot.png")
+time.sleep(6)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()

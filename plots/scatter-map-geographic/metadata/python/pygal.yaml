@@ -1,0 +1,223 @@
+library: pygal
+language: python
+specification_id: scatter-map-geographic
+created: '2026-05-18T18:03:31Z'
+updated: '2026-05-18T18:27:04Z'
+generated_by: claude-haiku
+workflow_run: 26051062985
+issue: 3617
+language_version: 3.13.13
+library_version: 3.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-dark.html
+quality_score: 61
+review:
+  strengths:
+  - Realistic earthquake data with accurate geographic coordinates
+  - Theme-adaptive styling correctly implements light/dark chrome
+  - Clean code structure with proper reproducibility (seed set)
+  - Text properly sized and readable in both light and dark themes
+  - Correct title format
+  weaknesses:
+  - Size encoding for magnitude is computed but never applied to chart (dead code)
+  - 'Color encoding for depth is broken: colors_depth array always contains same color
+    and is never used'
+  - Implementation fails to demonstrate multi-dimensional encoding capability - only
+    shows lat/lon positioning
+  - No design sophistication or visual hierarchy - generic library defaults
+  - Data preparation code (sizes, depth normalization) suggests intended features
+    not actually implemented
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title "scatter-map-geographic · python · pygal · anyplot.ai" clearly visible. Axis labels "Longitude (°)" and "Latitude (°)" readable. Tick labels visible. Grid lines subtle and present.
+      Data: 12 earthquake epicenter points plotted across Ring of Fire region. Points clearly distinguishable from light background.
+      Legibility verdict: PASS - All text readable, good contrast, proper sizing
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title and axis labels rendered in light text, clearly visible against dark background. Tick labels readable. Grid lines visible and appropriate.
+      Data: Same 12 epicenter points with identical positioning and colors to light render (only chrome adapted). Points clearly visible on dark surface.
+      Legibility verdict: PASS - All text is light-colored and readable, no dark-on-dark failures, good contrast maintained
+  criteria_checklist:
+    visual_quality:
+      score: 23
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (28/22/18), readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Points visible but no size variation to encode magnitude
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Good contrast, theme-correct
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Decent use of space, some room for optimization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Labels with units, title correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: Background correct, but color encoding feature not implemented despite
+          data prep
+    design_excellence:
+      score: 6
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic defaults, no custom design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization beyond library defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or emphasis
+    spec_compliance:
+      score: 10
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct XY scatter chart
+      - id: SC-02
+        name: Required Features
+        score: 1
+        max: 4
+        passed: false
+        comment: Size/color encoding partially intended but broken implementation
+      - id: SC-03
+        name: Data Mapping
+        score: 2
+        max: 3
+        passed: true
+        comment: Lat/lon correctly mapped, doesn't use all data dimensions
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: Title format correct, legend present but incomplete
+    data_quality:
+      score: 12
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 3
+        max: 6
+        passed: false
+        comment: Only demonstrates position encoding, not size/color capabilities
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real Ring of Fire earthquake scenario, plausible magnitudes/depths
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Factually plausible earthquake coordinates and values
+    code_quality:
+      score: 6
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Simple linear flow: imports → data → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random seed set to 42
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only necessary imports used
+      - id: CQ-04
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Dead code: size_normalized and colors_depth computed but never used'
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: 'Correct output format: plot-light.png and plot-dark.html'
+    library_mastery:
+      score: 4
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
+        max: 5
+        passed: false
+        comment: Basic chart creation and styling, doesn't leverage advanced features
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Generic XY scatter, no library-specific features used
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques: []
+  patterns:
+  - data-generation
+  - normalization
+  dataprep:
+  - normalization
+  styling: []
