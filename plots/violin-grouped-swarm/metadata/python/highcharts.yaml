@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: violin-grouped-swarm
 created: '2026-01-09T16:47:35Z'
-updated: '2026-05-18T03:35:45Z'
+updated: '2026-05-18T03:41:31Z'
 generated_by: claude-haiku
 workflow_run: 26011606063
 issue: 3529
@@ -12,41 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-gr
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/violin-grouped-swarm/python/highcharts/plot-dark.html
-quality_score: 78
+quality_score: 89
 review:
   strengths:
-  - Visual output is excellent in both light and dark themes with perfect legibility
-    and correct color palette
-  - Swarm algorithm effectively positions points to minimize overlap while showing
-    raw data distribution
-  - Clean, readable violins with appropriate transparency allow swarm points to be
-    clearly visible
-  - Good realistic data context with task types and expertise levels
-  - All specification requirements fully met
-  - Proper theme-adaptive rendering visible in both image outputs
+  - Perfect theme adaptation with theme-correct chrome in both light and dark renders
+    while maintaining identical data colors
+  - Excellent visual hierarchy that clearly communicates task type → expertise level
+    relationships through data distribution
+  - Clean, readable typography with explicitly-sized fonts at all levels (title through
+    tick labels)
+  - Realistic, well-chosen domain (cognitive psychology response times) that effectively
+    demonstrates the grouped violin + swarm pattern
+  - Proper Okabe-Ito palette compliance with brand green as first series
+  - Solid implementation of swarm collision-avoidance algorithm
+  - Correct output format with both PNG and interactive HTML artifacts
   weaknesses:
-  - Code saves outputs with hardcoded filenames (plot.html, plot.png) instead of theme-aware
-    pattern (plot-{THEME}.html, plot-{THEME}.png)
-  - Code does not read ANYPLOT_THEME environment variable for theme adaptation
-  - 'Code hardcodes background color as #ffffff instead of using #FAF8F1 / #1A1A17
-    tokens'
-  - 'Code hardcodes data colors (#306998, #FFD43B) instead of Okabe-Ito palette'
-  - Title text shows 'pyplots.ai' instead of 'anyplot.ai' and missing 'Python'
-  - Design is generic with no intentional styling choices or visual hierarchy
-  - Missing best practice of setting chart.options.colors = OKABE_ITO for color palette
-    declaration
+  - Design is fairly standard for violin plots without distinctive visual innovations
+    or particularly sophisticated aesthetic choices
+  - Limited use of Highcharts-specific features (could leverage more library-distinctive
+    capabilities)
+  - Visual refinement could be enhanced (spines remain, minimal customization beyond
+    defaults)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white at #FAF8F1, not pure white
-      Chrome: Title "violin-grouped-swarm · Python · highcharts · anyplot.ai" is dark and clearly readable. X-axis label "Task Type" with categories (Pattern Match, Memory Recall, Calculation) in dark text. Y-axis label "Response Time (ms)" clearly visible. All tick labels readable in dark gray. Legend shows Novice and Expert groups.
-      Data: Grouped violin plots with swarm overlay. Novice group in teal/green (#009E73), Expert group in orange (#D55E00). Violins are semi-transparent. Swarm points with white borders are clearly distinguishable from background. Data colors match Okabe-Ito palette.
-      Legibility verdict: PASS - All text readable, high contrast, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) ✓
+      Chrome: Title (72px dark text), axis labels (48px dark), tick labels (40px gray), subtitle (40px gray) — all clearly readable
+      Data: Green (#009E73) and orange (#D55E00) violins with matching swarm circles; smooth KDE-based rendering; proper spatial separation
+      Legibility verdict: PASS — all text has excellent contrast and explicit sizing; grid lines subtle; no overlap
 
     Dark render (plot-dark.png):
-      Background: Warm near-black at #1A1A17, not pure black
-      Chrome: All text (title, axis labels, tick labels, legend) clearly visible in light text against dark background. No dark-on-dark contrast failures detected.
-      Data: Same data colors (#009E73 and #D55E00) as light render - colors are identical, only chrome has changed. Swarm points remain visible with white borders providing strong contrast. Grid lines subtle but visible.
-      Legibility verdict: PASS - All text readable, proper theme adaptation, no dark-on-dark failures. Brand green #009E73 remains clearly visible.
+      Background: Warm near-black (#1A1A17) ✓
+      Chrome: Title (72px light text), axis labels (48px light), tick labels (40px soft gray), subtitle (40px soft gray) — all clearly readable; no dark-on-dark failures
+      Data: Green (#009E73) and orange (#D55E00) colors identical to light render; distribution shapes preserved; swarm points perfectly visible
+      Legibility verdict: PASS — excellent contrast on dark surface; all text flipped to light theme correctly; no text readability issues
   criteria_checklist:
     visual_quality:
       score: 30
@@ -57,65 +55,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text clearly readable in both themes
+        comment: All fonts explicitly sized (title 72px, labels 48px, ticks 40px);
+          perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean spacing, no collisions
+        comment: All text well-spaced; swarm points use effective collision avoidance
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Swarm points clearly visible
+        comment: Violins smoothly rendered; swarm points optimally sized for data
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, colorblind-safe
+        comment: Okabe-Ito palette colorblind-safe; excellent contrast between green
+          and orange
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good use of 4800×2700 canvas
+        comment: Perfect proportions; plot 50-70% of canvas; balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive with units
+        comment: 'Descriptive with units: ''Response Time (ms)'' and ''Task Type'''
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Correct Okabe-Ito, theme-correct backgrounds
+        comment: 'First series #009E73 (green), second #D55E00 (orange); backgrounds
+          #FAF8F1/#1A1A17; text theme-correct; data colors identical in both renders'
     design_excellence:
-      score: 8
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Generic styling, no custom design
+        comment: Professional with smooth KDE rendering and proper hierarchy; fairly
+          standard for violin plots without distinctive innovation
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Minimal customization
+        comment: Clean with subtle grid and good margins; could enhance with spine
+          removal and more customization
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 5
         max: 6
-        passed: false
-        comment: No intentional visual hierarchy
+        passed: true
+        comment: Excellent visual hierarchy showing task type → expertise level →
+          data points; distribution differences communicate clear story
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +131,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct grouped violin plot
+        comment: Correct grouped violin plot with swarm overlay
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: All features present
+        comment: 'All spec features: distinct colors, violin transparency (0.5), sized
+          swarm points, spacing, matching hues'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct axes and colors
+        comment: X-axis task types; Y-axis response times; swarm/violin properly aligned
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Descriptive title and legend
+        comment: Title format correct; legend labels match groups
     data_quality:
       score: 15
       max: 15
@@ -153,21 +160,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Complete feature coverage
+        comment: 'Shows all aspects: distribution shapes, individual points, multiple
+          categories and groups'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic task types and values
+        comment: Realistic cognitive psychology scenario (response times); neutral
+          domain; plausible and well-grounded
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sensible axes
+        comment: Response times (~200-5500ms) factually plausible for cognitive tasks
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -175,33 +184,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean linear implementation
+        comment: 'Linear code: imports → theme → data → KDE → plot → save; no unnecessary
+          functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: 'All imports used: numpy, highcharts_core, scipy, selenium, os, tempfile,
+          urllib, pathlib'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Reasonable algorithm
+        comment: Appropriate complexity; well-structured swarm algorithm; no fake
+          UI
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Hardcoded filenames, missing theme awareness
+        passed: true
+        comment: 'Correct naming: plot-{THEME}.png and plot-{THEME}.html'
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -209,13 +221,15 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Correct but missing best practices
+        comment: Correct usage of PolygonSeries and ScatterSeries; custom KDE approach
+          valid but somewhat specialized
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 3
         max: 5
         passed: false
-        comment: Minimal library-specific features
+        comment: Good use of polygon/scatter composition; theme-adaptive rendering;
+          proper Selenium integration for headless export
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -229,4 +243,4 @@ impl_tags:
   dataprep:
   - kde
   styling:
-  - publication-ready
+  - alpha-blending
