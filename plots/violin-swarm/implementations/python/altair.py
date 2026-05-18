@@ -1,14 +1,34 @@
-""" pyplots.ai
+""" anyplot.ai
 violin-swarm: Violin Plot with Overlaid Swarm Points
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-09
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-18
 """
 
-import altair as alt
-import numpy as np
-import pandas as pd
-from scipy import stats
+import os
+import sys
 
+
+_original_path = sys.path[:]  # noqa: E402
+sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd())]  # noqa: E402
+import altair as alt  # noqa: E402
+
+
+sys.path = _original_path  # noqa: E402
+
+import numpy as np  # noqa: E402
+import pandas as pd  # noqa: E402
+from scipy import stats  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette (first series is ALWAYS #009E73)
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
 
 # Data: Reaction times (ms) across 4 experimental conditions
 np.random.seed(42)
@@ -69,9 +89,8 @@ violin_df["x"] = violin_df["Condition"].map(condition_to_x)
 violin_df["x_left"] = violin_df["x"] - violin_df["width"]
 violin_df["x_right"] = violin_df["x"] + violin_df["width"]
 
-# Colors for each condition
-colors = ["#306998", "#FFD43B", "#4B8BBE", "#E67E22"]
-color_scale = alt.Scale(domain=conditions, range=colors)
+# Color scale using Okabe-Ito palette
+color_scale = alt.Scale(domain=conditions, range=OKABE_ITO)
 
 # Y axis scale
 y_scale = alt.Scale(domain=[y_min - 10, y_max + 10])
@@ -79,7 +98,7 @@ y_scale = alt.Scale(domain=[y_min - 10, y_max + 10])
 # X axis scale (fixed with padding)
 x_scale = alt.Scale(domain=[-0.6, 3.6])
 
-# Violin shapes using area marks (filled, no stroke lines)
+# Violin shapes using area marks
 violin = (
     alt.Chart(violin_df)
     .mark_area(opacity=0.4, interpolate="monotone", line=False)
@@ -88,7 +107,7 @@ violin = (
             "y:Q",
             title="Reaction Time (ms)",
             scale=y_scale,
-            axis=alt.Axis(labelFontSize=16, titleFontSize=20, grid=True, gridOpacity=0.3),
+            axis=alt.Axis(labelFontSize=18, titleFontSize=22, grid=True, gridOpacity=0.10),
         ),
         x=alt.X("x_left:Q", scale=x_scale, axis=None),
         x2="x_right:Q",
@@ -96,13 +115,14 @@ violin = (
     )
 )
 
-# Swarm-like points
+# Swarm-like points with category colors
 points = (
     alt.Chart(df)
-    .mark_circle(size=80, opacity=0.85, color="#2d2d2d")
+    .mark_circle(size=100, opacity=0.85)
     .encode(
-        y=alt.Y("Reaction Time (ms):Q", scale=y_scale),
+        y=alt.Y("Reaction Time (ms):Q", scale=y_scale, axis=None),
         x=alt.X("x_jittered:Q", scale=x_scale, axis=None),
+        color=alt.Color("Condition:N", scale=color_scale, legend=None),
         tooltip=[
             alt.Tooltip("Condition:N", title="Condition"),
             alt.Tooltip("Reaction Time (ms):Q", title="Time (ms)", format=".1f"),
@@ -115,24 +135,25 @@ label_df = pd.DataFrame({"x": [0, 1, 2, 3], "label": conditions, "y": [y_min - 3
 
 x_labels = (
     alt.Chart(label_df)
-    .mark_text(fontSize=18, fontWeight="bold")
-    .encode(
-        x=alt.X("x:Q", scale=x_scale),
-        y=alt.value(820),  # Position below the chart
-        text="label:N",
-    )
+    .mark_text(fontSize=18, fontWeight="bold", color=INK)
+    .encode(x=alt.X("x:Q", scale=x_scale), y=alt.value(820), text="label:N")
 )
 
 # Combine layers
 chart = (
     alt.layer(violin, points, x_labels)
     .properties(
-        width=1400, height=800, title=alt.Title("violin-swarm · altair · pyplots.ai", fontSize=28, anchor="middle")
+        width=1600,
+        height=900,
+        background=PAGE_BG,
+        title=alt.Title("violin-swarm · Python · altair · anyplot.ai", fontSize=28, anchor="middle", color=INK),
     )
-    .configure_view(strokeWidth=0)
-    .configure_axis(labelFontSize=16, titleFontSize=20, gridOpacity=0.3)
+    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT, tickColor=INK_SOFT, gridColor=INK, gridOpacity=0.10, labelColor=INK_SOFT, titleColor=INK
+    )
 )
 
 # Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=3.0)
+chart.save(f"plot-{THEME}.html")
