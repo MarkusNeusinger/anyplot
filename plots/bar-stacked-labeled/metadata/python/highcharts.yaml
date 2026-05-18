@@ -1,208 +1,232 @@
 library: highcharts
+language: python
 specification_id: bar-stacked-labeled
 created: '2026-01-09T15:32:32Z'
-updated: '2026-01-09T15:35:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856777046
+updated: '2026-05-18T02:15:24Z'
+generated_by: claude-haiku
+workflow_run: 26009420730
 issue: 3504
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/highcharts/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-stacked-labeled/python/highcharts/plot-dark.html
+quality_score: 73
 review:
   strengths:
-  - Excellent use of Highcharts native stackLabels feature for total labels with proper
-    formatting ($XXK)
-  - Clean colorblind-safe color palette following library guidelines
-  - Proper segment data labels within each bar
-  - Professional tooltip showing both individual values and stack totals
-  - Correct title format and descriptive subtitle
+  - Correct stacked bar chart type with all required features
+  - Stack and segment labels are properly formatted and visible
+  - Realistic business data context (quarterly revenue)
+  - Clean code structure and good canvas utilization
+  - Proper legend with descriptive product categories
   weaknesses:
-  - Legend is positioned too far from the chart with excessive whitespace gap
-  - Code complexity higher than necessary due to Selenium/urllib requirements (unavoidable
-    for highcharts)
-  image_description: 'The plot displays a stacked column chart with 4 quarters (Q1,
-    Q2, Q3, Q4) on the x-axis and "Revenue (thousands USD)" on the y-axis. Each bar
-    consists of 4 stacked segments representing product categories: Electronics (blue
-    #306998), Clothing (yellow #FFD43B), Home & Garden (purple #9467BD), and Sports
-    (teal #17BECF). Total value labels are prominently displayed above each stack
-    in bold format ($310K, $385K, $400K, $440K). Individual segment values are shown
-    within each bar segment. The legend is positioned at the top right with horizontal
-    layout. The title correctly follows the format "bar-stacked-labeled · highcharts
-    · pyplots.ai" with a subtitle explaining the data context. Grid lines are subtle
-    and the overall layout is clean and professional.'
+  - 'First series color is #306998 (Python Blue) instead of required #009E73 (brand
+    green)'
+  - All colors are custom hardcoded, not using Okabe-Ito palette
+  - 'Text colors are not theme-adaptive: dark text on dark background makes dark render
+    unreadable'
+  - 'Background is pure white/black instead of warm tones (#FAF8F1 light / #1A1A17
+    dark)'
+  - Code does not read ANYPLOT_THEME environment variable
+  - Output files are not theme-scoped (plot.png instead of plot-light.png/plot-dark.png)
+  - Generic design with no aesthetic sophistication or visual refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Pure white (should be warm off-white #FAF8F1)
+      Chrome: Title and axis labels are dark and readable against light background. Axis labels are descriptive ("Quarter", "Revenue (thousands USD)"). Tick labels and grid are visible.
+      Data: Bars are stacked with segments in pink/magenta, blue, orange, and cyan. Individual segment values labeled inside (120, 145, etc.). Stack totals labeled above (990K, 1005K, 1030K, 1160K) in larger font.
+      Colors: First series is #306998 (Python Blue), not #009E73 (brand green) — palette violation. Other colors are #FFD43B, #9467BD, #17BECF — not Okabe-Ito.
+      Legibility verdict: PASS (readable in light theme, but colors are non-compliant)
+
+    Dark render (plot-dark.png):
+      Background: Pure black or very dark (should be warm near-black #1A1A17)
+      Chrome: Title and axis labels are dark/black on dark background — text is barely visible. Tick labels are dark on dark — hard to read. Grid lines are barely visible.
+      Data: Same stacked bar layout and values as light render. Data colors are identical to light (pink, blue, orange, cyan) — correct color consistency between themes.
+      Colors: Data colors match light render (good consistency), but all chrome text is dark in both renders — not adapted.
+      Legibility verdict: FAIL — Dark-on-dark text makes the plot unreadable in dark mode. This is a critical theme-adaptation failure. Text colors must be light in dark theme (#F0EFE8 or #B8B7B0).
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 22
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and data labels are all clearly
-          readable at full size
+        score: 3
+        max: 8
+        passed: false
+        comment: Dark render has dark text on dark background — unreadable. Font sizes
+          set but not theme-adaptive.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; segment labels are well-positioned
-          within bars
+        comment: No overlapping text elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar segments are clearly visible with appropriate sizing and white
-          borders between segments
+        comment: Bars and labels clearly visible at 4800x2700.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette used (blue, yellow, purple, teal - no red-green
-          conflict)
+        score: 1
+        max: 2
+        passed: false
+        comment: Custom colors not Okabe-Ito; reasonably distinct but non-compliant.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, bars fill canvas well, minor point deducted for
-          slightly large top margin
+        comment: Excellent layout with balanced margins and good canvas utilization.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units Revenue (thousands USD), X-axis labeled Quarter
+        comment: 'Descriptive labels with units: ''Quarter'' and ''Revenue (thousands
+          USD)''.'
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Legend placed far from chart in top-right corner with excessive gap
+        comment: 'CRITICAL: First series is #306998 not #009E73. All colors are hardcoded
+          custom, not Okabe-Ito. Backgrounds are pure white/black not warm tones.
+          Text colors not theme-adaptive.'
+    design_excellence:
+      score: 6
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 2
+        max: 8
+        passed: false
+        comment: Generic default styling with arbitrary colors. No design thought.
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Minimal customization, library defaults, no polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Data displayed but no visual hierarchy or narrative emphasis.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct stacked column chart type
+        comment: Correct stacked column chart.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values stacked correctly
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Total labels above bars, segment labels within bars, stacking implemented
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: stacking, totals, segment labels, legend.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data with appropriate headroom for labels
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Categories on X, components stacked, values correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 4 product categories
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format bar-stacked-labeled · highcharts · pyplots.ai
+        comment: Title format correct. Legend labels match data.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows variation across quarters and categories; Q4 shows growth trend
+        comment: 'Shows all aspects: 4 categories, 4 components, good variation.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Quarterly revenue by product category is a real business scenario
+        comment: 'Realistic business scenario: quarterly revenue by product.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible for quarterly revenue in thousands USD
+        comment: Plausible quarterly revenue values (120-180K per component).
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code uses iteration and follows mostly linear structure, but has
-          function-like complexity with urllib and selenium
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Data is deterministic (hardcoded values)
+        comment: 'Linear structure: imports, data, config, save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only necessary imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: Clean code, no fake functionality.
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        passed: false
+        comment: Saves as plot.png instead of plot-light.png/plot-dark.png. No ANYPLOT_THEME
+          environment variable support.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 4
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: true
-        comment: Uses Highcharts stackLabels for totals, dataLabels for segments,
-          tooltip with stackTotal, proper column stacking configuration
-  verdict: APPROVED
+        passed: false
+        comment: Correct Highcharts API usage but standard patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: Uses stackLabels (Highcharts-specific) and dataLabels. Some distinctive
+          features.
+  verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
+  styling: []
