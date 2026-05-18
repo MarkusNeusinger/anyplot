@@ -1,8 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 bubble-map-geographic: Bubble Map with Sized Geographic Markers
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 74/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -23,6 +24,15 @@ from plotnine import (
     theme_minimal,
 )
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+OCEAN_BG = "#D4E8F7" if THEME == "light" else "#1A2E3D"
+CONTINENT_FILL = "#E0E0E0" if THEME == "light" else "#2A2A2A"
+CONTINENT_COLOR = "#A0A0A0" if THEME == "light" else "#555550"
 
 # Seed for reproducibility
 np.random.seed(42)
@@ -193,6 +203,9 @@ cities_data = {
 
 df = pd.DataFrame(cities_data)
 
+# Sort descending so smaller bubbles render on top of larger ones
+df = df.sort_values("population", ascending=False).reset_index(drop=True)
+
 # Simplified continent outlines for basemap
 continents = []
 
@@ -256,15 +269,9 @@ for i in range(len(au_lon)):
 
 df_continents = pd.DataFrame(continents)
 
-# Region color palette (colorblind-safe, alphabetically ordered for plotnine)
-region_colors = [
-    "#9467BD",  # Africa - Purple
-    "#306998",  # Asia - Python Blue
-    "#FFD43B",  # Europe - Python Yellow
-    "#2CA02C",  # N. America - Green
-    "#17BECF",  # Oceania - Cyan
-    "#D62728",  # S. America - Red
-]
+# Okabe-Ito canonical order mapped to regions alphabetically:
+# Africa, Asia, Europe, N. America, Oceania, S. America
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
 
 # Create the bubble map
 plot = (
@@ -273,8 +280,8 @@ plot = (
     + geom_polygon(
         aes(x="lon", y="lat", group="continent"),
         data=df_continents,
-        fill="#E0E0E0",
-        color="#A0A0A0",
+        fill=CONTINENT_FILL,
+        color=CONTINENT_COLOR,
         size=0.5,
         alpha=0.8,
     )
@@ -282,27 +289,30 @@ plot = (
     + geom_point(aes(x="longitude", y="latitude", color="region", size="population"), data=df, alpha=0.7, stroke=0.5)
     # Scale size by area for accurate perception (bubble area proportional to value)
     + scale_size_area(max_size=20, name="Population (M)")
-    + scale_color_manual(values=region_colors, name="Region")
+    + scale_color_manual(values=OKABE_ITO, name="Region")
     + coord_fixed(ratio=1.0, xlim=(-180, 180), ylim=(-60, 80))
     + labs(
-        title="World City Populations · bubble-map-geographic · plotnine · pyplots.ai",
+        title="World City Populations · bubble-map-geographic · python · plotnine · anyplot.ai",
         x="Longitude (°)",
         y="Latitude (°)",
     )
     + theme_minimal()
     + theme(
         figure_size=(16, 9),
-        plot_title=element_text(size=24, weight="bold"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
-        legend_position="right",
-        panel_grid_major=element_line(color="#CCCCCC", size=0.3, alpha=0.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=OCEAN_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="#D4E8F7", alpha=0.5),  # Ocean color
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        plot_title=element_text(size=24, weight="bold", color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=14, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
     )
 )
 
 # Save at 300 DPI for 4800x2700 px output
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
