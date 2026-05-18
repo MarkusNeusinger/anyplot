@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: scatter-matrix-interactive
 created: '2026-01-10T02:00:12Z'
-updated: '2026-05-18T16:40:18Z'
+updated: '2026-05-18T16:52:28Z'
 generated_by: claude-haiku
 workflow_run: 26046324205
 issue: 3604
@@ -12,37 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-matrix-interactive/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 81
 review:
   strengths:
-  - Perfect theme adaptation—chrome flips correctly while data colors remain constant
-    across light and dark renders
-  - Clean, systematic matrix layout effectively showing all pairwise variable relationships
-  - Excellent readability in both themes with no dark-on-dark or light-on-light failures
-  - Proper Okabe-Ito palette implementation with species colors providing clear visual
-    distinction
-  - Appropriate marker sizing (size=4, alpha=0.7) and transparency for 150-point dataset
-  - Correct title and legend formatting per specification
+  - Perfect visual quality and readability in both light and dark themes
+  - Beautiful, balanced 4×4 matrix layout with proper spacing and typography
+  - Flawless Okabe-Ito palette compliance and theme-adaptive chrome
+  - Clean, reproducible, well-organized code
+  - Proper diagonal histograms and scatter plot structure
+  - Excellent hover tooltips with species and coordinate information
+  - Correct title and legend formatting
   weaknesses:
-  - Missing linked selection across subplots—spec requires brushing in one plot should
-    highlight corresponding points in all others; current implementation provides
-    tooltips but not cross-subplot selection
-  - Design is functional but generic—relies on library defaults with minimal aesthetic
-    customization
-  - Limited exploration of letsplot distinctive capabilities beyond standard ggplot
-    patterns
+  - 'Missing core interactive feature: brushing/selection with cross-plot highlighting
+    (SC-02)'
+  - No linked selection across subplots - fundamental to SPLOM specification
+  - No zoom/pan functionality for interactive exploration
+  - Unselected points not de-emphasized
+  - No reset/clear selection mechanism
+  - Design is competent but not sophisticated - relies on library defaults
+  - Doesn't fully leverage letsplot's interactive potential beyond tooltips
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1), no pure white
-      Chrome: Title "scatter-matrix-interactive · python · letsplot · anyplot.ai" in dark text (32pt), clearly visible; axis labels "Sepal Length", "Sepal Width", "Petal Length", "Petal Width" in dark text (16pt), readable; tick labels in soft grey (13pt), distinct and readable; grid lines subtle but visible
-      Data: Scatter plots show three Okabe-Ito colors—green (#009E73), orange (#D55E00), blue (#0072B2); histograms on diagonal use same colors overlaid; markers well-sized (size=4, alpha=0.7) with no overlap; legend at bottom correctly identifies three species
-      Legibility verdict: PASS - All text is dark on light background with perfect contrast; no elements are hard to read
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "scatter-matrix-interactive · python · letsplot · anyplot.ai" in 32pt dark text, axis labels in 16pt dark text, tick labels in 13pt secondary color - all clearly readable
+      Data: 4×4 matrix with histograms on diagonal (colored by species), scatter plots off-diagonal with consistent Okabe-Ito colors (green #009E73 for Setosa, orange #D55E00 for Versicolor, blue #0072B2 for Virginica)
+      Layout: Well-balanced title (6%), grid (80%), legend (6%) with proper margins
+      Legibility verdict: PASS - all text perfectly readable, no overlap, grid subtle
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17), no pure black
-      Chrome: Title in light text (appears #F0EFE8 or similar), perfectly readable; axis labels in light text, readable; tick labels in light grey, distinct from background; grid lines light and subtle, visible without competing with data
-      Data: Scatter plots show identical Okabe-Ito colors to light render—green, orange, blue preserved exactly; histograms match light render's color scheme; markers same size and alpha as light render
-      Legibility verdict: PASS - All text is light on dark background with good contrast; no dark-on-dark failures; brand green visible and readable on dark surface; tick labels are light-colored, not dark
+      Background: Warm near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title and axis labels in light text (#F0EFE8), tick labels in secondary light (#B8B7B0) - all clearly readable on dark background. NO dark-on-dark failures.
+      Data: Identical colors to light render - green, orange, blue data colors preserved exactly across themes (only chrome adapts)
+      Grid: Subtle grid lines in light color scheme, properly visible
+      Legend: Light text on dark background, properly positioned
+      Legibility verdict: PASS - all text readable, theme-adaptive chrome perfect, no contrast failures
   criteria_checklist:
     visual_quality:
       score: 30
@@ -53,130 +56,125 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 32pt, axis labels 16pt, ticks 13pt).
-          All text perfectly readable in both light and dark renders.
+        comment: All font sizes explicitly set; title 32pt, axis labels 16pt, ticks
+          13pt; perfectly readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Axis labels shown only on edges, no collisions. Histograms and scatter
-          plots have adequate spacing.
+        comment: Well-spaced 4×4 grid with 6px margins; no text overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Markers and histogram bars are clearly visible. Alpha=0.7 is well-calibrated
-          for 150 points across the matrix.
+        comment: Points (size=4.5, alpha=0.72) and histograms well-adapted to data
+          density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Colors are distinguishable across
-          all data presentations.
+        comment: Okabe-Ito palette, CVD-safe, excellent contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4×4 grid with title and legend fills canvas well (~80% utilization).
-          Balanced margins, generous whitespace.
+        comment: Perfect proportions; title (6%), grid (80%), legend (6%); balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels provided. Title correct format: spec-id · language
-          · library · anyplot.ai'
+        comment: Descriptive variable names; proper title format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Light: #FAF8F1 background, first series #009E73, Okabe-Ito order
-          correct, dark text on light. Dark: #1A1A17 background, identical data colors,
-          light text on dark, no dark-on-dark failures.'
+        comment: 'First series #009E73; colors identical across themes; backgrounds
+          correct; chrome theme-adaptive'
     design_excellence:
-      score: 9
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: false
-        comment: Well-configured library defaults. Uses mandated Okabe-Ito palette
-          and theme_minimal(). No custom design beyond requirements.
+        comment: Professional layout with clear hierarchy; well-organized grid; solid
+          defaults but somewhat formulaic
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
         passed: false
-        comment: Minimal customization beyond theme_minimal(). Grid present but subtle.
-          Standard margin and padding settings.
+        comment: Subtle grid, clean appearance, generous whitespace; relies on library
+          defaults with minimal polish
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Scatter plot matrix layout is systematic and guides viewer through
-          variable relationships. Species colors provide visual separation.
+        comment: Clear visual narrative showing pairwise relationships; data displayed
+          but not interpreted
     spec_compliance:
-      score: 13
+      score: 9
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 3
         max: 5
-        passed: true
-        comment: Correct scatter plot matrix (SPLOM) with 4×4 configuration, histograms
-          on diagonal.
+        passed: false
+        comment: Structurally correct 4×4 scatter matrix; however, spec emphasizes
+          'interactive' and static visualization lacks full interactivity
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 0
         max: 4
         passed: false
-        comment: 'Scatter plots present, histograms present, tooltips present. Missing:
-          linked selection across subplots (spec requirement).'
+        comment: 'CRITICAL: Missing brushing/selection with cross-plot highlighting,
+          zoom/pan, de-emphasis, reset. Only hover tooltips present.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y correctly assigned. All four variables shown pairwise.
+        comment: X/Y correctly mapped; axes show full data range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows correct format. Legend correctly labels three species.
+        comment: Title format perfect; legend properly labeled and colored
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows three species with distinct distributions. All variable relationships
-          displayed.
+        comment: Shows all pairwise relationships and univariate distributions; demonstrates
+          correlations
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Iris-like synthetic dataset—well-known, neutral, scientifically plausible
-          context.
+        comment: Iris-like synthetic data; realistic scales; neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Measurement ranges are realistic for iris dimensions.
+        comment: Factually correct ranges for iris measurements
     code_quality:
       score: 10
       max: 10
@@ -186,60 +184,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → data generation → plot creation → save. No functions/classes.
+        comment: Clean linear flow; no functions/classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set for deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic, appropriate complexity. No fake functionality.
+        comment: Appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and plot-{THEME}.html. Correct format.
+        comment: Correct file naming
     library_mastery:
       score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Uses letsplot's ggplot() + geom_*() syntax correctly. Theme customization
-          follows recommended patterns.
+        passed: true
+        comment: Expert ggplot syntax; theme-adaptive tokens integrated; layer_tooltips
+          for hover
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
         passed: false
-        comment: Leverages layer_tooltips() for interactivity and ggbunch() for multi-plot
-          layout (letsplot-specific).
+        comment: Uses ggbunch and layer_tooltips; doesn't leverage linked-brushing
+          or advanced interactive capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - hover-tooltips
-  - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
+  - publication-ready
