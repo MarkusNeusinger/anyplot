@@ -1,14 +1,18 @@
-""" pyplots.ai
+"""anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-09
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
 from plotnine import (
     aes,
+    element_line,
+    element_rect,
     element_text,
     geom_hline,
     geom_line,
@@ -22,6 +26,18 @@ from plotnine import (
     theme_minimal,
 )
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette
+FAIL_COLOR = "#D55E00"  # Okabe-Ito position 2
+PASS_COLOR = "#009E73"  # Okabe-Ito position 1
+CURVE_COLOR = "#0072B2"  # Okabe-Ito position 3
 
 # Data - Exam score vs Pass/Fail outcome
 np.random.seed(42)
@@ -60,15 +76,32 @@ df_points = pd.DataFrame(
 
 df_curve = pd.DataFrame({"score": x_curve, "probability": y_pred, "lower": y_lower, "upper": y_upper})
 
+# Theme
+anyplot_theme = theme(
+    figure_size=(16, 9),
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.08),
+    panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.04),
+    panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+    axis_title=element_text(size=20, color=INK),
+    axis_text=element_text(size=16, color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
+    plot_title=element_text(size=24, color=INK),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_text=element_text(size=16, color=INK_SOFT),
+    legend_title=element_text(size=18, color=INK),
+)
+
 # Create plot
 plot = (
     ggplot()
     # Confidence interval ribbon
-    + geom_ribbon(data=df_curve, mapping=aes(x="score", ymin="lower", ymax="upper"), alpha=0.25, fill="#306998")
+    + geom_ribbon(data=df_curve, mapping=aes(x="score", ymin="lower", ymax="upper"), alpha=0.25, fill=CURVE_COLOR)
     # Fitted logistic curve
-    + geom_line(data=df_curve, mapping=aes(x="score", y="probability"), color="#306998", size=2)
+    + geom_line(data=df_curve, mapping=aes(x="score", y="probability"), color=CURVE_COLOR, size=2)
     # Decision threshold line at p=0.5
-    + geom_hline(yintercept=0.5, linetype="dashed", color="#666666", size=1)
+    + geom_hline(yintercept=0.5, linetype="dashed", color=INK_SOFT, size=1, alpha=0.6)
     # Data points with jitter
     + geom_point(
         data=df_points,
@@ -78,23 +111,17 @@ plot = (
         position=position_jitter(width=0, height=0.03),
     )
     # Colors
-    + scale_color_manual(values={"Fail": "#E74C3C", "Pass": "#27AE60"})
+    + scale_color_manual(values={"Fail": FAIL_COLOR, "Pass": PASS_COLOR})
     # Labels
     + labs(
-        title="logistic-regression · plotnine · pyplots.ai", x="Exam Score", y="Probability of Passing", color="Outcome"
+        title="logistic-regression · python · plotnine · anyplot.ai",
+        x="Exam Score (points)",
+        y="Probability of Passing",
+        color="Outcome",
     )
-    # Theme with scaled fonts for 4800x2700 canvas
     + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_title=element_text(size=24),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-    )
+    + anyplot_theme
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)
