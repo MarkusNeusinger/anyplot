@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 scatter-matrix-interactive: Interactive Scatter Plot Matrix (SPLOM)
-Library: plotly | Python 3.13
-Quality: pending | Created: 2026-05-18
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-18
 """
 
 import os
