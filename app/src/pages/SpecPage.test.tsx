@@ -184,25 +184,25 @@ describe('SpecPage', () => {
   });
 
   describe('language in title + breadcrumb', () => {
-    it('includes ` · Python · matplotlib` in the document title in detail mode', async () => {
+    it('includes ` · python · matplotlib` in the document title in detail mode', async () => {
       mockParams = { specId: 'scatter-basic', language: 'python', library: 'matplotlib' };
       mockSearchParams.delete('language');
       mockFetchSuccess();
       render(<SpecPage />);
 
       await waitFor(() => {
-        expect(document.title).toContain('Basic Scatter Plot · Python · matplotlib');
+        expect(document.title).toContain('Basic Scatter Plot · python · matplotlib');
       });
     });
 
-    it('includes ` · Python` in the document title when ?language= is set in hub mode', async () => {
+    it('includes ` · python` in the document title when ?language= is set in hub mode', async () => {
       mockParams = { specId: 'scatter-basic' };
       mockSearchParams.set('language', 'python');
       mockFetchSuccess();
       render(<SpecPage />);
 
       await waitFor(() => {
-        expect(document.title).toContain('Basic Scatter Plot · Python');
+        expect(document.title).toContain('Basic Scatter Plot · python');
       });
       mockSearchParams.delete('language');
     });
