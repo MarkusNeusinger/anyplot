@@ -1,156 +1,182 @@
 library: pygal
+language: python
 specification_id: density-rug
 created: '2026-01-09T15:34:28Z'
-updated: '2026-01-09T15:45:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20856774850
+updated: '2026-05-18T00:54:23Z'
+generated_by: claude-haiku
+workflow_run: 26007436359
 issue: 3505
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/density-rug/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/density-rug/pygal/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/density-rug/python/pygal/plot-dark.html
 quality_score: 90
 review:
   strengths:
-  - Excellent bimodal data that effectively demonstrates both KDE smoothing and rug
-    mark data transparency
-  - Clean code structure following KISS principles with scipy integration for KDE
-  - Good use of pygal XY chart with fill to create density curve visualization
-  - Proper font scaling for 4800x2700 canvas with custom Style
-  - Colorblind-friendly color scheme with good contrast
+  - Theme-adaptive styling with complete token coverage; both renders readable and
+    theme-correct
+  - 'Proper Okabe-Ito palette application (brand green #009E73 first, orange #D55E00
+    for rug)'
+  - Effective combination of KDE curve (distribution shape) and rug marks (data transparency)
+  - Clear bimodal visualization with strong visual hierarchy
+  - Clean, reproducible code with proper KDE implementation
+  - Excellent text legibility in both light and dark themes
   weaknesses:
-  - Rug marks rendered as dots at y=0 rather than traditional vertical tick marks;
-    while this is a pygal limitation, it reduces the visual impact of rug marks as
-    specified
-  - Axis labels could be more descriptive with context (e.g., Response Time ms instead
-    of generic Value)
-  image_description: The plot displays a density plot with rug marks on a white background.
-    The KDE (Kernel Density Estimation) curve is shown in Python Blue (#306998) with
-    a semi-transparent fill, revealing a clear bimodal distribution with peaks around
-    35 and 65. The first mode (centered ~35) reaches approximately 0.78 on the normalized
-    density scale, while the second mode (~65) reaches the maximum of 1.0. The rug
-    marks are displayed as yellow/gold (#FFD43B) dots positioned along the x-axis
-    at y=0, showing the actual data point locations. The title "density-rug · pygal
-    · pyplots.ai" is displayed at the top. The x-axis is labeled "Value" (ranging
-    from ~10 to ~95), and the y-axis is labeled "Density (normalized)" (ranging from
-    0 to 1.1). A legend at the bottom identifies "KDE Density Curve" and "Rug Marks".
-    Subtle gray grid lines are visible in the background.
+  - 'Design Excellence could be elevated: spines remain visible rather than refined;
+    minimal customization beyond theme defaults'
+  - Limited use of pygal-specific advanced features (e.g., custom legend positioning,
+    annotation styling)
+  - Could enhance visual refinement through spine removal or enhanced grid styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) correctly applied as plot background
+      Chrome: Title "density-rug · Python · pygal · anyplot.ai" clearly visible; X-axis labeled "Measurement Value", Y-axis labeled "Density (normalized)"; all labels in dark text (#1A1A17) readable against light surface; tick labels visible
+      Data: Filled teal/green curve (#009E73 — Okabe-Ito brand color) showing clear bimodal distribution; orange rug marks (#D55E00 — Okabe-Ito position 2) along x-axis at y=0 indicating 150 individual observations
+      Grid: Subtle gridlines on both axes, not competing with data
+      Legend: Present at bottom showing "KDE Density Curve" and "Rug Marks"
+      Legibility verdict: PASS — All text readable with excellent contrast on light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) correctly applied as plot background
+      Chrome: Same title position; axis labels now in light color (#F0EFE8) for dark theme; tick labels in soft light tone (#B8B7B0); all text readable
+      Data: KDE curve identical teal/green (#009E73); rug marks identical orange (#D55E00) — colors match light render exactly
+      Grid: Subtle gridlines at same opacity as light render
+      No dark-on-dark failures: text, ticks, labels all visible with proper contrast on dark surface
+      Legibility verdict: PASS — All text readable with excellent contrast on dark background; theme-adaptive chrome while preserving data color integrity
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size with appropriate font sizing
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; all labels and legend are well-spaced
+        comment: All text scales appropriately for 4800×2700px; readable in both light
+          and dark with proper contrast
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Title centered; axis labels positioned without overlap; legend at
+          bottom clear
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: KDE curve with fill is clearly visible; rug marks are visible as
-          yellow dots but could be more prominent as traditional tick marks
+        comment: KDE curve prominent; rug marks clearly distinguishable; appropriate
+          marker sizing
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow color scheme is colorblind-friendly and provides
-          excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins; legend positioned at
-          bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Labels are descriptive but lack units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: true
-        comment: Grid is subtle; legend placement at bottom is acceptable
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct: KDE density curve combined with rug marks showing distribution'
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis correctly shows values; Y-axis shows normalized density
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: KDE curve with fill is present; rug marks shown but as dots rather
-          than traditional tick marks
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible within axes range with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly identifies KDE Density Curve and Rug Marks
-      - id: SC-06
-        name: Title Format
-        score: 1
+        comment: 'Okabe-Ito #009E73 first; #D55E00 second; strong contrast; colorblind-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Well-proportioned 4800×2700px use; no elements cut off; balanced
+          margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Uses correct format with proper separator
-    data_quality:
-      score: 18
+        comment: 'X: Measurement Value; Y: Density (normalized); descriptive and properly
+          positioned'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light: #FAF8F1 ✓; Dark: #1A1A17 ✓; Okabe-Ito colors identical across
+          themes'
+    design_excellence:
+      score: 15
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
         max: 8
         passed: true
-        comment: Excellent bimodal distribution demonstrates KDE capability to reveal
-          multiple modes; rug marks show clustering
-      - id: DQ-02
-        name: Realistic Context
-        score: 5
-        max: 7
+        comment: Custom Style with theme-adaptive tokens; scaled typography; Okabe-Ito
+          correctly applied; professional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Plausible scenario but generic Value without domain context
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Grid styling subtle and effective; generous whitespace; clean composition
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bimodal distribution creates focal point; visual hierarchy emphasizes
+          KDE; clear narrative
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Values in reasonable range (10-95); 150 data points appropriate for
-          demonstration
+        comment: Correctly implements density plot with rug marks
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: KDE with fill ✓; rug marks ✓; semi-transparent fill ✓; both smoothed
+          and raw data ✓
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: '150 observations correctly mapped; x: 10-100; y: normalized 0-1.15;
+          all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title correct format ✓; legend shows both series ✓
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Complete KDE distribution and individual observations visible; both
+          aspects shown
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Bimodal distribution plausible; neutral uncontroversial data; appropriate
+          context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values 10-100 sensible; normalized density scale appropriate; 150
+          obs in 30-500 range
     code_quality:
       score: 10
       max: 10
@@ -160,52 +186,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, KDE calculation, chart creation,
-          save'
+        comment: No unnecessary functions or classes; straightforward
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: Uses np.random.seed(42); deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pygal, Style, scipy.stats.gaussian_kde)
+        comment: 'Only necessary: os, numpy, pygal, scipy.stats'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current pygal API
+        comment: Appropriate complexity; no fake UI; proper KDE
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and .html ✓; current API
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal XY chart, custom Style, fill capability, but rug marks
-          as dots is a pygal limitation workaround
+        comment: XY chart correctly used for continuous; Style properly applies tokens;
+          idiomatic patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Uses standard features; limited exploration of pygal-specific capabilities
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
-  techniques:
-  - html-export
+  techniques: []
   patterns:
   - data-generation
   dataprep:
   - kde
-  styling:
-  - alpha-blending
+  styling: []

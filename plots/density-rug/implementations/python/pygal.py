@@ -1,14 +1,26 @@
-""" pyplots.ai
+""" anyplot.ai
 density-rug: Density Plot with Rug Marks
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-09
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-18
 """
+
+import os
 
 import numpy as np
 import pygal
 from pygal.style import Style
 from scipy.stats import gaussian_kde
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Okabe-Ito palette (first series = brand green)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
 
 # Data - bimodal distribution to show interesting density shape
 np.random.seed(42)
@@ -27,22 +39,20 @@ density = kde(x_range)
 # Scale density for visibility
 density_scaled = density / density.max()
 
-# Custom style for pyplots (scaled for 4800x2700 canvas)
+# Custom style (scaled for 4800x2700 canvas)
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B"),  # Python Blue for KDE, Yellow for rug
-    title_font_size=56,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=32,
-    value_font_size=28,
-    stroke_width=4,
-    opacity=".7",
-    opacity_hover=".9",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=22,
+    major_label_font_size=18,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
 # Create XY chart for continuous data
@@ -50,8 +60,8 @@ chart = pygal.XY(
     width=4800,
     height=2700,
     style=custom_style,
-    title="density-rug · pygal · pyplots.ai",
-    x_title="Value",
+    title="density-rug · Python · pygal · anyplot.ai",
+    x_title="Measurement Value",
     y_title="Density (normalized)",
     show_legend=True,
     legend_at_bottom=True,
@@ -69,16 +79,11 @@ chart = pygal.XY(
 kde_points = [(float(x), float(y)) for x, y in zip(x_range, density_scaled, strict=True)]
 chart.add("KDE Density Curve", kde_points, stroke_style={"width": 5})
 
-# Add rug marks as tick marks along the x-axis at y=0
-# Position marks at y=0 and use dots as visual markers for each data point
-# In pygal, this is the closest approximation to traditional rug marks
+# Add rug marks as dots along the x-axis at y=0
 sorted_values = np.sort(values)
 rug_points = [(float(v), 0.0) for v in sorted_values]
-
-# Use small dots at the axis line to represent rug marks
-# This is pygal's best approximation of rug tick marks
 chart.add("Rug Marks", rug_points, stroke=False, show_dots=True, fill=False, dots_size=10)
 
-# Save as PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save as PNG and HTML with theme-suffixed names
+chart.render_to_png(f"plot-{THEME}.png")
+chart.render_to_file(f"plot-{THEME}.html")
