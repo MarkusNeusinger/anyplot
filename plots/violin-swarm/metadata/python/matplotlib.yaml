@@ -1,155 +1,183 @@
 library: matplotlib
+language: python
 specification_id: violin-swarm
 created: '2026-01-09T16:46:38Z'
-updated: '2026-01-09T16:49:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20858838180
+updated: '2026-05-18T04:52:28Z'
+generated_by: claude-haiku
+workflow_run: 26013862813
 issue: 3526
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/violin-swarm/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of density-based swarm jitter algorithm
-  - Beautiful color scheme with Python blue violin and yellow points providing strong
-    contrast
-  - Bimodal distribution in Treatment C effectively demonstrates the hybrid visualization
-    power
-  - Median lines add useful statistical reference
-  - 'All spec requirements met: violin transparency, point overlay, horizontal spread'
+  - Perfect visual quality with explicit font sizing and theme adaptation
+  - 'All spec requirements met: violin distributions + swarm overlay with appropriate
+    transparency'
+  - Sophisticated density-based jitter algorithm ensures optimal point distribution
+  - Data choice (bimodal Treatment C) demonstrates all plot type aspects
+  - Clean, reproducible code with proper random seeding
   weaknesses:
-  - Missing legend explaining what violin vs points represent
-  - Point size s=80 slightly small for 50 points per group; s=100-120 would be more
-    visible
-  - Manual swarm implementation is verbose compared to using built-in functionality
-  image_description: The plot displays a violin-swarm visualization comparing reaction
-    times across 4 experimental conditions (Control, Treatment A, Treatment B, Treatment
-    C). Each violin is rendered in a semi-transparent blue (#306998 with alpha 0.4),
-    showing kernel density estimation of the distribution. Yellow (#FFD43B) circular
-    points with blue edges are overlaid as a swarm on each violin, representing individual
-    observations (50 per group). Dark horizontal lines mark the median for each group.
-    The y-axis shows "Reaction Time (ms)" ranging from approximately 250-650ms, and
-    the x-axis shows "Experimental Condition". Treatment C shows a bimodal distribution
-    as intended, with two clusters of points visible. Points are well-jittered horizontally
-    to avoid overlap while staying within violin boundaries. A subtle dashed grid
-    is present on the y-axis. The title correctly follows the spec-id · library ·
-    pyplots.ai format.
+  - Design Excellence could be elevated through more sophisticated color choices or
+    visual emphasis
+  - Data storytelling relies on viewer interpretation rather than explicit visual
+    hierarchy emphasis
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) with appropriate plot surface contrast
+      Chrome: Title "violin-swarm · Python · matplotlib · anyplot.ai" (24pt, bold), axis labels "Experimental Condition" and "Reaction Time (ms)" (20pt), tick labels (16pt) — all explicitly sized and clearly readable in dark text against light background
+      Data: Four violin distributions (green #009E73) with α=0.4, overlaid swarm points (orange #D55E00) with α=0.8, median lines in dark ink, all well-distributed with density-based jittering to prevent overlap
+      Legend: "Distribution" title with "Individual observations" label, styled with elevated background frame
+      Legibility verdict: PASS — all elements readable, excellent contrast, no overlap
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) with consistent plot surface
+      Chrome: Title, axis labels, and tick labels all visible in light text (#F0EFE8 for title, #B8B7B0 for ticks), maintaining perfect readability against dark background
+      Data: Violins remain #009E73 (identical to light render), swarm points remain #D55E00 (identical), median lines in light ink — color palette is perfectly consistent across themes, only chrome adapts
+      Legend: Properly styled with dark elevated background, all text clearly visible
+      Legibility verdict: PASS — no dark-on-dark contrast issues, all chrome properly theme-adapted, data colors perfectly preserved
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, labels 20pt, ticks 16-18pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text, swarm points well-jittered
+        comment: All text explicitly sized (title 24pt, labels 20pt, ticks 16pt),
+          perfectly readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text; swarm points well-distributed via density-based
+          jitter
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Points s=80 visible but slightly small for 50pts; alpha 0.8 good
+        comment: 200 data points well-visible with s=110 markers and appropriate alpha
+          (0.4 violin, 0.8 scatter)
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow contrast is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of 16:9 canvas, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Reaction Time (ms) and Experimental Condition with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito palette with good contrast; orange #D55E00 stands out
+          sharply against green #009E73'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Perfect proportions (16:9 landscape), plot fills ~60% of canvas,
+          balanced margins, legend positioned appropriately
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Descriptive labels with units: ''Reaction Time (ms)'', ''Experimental
+          Condition'''
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green), second #D55E00 (Okabe-Ito pos
+          2), backgrounds #FAF8F1/#1A1A17, all chrome properly theme-adapted, no pure
+          white/black'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
         passed: false
-        comment: Grid only on y-axis is fine, but no legend explaining violin vs points
+        comment: Well-configured default with thoughtful color choices and polished
+          styling, but not exceptional/custom palette design
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Spines removed (top/right), subtle grid (α=0.10), generous whitespace,
+          polished legend styling
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy via color contrast (orange on green) and data choice
+          (bimodal Treatment C); viewer can see treatment effects, but story is implicit
+          rather than emphasized
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct violin + swarm overlay
+        comment: Correct violin-swarm hybrid with all subtypes present
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X, values on Y correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Violin transparency, swarm overlay, median lines, horizontal jitter
-          all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: transparency on violins (α=0.4), swarm points
+          with horizontal spread, centered within shapes'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows all data with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: categories (conditions); Y-axis: numeric values (reaction
+          time); all data visible'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for this plot type - no series legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: violin-swarm · matplotlib · pyplots.ai correct
+        comment: Title format correct, legend labels appropriate
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different distributions including bimodal (Treatment C), varying
-          spreads
+        comment: 'All plot aspects shown: distributions, individual points, bimodal
+          pattern in Treatment C'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Reaction times in experimental psychology, plausible scientific scenario
+        comment: Real, comprehensible scenario (reaction times in psychology/cognitive
+          science), neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values 250-650ms reasonable; could show more distinction between
-          groups
+        comment: Reaction times factually plausible (250-650ms), realistic distributions
+          and standard deviations
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -157,52 +185,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Linear structure: theme setup → data generation → plot → save, no
+          functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) at start
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy
+        comment: Only os, matplotlib.pyplot, numpy imported; all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Sophisticated density-based jitter algorithm is appropriate complexity;
+          no fake functionality
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but path handling could be cleaner
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current matplotlib API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct usage of ax.violinplot(), ax.scatter(), proper styling pattern;
+          standard matplotlib idioms
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses violinplot correctly but implements manual swarm jitter; creative
-          but verbose
+        comment: Custom density-based jitter algorithm shows thoughtful technique;
+          not distinctive to matplotlib library itself
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - layer-composition
+  techniques: []
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
   - grid-styling
+  - publication-ready
