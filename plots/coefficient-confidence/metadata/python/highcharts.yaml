@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: coefficient-confidence
 created: '2026-01-09T23:53:23Z'
-updated: '2026-05-18T12:43:02Z'
+updated: '2026-05-18T13:29:26Z'
 generated_by: claude-haiku
 workflow_run: 26033507087
 issue: 3576
@@ -12,171 +12,168 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/coefficie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/coefficient-confidence/python/highcharts/plot-dark.html
-quality_score: 77
+quality_score: 37
 review:
   strengths:
-  - Correct plot type with all required features present
-  - Excellent text legibility and readability in both light and dark themes
-  - 'Proper theme-adaptive background colors rendered correctly (#FAF8F1 light, #1A1A17
-    dark)'
-  - Good element sizing and visibility of markers and confidence interval bars
-  - Accurate title format and descriptive axis labels with units
-  - Realistic, neutral data context (housing price regression)
-  - Proper zero reference line and significance distinction with color coding
+  - 'Correct chart concept: scatter points for estimates + xrange bars for confidence
+    intervals is the right Highcharts approach'
+  - Realistic, neutral housing price regression dataset with 10 meaningful predictors
+  - Clean linear code structure with proper np.random.seed(42) for reproducibility
+  - Creative use of xrange series type for CI bars - a distinctive Highcharts-specific
+    technique
+  - Appropriate large font sizes and generous margins configured in the JS
   weaknesses:
-  - Implementation bypasses highcharts_core Python API, instead hand-coding JavaScript
-    strings — violates idiomatic library usage (LM-01)
-  - 'Non-significant series uses #FFD43B (Okabe-Ito position 7), which per style guide
-    is restricted to thin lines/small markers due to low luminance'
-  - Code doesn't read ANYPLOT_THEME environment variable; output filenames lack theme
-    suffix (should be plot-{THEME}.png)
-  - No custom visual refinement; appears as well-configured library default with no
-    design sophistication beyond defaults
-  - No visual hierarchy or emphasis to guide reader through data storytelling
+  - 'CRITICAL: ANYPLOT_THEME never read; output saved to plot.png/plot.html instead
+    of plot-{THEME}.png/plot-{THEME}.html - pipeline cannot find expected artifacts
+    causing completely blank renders'
+  - 'No theme-adaptive chrome: all colors hardcoded (#ffffff background, fixed label
+    colors) - dark render would be broken even with correct filenames'
+  - 'Non-Okabe-Ito colors: #306998 (Python blue) for significant and #FFD43B for non-significant;
+    must use #009E73 (significant) and #D55E00 (non-significant)'
+  - 'Title format wrong: ''coefficient-confidence · highcharts · pyplots.ai'' should
+    be ''coefficient-confidence · python · highcharts · anyplot.ai'''
+  - Bypasses highcharts_core Python API entirely, writing raw Highcharts JS f-strings
+    instead
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 matching style guide specification
-      Chrome: Title "coefficient-confidence · python · highcharts · anyplot.ai" in 56px, axis labels in 40px, tick labels in 32px — all dark text clearly readable on light background
-      Data: 10 horizontal coefficient estimates with confidence interval bars; green (#009E73) for significant coefficients, yellow (#FFD43B) for non-significant; vertical dashed reference line at zero with label; vertical gridlines subtle
-      Legibility verdict: PASS — all text highly readable at full resolution
+      Background: Warm off-white (~#FAF8F1) - correct anyplot light-theme surface color
+      Chrome: NO title, axis labels, tick labels, or any text visible - completely blank
+      Data: NO data elements, CI bars, reference line, or markers visible
+      Legibility verdict: FAIL - chart did not render; only a faint thin line at the very bottom edge is visible
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 matching style guide specification
-      Chrome: Same title and axis labels as light render, now rendered in light text (approximately #F0EFE8); all clearly readable against dark background
-      Data: Coefficient colors are IDENTICAL to light render — green #009E73 for significant, yellow #FFD43B for non-significant (confirming proper theme handling where only chrome adapts)
-      Legibility verdict: PASS — no dark-on-dark failures, all text visible and readable
-    Both renders successfully demonstrate theme-aware rendering with identical data colors and properly adapted chrome elements.
+      Background: Near-black (~#1A1A17) - correct anyplot dark-theme surface color
+      Chrome: NO title, axis labels, tick labels, or any text visible - completely blank
+      Data: NO data elements visible; data colors cannot be verified
+      Legibility verdict: FAIL - chart did not render; only a faint thin line at the very bottom edge is visible
+
+    Root cause: Code saves to plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html,
+    and has no import os / ANYPLOT_THEME handling. Pipeline could not find expected output files.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 7
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 0
         max: 8
-        passed: true
-        comment: 'All font sizes explicitly set: title 56px, labels 40px, ticks 32px;
-          perfectly readable at 4800x2700'
+        passed: false
+        comment: Both renders completely blank - no text visible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Zero overlapping text elements; all distinctly positioned
+        comment: No elements rendered to overlap
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 0
         max: 6
-        passed: true
-        comment: CI bars and markers optimally sized for 10-variable density
+        passed: false
+        comment: No data elements visible in either render - rendering failure
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Green/yellow well-contrasted; significance encoded via color and
-          position
+        passed: false
+        comment: No data visible to assess
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 1
         max: 4
         passed: false
-        comment: Plot fills ~65-70% of canvas; good margins but slight right-side
-          imbalance
+        comment: Canvas dimensions 4800x2700 correct but everything empty
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
-        max: 2
-        passed: true
-        comment: 'X-axis: ''Coefficient Estimate (Standardized)'' with units'
-      - id: VQ-07
-        name: Palette Compliance
-        score: 1
+        score: 0
         max: 2
         passed: false
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17), text colors theme-correct.
-          Non-significant uses #FFD43B (position 7, restricted to thin elements per
-          style guide) — problematic for large markers'
+        comment: Nothing visible
+      - id: VQ-07
+        name: Palette Compliance
+        score: 0
+        max: 2
+        passed: false
+        comment: 'No ANYPLOT_THEME handling; hardcoded #ffffff background; non-Okabe-Ito
+          colors #306998/#FFD43B'
     design_excellence:
-      score: 8
+      score: 0
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 0
         max: 8
         passed: false
-        comment: Well-configured library defaults; professional but not publication-ready
-          or exceptionally sophisticated
+        comment: Nothing rendered
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 0
         max: 6
         passed: false
-        comment: Minimal customization; standard grid visibility, all spines present,
-          no whitespace refinement
+        comment: Nothing rendered
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 0
         max: 6
         passed: false
-        comment: Data displayed clearly but no visual hierarchy or emphasis beyond
-          color/position distinction
+        comment: Nothing rendered
     spec_compliance:
-      score: 15
+      score: 3
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 2
         max: 5
-        passed: true
-        comment: Correct coefficient plot with confidence intervals
+        passed: false
+        comment: Code implements scatter+xrange correctly but chart does not render
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 1
         max: 4
-        passed: true
-        comment: Error bars, points, reference line, variable labels, significance
-          distinction all present
+        passed: false
+        comment: Code includes CI bars, zero line, significance coloring, sorted order
+          but nothing visible
       - id: SC-03
         name: Data Mapping
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: X/Y correctly assigned; all 10 coefficients visible
+        passed: false
+        comment: Cannot verify - nothing visible
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Title correct format; legend labels match data categories
+        passed: false
+        comment: Title reads 'coefficient-confidence · highcharts · pyplots.ai' -
+          missing 'python', wrong domain 'pyplots.ai' not 'anyplot.ai'
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Shows positive/negative coefficients, significant/non-significant,
-          varying CI widths
+        comment: Code covers sig/non-sig coefficients, CI bars, zero reference line,
+          sorted by magnitude
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Housing price regression is real, plausible, neutral scenario
+        comment: Housing price regression with 10 predictors is realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coefficient range (-0.22 to 0.45) realistic for standardized regression
+        comment: Standardized coefficients -0.22 to 0.45 with realistic standard errors
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -184,59 +181,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → chart → save'
+        comment: Linear imports -> data -> chart -> save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Sets np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: Only used imports present
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Does not use highcharts_core Python API; manually constructs JavaScript
-          as string templates
+        passed: true
+        comment: No fake UI elements, appropriate complexity
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png not plot-{THEME}.png; doesn't read ANYPLOT_THEME
-          environment variable
+        comment: Saves to plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
+          no ANYPLOT_THEME handling
     library_mastery:
-      score: 3
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
-        max: 5
-        passed: false
-        comment: 'CRITICAL: Does not use highcharts_core library. Should use Chart()
-          + HighchartsOptions() per prompts/library/highcharts.md, not hand-coded
-          JavaScript strings'
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses xrange series for CI (Highcharts-specific) but undermined by
-          non-idiomatic overall approach
+        comment: Completely bypasses highcharts_core Python API; writes raw Highcharts
+          JS as f-strings
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative use of xrange series type for CI bars is a distinctive Highcharts
+          feature
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling: []
