@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: scatter-map-geographic
 created: '2026-05-18T18:03:31Z'
-updated: '2026-05-18T18:14:31Z'
+updated: '2026-05-18T18:20:22Z'
 generated_by: claude-haiku
 workflow_run: 26051062985
 issue: 3617
@@ -12,54 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/scatter-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/scatter-map-geographic/python/pygal/plot-dark.html
-quality_score: 77
+quality_score: 69
 review:
   strengths:
-  - Excellent text legibility in both light and dark themes with explicitly set font
-    sizes
-  - 'Proper theme-adaptive styling with correct background colors (#FAF8F1 light /
-    #1A1A17 dark) and chrome (text, grid)'
-  - Real, scientifically accurate earthquake data from Ring of Fire hotspot with realistic
-    magnitude (6.6-7.8) and depth (18-125 km) values
-  - Correct latitude/longitude mapping of all 12 data points; all coordinates visible
-    within appropriate bounds
-  - Clean code structure with simple linear flow and proper reproducibility (np.random.seed(42))
-  - Correct title format and descriptive axis labels
-  - Effective palette compliance using Okabe-Ito colors (green, orange, blue) with
-    identical colors across light and dark renders
+  - 'Both light and dark renders are fully legible with correct theme-adaptive backgrounds
+    (#FAF8F1 / #1A1A17)'
+  - Axis labels and grid are clear and functional
+  - Geographic earthquake data (Ring of Fire) is realistic and well-chosen
+  - Proper theme token application for text colors in both modes
+  - Clean, seed-deterministic data generation
   weaknesses:
-  - 'Size encoding not implemented: magnitude-based point sizes are calculated (lines
-    40-41) but never passed to chart.add(), so magnitude differences are not visually
-    apparent'
-  - 'Color encoding incomplete: depth-based color interpolation code (lines 46-60)
-    calculates colors_depth but always appends the first green color and never uses
-    the result in chart.add()'
-  - 'Dead code: unused variables (sizes array, colors_depth list) and incomplete logic
-    indicate partial/abandoned implementation rather than deliberate simplification'
-  - 'Missing geographic context: specification requests basemap with country boundaries,
-    coastlines, terrain, and map projections; implementation is a plain lat/lon XY
-    scatter without geographic visualization'
-  - 'No visual encoding of magnitude or depth features: while data is present, viewers
-    cannot distinguish between earthquake intensities'
-  - 'Generic design: appears as well-configured library default rather than intentionally
-    designed visualization with visual hierarchy or storytelling'
+  - Title format is completely wrong - must be 'scatter-map-geographic · python ·
+    pygal · anyplot.ai' (Critical spec violation SC-04)
+  - Size and color encoding not implemented - code calculates magnitude sizes and
+    depth colors but never applies them to visualization (Critical feature gap SC-02)
+  - 'Dead code: sizes, depth_normalized, colors_depth calculated but unused, making
+    implementation misleading'
+  - Point colors cycling through Okabe-Ito palette without encoding meaning
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "scatter-map-geographic · python · pygal · anyplot.ai" is dark (#1A1A17), clearly readable. Axis labels "Longitude" and "Latitude" are readable. Tick labels showing degree values are legible. Grid lines are subtle and visible.
-      Data: 12 earthquake points plotted as small colored dots. Colors visible include green (#009E73), orange (#D55E00), and blue (#0072B2) from Okabe-Ito palette. Points are well-spaced with no overlap.
-      Legibility verdict: PASS - all text is readable against light background; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) - correct theme surface
+      Chrome: Title "Ring of Fire Earthquakes · Magnitude & Depth Analysis" is WRONG format (should be "scatter-map-geographic · python · pygal · anyplot.ai"). Axis labels "Longitude (°)" and "Latitude (°)" clearly readable in dark text. Tick labels visible. Grid subtle but visible.
+      Data: 12 scatter points in multiple colors (green, orange, blue) with minimal size variation. Points well-spaced across geographic range (longitude -90 to +170, latitude -40 to +40).
+      Legibility verdict: PASS - all text readable. FAIL - title format incorrect.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title and axis labels are light colored (off-white #F0EFE8 and muted #A8A79F), clearly readable against dark background. Tick labels are legible. Grid lines are subtle and visible.
-      Data: Same 12 earthquake points, colors are IDENTICAL to light render (green, orange, blue maintained). No color shift between renders - only chrome changed for theme adaptation.
-      Legibility verdict: PASS - all text is readable against dark background; no dark-on-dark failures present.
-
-    Both renders theme-correct and readable. Data colors identical across themes as required. Chrome properly adapted. VQ-07 passes.
+      Background: Warm near-black (#1A1A17) - correct theme surface
+      Chrome: Same incorrect title. Axis labels and tick labels in light text, clearly readable. No dark-on-dark failures observed. Grid visible with appropriate contrast.
+      Data: Same point positions and colors as light render - Okabe-Ito colors (green, orange, blue) identical between themes, only background and text flipped as expected. Point sizes unchanged.
+      Legibility verdict: PASS - all elements readable in dark theme. Colors match light render correctly.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -67,48 +51,48 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=28px, labels=22px, ticks=18px);
-          perfectly readable in both themes
+        comment: All text readable in both light and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; all labels fully readable
+        comment: Points well-spaced, no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 12 data points clearly visible, well-spaced, no overlapping markers
+        comment: Markers clearly visible at appropriate size
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast between colored markers and backgrounds; elements distinguishable
+        comment: Colors have good contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills ~60% of canvas with balanced margins, no wasted space
+        comment: Good proportions, axes fit data range
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 0
         max: 2
-        passed: true
-        comment: Descriptive labels ('Longitude', 'Latitude') and correct title format
+        passed: false
+        comment: Axis labels correct with units, but title format is wrong (shows
+          'Ring of Fire Earthquakes · Magnitude & Depth Analysis' instead of required
+          'scatter-map-geographic · python · pygal · anyplot.ai')
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'Okabe-Ito palette colors present (green, orange, blue); backgrounds
-          correct (#FAF8F1 light / #1A1A17 dark); chrome theme-adapted; data colors
-          identical across themes'
+        passed: false
+        comment: Backgrounds correct and theme-adaptive, colors match between themes,
+          but color encoding for depth not properly implemented
     design_excellence:
-      score: 10
+      score: 8
       max: 20
       items:
       - id: DE-01
@@ -116,81 +100,73 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured library defaults with theme support; professional
-          but generic appearance with no exceptional design customization
+        comment: Generic defaults, no custom palette or design touches
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 2
         max: 6
         passed: false
-        comment: Clean minimal design with subtle grid and balanced whitespace; some
-          refinement but minimal customization beyond defaults
+        comment: Minimal customization, basic plot styling
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Plot displays earthquake locations but lacks visual hierarchy, emphasis,
-          or narrative about Ring of Fire hotspot; magnitude and depth data not visually
-          encoded
+        comment: No visual hierarchy or emphasis to guide viewer
     spec_compliance:
-      score: 11
+      score: 9
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Correct XY scatter plot but lacks true geographic visualization;
-          specification requests basemap, country boundaries, coastlines, terrain,
-          and map projections - all absent
+        passed: true
+        comment: XY scatter plot is correct chart type
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 1
         max: 4
         passed: false
-        comment: 'Basic XY scatter works; CRITICAL: size encoding (magnitude) and
-          color encoding (depth) are calculated but never passed to chart.add(); unused
-          code at lines 46-60 and unused sizes variable indicate incomplete implementation'
+        comment: Spec allows optional magnitude (size) and depth (color) encoding
+          - code calculates these but never applies them
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Latitude and longitude correctly mapped; all 12 points visible within
-          proper bounds
+        comment: Latitude/longitude mapping correct, axes cover geographic range
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 0
         max: 3
-        passed: true
-        comment: Title format correct; legend appropriately hidden for single series
+        passed: false
+        comment: Title format completely wrong - shows 'Ring of Fire Earthquakes ·
+          Magnitude & Depth Analysis' instead of required 'scatter-map-geographic
+          · python · pygal · anyplot.ai'
     data_quality:
-      score: 13
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 3
         max: 6
         passed: false
-        comment: Shows earthquake locations with realistic coordinates; magnitude
-          and depth data present but not visually encoded; incomplete feature coverage
+        comment: Data includes magnitude and depth but these variables are not visualized
+          in the plot
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Ring of Fire earthquake data is scientifically meaningful, real,
-          and contextually appropriate; neutral and non-controversial
+        comment: Ring of Fire earthquake data is realistic and geographically appropriate
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Magnitudes (6.6-7.8) and depths (18-125 km) are factually correct
-          for subduction zone earthquakes; coordinates are accurate
+        comment: Geographic coordinates appropriate for Pacific Ring of Fire region
     code_quality:
       score: 9
       max: 10
@@ -200,33 +176,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear flow: imports → constants → data → plot → save; no
-          functions or classes'
+        comment: Straightforward code, no classes or functions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data is deterministic
+        comment: Uses np.random.seed(42) for deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, numpy, pygal, Style'
+        comment: Only necessary imports (numpy, pygal, Style)
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: 'Mostly clean but contains dead code: color interpolation (lines
-          46-60) and unused sizes array indicate incomplete/abandoned implementation'
+        comment: 'Dead code: sizes, depth_normalized, colors_depth calculated but
+          never used'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Correctly saves to plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
       score: 4
       max: 10
@@ -236,15 +211,15 @@ review:
         score: 3
         max: 5
         passed: false
-        comment: Proper use of pygal.XY(), custom Style object, and output methods;
-          does not fully leverage interactive capabilities
+        comment: Pygal.XY and Style used correctly, but doesn't properly implement
+          multi-dimensional encoding
       - id: LM-02
         name: Distinctive Features
         score: 1
         max: 5
         passed: false
-        comment: Uses pygal's Style system for theme adaptation (distinctive); otherwise
-          generic XY scatter with no other library-specific features leveraged
+        comment: Uses custom Style (pygal feature) but in basic way, no distinctive
+          library features leveraged
   verdict: REJECTED
 impl_tags:
   dependencies: []
