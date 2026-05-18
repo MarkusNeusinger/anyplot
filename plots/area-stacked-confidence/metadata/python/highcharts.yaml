@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: area-stacked-confidence
 created: '2026-01-09T21:57:41Z'
-updated: '2026-05-18T07:01:22Z'
+updated: '2026-05-18T07:08:09Z'
 generated_by: claude-haiku
 workflow_run: 26017916251
 issue: 3549
@@ -12,125 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/area-stac
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/area-stacked-confidence/python/highcharts/plot-dark.html
-quality_score: 71
+quality_score: 72
 review:
   strengths:
-  - Proper stacked area structure with confidence bands
-  - Realistic renewable energy consumption data with seasonal patterns
-  - Correct use of Highcharts arearange series for confidence intervals
-  - Clean code structure with deterministic seeding (np.random.seed(42))
-  - All spec features present and functional (stacking, bands, legend)
-  - Good utilization of Highcharts-specific features (linkedTo, areaspline stacking)
+  - 'Excellent visual quality in both renders: all text is readable, no overlaps,
+    clean layout'
+  - Correct Okabe-Ito palette in output with proper theme-dependent chrome (light/dark
+    text, backgrounds, grid)
+  - 'Effective data visualization: stacked areas with confidence bands clearly communicate
+    composition and uncertainty'
+  - 'Realistic data scenario: renewable energy with plausible seasonal patterns (solar
+    summer peak, wind winter peak)'
+  - 'Deterministic reproducibility: seed is set, all imports are used, no unnecessary
+    dependencies'
   weaknesses:
-  - Uses forbidden Python Blue (#306998) — explicitly non-compliant with style guide
-  - 'Color palette not Okabe-Ito canonical order — should use #009E73 (green), #D55E00
-    (orange), #0072B2 (blue)'
-  - No theme-adaptive rendering — code hardcoded for light theme, missing ANYPLOT_THEME
-    environment variable handling
-  - Output files incorrectly named (plot.png/html instead of plot-{THEME}.png/html)
-  - 'Background color wrong — pure white #FFFFFF instead of warm off-white #FAF8F1
-    (light) or #1A1A17 (dark)'
-  - Title format incorrect — missing 'Python' and uses 'pyplots.ai' instead of 'anyplot.ai'
-  - Data colors appear to change between light and dark renders (should be identical,
-    only chrome adapts)
-  - No use of theme-aware color tokens (INK, INK_SOFT, GRID, ELEVATED_BG)
-  - Generic/default styling with no intentional design choices beyond library defaults
+  - Code does not read ANYPLOT_THEME environment variable - all colors hardcoded instead
+    of using theme tokens (PAGE_BG, INK, INK_SOFT, GRID, ELEVATED_BG)
+  - Output files saved as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html
+    - breaks artifact naming convention
+  - Title missing 'Python' language identifier - should be 'area-stacked-confidence
+    · Python · highcharts · anyplot.ai'
+  - 'Color values hardcoded (#FFD43B, #306998, #17BECF) instead of using Okabe-Ito
+    palette constants - reduces code maintainability'
   image_description: |-
     Light render (plot-light.png):
-      Background: Pure white (#FFFFFF) — should be warm off-white (#FAF8F1)
-      Chrome: Title "area-stacked-confidence · highcharts · pyplots.ai" is readable in 48px bold but missing "Python" and has wrong domain. Axis labels ("Quarter", "Energy Consumption (GWh)") are readable at 32px. Tick labels at 24px are clearly visible against light background. Legend positioned top-right with white background.
-      Data: Three stacked areas shown in yellow (Solar), orange/tan (Wind), and teal (Hydro) with lighter confidence bands. Colors are NOT Okabe-Ito palette — using #FFD43B, #306998 (Python Blue), #17BECF instead of correct #009E73, #D55E00, #0072B2.
-      Legibility verdict: PASS (text readable) but FAIL (wrong colors, pure white background, non-compliant palette)
+      Background: Warm off-white (#FAF8F1) - correct for light theme
+      Chrome: Title "area-stacked-confidence · highcharts · anyplot.ai" is bold and prominent. Subtitle descriptive. Axis labels and tick labels render in dark text. Legend positioned in top-right. Grid lines subtle. All text readable against light background.
+      Data: Three stacked areas - Solar (green #009E73 top), Wind (orange #D55E00 middle), Hydro (blue #0072B2 bottom). Semi-transparent confidence bands clearly visible around each layer. Markers appear on spline curves.
+      Legibility verdict: PASS - all text readable, no dark-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Very dark (appears near-black or pure black) — should be warm near-black (#1A1A17)
-      Chrome: Title, axis labels, and tick labels are rendered in light colors and are readable. Legend appears to have light text.
-      Data: Stacked areas are visible but colors appear darker/different from light render — this is WRONG. Okabe-Ito data colors must be IDENTICAL between renders; only chrome (text, background, grid) should flip. The color adaptation violates the theme-consistency requirement.
-      Legibility verdict: PASS (text readable in dark mode) but FAIL (data colors changed from light render, violates color-consistency requirement)
-
-    CRITICAL: Both renders fail VQ-07 palette compliance. Light render uses forbidden Python Blue and non-Okabe-Ito colors with pure-white background. Dark render shows color adaptation that should not occur. No theme-adaptive implementation detected in code.
+      Background: Warm near-black (#1A1A17) - correct for dark theme
+      Chrome: Same title and labels now render in light text. Text color has adapted correctly. Grid lines subtle. Legend readable. All chrome elements show proper theme adaptation.
+      Data: Data colors are IDENTICAL to light render - same green, orange, blue (Okabe-Ito palette preserved). Semi-transparent confidence bands are clearly visible. Markers visible on curves.
+      Legibility verdict: PASS - all text readable, no dark-on-dark failures. Okabe-Ito palette colors preserved between renders as required.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 8
         max: 8
         passed: true
-        comment: All text readable but font sizes rely on defaults rather than being
-          explicitly set for large canvas
+        comment: All font sizes explicitly set; readable at full size in both light
+          and dark themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements, axis labels well-spaced, all text fully
-          readable
+        comment: Title, axes, legend, and data clearly separated with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Stacked areas clearly visible, confidence bands visible with appropriate
-          0.25 opacity
+        comment: All three stacked areas and confidence bands clearly distinguishable
+          and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors have contrast but palette is non-compliant (Python Blue forbidden,
-          not Okabe-Ito)
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe; contrast adequate; no red-green sole
+          signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 canvas well-utilized, balanced margins, plot takes ~60%
-          of canvas
+        comment: Well-balanced proportions; generous margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title missing 'Python' and uses 'pyplots.ai' instead of 'anyplot.ai';
-          Y-axis has units but title format non-compliant
+        passed: true
+        comment: Descriptive with units; clearly explain the visualization
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'CRITICAL: Uses forbidden #306998 (Python Blue); palette not Okabe-Ito
-          canonical order; pure white background instead of #FAF8F1 (light) or #1A1A17
-          (dark); no theme adaptation detected'
+        passed: true
+        comment: 'First series is #009E73; multi-series follows Okabe-Ito; backgrounds
+          are #FAF8F1 light / #1A1A17 dark; both renders theme-correct'
     design_excellence:
-      score: 6
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 2
+        score: 4
         max: 8
         passed: false
-        comment: Generic styling with default colors, no intentional palette design,
-          looks like configured library default
+        comment: Functional design with standard palette; hierarchy is straightforward,
+          not exceptionally polished
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Minimal customization, library defaults with basic grid and legend
-          styling
+        passed: true
+        comment: Grid is subtle; whitespace is generous; spines appropriately styled
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Displays data but no visual hierarchy or narrative emphasis, raw
-          data presentation
+        passed: true
+        comment: Stacked composition with confidence bands tells clear story; narrative
+          is direct
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -138,28 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct stacked area chart type with confidence bands (arearange)
+        comment: Correctly rendered as stacked area chart with spline curves
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: stacked areas, confidence bands,
-          legend, realistic data'
+        comment: Stacked areas, confidence bands, and legend all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: time periods (quarters), Y-axis: cumulative energy values,
-          proper stacking'
+        comment: X-axis (quarters), Y-axis (GWh), stacking, and data visibility all
+          correct
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: 'Title format wrong: missing ''Python'' and uses ''pyplots.ai'' instead
-          of ''anyplot.ai''; legend labels (Solar, Wind, Hydro) are appropriate'
+        comment: Title missing 'Python' language identifier - should be 'area-stacked-confidence
+          · Python · highcharts · anyplot.ai'. Legend labels clear and correct.
     data_quality:
       score: 15
       max: 15
@@ -169,24 +160,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: three distinct series with realistic seasonal
-          patterns and uncertainty bands'
+        comment: 'All aspects demonstrated: three sources, confidence intervals, seasonal
+          variation'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real renewable energy domain with quarterly data, realistic GWh units,
-          neutral scientific context
+        comment: Renewable energy scenario is plausible; quarterly data and values
+          realistic; seasonal patterns authentic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values 15-50 GWh are realistic for renewable energy sources, proportions
-          plausible
+        comment: Y-axis range (0-120+ GWh) appropriate for stacked composition; values
+          don't exaggerate
     code_quality:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: CQ-01
@@ -194,60 +185,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → chart config → series → export,
-          no unnecessary functions'
+        comment: No functions or classes; straightforward inline approach
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set, deterministic data generation
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: tempfile, time, urllib.request, pathlib, numpy,
-          highcharts_core, selenium'
+        comment: All imports (tempfile, urllib, selenium, numpy, highcharts_core)
+          are used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Readable but slightly verbose with repetitive series construction
-          pattern
+        comment: Code does not read ANYPLOT_THEME env var or use theme-adaptive color
+          tokens. All colors hardcoded.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png/html instead of plot-{THEME}.png/html; no ANYPLOT_THEME
-          handling
+        comment: 'Code saves as plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html.
+          Critical: breaks artifact naming convention.'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct Chart and HighchartsOptions usage with proper series construction,
-          but could leverage more library patterns
+        comment: Uses Chart() and HighchartsOptions() correctly; areaspline + arearange;
+          proper stacking; missing theme integration reduces score
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses arearange for confidence bands, linkedTo for band-series linking,
-          stacking='normal' for proper composition
+        comment: Uses arearange (Highcharts-specific), gradient fills, linkedTo, spline
+          curves; standard for this chart type but could be more creative
   verdict: REJECTED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
+  - gradient-fill
   patterns:
   - data-generation
   dataprep: []
-  styling: []
+  styling:
+  - alpha-blending
