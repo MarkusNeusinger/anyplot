@@ -1,14 +1,16 @@
-""" pyplots.ai
+"""anyplot.ai
 mosaic-categorical: Mosaic Plot for Categorical Association Analysis
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-11
+Library: plotnine | Python 3.13
+Quality: 91/100 | Updated: 2026-05-19
 """
 
-import numpy as np
+import os
+
 import pandas as pd
 from plotnine import (
     aes,
     element_blank,
+    element_rect,
     element_text,
     geom_rect,
     geom_text,
@@ -20,9 +22,16 @@ from plotnine import (
 )
 
 
-# Data - Titanic-style survival data by passenger class
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data - Titanic-style survival data by passenger class
 data = {
     "class": ["First", "First", "Second", "Second", "Third", "Third"],
     "survival": ["Survived", "Did Not Survive", "Survived", "Did Not Survive", "Survived", "Did Not Survive"],
@@ -40,7 +49,7 @@ class_order = ["First", "Second", "Third"]
 widths = {c: class_totals[c] / total for c in class_order}
 
 # Build rectangles for mosaic plot
-gap = 0.02  # Gap between rectangles
+gap = 0.02
 rects = []
 x_pos = 0
 
@@ -50,7 +59,6 @@ for cls in class_order:
     width = widths[cls] - gap
 
     y_pos = 0
-    # Use consistent survival order (Survived at bottom)
     for surv in survival_order:
         row = class_data[class_data["survival"] == surv].iloc[0]
         height = (row["count"] / class_total) * (1 - gap)
@@ -73,36 +81,10 @@ for cls in class_order:
 
 rect_df = pd.DataFrame(rects)
 
-# Colors - Python Blue for survived, muted for did not survive
-colors = {"Survived": "#306998", "Did Not Survive": "#8B9DC3"}
+# Colors - Okabe-Ito: green for Survived (first series), vermillion for Did Not Survive
+colors = {"Survived": OKABE_ITO[0], "Did Not Survive": OKABE_ITO[1]}
 
-# Create plot
-plot = (
-    ggplot(rect_df)
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="survival"), color="white", size=1.5)
-    + geom_text(aes(x="x_center", y="y_center", label="count"), color="white", size=14, fontweight="bold")
-    + scale_fill_manual(values=colors)
-    + labs(
-        title="mosaic-categorical · plotnine · pyplots.ai",
-        x="Passenger Class (width proportional to class size)",
-        y="Survival Proportion",
-        fill="Outcome",
-    )
-    + theme_minimal()
-    + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=24, ha="center"),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=16),
-        axis_text_x=element_blank(),
-        axis_ticks_major_x=element_blank(),
-        panel_grid=element_blank(),
-    )
-)
-
-# Add class labels at bottom
+# Class labels positioned below plot area
 class_labels = pd.DataFrame(
     {
         "x": [
@@ -115,8 +97,37 @@ class_labels = pd.DataFrame(
     }
 )
 
-plot = plot + geom_text(
-    data=class_labels, mapping=aes(x="x", y="y", label="label"), size=14, color="#306998", fontweight="bold"
+# Plot
+plot = (
+    ggplot(rect_df)
+    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="survival"), color=PAGE_BG, size=1.5)
+    + geom_text(aes(x="x_center", y="y_center", label="count"), color="white", size=14, fontweight="bold")
+    + geom_text(data=class_labels, mapping=aes(x="x", y="y", label="label"), size=14, color=INK_SOFT, fontweight="bold")
+    + scale_fill_manual(values=colors)
+    + labs(
+        title="mosaic-categorical · python · plotnine · anyplot.ai",
+        x="Passenger Class (width proportional to class size)",
+        y="Survival Proportion",
+        fill="Outcome",
+    )
+    + theme_minimal()
+    + theme(
+        figure_size=(16, 9),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
+        panel_grid=element_blank(),
+        plot_title=element_text(size=24, ha="center", color=INK),
+        axis_title=element_text(size=20, color=INK),
+        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_text_x=element_blank(),
+        axis_ticks_major_x=element_blank(),
+        legend_title=element_text(size=18, color=INK),
+        legend_text=element_text(size=16, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
+    )
 )
 
-plot.save("plot.png", dpi=300, width=16, height=9)
+# Save
+plot.save(f"plot-{THEME}.png", dpi=300)
