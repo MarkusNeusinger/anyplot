@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-11
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-19
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,8 +12,25 @@ import seaborn as sns
 from matplotlib.patches import Circle
 
 
-# Set seaborn style - use white background for better barb visibility
-sns.set_theme(style="white")
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+    },
+)
 sns.set_context("talk", font_scale=1.2)
 
 # Data: Simulated surface wind observations from a grid of weather stations
@@ -27,41 +46,38 @@ y = y.flatten()
 n_points = len(x)
 
 # Generate wind components with full range: calm, moderate, and strong (with pennants)
-# Create varied wind field showing all barb features
-base_u = 20 * np.sin(x * 0.4) + 15  # Zonal component varies with x
-base_v = 15 * np.cos(y * 0.5) + 10  # Meridional component varies with y
+base_u = 20 * np.sin(x * 0.4) + 15
+base_v = 15 * np.cos(y * 0.5) + 10
 noise_u = np.random.randn(n_points) * 8
 noise_v = np.random.randn(n_points) * 8
 
-u = base_u + noise_u  # Zonal wind component (knots)
-v = base_v + noise_v  # Meridional wind component (knots)
+u = base_u + noise_u
+v = base_v + noise_v
 
-# Force some calm winds (< 2.5 knots) - these will be shown as circles
-calm_indices = [0, 11, 23]  # Corners and center
+# Force calm winds (< 2.5 knots) shown as open circles
+calm_indices = [0, 11, 23]
 for idx in calm_indices:
-    u[idx] = 0.5 * (np.random.rand() - 0.5)  # Near zero
+    u[idx] = 0.5 * (np.random.rand() - 0.5)
     v[idx] = 0.5 * (np.random.rand() - 0.5)
 
-# Force some strong winds with pennants (50+ knots)
-strong_indices = [5, 9, 18]  # Scattered locations
+# Force strong winds with pennants (50+ knots)
+strong_indices = [5, 9, 18]
 for idx in strong_indices:
     angle = np.random.rand() * 2 * np.pi
-    speed_val = 55 + np.random.rand() * 15  # 55-70 knots
+    speed_val = 55 + np.random.rand() * 15
     u[idx] = speed_val * np.cos(angle)
     v[idx] = speed_val * np.sin(angle)
 
-# Calculate wind speed for color mapping
 speed = np.sqrt(u**2 + v**2)
 
-# Separate calm and non-calm winds for plotting
 calm_mask = speed < 2.5
 barb_mask = ~calm_mask
 
-# Create figure with seaborn styling - add extra bottom margin for legend
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 fig.subplots_adjust(bottom=0.15)
 
-# Plot wind barbs for non-calm winds using viridis colormap (colorblind-safe)
 if np.any(barb_mask):
     barbs = ax.barbs(
         x[barb_mask],
@@ -77,37 +93,35 @@ if np.any(barb_mask):
         clim=(0, 75),
     )
 
-    # Add colorbar for wind speed
     cbar = plt.colorbar(barbs, ax=ax, pad=0.02)
-    cbar.set_label("Wind Speed (knots)", fontsize=20, rotation=270, labelpad=25)
-    cbar.ax.tick_params(labelsize=16)
+    cbar.set_label("Wind Speed (knots)", fontsize=20, color=INK, rotation=270, labelpad=25)
+    cbar.ax.tick_params(labelsize=16, colors=INK_SOFT)
+    cbar.ax.yaxis.set_tick_params(color=INK_SOFT)
+    plt.setp(cbar.ax.yaxis.get_ticklabels(), color=INK_SOFT)
+    cbar.outline.set_edgecolor(INK_SOFT)
 
-# Plot calm winds as open circles (standard meteorological notation)
-# Use larger radius for better visibility
+# Calm winds as open circles (standard meteorological notation)
+calm_circle_color = "#440154" if THEME == "light" else "#90d743"
 for idx in np.where(calm_mask)[0]:
-    circle = Circle((x[idx], y[idx]), radius=0.35, fill=False, edgecolor="#440154", linewidth=3)
+    circle = Circle((x[idx], y[idx]), radius=0.35, fill=False, edgecolor=calm_circle_color, linewidth=3)
     ax.add_patch(circle)
 
-# Styling with seaborn-enhanced matplotlib
-ax.set_xlabel("Longitude (°E)", fontsize=20)
-ax.set_ylabel("Latitude (°N)", fontsize=20)
-ax.set_title("windbarb-basic · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+# Style
+ax.set_xlabel("Longitude (°E)", fontsize=20, color=INK)
+ax.set_ylabel("Latitude (°N)", fontsize=20, color=INK)
+ax.set_title("windbarb-basic · python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Set axis limits with padding
 ax.set_xlim(0, 14)
 ax.set_ylim(0, 10)
-
-# Remove grid - barbs provide their own spatial structure
 ax.grid(False)
 
-# Add subtle spines for axis reference
 for spine in ax.spines.values():
-    spine.set_color("#888888")
+    spine.set_color(INK_SOFT)
     spine.set_linewidth(0.8)
 
-# Add barb notation legend as text annotation within figure bounds
 legend_text = "Barb notation: ○ = calm (<2.5 kt) | half barb = 5 kt | full barb = 10 kt | pennant ▲ = 50 kt"
-fig.text(0.5, 0.02, legend_text, fontsize=14, ha="center", va="bottom", color="#555555")
+fig.text(0.5, 0.02, legend_text, fontsize=16, ha="center", va="bottom", color=INK_MUTED)
 
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
