@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: hierarchy-toggle-view
 created: '2026-01-11T21:05:27Z'
-updated: '2026-05-19T09:10:51Z'
+updated: '2026-05-19T09:34:19Z'
 generated_by: claude-sonnet
 workflow_run: 26085340441
 issue: 3697
@@ -12,43 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 81
 review:
   strengths:
-  - Correct pygal.Treemap with size-proportional blocks and GB value labels
-  - Interactive HTML toggle with smooth CSS fade transitions showcases pygal SVG-in-HTML
-    strength
-  - Thoughtful 3-shade tinting per category maintaining visual consistency between
-    both views
-  - PIL-based composite PNG side-by-side is creative solution for charts pygal cannot
-    do natively
-  - All font sizes explicitly scaled for high-resolution 4800x2700 canvas
-  - Correct Okabe-Ito palette with theme-adaptive chrome in both light and dark renders
-  - 'Complete output: HTML interactive toggle plus PNG static side-by-side'
+  - 'Excellent data quality: realistic file-system scenario with plausible GB values
+    and full 3-level hierarchy coverage'
+  - 'Thoughtful color design: Okabe-Ito tints within color families convey parent-child
+    relationships without explicit hierarchy rings'
+  - Both HTML (interactive toggle with fade animation) and PNG (side-by-side composite)
+    outputs are well-executed for their respective formats
+  - 'Perfect code quality: clean KISS structure, deterministic data, correct output
+    naming'
+  - 'Theme adaptation is thorough: PIL-drawn outer elements and pygal SVG internals
+    both respond to ANYPLOT_THEME'
   weaknesses:
-  - Sunburst implemented as a flat single-ring donut — all 12 leaf nodes at same radial
-    level; true sunburst requires concentric rings showing hierarchy (categories inner,
-    sub-folders outer)
-  - Parent-child relationship that sunburst should reveal is lost — viewers see distribution
-    but not hierarchy depth
-  - Minor label crowding for smallest sunburst segments (6 GB Logs, 10 GB Cache) due
-    to single-ring crowding
-  - 'Slight visual imbalance in PNG: treemap column is narrower than sunburst column'
+  - Sunburst is a flat donut chart (pygal.Pie), not a true concentric sunburst — spec
+    calls for concentric radial segments showing hierarchical depth; inner ring (categories)
+    + outer ring (sub-items) structure is missing
+  - Smallest donut segments (Logs 6 GB, Cache 10 GB) are thin slivers difficult to
+    identify visually
+  - 'Right-panel whitespace: donut hollow center and surrounding area leaves significant
+    canvas unused'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "Disk Storage · hierarchy-toggle-view · python · pygal · anyplot.ai" in brand green (#009E73); subtitle in muted ink; "Treemap View" and "Sunburst View" section headers in dark ink — all readable.
-      Data: Left panel is a treemap with 4 category blocks (teal/Media, orange/Documents, blue/Applications, pink-purple/System) and 12 sub-folder cells labeled with GB values. Right panel is a single-ring donut with 12 tinted slices (Okabe-Ito tints). First series is #009E73 (Videos / Media teal). Legend lists all 12 sub-folders.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: PIL-composed outer title in #009E73 (green), subtitle in INK_MUTED (#6B6A63); pygal chart titles ("Treemap View", "Sunburst View") in dark INK (#1A1A17); legend text in dark INK; all readable
+      Data: Left half = treemap with teal-green (Media), orange (Documents), blue (Applications), pink/purple (System) rectangles with GB value labels; right half = donut chart with 12 proportional segments in same color families; first series is #009E73 (Videos/Media)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark surface.
-      Chrome: Title still in brand green (#009E73); subtitle in muted light-gray; section headers "Treemap View" / "Sunburst View" in light foreground ink — all readable. No dark-on-dark failures observed.
-      Data: Treemap and donut colors are identical to light render (teal, orange, blue, pink tints). The donut hole renders as a dark ring matching the background instead of the white ring in light mode — correct theme-adaptive behavior.
-      Legibility verdict: PASS — text is light-on-dark and readable throughout; no chrome failures.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: PIL outer title remains #009E73 (green); subtitle in INK_MUTED (#A8A79F); pygal chart titles and legend text in light cream #F0EFE8 via foreground token; value labels within segments appear in light foreground color; no dark-on-dark failures observed
+      Data: Identical data colors to light render — same teal greens, oranges, blues, and pinks in both treemap and donut; only chrome (background, text, legend) flips between themes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -56,52 +55,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (64px title, 36px labels, 32px legend
-          for PNG); readable in both themes. Minor: smallest sunburst labels (6 GB,
-          10 GB) are tight.'
+        comment: Font sizes explicitly set in png_style (64px title, 36px labels);
+          all text readable in both themes; -1 for pygal SVG value-label color not
+          explicitly overridden per-element
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Treemap labels fit cleanly; sunburst value labels have minor crowding
-          around smallest segments.
+        comment: No meaningful text collisions; small donut segments have minimal
+          label space but no overlap
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Treemap blocks and donut slices well-sized; all segments distinguishable.
+        comment: Treemap segments all well-sized and labeled; smallest donut segments
+          (Logs 6 GB, Cache 10 GB) are thin slivers
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito tints maintain CVD safety; no red-green as sole signal.
+        comment: Okabe-Ito with tints, CVD-safe, distinguishable by luminance as well
+          as hue
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Side-by-side 4800x2700 canvas well-utilized. Treemap column is slightly
-          narrower than sunburst column.
+        comment: Side-by-side composite uses 4800x2700 canvas well; donut hollow center
+          leaves ~30% of right half unused
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows required format; section labels descriptive; GB units
-          in value labels.
+        comment: Title follows spec format; values labeled with GB units; subtitle
+          contextualizes both views
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series is #009E73; Okabe-Ito tint progression maintained;
-          backgrounds #FAF8F1 (light) / #1A1A17 (dark); data colors identical across
-          themes.'
+        comment: 'First series #009E73 (Media/Videos); Okabe-Ito order followed; backgrounds
+          #FAF8F1/#1A1A17 correct in both themes; data colors identical across themes'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -109,79 +109,81 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful 3-shade tinting per category, brand green title, PIL composite,
-          smooth HTML toggle — above defaults but not publication-ready.
+        comment: 'Thoughtful design: custom tint palette within color families for
+          hierarchy depth, brand-green PIL title, clean composite layout; above defaults
+          but not publication-ready'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: No unnecessary spines/grids (appropriate for chart types). Legend
-          well-organized. Reasonable whitespace.
+        comment: Custom pygal Style applied, font sizing scaled for large canvas;
+          pygal SVG-based rendering limits spine/grid control
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Dual-view concept tells story about different data perspectives.
-          Subtitle provides context. But donut does not reveal hierarchy depth.
+        comment: Subtitle explains each view's purpose; value labels guide eye; color-family
+          tints convey parent-child hierarchy
     spec_compliance:
-      score: 11
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 3
         max: 5
-        passed: false
-        comment: Treemap correctly implemented. Sunburst approximated with single-ring
-          donut — missing true concentric hierarchical rings.
+        passed: true
+        comment: Treemap correctly implemented via pygal.Treemap; sunburst approximated
+          as flat donut (pygal.Pie with inner_radius=0.35) — lacks concentric radial
+          segments; pygal has no native multi-ring sunburst
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: 'Toggle button, consistent colors, smooth transitions all present.
-          Missing: true parent-child hierarchy in sunburst (all leaf nodes at same
-          radial level).'
+        passed: true
+        comment: Toggle button with fade animation (HTML) ✓; consistent colors ✓;
+          smooth transitions ✓; sunburst missing concentric rings for hierarchy depth
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Treemap block sizes correct. Sunburst slice angles correct for sub-folder
-          values, but category-level hierarchy not shown.
+        passed: true
+        comment: All 12 leaf nodes correctly sized in both views; parent sums calculated
+          correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Disk Storage · hierarchy-toggle-view · python · pygal · anyplot.ai'
-          matches required format. Legend labels match data.
+        comment: 'PIL title: ''Disk Storage · hierarchy-toggle-view · python · pygal
+          · anyplot.ai'' ✓; HTML title also correct; legend labels match'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows both chart types; 4 categories with 3 sub-folders each. Sunburst
-          misses showing hierarchical depth through concentric structure.
+        passed: true
+        comment: 4 top-level categories × 3 sub-folders = 12 leaf nodes; values vary
+          from 6–52 GB; 3-level hierarchy demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: File system disk storage allocation is neutral, real-world, and comprehensible.
+        comment: 'File-system storage allocation: neutral, universally comprehensible
+          scenario'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 240 GB total with plausible sub-folder breakdowns; values factually
-          reasonable.
+        comment: 240 GB total with plausible breakdown; Videos 52 GB (largest), Logs
+          6 GB (smallest); proportions match real-world storage patterns
     code_quality:
       score: 10
       max: 10
@@ -191,36 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → constants → data → charts → HTML → PNG
-          → save.'
+        comment: 'Linear: imports → data → parent-sum calc → HTML charts → PIL composite
+          → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; hardcoded data.
+        comment: Fully deterministic data; no random calls
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, sys, pathlib, PIL, pygal, Style) are actively used.
+        comment: 'All imports used: PIL, pygal+Style, os, sys, pathlib'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized code. HTML generation verbose but appropriate.
-          PIL canvas assembly is idiomatic.
+        comment: Clean readable code; PIL assembly appropriately complex; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly (both required
-          for pygal).
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,17 +228,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of pygal.Style, pygal.Treemap, pygal.Pie with inner_radius,
-          value_formatter, print_values, render_to_png, render(is_unicode=True).
+        comment: Uses pygal Style object correctly, per-item color dicts in treemap,
+          print_values_position, value_formatter lambda, legend options
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Uses pygal.Treemap (distinctive chart type), embeds interactive pygal
-          SVGs in HTML toggle (pygal's primary differentiator), animated CSS transitions
-          over pygal SVG output.
-  verdict: REJECTED
+        comment: Leverages pygal's interactive HTML rendering (SVG+JS), pygal.Treemap
+          chart type, and multi-chart HTML toggle interface
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
