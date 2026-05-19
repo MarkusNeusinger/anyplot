@@ -1,7 +1,7 @@
 """ anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 Library: highcharts unknown | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-19
+Quality: 90/100 | Updated: 2026-05-19
 """
 
 import os

@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:54:59Z'
-updated: '2026-05-19T05:06:05Z'
+updated: '2026-05-19T05:20:11Z'
 generated_by: claude-sonnet
 workflow_run: 26076952082
 issue: 3652
@@ -12,93 +12,94 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/highcharts/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Perfect data quality: realistic stock simulation, two meaningful EMA periods
-    (12 & 26), plus crossover event highlighting that directly addresses the spec''s
-    crossover signal use case'
-  - Proper Okabe-Ito palette applied in order with explicit per-series color assignment;
-    both themes adapt correctly with no dark-on-dark or light-on-light failures
-  - Robust CDN fallback chain (jsdelivr → unpkg → code.highcharts.com) prevents silent
-    failures in restricted network environments
-  - z_index ordering ensures crossover scatter markers render on top of lines, and
-    price line renders above EMA lines
+  - 'Perfect spec compliance: price line, two EMA periods, distinct colors, EMA lines
+    thinner than price line, and crossover markers all present and correctly styled'
+  - Full Okabe-Ito palette compliance with proper theme-adaptive chrome in both light
+    and dark renders
+  - Clear visual hierarchy through line-weight differentiation (5px price vs. 3px
+    EMA lines) and dash-style cue on EMA 26
+  - 'Excellent data quality: realistic stock simulation with 120 business days, standard
+    EMA periods (12, 26), factually plausible price range'
+  - Clean code structure with multi-CDN JS fallback making the script robust to CDN
+    outages
   weaknesses:
-  - 'Legend visibility is uncertain in the output images — spacingBottom: 100 may
-    not leave enough room once x-axis title and tick labels are accounted for; consider
-    increasing to 150 or setting an explicit legend.y offset'
-  - LineSeries imported from highcharts_core.options.series.area instead of the correct
-    highcharts_core.options.series.line module — works by coincidence of inheritance
-    but is non-idiomatic
-  - 'Plot border / frame not explicitly removed — Highcharts draws a thin border around
-    the plot area by default; consider plotBorderWidth: 0 for cleaner look'
+  - DE-01 could reach 6/8 by adding a subtle background plot-area gradient or removing
+    the default Highcharts chart border for a cleaner framing
+  - LM-02 could improve by using a Highcharts flags series for crossover events instead
+    of a ScatterSeries, which would be more idiomatic for financial charting
+  - LineSeries is imported from .series.area module — should be .series.line per library
+    docs (non-breaking but semantically incorrect)
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct, not pure white
-      Chrome: title "Stock Price EMAs · indicator-ema · python · highcharts · anyplot.ai" visible at top; subtitle "Close Price with 12-day and 26-day Exponential Moving Averages" visible; Y-axis label "Price (USD)" and X-axis label "Date" both readable; tick labels show monthly dates and dollar values
-      Data: green close price line (#009E73, Okabe-Ito pos 1), orange EMA-12 line (#D55E00, pos 2), blue dashed EMA-26 line (#0072B2, pos 3), pink/mauve crossover diamonds (#CC79A7, pos 4)
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "Stock Price EMAs · indicator-ema · python · highcharts · anyplot.ai" in dark ink (#1A1A17), subtitle visible in secondary ink, axis titles ("Date", "Price (USD)") in dark ink, tick labels in INK_SOFT — all readable against light background
+      Data: Green (#009E73) close price line (5px, most prominent), orange (#D55E00) EMA 12 line (3px solid), blue (#0072B2) EMA 26 line (3px dashed), pink-purple (#CC79A7) diamond crossover markers — first series is #009E73 confirmed
+      Legibility verdict: PASS — all text and data elements readable against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct, not pure black
-      Chrome: title rendered in light text and clearly readable; subtitle, axis labels ("Price (USD)", "Date"), and tick labels all legible against dark background; no dark-on-dark text failures observed; grid lines subtle
-      Data: colors identical to light render — green (#009E73), orange (#D55E00), blue dashed (#0072B2), pink diamonds (#CC79A7) — only chrome flips between themes
-      Legibility verdict: PASS — all text readable against dark background
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light (#F0EFE8) ink clearly readable, subtitle in secondary light ink, axis labels in INK_SOFT (#B8B7B0) — no dark-on-dark failures observed; all text reads properly against dark background
+      Data: Colors identical to light render — green (#009E73) close price, orange (#D55E00) EMA 12, blue (#0072B2) EMA 26 dashed, pink-purple (#CC79A7) crossover diamonds — data colors unchanged between themes as required
+      Legibility verdict: PASS — no dark-on-dark issues; title, axis labels, tick labels, and legend text all readable
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, subtitle, axis labels, ticks all readable in both themes;
-          font sizes well above minimum guidelines
+        comment: 'All font sizes explicitly set: title 40px, axis titles 36px, tick
+          labels 28px, legend 28px — above minimums, both renders fully readable'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text collisions; minor visual clutter where all three lines cluster
-          in mid-chart
+        comment: No overlapping text or data elements; crossover diamonds sit cleanly
+          on EMA 12 line
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All three lines clearly differentiated; crossover diamonds prominently
-          sized (radius 14)
+        comment: Price line 5px prominent, EMA lines 3px clearly thinner, crossover
+          diamonds radius 14 clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; no red-green-only signal
+        comment: Okabe-Ito palette CVD-safe; dashed EMA 26 adds non-color secondary
+          cue
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 4800x2700 landscape, generous spacing on all sides, nothing cut off
+        comment: Generous spacing (60/100/80/80 px), chart fills 70-80% canvas, balanced
+          whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) with dollar format on Y, Date with monthly labels on
-          X, descriptive title
+        comment: 'Y-axis: Price (USD) with units; X-axis: Date descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito positions 1-4 in order, backgrounds
-          #FAF8F1/#1A1A17 correct, chrome adapts properly'
+        comment: 'First series #009E73 confirmed; EMA 12 #D55E00 (pos 2); EMA 26 #0072B2
+          (pos 3); crossovers #CC79A7 (pos 4); backgrounds #FAF8F1/#1A1A17 correct;
+          chrome fully adaptive'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -106,24 +107,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Explicit Okabe-Ito palette per series, descriptive subtitle, crossover
-          scatter layer; above generic defaults
+        comment: 'Clearly above defaults: intentional line-weight hierarchy (5px/3px/3px-dashed),
+          crossover diamond markers, subtitle context, themed colors throughout'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid with GRID token, proper font hierarchy, generous spacing;
-          plot border not explicitly removed
+        comment: Subtle grid (rgba 0.10), markers disabled on line series, generous
+          spacing. Chart border not removed (default Highcharts frame).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Crossover diamonds highlight trading signals, EMA-26 dash style differentiates
-          from EMA-12, shared tooltip with crosshairs
+        comment: Strong hierarchy through line weights; crossover markers explicitly
+          call out trading signals; subtitle explains context; data shows both downtrend
+          and recovery
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -131,27 +133,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct line chart with EMA overlays
+        comment: Correct EMA overlay chart with line series for price+EMAs and scatter
+          for crossover markers
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Close price, EMA-12, EMA-26, crossover highlighting all present
+        comment: Price line prominent, EMA 12, EMA 26, distinct colors, EMA lines
+          thinner, crossover highlighting, legend with periods — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=trading date (datetime), y=price; 120 business-day periods; both
-          EMA periods correctly computed
+        comment: Datetime X-axis, Price (USD) Y-axis, all 120-day data visible
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend enabled with theme-adaptive styling
-          but visibility in rendered output uncertain
+        comment: 'Title: Stock Price EMAs · indicator-ema · python · highcharts ·
+          anyplot.ai; Legend: Close Price, EMA 12, EMA 26, Crossover'
     data_quality:
       score: 15
       max: 15
@@ -161,22 +164,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Raw price volatility, two EMA smoothing periods, crossover signals
-          all shown
+        comment: Price + two EMA periods + crossover detection; data shows trending
+          downtrend and ranging recovery
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: $150 base stock, 0.1% mean daily return, 2% daily volatility; plausible
-          and neutral
+        comment: Realistic stock price simulation $150 start, plausible daily returns,
+          business day dates, no controversial content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 business days, price range ~$119-$166; realistic for a mid-cap
-          stock
+        comment: Price range $119-$166 plausible; 12-day and 26-day are standard MACD
+          EMA inputs
     code_quality:
       score: 10
       max: 10
@@ -186,32 +189,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; straightforward procedural script
+        comment: 'Clean linear flow: imports -> tokens -> data -> chart config ->
+          series -> export'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; LineSeries imported from area module instead of
-          line (minor, works)
+        comment: All imports used; note LineSeries from .series.area (non-standard
+          but functional)
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: CDN fallback chain robust; z_index ordering intentional and clean
+        comment: Multi-CDN fallback pragmatic, z_index layering clean, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes
     library_mastery:
       score: 7
       max: 10
@@ -221,27 +225,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper Chart(container='container'), HighchartsOptions, series-level
-          color assignment; LineSeries from wrong submodule
+        comment: Proper container setup, typed series classes, datetime axis with
+          dateTimeLabelFormats, per-series color/lineWidth/dashStyle, z_index layering,
+          Selenium export pipeline
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: z_index for layer ordering, dash_style ShortDash for EMA-26, ScatterSeries
-          for crossovers, shared tooltip with crosshairs, datetime axis with tickInterval
-          and dateTimeLabelFormats
+        comment: Shared tooltip with crosshairs, datetime axis formatting, dashStyle
+          property, HTML artifact export. Could use Highcharts flags series for crossover
+          markers (more idiomatic for financial charts)
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
-  - time-series
   - rolling-window
+  - time-series
   styling:
   - grid-styling
