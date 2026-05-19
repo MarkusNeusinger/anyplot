@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-19
@@ -116,7 +116,7 @@ region_labels = (
 chart = (
     (points + fit_line + ref_rules + region_labels)
     .properties(width=800, height=450, background=PAGE_BG, title=alt.Title(text=TITLE, fontSize=16, anchor="middle"))
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, strokeOpacity=0)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
