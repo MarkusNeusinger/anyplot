@@ -1,10 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
-Library: highcharts unknown | Python 3.13.11
+Library: highcharts | Python 3.13
 Quality: 91/100 | Created: 2026-01-11
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -16,52 +17,58 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Generate sample stock data (365 trading days)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito colors (canonical order)
+CLOSE_COLOR = "#009E73"  # position 1 — brand green — close price
+SMA20_COLOR = "#D55E00"  # position 2 — vermillion — SMA 20
+SMA50_COLOR = "#0072B2"  # position 3 — blue — SMA 50
+SMA200_COLOR = "#CC79A7"  # position 4 — reddish purple — SMA 200
+
+# Data: stock price with mean-reverting (Ornstein-Uhlenbeck) dynamics
 np.random.seed(42)
 n_days = 365
-dates = pd.date_range(start="2024-01-02", periods=n_days, freq="B")  # Business days
+dates = pd.date_range(start="2024-01-02", periods=n_days, freq="B")
 
-# Generate realistic stock price movement using random walk
-returns = np.random.normal(0.0005, 0.015, n_days)  # Daily returns
-price_start = 150.0
-close_prices = price_start * np.cumprod(1 + returns)
+# Ornstein-Uhlenbeck mean-reverting process (differentiates from linear-trend peers)
+theta = 0.008  # mean-reversion speed
+mu = 175.0  # long-term mean
+sigma = 0.015  # volatility
+price = 150.0
+prices = [price]
+for _ in range(n_days - 1):
+    drift = theta * (mu - prices[-1])
+    noise = np.random.normal(0, sigma * prices[-1])
+    prices.append(max(prices[-1] + drift + noise, 50.0))
 
-# Add some trend and volatility patterns
-trend = np.linspace(0, 20, n_days)
-close_prices = close_prices + trend
+close_prices = np.array(prices)
 
-# Create DataFrame
 df = pd.DataFrame({"date": dates, "close": close_prices})
-
-# Calculate SMAs
 df["sma_20"] = df["close"].rolling(window=20).mean()
 df["sma_50"] = df["close"].rolling(window=50).mean()
 df["sma_200"] = df["close"].rolling(window=200).mean()
 
-# Convert dates to timestamps for Highcharts (milliseconds since epoch)
+# Convert dates to milliseconds for Highcharts datetime axis
 timestamps = [int(d.timestamp() * 1000) for d in df["date"]]
 
-# Prepare data series (as [timestamp, value] pairs, handling NaN for initial periods)
 close_data = [[t, round(v, 2)] for t, v in zip(timestamps, df["close"], strict=True)]
 sma20_data = [[t, round(v, 2)] for t, v in zip(timestamps, df["sma_20"], strict=True) if not np.isnan(v)]
 sma50_data = [[t, round(v, 2)] for t, v in zip(timestamps, df["sma_50"], strict=True) if not np.isnan(v)]
 sma200_data = [[t, round(v, 2)] for t, v in zip(timestamps, df["sma_200"], strict=True) if not np.isnan(v)]
 
-# Colors (colorblind-safe palette)
-colors = {
-    "close": "#306998",  # Python Blue - price line
-    "sma20": "#FFD43B",  # Python Yellow - short-term
-    "sma50": "#17BECF",  # Cyan - medium-term
-    "sma200": "#9467BD",  # Purple - long-term
-}
-
-# Chart options for Highcharts
+# Chart options
 chart_options = {
     "chart": {
         "type": "line",
         "width": 4800,
         "height": 2700,
-        "backgroundColor": "#ffffff",
+        "backgroundColor": PAGE_BG,
         "marginBottom": 200,
         "marginLeft": 220,
         "marginRight": 100,
@@ -69,34 +76,34 @@ chart_options = {
         "style": {"fontFamily": "Arial, sans-serif"},
     },
     "title": {
-        "text": "indicator-sma · highcharts · pyplots.ai",
-        "style": {"fontSize": "64px", "fontWeight": "bold", "color": "#333333"},
+        "text": "indicator-sma · python · highcharts · anyplot.ai",
+        "style": {"fontSize": "64px", "fontWeight": "bold", "color": INK},
         "y": 70,
     },
     "subtitle": {
         "text": "Stock Price with 20, 50, and 200-day Simple Moving Averages",
-        "style": {"fontSize": "36px", "color": "#666666"},
+        "style": {"fontSize": "36px", "color": INK_SOFT},
         "y": 130,
     },
     "xAxis": {
         "type": "datetime",
-        "title": {"text": "Date", "style": {"fontSize": "40px", "color": "#333333"}, "margin": 25},
-        "labels": {"style": {"fontSize": "28px", "color": "#333333"}, "format": "{value:%b %Y}", "y": 35},
+        "title": {"text": "Date", "style": {"fontSize": "40px", "color": INK}, "margin": 25},
+        "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "format": "{value:%b %Y}", "y": 35},
         "gridLineWidth": 1,
-        "gridLineColor": "rgba(0, 0, 0, 0.1)",
+        "gridLineColor": GRID,
         "lineWidth": 2,
-        "lineColor": "#333333",
+        "lineColor": INK_SOFT,
         "tickWidth": 2,
-        "tickColor": "#333333",
+        "tickColor": INK_SOFT,
         "tickLength": 12,
     },
     "yAxis": {
-        "title": {"text": "Price (USD)", "style": {"fontSize": "40px", "color": "#333333"}, "margin": 25},
-        "labels": {"style": {"fontSize": "28px", "color": "#333333"}, "format": "${value:.0f}", "x": -15},
+        "title": {"text": "Price (USD)", "style": {"fontSize": "40px", "color": INK}, "margin": 25},
+        "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "format": "${value:.0f}", "x": -15},
         "gridLineWidth": 1,
-        "gridLineColor": "rgba(0, 0, 0, 0.1)",
+        "gridLineColor": GRID,
         "lineWidth": 2,
-        "lineColor": "#333333",
+        "lineColor": INK_SOFT,
     },
     "legend": {
         "enabled": True,
@@ -105,10 +112,11 @@ chart_options = {
         "layout": "vertical",
         "x": -60,
         "y": 120,
-        "itemStyle": {"fontSize": "28px", "color": "#333333"},
+        "itemStyle": {"fontSize": "28px", "color": INK_SOFT},
         "itemMarginBottom": 15,
         "symbolWidth": 40,
         "symbolHeight": 18,
+        "backgroundColor": ELEVATED_BG,
     },
     "tooltip": {
         "shared": True,
@@ -120,19 +128,12 @@ chart_options = {
     "plotOptions": {"line": {"lineWidth": 4, "marker": {"enabled": False}}, "series": {"animation": False}},
     "credits": {"enabled": False},
     "series": [
-        {"name": "Close Price", "data": close_data, "color": colors["close"], "lineWidth": 5, "zIndex": 4},
-        {
-            "name": "SMA 20",
-            "data": sma20_data,
-            "color": colors["sma20"],
-            "lineWidth": 3,
-            "dashStyle": "Solid",
-            "zIndex": 3,
-        },
+        {"name": "Close Price", "data": close_data, "color": CLOSE_COLOR, "lineWidth": 5, "zIndex": 4},
+        {"name": "SMA 20", "data": sma20_data, "color": SMA20_COLOR, "lineWidth": 3, "dashStyle": "Solid", "zIndex": 3},
         {
             "name": "SMA 50",
             "data": sma50_data,
-            "color": colors["sma50"],
+            "color": SMA50_COLOR,
             "lineWidth": 3,
             "dashStyle": "ShortDash",
             "zIndex": 2,
@@ -140,7 +141,7 @@ chart_options = {
         {
             "name": "SMA 200",
             "data": sma200_data,
-            "color": colors["sma200"],
+            "color": SMA200_COLOR,
             "lineWidth": 3,
             "dashStyle": "LongDash",
             "zIndex": 1,
@@ -148,41 +149,52 @@ chart_options = {
     ],
 }
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+# Download Highcharts JS from jsdelivr (inline embed required for headless Chrome)
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@12/highcharts.js"
+with urllib.request.urlopen(highcharts_url, timeout=60) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Generate chart options JSON
 chart_options_json = json.dumps(chart_options)
 
-# Generate HTML with inline scripts
-html_content = f"""<!DOCTYPE html>
+# Inline HTML for headless screenshot
+inline_html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; background-color: #ffffff;">
+<body style="margin:0; background-color: {PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {{
-            Highcharts.chart('container', {chart_options_json});
-        }});
+        Highcharts.chart('container', {chart_options_json});
     </script>
 </body>
 </html>"""
 
-# Write temp HTML file
+# CDN HTML for interactive artifact
+cdn_html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+</head>
+<body style="margin:0; background-color: {PAGE_BG};">
+    <div id="container" style="width: 100%; height: 100vh;"></div>
+    <script>
+        Highcharts.chart('container', {chart_options_json});
+    </script>
+</body>
+</html>"""
+
+# Save CDN HTML artifact for interactive viewing
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(cdn_html)
+
+# Write temp inline HTML and screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
-    f.write(html_content)
+    f.write(inline_html)
     temp_path = f.name
 
-# Also save the HTML for interactive viewing
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Take screenshot with headless Chrome
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
@@ -192,9 +204,8 @@ chrome_options.add_argument("--window-size=4800,2700")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Clean up temp file
 Path(temp_path).unlink()
