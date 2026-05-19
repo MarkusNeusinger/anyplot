@@ -1,155 +1,182 @@
 library: seaborn
+language: python
 specification_id: windbarb-basic
 created: '2026-01-11T09:27:46Z'
-updated: '2026-01-11T09:45:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20892890739
+updated: '2026-05-19T06:47:50Z'
+generated_by: claude-sonnet
+workflow_run: 26080308427
 issue: 3694
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent demonstration of ALL wind barb features (calm circles, half barbs, full
-    barbs, pennants)
-  - Colorblind-safe viridis colormap with clear colorbar
-  - Proper meteorological notation explanation in legend
-  - Clean, readable code structure with good comments
-  - Appropriate grid spacing prevents barb overlap
+  - 'Complete spec coverage: calm circles, half/full barbs, and pennants all correctly
+    rendered with standard meteorological convention'
+  - Viridis colormap thoughtfully applied to continuous wind speed — creates instant
+    visual hierarchy fast vs. slow winds
+  - 'Comprehensive theme-adaptive chrome: colorbar label/ticks, spines, title, tick
+    labels all styled per theme; zero dark-on-dark failures in either render'
+  - 'Calm circle color appropriately adapted per theme for visibility (#440154 on
+    light, #90d743 on dark)'
+  - Footer legend succinctly explains barb notation without cluttering the plot area
   weaknesses:
-  - Legend notation text at bottom is slightly small (fontsize=14) compared to main
-    plot text
-  - Seaborn used only for styling, not distinctive plotting features (unavoidable
-    for wind barbs)
-  image_description: 'The plot displays a wind barb visualization on a 6×4 grid representing
-    24 weather station locations. Wind barbs are color-coded using the viridis colormap
-    (purple to yellow) indicating wind speed from 0 to 75 knots. The visualization
-    correctly shows all standard meteorological barb features: calm winds (<2.5 knots)
-    as open purple circles at three locations (bottom-left, middle-right, and top-right
-    areas), moderate winds with half barbs (5 kt) and full barbs (10 kt), and strong
-    winds (50+ knots) with triangular pennants visible at several locations (top-left,
-    middle area, and bottom-right showing bright green/yellow coloring). The barbs
-    point in various directions indicating wind direction. The colorbar on the right
-    shows "Wind Speed (knots)" with clear labels. Axis labels show "Longitude (°E)"
-    and "Latitude (°N)" with appropriate units. The title follows the correct format
-    "windbarb-basic · seaborn · pyplots.ai". A helpful legend at the bottom explains
-    the barb notation conventions. The white background provides good contrast for
-    the colored barbs.'
+  - Top and right spines are kept; style guide mandates removing them by default —
+    remove with ax.spines['top'].set_visible(False) and ax.spines['right'].set_visible(False)
+  - Data grid (lat 2-8, lon 2-12) leaves empty margins at axis edges; tightening xlim/ylim
+    to the data extent would improve canvas utilization
+  - Seaborn used only for theming (set_theme, set_context); core visualization is
+    matplotlib ax.barbs() — no seaborn plot function used
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "windbarb-basic · python · seaborn · anyplot.ai" in dark text (clearly readable); axis labels "Longitude (°E)" and "Latitude (°N)" in dark text; tick labels in muted dark color; footer legend in muted gray — all readable
+      Data: 24 wind barbs colored via viridis from dark purple (low speed ~5-15 kt) through teal-blue (moderate ~20-35 kt) to yellow-green (strong 60+ kt); 3 calm circles as open dark-purple rings (#440154); 3 pennant flags in yellow-green; viridis colorbar on right labeled "Wind Speed (knots)"
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, colorbar label and ticks, and footer legend all render in light colors (off-white/muted light); no dark-on-dark failures detected
+      Data: All viridis-colored barbs are identical to the light render (dark purple for slow, teal for moderate, yellow-green for fast); calm circles changed to bright yellow-green (#90d743) for visibility on dark background — barb colors unchanged
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title 24pt, labels 20pt, ticks 16pt, all perfectly readable
+        comment: 'All sizes explicitly set: title=24pt, labels=20pt, ticks=16pt, colorbar=20pt;
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, grid spacing prevents barb collision
+        comment: 6x4 grid well-spaced, no barb or label collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Barbs optimally sized with length=9 and linewidth=2.5, circles clearly
-          visible
+        comment: Barbs at length=9, linewidth=2.5; calm circles at radius=0.35; all
+          clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight extra whitespace at top
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Longitude (°E), Latitude (°N)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout; data spans lat 2-8 and lon 2-12 while axes extend to
+          0-10 and 0-14, leaving some empty margin
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Labels include units: Longitude (°E), Latitude (°N), Wind Speed
+          (knots)'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis used for continuous wind speed (correct); backgrounds #FAF8F1
+          (light) and #1A1A17 (dark); chrome fully theme-adaptive'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic default: viridis speed encoding intentional, themed
+          colorbar fully styled, calm circle colors adapted per theme. Not publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
         passed: false
-        comment: Grid disabled (acceptable), legend text at bottom is small (fontsize=14)
+        comment: All four spines kept; top and right should be removed per style guide.
+          No grid (appropriate for wind plot). Clean colorbar styling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Viridis speed gradient creates visual hierarchy; calm circles and
+          pennant flags are visually distinctive. No focal point annotation.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct wind barb plot using matplotlib barbs()
+        comment: Correct wind barb plot using ax.barbs() with proper meteorological
+          notation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y correctly mapped as longitude/latitude, u/v as wind components
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: half barbs, full barbs, pennants, calm
-          circles'
-      - id: SC-04
-        name: Data Range
+        comment: Half barbs (5 kt), full barbs (10 kt), pennants (50 kt), and calm
+          circles all present; barb_increments explicitly set
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits (0-14 x 0-10)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: x=longitude, y=latitude, u/v zonal/meridional components; speed computed
+          from components
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar label and notation legend both accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: windbarb-basic · seaborn · pyplots.ai'
+        comment: Title 'windbarb-basic · python · seaborn · anyplot.ai' is exact format;
+          barb notation legend in footer
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Demonstrates ALL wind barb features: calm, half barbs, full barbs,
-          and pennants (50+ knots)'
+        comment: 'Shows full range: calm (<2.5 kt), low/moderate/high barbs, and pennant-flag
+          winds (55-70 kt); all notational features exercised'
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Plausible meteorological scenario with synthetic but realistic wind
-          patterns
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Wind speeds 0-70 knots realistic for surface observations
+        comment: Simulated surface weather station network with spatially coherent
+          wind field; physically neutral scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds 0-70+ knots match realistic surface observation range;
+          spatial grid plausible for synoptic network
     code_quality:
       score: 10
       max: 10
@@ -159,11 +186,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save, no functions/classes'
+        comment: Imports → Data → Plot → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -171,31 +198,40 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, seaborn, Circle patch)
+        comment: os, matplotlib.pyplot, numpy, seaborn, matplotlib.patches.Circle
+          all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn 0.13+ API
+        comment: Clean and Pythonic; mask-based calm/barb splitting is clear; colorbar
+          theming thorough
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with facecolor; no deprecated APIs
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.set_theme() and sns.set_context() used idiomatically; core wind
+          barb visualization uses matplotlib ax.barbs() (unavoidable — seaborn has
+          no native barb function)
+      - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 1
         max: 5
         passed: false
-        comment: Uses matplotlib barbs() directly; seaborn only provides styling via
-          set_theme/set_context. This is acceptable as seaborn has no native wind
-          barb function.
+        comment: Library usage limited to seaborn's theme/context management; visualization
+          is effectively a matplotlib plot; no seaborn-specific plot function used
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -204,7 +240,7 @@ impl_tags:
   - patches
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
