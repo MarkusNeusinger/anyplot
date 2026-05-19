@@ -183,10 +183,10 @@ Three library families with different sizing controls:
 |---------|--------------------------------------------|------------------------------------------|------------------------------------------|
 | Canvas (16:9) | `figsize=(8, 4.5)` `dpi=400` | `width=800 height=450 scale=4` | `width=3200 height=1800` |
 | Canvas (1:1) | `figsize=(6, 6)` `dpi=400` | `width=600 height=600 scale=4` | `width=2400 height=2400` |
-| Title | 18pt | 22px | '22pt' |
-| Axis labels | 14pt | 16px | '16pt' |
-| Tick labels | 12pt | 14px | '14pt' |
-| Legend | 12pt | 14px | '14pt' |
+| Title | 14pt | 18px | '18pt' |
+| Axis labels | 12pt | 14px | '14pt' |
+| Tick labels | 10pt | 12px | '12pt' |
+| Legend | 10pt | 12px | '12pt' |
 
 All three families produce the same 3200×1800 (or 2400×2400) output, so text pixel sizes are comparable across libraries.
 

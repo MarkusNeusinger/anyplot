@@ -27,10 +27,10 @@ plot = plot + ggsize(800, 450)
 
 # Text and element sizes
 plot = plot + theme(
-    axis_title=element_text(size=16),
-    axis_text=element_text(size=14),
-    plot_title=element_text(size=22),
-    legend_text=element_text(size=14)
+    axis_title=element_text(size=14),
+    axis_text=element_text(size=12),
+    plot_title=element_text(size=18),  # kept compact for the long mandated title
+    legend_text=element_text(size=12)
 )
 
 # Element sizes in geoms (density-aware — see default-style-guide.md)

@@ -15,10 +15,13 @@ chart = alt.Chart(df).mark_point(size=60).encode(  # size ~2-3x default, density
 ).properties(
     width=800,
     height=450,
-    title=alt.Title(title, fontSize=22)
+    title=alt.Title(title, fontSize=18)  # kept compact for the long mandated title
 ).configure_axis(
-    labelFontSize=14,
-    titleFontSize=16
+    labelFontSize=12,
+    titleFontSize=14
+).configure_legend(
+    labelFontSize=12,
+    titleFontSize=12
 )
 ```
 

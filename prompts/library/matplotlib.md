@@ -48,12 +48,13 @@ plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
 ## Sizing for 3200×1800 px (starting values — adjust per plot, review-loop tunes)
 
 ```python
-# Text sizes
-ax.set_title(title, fontsize=18, fontweight='medium')
-ax.set_xlabel(x_label, fontsize=14)
-ax.set_ylabel(y_label, fontsize=14)
-ax.tick_params(axis='both', labelsize=12)
-ax.legend(fontsize=12)
+# Text sizes — title kept compact because the mandated "{spec-id} · python · matplotlib · anyplot.ai"
+# title is ~67 chars and would overflow at 16+pt on the 3200px-wide canvas.
+ax.set_title(title, fontsize=14, fontweight='medium')
+ax.set_xlabel(x_label, fontsize=12)
+ax.set_ylabel(y_label, fontsize=12)
+ax.tick_params(axis='both', labelsize=10)
+ax.legend(fontsize=10)
 
 # Element sizes
 ax.scatter(x, y, s=100, edgecolors='white', linewidth=0.5)  # s=60-150 (density-aware)
@@ -72,10 +73,10 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for the review-step c
 ## Styling
 
 ```python
-ax.set_xlabel(x_label, fontsize=14)
-ax.set_ylabel(y_label, fontsize=14)
-ax.set_title(title, fontsize=18, fontweight='medium')
-ax.legend(fontsize=12)  # if needed (omit for single-series)
+ax.set_xlabel(x_label, fontsize=12)
+ax.set_ylabel(y_label, fontsize=12)
+ax.set_title(title, fontsize=14, fontweight='medium')
+ax.legend(fontsize=10)  # if needed (omit for single-series)
 plt.tight_layout()
 ```
 

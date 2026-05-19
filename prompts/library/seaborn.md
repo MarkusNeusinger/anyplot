@@ -46,11 +46,12 @@ plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
 ## Sizing for 3200×1800 px (starting values — adjust per plot, review-loop tunes)
 
 ```python
-# Text sizes (seaborn uses matplotlib underneath)
-ax.set_title(title, fontsize=18, fontweight='medium')
-ax.set_xlabel(x_label, fontsize=14)
-ax.set_ylabel(y_label, fontsize=14)
-ax.tick_params(axis='both', labelsize=12)
+# Text sizes (seaborn uses matplotlib underneath) — title kept compact to avoid
+# overflow of the long mandated "{spec-id} · python · seaborn · anyplot.ai" title.
+ax.set_title(title, fontsize=14, fontweight='medium')
+ax.set_xlabel(x_label, fontsize=12)
+ax.set_ylabel(y_label, fontsize=12)
+ax.tick_params(axis='both', labelsize=10)
 
 # Or use sns.set_context for global scaling
 sns.set_context("notebook", font_scale=1.0)

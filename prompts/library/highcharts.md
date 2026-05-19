@@ -195,19 +195,19 @@ chart.options.chart = {
     'backgroundColor': PAGE_BG,
     'style': {'color': INK},
 }
-chart.options.title = {'text': title, 'style': {'fontSize': '22px', 'color': INK}}
+chart.options.title = {'text': title, 'style': {'fontSize': '18px', 'color': INK}}
 chart.options.x_axis = {
-    'title': {'text': x_label, 'style': {'fontSize': '16px', 'color': INK}},
-    'labels': {'style': {'fontSize': '14px', 'color': INK_SOFT}},
+    'title': {'text': x_label, 'style': {'fontSize': '14px', 'color': INK}},
+    'labels': {'style': {'fontSize': '12px', 'color': INK_SOFT}},
     'lineColor': INK_SOFT, 'tickColor': INK_SOFT, 'gridLineColor': GRID,
 }
 chart.options.y_axis = {
-    'title': {'text': y_label, 'style': {'fontSize': '16px', 'color': INK}},
-    'labels': {'style': {'fontSize': '14px', 'color': INK_SOFT}},
+    'title': {'text': y_label, 'style': {'fontSize': '14px', 'color': INK}},
+    'labels': {'style': {'fontSize': '12px', 'color': INK_SOFT}},
     'lineColor': INK_SOFT, 'tickColor': INK_SOFT, 'gridLineColor': GRID,
 }
 chart.options.legend = {
-    'itemStyle': {'color': INK_SOFT, 'fontSize': '14px'},
+    'itemStyle': {'color': INK_SOFT, 'fontSize': '12px'},
     'backgroundColor': ELEVATED_BG, 'borderColor': INK_SOFT, 'borderWidth': 1,
 }
 ```

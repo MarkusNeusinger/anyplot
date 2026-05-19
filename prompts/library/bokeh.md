@@ -89,12 +89,12 @@ driver.quit()
 ## Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python
-# Text sizes
-p.title.text_font_size = '22pt'
-p.xaxis.axis_label_text_font_size = '16pt'
-p.yaxis.axis_label_text_font_size = '16pt'
-p.xaxis.major_label_text_font_size = '14pt'
-p.yaxis.major_label_text_font_size = '14pt'
+# Text sizes — title kept compact for the long mandated anyplot title
+p.title.text_font_size = '18pt'
+p.xaxis.axis_label_text_font_size = '14pt'
+p.yaxis.axis_label_text_font_size = '14pt'
+p.xaxis.major_label_text_font_size = '12pt'
+p.yaxis.major_label_text_font_size = '12pt'
 
 # Element sizes (density-aware — see default-style-guide.md)
 p.scatter(..., size=10)        # ~2-3x default
