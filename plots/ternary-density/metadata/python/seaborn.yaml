@@ -1,157 +1,185 @@
 library: seaborn
+language: python
 specification_id: ternary-density
 created: '2026-01-11T09:30:06Z'
-updated: '2026-01-11T09:34:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20892891073
+updated: '2026-05-19T10:46:34Z'
+generated_by: claude-sonnet
+workflow_run: 26091099438
 issue: 3696
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-density/seaborn/plot.png
-preview_html: null
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 91
 review:
   strengths:
-  - Excellent use of viridis colormap for perceptually uniform density visualization
-  - Three distinct data clusters clearly demonstrate density estimation capability
-  - Proper ternary coordinate transformation with clipping to triangle boundary
-  - Grid lines visible beneath density layer with appropriate transparency
-  - Contour lines at key density levels enhance interpretability
-  - Professional typography with clear vertex labels
+  - 'Perfect spec compliance: all required features (viridis fill, ternary grid at
+    10% intervals, contour lines, labeled vertices, auto bandwidth) correctly implemented'
+  - Dual-call sns.kdeplot pattern (fill + contours) with correct triangle clip path
+    produces clean, well-layered density visualization
+  - 'Full theme-adaptive chrome: background, vertex labels, tick labels, colorbar,
+    and annotation boxes correctly flip between light and dark themes'
+  - Soil composition domain is realistic, neutral, and scientifically appropriate
+    with correctly-constrained ternary data (sums to 100%)
+  - Cluster annotations with labeled density peaks elevate data storytelling above
+    mere display
   weaknesses:
-  - No colorbar/legend showing the density scale interpretation
-  - Contour lines could be slightly thicker for better visibility at full resolution
-  image_description: 'The plot displays a ternary density visualization for soil composition
-    data (sand/silt/clay). The triangle has vertices labeled "Sand (%)", "Silt (%)",
-    and "Clay (%)" in bold blue text (#306998). The density is shown using a filled
-    viridis colormap with 20 levels, ranging from dark purple (low density) to bright
-    yellow-green (high density). Three distinct density clusters are visible: one
-    in the lower-left corner (high sand content), one in the lower-right area (high
-    silt content), and one in the upper region (high clay content). Blue contour lines
-    overlay the density for easier interpretation. Grid lines are visible beneath
-    the density layer with 10% intervals. The triangle boundary is drawn in blue (#306998)
-    with a thick line. Percentage labels (20, 40, 60, 80) appear along each edge in
-    gray. The title "Soil Composition · ternary-density · seaborn · pyplots.ai" appears
-    at the top in bold black text. The figure uses a 12x12 square aspect ratio appropriate
-    for ternary diagrams, with the plot well-centered and filling the canvas appropriately.'
+  - 'LM-01 ceiling: seaborn contribution limited to KDE engine; triangle geometry,
+    grid, labels, and colorbar are all matplotlib — unavoidable for ternary plots
+    but caps library mastery score'
+  - 'DE-01 has room for growth: blue boundary/contour color is functional but overall
+    aesthetic could achieve publication-ready polish with more intentional typography
+    sizing ratios or finer grid opacity'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "Soil Composition · ternary-density · python · seaborn · anyplot.ai" in dark #1A1A17 text, clearly readable; vertex labels "Sand (%)", "Silt (%)", "Clay (%)" bold dark text at corners; edge tick labels (20/40/60/80) in INK_SOFT (#4A4A44); colorbar label "Relative Density" and Low/Medium/High labels in dark tones — all readable
+      Data: Viridis KDE density fill with three distinct peaks (yellow-green for high density, dark purple for low density); blue (#0072B2) contour lines; thick blue triangle boundary; cluster annotation boxes with off-white fill and dark text; ternary grid at alpha=0.20 visible beneath density layer
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 text, clearly readable against dark background; vertex labels in light ink; edge tick labels in light INK_SOFT (#B8B7B0); colorbar "Relative Density" label and Low/Medium/High labels in light tones — all readable; annotation box fills are near-black #1A1A17 with near-white text
+      Data: Viridis colors are identical to light render — yellow-green density peaks unchanged; blue contour lines and triangle boundary unchanged; data colors have not shifted between themes
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly flipped to light tokens on dark surface
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 26pt, vertex labels at 22pt, percentage labels at 14pt -
-          all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, labels well positioned outside triangle
+        comment: 'All font sizes explicitly set: title 24pt, vertex labels 22pt bold,
+          tick labels 16pt, colorbar 18pt, annotations 15pt; readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Vertex labels, edge tick labels, and annotations well-separated with
+          proper offsets
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density clearly visible with good contrast; contour lines visible
-          but could be slightly thicker
+        comment: Viridis fill alpha=0.85 provides strong density coverage; contours
+          at linewidths=3.0 prominent; boundary linewidth=4
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square 12x12 figure with good proportions, plot fills canvas well
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Ternary plots don't use traditional axes; vertices labeled but no
-          unit context beyond (%)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid subtle (alpha=0.25), no legend needed for density plot
+        comment: Viridis perceptually uniform and CVD-safe; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600px appropriate for symmetric ternary; triangle fills
+          ~75% of canvas with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Vertex labels include units (%); colorbar labeled Relative Density
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for sequential continuous density data; backgrounds #FAF8F1/#1A1A17;
+          chrome correctly theme-adaptive in both renders'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Cohesive blue structural elements, semantic colorbar labels, styled
+          annotation boxes; above defaults but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: ax.axis('off') removes all spines; ternary grid at alpha=0.20 subtle;
+          generous margins; most details polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three labeled density peaks guide viewer to distinct soil clusters;
+          viridis contrast creates visual hierarchy
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct ternary density plot with KDE overlay
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Three components correctly mapped to ternary coordinates
-      - id: SC-03
+        comment: Correct ternary diagram with KDE density heatmap; ternary-to-Cartesian
+          transformation correct
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Density overlay, contour lines, grid lines, vertex labels present;
-          no colorbar showing density scale
-      - id: SC-04
-        name: Data Range
+        comment: Viridis colormap, ternary grid at 10% intervals with alpha=0.20,
+          vertex labels, contour lines, auto bandwidth all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within triangle bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: No colorbar/legend to show density scale interpretation
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: Sand bottom-left, Silt bottom-right, Clay top; components sum to
+          100% by construction
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Uses correct format with context: Soil Composition · ternary-density
-          · seaborn · pyplots.ai'
+        comment: Title matches Descriptive · spec-id · python · seaborn · anyplot.ai
+          format exactly
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct clusters representing different soil types (sandy,
-          silty, clay-rich)
+        comment: Three distinct clusters, sparse edge regions, full compositional
+          space; KDE levels=20 reveals fine density gradients
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Soil composition is a classic ternary data application, neutral scientific
-          topic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All values sum to 100%, realistic soil composition percentages
+        comment: Soil texture composition (sand/silt/clay) is well-established neutral
+          domain; clusters correspond to USDA soil texture classes
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Beta distribution produces plausible soil percentage ranges; ternary
+          constraint (sum=100%) correctly enforced
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,57 +187,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → plot → save'
+        comment: 'Linear flow: imports, tokens, data generation, ternary transform,
+          plot, save; no classes or functions'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: All imports are used - Polygon from matplotlib.patches is necessary
-          for clipping
+        passed: true
+        comment: 'All 7 imports used: os, matplotlib.cm, matplotlib.pyplot, numpy,
+          seaborn, Normalize, Polygon'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean Pythonic code; two-pass clip loop is justified for seaborn/matplotlib
+          KDE clipping
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with proper DPI
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG;
+          current seaborn 0.13.2 API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.kdeplot with fill=True and dual-call pattern is idiomatic; majority
+          of geometric work is matplotlib (unavoidable for ternary)
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.kdeplot for density estimation which is seaborn's strength,
-          but most work is manual matplotlib for ternary transformation
+        comment: thresh=0.02 and levels=20 are seaborn-specific; applying kdeplot
+          to custom Cartesian ternary coordinates is creative
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
+  - colorbar
   - annotations
-  - layer-composition
+  - patches
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - kde
+  - normalization
   styling:
+  - minimal-chrome
   - custom-colormap
   - alpha-blending
-  - minimal-chrome
-  - grid-styling
