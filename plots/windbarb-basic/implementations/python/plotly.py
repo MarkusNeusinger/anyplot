@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-11
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 79/100 | Updated: 2026-05-19
 """
 
 import numpy as np
