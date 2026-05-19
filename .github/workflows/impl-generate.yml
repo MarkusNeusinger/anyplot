@@ -369,6 +369,13 @@ jobs:
       # overlaid prompts/ never end up in the resulting PR. The later "Create
       # library metadata file" step re-checks out origin/$BRANCH, which discards
       # the overlay automatically. No-op on main + on label triggers.
+      #
+      # FETCH_HEAD is used instead of origin/<name> so the step also works for
+      # tag and SHA refs (where origin/<name> isn't created). The existence
+      # check for prompts/ guards refs without that tree. impl-generate-claude.md
+      # is always restored from the implementation branch (= main) after the
+      # overlay, so a branch can't override Claude's `git add plots/...` safety
+      # contract by editing that one file.
       - name: Overlay prompts/ from trigger ref (branch-level prompt iteration)
         if: github.ref_name != 'main' && github.event_name == 'workflow_dispatch'
         env:
@@ -378,8 +385,17 @@ jobs:
             echo "::notice::Trigger ref $TRIGGER_REF not found on origin — skipping overlay (workflow runs against main's prompts)"
             exit 0
           fi
-          git checkout "origin/$TRIGGER_REF" -- prompts/
-          echo "::notice::Overlaid prompts/ from $TRIGGER_REF — Claude will read these instead of main's prompts"
+          if ! git ls-tree FETCH_HEAD -- prompts/ 2>/dev/null | grep -q .; then
+            echo "::notice::Trigger ref $TRIGGER_REF has no prompts/ tree — skipping overlay"
+            exit 0
+          fi
+          git checkout FETCH_HEAD -- prompts/
+          # Always restore impl-generate-claude.md from main: it tells Claude
+          # `git add plots/.../{LIBRARY}{EXT}` (Step 7), which is what keeps
+          # the overlaid prompts/ out of the resulting PR. Letting a feature
+          # branch override that instruction defeats the safety contract above.
+          git checkout HEAD -- prompts/workflow-prompts/impl-generate-claude.md
+          echo "::notice::Overlaid prompts/ from $TRIGGER_REF (impl-generate-claude.md kept from main for safety)"
 
       - name: Run Claude Code to generate implementation
         id: claude
