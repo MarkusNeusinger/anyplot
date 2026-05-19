@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-race-animated: Animated Bar Chart Race
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-11
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-19
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,9 +12,9 @@ from plotnine import (
     aes,
     coord_flip,
     element_blank,
+    element_line,
     element_rect,
     element_text,
-    expand_limits,
     facet_wrap,
     geom_col,
     geom_text,
@@ -25,26 +27,32 @@ from plotnine import (
 )
 
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
+
+PALETTE = [
+    "#009E73",  # TechCorp - bluish green
+    "#D55E00",  # DataFlow - vermillion
+    "#0072B2",  # CloudBase - blue
+    "#CC79A7",  # NetSys - reddish purple
+    "#E69F00",  # CodeLab - orange
+    "#56B4E9",  # AppStream - sky blue
+    "#F0E442",  # ByteWorks - yellow
+    NEUTRAL,  # DigiCore - adaptive neutral
+]
+
 # Data - Tech companies revenue over time (billions USD)
 np.random.seed(42)
 
 companies = ["TechCorp", "DataFlow", "CloudBase", "NetSys", "CodeLab", "AppStream", "ByteWorks", "DigiCore"]
 
-# Color palette for companies - using Python colors and colorblind-safe additions
-colors = {
-    "TechCorp": "#306998",  # Python Blue
-    "DataFlow": "#FFD43B",  # Python Yellow
-    "CloudBase": "#2E86AB",  # Steel Blue
-    "NetSys": "#A23B72",  # Mulberry
-    "CodeLab": "#F18F01",  # Orange
-    "AppStream": "#C73E1D",  # Vermilion
-    "ByteWorks": "#3B1F2B",  # Dark Purple
-    "DigiCore": "#95C623",  # Yellow Green
-}
-
 years = [2018, 2020, 2022, 2024]
 
-# Generate realistic growth data with different trajectories
 base_values = {
     "TechCorp": 150,
     "DataFlow": 80,
@@ -67,7 +75,6 @@ growth_rates = {
     "DigiCore": 1.40,
 }
 
-# Build dataframe
 data = []
 for year in years:
     year_idx = years.index(year)
@@ -78,58 +85,65 @@ for year in years:
 
 df = pd.DataFrame(data)
 
-# Add rank for each year (for positioning) - rank 1 = highest value
 df["rank"] = df.groupby("year")["revenue"].rank(ascending=False, method="first").astype(int)
-
-# Create year labels for faceting
 df["year_label"] = df["year"].apply(lambda x: f"Year {x}")
-
-# Create label text
-df["label"] = df["revenue"].apply(lambda x: f"${x:.0f}B")
-
-# Sort for consistent ordering within facets
 df = df.sort_values(["year", "rank"])
-
-# Create a categorical ordering column for proper per-facet bar sorting
-# This creates a unique rank-based key for each year-company pair
 df["bar_order"] = df.groupby("year")["revenue"].rank(ascending=True, method="first").astype(int)
 
-# Get max revenue for consistent x-axis scaling
-max_revenue = df["revenue"].max()
+# Rank change 2018 → 2024: positive = climbed, negative = fell
+ranks = df.pivot_table(index="company", columns="year", values="rank")
+rank_chg = (ranks[2018] - ranks[2024]).astype(int).to_dict()
 
-# Create combined label for display (company name and value)
-df["bar_label"] = df.apply(lambda row: f"{row['company']}  {row['label']}", axis=1)
 
-# Create the small multiples plot - bars sorted by revenue within each facet
-# Using bar_order ensures proper sorting per-facet (rank-based within each year)
+def make_bar_label(row):
+    base = f"{row['company']}  ${row['revenue']:.0f}B"
+    if row["year"] == 2024:
+        chg = rank_chg.get(row["company"], 0)
+        if chg >= 3:
+            return f"{base}  ↑{chg}"
+        elif chg <= -3:
+            return f"{base}  ↓{abs(chg)}"
+    return base
+
+
+df["bar_label"] = df.apply(make_bar_label, axis=1)
+
+colors = {company: PALETTE[i] for i, company in enumerate(companies)}
+
+# Plot
 plot = (
     ggplot(df, aes(x="bar_order", y="revenue", fill="company"))
     + geom_col(width=0.8, show_legend=False)
-    + geom_text(aes(label="bar_label"), ha="left", nudge_y=5, size=9, color="#333333")
+    + geom_text(aes(label="bar_label"), ha="left", nudge_y=5, size=12, color=INK_SOFT)
     + coord_flip()
     + facet_wrap("~year_label", ncol=2)
     + scale_fill_manual(values=colors)
     + scale_y_continuous(expand=(0.02, 0, 0.25, 0))
-    + expand_limits(y=max_revenue * 1.2)
     + labs(
-        title="Tech Company Revenue Race · bar-race-animated · plotnine · pyplots.ai", x="", y="Revenue (Billions USD)"
+        title="Tech Company Revenue Race · bar-race-animated · python · plotnine · anyplot.ai",
+        x="",
+        y="Revenue (Billions USD)",
     )
     + theme_minimal()
     + theme(
         figure_size=(16, 10),
-        plot_title=element_text(size=24, weight="bold", ha="center", margin={"b": 15}),
-        axis_title_x=element_text(size=18, margin={"t": 10}),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        plot_title=element_text(size=24, weight="bold", ha="center", margin={"b": 15}, color=INK),
+        axis_title_x=element_text(size=20, margin={"t": 10}, color=INK),
         axis_title_y=element_blank(),
-        axis_text_x=element_text(size=14),
+        axis_text_x=element_text(size=16, color=INK_SOFT),
         axis_text_y=element_blank(),
-        strip_text=element_text(size=20, weight="bold"),
-        strip_background=element_rect(fill="#f0f0f0", color="none"),
-        panel_spacing=0.05,
-        panel_grid_major_y=element_blank(),
+        strip_text=element_text(size=20, weight="bold", color=INK),
+        strip_background=element_rect(fill=ELEVATED_BG, color=None),
+        panel_border=element_blank(),
+        panel_spacing=0.15,
+        panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         plot_margin=0.02,
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=300)
