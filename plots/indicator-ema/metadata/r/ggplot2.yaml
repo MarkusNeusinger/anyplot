@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: indicator-ema
 created: '2026-05-19T05:00:14Z'
-updated: '2026-05-19T05:06:35Z'
+updated: '2026-05-19T05:20:44Z'
 generated_by: claude-sonnet
 workflow_run: 26077083850
 issue: 3652
@@ -12,110 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 92
 review:
   strengths:
-  - 'Perfect spec compliance: all required EMA features present with correct line
-    hierarchy'
-  - 'Solid theme adaptation: both renders fully legible with correct Okabe-Ito colors
-    and theme-adaptive chrome'
-  - 'Correct palette order: Price=#009E73, EMA12=#D55E00, EMA26=#0072B2 (canonical
-    positions 1-3)'
-  - 'Good visual refinement: Y-only subtle grid, no panel border, generous margins'
+  - Complete theme-adaptive chrome with zero dark-on-dark failures
+  - Idiomatic ggplot2 long-format pattern for clean multi-series mapping
+  - Technically correct EMA via Reduce with proper exponential smoothing factor
+  - Crossover detection and visualization adds real chart value
+  - Alpha and linewidth differentiation creates visual hierarchy between price and
+    EMA lines
   weaknesses:
-  - Plot title size is 22pt — raise to 24pt per style guide
-  - 'No visual storytelling: crossover points between EMA12 and EMA26 are not highlighted
-    despite spec mentioning this as a key feature'
-  - Design is clean but generic — needs visual emphasis (crossover markers, shaded
-    region, or trend annotation) to reach DE-01 score above 4
-  - calc_ema() helper function breaks KISS flat structure — replace with inline Reduce()
-    or stats::filter()
+  - DE-01 could be elevated with typography polish or a focal annotation at the most
+    significant crossover
+  - Frequent crossover dashed verticals add visual noise; limiting to significant
+    crossovers would improve storytelling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) - correct, not pure white
-      Chrome: Title "Tech Stock EMA · indicator-ema · r · ggplot2 · anyplot.ai" in dark bold ink, clearly readable. Axis labels "Date" and "Closing Price (USD)" in dark ink. Tick labels (Feb/Apr/Jun 2024 dates, $140-$175 dollar values) in dark gray — all readable.
-      Data: Three lines — green (#009E73) price line (lw=1.5, alpha=0.80), orange (#D55E00) EMA(12) line (lw=1.1), blue (#0072B2) EMA(26) line (lw=1.1). First series correctly uses brand green. Subtle horizontal grid lines visible.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "Tech Stock EMA · indicator-ema · r · ggplot2 · anyplot.ai" in bold dark text clearly readable; axis labels "Closing Price (USD)" and "Date" readable; tick labels ($140-$180, Feb/Apr/Jun 2024) readable in INK_SOFT gray; legend box with subtle border at bottom showing Price/EMA(12)/EMA(26)
+      Data: Three lines — Price in teal #009E73 (slightly transparent), EMA(12) in orange #D55E00, EMA(26) in blue #0072B2; dashed vertical gray crossover lines; open circles at crossover points on EMA(12)
+      Legibility verdict: PASS — all text clearly readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) - correct, not pure black
-      Chrome: Title and axis labels in near-white (#F0EFE8), tick labels and legend text in lighter gray (#B8B7B0) — all clearly readable against dark surface. No dark-on-dark failures. Legend box uses elevated dark (#242420) with subtle border.
-      Data: Identical colors to light render — green (#009E73) price, orange (#D55E00) EMA(12), blue (#0072B2) EMA(26). Data colors unchanged as required.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title and axis labels rendered in light off-white (#F0EFE8); tick labels in soft light gray (#B8B7B0); legend box using elevated dark background #242420 with light text — all readable
+      Data: Data line colors identical to light render (teal #009E73, orange #D55E00, blue #0072B2); crossover markers and dashed verticals adapt to lighter chrome
+      Legibility verdict: PASS — no dark-on-dark failures; all text clearly legible against dark background
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Sizes explicitly set but plot.title=22pt is below the >=24pt guideline
+        comment: Title 24pt, axis labels 20pt, tick labels 16pt, legend 16pt all explicitly
+          set; readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text collisions; line overlaps are inherent to EMA overlay chart
+          type
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line (lw=1.5) and EMA lines (lw=1.1) clearly visible
+        comment: Lines well-sized at linewidth 1.1-1.5; crossover markers visible
+          at size=4
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; green/orange/blue distinguishable
-          under deuteranopia/protanopia
+        comment: Okabe-Ito teal/orange/blue is CVD-safe; adequate contrast in both
+          themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16x9 at 300dpi fills canvas well; bottom legend placement works
+        comment: Plot fills canvas well; 20pt margins; legend well-positioned at bottom
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units (USD); X-axis descriptive
+        comment: Closing Price (USD) with units; Date appropriate for x-axis
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Price=#009E73 (pos 1), EMA12=#D55E00 (pos 2), EMA26=#0072B2 (pos
-          3); backgrounds correct; chrome theme-correct in both renders
+        comment: 'Price=#009E73, EMA(12)=#D55E00, EMA(26)=#0072B2; backgrounds #FAF8F1/#1A1A17;
+          data colors identical across themes'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Correctly configured with Okabe-Ito and good typography, but reads
-          as a well-tuned library default
+        passed: true
+        comment: 'Above generic defaults: alpha differentiation, hollow crossover
+          markers; intentional design choices but not publication-grade'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-only grid (lw=0.3), no minor grid, no panel border, theme_minimal
-          removes top/right spines, generous 20pt margins
+        comment: L-shaped frame via axis.line + panel.border blank; y-only major grid;
+          no minor grid; semantic crossover verticals
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Mild hierarchy (price line thicker/translucent) but no visual emphasis
-          on crossover points or trend events
+        passed: true
+        comment: Crossover highlights create clear focal points; alpha/linewidth hierarchy
+          keeps EMAs prominent
     spec_compliance:
       score: 15
       max: 15
@@ -125,27 +124,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: EMA overlay chart with price line and two EMA lines
+        comment: Correct EMA overlay chart with price + two EMA periods
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Price prominent (thicker), two EMA periods (12 and 26), EMA lines
-          thinner than price, legend labels each EMA
+        comment: Price line prominent; EMAs overlaid; distinct colors; thinner EMAs;
+          legend labels; crossover highlighting
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, closing price (USD) on Y, all 180 points visible
+        comment: Date on x, closing price on y; all series visible across 180 trading
+          days
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai
-          format; legend labels correct
+        comment: Title matches {Descriptive}·{spec-id}·r·ggplot2·anyplot.ai format;
+          legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -155,32 +155,33 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows short and long EMAs, smoothing lag, uptrend and downtrend phases
+        comment: Price volatility, EMA smoothing, crossovers, uptrend and downtrend
+          phases all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tech stock at $150 with plausible drift (0.05%) and volatility (1.8%)
-          — neutral financial scenario
+        comment: Tech Stock EMA neutral trading scenario; standard periods 12/26;
+          plausible price action
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $135-$180 over 180 trading days is realistic; volatility
-          parameters factually appropriate
+        comment: Starting price $150, range $135-$180; daily drift/volatility realistic
+          for tech stocks
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: calc_ema() helper function defined; departs from flat Imports->Data->Plot->Save
-          structure
+        passed: true
+        comment: 'Linear flow: imports → tokens → data → EMA → crossovers → reshape
+          → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -192,46 +193,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, scales, ragg all used; no dead imports
+        comment: ggplot2, scales, tidyr, ragg all actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Compact, readable, no fake functionality
+        comment: Idiomatic Reduce for inline EMA; pivot_longer for reshaping; named
+          color vector
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png via ragg::agg_png with correct dimensions
+        comment: sprintf plot-%s.png → plot-light/dark.png; ragg::agg_png device
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Exemplary: long-format data, named aesthetic vectors, scale_linewidth/alpha_manual
+          with guide=none, multi-dataset geoms with inherit.aes=FALSE'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Good use of scale_x_date(), dollar_format(), scale_color_manual()
-          with named breaks; could use pivot_longer + single aesthetic for more idiomatic
-          multi-series
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses scale_x_date() and dollar_format() (ggplot2-ecosystem), but
-          chart structure not deeply ggplot2-distinctive
-  verdict: REJECTED
+        comment: Grammar-driven multi-aesthetic scaling, multi-dataset geom layering,
+          factor levels for legend ordering — distinctively ggplot2
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - scales
+  - tidyr
+  - ragg
   techniques:
   - layer-composition
-  - custom-legend
   patterns:
   - data-generation
+  - wide-to-long
   dataprep:
   - time-series
   styling:

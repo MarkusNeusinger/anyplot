@@ -1,6 +1,7 @@
 #' anyplot.ai
 #' indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 92/100 | Created: 2026-05-19
 
 library(ggplot2)
 library(scales)
