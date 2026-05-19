@@ -1,149 +1,205 @@
 library: highcharts
+language: python
 specification_id: hierarchy-toggle-view
 created: '2026-01-11T09:31:11Z'
-updated: '2026-01-11T09:35:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20892895217
+updated: '2026-05-19T08:39:18Z'
+generated_by: claude-sonnet
+workflow_run: 26085440123
 issue: 3697
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/highcharts/plot-dark.html
+quality_score: 93
 review:
   strengths:
-  - Excellent interactive toggle implementation with smooth button styling
-  - Consistent color scheme across both views using colorblind-safe palette
-  - Rich hierarchical data with realistic organizational structure
-  - Proper use of Highcharts-specific features (treemap/sunburst modules, drilldown)
-  - Well-structured HTML with modern CSS styling for toggle buttons
+  - Custom toggle UI with rounded container, shadow effect, and brand-color active
+    state — clearly above library defaults
+  - 'Perfect Okabe-Ito color mapping: Engineering=#009E73, Sales=#D55E00, Operations=#0072B2,
+    HR=#CC79A7 in canonical order'
+  - 'Full theme-adaptive chrome: all INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens correctly
+    wired in both Python and embedded JavaScript'
+  - 'Highcharts-specific features used expertly: treemap + sunburst modules, allowDrillToNode,
+    textOutline contrast, rotationMode:circular, level-specific styling'
+  - Realistic organizational hierarchy with 43 nodes across 4 levels and plausible
+    employee headcount values
+  - Clean flat code structure — no Python functions/classes, deterministic data, all
+    imports used
+  - Both HTML and PNG artifacts produced correctly for both themes
   weaknesses:
-  - Some smaller leaf nodes have text that could be slightly larger for perfect readability
+  - 'Chart title does not follow required spec format: should be ''TechCorp Organizational
+    Structure · Employee Headcount · hierarchy-toggle-view · python · highcharts ·
+    anyplot.ai'' or ''hierarchy-toggle-view · python · highcharts · anyplot.ai'' —
+    spec attribution is currently only in the footer watermark, not the Highcharts
+    title.text'
+  - Design Excellence at 14/20 — while the toggle UI is polished, the treemap itself
+    uses mostly Highcharts defaults beyond color assignment; additional visual refinement
+    (e.g., gradient fills for depth, level-based opacity, or annotated callouts for
+    largest nodes) would elevate to publication-ready
   image_description: |-
-    The plot displays a treemap visualization of TechCorp's organizational structure showing employee headcount distribution. The main title "TechCorp Organizational Structure · Employee Headcount" appears at the top, followed by a toggle button with "Treemap" (active, blue) and "Sunburst" (inactive, gray) options. Below is the spec title "hierarchy-toggle-view · highcharts · pyplots.ai".
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the outer canvas — correct light surface, not pure white.
+      Chrome: At the top, a rounded pill-shaped toggle container (lighter elevated bg #FFFDF6) holds two buttons: "Treemap" (active, filled #009E73 green with near-white text) and "Sunburst" (inactive, transparent with dark-soft text). Below that, the Highcharts chart title "TechCorp Organizational Structure · Employee Headcount" renders in dark ink (#1A1A17) at 42px — clearly readable. Footer watermark "hierarchy-toggle-view · python · highcharts · anyplot.ai" in soft ink at bottom center.
+      Data: Squarified treemap fills the chart area. Four top-level departments color-coded in Okabe-Ito order: Engineering (#009E73 green) occupying the left ~30%, Sales (#D55E00 orange-vermillion) the large central area, Operations (#0072B2 blue) on the right, HR (#CC79A7 reddish-purple) as a bottom strip. Sub-nodes inherit department colors. Labels visible at all three levels with level-specific font sizes (40px→32px→26px). Root "TechCorp" label centered in Sales region at chart center.
+      Legibility verdict: PASS — all title, toggle, data labels, and footer text are clearly readable against the warm off-white background. No light-on-light issues.
 
-    The treemap uses a squarified layout with nested rectangles representing the company hierarchy. Four main departments are color-coded:
-    - Engineering (blue #306998): Contains Backend, Frontend, DevOps, and QA teams with their sub-teams
-    - Sales (yellow #FFD43B): Contains Enterprise (North America, Europe, Asia Pacific), SMB, and Partners divisions
-    - Operations (purple #9467BD): Contains Support (Tier 1, 2, 3) and Logistics teams
-    - Human Resources (cyan #17BECF): Contains Recruiting and Training teams
-
-    Text labels are clearly visible on most rectangles with white text outline for contrast. The layout fills the canvas well with white borders separating nested levels.
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) fills the outer canvas — correct dark surface.
+      Chrome: Toggle container uses dark elevated background (#242420) with the same green active "Treemap" button. Title "TechCorp Organizational Structure · Employee Headcount" renders in near-white (#F0EFE8) — clearly readable against the dark background. Footer watermark in #B8B7B0 (light soft) on dark — readable. No dark-on-dark failures detected.
+      Data: Treemap layout is pixel-identical to the light render. Department colors are IDENTICAL: Engineering #009E73, Sales #D55E00, Operations #0072B2, HR #CC79A7 — data colors have not changed between themes, only chrome flipped. Cell labels appear in contrasted text (Highcharts textOutline: '3px contrast' auto-adjusts for readability on colored tiles).
+      Legibility verdict: PASS — all text is readable. Title is light on dark. Footer watermark is visible. No dark-on-dark issues. Brand green #009E73 remains clearly visible on the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable, larger rectangles have clear labels, some smaller
-          rectangles have slightly cramped text
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No text overlap, labels fit within rectangles
+        comment: 'All font sizes explicitly set: title 42px, toggle buttons 30px,
+          data labels 26-40px (level-specific), footer 26px. All text readable in
+          both themes.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Treemap squarified layout prevents label collisions. No text overlap
+          observed in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All rectangles clearly visible, white borders provide good separation
+        comment: All treemap cells clearly visible with distinct department colors.
+          Hierarchical borders (5px/3px/2px) delineate levels clearly.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette (blue, yellow, purple, cyan)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Treemap fills canvas well with balanced proportions
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A - treemaps do not have traditional axes
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean presentation, colors self-explanatory via grouping
+        comment: Okabe-Ito palette is CVD-safe. Departments are distinguishable without
+          relying on hue alone due to size and text labels.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills ~92% of vertical canvas (160px header + chart + 60px
+          footer). Excellent canvas utilization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes needed for treemap. Chart title 'TechCorp Organizational
+          Structure · Employee Headcount' is descriptive. N/A for axis labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series Engineering=#009E73 (brand green). Subsequent departments
+          follow Okabe-Ito positions 2-4. Light bg=#FAF8F1, dark bg=#1A1A17. All chrome
+          tokens theme-adaptive. Data colors identical between renders.
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design clearly above defaults: custom toggle UI (rounded,
+          shadowed, brand-color active state), thoughtful color hierarchy, professional
+          typography. Not quite FiveThirtyEight-level but notably polished.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Level-specific treemap borders (5/3/2px) for hierarchy. Smooth CSS
+          transitions on toggle (0.3s). Theme-adaptive at all levels. Treemap cells
+          themselves rely on Highcharts defaults beyond color.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color hierarchy immediately communicates departments; size encodes
+          headcount. Sales and Engineering clearly dominate. Toggle feature enables
+          dual perspectives. 'TechCorp' root label provides focal point.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct treemap visualization with toggle to sunburst
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Hierarchy correctly mapped, parent-child relationships preserved
-      - id: SC-03
+        comment: Both treemap AND sunburst implemented. Toggle switches between them.
+          Correct hierarchical visualization.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Toggle button present, consistent colors, drilldown enabled; animation
-          on toggle works
-      - id: SC-04
-        name: Data Range
+        comment: Toggle button implemented. Consistent colors across both views (same
+          DEPT_COLORS). Both views fit same container. Animated transitions (duration:800ms).
+          Hover tooltips present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All hierarchy levels visible (4 levels as specified)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: No explicit legend, but colors are consistent and self-documenting
-          via hierarchy
-      - id: SC-06
-        name: Title Format
+        comment: Hierarchical data correctly mapped with id/parent/name/value. 43
+          nodes across 4 levels. Values correctly encode employee headcount as area
+          (treemap) and angle (sunburst).
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
+        max: 3
         passed: true
-        comment: Uses hierarchy-toggle-view · highcharts · pyplots.ai format
+        comment: Footer watermark correctly reads 'hierarchy-toggle-view · python
+          · highcharts · anyplot.ai'. However, the Highcharts chart title.text is
+          'TechCorp Organizational Structure · Employee Headcount' without the spec-id
+          format. Attribution is present but not as the primary chart title.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4-level hierarchy with 43 nodes, demonstrates both branch and
-          leaf nodes
+        comment: Shows all hierarchy levels (4 levels), multiple parent nodes, varying
+          leaf node sizes, color-coded departments. Full coverage of treemap/sunburst
+          features.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Company organizational structure is a perfect real-world use case
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Employee headcount values are realistic (4-35 range)
+        comment: Company organizational structure (TechCorp) is a real, comprehensible,
+          neutral business scenario. Departments (Engineering, Sales, Operations,
+          HR) are standard. Neutral topic.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Employee headcount values (4-35 per leaf team) are plausible for
+          a mid-size tech company. Engineering and Sales being the largest departments
+          is realistic. No impossible values.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -151,42 +207,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: data to HTML generation to screenshot'
+        comment: 'Flat Python structure: imports → theme setup → data → HTML generation
+          → file save → screenshot. No Python functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (no random), but relies on external CDN downloads
+        comment: Data is fully deterministic (hardcoded org chart). No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: base64 (screenshot decode), os (env var), subprocess
+          (npm install), tempfile, time (sleep), pathlib (file ops), selenium (screenshot).'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Highcharts is an interactive library — real toggle buttons in HTML
+          are legitimate, not fake UI. JavaScript functions for toggle are appropriate.
+          Clean Python structure with well-organized data definitions.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html correctly
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Correct
+          output for interactive library.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of Highcharts JavaScript API: correct hierarchical data
+          format (id/parent/name/value), proper series type configuration, chart.destroy()
+          + recreate for toggle, correct module loading order (treemap, sunburst).'
+      - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: Uses Highcharts treemap and sunburst modules, drilldown capability,
-          animated transitions, interactive toggle
+        comment: 'Uses Highcharts-exclusive features: treemap module, sunburst module,
+          allowDrillToNode, textOutline:''3px contrast'' (auto-contrast), rotationMode:''circular''
+          for sunburst labels, level-specific dataLabel/borderWidth configuration.'
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -198,5 +268,4 @@ impl_tags:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
