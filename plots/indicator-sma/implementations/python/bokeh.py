@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-19
@@ -57,10 +57,12 @@ p = figure(
     tools="pan,wheel_zoom,box_zoom,reset,save",
 )
 
-close_line = p.line(x="date", y="close", source=source, line_width=3, color=COLOR_CLOSE, alpha=0.9)
-sma20_line = p.line(x="date", y="sma_20", source=source, line_width=3, color=COLOR_SMA20, alpha=0.9)
-sma50_line = p.line(x="date", y="sma_50", source=source, line_width=3, color=COLOR_SMA50, alpha=0.9)
-sma200_line = p.line(x="date", y="sma_200", source=source, line_width=3, color=COLOR_SMA200, alpha=0.9)
+close_line = p.line(x="date", y="close", source=source, line_width=5, color=COLOR_CLOSE, alpha=1.0)
+sma20_line = p.line(x="date", y="sma_20", source=source, line_width=2, color=COLOR_SMA20, alpha=0.8, line_dash="dashed")
+sma50_line = p.line(x="date", y="sma_50", source=source, line_width=2, color=COLOR_SMA50, alpha=0.8, line_dash="dashed")
+sma200_line = p.line(
+    x="date", y="sma_200", source=source, line_width=2, color=COLOR_SMA200, alpha=0.8, line_dash="dashed"
+)
 
 # HoverTool for exact values on mouseover
 hover = HoverTool(
@@ -108,14 +110,13 @@ p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 
-p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 # Save HTML then screenshot with headless Chrome
 output_file(f"plot-{THEME}.html")
