@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-race-animated: Animated Bar Chart Race
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-19
+Quality: 89/100 | Updated: 2026-05-19
 """
 
 import os
