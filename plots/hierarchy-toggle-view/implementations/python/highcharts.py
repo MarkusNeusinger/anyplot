@@ -1,18 +1,29 @@
-""" pyplots.ai
+"""anyplot.ai
 hierarchy-toggle-view: Interactive Treemap-Sunburst Toggle View
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-11
+Library: highcharts unknown | Python 3.13
+Quality: 91/100 | Updated: 2026-05-19
 """
 
 import base64
+import os
+import subprocess
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Okabe-Ito palette for departments (positions 1-4)
+DEPT_COLORS = {"engineering": "#009E73", "sales": "#D55E00", "operations": "#0072B2", "hr": "#CC79A7"}
 
 # Hierarchical data: Company organizational structure
 # Format: [id, parent, label, value]
@@ -53,12 +64,14 @@ hierarchy_data = [
     # Level 3: QA teams
     ["qa-auto", "qa", "Automation", 8],
     ["qa-manual", "qa", "Manual Testing", 6],
-    # Level 3: Sales teams
+    # Level 3: Enterprise sales teams
     ["ent-na", "enterprise", "North America", 35],
     ["ent-eu", "enterprise", "Europe", 28],
     ["ent-apac", "enterprise", "Asia Pacific", 20],
+    # Level 3: SMB sales teams
     ["smb-direct", "smb", "Direct Sales", 18],
     ["smb-online", "smb", "Online Sales", 22],
+    # Level 3: Partner sales teams
     ["partner-tech", "partners", "Tech Partners", 12],
     ["partner-resell", "partners", "Resellers", 15],
     # Level 3: Operations teams
@@ -74,30 +87,30 @@ hierarchy_data = [
     ["train-dev", "training", "Development", 4],
 ]
 
-# Convert to JavaScript array format
+# Convert to JavaScript array literal
 js_data = "[\n"
 for item in hierarchy_data:
     id_val, parent_val, label_val, value_val = item
     parent_str = f'"{parent_val}"' if parent_val else "null"
-    value_str = str(value_val) if value_val else "null"
+    value_str = str(value_val) if value_val is not None else "null"
     js_data += f'    ["{id_val}", {parent_str}, "{label_val}", {value_str}],\n'
 js_data += "]"
 
-# Download Highcharts JS files
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-treemap_url = "https://code.highcharts.com/modules/treemap.js"
-sunburst_url = "https://code.highcharts.com/modules/sunburst.js"
+# Build JavaScript color map object literal
+js_color_map = "{\n"
+for dept, color in DEPT_COLORS.items():
+    js_color_map += f"    '{dept}': '{color}',\n"
+js_color_map += "}"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Install Highcharts via npm and read local files (CDN blocked in CI)
+hc_prefix = "/tmp/hc-anyplot"
+subprocess.run(["npm", "install", "highcharts", "--prefix", hc_prefix], check=True, capture_output=True)
+hc_dir = Path(hc_prefix) / "node_modules" / "highcharts"
+highcharts_js = (hc_dir / "highcharts.js").read_text(encoding="utf-8")
+treemap_js = (hc_dir / "modules" / "treemap.js").read_text(encoding="utf-8")
+sunburst_js = (hc_dir / "modules" / "sunburst.js").read_text(encoding="utf-8")
 
-with urllib.request.urlopen(treemap_url, timeout=30) as response:
-    treemap_js = response.read().decode("utf-8")
-
-with urllib.request.urlopen(sunburst_url, timeout=30) as response:
-    sunburst_js = response.read().decode("utf-8")
-
-# HTML with toggle functionality
+# HTML with toggle functionality and theme-adaptive chrome
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -107,59 +120,62 @@ html_content = f"""<!DOCTYPE html>
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #ffffff;
+            background: {PAGE_BG};
+            color: {INK};
         }}
-        .container {{
+        .outer {{
             width: 4800px;
             height: 2700px;
             position: relative;
+            background: {PAGE_BG};
+            box-sizing: border-box;
         }}
         .toggle-container {{
             position: absolute;
-            top: 40px;
+            top: 50px;
             left: 50%;
             transform: translateX(-50%);
             z-index: 1000;
             display: flex;
             gap: 0;
-            background: #e8e8e8;
-            border-radius: 30px;
-            padding: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            background: {ELEVATED_BG};
+            border-radius: 32px;
+            padding: 10px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.18);
         }}
         .toggle-btn {{
-            padding: 20px 60px;
-            font-size: 28px;
+            padding: 22px 70px;
+            font-size: 30px;
             font-weight: 600;
             border: none;
             cursor: pointer;
-            border-radius: 24px;
+            border-radius: 26px;
             transition: all 0.3s ease;
-            color: #666;
+            color: {INK_SOFT};
             background: transparent;
         }}
         .toggle-btn.active {{
-            background: #306998;
-            color: white;
-            box-shadow: 0 2px 8px rgba(48, 105, 152, 0.4);
-        }}
-        .toggle-btn:hover:not(.active) {{
-            background: #d0d0d0;
+            background: #009E73;
+            color: #FAF8F1;
+            box-shadow: 0 2px 10px rgba(0,158,115,0.45);
         }}
         #chart-container {{
-            width: 100%;
-            height: calc(100% - 200px);
-            margin-top: 200px;
-        }}
-        .title {{
             position: absolute;
-            top: 140px;
+            top: 160px;
+            left: 0;
+            right: 0;
+            bottom: 60px;
+        }}
+        .spec-label {{
+            position: absolute;
+            bottom: 14px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 48px;
-            font-weight: 700;
-            color: #333;
+            font-size: 26px;
+            color: {INK_SOFT};
             z-index: 100;
+            white-space: nowrap;
+            letter-spacing: 0.02em;
         }}
     </style>
     <script>{highcharts_js}</script>
@@ -167,66 +183,58 @@ html_content = f"""<!DOCTYPE html>
     <script>{sunburst_js}</script>
 </head>
 <body>
-    <div class="container">
+    <div class="outer">
         <div class="toggle-container">
             <button class="toggle-btn active" id="treemap-btn" onclick="showTreemap()">Treemap</button>
             <button class="toggle-btn" id="sunburst-btn" onclick="showSunburst()">Sunburst</button>
         </div>
-        <div class="title">hierarchy-toggle-view · highcharts · pyplots.ai</div>
         <div id="chart-container"></div>
+        <div class="spec-label">hierarchy-toggle-view · python · highcharts · anyplot.ai</div>
     </div>
     <script>
         var rawData = {js_data};
 
-        // Color palette - consistent across both views
-        var colorMap = {{
-            'engineering': '#306998',
-            'sales': '#FFD43B',
-            'operations': '#9467BD',
-            'hr': '#17BECF'
-        }};
+        var colorMap = {js_color_map};
 
-        // Get department color for any node
         function getDeptColor(id, parent) {{
             if (colorMap[id]) return colorMap[id];
-            // Find parent department
             for (var i = 0; i < rawData.length; i++) {{
                 if (rawData[i][0] === parent) {{
                     if (colorMap[rawData[i][0]]) return colorMap[rawData[i][0]];
                     return getDeptColor(rawData[i][0], rawData[i][1]);
                 }}
             }}
-            return '#666666';
+            return '#888888';
         }}
 
-        // Process data for both chart types
         var processedData = rawData.map(function(item) {{
-            var color = getDeptColor(item[0], item[1]);
             return {{
                 id: item[0],
                 parent: item[1] || undefined,
                 name: item[2],
                 value: item[3],
-                color: color
+                color: getDeptColor(item[0], item[1])
             }};
         }});
 
         var currentChart = null;
         var currentType = 'treemap';
 
+        var chartBg = '{PAGE_BG}';
+        var elevatedBg = '{ELEVATED_BG}';
+        var inkColor = '{INK}';
+        var inkSoft = '{INK_SOFT}';
+
         function createTreemap() {{
             return Highcharts.chart('chart-container', {{
                 chart: {{
-                    backgroundColor: '#ffffff',
+                    backgroundColor: chartBg,
                     animation: {{ duration: 800 }}
                 }},
                 title: {{
                     text: 'TechCorp Organizational Structure · Employee Headcount',
-                    style: {{ fontSize: '36px', fontWeight: '600', color: '#333' }},
-                    y: 30
-                }},
-                subtitle: {{
-                    text: null
+                    style: {{ fontSize: '42px', fontWeight: '600', color: inkColor }},
+                    y: 28
                 }},
                 series: [{{
                     type: 'treemap',
@@ -236,7 +244,7 @@ html_content = f"""<!DOCTYPE html>
                     dataLabels: {{
                         enabled: true,
                         style: {{
-                            fontSize: '24px',
+                            fontSize: '26px',
                             fontWeight: 'bold',
                             textOutline: '3px contrast'
                         }}
@@ -245,31 +253,33 @@ html_content = f"""<!DOCTYPE html>
                         level: 1,
                         dataLabels: {{
                             enabled: true,
-                            style: {{ fontSize: '36px' }}
+                            style: {{ fontSize: '40px' }}
                         }},
-                        borderWidth: 4,
-                        borderColor: '#ffffff'
+                        borderWidth: 5,
+                        borderColor: chartBg
                     }}, {{
                         level: 2,
                         dataLabels: {{
                             enabled: true,
-                            style: {{ fontSize: '28px' }}
+                            style: {{ fontSize: '32px' }}
                         }},
                         borderWidth: 3,
-                        borderColor: '#ffffff'
+                        borderColor: chartBg
                     }}, {{
                         level: 3,
                         dataLabels: {{
                             enabled: true,
-                            style: {{ fontSize: '22px' }}
+                            style: {{ fontSize: '26px' }}
                         }},
                         borderWidth: 2,
-                        borderColor: '#ffffff'
+                        borderColor: chartBg
                     }}],
                     data: processedData
                 }}],
                 tooltip: {{
                     style: {{ fontSize: '22px' }},
+                    backgroundColor: elevatedBg,
+                    borderColor: inkSoft,
                     pointFormat: '<b>{{point.name}}</b>: {{point.value}} employees'
                 }},
                 credits: {{ enabled: false }}
@@ -279,16 +289,13 @@ html_content = f"""<!DOCTYPE html>
         function createSunburst() {{
             return Highcharts.chart('chart-container', {{
                 chart: {{
-                    backgroundColor: '#ffffff',
+                    backgroundColor: chartBg,
                     animation: {{ duration: 800 }}
                 }},
                 title: {{
                     text: 'TechCorp Organizational Structure · Employee Headcount',
-                    style: {{ fontSize: '36px', fontWeight: '600', color: '#333' }},
-                    y: 30
-                }},
-                subtitle: {{
-                    text: null
+                    style: {{ fontSize: '42px', fontWeight: '600', color: inkColor }},
+                    y: 28
                 }},
                 series: [{{
                     type: 'sunburst',
@@ -299,38 +306,41 @@ html_content = f"""<!DOCTYPE html>
                         enabled: true,
                         format: '{{point.name}}',
                         style: {{
-                            fontSize: '20px',
+                            fontSize: '24px',
                             fontWeight: 'bold',
-                            textOutline: '2px contrast'
+                            textOutline: '2px contrast',
+                            color: inkColor
                         }},
                         rotationMode: 'circular'
                     }},
                     levels: [{{
                         level: 1,
                         dataLabels: {{
-                            style: {{ fontSize: '28px' }}
+                            style: {{ fontSize: '32px' }}
                         }}
                     }}, {{
                         level: 2,
                         colorByPoint: false,
                         dataLabels: {{
-                            style: {{ fontSize: '24px' }}
+                            style: {{ fontSize: '28px' }}
                         }}
                     }}, {{
                         level: 3,
                         dataLabels: {{
-                            style: {{ fontSize: '18px' }}
+                            style: {{ fontSize: '24px' }}
                         }}
                     }}, {{
                         level: 4,
                         dataLabels: {{
                             enabled: true,
-                            style: {{ fontSize: '16px' }}
+                            style: {{ fontSize: '22px' }}
                         }}
                     }}]
                 }}],
                 tooltip: {{
                     style: {{ fontSize: '22px' }},
+                    backgroundColor: elevatedBg,
+                    borderColor: inkSoft,
                     pointFormat: '<b>{{point.name}}</b>: {{point.value}} employees'
                 }},
                 credits: {{ enabled: false }}
@@ -355,17 +365,16 @@ html_content = f"""<!DOCTYPE html>
             currentChart = createSunburst();
         }}
 
-        // Initialize with treemap
         currentChart = createTreemap();
     </script>
 </body>
 </html>"""
 
-# Write HTML file for interactive version
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact (theme-suffixed)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Create PNG screenshot using Selenium
+# Create PNG screenshot via Selenium
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -383,18 +392,15 @@ driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
 
-# Use CDP to capture screenshot at exact dimensions
 driver.execute_cdp_cmd(
     "Emulation.setDeviceMetricsOverride", {"width": 4800, "height": 2700, "deviceScaleFactor": 1, "mobile": False}
 )
 time.sleep(1)
 
-# Take full screenshot
 screenshot_data = driver.execute_cdp_cmd("Page.captureScreenshot", {"format": "png"})
 
-with open("plot.png", "wb") as f:
+with open(f"plot-{THEME}.png", "wb") as f:
     f.write(base64.b64decode(screenshot_data["data"]))
 
 driver.quit()
-
 Path(temp_path).unlink()
