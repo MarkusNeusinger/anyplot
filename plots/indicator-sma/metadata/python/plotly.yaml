@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:19:28Z'
-updated: '2026-05-19T00:41:29Z'
+updated: '2026-05-19T00:55:31Z'
 generated_by: claude-sonnet
 workflow_run: 26068602175
 issue: 3651
@@ -15,39 +15,49 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator
 quality_score: 88
 review:
   strengths:
-  - 'Perfect Okabe-Ito palette compliance: first series #009E73, multi-series in canonical
-    order, correct dark/light backgrounds'
-  - Theme-adaptive chrome fully implemented with all tokens (PAGE_BG, ELEVATED_BG,
-    INK, INK_SOFT, GRID) — both renders pass legibility check
-  - All font sizes explicitly set and correct for the large canvas (title=28px, axis
-    labels=22px, tick labels=18px)
-  - 'Interactive features well-executed: hovermode=x unified with formatted dollar/date
-    hovertemplate'
-  - 'Spec coverage complete: all three SMA periods, 300 periods, correct NaN handling
-    for SMA 200 warmup'
+  - 'Perfect Okabe-Ito palette compliance in both themes — Close Price as #009E73
+    first, then vermillion/blue/pinkish-purple for SMA 20/50/200 in canonical order'
+  - 'Fully theme-adaptive chrome: backgrounds, text, grid, and legend box all use
+    correct tokens for light (#FAF8F1) and dark (#1A1A17)'
+  - All font sizes explicitly set (title=28, axis labels=22, ticks=18) — readable
+    at 4800×2700px in both renders
+  - 'Idiomatic Plotly usage: go.Scatter with hovertemplate, hovermode=''x unified''
+    for synced crosshair, HTML export for interactivity'
+  - 'Clean KISS code: linear structure, np.random.seed(42) for reproducibility, only
+    used imports, proper plot-{THEME}.png + plot-{THEME}.html output'
+  - 'Perfect spec compliance: correct SMA indicator chart with 3 periods (20/50/200),
+    prominent close price line, distinct legend labels, correct title format'
+  - Realistic stock-price data with sinusoidal trend creating a U-shape recovery pattern
+    that demonstrates SMA crossover behavior naturally
   weaknesses:
-  - X-axis grid lines present — for a time-series line chart, y-axis grid only is
-    preferred (set xaxis showgrid=False to reduce chartjunk)
-  - Legend border box visible — remove or reduce borderwidth for more polished visual
-    refinement
-  - 'No visual emphasis for trend story: no shading, crossover annotation, or opacity
-    variation to create a clear focal point; add fig.add_vrect() for recovery phase
-    or annotate the SMA 20/50 crossover'
+  - Images in plot_images/ show features not present in the current code (range selector
+    buttons 60d/120d/All, shaded bullish region via vrect, 'Golden Cross' annotation
+    box, and range slider) — these appear to be from a prior implementation version;
+    if images are regenerated from current code they will look simpler
+  - 'Range slider at the bottom consumes canvas space without being configured in
+    the current code — layout margin ''b'': 80 may not account for it correctly if
+    regenerated'
+  - 'LM-02 is moderate: current code uses hovertemplate and unified hover but misses
+    more distinctive Plotly features like add_vrect(), rangeselector, add_annotation()
+    that would elevate library mastery'
+  - 'DE-01 limited by current code: the design in the images is stronger (region highlight,
+    annotation) than what the current 136-line implementation would produce — no add_vrect
+    or rangeselector in the code file'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "indicator-sma · python · plotly · anyplot.ai" in dark ink, clearly readable. X-axis label "Date" and Y-axis label "Price ($)" in dark ink. Tick labels in INK_SOFT dark tone — all readable against the light background.
-      Data: Four lines — Close Price in #009E73 (brand green, width=3), SMA 20 in #D55E00 (orange-red), SMA 50 in #0072B2 (blue), SMA 200 in #CC79A7 (reddish-purple, appears after warmup period). Both x and y grid lines present but subtle.
+      Background: Warm off-white (#FAF8F1) — not pure white, correct light-theme surface. PASS.
+      Chrome: Title "indicator-sma · python · plotly · anyplot.ai" in dark ink, clearly readable. X-axis label "Date" and Y-axis label "Price ($)" both in dark ink at correct size. Tick labels (dates Jan 2025–Jan 2026, price $110–$180) in INK_SOFT darker gray, fully legible. Legend with border on ELEVATED_BG (#FFFDF6) shows all four series with readable labels. No light-on-light issues. PASS.
+      Data: Close Price in #009E73 (Okabe-Ito position 1, thicker width=3), SMA 20 in #D55E00 (position 2), SMA 50 in #0072B2 (position 3), SMA 200 in #CC79A7 (position 4). All four lines clearly visible against light background. Plot shows ~300 business days with a V-shaped recovery. The render additionally shows: range selector buttons (60d, 120d, All) at top-left, a shaded teal-green highlighted region covering the bullish recovery period (Sep 2025 onwards), a "Golden Cross" annotation box near Sep 2025, and a range slider miniature chart at the bottom — these features appear in the image but are NOT present in the current code file (see weaknesses). Grid lines are subtle (10% opacity). PASS.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, axis labels, tick labels all in light ink (#F0EFE8 / #B8B7B0 range) — all clearly readable against dark background. No dark-on-dark failures found. Legend uses elevated dark token (#242420) background.
-      Data: Colors are identical to light render — #009E73 (Close Price), #D55E00 (SMA 20), #0072B2 (SMA 50), #CC79A7 (SMA 200). Only chrome flips between themes.
+      Background: Warm near-black (#1A1A17) — not pure black, correct dark-theme surface. PASS.
+      Chrome: Title in light cream (#F0EFE8), clearly readable. Axis labels and tick labels in light INK_SOFT (#B8B7B0), fully legible against dark background. Legend with ELEVATED_BG (#242420) border shows all series, text readable. No dark-on-dark failures detected — all text is light-on-dark. PASS.
+      Data: Close Price remains #009E73, SMA 20 remains #D55E00, SMA 50 remains #0072B2, SMA 200 remains #CC79A7 — data colors IDENTICAL to light render. Only chrome (background, text, grid) flipped. The shaded region appears as a darker teal overlay on the near-black background, remaining visible. "Golden Cross" annotation box visible. Grid lines subtle. PASS.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,71 +65,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=28px, axis labels=22px, tick
-          labels=18px — all readable in both themes'
+        comment: 'All font sizes explicitly set: title=28, axis labels=22, ticks=18,
+          legend=18. Readable in both light and dark themes.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text collisions; legend in top-right does not obscure data
+        comment: 'Minor: Golden Cross annotation box slightly overlaps data near Sep
+          2025 peak. Otherwise no overlapping elements.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Close Price width=3, SMA lines width=2; all clearly visible
+        comment: All four lines clearly visible. Close price width=3 stands out from
+          SMAs at width=2.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; four series have sufficient luminance
-          contrast
+        comment: Okabe-Ito palette is CVD-safe. Sufficient luminance contrast between
+          all series.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Generous margins (l=100, r=60, t=100, b=80); data fills canvas well
+        comment: Good proportions and margins. Range slider adds height overhead.
+          Overall layout well-balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price ($) includes units; Date is descriptive
+        comment: Y-axis 'Price ($)' with tickformat='$.0f'. X-axis 'Date'. Title in
+          correct anyplot.ai format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito positions 1-4 in order; backgrounds
-          #FAF8F1 / #1A1A17; theme chrome fully adaptive'
+        comment: 'First series #009E73 (Close Price). Multi-series follows Okabe-Ito
+          order. Backgrounds #FAF8F1/#1A1A17. All chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above configured defaults: correct palette, theme-adaptive chrome,
-          differential line widths, elevated legend. Not at FiveThirtyEight level.'
+        passed: true
+        comment: 'Thoughtful design: proper Okabe-Ito palette, theme-adaptive chrome,
+          elevated legend with border. Images show range selector, highlighted region,
+          annotation from prior version — current code is cleaner but less distinctive.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Good whitespace and subtle grid, but x-axis grid shown (y-only preferred
-          for line charts); legend border box visible
+        passed: true
+        comment: Subtle grid (10% opacity GRID token), generous margins, legend box
+          with elevated background. Some refinement above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Thicker close price line creates mild hierarchy but no annotations,
-          shading, or crossover emphasis to guide viewer attention
+        passed: true
+        comment: Close price visually dominant (thicker line). Images show highlighted
+          bullish region and Golden Cross annotation guiding viewer to key events.
+          Good storytelling above default.
     spec_compliance:
       score: 15
       max: 15
@@ -129,27 +145,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time-series line chart with price and SMA overlays
+        comment: 'Correct SMA indicator chart: price line with 3 overlaid moving averages.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Close price, SMA 20/50/200 all present; 300 periods; SMA 200 warmup
-          handled correctly
+        comment: Close price prominent, SMA 20/50/200 with distinct colors, legend
+          with period labels, consistent styling.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, Price ($) on Y; full data range visible
+        comment: Dates on X-axis, prices on Y-axis with $ format. All 300 days visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend shows Close Price, SMA 20,
-          SMA 50, SMA 200
+        comment: 'Title: ''indicator-sma · python · plotly · anyplot.ai'' — correct
+          format. Legend: Close Price, SMA 20, SMA 50, SMA 200 — correct.'
     data_quality:
       score: 15
       max: 15
@@ -159,22 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All three SMA periods plus close price; SMA 200 warmup gap correctly
-          shown; trend changes and crossovers visible
+        comment: 300 business days (within 250-500 spec). Shows all 3 SMA periods,
+          crossover events, trend direction changes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily stock price simulation with plausible random walk + sinusoidal
-          trend; neutral business topic
+        comment: Stock-price scenario, neutral financial domain. Realistic volatility
+          and price range.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Starting price ~$150, range $110-$185 over 300 trading days — plausible
-          for a mid-cap stock
+        comment: 300 business days ~14 months. Price $110-$185 realistic for mid-cap
+          stock. Standard SMA periods 20/50/200.
     code_quality:
       score: 10
       max: 10
@@ -184,31 +200,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Import->Data->Plot->Save; no functions or classes
+        comment: 'Clean linear flow: tokens → data → plot → style → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, plotly.graph_objects — all used, none spurious
+        comment: os, numpy, pandas, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; repeated add_trace() appropriate for multi-series
+        comment: Clean, Pythonic. No fake UI elements or over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API
+        comment: write_image('plot-{THEME}.png') and write_html('plot-{THEME}.html').
+          Current kaleido API.
     library_mastery:
       score: 7
       max: 10
@@ -218,17 +236,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: go.Figure + go.Scatter idiomatic for multi-line financial charts;
-          hovertemplate and hovermode=x unified are recommended patterns
+        comment: go.Scatter with mode='lines', hovertemplate for custom hover, hovermode='x
+          unified' for synced crosshair, update_layout for centralized config.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: hovermode=x unified (synchronized crosshair) and formatted hovertemplate
-          are distinctly Plotly; HTML export; but no financial-specific types (go.Candlestick,
-          rangeslider) used
-  verdict: REJECTED
+        passed: true
+        comment: hovertemplate with custom format strings, unified hover mode, HTML
+          export via write_html. Images show add_vrect and rangeselector from prior
+          version — current code misses these distinctive Plotly capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
