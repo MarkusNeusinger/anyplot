@@ -1,161 +1,204 @@
 library: altair
+language: python
 specification_id: bar-race-animated
 created: '2026-01-11T00:22:58Z'
-updated: '2026-01-11T00:29:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886561814
+updated: '2026-05-19T02:18:21Z'
+generated_by: claude-sonnet
+workflow_run: 26071184942
 issue: 3653
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/altair/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent small multiples approach as a static fallback for animation (spec-compliant
-    alternative)
-  - Clear visualization of ranking changes over time with sorted bars
-  - Beautiful rounded bars with consistent entity colors across all panels
-  - 'Effective dual-label system: values inside bars (white) and names outside (dark)'
-  - 'Good use of Altair-specific features: faceting, layer composition, tooltips,
-    declarative encoding'
-  - Realistic, engaging data scenario (streaming platforms) with believable growth
-    patterns
+  - Clean small-multiples design with four key-year facets that clearly shows ranking
+    progression over time
+  - Triple-layer Altair composition (bars + value labels + platform name labels) adds
+    data richness without clutter
+  - 'Correct Okabe-Ito palette with #009E73 as first series, plus accessible extensions
+    for 10 entities'
+  - 'Full theme-adaptive chrome: backgrounds, text, grid, and legend all correctly
+    flip between light (#FAF8F1) and dark (#1A1A17)'
+  - Independent x-axis scales per facet (resolve_scale) let each year use its own
+    range — avoids compressing 2015 data against 2024 max
+  - Rounded bar corners (cornerRadiusEnd=6) and hidden Y-axis give a polished, modern
+    look
+  - Code is clean KISS structure with np.random.seed(42) for reproducibility and all
+    explicitly-set font sizes
   weaknesses:
-  - Missing legend to reinforce color-entity mapping (labels on bars partially compensate)
-  - Value labels could be slightly larger for improved readability at a glance
-  - Grid lines are present but minimal - could be slightly more visible to help compare
-    values across panels
-  image_description: The plot displays a small multiples grid with 4 horizontal bar
-    chart panels for years 2015, 2018, 2021, and 2024. Each panel shows 10 streaming
-    platforms (StreamFlix, ViewMax, PlayNow, WatchHub, MediaGo, CineCloud, ShowTime,
-    PrimeView, FlixBox, CloudTV) sorted by subscriber count in descending order from
-    top to bottom. Bars have rounded corners and consistent colors per platform across
-    all panels. Value labels appear inside bars (white text) showing subscriber counts,
-    while platform names appear outside bars on the right (dark gray text). The title
-    "bar-race-animated · altair · pyplots.ai" is centered at the top with subtitle
-    "Streaming Platform Subscribers Over Time (millions)". Each panel has independent
-    x-axis scales and year labels at the top. The visualization effectively demonstrates
-    ranking changes over time - notably PlayNow rises from 3rd in 2015 to 1st by 2024,
-    while StreamFlix drops from 1st to 2nd.
+  - 'DE-01 (5/8): Lacks a stand-out design flourish — e.g., a subtle gradient on the
+    leading bar, a callout annotation on the rank-1 crossover year, or a bold highlight
+    on the platform that overtook the leader'
+  - 'DE-03 (3/6): The rank-change story (PlayNow rising from #3 to #1) is visible
+    but not emphasised; consider a rank-delta annotation or bolder colour contrast
+    on the biggest mover to guide the viewer''s eye'
+  - 'DE-02 (4/6): Grid opacity 0.25 (encoding-level) overrides the configure_axis
+    value of 0.20; unifying to 0.15 would produce a subtler grid closer to the style-guide
+    target'
+  - 'LM-02 (3/5): Altair''s concat/resolve and selection-driven animation (via params)
+    are not used; even a simple step-slider param could demonstrate a more Altair-distinctive
+    capability'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, correct surface tone.
+      Chrome: Title "bar-race-animated · python · altair · anyplot.ai" clearly readable in dark ink at top centre. Subtitle "Streaming Platform Subscribers Over Time (millions)" visible below in slightly lighter ink. Year column headers (2015, 2018, 2021, 2024) rendered at 26px — sharp and readable. X-axis tick labels and "Subscribers (millions)" titles are legible at 16/20px respectively. Legend on the right shows all 10 platforms with coloured symbols; label and title text is readable.
+      Data: Bars use Okabe-Ito starting with #009E73 (StreamFlix). Each bar has a white value label (subscriber count) inside and a bold dark platform-name label just beyond the bar end. Rounded bar corners add polish. Independent x-scales correctly widen each facet to its year's data range. Rank ordering descends top-to-bottom per year.
+      Legibility verdict: PASS — all text elements are readable against the warm off-white background; no light-on-light issues detected.
+
+    Dark render (plot-dark.png):
+      Background: Near-black consistent with #1A1A17 — not pure black, correct dark surface.
+      Chrome: Title, subtitle, and year headers rendered in light text (#F0EFE8 / INK token) — clearly readable against the dark surface. Axis tick labels and axis titles appear in the lighter INK_SOFT token (#B8B7B0). Legend label and title text is light-coloured and readable. No dark-on-dark failures detected.
+      Data: Bar colours are identical to the light render — Okabe-Ito palette unchanged across themes (only chrome flips). White value labels inside bars remain readable on coloured bars. Platform name labels outside bars use the INK token which correctly resolves to the light value in dark mode.
+      Legibility verdict: PASS — all text readable against the dark background; data colours are theme-consistent with the light render.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, subtitles, and axis labels clearly readable. Year headers
-          large (26pt). Value labels and platform names legible but could be slightly
-          larger.
+        comment: Most sizes explicitly set (title 34px, subtitle 22px, year headers
+          26px, axis title 20px, axis labels 16px, legend 16-18px). text_labels layer
+          at 14px is marginally below the 16px minimum but readable at scale_factor=3.0
+          output.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; bars and labels well spaced
+        comment: Clean faceted layout with no overlapping text; bar labels and value
+          labels are well separated.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars appropriately sized with good height (45px), rounded corners
-          add polish
+        comment: Bars at height=45 are clearly visible; cornerRadiusEnd adds definition;
+          colours well differentiated.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Diverse 10-color palette; Python Blue and Yellow distinguishable.
-          Minor: some adjacent colors could be closer in hue'
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization with 4 panels filling width, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Subscribers (millions) is descriptive with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; adequate contrast between bar colours
+          and backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Four-panel facet fills canvas well; legend placed to the right; balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No legend present; grid subtle but legend would help track colors
+        passed: true
+        comment: X-axis titled 'Subscribers (millions)' with units; Y-axis omitted
+          intentionally (ranks are labelled on bars).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series StreamFlix = #009E73; multi-series follows Okabe-Ito
+          order with accessible extensions for positions 8-10. Backgrounds #FAF8F1
+          / #1A1A17. Chrome fully theme-adaptive in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: rounded corners, multi-layer labels, clean
+          faceting. Falls short of strong-design (6) — no standout emphasis or focal-point
+          technique.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Hidden Y-axis, no view borders, subtle grid, facet spacing, legend
+          padding/cornerRadius are all good touches. Grid opacity mismatch (0.25 encoding
+          vs 0.20 configure) is a minor inconsistency.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Time-progression story is present (4 key years, rank ordering). Rank-change
+          narrative (PlayNow rise) is visible but not visually emphasised — no colour
+          highlight, delta annotation, or focal-point technique.
     spec_compliance:
-      score: 22
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct small multiples implementation as static bar chart race fallback
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Platforms on Y-axis sorted by rank, Subscribers on X-axis, Years
-          in facets
-      - id: SC-03
+        comment: Correct small-multiples implementation for a library without native
+          animation support, as explicitly permitted by spec.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows rankings, labels attached, time visible. Small multiples valid
-          static alternative
-      - id: SC-04
-        name: Data Range
+        comment: Bars sorted by value at each snapshot; entity labels on bars; visible
+          time indicator (year headers); colour consistent per entity across frames.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, independent x-scales per panel work well
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: No legend provided; labels on bars compensate but legend would help
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: X = Subscribers (value driving bar length and ranking), Y = Rank
+          (ordinal, sorted descending). All 10 platforms shown across 4 years.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: bar-race-animated · altair · pyplots.ai'
+        comment: 'Title: ''bar-race-animated · python · altair · anyplot.ai'' — exact
+          format. Subtitle descriptive. Legend labels match all 10 platforms.'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Excellent: shows ranking changes, varied growth rates, multiple
-          crossovers visible'
+        comment: 'Shows all aspects: rank ordering, value-driven bar length, time
+          progression, colour coding, diverse growth trajectories across 10 entities.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Streaming platform subscribers - perfect, neutral, relatable scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Values 5M to 203M, realistic for streaming industry growth 2015-2024
+        comment: Streaming platform subscribers (millions) — realistic, neutral, business
+          domain. Fictional platform names are plausible. No sensitive or political
+          content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 2015 base values 5-40M plausible for early streaming era; 2024 range
+          10-200M reflects realistic decade-long growth with differentiated rates.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,42 +206,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: 'Linear flow: imports → tokens → data → chart layers → facet → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set before synthetic data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: altair, numpy, pandas'
+        comment: os, altair, numpy, pandas — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: resolve_scale works but may show warnings in newer Altair
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic Altair composition. No over-engineering.
       - id: CQ-05
-        name: Output Correct
-        score: 0
+        name: Output & API
+        score: 1
         max: 1
-        passed: false
-        comment: Saves plot.png and plot.html - correct outputs
-    library_features:
-      score: 5
-      max: 5
+        passed: true
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html.
+          Uses current Altair 6.1.0 API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Altair declarative grammar: faceting, layer composition,
-          tooltips, alt.Title, encoding types'
+        comment: 'Expert use of Altair high-level API: mark_bar, encoding types (Q/N/O),
+          layer composition (+), facet(), configure_* chain, resolve_scale.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Uses Altair-distinctive features: facet(column=...) for small multiples,
+          layer composition (bar + text + value), resolve_scale(x=''independent'').
+          No use of params/selection for interactivity which would further differentiate.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -212,5 +265,4 @@ impl_tags:
   - groupby-aggregation
   dataprep: []
   styling:
-  - grid-styling
-  - edge-highlighting
+  - alpha-blending
