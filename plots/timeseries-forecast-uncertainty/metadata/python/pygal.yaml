@@ -2,9 +2,9 @@ library: pygal
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-05-16T22:32:57Z'
-updated: '2026-05-19T15:15:38Z'
+updated: '2026-05-19T19:50:13Z'
 generated_by: claude-sonnet
-workflow_run: 26101456516
+workflow_run: 26118380603
 issue: 3188
 language_version: 3.13.13
 library_version: 3.1.0
@@ -12,45 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/pygal/plot-dark.html
-quality_score: 86
+quality_score: 83
 review:
   strengths:
-  - Sophisticated SVG post-processing fixes pygal guide-line colors for dark theme
-    (stroke:black replaced with theme-adaptive tokens)
-  - Creative background-erase technique works around pygal fill-between limitation
-    — only the forecast CI band is visible, historical area stays clean
-  - 'Perfect spec compliance: historical line, dashed forecast, 95%/80% CI bands,
-    vertical forecast boundary, legend all present'
-  - 'Perfect data quality: realistic monthly sales forecasting scenario with 36-month
-    history + 6-month ARIMA-style projection'
-  - 'Perfect code quality: KISS structure, seed set, clean imports, correct PNG+HTML
-    output'
-  - Theme-adaptive Style object correctly wires INK/INK_MUTED/PAGE_BG tokens through
-    all chrome elements
+  - Creative background-erase CI band technique with clear inline documentation —
+    solves pygal lack of native fill-between
+  - SVG post-processing for dark-mode guide line theming shows deep library knowledge
+  - All font sizes explicitly set with correct theme-adaptive tokens for both renders
+  - 'Excellent data quality: realistic sales scenario with seasonality and trend,
+    plausible CI widths'
+  - Clean KISS code structure with well-explained rendering strategy
   weaknesses:
-  - 'Design excellence mid-tier: grid is still full x+y guides (both axes), spines
-    not removed — DE-02 limited by pygal defaults; consider show_x_guides=False to
-    leave only y-axis grid'
-  - 80% CI dashed lines (INK_MUTED gray) are thin and may lack contrast inside the
-    orange 95% band — consider slightly thicker stroke or higher-contrast color for
-    the 80% boundaries
-  - 'VQ-05 minor: legend at bottom creates a small dead zone; canvas top margin has
-    modest empty space — minor balance issue'
-  - 'DE-01 mid-tier: the chart reads as a well-configured pygal chart rather than
-    publication-ready; adding subtle drop shadow or tightening the outer margins could
-    push polish further'
+  - 80% CI rendered as dashed boundary lines inside 95% band instead of a nested inner
+    shaded band — spec says nested shaded bands for both CI levels; an inner lighter-filled
+    band for 80% would be more spec-compliant
+  - Forecast dashed line (#D55E00 orange) inside the orange CI band has moderate contrast
+    — a different color or increased opacity would improve visibility
+  - 'VQ-07 partial: BRAND (#009E73) is series 4 in palette order not position 0 —
+    necessary for the erase technique but still a spec deviation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white.
-      Chrome: Title "timeseries-forecast-uncertainty · python · pygal · anyplot.ai" rendered in dark ink at top, readable. X-axis label "Month" and y-axis label "Sales ($)" in dark ink, clearly legible. Tick labels sparse every 6 months (Jan 22, Jul 22, …, Jan 25) and y-axis values — all readable against light background.
-      Data: Green (#009E73) solid line traces the 36-month historical uptrend with seasonal oscillation. Orange dashed line shows the 6-month forecast. Warm semi-transparent orange CI band fills the forecast region between lower_95/upper_95 bounds. Two thin gray-muted dashed lines mark the 80% CI boundaries inside the 95% band. A vertical dotted guide line at Jan 25 marks the forecast start prominently. Legend at bottom correctly labels 95% CI, 80% CI, Forecast (projected), Historical (observed).
-      Legibility verdict: PASS — all text is readable; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "timeseries-forecast-uncertainty · python · pygal · anyplot.ai" readable at top. Axis labels "Sales ($)" (Y) and "Month" (X) clearly visible in dark ink. Tick labels Jan '22, Jan '23, Jan '24, Jan '25 readable and non-overlapping. Grid lines subtle dashed horizontal lines.
+      Data: Historical line in brand green #009E73 rising from ~1050 to ~2650. 95% CI band as light peach/tan semi-transparent fill in forecast region (upper-right). 80% CI dashed INK boundary lines visible inside band. Forecast dashed orange line through CI center. Legend at bottom legible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title, axis labels, and tick labels render in light #F0EFE8 / INK_MUTED tones — clearly readable against the dark background. Guide-line SVG post-processing successfully replaces hardcoded stroke:black with theme-adaptive INK_MUTED (regular grid) and INK (Jan 25 boundary). No dark-on-dark failures observed.
-      Data: Green (#009E73) historical line identical to light render — Okabe-Ito colors unchanged between themes. Orange CI fill and dashed forecast line maintain the same hues. The background-erase technique keeps the historical area clean (dark background visible below the historical line); the forecast CI band shows correctly as amber fill on the dark surface.
-      Legibility verdict: PASS — both themes render correctly; data colors are identical between light and dark.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and all axis/tick labels use #F0EFE8 light token — clearly readable against dark background. No dark-on-dark failures. Grid lines subtle with theme-muted token.
+      Data: Colors identical to light render. Green historical line (#009E73) unchanged. CI band appears more vivid orange-brown at 25% alpha on dark bg. Forecast dashed line maintains correct color. 80% CI boundary lines in light INK visible against orange band.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 27
@@ -58,86 +49,81 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=18, label=12, major_label=12,
-          legend=12); text readable in both themes. Minor: tick labels at 12 are fine
-          but slightly compact at mobile widths.'
+        comment: All font sizes explicitly set (title=56, label=42, major_label=36,
+          legend=36). Well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; sparse x-axis labels (every 6 months) prevent
-          collision; legend at bottom doesn't overlap data.
+        comment: Sparse x-tick labels every 6 months, legend at bottom — no collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Historical and forecast lines clearly visible; 95% CI band prominent
-          in forecast region; 80% CI dashed boundaries (INK_MUTED) visible but thin
-          inside the orange band — slightly sub-optimal contrast.
+        comment: Historical line and CI band clearly visible. Forecast orange line
+          inside orange CI band has moderate contrast; 80% CI dashed lines are subtle
+          at INK_MUTED + 50% opacity
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito palette (#009E73 green, #D55E00 orange) is CVD-safe; luminance
-          contrast adequate between green line and orange fill.'
+        comment: Okabe-Ito green/orange CVD-safe. Semi-transparent fills allow overlap
+          without obscuring data
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: '3200x1800 canvas well-utilized; legend at bottom is near the chart.
-          Minor: slight vertical imbalance between top margin and bottom legend area.'
+        comment: 'Good proportions. Minor: 6-month forecast compressed into far right
+          of 36-month timeline'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Sales ($)' includes units; X-axis 'Month' is descriptive;
-          title follows mandated format.
+        comment: Month and Sales ($) with unit — descriptive
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series (#009E73 brand green) correct; forecast uses #D55E00
-          (Okabe-Ito position 2); backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct;
-          chrome is theme-adaptive in both renders.'
+        passed: false
+        comment: 'Partial: BRAND #009E73 at palette position 4 (not 0) due to background-erase
+          technique necessity. Backgrounds correct (#FAF8F1/#1A1A17). Historical line
+          IS brand green visually.'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above-default: custom Style with theme tokens, semi-transparent
-          CI fill, SVG post-processing for guide colors. Well-configured professional
-          look, not publication-ready.'
+        passed: false
+        comment: Well-configured style with theme-adaptive tokens. Creative CI technique.
+          Limited by pygal aesthetic ceiling — refined default.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: 'Some refinement: semi-transparent fills, sparse x-axis labels, bottom
-          legend. Full x+y grid (show_x_guides=True) and visible spines limit refinement
-          score.'
+        passed: false
+        comment: Y-guides only, subtle dashed grid, minimal dot size, SVG post-processing
+          for dark-mode guide colors. Pygal doesn't support spine removal.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: 'Good visual hierarchy: green solid (observed) vs orange dashed (forecast)
-          + Jan 25 boundary guide clearly separates periods; widening CI bands show
-          increasing uncertainty. Viewer immediately grasps the forecast narrative.'
+        passed: false
+        comment: Widening CI band communicates growing uncertainty. Green/orange historical
+          vs forecast creates clear narrative. Above default but no specific emphasis
+          technique.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -145,31 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: time series line chart with historical + forecast + confidence
-          bands.'
+        comment: 'Correct: line chart with CI uncertainty bands for time series forecast'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All spec features present: historical solid line, dashed forecast
-          line, 95% CI shaded band, 80% CI boundaries, vertical forecast-start marker,
-          legend, semi-transparent fills.'
+        comment: 'All main features present. Minor: spec requires nested shaded bands
+          for both CI levels; 80% CI shown as dashed boundary lines not an inner shaded
+          band'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dates (monthly), Y=Sales ($); all 42 data points (36 historical
-          + 6 forecast) correctly mapped.
+        comment: Time on X, sales on Y. Historical left, forecast right. All data
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'timeseries-forecast-uncertainty · python · pygal · anyplot.ai'
-          correct; legend shows 95% CI, 80% CI, Historical (observed), Forecast (projected)
-          — all labels accurate.
+        comment: 'Correct mandatory title format. Legend: 95% CI, 80% CI, Historical
+          (observed), Forecast (projected)'
     data_quality:
       score: 15
       max: 15
@@ -179,23 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all plot-type aspects: historical trend, forecast line, nested
-          80%/95% CI bands, widening uncertainty, forecast boundary marker.'
+        comment: Shows historical trend with seasonality, forecast projection, and
+          two confidence levels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales forecasting — realistic neutral business scenario (Prophet/ARIMA
-          style). Values and context are plausible and non-controversial.
+        comment: Monthly sales with 3-year history + 6-month forecast. Realistic business
+          forecasting, neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales ~$200 at start growing to ~$3500 over 3 years with seasonal
-          oscillation; 6-month forecast with widening CI (±$100 / ±$150) — factually
-          plausible proportions.
+        comment: Growth from ~1050 to ~2650 over 36 months plausible. CI widths +/-150
+          reasonable for signal magnitude
     code_quality:
       score: 10
       max: 10
@@ -205,34 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → style → chart configuration
-          → save. No functions or classes.'
+        comment: 'Linear: imports → data → style → chart → add series → render → save.
+          No functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, sys, cairosvg, numpy, pandas, pygal, pygal.style.Style.'
+        comment: 'All imports used: os, sys, cairosvg, numpy, pandas, pygal, Style'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Comments explain non-obvious constraints (pygal fill limitation,
-          SVG post-processing rationale). No fake UI elements. Complexity is justified.
+        comment: Background-erase technique well-documented. SVG post-processing justified
+          and clean
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current cairosvg
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
       score: 7
       max: 10
@@ -242,17 +224,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal.Line, Style object, fill=True, stroke_dasharray, x_labels_major,
-          legend_at_bottom — idiomatic pygal patterns. SVG post-processing bypasses
-          API slightly but is justified for dark theme.
+        comment: Correct use of Style system, fill=True, x_labels_major, stroke_dasharray,
+          legend_at_bottom. SVG post-processing indicates one area where pygal API
+          falls short natively
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal's x_labels_major for forecast boundary guide, stroke_dasharray
-          for CI boundaries, fill series layering for CI bands, and HTML export. Creative
-          use of pygal's capabilities for a complex chart.
+        comment: Uses x_labels_major for forecast boundary (pygal-specific), exports
+          interactive HTML, SVG-level post-processing for dark-mode guide colors,
+          background-erase technique exploiting pygal fill behavior
   verdict: APPROVED
 impl_tags:
   dependencies:
