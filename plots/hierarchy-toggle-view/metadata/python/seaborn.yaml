@@ -1,192 +1,241 @@
 library: seaborn
+language: python
 specification_id: hierarchy-toggle-view
 created: '2026-01-11T09:31:16Z'
-updated: '2026-01-11T09:44:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20892891206
+updated: '2026-05-19T08:47:20Z'
+generated_by: claude-sonnet
+workflow_run: 26084863327
 issue: 3697
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 75
 review:
   strengths:
-  - Excellent dual-view layout showing both treemap and sunburst representations side
-    by side
-  - Consistent color palette maintained across both views using seaborn Set2
-  - Well-structured hierarchical data with realistic budget allocation scenario
-  - Clear labeling with dollar values displayed in both views
-  - Professional styling with appropriate font sizes and layout balance
-  - Center circle in sunburst provides helpful total context
+  - Correct dual-panel approach presenting treemap and sunburst side-by-side — best
+    possible static interpretation of an interactive toggle spec
+  - FancyBboxPatch with rounded corners and alpha layering (0.35 parent / 0.90 children)
+    creates effective visual depth in the treemap
+  - Consistent Okabe-Ito color coding across both views enables category tracing between
+    treemap and sunburst
+  - Theme tokens fully applied — both light and dark renders pass the dark-on-dark
+    / light-on-light legibility check
+  - Realistic and neutral data (software budget allocation) well-suited for hierarchical
+    demonstration
   weaknesses:
-  - Some sunburst labels could benefit from larger font sizes for improved readability
-  - Title format has minor inconsistency (SC-06)
-  - Code structure could be slightly cleaner with less manual value recalculation
+  - 'Bottom treemap category labels clipped: text like ''Development: $600K'' appears
+    as ''Development: $6'' because the label bbox extends below the axes ylim boundary'
+  - Narrow columns (Operations ~18% width, Research ~15% width) clip child text labels
+    — 'DevOp' and 'Prototyp' appear truncated
+  - Seaborn high-level API unused (only sns.set_theme used); all visualization is
+    via matplotlib FancyBboxPatch/Wedge primitives — inherent library limitation for
+    hierarchical charts
+  - Child cell label fontsize 11–13pt falls below the recommended 16pt minimum for
+    large-canvas (4800x2700) readability
   image_description: |-
-    The plot displays a side-by-side view of hierarchical budget data in two formats. On the left is a Treemap View showing nested rectangles representing a software project budget allocation across four main categories (Development $600K, Infrastructure $310K, Operations $240K, Research $200K) with their subcategories displayed as vertical slices within each column. Colors are from seaborn Set2 palette: green for Development, orange for Infrastructure, purple for Operations, and pink for Research. Each rectangle shows the label and dollar value in white text. Category labels at the bottom have colored backgrounds matching their sections.
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Suptitle "hierarchy-toggle-view · python · seaborn · anyplot.ai" in dark #1A1A17 ink at 24pt, clearly legible. Panel titles "Treemap View" / "Sunburst View" at 20pt readable. Subtitle in muted INK_MUTED italic at 15pt visible. Legend text at 14pt readable. Bottom category labels partially clipped (show "Development: $6" instead of "$600K").
+      Data: Left treemap — Development (green #009E73) widest column, Infrastructure (orange #D55E00), Operations (blue #0072B2), Research (pink #CC79A7). Level-1 as translucent alpha=0.35 backgrounds, Level-2 as solid alpha=0.90 rounded rectangles with white labels. Right sunburst — inner ring for L1 categories, outer ring for children, same Okabe-Ito colors, white rotated labels. Center circle shows "Total / $1350K" in theme-ink colors.
+      Legibility verdict: PASS — all major text readable; minor clipping on narrow column labels and bottom treemap labels
 
-    On the right is a Sunburst View showing the same data as concentric rings. The inner ring displays the four main categories with curved white text labels, while the outer ring shows all subcategories with radial text labels. A central white circle displays "Total $1350K". Both views use consistent colors across categories. A legend at the bottom shows all four main categories.
-
-    The main title "hierarchy-toggle-view · seaborn · pyplots.ai" is at the top in blue (#306998), with an italic subtitle "Software Project Budget Allocation - Dual Hierarchy View" below it.
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: All text flips correctly to light tones — suptitle in #F0EFE8, subtitle in #A8A79F, panel titles in #F0EFE8, legend box in elevated #242420 with light label text. Center circle text in light ink. No dark-on-dark failures observed — all labels clearly visible against dark background.
+      Data: Colors identical to light render — Development #009E73, Infrastructure #D55E00, Operations #0072B2, Research #CC79A7. Same alpha layering. Same layout. Same minor label clipping issues as light render.
+      Legibility verdict: PASS — theme adaptation correct throughout both renders
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 23
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Text is readable but some sunburst labels are slightly small and
-          rotated text can be harder to read
+        comment: Most sizes explicitly set (suptitle 24pt, panel titles 20pt); child
+          labels at 11pt and legend at 14pt fall below recommended 16pt minimum
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
+        score: 3
+        max: 6
+        passed: false
+        comment: Bottom treemap category labels clipped; narrow column child labels
+          truncated ('DevOp', 'Prototyp'); sunburst outer labels crowded
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: All rectangles and wedges are well-sized and visible
+        comment: Treemap rectangles and sunburst wedges well-sized and visible; minor
+          clipping in narrow columns
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Set2 palette is colorblind-friendly with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Perfect 50/50 split between views with good margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for this chart type (no axes), but labels are descriptive
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is well-placed at bottom, no grid needed
+        comment: Okabe-Ito palette CVD-safe; white text on solid fills provides adequate
+          contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good dual-panel 16:9 canvas use; tight_layout applied; minor label
+          clipping at boundaries
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Suptitle in correct format; panel titles descriptive; subtitle informative
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Development first at #009E73; Okabe-Ito order correct; #FAF8F1/#1A1A17
+          backgrounds; data colors identical across renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: FancyBboxPatch rounded corners, alpha layering creates depth; above
+          defaults but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Both axes off, no grid, consistent theme backgrounds, tight_layout
+          applied
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Dual-view comparison enables size vs hierarchy storytelling; consistent
+          color coding aids cross-view tracing
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Both treemap and sunburst views correctly implemented
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Parent-child relationships and values correctly mapped
-      - id: SC-03
+        comment: Both treemap and sunburst correctly implemented as static dual-panel
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Both views present with consistent colors; static side-by-side instead
-          of toggle (acceptable limitation for static library)
-      - id: SC-04
-        name: Data Range
+        comment: Both hierarchy views present with consistent colors; interactive
+          toggle inherently unavailable in static library
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible in both views
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct hierarchical proportions in both views; 3-level hierarchy
+          mapped correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four categories
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Title follows format correctly
+        comment: Title 'hierarchy-toggle-view · python · seaborn · anyplot.ai' exact
+          format; 4-category legend correct
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows 3-level hierarchy with good variety in subcategory sizes
+        comment: 3-level hierarchy with varied proportions; both chart types demonstrate
+          hierarchical structure
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Software project budget allocation is a realistic, neutral business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Budget values in thousands are realistic for a software project
+        comment: Software project budget allocation — realistic, neutral business
+          scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $1350K total with plausible sub-allocations; proportions realistic
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Uses some manual calculations but no functions/classes; direct script
-          structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data (no random seed needed as data is hardcoded)
+        comment: 'Linear flow: imports → tokens → data → hierarchy build → plot →
+          save; no functions/classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic data — no random generation needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 7 imports verified as used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
+        max: 2
         passed: true
-        comment: Uses current seaborn and matplotlib APIs
+        comment: 'Slightly verbose: repeated parallel structures for L1/L2 in both
+          treemap and sunburst loops'
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct settings
-    library_features:
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches='tight'; current
+          API
+    library_mastery:
       score: 3
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
         max: 5
-        passed: true
-        comment: Uses sns.set_theme, sns.set_context, and sns.color_palette for consistent
-          styling; however, primarily uses matplotlib patches for visualization
+        passed: false
+        comment: Seaborn used only for sns.set_theme(); all visualization via matplotlib
+          FancyBboxPatch/Wedge; spec requires chart types seaborn doesn't natively
+          support
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No distinctive seaborn API features leveraged; visualization is entirely
+          matplotlib-based
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -196,10 +245,10 @@ impl_tags:
   - annotations
   - custom-legend
   patterns:
-  - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
+  - minimal-chrome
   - alpha-blending
   - edge-highlighting
-  - minimal-chrome

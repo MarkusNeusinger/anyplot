@@ -1,216 +1,252 @@
 library: letsplot
+language: python
 specification_id: hierarchy-toggle-view
 created: '2026-01-11T09:33:07Z'
-updated: '2026-01-11T09:55:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20892895549
+updated: '2026-05-19T09:10:59Z'
+generated_by: claude-sonnet
+workflow_run: 26085537431
 issue: 3697
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/letsplot/plot.html
-quality_score: 90
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/letsplot/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent implementation of both treemap and sunburst visualizations using lets-plot
-    ggplot2-style API
-  - Consistent color scheme across both views makes comparison intuitive
-  - Interactive HTML version includes fully functional toggle button with canvas-based
-    rendering
-  - Good use of gggrid for combining multiple plots
-  - Well-structured hierarchical data representing realistic company budget allocation
-  - Nested rectangles in treemap clearly show parent-child relationships with department
-    labels at top
-  - Sunburst properly shows two concentric rings with appropriate labeling
+  - Correct dual-view implementation using letsplot grammar-of-graphics (geom_rect
+    treemap + geom_polygon sunburst)
+  - gggrid composition is idiomatic and distinctive letsplot usage
+  - 'Perfect theme-adaptive chrome: #FAF8F1/#1A1A17 backgrounds, INK tokens throughout,
+    no dark-on-dark failures'
+  - Genuine interactive HTML toggle (Canvas API with real JS drawing) — not faked
+    drawn UI
+  - 'Perfect data quality: realistic company budget scenario with correct hierarchical
+    value propagation'
+  - All axes, spines, and grid removed cleanly; intentional color hierarchy (Okabe-Ito
+    departments + lighter child tints)
   weaknesses:
-  - Operations section in treemap appears cramped with minimal child labels
-  - Static PNG shows both views side-by-side rather than an actual toggle control
-  - Code uses helper functions which slightly deviates from KISS principle
-  image_description: 'The plot displays a side-by-side comparison of two hierarchical
-    visualization types: a Treemap view (left) and a Sunburst view (right). The treemap
-    shows nested rectangles representing company budget allocation with 4 main departments
-    (Sales in yellow #FFD43B, Engineering in blue #306998, Marketing in green #4CAF50,
-    Operations in pink #E07A5F). Each department contains child rectangles for teams
-    with percentage labels (e.g., Backend 15%, Frontend 12%, North 13%). The sunburst
-    view shows the same data as concentric rings - departments in the inner ring and
-    teams in the outer ring. Colors are consistent across both views. The title "hierarchy-toggle-view
-    · letsplot · pyplots.ai" appears at top with subtitle "Company Budget Allocation
-    · Toggle between views in HTML (interactive)". All text is legible and well-sized.
-    The layout uses approximately 80% of the canvas with good balance.'
+  - Narrow Marketing and Operations treemap columns cause letsplot to truncate department
+    labels to 'Mark.' / 'Oper.' — treemap column width calculation should reserve
+    minimum column width or use abbreviated labels proactively
+  - HTML output bypasses letsplot's native ggsave-to-HTML export in favor of hand-written
+    JavaScript, missing opportunity to showcase letsplot's distinctive interactive
+    export
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "hierarchy-toggle-view · python · letsplot · anyplot.ai" in dark #1A1A17 ink, clearly readable. Subtitle in INK_SOFT. Panel titles "Treemap View" / "Sunburst View" in dark ink, readable. No tick labels (appropriately removed).
+      Data: Treemap uses Okabe-Ito: Engineering=#009E73 (green, first series), Sales=#D55E00 (vermillion), Marketing=#0072B2 (blue), Operations=#CC79A7 (purple). Child cells use lighter tints of parent colors. Sunburst inner ring matches department colors; outer ring uses lighter child variants. Percentage labels embedded in treemap cells.
+      Issue: Marketing and Operations columns are narrow; letsplot truncates department headers to "Mark." and "Oper." Child labels in those columns are small but marginally readable.
+      Legibility verdict: PASS (with narrow-column truncation caveat)
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle in light #F0EFE8 ink, clearly readable against dark background. Panel titles in light ink. No dark-on-dark failures detected. INK_SOFT token correctly applied to secondary text.
+      Data: All data colors identical to light render — Engineering green, Sales vermillion, Marketing blue, Operations purple in both treemap and sunburst. White text labels on colored cell/segment backgrounds read well. Child labels on sunburst outer ring use INK (dark) ink which reads against the light-ish tinted child segments.
+      Same narrow-column truncation ("Mark.", "Oper.") present as in light render.
+      Legibility verdict: PASS (with same narrow-column caveats)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 22
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 5
+        max: 8
         passed: true
-        comment: All text readable, title and labels appropriately sized, percentage
-          labels clear
+        comment: Sizes explicitly set (title 24pt, panel titles 22pt, dept labels
+          16pt, child labels 10-11pt), but narrow Marketing/Operations columns cause
+          cramped rendering
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 3
+        max: 6
         passed: true
-        comment: No overlapping text elements, labels positioned within their containers
+        comment: Department headers truncated to 'Mark.' and 'Oper.' in narrow columns;
+          child labels cramped but main content readable
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Rectangles and segments well-sized, minor issue with Operations children
-          being small
+        comment: All treemap cells and sunburst segments clearly visible; sunburst
+          proportions well-balanced
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Distinct colors for each department, child colors are lighter variants,
-          colorblind-friendly palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Both views fill canvas well, good proportions with side-by-side layout
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for treemap/sunburst - no axis labels expected
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed, legend embedded in visualization via labels
+        comment: Okabe-Ito positions 1-4 for departments; CVD-safe; adequate luminance
+          contrast between parent/child tones
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Side-by-side gggrid layout works; some wasted canvas space as 750x750
+          panels don't fill 1600x900 grid evenly
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format; axes appropriately removed (element_blank)
+          for this chart type
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Engineering first=#009E73; Okabe-Ito positions 1-4 for departments;
+          #FAF8F1/#1A1A17 backgrounds; INK tokens correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional color hierarchy (Okabe-Ito departments + lighter child
+          variants); clean dual-panel composition; above library defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines, axes, grid, ticks removed; white cell borders give clean
+          separation; narrow treemap columns reduce polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual-view provides complementary perspectives; percentage labels
+          guide interpretation; color hierarchy establishes visual structure
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements both treemap and sunburst views
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Values correctly mapped to rectangle area and segment angles
-      - id: SC-03
+        comment: Both treemap (geom_rect) and sunburst (geom_polygon concentric rings)
+          correctly implemented
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Toggle implemented in HTML version, static PNG shows both views side-by-side
-      - id: SC-04
-        name: Data Range
+        comment: Toggle present in HTML; consistent colors across views; both views
+          in same container; hover state not preserved (acceptable)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All hierarchy levels visible (root -> department -> team)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: 15-node hierarchy; values correctly drive cell area and arc angle;
+          parent values summed from children
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Color-coded with embedded labels, but formal legend would help
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: hierarchy-toggle-view · letsplot · pyplots.ai'
+        comment: Title matches required format; no legend appropriate as labels embedded
+          in chart elements
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3-level hierarchy, varying sizes, 4 departments with 10 child
-          teams total
+        comment: 3-level hierarchy with 15 nodes; varied value distribution; percentage
+          labels show relative contribution
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Company budget allocation is a real, neutral business scenario
+        comment: Company budget allocation across plausible departments; neutral business
+          scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values (65-180) are plausible for budget units, percentages sum correctly
+        comment: Values 65-180K with ~$1.2M total; department ratios internally consistent
+          and realistic
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses functions (squarify_layout) which deviates from KISS principle,
-          but justified for complex algorithm
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: Linear Imports -> Data -> Plot -> Save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, organized properly
+        comment: All imports used; standard library used appropriately
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean implementation; HTML uses genuine Canvas API JS (real interactivity,
+          not fake drawn UI)
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of gggrid for side-by-side layout, geom_polygon for
-          sunburst, geom_rect for treemap, custom scale_fill_manual, HTML export with
-          interactive JavaScript toggle
+        comment: Grammar-of-graphics for both chart types; gggrid for composition;
+          coord_fixed, scale_fill_manual, theme customization all idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: gggrid is distinctive letsplot feature used well; HTML is hand-crafted
+          JS Canvas rather than letsplot's native ggsave HTML export
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
-  - layer-composition
   - html-export
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
   - minimal-chrome
+  - alpha-blending

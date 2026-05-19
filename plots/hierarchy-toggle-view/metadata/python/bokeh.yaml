@@ -1,206 +1,258 @@
 library: bokeh
+language: python
 specification_id: hierarchy-toggle-view
 created: '2026-01-11T09:31:55Z'
-updated: '2026-01-11T10:00:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20892893155
+updated: '2026-05-19T09:00:04Z'
+generated_by: claude-sonnet
+workflow_run: 26085052111
 issue: 3697
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/bokeh/plot.html
-quality_score: 72
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/bokeh/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Realistic company budget hierarchy data with clear department structure
-  - Good treemap layout algorithm implementation
-  - Colors are generally distinguishable
-  - Interactive HTML version includes proper toggle functionality with CustomJS
-  - Clean code organization with separate PNG and HTML generation
+  - 'Excellent spec compliance: both treemap and sunburst correctly implemented with
+    interactive HTML toggle; static PNG shows side-by-side for immediate visual comparison'
+  - 'Outstanding data quality: realistic company budget hierarchy with authentic department
+    names and sensible budget proportions'
+  - Correct Okabe-Ito palette applied at all 4 hierarchy levels; consistent colors
+    across treemap and sunburst views aiding cross-view identification
+  - 'Proper theme adaptation: both light and dark renders pass readability checks;
+    INK/INK_SOFT tokens threaded through all text elements'
+  - 'Idiomatic Bokeh: CustomJS toggle with Button widgets, ColumnDataSource, patches
+    for sunburst — leverages Bokeh client-side interactivity model effectively'
   weaknesses:
-  - PNG output only shows treemap view - sunburst is not visible (spec requires toggle
-    between both views)
-  - Legend only shows 4 parent departments, not matching the 13+ colors visible in
-    treemap
-  - Code is overly complex with inline squarify algorithm
-  - Panel labels and toggle arrow from code are not visible in output
-  image_description: 'The plot shows only a treemap view of a company budget hierarchy.
-    The treemap displays 13 colored rectangles representing sub-departments (Backend,
-    Frontend, Digital, QA, DevOps, Facilities, Logistics, Content, Analytics, Recruiting,
-    Training, Benefits, Procurement). Each rectangle is sized proportionally to its
-    budget value and labeled with the department name and budget (e.g., "Backend $1500K").
-    Colors include red (Frontend), blue (Backend), yellow (Digital), green (DevOps,
-    Content), orange (Logistics, Facilities, Procurement), purple/cyan (Recruiting,
-    Training, Benefits), and others. A small "Departments" legend appears in the top-right
-    corner showing only the 4 parent categories: Engineering, Marketing, Operations,
-    and HR. The title "hierarchy-toggle-view · bokeh · pyplots.ai" is displayed at
-    the top left in blue text. Critically, the sunburst view that should be shown
-    alongside the treemap is NOT visible in the PNG output - only the treemap is rendered.
-    The code intended to show both views side-by-side with panel labels and a toggle
-    arrow, but these elements are also not visible in the final output.'
+  - 'DE-03 (3/6): No visual emphasis or annotation guides the viewer to a specific
+    insight (e.g., which department dominates); adding a callout or center label would
+    lift storytelling'
+  - 'VQ-05 (3/4): Sunburst is undersized relative to the right panel — increasing
+    radius to fill more of the right panel would improve canvas utilization'
+  - 'DE-02 (4/6): Sunburst segment borders use line_color=PAGE_BG which is near-invisible
+    in dark mode; use ELEVATED_BG for dark theme to maintain separation cues'
+  - 'VQ-01 (6/8): Legend label font size (14pt) is slightly below the 16px recommendation;
+    bumping to 16pt would improve readability'
+  - 'CQ-04 (1/2): Static and HTML figures share almost identical code — a small helper
+    or shared data dict would reduce duplication'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct per style guide
+      Chrome: title "hierarchy-toggle-view · python · bokeh · anyplot.ai" at top-left in dark INK text (readable); panel headers "Treemap View" and "Sunburst View" in 26pt bold dark text (prominent); legend "Budget Hierarchy" on far right with dark INK title and INK_SOFT label text
+      Data: Treemap rectangles use Engineering=#009E73 (brand green) for Frontend/Backend/DevOps/QA with derived shades; Marketing=#D55E00 for Digital/Content/Analytics; Operations=#0072B2 for Logistics/Facilities/Procurement; HR=#CC79A7 for Recruiting/Training/Benefits; same colors in sunburst wedges; all segments clearly visible with alpha=0.92
+      Legibility verdict: PASS — all text readable; large treemap cells show name+value labels; smaller cells unlabeled by design (size filter)
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct per style guide
+      Chrome: title in light #F0EFE8 text (readable); panel headers "Treemap View" and "Sunburst View" in light INK text (readable); legend uses ELEVATED_BG (#242420) fill with INK_SOFT (#B8B7B0) label text and INK (#F0EFE8) title text — all readable; segment borders use line_color=PAGE_BG=#1A1A17 (low contrast in dark mode but segments distinguishable by color)
+      Data: all data colors identical to light render — Engineering=#009E73, Marketing=#D55E00, Operations=#0072B2, HR=#CC79A7 with same derived sub-department shades; sunburst center hole shows as near-black background (correct); no color changes between themes
+      Legibility verdict: PASS — no dark-on-dark text failures; treemap labels use adaptive INK=#F0EFE8 on dark background; value labels use INK_SOFT=#B8B7B0 (visible); legend text readable
   criteria_checklist:
     visual_quality:
-      score: 32
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
-        passed: true
-        comment: Labels readable but value text is somewhat small
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 8
         passed: true
-        comment: Rectangles visible but some are quite small
+        comment: All sizes explicitly set (title 28pt, panel headers 26pt, labels
+          18pt/15pt, legend 14pt/18pt); legend text at 14pt slightly below 16px recommendation
+          for 4800px canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Size-filtered labeling (large_mask) prevents overlap in treemap;
+          no collision in sunburst
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All treemap rectangles and sunburst wedges clearly visible in both
+          themes with alpha=0.92
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Generally colorblind-safe but some similar hues
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Treemap fills canvas well but legend is minimal
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for treemap, labels present on rectangles
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito departments provide high contrast; adjacent segments distinguishable
+          by hue and luminance
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Treemap fills left panel well; sunburst undersized in right panel
+          leaving empty space above/below; legend positioned usably
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Panel headers serve as section titles; axes intentionally hidden
+          (correct for hierarchy plots)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Engineering=#009E73 (brand green) first; Okabe-Ito order maintained
+          for departments; backgrounds #FAF8F1/#1A1A17; chrome adapts correctly'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional color hierarchy (parent Okabe-Ito → derived child shades),
+          vertical divider, indented legend; polished above default 4
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid hidden, clean backgrounds, panel headers, alpha=0.92; segment
+          borders near-invisible in dark mode (line_color=PAGE_BG)
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
         passed: false
-        comment: Legend shows only 4 parent departments, not all colors
+        comment: Dual-view layout is the story mechanism, consistent colors aid cross-view
+          identification, but no specific insight emphasized or annotated
     spec_compliance:
-      score: 15
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
-        max: 8
-        passed: false
-        comment: Only treemap visible, sunburst NOT shown in PNG
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Data correctly mapped to rectangle sizes
-      - id: SC-03
+        comment: Both treemap (nested proportional rectangles) and sunburst (radial
+          segments) correctly implemented
+      - id: SC-02
         name: Required Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Toggle button missing from PNG, no sunburst visible
-      - id: SC-04
-        name: Data Range
+        score: 3
+        max: 4
+        passed: true
+        comment: Toggle button in HTML, consistent colors, hover tooltips present;
+          animated transitions not implemented (simple visibility toggle); hover state
+          not preserved across toggle
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend shows only 4 parent departments, not matching all rectangle
-          colors
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Correct format but missing panel labels
+        comment: Area (treemap) and arc angle (sunburst) both proportional to budget
+          value; 2-level hierarchy correctly shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches spec format exactly; legend Budget Hierarchy with correct
+          department and sub-department labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Good hierarchy with 3 levels, 18 nodes
+        comment: 4 departments, 13 sub-departments, 18 nodes total; 3 hierarchy levels;
+          both treemap and sunburst fully covered
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Company budget allocation is realistic and neutral
+        comment: Company budget hierarchy is a real, neutral business scenario with
+          authentic department names
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Budget values are realistic
+        comment: Sub-department budgets $300K-$1500K; total ~$9.1M plausible for mid-size
+          company; proportions internally consistent
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code is quite long with inline squarify algorithm
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) present
+        comment: Linear flow; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set; data is deterministic
       - id: CQ-03
         name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; selenium correctly required for Selenium screenshot
+          pattern
+      - id: CQ-04
+        name: Code Elegance
         score: 1
         max: 2
         passed: false
-        comment: Div import used only in HTML version
-      - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Current API usage
+        comment: Custom squarify algorithm (~50 lines) necessary; static and HTML
+          figures duplicate significant code; acceptable but verbose
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.html + plot-{THEME}.png via Selenium; correct
+          per bokeh.md guide
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: HTML version has CustomJS callbacks but PNG fails to show both views
+        passed: true
+        comment: Proper ColumnDataSource, CustomJS, Button, Legend/LegendItem, add_layout,
+          Label; row/column layout used correctly; Selenium pattern follows library
+          guide
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: CustomJS callbacks for server-less toggle is distinctly Bokeh; patches
+          glyph for sunburst; Button model with js_on_click; HoverTool via tooltips
+          shorthand
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - patches
-  - annotations
   - hover-tooltips
-  - custom-legend
   - html-export
+  - patches
+  - custom-legend
   patterns:
   - data-generation
   - columndatasource
@@ -208,4 +260,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
+  - minimal-chrome
   - edge-highlighting
