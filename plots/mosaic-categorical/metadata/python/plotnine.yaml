@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: mosaic-categorical
 created: '2026-01-11T00:19:16Z'
-updated: '2026-05-19T03:29:52Z'
+updated: '2026-05-19T03:43:29Z'
 generated_by: claude-sonnet
 workflow_run: 26073921601
 issue: 3650
@@ -12,47 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 89
 review:
   strengths:
-  - Correct Okabe-Ito palette with green (#009E73) for Survived and orange (#D55E00)
-    for Did Not Survive — intuitive and CVD-safe
-  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders have
-    readable text, correct backgrounds, and identical data colors'
-  - Historically accurate Titanic survival data makes for a compelling, neutral, real-world
-    example
-  - All font sizes explicitly set (title 24pt, axis labels 20pt, ticks 16pt) and clearly
-    readable at 4800x2700px
-  - Clean KISS structure with deterministic data — no random seeds needed
-  - 'Mosaic geometry accurately computed: widths proportional to class totals, heights
-    to conditional survival proportions'
-  - White count labels inside colored rectangles provide quantitative context without
-    cluttering the design
+  - Correct mosaic geometry hand-built in plotnine grammar (geom_rect with computed
+    xmin/xmax/ymin/ymax), since plotnine has no native mosaicplot
+  - 'Perfect Okabe-Ito palette: Survived = #009E73 (brand green, position 1), Did
+    Not Survive = #D55E00 (position 2)'
+  - 'Full theme-adaptive chrome: PAGE_BG, INK, INK_SOFT, ELEVATED_BG tokens applied
+    to all non-data elements, both renders pass legibility check'
+  - Subtitle encodes the key insight numerically ('62% vs 25%, 2.5×'), and per-class
+    survival rate annotations below each column reinforce the story
+  - '100% spec compliance: widths proportional to class marginal frequency, heights
+    proportional to conditional survival, gap spacing, count labels inside each cell'
+  - Clean, flat script — no functions or classes; reproducible with hardcoded Titanic
+    counts; all imports used
   weaknesses:
-  - Design Excellence is moderate — no subtitle or annotation highlighting the key
-    insight (e.g., survival rate per class like 62% in First vs 25% in Third), which
-    would push DE-03 toward 6/6
-  - Panel border is a full bounding box; removing top/right spines to an L-spine or
-    removing all spines would be more refined (DE-02)
-  - Legend ordering shows Did Not Survive before Survived — reversing to Survived-first
-    would better match the Okabe-Ito mapping order
-  - 'Library Mastery is basic: no distinctively plotnine feature is used beyond the
-    grammar of graphics foundation (shared with ggplot2) — consider stat_*() transformations
-    or faceting to add a second variable dimension'
-  - 'Minor right-side canvas imbalance: space below the legend is empty; reducing
-    figure width or adding a subtitle/caption would fill that area'
+  - Class name labels (size=14) and per-class survival rate labels (size=12) are below
+    the style-guide minimum of 16pt for secondary/tertiary text at 4800×2700px; raise
+    to 16pt and 14pt respectively
+  - Design sophistication is limited to flat colored rectangles and text — no visual
+    refinement beyond gap spacing (e.g., subtle inner drop shadow, rounded corners,
+    or typographic weight hierarchy on count labels vs. rate labels)
+  - 'LM-02: plotnine''s grammar-of-graphics strengths (stat layers, position adjustments,
+    coord_flip) are not leveraged — plot is built via raw coordinate math rather than
+    plotnine''s higher-level abstractions'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title "mosaic-categorical · python · plotnine · anyplot.ai" in dark ink at 24pt — clearly readable. Y-axis label "Survival Proportion" and x-axis label "Passenger Class (width proportional to class size)" in dark ink at 20pt — readable. Tick labels (0.00–1.00) in muted dark at 16pt — readable. Class labels "First", "Second", "Third" positioned via geom_text just below the mosaic rectangles in INK_SOFT color — readable. Legend titled "Outcome" with two entries at 16pt — readable.
-      Data: Three mosaic columns (First, Second, Third) with widths proportional to class sizes (Third is widest). Each column split into teal (#009E73, Survived at bottom) and orange (#D55E00, Did Not Survive at top), with proportional heights showing conditional survival rates. White bold count labels (122, 203, 167, 118, 528, 178) centered inside each rectangle — all readable. Panel has full border, no grid.
-      Legibility verdict: PASS — all text is clearly readable against the warm off-white background.
+      Chrome: Bold dark title "mosaic-categorical · python · plotnine · anyplot.ai" readable. Subtitle in INK_SOFT readable. Y-axis label "Conditional Survival Proportion" in dark ink readable. Y-axis tick labels (0.00–1.00) in soft gray readable. Bold class name labels ("First", "Second", "Third") below plot in dark ink readable. Survival rate labels ("62% survived", "41% survived", "25% survived") in softer gray readable, though small (12pt).
+      Data: Three columns — Third is widest (706 passengers), First is medium (325), Second narrowest (285). Green (#009E73) fills Survived rectangles (bottom), orange (#D55E00) fills Did Not Survive (top). White bold count labels inside each rectangle clearly readable. PAGE_BG-colored borders between rectangles create clean gap effect.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
       Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light text (#F0EFE8) — clearly readable against dark background. Axis labels and tick labels in light-muted text (#B8B7B0) — readable. Class labels (First, Second, Third) in INK_SOFT dark-theme color — readable. Legend text readable against dark elevated background (#242420 legend box). Panel border visible.
-      Data: Data colors IDENTICAL to light render — teal (#009E73) for Survived and orange (#D55E00) for Did Not Survive. White count labels remain readable on both colored surfaces. No dark-on-dark failures observed.
-      Legibility verdict: PASS — all text is readable against the near-black background; no dark-on-dark failures.
+      Chrome: Title and subtitle text rendered in light tokens (#F0EFE8 / #B8B7B0), clearly readable. Y-axis label in light ink readable. Tick labels in INK_SOFT (#B8B7B0) readable against dark background. Class labels in light INK and rate labels in INK_SOFT both readable. Legend box uses #242420 elevated surface with INK_SOFT border, text readable.
+      Data: Colors identical to light render — #009E73 (Survived) and #D55E00 (Did Not Survive) unchanged. White count labels inside rectangles still clearly readable. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text readable against dark background, brand green #009E73 clearly visible.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -60,53 +56,57 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, axis labels 20pt, ticks
-          16pt, legend 16-18pt. Readable in both themes.'
+        comment: Title 24pt, axis label 20pt, tick labels 16pt all correct. Count
+          labels 14pt and rate labels 12pt are slightly below the 16pt minimum for
+          secondary text at 4800x2700px; both renders pass readability check but could
+          be larger.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Count labels well-centered inside rectangles,
-          class labels below, legend isolated on right.
+        comment: No overlapping elements; count labels centered in each rectangle
+          with no collision; class and rate labels spaced below plot area.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Mosaic rectangles are large and clearly visible. White count labels
-          readable on both teal and orange surfaces.
+        comment: All rectangles clearly visible in both themes; green and orange strongly
+          contrast each other and the backgrounds.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green and orange have high contrast, CVD-safe. White text
-          on both colors provides sufficient luminance contrast.
+        comment: Okabe-Ito positions 1 and 2 are CVD-safe by design; green/orange
+          pair is distinguishable under deuteranopia.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, but right side has empty space below the
-          legend creating slight imbalance.
+        comment: 16:9 landscape canvas; generous margins; class and rate labels fit
+          within explicit y-limit (-0.17 to 1.04); nothing clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive x-axis label includes context about width encoding; y-axis
-          label is clear; title follows required format.
+        comment: Y-axis 'Conditional Survival Proportion' is descriptive; x-axis label
+          omitted (appropriate — class labels below serve that role); subtitle encodes
+          the key finding.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Survived mapped to #009E73 (Okabe-Ito pos 1), Did Not Survive to
-          #D55E00 (pos 2). Background #FAF8F1 light / #1A1A17 dark. Chrome fully theme-adaptive.'
+        comment: 'First series Survived = #009E73 (brand green, Okabe-Ito position
+          1). Second series = #D55E00 (position 2). Light bg = #FAF8F1, dark bg =
+          #1A1A17. Chrome tokens flip correctly between themes.'
     design_excellence:
       score: 13
       max: 20
@@ -116,25 +116,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured defaults: Okabe-Ito palette, adaptive theming,
-          clean grid-free look. No annotations or subtitle to highlight the class-disparity
-          insight.'
+        comment: Intentional color assignment (Survived = brand green), subtitle with
+          quantified insight, and per-class rate annotations show design thought.
+          Rectangles are plain flat fills with no further visual refinement.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid removed, custom x-axis approach via geom_text. Panel border
-          kept as full box — appropriate for mosaic type but not as refined as L-spine.
-          Good whitespace.
+        comment: No grid (appropriate for mosaic), all spines and panel borders removed,
+          PAGE_BG-colored borders create subtle gap between cells. Clean and minimal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Proportional widths and heights create natural visual hierarchy showing
-          Third class dominance. Count labels add quantitative context. No annotation
-          calling out key survival rates by class.
+        comment: Subtitle explicitly calls out the 2.5x differential. Per-class survival
+          rates anchor the comparison. Column widths visually encode class sizes as
+          a secondary message. Clear focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -144,30 +143,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct mosaic plot: rectangle widths = marginal proportions, heights
-          = conditional proportions, areas = cell frequencies.'
+        comment: 'Correct mosaic plot: column widths proportional to marginal class
+          frequency, cell heights proportional to conditional survival proportion,
+          areas proportional to contingency table cells.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: proportional widths, proportional heights,
-          gap spacing, color coding, labels identifying both categorical variables.'
+        comment: Width = marginal proportion, height = conditional proportion, area
+          = cell frequency, color coding, gap spacing, labels for both categorical
+          variables — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Passenger Class with proportional widths. Y-axis: conditional
-          survival proportions 0-1. All 6 cells visible.'
+        comment: category_1 (class) mapped to x-axis widths, category_2 (survival)
+          mapped to y-axis heights, frequency (count) drives all proportions. Both
+          axes show complete data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''mosaic-categorical · python · plotnine · anyplot.ai'' —
-          correct format. Legend ''Outcome'' with ''Did Not Survive'' / ''Survived''
-          labels — correct.'
+        comment: Title is exactly 'mosaic-categorical · python · plotnine · anyplot.ai'.
+          Legend labeled 'Outcome' with correct category labels 'Survived' and 'Did
+          Not Survive'.
     data_quality:
       score: 15
       max: 15
@@ -177,22 +179,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all mosaic features: varying widths (class sizes differ),
-          varying heights (survival rates differ by class), count annotations.'
+        comment: 'Shows all mosaic aspects: varying column widths, varying cell heights,
+          count annotations inside cells, marginal survival rates below — full feature
+          demonstration.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Titanic survival data by passenger class — real historical dataset,
-          well-known, educational, neutral.
+        comment: Titanic survival data is a canonical real-world contingency table
+          dataset. Neutral historical topic with no controversy.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Historically accurate counts: First class had ~62% survival, Second
-          ~41%, Third ~25%. Values match known Titanic statistics.'
+        comment: Counts (122–528) are accurate Titanic figures. Proportions and survival
+          rates computed correctly from raw counts.
     code_quality:
       score: 10
       max: 10
@@ -202,27 +205,28 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → tokens → data → geometry calculation
-          → plot → save.'
+        comment: Flat script with no functions or classes. Clear data → geometry →
+          plot → save flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Deterministic hardcoded data — no random elements, no seed needed.
+        comment: Hardcoded Titanic counts — fully deterministic, no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pandas, and the specific plotnine functions used are imported.
+        comment: All imports (os, pandas, plotnine components) are used. No unused
+          imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Manual geometry calculation is necessary and appropriate
-          given no native geom_mosaic in plotnine.
+        comment: Appropriate complexity for a manually-computed mosaic in a grammar-of-graphics
+          library. No fake UI or interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -230,7 +234,7 @@ review:
         passed: true
         comment: Saves as plot-{THEME}.png using current plotnine API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -238,26 +242,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct grammar of graphics usage: ggplot + geom_rect + geom_text
-          + scale_fill_manual + labs + theme. aes() mapping of survival to fill is
-          idiomatic.'
+        comment: Grammar-of-graphics composition with geom_rect + three geom_text
+          layers on different data frames, scale_fill_manual, scale_x/y_continuous,
+          theme() customization — all idiomatic plotnine patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Grammar of graphics composition is plotnine's signature but shared
-          with ggplot2. No stat_*() transformations, faceting, or other distinctively
-          plotnine features used.
-  verdict: REJECTED
+        passed: true
+        comment: Multi-dataframe geom layering (rect_df, class_labels, rate_labels
+          passed via data= argument) is a distinctive plotnine/ggplot2 pattern. However,
+          the mosaic is built via raw coordinate math rather than plotnine stat layers
+          or position adjustments.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
   patterns:
-  - groupby-aggregation
   - iteration-over-groups
+  - groupby-aggregation
   dataprep:
   - normalization
-  styling: []
+  styling:
+  - edge-highlighting
