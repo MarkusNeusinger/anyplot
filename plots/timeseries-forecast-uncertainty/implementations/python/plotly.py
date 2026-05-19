@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-19
@@ -62,7 +62,7 @@ fig.add_trace(
         x=dates_forecast + dates_forecast[::-1],
         y=np.concatenate([upper_95, lower_95[::-1]]),
         fill="toself",
-        fillcolor="rgba(213, 94, 0, 0.15)",
+        fillcolor="rgba(213, 94, 0, 0.10)",
         line=dict(color="rgba(213, 94, 0, 0)"),
         name="95% CI",
         showlegend=True,
@@ -76,7 +76,7 @@ fig.add_trace(
         x=dates_forecast + dates_forecast[::-1],
         y=np.concatenate([upper_80, lower_80[::-1]]),
         fill="toself",
-        fillcolor="rgba(213, 94, 0, 0.30)",
+        fillcolor="rgba(213, 94, 0, 0.32)",
         line=dict(color="rgba(213, 94, 0, 0)"),
         name="80% CI",
         showlegend=True,
@@ -140,7 +140,7 @@ fig.add_trace(
 # Layout with theme-adaptive colors and chrome
 fig.update_layout(
     title=dict(
-        text="timeseries-forecast-uncertainty · plotly · pyplots.ai",
+        text="timeseries-forecast-uncertainty · python · plotly · anyplot.ai",
         font=dict(size=28, color=INK),
         x=0.5,
         xanchor="center",
@@ -148,8 +148,9 @@ fig.update_layout(
     xaxis=dict(
         title=dict(text="Date", font=dict(size=22, color=INK)),
         tickfont=dict(size=18, color=INK_SOFT),
-        showgrid=True,
-        gridcolor=GRID,
+        showgrid=False,
+        showline=True,
+        mirror=False,
         linecolor=INK_SOFT,
         zerolinecolor=INK_SOFT,
     ),
@@ -158,6 +159,8 @@ fig.update_layout(
         tickfont=dict(size=18, color=INK_SOFT),
         showgrid=True,
         gridcolor=GRID,
+        showline=True,
+        mirror=False,
         linecolor=INK_SOFT,
         zerolinecolor=INK_SOFT,
     ),
@@ -178,5 +181,5 @@ fig.update_layout(
 )
 
 # Save outputs
-fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
