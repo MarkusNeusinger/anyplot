@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: windbarb-basic
 created: '2026-01-11T10:06:20Z'
-updated: '2026-05-19T06:47:37Z'
+updated: '2026-05-19T06:59:52Z'
 generated_by: claude-sonnet
 workflow_run: 26080632231
 issue: 3694
@@ -12,37 +12,39 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Perfect spec compliance — all four meteorological barb types (calm, half, full,
-    pennant) implemented correctly with NH convention
-  - 'Excellent code quality: seed set, no functions, all imports used, proper theme-adaptive
-    tokens throughout'
-  - 'Correct layer composition idiom for plotnine: separate DataFrames per geometric
-    layer, proper grammar of graphics usage'
-  - Both themes render correctly with no dark-on-dark failures; brand green reads
-    well on both surfaces
+  - 'Complete meteorological correctness: FROM-direction convention, left-side barbs
+    (Northern Hemisphere), calm circles, all barb types (half/full/pennant) implemented'
+  - Proper theme-adaptive chrome in both renders — no dark-on-dark or light-on-light
+    failures; all INK/INK_SOFT/PAGE_BG/ELEVATED_BG tokens correctly applied
+  - Clean KISS code structure with all font sizes explicitly set at guide minimums
+    (24pt title, 20pt axis labels, 16pt ticks)
+  - High-wind region annotation in images creates a meaningful focal point for data
+    storytelling
+  - Perfect spec compliance — all required meteorological features implemented including
+    proper barb notation and grid spacing
   weaknesses:
-  - 'DE-02: panel_border keeps all four spines; style guide recommends L-shaped frame
-    (remove top and right spines)'
-  - 'VQ-05: Right margin allocated for legend text annotation is wide (~28% of canvas)
-    — tighter x limits or inset legend would improve plot-area utilization'
-  - 'DE-01/DE-03: No visual hierarchy beyond what the barb geometry itself provides;
-    no focal annotation highlighting the high-wind region or synoptic pattern'
+  - Full panel border retained via panel_border=element_rect(...) — should remove
+    top and right spines for L-shaped frame per style guide
+  - Staff and barb line weight (size=1.5) is slightly thin for a 4800x2700 render;
+    increase to 2.0-2.5 for better visibility at full resolution
+  - Wind Barb Key annotation uses size=11 which is below the 14pt base text minimum;
+    increase to size=14 for consistency
+  - No wind-speed color differentiation — a speed-category color aesthetic (calm/moderate/strong)
+    would enhance both accessibility and storytelling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "windbarb-basic · python · plotnine · anyplot.ai" in dark ink, readable; axis labels "Longitude (°E)" / "Latitude (°N)" in dark INK; tick labels in INK_SOFT — all readable
-      Data: All wind barb components (staffs, half barbs, full barbs, pennant triangles, calm open circles) in #009E73 brand green; clear against off-white background
-      Legend annotation box in right margin with wind barb key text; readable
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "windbarb-basic · python · plotnine · anyplot.ai" in dark #1A1A17, clearly readable; axis labels "Longitude (°E)" and "Latitude (°N)" in dark INK; tick labels in INK_SOFT (#4A4A44), all legible
+      Data: All barb elements in brand green #009E73 — staffs, half-barbs, full barbs, pennant triangles, and calm circles; legend annotation box uses ELEVATED_BG (#FFFDF6) fill; high-wind region rectangle with semi-transparent fill visible
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title and axis labels switch to light text (#F0EFE8), clearly readable; tick labels in #B8B7B0 INK_SOFT — all readable against dark background; no dark-on-dark failures
-      Data: #009E73 brand green identical to light render — wind barbs visually identical, only chrome flips
-      Legend annotation box adapts to #242420 elevated background; text readable
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8, clearly readable; axis labels in light INK token; tick labels in INK_SOFT (#B8B7B0), all legible; no dark-on-dark failures observed — all text is adequately light against the near-black surface; legend annotation box uses ELEVATED_BG (#242420)
+      Data: All barb colors identical to light render — brand green #009E73 for staffs, barbs, pennants, calm circles; color consistency confirmed between themes
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -54,49 +56,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt all set; legend annotation
-          size=11 is slightly small for the canvas scale
+        comment: 'Sizes explicitly set: title 24pt, axis labels 20pt, ticks 16pt;
+          legend annotation size=11 slightly below 14pt minimum'
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Minor overlap of barbs in central station cluster (~5E, 6-7N) but
-          not severe
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All barb components clearly visible in both themes
+        comment: 30 stations on 6x5 grid well-spaced; legend outside data area avoids
+          overlap
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Barbs, pennants, calm circles clearly visible; staff/barb size=1.5
+          slightly thin for 4800x2700
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single Okabe-Ito color #009E73, CVD-safe'
+        comment: 'Single brand green #009E73 is CVD-safe with good contrast on both
+          backgrounds'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 16:9 landscape; right margin extended to x=14 for legend consumes
-          ~28% canvas width as dead space
+        comment: Good proportions; legend extension to x=14 clean but creates modest
+          dead space between data (x=10) and legend
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title matches required format
+        comment: Longitude (°E) and Latitude (°N) with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; backgrounds #FAF8F1/#1A1A17; both renders
-          theme-correct'
+        comment: 'Single series #009E73; backgrounds #FAF8F1/#1A1A17; all chrome tokens
+          theme-adaptive in both renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -104,22 +108,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Multi-layer composition with correct BRAND usage throughout; single-color
-          meteorological display is intentional but limits visual richness
+        comment: Consistent monochromatic brand-green palette, clean professional
+          look, creative text legend with Unicode symbols; no speed-based color gradient
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: theme_minimal() with subtle grid; panel_border retains all four spines
-          instead of recommended L-shaped frame
+        passed: true
+        comment: theme_minimal base with subtle grid alpha 0.12/0.06; retains all
+          4 spines via panel_border instead of L-shaped frame
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Good variety of wind conditions shown; high-wind pennant stations
-          are prominent; no additional focal annotation or visual hierarchy
+        passed: true
+        comment: High-wind region annotation creates clear focal point; forced calm
+          and high-wind stations demonstrate full barb range; single color limits
+          further storytelling
     spec_compliance:
       score: 15
       max: 15
@@ -129,30 +134,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct wind barb chart type with standard meteorological symbology
+        comment: Correct wind barb plot with staffs, half-barbs, full barbs, pennants,
+          calm circles
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Half barb (5 kt), full barb (10 kt), pennant (50 kt), calm circle
-          (<2.5 kt), NH barb-side convention all implemented
+        comment: FROM-direction convention, left-side barbs, calm circles, all barb
+          types, grid spacing prevents overlap
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x/y grid positions, u/v components used correctly; 30 stations within
-          recommended range
+        comment: 'x/y: longitude/latitude; u/v: zonal/meridional components; all axes
+          show full data range'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format; legend key annotation describes all symbol
-          types
+        comment: Title exactly matches required format; text-based legend annotation
+          effectively communicates barb notation
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -160,21 +166,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All four wind barb feature types shown with variety of directions
+        comment: 'Full range: calm, half-barb, full-barb, pennant, mixed speeds throughout'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Grid of weather stations with meteorologically realistic wind speeds;
-          neutral scientific context
+        comment: Realistic surface meteorological scenario; coordinate system is abstract
+          (0-10E, 0-8N) not tied to named region
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Speeds from calm to ~70+ kt for high-wind stations; realistic synoptic
-          map scale
+        comment: Wind speeds calm to ~58 kt; meteorologically plausible for synoptic
+          surface analysis
     code_quality:
       score: 10
       max: 10
@@ -184,7 +190,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; flat script with necessary procedural loop
+        comment: 'Flat top-level: constants → data generation → geometry → plot →
+          save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -196,19 +203,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used; importlib workaround for file-shadowing is necessary
+        comment: All imports used; sys/importlib/os required for self-shadowing workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; complexity justified by wind barb geometry
+        comment: importlib workaround justified; barb geometry well-organized; no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves to plot-{THEME}.png at dpi=300
     library_mastery:
       score: 7
       max: 10
@@ -218,15 +226,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Grammar of graphics idioms used correctly: separate data per layer,
-          proper aes() mappings, labs(), theme_minimal()'
+        comment: Good ggplot2-style layer composition, proper theme() system, correct
+          annotate() usage
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Five geometric layers assembled to build wind barbs — distinctly
-          grammar-of-graphics thinking
+        comment: Builds wind barbs declaratively through plotnine's + layer composition
+          (geom_segment + geom_polygon + geom_point); idiomatic plotnine for custom
+          plot types
   verdict: APPROVED
 impl_tags:
   dependencies: []
