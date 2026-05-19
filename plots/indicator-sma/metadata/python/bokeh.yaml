@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:18:46Z'
-updated: '2026-05-19T00:44:06Z'
+updated: '2026-05-19T00:54:37Z'
 generated_by: claude-sonnet
 workflow_run: 26068676068
 issue: 3651
@@ -12,94 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present (close price, SMA 20/50/200,
-    legend, hover tooltips)'
-  - 'Exemplary theme adaptation: all chrome elements correctly flip between light
-    and dark via theme tokens'
-  - 'Correct Okabe-Ito palette order with #009E73 as the first series (close price)'
-  - HoverTool with vline mode and datetime formatters is a genuinely Bokeh-distinctive
-    interactive feature
-  - Clean, reproducible code with seed set, KISS structure, and correct output file
-    naming
-  - Data engineering is thoughtful — decline-then-recovery structure creates visible
-    SMA crossover signals
+  - 'Perfect spec compliance: all three SMAs plus close price, correct legend, correct
+    title format'
+  - 'Correct Okabe-Ito color assignments (close = brand green #009E73, SMAs in positions
+    2-4)'
+  - Both themes fully implemented with all chrome tokens (background, text, grid,
+    legend)
+  - 'Intentional visual hierarchy: solid wide close-price line vs. thin dashed SMA
+    lines'
+  - Engineered data produces a clear golden-cross pattern, good storytelling
+  - 'Idiomatic Bokeh usage: ColumnDataSource, HoverTool with formatters, Legend model'
   weaknesses:
-  - No visual hierarchy between close price (primary series) and the three SMAs —
-    all lines at identical weight make the chart read as four equals rather than 'price
-    + trend guides'
-  - Full plot outline box (outline_line_color) is retained; top and right border should
-    be removed per style guide
-  - Both x-grid and y-grid are active; y-only grid is preferred for line/time-series
-    charts
-  - The crossover signals visible in the data are not visually emphasized — close
-    price line should dominate the chart
+  - Bokeh toolbar icons overflow into the right edge of the screenshot; add p.toolbar_location
+    = None to remove toolbar from the static PNG
+  - X-axis label is Date — change to Trading Date or similar for better descriptive
+    context
+  - Dashed SMA lines (2px) are thin and hard to distinguish in crowded crossover regions;
+    increase to 2.5-3px or vary dash patterns (dashed/dotdash/dotted) for the three
+    SMAs
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "indicator-sma · python · bokeh · anyplot.ai" in dark ink at top; Y-axis label "Price ($)" rotated on left; X-axis label "Date" at bottom; tick labels in dark secondary ink (#4A4A44); all elements clearly readable against light background
-      Data: Four lines — teal/green close price (#009E73) as first series, orange SMA 20 (#D55E00), blue SMA 50 (#0072B2), pink/purple SMA 200 (#CC79A7). Price shows decline from ~105 to ~85 then strong recovery to ~140+
-      Legend: Top-left corner, warm elevated background (#FFFDF6), all four series labeled
-      Legibility verdict: PASS — all text readable, no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white
+      Chrome: Title "indicator-sma · python · bokeh · anyplot.ai" in dark ink, clearly readable. Y-axis label "Price ($)" rotated left, readable. X-axis label "Date" at bottom, readable. Tick labels (90, 100, 110, 120, 130) in INK_SOFT, readable. Legend box with elevated background clearly shows all four series.
+      Data: Close price as solid green (#009E73) line — dominant and clearly visible. SMA 20 in vermillion (#D55E00) dashed, SMA 50 in blue (#0072B2) dashed, SMA 200 in reddish-purple (#CC79A7) dashed. All four lines distinguishable by color and style.
+      Minor issue: Bokeh toolbar icons bleed into the right edge of the screenshot.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and axis labels in light cream (#F0EFE8); tick labels in #B8B7B0 — all clearly visible against near-black background. No dark-on-dark failures detected
-      Data: Identical data colors to light render — green, orange, blue, pink lines unchanged; only chrome flips
-      Legend: Dark elevated background (#242420) with styled border; label text in #B8B7B0
-      Legibility verdict: PASS — all text light-colored and legible; no dark-on-dark issues
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title in light ink (#F0EFE8), clearly readable on dark background. Axis labels and tick labels in #B8B7B0 — readable, no dark-on-dark failure. Legend uses #242420 elevated background with INK_SOFT borders and label text.
+      Data: Colors identical to light render — close price #009E73 green, SMA 20 vermillion, SMA 50 blue, SMA 200 reddish-purple. All data colors unchanged between themes as required.
+      Minor issue: Same toolbar icon overflow on right edge as in light render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All sizes explicitly set: title 28pt, axis labels 22pt, tick labels
-          18pt, legend 22pt — all meet minimums'
+        comment: All text readable in both themes; y-axis label small and rotated
+          but legible at full resolution
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; line crossings are by design
+        comment: Lines cross naturally, legend positioned clear of data
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All four lines clearly visible with line_width=3
+        comment: Close price highly visible; dashed SMA lines at 2px are somewhat
+          thin in crowded regions
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe, good luminance contrast between series
+        comment: Okabe-Ito CVD-safe palette, no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Data spans canvas well; Bokeh toolbar icons appear as small sliver
-          on right edge
+        comment: Correct 4800x2700 canvas; Bokeh toolbar icons bleed into right edge
+          of screenshot
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Price ($) with units; Date descriptive; title in canonical format
+        passed: false
+        comment: Y-axis Price ($) good; X-axis Date is too generic, should be Trading
+          Date
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; SMA order #D55E00, #0072B2, #CC79A7; backgrounds
-          correct; full theme-adaptive chrome'
+        comment: 'First series #009E73, SMAs follow Okabe-Ito positions 2-4, backgrounds
+          correct in both themes'
     design_excellence:
       score: 11
       max: 20
@@ -109,24 +108,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: theme tokens thorough, correct palette, explicit
-          sizing. But all lines identical weight — no visual hierarchy; close price
-          doesn''t visually dominate'
+        comment: Custom Okabe-Ito assignments, solid-vs-dashed hierarchy, full theme
+          adaptation
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Subtle y-grid (alpha=0.10) good, but x-grid also enabled and full
-          outline box retained — style guide recommends removing top/right spines/border
-          and y-only grid
+        passed: true
+        comment: No border outline, y-grid only at 10% alpha; toolbar overflow detracts
+          slightly
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Data naturally tells a story (decline then strong recovery) but visualization
-          provides no visual emphasis; all lines equal weight; crossovers not highlighted
+        passed: true
+        comment: Engineered golden-cross data, visual hierarchy guides eye; no crossover
+          annotations
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +133,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SMA indicator chart with close price + 3 overlay SMAs
+        comment: Correct SMA indicator chart
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Close price, SMA 20, SMA 50, SMA 200, legend with period labels,
-          HoverTool with vline mode
+        comment: Close price, SMA 20/50/200, legend, HoverTool all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, Price ($) on y-axis, all data ranges visible
+        comment: X=datetime dates, Y=price; 300 business days
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'indicator-sma · python · bokeh · anyplot.ai'; legend labels
-          Close Price, SMA 20, SMA 50, SMA 200
+        comment: Title matches format; legend labels match spec
     data_quality:
       score: 15
       max: 15
@@ -166,22 +161,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Data engineered to show decline then recovery with visible golden
-          cross signals; all three SMA periods behaviorally distinct
+        comment: All SMA periods shown; null-start behavior preserved
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily stock price simulation with business-day calendar; neutral
-          financial context
+        comment: Stock-like $85-$135 price range; neutral synthetic data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Starting at $100, ranging ~85-140 over 300 business days; SMA calculations
-          mathematically correct
+        comment: 300 business days, seed=42, three-phase regime produces meaningful
+          crossover signals
     code_quality:
       score: 10
       max: 10
@@ -191,13 +184,13 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Plot → Save; no functions or classes
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -209,47 +202,43 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic, appropriate complexity
+        comment: Clean, well-organized; correct Selenium screenshot pattern
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html + plot-{THEME}.png; current Bokeh API
-    library_mastery:
-      score: 7
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly
+    library_features:
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource, datetime axis, HoverTool with formatters, Legend
+          model with add_layout
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, datetime axis, HoverTool with formatters, explicit
-          Legend class construction; very idiomatic Bokeh
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: HoverTool with vline mode and datetime formatting distinctly Bokeh;
-          HTML interactive export alongside PNG; ColumnDataSource for reactive data
-          binding
-  verdict: REJECTED
+        comment: HoverTool with vline mode and formatted tooltips, interactive toolbar,
+          HTML output; no span annotations or range tool
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
   - html-export
-  - custom-legend
   patterns:
   - data-generation
   - columndatasource
   dataprep:
   - rolling-window
-  - cumulative-sum
   - time-series
   styling:
-  - grid-styling
   - alpha-blending

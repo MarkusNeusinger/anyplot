@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-19
+Quality: 86/100 | Updated: 2026-05-19
 """
 
 import os
