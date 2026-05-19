@@ -9,6 +9,8 @@ library(scales)
 library(ragg)
 library(gapminder)
 
+set.seed(42)
+
 # Theme tokens
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
@@ -39,15 +41,25 @@ continent_colors <- setNames(
 # Plot — small multiples replacing animation; each facet is one time snapshot
 p <- ggplot(df_snap, aes(x = cntry_yr, y = gdpPercap, fill = continent)) +
   geom_col(width = 0.8, alpha = 0.9) +
+  geom_text(
+    aes(label = label_dollar(scale = 1e-3, suffix = "K", accuracy = 1)(gdpPercap)),
+    hjust  = -0.1,
+    color  = INK_SOFT,
+    size   = 4.5
+  ) +
   coord_flip() +
   scale_x_discrete(labels = function(x) sub("___.*", "", x)) +
-  scale_y_continuous(labels = label_dollar(scale = 1e-3, suffix = "K")) +
+  scale_y_continuous(
+    labels = label_dollar(scale = 1e-3, suffix = "K"),
+    expand = expansion(mult = c(0, 0.28))
+  ) +
   scale_fill_manual(values = continent_colors, name = "Continent") +
   facet_wrap(~year, scales = "free", nrow = 2) +
   labs(
-    title = "GDP per Capita Rankings · bar-race-animated · r · ggplot2 · anyplot.ai",
-    x     = NULL,
-    y     = "GDP per Capita (USD)"
+    title    = "GDP per Capita Rankings · bar-race-animated · r · ggplot2 · anyplot.ai",
+    subtitle = "Kuwait leads in 1952 on oil wealth; European economies — especially Norway — rise to the top by 2007",
+    x        = NULL,
+    y        = "GDP per Capita (USD)"
   ) +
   theme_minimal(base_size = 14) +
   theme(
@@ -56,18 +68,20 @@ p <- ggplot(df_snap, aes(x = cntry_yr, y = gdpPercap, fill = continent)) +
     panel.grid.major.y = element_blank(),
     panel.grid.major.x = element_line(color = INK_SOFT, linewidth = 0.25),
     panel.grid.minor   = element_blank(),
-    axis.title.x       = element_text(color = INK, size = 18),
+    axis.title.x       = element_text(color = INK, size = 20),
     axis.title.y       = element_blank(),
-    axis.text.x        = element_text(color = INK_SOFT, size = 11),
-    axis.text.y        = element_text(color = INK, size = 12),
-    plot.title         = element_text(color = INK, size = 20, face = "bold",
+    axis.text.x        = element_text(color = INK_SOFT, size = 16),
+    axis.text.y        = element_text(color = INK, size = 16),
+    plot.title         = element_text(color = INK, size = 24, face = "bold",
+                                      margin = margin(b = 5)),
+    plot.subtitle      = element_text(color = INK_SOFT, size = 18,
                                       margin = margin(b = 15)),
     legend.background  = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
                                       linewidth = 0.3),
-    legend.text        = element_text(color = INK_SOFT, size = 14),
-    legend.title       = element_text(color = INK, size = 16),
+    legend.text        = element_text(color = INK_SOFT, size = 16),
+    legend.title       = element_text(color = INK, size = 18),
     legend.position    = "bottom",
-    strip.text         = element_text(color = INK, size = 16, face = "bold"),
+    strip.text         = element_text(color = INK, size = 18, face = "bold"),
     strip.background   = element_rect(fill = ELEVATED_BG, color = NA),
     plot.margin        = margin(15, 15, 10, 15)
   )
