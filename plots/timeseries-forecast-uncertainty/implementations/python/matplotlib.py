@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-19
@@ -9,6 +9,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+from matplotlib.patches import Patch
 
 
 # Theme tokens
@@ -64,8 +65,8 @@ ax.set_axisbelow(True)
 ax.axvspan(forecast_dates[0], forecast_dates[-1], color=INK, alpha=0.03, zorder=0)
 
 # CI bands — outer 95% first, then 80% sits on top (correct nesting)
-fill_95 = ax.fill_between(forecast_dates, lower_95, upper_95, color=CI_COLOR, alpha=0.20, zorder=1, label="95% CI")
-fill_80 = ax.fill_between(forecast_dates, lower_80, upper_80, color=CI_COLOR, alpha=0.30, zorder=2, label="80% CI")
+ax.fill_between(forecast_dates, lower_95, upper_95, color=CI_COLOR, alpha=0.20, zorder=1)
+ax.fill_between(forecast_dates, lower_80, upper_80, color=CI_COLOR, alpha=0.30, zorder=2)
 
 # Historical solid line
 (hist_line,) = ax.plot(
@@ -98,11 +99,24 @@ ax.axvline(x=forecast_dates[0], color=INK_SOFT, linewidth=1.2, linestyle=":", al
 y_max = max(actual.max(), upper_95.max()) + 12
 ax.text(forecast_dates[0], y_max, "Forecast →", color=INK_MUTED, fontsize=8, va="top", ha="left", fontstyle="italic")
 
+# Peak marker — highlights the expected peak of the forecast
+peak_idx = np.argmax(forecast_values)
+ax.plot(
+    forecast_dates[peak_idx],
+    forecast_values[peak_idx],
+    "o",
+    color=FORECAST_COLOR,
+    markersize=6,
+    zorder=6,
+    markeredgecolor=PAGE_BG,
+    markeredgewidth=1.5,
+)
+
 # Style
 ax.set_xlabel("Date", fontsize=14, color=INK)
 ax.set_ylabel("Monthly Sales (thousands)", fontsize=14, color=INK)
 ax.set_title(
-    "timeseries-forecast-uncertainty · python · matplotlib · anyplot.ai", fontsize=18, fontweight="medium", color=INK
+    "timeseries-forecast-uncertainty · python · matplotlib · anyplot.ai", fontsize=15, fontweight="medium", color=INK
 )
 ax.tick_params(axis="both", labelsize=12, colors=INK_SOFT)
 
@@ -124,10 +138,19 @@ for spine in ("left", "bottom"):
 y_min = min(actual.min(), lower_95.min()) - 10
 ax.set_ylim(y_min, y_max + 5)
 
+# X-axis padding: small right margin so the CI band doesn't clip at the edge
+ax.set_xlim(dates[0] - pd.DateOffset(months=1), dates[-1] + pd.DateOffset(months=2))
+
 # Legend — correct order: Historical, Forecast, Forecast Start, 80% CI, 95% CI
+# Explicit Patch handles with visually distinct alphas so 80% vs 95% CI are clearly differentiable
 fc_start_proxy = plt.Line2D([0], [0], color=INK_SOFT, linestyle=":", linewidth=1.2, label="Forecast Start")
+ci_80_handle = Patch(facecolor=CI_COLOR, alpha=0.55, label="80% CI")
+ci_95_handle = Patch(facecolor=CI_COLOR, alpha=0.25, label="95% CI")
 leg = ax.legend(
-    handles=[hist_line, fc_line, fc_start_proxy, fill_80, fill_95], fontsize=12, loc="upper left", framealpha=0.95
+    handles=[hist_line, fc_line, fc_start_proxy, ci_80_handle, ci_95_handle],
+    fontsize=12,
+    loc="upper left",
+    framealpha=0.95,
 )
 if leg:
     leg.get_frame().set_facecolor(ELEVATED_BG)
