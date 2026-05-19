@@ -1,156 +1,186 @@
 library: bokeh
+language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T22:40:26Z'
-updated: '2026-01-10T22:49:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20885435547
+updated: '2026-05-18T23:55:12Z'
+generated_by: claude-sonnet
+workflow_run: 26066511363
 issue: 3638
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/bokeh/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of geographic heatmap with proper Web Mercator projection
-  - Clean Gaussian smoothing for continuous density appearance
-  - Appropriate use of WMTSTileSource for CartoDB basemap integration
-  - Both PNG and interactive HTML outputs generated
-  - Good colormap choice (YlOrRd) with transparency for basemap visibility
-  - Well-structured synthetic data with realistic California monitoring station clusters
+  - Theme-adaptive basemap tiles (CartoDB light/dark) make both renders contextually
+    appropriate and visually polished
+  - 'Full spec compliance: Gaussian smoothing for continuous density, Viridis colormap
+    with transparency, colorbar, basemap, interactive hover, bandwidth parameter'
+  - 'Excellent idiomatic Bokeh usage: WMTSTileSource, mercator projection, LinearColorMapper,
+    HoverTool with renderer-scoped tooltips'
+  - Robust Web Mercator projection correctly applied to both the heatmap grid and
+    scatter overlay
+  - Reproducible synthetic data with realistic California cluster locations and plausible
+    AQI values
+  - Clean flat script structure with proper Selenium screenshot following library
+    guidelines exactly
   weaknesses:
-  - Missing HoverTool for interactive hover information on monitoring stations
-  - Axis labels lack degree symbols or units
-  - Colorbar title font size could be larger for better visibility
-  image_description: 'The plot displays a geographic heatmap of California and surrounding
-    western US states rendered on a CartoDB Positron basemap. Three distinct density
-    clusters are visible: (1) Northern California around Sacramento/SF Bay Area at
-    ~38.5°N latitude, (2) Central California coast around Monterey at ~36.5°N latitude,
-    and (3) Southern California around Los Angeles at ~34°N latitude. Blue scatter
-    points (500 total) represent individual environmental monitoring stations. The
-    heatmap uses a YlOrRd colormap with yellow/white indicating high AQI density values
-    and red/dark red indicating lower density areas. A vertical colorbar on the right
-    displays "AQI Density" ranging from 0 to ~30. The title "heatmap-geographic ·
-    bokeh · pyplots.ai" appears in the top-left. Axis labels show "Longitude" (-125
-    to -110) and "Latitude" (32 to 42) in Web Mercator projection.'
+  - Design excellence is functional but not visually distinctive — no regional boundary
+    overlays, annotation callouts, or focal-point emphasis to guide the viewer
+  - Geographic bounding box includes significant empty eastern area (Nevada/Arizona)
+    that underutilizes the right portion of the canvas; tighter framing around the
+    populated California coast/valley corridor would improve canvas utilization
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) page border/fill surrounds a CartoDB light basemap (light grey city map)
+      Chrome: Title "California AQI Monitoring · heatmap-geographic · python · bokeh · anyplot.ai" in dark INK (#1A1A17) at top left; axis labels "Latitude (°)" and "Longitude (°)" in dark INK; tick labels in INK_SOFT (#4A4A44); colorbar labeled "AQI Density" with dark text; "Monitoring Stations" legend in top-right with ELEVATED_BG fill
+      Data: Viridis256 colorscale (deep purple → teal → yellow-green) for density; two main clusters (NorCal/Bay Area and SoCal/LA); green (#009E73) monitoring stations as size-12 scatter dots within clusters; alpha=0.7 heatmap transparency allows basemap to show through
+      Legibility verdict: PASS — all text is clearly readable against the light background; no light-on-light failures detected
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) page area with CartoDB dark basemap; ELEVATED_BG (#242420) used for legend and colorbar fill
+      Chrome: Title in off-white (#F0EFE8) light text readable against dark background; axis labels in INK (#F0EFE8); tick labels in INK_SOFT (#B8B7B0) — light enough to read against near-black; colorbar "AQI Density" label in light text; CartoDB dark tile place names ("Sacramento Valley", "SF Bay Area", "Los Angeles Basin") visible from basemap
+      Data: Viridis256 colors are IDENTICAL to light render — only the basemap and chrome flip; green (#009E73) monitoring stations equally visible; heatmap clusters are more visually striking on the dark background
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome text is in theme-appropriate light tokens; data colors unchanged between themes
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt are all readable;
-          colorbar title slightly small relative to overall canvas
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; all labels clearly separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Heatmap density well-represented; scatter points visible but slightly
-          small for 500 points
+        comment: All font sizes explicitly set (28pt title, 22pt axis labels, 18pt
+          ticks, 16pt legend); fully theme-adaptive; readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text collisions; monitoring stations naturally cluster within
+          heatmap blobs; basemap place names distinct from plot chrome
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Heatmap blobs sharply defined; size-12 monitoring stations clearly
+          visible in both themes; colorbar properly sized
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: YlOrRd colormap is colorblind-safe sequential palette
+        comment: Viridis is perceptually uniform and CVD-safe; BRAND green (#009E73)
+          is the sole categorical color
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good canvas utilization; map centered with balanced margins
+        comment: 4800x2700 correct; large empty eastern area (Nevada/Arizona) underutilizes
+          right portion of canvas
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units (degrees)
+        comment: Title includes descriptive prefix plus required spec-id·language·library·anyplot.ai
+          pattern; axis labels include units (°)
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid has alpha=0.3 dashed lines; legend readable but positioned far
-          from data
+        comment: Viridis256 for continuous density (correct); BRAND (#009E73) for
+          stations; PAGE_BG tokens correctly applied in both themes
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive basemap switching, Gaussian smoothing, intentional
+          alpha=0.7 transparency for layering — above defaults but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtle grid at 10% opacity; colorbar well-positioned; appropriate
+          geographic plot framing
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: California AQI story is coherent; density clusters tell geographic
+          story clearly; dark render especially striking
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct geographic heatmap with continuous density visualization
+        comment: Geographic heatmap with continuous density rendering, not choropleth
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/lon correctly mapped to Web Mercator coordinates
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has KDE-like smoothing, sequential colormap with transparency, colorbar,
-          basemap context, zoom capability via HTML export
-      - id: SC-04
-        name: Data Range
+        comment: Gaussian smoothing, Viridis+alpha, colorbar, CartoDB basemap, sigma
+          parameter, interactive zoom all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points and density areas visible within California bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: lat/lon correctly projected to Web Mercator; values used as histogram
+          weights; full California extent shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Monitoring Stations
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format heatmap-geographic · bokeh · pyplots.ai
+        comment: Title follows required format; 'Monitoring Stations' legend is descriptive
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows density hotspots and clusters; could show more variation in
-          values across regions
+        comment: Continuous density surface, individual stations, interactive tooltips,
+          colorbar, basemap — all aspects covered
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Environmental monitoring stations measuring AQI across California
-          is a realistic, neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 500 monitoring stations with AQI values 20-200+ is realistic for
-          California
+        comment: California AQI monitoring is plausible, neutral, non-controversial;
+          cluster locations match real urban/industrial centers
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 500 points in spec range; AQI values from exponential(50)+20 are
+          realistic; California coordinates correct
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,48 +188,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → projection → histogram → smoothing
-          → plot → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unnecessary imports
+        comment: All imported names are used; no stale imports
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses BasicTicker which is functional but simpler tickers available
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Gaussian smoothing via apply_along_axis+convolve is concise; Selenium
+          screenshot follows library-prescribed pattern
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; no bare plot.png
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, WMTSTileSource for basemap, export_png, and
-          interactive HTML export; could leverage HoverTool for interactivity
+        comment: ColumnDataSource, WMTSTileSource, mercator axis types, LinearColorMapper+ColorBar,
+          HoverTool, p.image, p.add_layout — all idiomatic Bokeh
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: WMTSTileSource native tile integration, mercator projection axes,
+          LinearColorMapper on p.image, renderer-scoped HoverTool — strong but could
+          use more native overlay model
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
   - colorbar
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -210,4 +250,3 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
