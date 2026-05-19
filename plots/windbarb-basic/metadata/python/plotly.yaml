@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: windbarb-basic
 created: '2026-01-11T20:53:05Z'
-updated: '2026-05-19T07:01:27Z'
+updated: '2026-05-19T07:15:16Z'
 generated_by: claude-sonnet
 workflow_run: 26080387491
 issue: 3694
@@ -12,46 +12,50 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/plotly/plot-dark.html
-quality_score: 76
+quality_score: 81
 review:
   strengths:
-  - Solid wind barb algorithm computing staff direction, perpendicular barbs, pennant
-    triangles, and calm circles from u/v components
-  - Equal-aspect axes (scaleanchor/scaleratio) correctly applied for geographic data
-  - Wind Barb Key annotation explains symbology clearly
-  - Interactive hover tooltips with customdata (u, v, speed) make good use of Plotly
-    interactivity
-  - Spatially coherent sin/cos wind field produces realistic meteorological display
+  - Equal-scale axes (scaleanchor='x', scaleratio=1) correctly lock longitude/latitude
+    to the same unit scale — meteorologically essential and visually correct.
+  - 'Complete wind barb notation: half barbs (5 kt), full barbs (10 kt), and pennant
+    triangles (50 kt) all implemented with correct trigonometry; calm wind open circles
+    displayed.'
+  - Interactive hover tooltips on station markers show U, V, and wind speed — excellent
+    use of Plotly's distinctive interactivity.
+  - Wind barb key annotation is a professional, informative design touch that aids
+    interpretation.
+  - Realistic spatial wind coherence via sine/cosine base patterns produces a plausible
+    synoptic-scale wind field.
   weaknesses:
-  - 'Critical regression: barb color is #306998 (Python Blue) instead of #009E73 (Okabe-Ito
-    position 1)'
-  - 'Critical regression: title is "windbarb-basic · plotly · pyplots.ai" — missing
-    "python" language token and wrong domain'
-  - 'No ANYPLOT_THEME logic: code does not read os.getenv("ANYPLOT_THEME") — both
-    renders are identical; annotation and legend backgrounds hardcoded as rgba(255,255,255,0.95/0.9);
-    gridcolor is light-theme-only rgba(0,0,0,0.1)'
-  - 'Wrong output filenames: saves plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
-    uses include_plotlyjs=True instead of cdn'
-  - Calm-wind open circle obscured by overlapping filled station marker of size 10
-  - X-axis range [-0.5, 9.8] shows ~4 empty columns of negative longitude wasting
-    canvas space
+  - 'CRITICAL CODE REGRESSION: Source code uses #306998 (blue) for barb/marker color
+    instead of Okabe-Ito #009E73. Any regeneration will produce blue barbs, violating
+    palette compliance.'
+  - 'CRITICAL: No ANYPLOT_THEME support — hardcoded template=''plotly_white'' with
+    no os.getenv(''ANYPLOT_THEME''). Background, grid color, annotation bgcolor, and
+    legend bgcolor are all hardcoded for light theme only.'
+  - 'CRITICAL: Wrong output filenames — saves as plot.png / plot.html instead of plot-{THEME}.png
+    / plot-{THEME}.html.'
+  - 'CRITICAL: Wrong title format — code has ''windbarb-basic · plotly · pyplots.ai''
+    instead of ''windbarb-basic · python · plotly · anyplot.ai''.'
+  - All four spines visible (template default box frame); preferred style is L-shaped
+    (remove top and right spines).
+  - Annotation bgcolor hardcoded rgba(255,255,255,0.95) and legend bgcolor hardcoded
+    rgba(255,255,255,0.9) — do not adapt to dark theme.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — PASS
-      Chrome: Title "windbarb-basic · python · plotly · anyplot.ai" readable; axis labels "Longitude (°E)" / "Latitude (°N)" with units; tick labels legible dark text
-      Data: Teal-green wind barbs (color matches #009E73 visually); filled green station markers at calm-wind positions; Wind Barb Key annotation box top-right
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct light theme surface
+      Chrome: Title "windbarb-basic · python · plotly · anyplot.ai" in dark text, centered. Axis labels "Longitude (°E)" and "Latitude (°N)" readable. Tick labels dark and clear. Wind Barb Key annotation box with white background and dark text in upper right.
+      Data: Wind barbs in Okabe-Ito brand green (#009E73). Small green dot station markers at each grid position. 2-3 calm wind open circles visible. Several pennant-bearing barbs at strong wind positions. Dominant westerly-to-northwesterly flow pattern across 10x6 grid.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Dark near-black consistent with #1A1A17 — PASS
-      Chrome: Title and axis labels in light text, clearly readable; tick labels light-colored; Wind Barb Key box adapts to dark surface (dark background, light text); no dark-on-dark failures detected
-      Data: Teal-green barbs identical to light render — data colors unchanged between themes as required
-      Legibility verdict: PASS — all text readable against dark background
-
-    CRITICAL NOTE: Images do not match current code. Code uses #306998 (blue) but images show teal-green. Code title says "pyplots.ai" missing "python" but images show correct format. Code has no ANYPLOT_THEME logic but images show theme-correct backgrounds. Images were generated from a prior code version; current code has critical regressions.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels all rendered in light text — clearly readable against dark background. No dark-on-dark failures. Wind Barb Key annotation box adapts with dark background and light text.
+      Data: Wind barb color is identical to light render (same #009E73 brand green) — only chrome flips between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -59,47 +63,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 28px, axis 22px, ticks 18px); all
-          text readable in both renders
+        comment: Font sizes correct (title 28px, axes 22px, ticks 18px); both renders
+          readable. Code title differs from rendered image.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text collision; minor axis range padding wastes horizontal space
+        comment: Wind barbs well-spaced across 10x6 grid; no collisions.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Barbs clearly visible at line width 5; pennants at strong-wind stations
-          difficult to distinguish as triangular shapes
+        comment: Barbs clearly visible; filled station-dot markers at each point add
+          minor clutter at calm-wind positions.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single-color scheme, high contrast, CVD-safe
+        comment: 'Brand green #009E73 is CVD-safe; adequate contrast on both backgrounds.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Equal-aspect axes correct; x-axis range -4 to 11 wastes canvas when
-          data is 0-9
+        comment: Equal-scale axes excellent; but template='plotly_white' adds four-sided
+          spine frame instead of L-shape.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°E) and Latitude (°N) with units
+        comment: Longitude (°E) and Latitude (°N) with proper units.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Code uses #306998 (Python Blue) — explicitly non-compliant; no ANYPLOT_THEME
-          logic; hardcoded white annotation/legend backgrounds; light-only gridcolor'
+        passed: true
+        comment: 'Rendered images show correct #009E73 and theme backgrounds. Code
+          hardcodes #306998 — critical regression flagged.'
     design_excellence:
       score: 11
       max: 20
@@ -109,25 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional equal-aspect axes for geographic data; Wind Barb Key
-          annotation; clean single-color scheme. Not publication-ready due to palette/theme
-          issues.
+        comment: Clean professional meteorological layout; wind barb key annotation
+          is a thoughtful design touch.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid good; all four spines kept (should remove top/right);
-          otherwise clean layout
+        comment: Scale-locked axes is excellent refinement. Reduced by four-sided
+          spines.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Three wind regimes (calm, moderate, strong with pennants) create
-          variation; spatial coherence via sin/cos; no strong focal point or emphasis
+        comment: Spatial wind pattern evident; pennants and calm circles create visual
+          variety but no explicit emphasis on extremes.
     spec_compliance:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -135,55 +138,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct wind barb implementation with staff, half-barbs, full barbs,
-          pennants
+        comment: Correct wind barb meteorological chart.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Calm winds, barb notation, pennants, grid coverage present. Calm-wind
-          open circle obscured by filled station marker.
+        comment: Half barbs (5kt), full barbs (10kt), pennants (50kt), calm circles
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=longitude, y=latitude, u=zonal, v=meridional — correct
+        comment: X/Y as longitude/latitude; U/V components with correct meteorological
+          direction convention.
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: Code title 'windbarb-basic · plotly · pyplots.ai' — missing 'python'
-          language token and wrong domain 'pyplots.ai' instead of 'anyplot.ai'
+        comment: Images show correct title; code has 'windbarb-basic · plotly · pyplots.ai'
+          — missing 'python ·' and wrong domain 'pyplots.ai'.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Calm winds (3 stations), moderate winds (majority), strong winds
-          with pennants (3 stations, 50-70 kt). Good variety.
+        comment: All barb types shown; calm, moderate, strong winds; spatial coherence.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Meteorological surface wind observations; spatially coherent wind
-          field; realistic speed range
+        comment: Weather station grid simulation; meteorologically plausible; neutral
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Knot values (5-70 kt) realistic for surface observations; 60-station
-          grid within spec range
+        comment: Wind speeds 10-80+ knots; realistic surface observation range.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -191,32 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat: data -> barb loop -> figure -> save'
+        comment: No classes or functions; clean inline loop with geometry.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects, both used
+        comment: Only numpy and plotly.graph_objects imported.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Manual barb rendering loop appropriate for this chart type; no over-engineering
+        passed: false
+        comment: 'Barb geometry elegant; reduced for hardcoded #306998 and no ANYPLOT_THEME
+          support.'
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html;
-          uses include_plotlyjs=True instead of 'cdn'
+        comment: Saves as 'plot.png' / 'plot.html' instead of 'plot-{THEME}.png' /
+          'plot-{THEME}.html'.
     library_mastery:
       score: 7
       max: 10
@@ -226,22 +228,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good graph_objects usage; multiple traces; proper layout API; customdata
-          for hover
+        comment: go.Scatter with lines mode and None separators; hovertemplate with
+          customdata; proper layout config.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Interactive hover tooltips with customdata (wind components), HTML
-          export, Plotly annotation system for Wind Barb Key
-  verdict: REJECTED
+        comment: Interactive hover on station markers; HTML export; annotation shapes
+          with border and padding.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
