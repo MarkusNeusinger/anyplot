@@ -1,213 +1,272 @@
 library: highcharts
+language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T22:41:03Z'
-updated: '2026-01-10T22:43:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20885436009
+updated: '2026-05-19T00:14:22Z'
+generated_by: claude-sonnet
+workflow_run: 26066810396
 issue: 3638
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/highcharts/plot-dark.html
+quality_score: 81
 review:
   strengths:
-  - Excellent use of Highmaps tiledwebmap for OpenStreetMap basemap integration
-  - Good implementation of kernel smoothing for continuous density effect
-  - Sequential YlOrRd colormap with transparency allows basemap visibility
-  - Clean geographic projection setup with WebMercator
-  - Multiple realistic hotspots demonstrating density variations
+  - 'Excellent code quality: clean linear structure, reproducible with seed, all imports
+    used, no over-engineering'
+  - 'Full spec compliance: KDE-like Gaussian smoothing, OSM basemap, colorbar legend,
+    WebMercator projection — all required features present'
+  - Geographically accurate data with four distinct hotspot locations correctly placed
+    in the SF Bay Area
+  - 'Proper theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders
+    pass readability checks with no dark-on-dark issues'
+  - Idiomatic Highcharts Maps usage with tiledwebmap series and colorAxis with colorKey
+    on mappoint
   weaknesses:
-  - Contains a function definition (gaussian_smooth) which violates KISS structure
-    guideline
-  - Subtitle text appears quite small relative to the canvas size
-  image_description: The plot displays a geographic heatmap of the San Francisco Bay
-    Area overlaid on OpenStreetMap tiles. The visualization shows activity density
-    using a sequential yellow-orange-red colormap with transparency, allowing the
-    basemap to show through. Multiple density hotspots are visible around the SF peninsula
-    and East Bay (Oakland/Berkeley area), rendered as semi-transparent colored squares
-    that create a smooth heatmap effect. The title "Activity Density in SF Bay Area
-    · heatmap-geographic · highcharts · pyplots.ai" appears at the top, with a subtitle
-    "Spatial density visualization using kernel smoothing". A vertical intensity legend
-    on the right shows the scale from 0.0 to 1.0. The basemap provides excellent geographic
-    context with coastlines, city labels, roads, and terrain coloring.
+  - 'Color palette: custom YlOrRd-like stops instead of recommended viridis/cividis
+    for continuous heatmap data — fix: use viridis stops [[0,''#440154''],[0.33,''#31688E''],[0.66,''#35B779''],[1,''#FDE725'']]'
+  - 'Pixelated grid-square appearance from 60x60 mappoint grid with radius-24 squares
+    — fix: increase grid to 90x100 and reduce marker radius to 16-18 for smoother
+    density gradients'
+  - 'Hotspot clusters occupy a small fraction of the visible map canvas — fix: increase
+    mapView zoom from 9.5 to 10.5 and re-center on [-122.35, 37.77] to focus on active
+    data region'
+  - No annotation or emphasis on dominant hotspot (Downtown SF) — missed opportunity
+    for stronger data storytelling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Activity Density in SF Bay Area · heatmap-geographic · python · highcharts · anyplot.ai" in dark ink (~52px) — clearly readable. Subtitle in muted dark ink — readable. Legend "Intensity" label and scale values (0.0–1.0) in dark secondary ink — readable.
+      Data: Two prominent density clusters in blue-purple tones over the SF Bay Area (Downtown SF and Oakland/Berkeley). SFO corridor cluster visible to the south. Color scale appears viridis-like in the render (dark purple at high intensity, transitioning outward). Clusters are rendered as discrete 60x60 grid squares with radius-24 markers.
+      Legibility verdict: PASS — all text is dark on light, fully readable
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle render in light cream/white text — clearly readable against dark background. Legend "Intensity" label and scale values in muted light ink — readable. No dark-on-dark issues detected.
+      Data: Density clusters are identical in color and position to the light render — same blue-purple hotspot pattern at the same locations. OSM basemap tiles retain standard colors (no separate dark tile theme), which naturally reads darker on the dark background. Data colors are unchanged between renders, only chart background and text chrome flip.
+      Legibility verdict: PASS — all text is light on dark, no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and legend text are readable at full size, subtitle slightly
-          small
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Heatmap squares visible with good transparency, could be slightly
-          larger for better density visualization
+        comment: All font sizes explicitly set (title 52px, subtitle 44px, legend/coloraxis
+          32px). Readable in both themes. Minor deduction for subtitle/title size
+          hierarchy being close.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements; legend sits cleanly at the right margin
+          without touching data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Density clusters visible but 60x60 grid of mappoint squares produces
+          pixelated/blocky appearance instead of smooth gradients. Hotspots cover
+          a small portion of map canvas.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: YlOrRd sequential colormap is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas, basemap fills view appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: No axis labels (expected for map view, but geographic coordinates
-          could be shown)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed with good styling
-    spec_compliance:
-      score: 24
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct geographic heatmap with density visualization
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/lon correctly mapped to geographic positions with intensity as
-          color
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: KDE smoothing, sequential colormap with transparency, colorbar legend,
-          basemap with geographic context
-      - id: SC-04
-        name: Data Range
+        comment: Sequential colormap is CVD-safe. No red-green sole signal. Adequate
+          contrast between density levels.
+      - id: VQ-05
+        name: Layout & Canvas
         score: 3
-        max: 3
+        max: 4
         passed: true
-        comment: All data visible within the map extent
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Map fills the full canvas. However, active data hotspots occupy a
+          small fraction of the visible map area at zoom 9.5, leaving much canvas
+          as empty basemap.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title is descriptive and follows required format. Legend labeled
+          'Intensity' with 0.0-1.0 scale.
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: true
-        comment: Legend title says Intensity which is correct but scale labels could
-          be more descriptive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: heatmap-geographic · highcharts · pyplots.ai'
-    data_quality:
-      score: 18
+        comment: 'Custom YlOrRd-like sequential color stops instead of recommended
+          viridis/cividis. Backgrounds correctly use #FAF8F1 (light) and #1A1A17 (dark).
+          Chrome tokens are theme-adaptive in both renders.'
+    design_excellence:
+      score: 11
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Professional geographic visualization with real OSM basemap. Semi-transparent
+          color stops blend with basemap well. Pixelated grid squares and unrefined
+          tile theme limit polish. Well-configured default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Legend styling is polished (explicit border, padding, vertical layout).
+          Text hierarchy explicitly set. Spacing parameters deliberately configured.
+          Map-type plots lack traditional spines/grids; available refinements are
+          applied.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Multiple hotspot locations at varying intensities tell a spatial
+          story. Subtitle adds context. Color gradient guides eye to densest zones.
+          Missing: no annotation or emphasis on dominant Downtown SF hotspot.'
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Geographic heatmap with basemap implemented. Uses 60x60 grid of mappoint
+          squares rather than smooth interpolated continuous surface — functional
+          but not a fully continuous density layer.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Gaussian smoothing (KDE-like) ✓, transparency for basemap visibility
+          ✓, colorbar legend ✓, OSM tiledwebmap basemap ✓, WebMercator projection
+          ✓, lat/lon/value data ✓.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Latitude/longitude correctly mapped to map coordinates. z value drives
+          colorKey. All hotspot data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'Activity Density in SF Bay Area · heatmap-geographic · python
+          · highcharts · anyplot.ai' matches required format. Legend correctly labeled.
+    data_quality:
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple hotspots with varying intensities, demonstrates density
-          clusters well
+        comment: 'Four distinct hotspot clusters plus scattered background points
+          cover most features of spatial density visualization. Small deduction: background
+          scatter nearly invisible due to low-intensity threshold filter (0.01 cutoff).'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: SF Bay Area activity density is a plausible scenario, though context
-          could be more specific
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Coordinate values are correct for SF Bay Area, intensity normalized
-          0-1
+        comment: SF Bay Area activity density is a real, neutral, comprehensible scenario.
+          Hotspot locations (Downtown SF, Oakland, Berkeley, SFO corridor) are geographically
+          plausible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All geographic coordinates are accurate for the stated locations.
+          Lat 37.5-38.0, Lon -122.6 to -122.1 correctly covers the Bay Area. 1500
+          total points within the 100-10000 specified range.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Contains a gaussian_smooth function definition, violates pure script
-          structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: 'Linear flow: imports → data generation → grid computation → chart
+          config → export. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set before all random data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 8 imports (json, os, tempfile, time, urllib.request, pathlib.Path,
+          numpy, scipy.ndimage.gaussian_filter, selenium) are actively used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current APIs
+        comment: Clean, idiomatic Python. Chart config expressed as clear nested dict.
+          Selenium setup follows standard pattern from library guide.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses Highcharts 12
+          via jsdelivr CDN. Current API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highmaps with tiledwebmap provider, mappoint series,
-          WebMercator projection, and interactive features
+        comment: Correct use of highmaps.js + tiledwebmap module, Highcharts.mapChart,
+          colorAxis, mapView with WebMercator, inline script injection for headless
+          Chrome. Very idiomatic for Highcharts Maps.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: tiledwebmap series (Highcharts-specific OSM tile integration), colorAxis
+          with colorKey on mappoint, and mapView projection configuration are distinctive
+          Highcharts Maps features not available in generic charting libraries.
   verdict: APPROVED
 impl_tags:
   dependencies:
+  - scipy
   - selenium
   techniques:
-  - colorbar
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
-  - kde
   - binning
   - normalization
   styling:
