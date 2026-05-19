@@ -277,10 +277,10 @@ Only award full points (5/5) for real, neutral contexts:
 ## Image Formats
 
 Both are valid:
-- **Landscape**: 4800 × 2700 px (16:9)
-- **Square**: 3600 × 3600 px (1:1)
+- **Landscape**: 3200 × 1800 px (16:9)
+- **Square**: 2400 × 2400 px (1:1)
 
-Both have ~13M pixels, so font size recommendations apply equally.
+Both have ~5.76M pixels, so font size recommendations apply equally.
 
 ## Interactive Libraries
 
