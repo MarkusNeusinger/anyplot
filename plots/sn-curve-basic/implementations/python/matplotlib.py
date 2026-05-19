@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-19
@@ -60,7 +60,7 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 ax.scatter(
-    cycles, stress, s=80, color=BRAND, alpha=0.75, edgecolors=PAGE_BG, linewidths=0.5, label="Test Data", zorder=5
+    cycles, stress, s=100, color=BRAND, alpha=0.75, edgecolors=PAGE_BG, linewidths=0.5, label="Test Data", zorder=5
 )
 
 ax.plot(fit_cycles, fit_stress, color=COLOR_FIT, linewidth=2.0, label="Basquin Fit", zorder=4)
@@ -116,7 +116,15 @@ if leg:
 
 # Fatigue region labels
 ax.annotate("Low-Cycle\nFatigue", xy=(4e2, 420), fontsize=7, ha="center", color=INK_MUTED, style="italic")
-ax.annotate("High-Cycle\nFatigue", xy=(1e5, 290), fontsize=7, ha="center", color=INK_MUTED, style="italic")
+ax.annotate(
+    "High-Cycle\nFatigue",
+    xy=(1e5, 420),
+    fontsize=7,
+    ha="center",
+    color=INK_MUTED,
+    style="italic",
+    bbox={"boxstyle": "round,pad=0.2", "facecolor": PAGE_BG, "alpha": 0.75, "edgecolor": "none"},
+)
 ax.annotate("Infinite Life", xy=(5e7, 170), fontsize=7, ha="center", color=INK_MUTED, style="italic")
 
 plt.tight_layout()
