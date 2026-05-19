@@ -1,158 +1,183 @@
 library: highcharts
+language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:55:05Z'
-updated: '2026-01-11T00:57:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886980688
+updated: '2026-05-19T01:03:51Z'
+generated_by: claude-sonnet
+workflow_run: 26068953218
 issue: 3651
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent visual clarity with well-differentiated lines using color and dash styles
-  - Proper handling of NaN values for initial SMA periods (filtered out correctly)
-  - Clean, well-structured code with good separation of concerns
-  - Colorblind-safe palette following project guidelines
-  - Appropriate use of Highcharts tooltip sharing for multi-series comparison
-  - Realistic stock data generation with trend and volatility
+  - Perfect spec compliance with all 4 series using correct Okabe-Ito colors and dash
+    styles
+  - Full theme-adaptive chrome — both light and dark renders pass legibility check
+    with no dark-on-dark failures
+  - Realistic Ornstein-Uhlenbeck price data with correct SMA null-period behavior
+    (SMA 200 starts after 200 days)
+  - 'Expert Highcharts idiomatic usage: dual HTML approach, millisecond timestamp
+    conversion, SDK objects with typed properties, shared tooltips'
   weaknesses:
-  - Legend could be better integrated within the plot area rather than floating outside
-  - Does not use Highcharts Stock module which would provide native financial chart
-    features like range selector
+  - LineSeries imported from highcharts_core.options.series.area instead of the correct
+    highcharts_core.options.series.line — fix import path
+  - Design Excellence could be pushed higher by annotating key technical events such
+    as a golden cross or adding a shaded region for the pre-SMA-200 period to improve
+    storytelling
   image_description: |-
-    The plot displays a stock price chart with Simple Moving Average (SMA) overlays over approximately 365 business days from January 2024 to May 2025. The chart shows:
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "indicator-sma · python · highcharts · anyplot.ai" in bold dark ink (64px), subtitle "Stock Price with 20, 50, and 200-day Simple Moving Averages" in soft dark (36px), y-axis "Price (USD)" and x-axis "Date" labels in dark ink (40px), tick labels in soft dark (28px), legend items in soft dark (28px) — all readable
+      Data: Four lines — Close Price solid thick green (#009E73), SMA 20 solid thinner orange (#D55E00), SMA 50 short-dashed blue (#0072B2), SMA 200 long-dashed reddish-purple (#CC79A7) starting ~200 trading days in. Monthly x-axis ticks Jan 2024 to May 2025. Subtle horizontal grid lines. Legend box upper-right with elevated-bg and border.
+      Legibility verdict: PASS
 
-    - Close Price (blue solid line, #306998) - the main price series showing typical stock price volatility with an overall upward trend from ~$150 to ~$195
-    - SMA 20 (yellow solid line, #FFD43B) - short-term moving average closely following the price
-    - SMA 50 (cyan dashed line, #17BECF) - medium-term moving average showing smoother trend
-    - SMA 200 (purple long-dashed line, #9467BD) - long-term moving average starting later due to the 200-day calculation window
-
-    The title "indicator-sma · highcharts · pyplots.ai" appears at the top with a subtitle describing the chart. The Y-axis shows "Price (USD)" with dollar values ranging from $126 to $212. The X-axis shows dates formatted as "Month Year". A legend is positioned in the upper right corner identifying all four series. Grid lines are visible but subtle.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title and subtitle in light ink (#F0EFE8 range), axis labels and tick labels in light soft (#B8B7B0 range) — all clearly readable against dark background. No dark-on-dark failures observed. Legend box uses elevated dark fill (#242420) with subtle border.
+      Data: All four series colors identical to light render — green Close Price, orange SMA 20, blue SMA 50, pink SMA 200 — confirming only chrome flips between themes. Grid lines faint but visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable. Font
-          sizes are appropriate for the 4800x2700 canvas, though tick labels could
-          be slightly larger.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements. X-axis labels are well-spaced, legend
-          does not overlap data.
+        comment: 'All font sizes explicitly set: title 64px, subtitle 36px, axis labels
+          40px, tick labels 28px, legend 28px — all above minimums, both renders legible'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text in either render; monthly x-axis ticks space
+          cleanly
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths are appropriate. The price line is prominently thicker
-          (5px) while SMA lines are thinner (3px). Lines are clearly distinguishable.
+        comment: Close price 5px solid dominant; SMAs 3px with Solid/ShortDash/LongDash
+          patterns clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-safe palette using blue, yellow, cyan, and purple. No
-          red-green conflicts.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills the canvas well with balanced margins. Good use of space.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Price (USD) with currency formatting. X-axis shows Date
-          with proper date formatting.
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette (CVD-safe); dash-style differentiation adds secondary
+          visual channel
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Data area fills ~85% of 4800x2700 canvas with balanced margins; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle and appropriate. However, the legend is positioned
-          outside the plot area on the upper right, which is functional but could
-          be better integrated.
+        passed: true
+        comment: Y-axis Price (USD) with units; x-axis Date descriptive; title format
+          correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Close #009E73 (pos1), SMA20 #D55E00 (pos2), SMA50 #0072B2 (pos3),
+          SMA200 #CC79A7 (pos4); backgrounds #FAF8F1/#1A1A17 correct; chrome fully
+          theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clear design intent: correct palette, distinct dash styles, z-index
+          ordering, subtitle. Above default but not exceptional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Subtle grid (rgba 0.10 opacity), axis lines removed (lineWidth:
+          0), generous margins, bordered legend with elevated bg'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy via line thickness (close price thicker) creates
+          focal point; OU process produces realistic mean-reverting dynamics; no crossover
+          annotations
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart type for time series with SMA overlays
+        comment: 'Correct: line chart with price and 3 SMA overlays'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis is datetime, Y-axis is price values
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: price line, 20/50/200-day SMAs, legend
-          showing periods'
-      - id: SC-04
-        name: Data Range
+        comment: Close line prominent, SMA 20/50/200 with distinct colors/dash styles,
+          legend with period labels, y-axis grid, SMA 200 null-period correctly filtered
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate axis scaling
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on x-axis (365 business days within 250-500 range), price (USD)
+          on y-axis
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Close Price, SMA 20, SMA 50, SMA 200
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows format {spec-id} · {library} · pyplots.ai
+        comment: 'Title: indicator-sma · python · highcharts · anyplot.ai; legend:
+          Close Price, SMA 20, SMA 50, SMA 200'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows all aspects: price volatility, trend following by SMAs, SMA
-          crossovers visible around August/September, different smoothing levels.
-          Missing explicit golden/death cross demonstration.'
+        comment: Shows SMA null period, progressive smoothing at different time scales,
+          lag effect, price dynamics around long-term mean
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock price movement using random walk with trend, plausible
-          price range and volatility
+        comment: Stock price with daily SMAs is canonical technical analysis; dates
+          Jan 2024 - May 2025 realistic; USD formatting correct
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Reasonable starting price ($150), realistic daily returns (~0.05%
-          mean, 1.5% std), appropriate 365-day period
+        comment: Price range ~$130-$200 plausible for mid-cap stock; OU process mean
+          $175 creates believable mean-reverting dynamics
     code_quality:
       score: 9
       max: 10
@@ -162,46 +187,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data generation, SMA calculation,
-          chart config, export'
+        comment: 'Linear: imports -> data -> chart options -> series -> render ->
+          save; no user-defined functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (json, tempfile, time, urllib, Path, numpy,
-          pandas, selenium)
+        comment: All imports are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: LineSeries imported from highcharts_core.options.series.area instead
+          of correct highcharts_core.options.series.line — semantically incorrect
+          import path
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current Highcharts API patterns
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Outputs both plot.png and plot.html, which is correct for Highcharts
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Chart(container=container), HighchartsOptions, LineSeries SDK objects
+          with typed properties, to_js_literal(), dual HTML approach, millisecond
+          timestamp conversion, dateTimeLabelFormats
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts datetime axis, tooltip formatting with shared tooltip
-          and value formatting. Uses dashStyle for line differentiation. Could leverage
-          more Highcharts-specific features like stock chart module or interactive
-          zooming.
+        comment: dashStyle (Solid/ShortDash/LongDash), z_index for series layering,
+          shared:True tooltip, dateTimeLabelFormats, symbolWidth/symbolHeight in legend
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -211,8 +243,8 @@ impl_tags:
   - hover-tooltips
   patterns:
   - data-generation
-  - time-series
+  - iteration-over-groups
   dataprep:
+  - time-series
   - rolling-window
-  styling:
-  - grid-styling
+  styling: []
