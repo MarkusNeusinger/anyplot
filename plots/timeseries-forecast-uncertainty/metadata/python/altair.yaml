@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:29:40Z'
-updated: '2026-05-19T13:22:22Z'
+updated: '2026-05-19T13:32:07Z'
 generated_by: claude-sonnet
 workflow_run: 26099236924
 issue: 3188
@@ -15,37 +15,39 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeserie
 quality_score: 88
 review:
   strengths:
-  - 'Full spec compliance: all required elements (historical line, dashed forecast,
-    nested CI bands, vertical rule, legend) implemented correctly'
-  - 'Proper Okabe-Ito palette: #009E73 for historical, #D55E00 for forecast — exact
-    canonical order'
-  - 'Clean theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
-    correctly applied in both light and dark renders; no dark-on-dark failures'
-  - 'Good statistical realism: CI widths grow with forecast horizon (linspace 5→20
-    std), matching real forecasting model behavior'
-  - 'Clean axis styling: domain lines removed, tick marks removed, x-axis grid disabled,
-    y-axis grid subtle at 0.10 opacity'
-  - Reproducible with np.random.seed(42) and exports both PNG and HTML
+  - 'All spec features present: historical solid line, dashed forecast, nested 80%/95%
+    CI bands, vertical dashed rule at forecast start'
+  - Correct Okabe-Ito palette — green (#009E73) for historical data, orange (#D55E00)
+    for forecast/CI
+  - Both light and dark renders work correctly with proper theme-adaptive chrome tokens
+  - 'Strong data storytelling: widening CI bands naturally communicate growing uncertainty,
+    vertical rule creates clear historical/forecast boundary'
+  - Clean Altair layer composition using alt.layer() with invisible-points legend
+    workaround — idiomatic Altair pattern
+  - Subtitle adds meaningful context ('Monthly Sales with 80% and 95% Confidence Intervals')
+  - 'Excellent tick/spine refinement: tickSize=0 removes tick marks, domain=False,
+    x-grid removed, y-grid at opacity=0.10'
   weaknesses:
-  - 'Canvas size deviates from style guide: uses width=1600, height=900, scale_factor=3.0
-    (4800x2700 px) instead of recommended width=800, height=450, scale_factor=4.0
-    (3200x1800 px)'
-  - 'DE-03 low: no annotation or callout at the forecast start point; a text annotation
-    near the vertical rule would strengthen the storytelling'
-  - Legend placed with orient='right' sits tight against the right canvas edge; consider
-    orient='top-right' or padding for breathing room
+  - Canvas size 4800x2700 (width=1600, height=900, scale_factor=3.0) exceeds the allowed
+    3200x1800 target — use width=800, height=450, scale_factor=4.0 per the Altair
+    library guide
+  - Legend combines 80% and 95% CI as a single entry ('80% & 95% CI') rather than
+    two separate entries with different alpha swatches to visually distinguish the
+    two confidence levels
+  - configure_view uses stroke=None (no border) rather than stroke=INK_SOFT per the
+    Altair theme template — minor inconsistency with the style guide chrome pattern
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "timeseries-forecast-uncertainty · python · altair · anyplot.ai" in dark bold text; subtitle "Monthly Sales with 80% and 95% Confidence Intervals" in softer gray; Y-axis label "Sales (thousands USD)" and X-axis label "Date" in dark text; tick labels in INK_SOFT gray; all clearly readable
-      Data: Solid green (#009E73) line for historical data (2021-2023); dashed orange (#D55E00) line for forecast (2024); nested semi-transparent CI bands (opacity 0.15 outer / 0.30 inner) in orange/vermillion; dashed vertical rule at forecast start; legend in top-right with box frame
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — confirmed, not pure white. PASS
+      Chrome: Title 'timeseries-forecast-uncertainty · python · altair · anyplot.ai' in dark near-black text, clearly readable. Subtitle 'Monthly Sales with 80% and 95% Confidence Intervals' in secondary (INK_SOFT) text, readable. X-axis label 'Date', Y-axis label 'Sales (thousands USD)' in dark text, both visible. Tick labels in INK_SOFT, readable at this canvas size.
+      Data: Historical line in #009E73 (brand green), solid, strokeWidth=3 — clearly visible from Jan 2021 to Dec 2023 showing upward trend with seasonal oscillation. Dashed orange forecast line from Jan 2024 to Dec 2024. Lighter 95% CI band (opacity=0.15 orange) surrounds the darker 80% CI band (opacity=0.30 orange) — nested structure clearly visible. Vertical dashed rule at Jan 2024 cleanly marks forecast boundary. Legend in top-right with 'Historical Data' (green), 'Forecast' (orange), '80% & 95% CI' (orange).
+      Legibility verdict: PASS — all text readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface
-      Chrome: Title and subtitle in light (#F0EFE8 / #B8B7B0) text — clearly readable against dark background; axis labels and tick labels in light color; no dark-on-dark failures observed; legend text in light tones
-      Data: Identical Okabe-Ito colors to light render — green historical line and orange forecast line unchanged; CI bands render as deeper brownish-orange on dark background (natural opacity blending), still showing two confidence levels distinctly; dashed vertical rule appears as medium-gray
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — confirmed, not pure black. PASS
+      Chrome: Title and subtitle rendered in light-colored text (#F0EFE8) — clearly readable. Axis labels and tick labels in lighter tones (B8B7B0 range) — readable. No dark-on-dark text failures detected. Legend text light on elevated dark background (#242420) — readable.
+      Data: Historical line still in #009E73 (identical to light render) — vivid green clearly visible on dark background. Forecast dashed line still #D55E00 orange — visible. CI bands appear as brownish-orange fills (same hue, darker due to dark background) — the 80% band is distinguishable as a slightly more vivid inner zone within the broader 95% band. Vertical rule visible as a subtle dashed line.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -56,49 +58,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set and readable in both themes; canvas is
-          4800x2700 (1600x900 x scale=3) vs recommended 3200x1800
+        comment: 'All font sizes explicitly set; both themes fully readable. Minor:
+          ''Date'' x-axis label at titleFontSize=22 is slightly generous for a 4-char
+          label, though X/Y label balance is maintained.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; tick labels well-spaced
+        comment: No overlapping text or data elements; legend cleanly positioned in
+          top-right.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Historical line, dashed forecast line, and both CI bands clearly
-          distinguishable; opacity 0.15/0.30 appropriate
+        comment: Historical line, forecast line, and both CI bands clearly visible;
+          dashed forecast line readable through transparent bands.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs orange is CVD-safe; no red-green conflict
+        comment: Green/orange Okabe-Ito pair is CVD-safe; not red-green; adequate
+          luminance contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas deviates from recommended 800x450 x scale=4; uses 1600x900
-          x scale=3 instead (4800x2700 vs 3200x1800)
+        comment: 'Good layout and margins. Minor: canvas 4800x2700 exceeds allowed
+          3200x1800 target (width=1600, height=900, scale=3.0).'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis includes units; subtitle adds useful context
+        comment: '''Date'' and ''Sales (thousands USD)'' with units; correct title
+          format with subtitle.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; forecast #D55E00; backgrounds #FAF8F1/#1A1A17;
-          theme chrome adapts correctly'
+        comment: 'First series #009E73, second #D55E00. Backgrounds #FAF8F1 (light)
+          and #1A1A17 (dark). Both themes theme-correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -106,22 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional execution with correct palette and transparency; standard
-          forecast chart composition without standout creative choices
+        comment: Solid professional design with intentional color hierarchy, subtitle,
+          and nested CI opacity layers. Clearly above configured defaults but not
+          publication-exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: domain=False, tickSize=0, stroke=None, y-axis-only grid at opacity=0.10;
-          good refinement
+        comment: tickSize=0, domain=False, x-grid removed, y-grid at opacity=0.10,
+          view border removed — multiple refinements visible and effective.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Widening CI bands communicate growing uncertainty; vertical rule
-          marks transition. Missing: no annotation at forecast start point'
+        passed: true
+        comment: Vertical rule creates a strong forecast boundary narrative. Widening
+          CI bands communicate increasing uncertainty naturally. Green/orange distinction
+          guides the viewer through the historical-to-forecast story.
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +139,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Time series line with forecast and uncertainty bands
+        comment: 'Correct: time series line with forecast and nested confidence interval
+          bands.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid historical line, dashed forecast, vertical rule, nested 80%+95%
-          CI bands, legend
+        comment: 'All spec features: solid historical line, dashed forecast, 80% CI,
+          95% CI, vertical rule, semi-transparent fills, labeled legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X (temporal), sales on Y (quantitative); all 48 points visible
+        comment: Date on x, Sales on y; both historical (2021-2024) and forecast (2024-2025)
+          periods visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format; legend labels Historical Data/Forecast/80% &
-          95% CI
+        comment: Title exactly 'timeseries-forecast-uncertainty · python · altair
+          · anyplot.ai'. Legend items correctly labeled.
     data_quality:
       score: 15
       max: 15
@@ -161,22 +171,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects: historical trend+seasonality+noise, forecast mean,
-          nested CI bands, transition marker'
+        comment: 'Shows all features: historical trend + seasonality, forecast continuation,
+          nested 80%/95% bands widening over time, transition marker.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales with plausible upward trend and seasonality; neutral
-          business scenario
+        comment: Monthly sales with 3-year history + 12-month forecast; realistic
+          business scenario, neutral content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 36 historical + 12 forecast points; CI widths grow realistically
-          over forecast horizon
+        comment: Sales ~100-210K USD plausible; 80% CI narrower than 95% CI (statistically
+          correct); bands widen over forecast horizon (correct behavior).
     code_quality:
       score: 10
       max: 10
@@ -186,51 +196,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat linear script
+        comment: 'Linear: imports → tokens → data → layers → assemble → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used
+        comment: os, altair, numpy, pandas — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; clear variable naming; no fake UI
+        comment: Clean Altair layer composition, no over-engineering, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6.x
-          API
-    library_features:
-      score: 8
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct naming.
+    library_mastery:
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: alt.layer() composition; correct encoding types (T, Q); alt.value()
-          for colors; Y2 encoding for area bands
+        comment: alt.layer(), alt.value(), proper :T/:Q/:N encoding types, configure_axis/view/legend
+          chain — strong idiomatic Altair.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Invisible-points legend technique for layered charts; alt.layer()
-          composition. Workaround rather than elegant feature use; no interactive
-          selection/tooltips
+        comment: Invisible-points legend pattern (Altair-specific workaround), y2
+          encoding for area bounds, alt.layer() composition — multiple Altair-distinctive
+          techniques.
   verdict: APPROVED
 impl_tags:
   dependencies: []
