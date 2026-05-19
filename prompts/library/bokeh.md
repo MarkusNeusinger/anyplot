@@ -11,13 +11,21 @@ from bokeh.io import output_file, save
 ## Create Figure
 
 ```python
-# Target: 3200 × 1800 px (see default-style-guide.md)
+# Target: 3200 × 1800 px (see default-style-guide.md).
+# `width` / `height` are the TOTAL canvas; axis labels at the new 36–42pt
+# native-pixel sizes need explicit `min_border_*` reservations or they get
+# clipped at the edges of the rendered PNG. Reserve ~150px per side for
+# the tick + axis-label stack.
 p = figure(
     width=3200,
     height=1800,
     title=title,
     x_axis_label=x_label,
-    y_axis_label=y_label
+    y_axis_label=y_label,
+    min_border_bottom=180,   # room for 36pt x-tick labels + 42pt x-axis label
+    min_border_left=200,     # room for 36pt y-tick labels + 42pt y-axis label
+    min_border_top=120,      # room for 56pt title
+    min_border_right=60,
 )
 ```
 
