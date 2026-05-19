@@ -1,154 +1,185 @@
 library: seaborn
+language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:19:30Z'
-updated: '2026-01-11T00:25:40Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886559726
+updated: '2026-05-19T05:08:00Z'
+generated_by: claude-sonnet
+workflow_run: 26076556888
 issue: 3652
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of EMA calculation using pandas ewm()
-  - Clear visual hierarchy with price line thicker than EMAs
-  - Crossover markers effectively highlight trading signals with appropriate green/red
-    colors and triangle markers
-  - Well-structured code following KISS principles
-  - Good use of whitegrid style and subtle grid styling
+  - Correct Okabe-Ito palette with perfect canonical ordering and fully theme-adaptive
+    chrome in both renders
+  - All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt, legend 16pt)
+    and readable in both light and dark themes
+  - Crossover markers (bullish/bearish triangles) add meaningful information and create
+    visual focal points aligned with the spec request
+  - 'Idiomatic seaborn usage: long-format melt + hue grouping + palette dict is the
+    recommended seaborn pattern for multi-series lines'
+  - Mathematically correct EMA computation (ewm(span=..., adjust=False)) with reproducible
+    synthetic data via np.random.seed(42)
   weaknesses:
-  - Legend shows some visual artifacts from the iteration approach; using seaborn
-    hue parameter with the long-format data would be more idiomatic
-  - The EMA 12 yellow line could have slightly better contrast against the white background
-  image_description: 'The plot displays an Exponential Moving Average (EMA) indicator
-    chart with a stock price time series spanning from January 2024 to June 2024.
-    Three line series are shown: a dark blue "Close Price" line showing the most volatile
-    actual price movements, a yellow "EMA 12" line (12-day EMA), and a red "EMA 26"
-    line (26-day EMA). The EMAs are visibly smoother than the close price and lag
-    behind price movements. The chart features crossover markers: green upward triangles
-    indicate bullish crossovers (short EMA crosses above long EMA) and dark red downward
-    triangles indicate bearish crossovers (short EMA crosses below long EMA). The
-    price trends downward from around $158 to about $125 before recovering to around
-    $135. The title correctly follows the format "indicator-ema · seaborn · pyplots.ai".
-    Axes are labeled with "Date" on x-axis and "Price (USD)" on y-axis. A legend in
-    the upper left corner clearly identifies all three series. The grid is subtle
-    with dashed lines.'
+  - 'DE-01: Lacks visual depth features such as a shaded region between EMA lines
+    (fill_between) or background trend bands that would elevate the design from competent
+    to publication-ready'
+  - 'LM-02: Crossover markers and line-width adjustments drop to matplotlib primitives
+    (ax.scatter, ax.get_lines()); wrapping crossover data into the long DataFrame
+    and using sns.scatterplot would keep more logic at the seaborn layer'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "indicator-ema · python · seaborn · anyplot.ai" bold 24pt in dark ink — fully readable. Axis labels "Date" and "Price (USD)" in dark ink — readable. Tick labels on both axes in INK_SOFT (#4A4A44) — readable. Legend in upper-left with ELEVATED_BG frame — readable.
+      Data: Close Price in Okabe-Ito green #009E73 (thickest, 3.5px); EMA 12 in vermillion #D55E00 (2.5px); EMA 26 in blue #0072B2 (2.5px). Bearish crossover marker (down-triangle, vermillion) visible around 2024-08. Y-axis grid lines very subtle (alpha=0.10). Top/right spines removed.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, tick labels, and legend text all rendered in light ink tokens (#F0EFE8 / #B8B7B0) — all clearly readable against dark background. No dark-on-dark failures detected. Legend frame uses ELEVATED_BG (#242420).
+      Data: All three series colors IDENTICAL to light render — green Close Price (#009E73), vermillion EMA 12 (#D55E00), blue EMA 26 (#0072B2). Crossover marker still clearly visible. Grid lines very subtle against dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable
+        comment: Title 24pt, axis labels 20pt, ticks 16pt, legend 16pt all explicitly
+          set; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, legend well positioned away from data
+        comment: X-axis dates rotated 30deg, legend positioned upper-left away from
+          data, no collisions
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths appropriate (3.5 for price, 2.5 for EMAs), good differentiation
+        comment: Price line 3.5px, EMA lines 2.5px, crossover markers s=250 — all
+          clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, red are distinguishable, though yellow could have slightly
-          better contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good margins, balanced proportions
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Price (USD), Date'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito is CVD-safe; three series have good luminance contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized; balanced margins; data fills the plot
+          area
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid subtle at alpha 0.3, but legend has duplicate entries from iterating
-          through series
+        passed: true
+        comment: Y-axis Price (USD) with units; X-axis Date
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; EMA 12 #D55E00; EMA 26 #0072B2; correct Okabe-Ito
+          order; backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome fully correct
+          in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: intentional line-width hierarchy,
+          crossover markers with directional symbolism. Falls short of strong design
+          due to absence of fill_between shading between EMA lines or background trend
+          bands'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed; remaining spines coloured with INK_SOFT;
+          y-axis-only grid at alpha=0.10; legend styled with ELEVATED_BG frame; tight_layout
+          applied
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Crossover marker creates clear focal point; price line visually dominant
+          through line weight; smooth EMA vs jagged price contrast guides the reader
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart with EMA overlay
+        comment: EMA overlay line chart; price + two EMA series correctly displayed
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X, price/EMA values on Y, correct assignment
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Price line, two EMA periods, crossover highlighting, period labels
-          in legend
-      - id: SC-04
-        name: Data Range
+        comment: Price line prominent; two EMAs overlaid with distinct colors; EMA
+          lines thinner than price; legend with period labels; crossover points highlighted
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show complete range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X, Price (USD) on Y; all 150 trading days shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Labels correctly identify Close Price, EMA 12, EMA 26
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: indicator-ema · seaborn · pyplots.ai'
+        comment: Title indicator-ema · python · seaborn · anyplot.ai exact format;
+          legend labels Close Price, EMA 12, EMA 26
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows downtrend, recovery, multiple crossovers (bullish and bearish),
-          EMA smoothing
+        comment: 'Shows all aspects: jagged close price, short EMA (12), long EMA
+          (26), trending period, crossover signals, 150 trading days'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price scenario with realistic volatility and movement patterns
+        comment: Stock price scenario with standard technical indicators; 2024 trading
+          calendar; neutral finance domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price range $125-165 is realistic, 120 trading days appropriate
+        comment: $155-$225 price range plausible for mid-cap stock; EMA via pandas
+          ewm mathematically correct
     code_quality:
       score: 10
       max: 10
@@ -158,52 +189,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, plotting, save'
+        comment: 'Flat script: Imports → Theme tokens → Data → Plot → Style → Save;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, pandas, seaborn imported
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current seaborn and pandas APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic pandas ewm for EMA; crossover detection with shift; clean
+          melt for long format; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; no deprecated seaborn/matplotlib API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses sns.lineplot which is appropriate, but manual iteration over
-          series is less idiomatic than using hue parameter
+        passed: true
+        comment: Long-format DataFrame via melt; sns.lineplot with hue, hue_order,
+          explicit palette dict; sns.set_theme with rc= for full theme control — textbook
+          idiomatic seaborn
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Hue-based multi-series with palette dict is seaborn-distinctive.
+          However crossover markers (ax.scatter) and line-width adjustment (ax.get_lines())
+          are implemented at the matplotlib layer
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - annotations
+  techniques: []
   patterns:
   - data-generation
   - wide-to-long
-  - iteration-over-groups
   dataprep:
   - time-series
+  - rolling-window
   styling:
+  - edge-highlighting
   - grid-styling
