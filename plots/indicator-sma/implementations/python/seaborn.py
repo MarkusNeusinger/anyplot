@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-11
+Library: seaborn | Python 3.13
+Quality: pending | Updated: 2026-05-19
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,80 +12,94 @@ import pandas as pd
 import seaborn as sns
 
 
-# Generate realistic stock price data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette — close price first (brand green), then SMAs in canonical order
+PALETTE = {"Close Price": "#009E73", "SMA 20": "#D55E00", "SMA 50": "#0072B2", "SMA 200": "#CC79A7"}
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data — realistic stock price with geometric random walk and mild upward drift
 np.random.seed(42)
 n_days = 300
-
-# Create date range (trading days)
 dates = pd.date_range(start="2025-01-01", periods=n_days, freq="B")
-
-# Generate price data with trend and volatility
-# Start at $100, with drift and random walk
 returns = np.random.normal(0.0005, 0.015, n_days)
 prices = 100 * np.cumprod(1 + returns)
-
-# Add some trend structure
 trend = np.linspace(0, 20, n_days)
 prices = prices + trend * 0.3
 
-# Create DataFrame
 df = pd.DataFrame({"date": dates, "close": prices})
-
-# Calculate SMAs
 df["sma_20"] = df["close"].rolling(window=20).mean()
 df["sma_50"] = df["close"].rolling(window=50).mean()
 df["sma_200"] = df["close"].rolling(window=200).mean()
 
-# Prepare data for seaborn (long format)
+# Reshape to long format for seaborn native hue parameter
 df_long = pd.melt(
     df, id_vars=["date"], value_vars=["close", "sma_20", "sma_50", "sma_200"], var_name="series", value_name="price"
 )
+label_map = {"close": "Close Price", "sma_20": "SMA 20", "sma_50": "SMA 50", "sma_200": "SMA 200"}
+df_long["series"] = df_long["series"].map(label_map)
 
-# Set up style
-sns.set_style("whitegrid")
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+sns.lineplot(
+    data=df_long,
+    x="date",
+    y="price",
+    hue="series",
+    palette=PALETTE,
+    hue_order=list(PALETTE.keys()),
+    linewidth=2.2,
+    ax=ax,
+)
 
-# Define colors - Python Blue for close, distinct colors for SMAs
-color_palette = {
-    "close": "#306998",  # Python Blue
-    "sma_20": "#FFD43B",  # Python Yellow
-    "sma_50": "#E74C3C",  # Red
-    "sma_200": "#2ECC71",  # Green
-}
+# Style
+ax.set_title("indicator-sma · python · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20)
+ax.set_xlabel("Date", fontsize=20, color=INK)
+ax.set_ylabel("Price ($)", fontsize=20, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Plot each series with seaborn
-for series_name, color in color_palette.items():
-    series_data = df_long[df_long["series"] == series_name]
-    linewidth = 2.5 if series_name == "close" else 2.0
-    alpha = 1.0 if series_name == "close" else 0.85
-    sns.lineplot(
-        data=series_data,
-        x="date",
-        y="price",
-        color=color,
-        linewidth=linewidth,
-        alpha=alpha,
-        label=series_name.upper().replace("_", " ") if series_name != "close" else "Close Price",
-        ax=ax,
-    )
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
-# Style the plot
-ax.set_title("indicator-sma · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Price ($)", fontsize=20)
-ax.tick_params(axis="both", labelsize=16)
-
-# Configure legend
-ax.legend(fontsize=16, loc="upper left", framealpha=0.95)
-
-# Format x-axis dates
-fig.autofmt_xdate(rotation=30)
-
-# Subtle grid
-ax.grid(True, alpha=0.3, linestyle="--")
+ax.yaxis.grid(True, alpha=0.12, linewidth=0.8, color=INK)
+ax.xaxis.grid(False)
 ax.set_axisbelow(True)
 
+legend = ax.get_legend()
+if legend:
+    legend.set_title(None)
+    legend.get_frame().set_facecolor(ELEVATED_BG)
+    legend.get_frame().set_edgecolor(INK_SOFT)
+    for text in legend.get_texts():
+        text.set_color(INK)
+        text.set_fontsize(16)
+
+fig.autofmt_xdate(rotation=30)
+
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
