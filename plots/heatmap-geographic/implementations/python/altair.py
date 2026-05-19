@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 73/100 | Updated: 2026-05-18
+Quality: 81/100 | Updated: 2026-05-19
 """
 
 import os

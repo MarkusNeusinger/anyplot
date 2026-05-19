@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T08:16:12Z'
-updated: '2026-05-18T23:51:39Z'
+updated: '2026-05-19T00:05:46Z'
 generated_by: claude-sonnet
 workflow_run: 26066589580
 issue: 3638
@@ -12,94 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/altair/plot-dark.html
-quality_score: 73
+quality_score: 81
 review:
   strengths:
-  - Strong data storytelling through color gradient — urban hotspots clearly emerge
-    from rural noise
-  - Correct use of alt.topo_feature() and geographic projection (Altair-distinctive
-    feature)
-  - Realistic, neutral dataset with accurate European city coordinates
-  - Clean flat code structure with reproducible data generation
-  - Good canvas utilization for a geographic plot
+  - 'Excellent theme-adaptive implementation: basemap colors, legend fill, and text
+    colors all flip correctly between light and dark renders'
+  - Dual encoding (size + color) for density creates clear visual hierarchy — large
+    bright circles immediately convey hotspots
+  - Correct use of viridis colormap for continuous data with proper colorbar legend
+    labeled with units
+  - 'Perfect code quality: KISS structure, np.random.seed(42) set, clean imports,
+    idiomatic Altair layer composition'
+  - Idiomatic Altair geographic visualization using alt.topo_feature() for TopoJSON
+    loading and .project(type='mercator') — distinctly Altair features
   weaknesses:
-  - 'No theme-adaptive chrome: code never reads ANYPLOT_THEME; dark render has dark-on-dark
-    text (title and legend in black ink on near-black canvas); must implement INK/INK_SOFT/PAGE_BG
-    tokens in configure_title, configure_legend, and configure_view'
-  - 'Wrong output filenames: saves plot.png/plot.html instead of plot-{THEME}.png/plot-{THEME}.html'
-  - 'Basemap fill hardcoded to #e8e8e8 (always light gray); in dark theme this looks
-    visually wrong — should adapt to ~#3A3A35 for dark'
-  - 'Non-approved colormap: inferno not in approved viridis/cividis list — switch
-    to viridis'
-  - Title format in code uses pyplots.ai and is missing python segment
+  - 'Not a true continuous geographic heatmap: spec requires KDE/interpolation for
+    a smooth surface; circles produce a bubble-map effect rather than a continuous
+    density field — use mark_rect with 0.5-degree grid bins and summed value aggregation
+    instead'
+  - Legend label font size is 14px, below the recommended 16px minimum for pixel-based
+    libraries
+  - 'Data storytelling lacks focal point: no city labels or annotations to anchor
+    viewer attention — adding mark_text labels for top 5 cities (London, Paris, Berlin,
+    Madrid, Rome) would significantly improve DE-03'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) outer canvas; light gray (#e8e8e8) land fill; near-white ocean areas
-      Chrome: Title "European Activity Density · heatmap-geographic · python · altair · anyplot.ai" in dark text — clearly readable; legend "Density (%)" with values 0-100 readable in upper right
-      Data: Inferno colormap (yellow→orange→red→purple→near-black) overlapping semi-transparent circles clustered around 15 European city centers; London and Paris are brightest hotspots
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "European Activity Density · heatmap-geographic · python · altair · anyplot.ai" in dark ink (#1A1A17) at 28px — clearly readable. Legend title "Density (%)" in dark ink at 18px, legend labels in #4A4A44 at 14px — readable. Legend box has warm elevated fill (#FFFDF6) with subtle border.
+      Data: Overlapping semi-transparent circles (opacity=0.5) encoded with viridis colormap (purple=low, yellow-green=high) and size (100–1500). European city clusters (London, Paris, Berlin, Madrid, Rome, etc.) show large bright circles; rural/scattered points appear as small purple dots. Land fills are light gray (#e8e8e8) with medium-gray borders (#999999).
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) outer canvas; land areas still hardcoded #e8e8e8 (light gray) — not theme-adapted; ocean areas near-black
-      Chrome: Title text appears dark/black against the near-black canvas — dark-on-dark failure; legend labels (Density %, 0/20/40/60/80/100 ticks) also appear dark against dark background — nearly invisible
-      Data: Inferno colormap data colors are identical to light render (consistent across themes); heatmap hotspots clearly visible against dark background
-      Legibility verdict: FAIL — dark text on near-black background for title and legend (ANYPLOT_THEME not read, ink tokens not applied); basemap land fill is #e8e8e8 (light gray) regardless of theme — visually wrong in dark mode
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title text is light (#F0EFE8) — clearly readable against dark background. Legend labels use #B8B7B0 (INK_SOFT for dark) — readable. Legend box has dark elevated fill (#242420). No dark-on-dark text failures detected.
+      Data: Viridis circle colors are IDENTICAL to the light render — same purple-to-yellow-green gradient. Land fills shift to dark charcoal (#3A3A35) with muted gray borders (#6A6A60), creating appropriate contrast with the near-black background. Data circles pop more on the dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 21
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 3
+        score: 7
         max: 8
-        passed: false
-        comment: Readable in light render; dark render has dark-on-dark text for title
-          and legend — no theme-adaptive ink tokens
+        passed: true
+        comment: Title 28px, legend title 18px, legend labels 14px explicitly set;
+          14px slightly below 16px guideline but readable at 3x scale; no axis labels
+          needed for geographic map
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap
+        comment: Circle overlap is intentional for density visualization; title and
+          legend are clear of data
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Hotspot clusters clearly visible; blocky/pixelated due to discrete
-          circle overlapping rather than smooth KDE
+        comment: Size range 100-1500 with opacity 0.5 adapts well to density; rural
+          dots are small but discernible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Inferno is perceptually uniform; adequate contrast between heatmap
-          and basemap
+        comment: Viridis is perceptually uniform and CVD-safe; size redundancy strengthens
+          discrimination
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Map fills canvas well; minor wasted ocean space (expected for geographic
-          plots)
+        comment: Map fills full 1600x900 canvas; data-dense area covers ~55% of canvas,
+          right side shows less-interesting context
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axis labels (appropriate for geographic map); descriptive
-          title present
+        comment: Title is descriptive; Density (%) legend label includes unit; geographic
+          map needs no traditional axis labels
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Uses inferno (not in approved viridis/cividis list); dark render
-          has wrong-theme chrome (dark text on dark background); basemap hardcoded
-          to #e8e8e8 regardless of theme'
+        passed: true
+        comment: 'Continuous data uses viridis; backgrounds are #FAF8F1 (light) /
+          #1A1A17 (dark); all chrome tokens are theme-correct in both renders'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -107,54 +111,55 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-configured geographic heatmap; creative circle layering for
-          density; dark mode appearance poor due to hardcoded basemap fill
+        comment: Dual encoding (size+color) for density, theme-adaptive basemap fills,
+          clean legend styling — above defaults but in well-configured library default
+          tier
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: configure_view(strokeWidth=0) removes border; no additional polish;
-          library defaults otherwise
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient clearly guides viewer from rural noise to dense urban
-          hotspots; London and Paris dominate; good visual hierarchy
+        comment: No decorative borders, no grid lines, legend has 12px padding and
+          4px corner radius, theme-adaptive land colors
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: High-density clusters clearly stand out visually; story requires
+          viewer effort; no focal point annotations or city labels
     spec_compliance:
       score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Geographic heatmap with basemap present; circle overlay as density
-          proxy rather than true KDE — spec allows 'similar interpolation'
+        comment: Geographic map context correct; spec requires continuous KDE/interpolation
+          surface but implementation uses bubble circles — reasonable Altair approximation
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Basemap with country boundaries, colorbar legend, geographic lat/lon/value
-          data, tooltips all present; no true smooth density interpolation
+        comment: Basemap with country boundaries, viridis colorbar, lat/lon/value
+          encoding, tooltips all present; missing continuous interpolated surface
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly projected with Mercator; values encoded to color
+        comment: latitude/longitude correctly bound to geographic encodings; value
+          drives both color and size
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Images show correct format; code has 'altair · pyplots.ai' (missing
-          python, wrong domain); legend title in code is 'Intensity' but images show
-          'Density (%)'
+        passed: true
+        comment: Title format matches {Descriptive Title} · {spec-id} · {language}
+          · {library} · anyplot.ai; legend label includes unit
     data_quality:
       score: 14
       max: 15
@@ -164,24 +169,25 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Density variation from dense urban clusters to sparse rural scatter;
-          multiple intensity levels
+        comment: Shows density variation across geography, multiple city clusters,
+          exponential value distribution, rural vs urban contrast; docked for absence
+          of continuous surface
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real European city coordinates; plausible activity density scenario;
-          neutral business/activity framing
+        comment: Real European cities with accurate coordinates, population-proportional
+          weights, neutral topic (activity density)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: City coordinates geographically accurate; Mercator scale 600 centers
-          Europe correctly; value ranges plausible
+        comment: City coordinates are accurate; value ranges produce plausible density
+          spreads; rural points have appropriately lower values
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -189,7 +195,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> data -> plot -> save'
+        comment: Imports → Data → Plot → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -201,21 +207,19 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported, all used
+        comment: os, altair, numpy, pandas — all actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic construction; loop for data rows appropriate; layer
-          composition clean
+        comment: Clean idiomatic Altair layer composition; no over-engineering
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves plot.png and plot.html instead of plot-{THEME}.png + plot-{THEME}.html;
-          no ANYPLOT_THEME handling
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
       score: 7
       max: 10
@@ -225,16 +229,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of alt.layer(), alt.topo_feature(), geographic projection;
-          alt.Title used idiomatically
+        comment: Proper use of alt.topo_feature(), .project(), geographic encodings
+          (longitude:Q, latitude:Q), alt.layer() for basemap+data, configure_legend/title
+          for theming
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: alt.topo_feature() for TopoJSON basemap loading is Altair-distinctive;
-          Mercator projection with center/scale; HTML interactive export with tooltips
-  verdict: REJECTED
+        comment: alt.topo_feature() for TopoJSON geographic data loading and .project(type='mercator')
+          are distinctly Altair/Vega-Lite features
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -243,8 +248,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
