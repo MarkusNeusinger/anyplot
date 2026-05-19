@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:18:47Z'
-updated: '2026-05-19T01:04:10Z'
+updated: '2026-05-19T01:15:17Z'
 generated_by: claude-sonnet
 workflow_run: 26068744577
 issue: 3651
@@ -12,129 +12,118 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/altair/plot-dark.html
-quality_score: 78
+quality_score: 87
 review:
   strengths:
-  - Excellent data quality with perfectly realized SMA startup gaps (200-day NaN period)
-    and realistic stock price behavior
-  - Smart use of three encoding channels (color + stroke-dash + stroke-width) for
-    multi-series differentiation providing CVD redundancy
-  - Clean KISS code structure with proper seed (np.random.seed(42)) and idiomatic
-    Altair multi-channel encoding
-  - Both renders fully readable with good font sizing matching style guide specs (title=28,
-    axis=22, tick=18)
+  - Full theme-adaptive chrome implementation — all text, grid, legend, and background
+    tokens correctly flip between light and dark
+  - Dual visual encoding (color + dash pattern + stroke weight) makes all four series
+    distinguishable without relying on hue alone — excellent CVD accessibility
+  - Idiomatic Altair declarative grammar with strokeDash and strokeWidth as typed
+    encoding scales with explicit domain/range
+  - Clean, reproducible flat code structure with np.random.seed(42); correct output
+    filenames for both PNG and HTML
   weaknesses:
-  - 'Critical: Non-Okabe-Ito palette — uses Python Blue (#306998), yellow (#FFD43B),
-    red (#E74C3C), green (#2ECC71); first series must be #009E73; red-green pair for
-    SMA 50/200 is CVD-problematic'
-  - 'Critical: No theme-adaptive chrome — missing os.getenv(''ANYPLOT_THEME'') logic,
-    no PAGE_BG/INK/INK_SOFT tokens, no properties(background=PAGE_BG), configure_title(color=INK),
-    configure_legend(fillColor=ELEVATED_BG)'
-  - 'Critical: Wrong output file names — saves plot.png/plot.html but must save plot-{THEME}.png/plot-{THEME}.html
-    (run twice for light and dark)'
-  - Source code title at line 92 is 'indicator-sma · altair · pyplots.ai' — missing
-    'python' language token and wrong domain (pyplots.ai vs anyplot.ai)
-  - Grid opacity 0.3 is too high; spec recommends 0.12-0.15 for subtle non-dominant
-    grid lines
-  - 'Visual hierarchy too subtle: Close Price stroke width 3.0 vs SMAs at 2.5 is barely
-    noticeable; needs stronger differentiation (e.g., 3.5 vs 1.5)'
+  - 'SMA 200 line is slightly faint: [2,2] dash pattern combined with 1.5px stroke
+    width reduces visibility on the light background — increase stroke to 2.0px or
+    use [4,3] dash'
+  - DE-03 storytelling is limited — chart displays data without guiding the viewer
+    to crossover signals or trend inflection points; emphasis on key crossover moments
+    would improve this
+  - 300-day window gives only ~100 days of SMA-200 history; using 400–500 periods
+    would better demonstrate long-term SMA behavior per spec guidance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface
-      Chrome: Title "indicator-sma · python · altair · anyplot.ai" visible in dark text. Axis labels "Price ($)" and "Date" clearly readable. Tick labels angled at -45° with month/year labels, all readable. Legend top-right with series title "Series" and four entries.
-      Data: Four line series — Close Price (solid teal/blue), SMA 20 (long-dashed orange-yellow), SMA 50 (dotted blue), SMA 200 (solid pink-purple, starting ~Jul 2025 after 200-day startup). All lines distinguishable via color AND stroke pattern. Price range ~$86-128 over 300 days with upward trend.
-      Note: First series is NOT #009E73 — uses non-Okabe-Ito palette (#306998 Python Blue as Close Price)
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "indicator-sma · python · altair · anyplot.ai" clearly readable in dark ink at 28px. X-axis label "Date" and Y-axis label "Price ($)" legible at 22px. Tick labels at 18px with −45° angled X-axis labels avoiding overlap. Legend in top-right with all series labeled.
+      Data: Close Price renders as solid green (#009E73) at 3.5px — most prominent. SMA 20 in orange (#D55E00) long-dashed. SMA 50 in blue (#0072B2) medium-dashed. SMA 200 in purple (#CC79A7) fine-dashed [2,2] — visible but slightly faint at 1.5px stroke. Y-axis gridlines at 0.10 opacity, very subtle.
+      Legibility verdict: PASS — all text readable, no legibility failures
 
     Dark render (plot-dark.png):
-      Background: Dark near-black consistent with #1A1A17 — correct theme surface
-      Chrome: Title, axis labels, tick labels all rendered in light/white text — clearly readable against dark background. Legend appears with dark fill and light text. No dark-on-dark failures observed.
-      Data: Identical line colors to light render (as required — only chrome flips). Same four series with same dash patterns and relative positions. SMA 200 startup gap still clearly visible.
-      Note: Code lacks explicit ANYPLOT_THEME adaptation (no os.getenv, no theme tokens) — dark render works via pipeline env injection or vl-convert behavior, not proper implementation
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: All text flips to light colors (INK→#F0EFE8, INK_SOFT→#B8B7B0). Title, axis labels, tick labels, and legend text all clearly readable against the dark background. No dark-on-dark failures detected. Legend box uses ELEVATED_BG (#242420) with INK_SOFT stroke. Grid remains subtle.
+      Data: Data colors are identical to light render — Close Price #009E73, SMA 20 #D55E00, SMA 50 #0072B2, SMA 200 #CC79A7. The SMA 200 purple is slightly more visible on dark background than light.
+      Legibility verdict: PASS — no dark-on-dark text issues, all elements distinguishable
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=28, axis=22, tick=18). Both renders
-          readable. Deduction: no explicit theme-based text color tokens in code.'
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px, legend 16/18px; fully readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Clean layout, no text collisions. Legend top-right without overlapping
-          data.
+        comment: X-axis labels angled at -45deg, no label collisions; legend in corner
+          avoids data overlap
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All four lines clearly visible with distinct dash patterns providing
-          redundant differentiation.
+        comment: Close Price line prominent at 3.5px solid; SMA 20/50 clear; SMA 200
+          at [2,2] dash with 1.5px stroke is slightly faint but distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Stroke-dash patterns add CVD redundancy, but red (#E74C3C for SMA
-          50) and green (#2ECC71 for SMA 200) pairing is problematic for red-green
-          colorblindness.
+        passed: true
+        comment: Okabe-Ito is CVD-safe; redundant dash pattern encoding adds non-hue
+          distinguishability
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions, canvas well utilized, balanced margins, nothing
-          cut off.
+        comment: 'Good layout with data filling canvas well; minor: canvas utilization
+          could be slightly better'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price ($) and Date are descriptive with units.
+        comment: Date on X-axis, Price ($) on Y-axis with units present
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: 'Non-Okabe-Ito palette: #306998 (Python Blue), #FFD43B, #E74C3C,
-          #2ECC71. First series must be #009E73. Custom arbitrary hexes used instead
-          of required Okabe-Ito order.'
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order followed; backgrounds #FAF8F1
+          light/#1A1A17 dark; theme-adaptive chrome correct'
     design_excellence:
-      score: 8
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default. Stroke-width hierarchy shows some design
-          intent but wrong palette is a design failure. Calibration default.
+        passed: true
+        comment: Intentional stroke-weight hierarchy and legend styling above configured
+          defaults but not publication-grade
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: 'Only configure_view(strokeWidth=0) and gridOpacity=0.3. No spine
-          management. Grid opacity 0.3 is too high (spec: ≤0.15-0.25). Calibration
-          default.'
+        passed: true
+        comment: Grid at 0.10 opacity is genuinely subtle; some Altair defaults remain
+          (full-box spine via configure_view stroke)
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Stroke-width difference (3.0 vs 2.5) too subtle to create clear focal
-          point. Viewer must self-interpret. Calibration default.
+        passed: true
+        comment: Visual hierarchy through stroke weight and dash pattern; no emphasis
+          on crossover signals or trend annotations
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -142,55 +131,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-series line chart with SMA overlays.
+        comment: 'Correct: line chart with price series and three SMA overlays'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required: Close Price + SMA 20 + SMA 50 + SMA 200, distinct
-          styling, legend, SMA 200 startup gap visible.'
+        comment: Close Price, SMA 20, SMA 50, SMA 200 all present; legend with period
+          labels; distinct colors and dash styles; y-axis gridlines
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, Price($) on Y, all 300 data points rendered correctly.
+        comment: Date on X-axis, Price ($) on Y-axis; all 300 periods rendered; SMA
+          200 correctly shows only after 200-day window
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Image shows correct title format but source code at line 92 has 'indicator-sma
-          · altair · pyplots.ai' — missing 'python' and wrong domain. Legend labels
-          (Close Price, SMA 20, SMA 50, SMA 200) are correct.
+        passed: true
+        comment: Title exactly 'indicator-sma · python · altair · anyplot.ai'; legend
+          labels 'Close Price', 'SMA 20', 'SMA 50', 'SMA 200'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all aspects: price volatility vs smoothed SMAs, different
-          lag responses, SMA 200 startup gap, upward trend.'
+        comment: Shows all three SMA timeframes with meaningful divergence; 300 days
+          gives only ~100 days of SMA-200 history
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily stock prices Jan 2025, realistic drift and volatility. Neutral
-          business/financial context.
+        comment: Simulated daily stock returns with upward trend; realistic starting
+          price of $100; neutral financial domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range $86-128 with realistic trend+volatility. 300 days appropriate
-          for 200-day SMA.
+        comment: Price range ~$86-$128 over 300 days; SMA calculation correct with
+          appropriate lag
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -198,56 +187,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, SMAs, reshape, chart, save. No functions
-          or classes.'
+        comment: 'Flat structure: imports -> data -> reshape -> chart -> save; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported and used.
+        comment: os, altair, numpy, pandas — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No over-engineering. Multi-channel encoding
-          is idiomatic Altair.
+        comment: Clean, Pythonic; wide-to-long reshape via concat appropriate for
+          Altair grammar
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Saves plot.png/plot.html (bare names). Must save plot-{THEME}.png/plot-{THEME}.html.
-          No os.getenv('ANYPLOT_THEME') logic. No theme-adaptive background or text
-          color tokens.
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6.1
+          API
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Good use of alt.Color, alt.StrokeDash, alt.StrokeWidth with explicit
-          alt.Scale(domain, range). Interactive tooltips. Concat-to-long pattern is
-          standard Altair.
+        comment: Proper declarative grammar with typed encodings, scale domains, Legend/Axis/configure_*
+          APIs used correctly
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: 'Distinctively Altair: three encoding channels from same nominal
-          field simultaneously with independent scales. legend=None on secondary encodings.
-          Interactive HTML export.'
-  verdict: REJECTED
+        comment: Uses strokeDash and strokeWidth as encoding channels with explicit
+          scale domains — distinctively Altair; interactive tooltips; HTML export
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
