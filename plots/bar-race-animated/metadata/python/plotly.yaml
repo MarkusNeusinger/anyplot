@@ -1,155 +1,181 @@
 library: plotly
+language: python
 specification_id: bar-race-animated
 created: '2026-01-11T00:19:26Z'
-updated: '2026-01-11T00:25:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886560119
+updated: '2026-05-19T02:20:56Z'
+generated_by: claude-sonnet
+workflow_run: 26071044074
 issue: 3653
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Plotly animation_frame for smooth bar race animation
-  - Clean, readable layout with properly sized fonts and margins
-  - Interactive controls (play/pause, timeline slider) with year indicator
-  - Consistent color mapping per platform across frames
-  - Both PNG and HTML outputs generated
-  - Realistic streaming platform scenario with varied growth trajectories
+  - 'Full Plotly animation API used correctly: go.Frame array, updatemenus play/pause,
+    sliders timeline scrubber — distinctly Plotly features that cannot be replicated
+    in static libraries'
+  - 'Perfect spec compliance: sorted bars per frame, consistent entity colors, visible
+    year indicator via slider, configurable animation speed (600ms frame, 300ms transition)'
+  - Both renders theme-adapt correctly; GRID, INK, INK_SOFT, PAGE_BG, and ELEVATED_BG
+    tokens all wired through to every relevant layout element in both the animated
+    and PNG figures
+  - Realistic GDP data with accurate proportions and genuine rank changes (China's
+    rise from last to 2nd, Germany overtaking Japan) makes for compelling animation
+    content
   weaknesses:
-  - Grid lines are very subtle/nearly invisible - could use slightly more visible
-    grid (alpha 0.2-0.3)
-  - Static PNG only shows 2019 frame; users seeing PNG miss the animation story
-  - Two similar blue shades (StreamFlix and OnDemandTV) could be more distinct
-  image_description: 'The plot displays a horizontal bar chart showing 10 streaming
-    platform subscriber counts for the year 2019. StreamFlix leads with 146M subscribers
-    (dark blue bar), followed by ViewMax at 109M (yellow), WatchHub at 85M (red/orange),
-    PlayStream at 59M (blue), CinemaCloud at 50M (purple), MediaFlow at 41M (gray),
-    ScreenTime at 34M (orange), FlixNow at 23M (green), StreamZone at 20M (pink),
-    and OnDemandTV at 15M (light blue). The title "bar-race-animated · plotly · pyplots.ai"
-    is centered at the top. The x-axis shows "Subscribers (Millions)" ranging from
-    0 to 450. A year indicator shows "Year: 2019" and a timeline slider at the bottom
-    spans 2019-2024 with play/pause controls. Each bar has its value labeled to the
-    right. The bars are sorted in descending order by subscriber count. Colors are
-    distinct and consistent per platform. The layout has ample margins and uses a
-    clean white background with subtle grid lines.'
+  - 'Grid opacity set to 0.25 instead of style guide-specified 0.10 — grid lines are
+    2.5x more prominent than intended; fix: GRID = "rgba(26,26,23,0.10)" if THEME
+    == "light" else "rgba(240,239,232,0.10)"'
+  - 'DE-01 remains at configured-default level: no typographic hierarchy beyond font
+    sizes, no visual emphasis on the leading bar or fastest-rising entity to create
+    a focal point'
+  - Only 7 entities in the dataset; specification recommends 10-20 for richer competitive
+    dynamics — consider adding India, Canada, South Korea, Italy
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "GDP Rankings · bar-race-animated · python · plotly · anyplot.ai" in 28px dark INK text, centered; subtitle in smaller gray INK_SOFT text; X-axis label "GDP (Trillion USD) — 2023 snapshot" in 22px; tick labels 18px — all clearly readable against light background
+      Data: 7 horizontal bars sorted descending (USA top, Brazil bottom); colors follow Okabe-Ito order — USA #009E73 (brand green), China #D55E00, Germany #CC79A7, Japan #0072B2, UK #E69F00, France #56B4E9, Brazil #F0E442; rank labels (#1–#7) and GDP values outside bars in dark INK text
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels, and rank/value labels all render in light cream/off-white INK token; no dark-on-dark failures observed; all text elements clearly distinguishable against near-black surface
+      Data: Identical bar colors to light render — #009E73, #D55E00, #CC79A7, #0072B2, #E69F00, #56B4E9, #F0E442 all unchanged confirming correct Okabe-Ito immutability across themes; brand green #009E73 remains vivid on dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick fonts at 18-20pt, all perfectly
-          readable
+        comment: All font sizes explicitly set (title 28px, axis 22px, ticks/labels
+          18px); readable in both themes; minor deduction for subtitle size
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, platform labels and values are well-spaced
+        comment: No overlapping elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are appropriately sized with good contrast, value labels outside
-          bars
+        comment: All bars clearly visible; rank/value labels positioned outside bars
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good variety of distinct colors, though some similar hues (two blues)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with proper margins, though bars only use ~1/3
-          of x-axis range in first frame
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: X-axis has Subscribers (Millions) with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito is CVD-safe; no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700px effective; balanced margins; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: X-axis has descriptive label with units; title correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds #FAF8F1/#1A1A17;
+          chrome tokens flip correctly'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend disabled (appropriate), but grid is very subtle/nearly invisible
+        comment: Well-configured defaults; correct palette and rank labels; no typographic
+          or visual hierarchy innovation beyond defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Generous margins and clean layout; grid opacity 0.25 exceeds recommended
+          0.10
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtitle explicitly identifies narrative; rank labels provide hierarchy;
+          animation delivers the race story dynamically
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct animated horizontal bar chart race
+        comment: Animated horizontal bar chart race with per-frame sorted bars
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Platforms on Y-axis, subscribers on X-axis, animation by year
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Sorted bars, entity labels, time indicator, play/pause controls,
-          timeline scrubber, consistent colors
-      - id: SC-04
-        name: Data Range
+        comment: Sorted frames, consistent colors, year slider, play/pause controls,
+          configurable speed
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X-axis range set to 115% of max to accommodate growth
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Horizontal orientation, GDP on x-axis, countries on y-axis, 29 time
+          points
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, platform names on Y-axis
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: bar-race-animated · plotly · pyplots.ai'
+        comment: Correct title format; no legend needed; entity identity via y-axis
+          labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows ranking changes over time, varying growth rates, overtakes
-          possible; minor: static PNG shows only first frame'
+        comment: Multiple entities competing with rank changes; dominant leader and
+          dramatic risers
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Streaming platform subscriber data is realistic and neutral
+        comment: Major economy GDP — real, comprehensible, politically neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible (15M-450M range), though some growth rates (1.5x/year)
-          are aggressive
+        comment: GDP values (USA ~26T, China ~13T, Japan ~4T in 2023) match approximately
+          correct real-world proportions
     code_quality:
       score: 10
       max: 10
@@ -159,52 +185,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, plot, save'
+        comment: 'Flat script: constants -> data -> animation frames -> figures ->
+          save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly.express used
+        comment: os, numpy, pandas, plotly.graph_objects — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern plotly.express API
+        comment: Appropriate complexity; clean separation of animation and PNG figures;
+          no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct dimensions
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses px.bar with animation_frame, slider, play controls; could use
-          more advanced features like custom animation easing
+        comment: go.Frame, go.Figure(frames=...), updatemenus, sliders — all recommended
+          Plotly animation patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Plotly animation with timeline slider and play/pause is genuinely
+          distinctive; animated hover templates not customized
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
+  styling: []
