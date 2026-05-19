@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: ternary-density
 created: '2026-01-11T09:30:06Z'
-updated: '2026-05-19T10:35:24Z'
+updated: '2026-05-19T10:46:34Z'
 generated_by: claude-sonnet
 workflow_run: 26091099438
 issue: 3696
@@ -12,121 +12,115 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 91
 review:
   strengths:
-  - Correct ternary-to-Cartesian coordinate transformation with three-family grid
-    lines at 10% intervals
-  - 'Full spec compliance: viridis density fill, contour lines at multiple levels,
-    clipped to triangle boundary, labelled vertices with units'
-  - 'Proper theme-adaptive chrome: all text elements use INK/INK_SOFT tokens, backgrounds
-    correctly set to #FAF8F1 (light) / #1A1A17 (dark)'
-  - Semantic colorbar labels (Low / Medium / High) instead of raw numeric values —
-    clear interpretation aid
-  - Realistic three-cluster soil dataset (sandy, silty, clay-rich) with plausible
-    geological proportions
-  - 'Clean code: linear flat structure, np.random.seed(42), all imports used, saves
-    to plot-{THEME}.png'
+  - 'Perfect spec compliance: all required features (viridis fill, ternary grid at
+    10% intervals, contour lines, labeled vertices, auto bandwidth) correctly implemented'
+  - Dual-call sns.kdeplot pattern (fill + contours) with correct triangle clip path
+    produces clean, well-layered density visualization
+  - 'Full theme-adaptive chrome: background, vertex labels, tick labels, colorbar,
+    and annotation boxes correctly flip between light and dark themes'
+  - Soil composition domain is realistic, neutral, and scientifically appropriate
+    with correctly-constrained ternary data (sums to 100%)
+  - Cluster annotations with labeled density peaks elevate data storytelling above
+    mere display
   weaknesses:
-  - 'Some text sizes below the 16pt guideline: percentage tick labels along ternary
-    edges are 14pt; colorbar tick labels also 14pt — should be 16pt for the 3600×3600
-    canvas'
-  - 'Design excellence is functional but not polished: no annotation of the three
-    soil clusters (Sandy / Silty / Clay-rich), no visual focal point or hierarchy
-    beyond the density gradient'
-  - Library-specific seaborn features are minimal — the ternary geometry is handled
-    entirely in matplotlib; only sns.kdeplot is seaborn-specific
-  - Contour lines use the ACCENT blue (#0072B2) which is fine, but appear slightly
-    thin relative to the large canvas (linewidths=2.0 — could be 3.0 for readability
-    at full resolution)
+  - 'LM-01 ceiling: seaborn contribution limited to KDE engine; triangle geometry,
+    grid, labels, and colorbar are all matplotlib — unavoidable for ternary plots
+    but caps library mastery score'
+  - 'DE-01 has room for growth: blue boundary/contour color is functional but overall
+    aesthetic could achieve publication-ready polish with more intentional typography
+    sizing ratios or finer grid opacity'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — not pure white, matches the theme spec.
-      Chrome: Title "Soil Composition · ternary-density · python · seaborn · anyplot.ai" in dark text (bold medium weight, 24pt) is clearly readable. Vertex labels "Clay (%)", "Sand (%)", "Silt (%)" in bold 22pt dark ink are prominent and well-positioned. Percentage tick labels (20, 40, 60, 80) in 14pt muted ink along all three triangle edges are readable but slightly small for the canvas. Colorbar label "Relative Density" and tick labels "Low", "Medium", "High" are visible with the correct INK_SOFT color.
-      Data: viridis density fill clearly shows three distinct density peaks — high-sand cluster near the bottom-left vertex (bright yellow-green), high-clay cluster upper-left region, and high-silt cluster near the bottom-right. Contour lines in Okabe-Ito blue (#0072B2) are visible over the fill. Subtle ternary grid lines (three families, 10% intervals) are faintly visible beneath the density layer. Triangle boundary in blue is crisp.
-      Legibility verdict: PASS — all text readable; minor note that 14pt tick labels are below the 16pt guideline for this canvas size.
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "Soil Composition · ternary-density · python · seaborn · anyplot.ai" in dark #1A1A17 text, clearly readable; vertex labels "Sand (%)", "Silt (%)", "Clay (%)" bold dark text at corners; edge tick labels (20/40/60/80) in INK_SOFT (#4A4A44); colorbar label "Relative Density" and Low/Medium/High labels in dark tones — all readable
+      Data: Viridis KDE density fill with three distinct peaks (yellow-green for high density, dark purple for low density); blue (#0072B2) contour lines; thick blue triangle boundary; cluster annotation boxes with off-white fill and dark text; ternary grid at alpha=0.20 visible beneath density layer
+      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — not pure black, matches the dark theme spec.
-      Chrome: Title in light cream text is clearly visible against the dark background. Vertex labels "Clay (%)", "Sand (%)", "Silt (%)" in light ink are prominent and legible. Percentage tick labels use INK_SOFT (#B8B7B0) and remain readable — no dark-on-dark failure. Colorbar label and semantic tick labels are readable in the correct muted light color.
-      Data: viridis colors are identical to the light render — same three density peaks in the same positions, confirming data colors (positions 1–7 equivalent) did not change between themes. Only the background and chrome flip. Contour lines remain visible. Triangle boundary and grid lines adapt correctly.
-      Legibility verdict: PASS — no dark-on-dark failures found. Text in all elements properly uses light INK/INK_SOFT tokens for the dark surface.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 text, clearly readable against dark background; vertex labels in light ink; edge tick labels in light INK_SOFT (#B8B7B0); colorbar "Relative Density" label and Low/Medium/High labels in light tones — all readable; annotation box fills are near-black #1A1A17 with near-white text
+      Data: Viridis colors are identical to light render — yellow-green density peaks unchanged; blue contour lines and triangle boundary unchanged; data colors have not shifted between themes
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome correctly flipped to light tokens on dark surface
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; tick labels along edges are 14pt
-          (below 16pt guideline) and colorbar ticks are 14pt
+        comment: 'All font sizes explicitly set: title 24pt, vertex labels 22pt bold,
+          tick labels 16pt, colorbar 18pt, annotations 15pt; readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions; percentage labels well-spaced along edges
+        comment: Vertex labels, edge tick labels, and annotations well-separated with
+          proper offsets
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Density fill, contour lines, grid, boundary all clearly visible
+        comment: Viridis fill alpha=0.85 provides strong density coverage; contours
+          at linewidths=3.0 prominent; boundary linewidth=4
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is CVD-safe; no red-green as sole signal
+        comment: Viridis perceptually uniform and CVD-safe; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 12x12 figsize appropriate for ternary; nothing cut off; colorbar
-          well-placed
+        comment: Square 3600x3600px appropriate for symmetric ternary; triangle fills
+          ~75% of canvas with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels include units (%); title follows correct format with
-          descriptive prefix
+        comment: Vertex labels include units (%); colorbar labeled Relative Density
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'viridis for continuous density data (correct); backgrounds #FAF8F1
-          light / #1A1A17 dark; both renders theme-correct'
+        comment: 'Viridis for sequential continuous density data; backgrounds #FAF8F1/#1A1A17;
+          chrome correctly theme-adaptive in both renders'
     design_excellence:
-      score: 11
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: semantic colorbar labels, ternary grid, clean triangle
-          boundary; clusters visible but not annotated'
+        comment: Cohesive blue structural elements, semantic colorbar labels, styled
+          annotation boxes; above defaults but not publication-ready
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 5
         max: 6
         passed: true
-        comment: ax.axis('off') for minimal chrome; subtle grid (alpha=0.20); alpha
-          blending on KDE fill
+        comment: ax.axis('off') removes all spines; ternary grid at alpha=0.20 subtle;
+          generous margins; most details polished
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Three clusters correspond to geological soil types; contour lines
-          add interpretation; no annotation labelling clusters
+        comment: Three labeled density peaks guide viewer to distinct soil clusters;
+          viridis contrast creates visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +130,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary density plot with KDE heatmap overlay
+        comment: Correct ternary diagram with KDE density heatmap; ternary-to-Cartesian
+          transformation correct
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: viridis cmap, grid lines beneath density, vertex labels, contour
-          lines all present
+        comment: Viridis colormap, ternary grid at 10% intervals with alpha=0.20,
+          vertex labels, contour lines, auto bandwidth all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All three components correctly projected to Cartesian ternary coordinates
+        comment: Sand bottom-left, Silt bottom-right, Clay top; components sum to
+          100% by construction
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Soil Composition · ternary-density · python · seaborn ·
-          anyplot.ai'' — correct format'
+        comment: Title matches Descriptive · spec-id · python · seaborn · anyplot.ai
+          format exactly
     data_quality:
       score: 15
       max: 15
@@ -166,22 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: filled density, contours, ternary grid, vertex
-          labels, scale legend, tick marks'
+        comment: Three distinct clusters, sparse edge regions, full compositional
+          space; KDE levels=20 reveals fine density gradients
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Soil composition (sand/silt/clay) is realistic, neutral, and scientifically
-          grounded
+        comment: Soil texture composition (sand/silt/clay) is well-established neutral
+          domain; clusters correspond to USDA soil texture classes
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values sum to 100%, three distinct realistic soil-type clusters,
-          500 total samples
+        comment: Beta distribution produces plausible soil percentage ranges; ternary
+          constraint (sum=100%) correctly enforced
     code_quality:
       score: 10
       max: 10
@@ -191,33 +187,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat linear script, no functions or classes
+        comment: 'Linear flow: imports, tokens, data generation, ternary transform,
+          plot, save; no classes or functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All 7 imports used: os, matplotlib.cm, matplotlib.pyplot, numpy,
+          seaborn, Normalize, Polygon'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; clean coordinate math; proper clip_path usage
+        comment: Clean Pythonic code; two-pass clip loop is justified for seaborn/matplotlib
+          KDE clipping
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves to plot-{THEME}.png; no bare plot.png
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG;
+          current seaborn 0.13.2 API
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -225,15 +225,15 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: sns.kdeplot with fill=True and cmap is idiomatic; clip_path on collections
-          is correct matplotlib/seaborn pattern
+        comment: sns.kdeplot with fill=True and dual-call pattern is idiomatic; majority
+          of geometric work is matplotlib (unavoidable for ternary)
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Only seaborn-specific element is sns.kdeplot; the ternary geometry,
-          grid, labels, and boundary are pure matplotlib
+        passed: true
+        comment: thresh=0.02 and levels=20 are seaborn-specific; applying kdeplot
+          to custom Cartesian ternary coordinates is creative
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -243,8 +243,6 @@ impl_tags:
   - patches
   patterns:
   - data-generation
-  - iteration-over-groups
-  - explicit-figure
   dataprep:
   - kde
   - normalization
