@@ -19,8 +19,11 @@ from plotnine import (
     geom_ribbon,
     geom_vline,
     ggplot,
+    guide_legend,
+    guides,
     labs,
     scale_color_manual,
+    scale_fill_manual,
     scale_x_datetime,
     theme,
     theme_minimal,
@@ -69,49 +72,45 @@ ci_95 = 10 * time_factor
 df_historical = pd.DataFrame({"date": dates_historical, "value": actual_values, "series": "Historical"})
 
 # Build dataframe for forecast
-df_forecast = pd.DataFrame(
-    {
-        "date": dates_forecast,
-        "value": forecast_values,
-        "lower_80": forecast_values - ci_80,
-        "upper_80": forecast_values + ci_80,
-        "lower_95": forecast_values - ci_95,
-        "upper_95": forecast_values + ci_95,
-        "series": "Forecast",
-    }
+df_forecast = pd.DataFrame({"date": dates_forecast, "value": forecast_values, "series": "Forecast"})
+
+# CI band dataframes with label column for legend mapping
+df_ci_95 = pd.DataFrame(
+    {"date": dates_forecast, "ymin": forecast_values - ci_95, "ymax": forecast_values + ci_95, "ci": "95% CI"}
+)
+df_ci_80 = pd.DataFrame(
+    {"date": dates_forecast, "ymin": forecast_values - ci_80, "ymax": forecast_values + ci_80, "ci": "80% CI"}
 )
 
 # Forecast start date and annotation anchor
 forecast_start = dates_forecast[0]
-annotation_y = float(df_forecast["upper_95"].max()) + 5
+annotation_x = forecast_start + pd.DateOffset(months=1)
+annotation_y = float(df_ci_95["ymax"].max()) + 5
+
+# CI fill colors (same hue; alpha per-geom creates visual depth difference)
+CI_COLORS = {"95% CI": OKABE_ITO["Forecast"], "80% CI": OKABE_ITO["Forecast"]}
 
 # Plot
 plot = (
     ggplot()
-    # 95% confidence band (lighter, outer)
-    + geom_ribbon(
-        data=df_forecast,
-        mapping=aes(x="date", ymin="lower_95", ymax="upper_95"),
-        fill=OKABE_ITO["Forecast"],
-        alpha=0.15,
-    )
-    # 80% confidence band (darker, inner)
-    + geom_ribbon(
-        data=df_forecast,
-        mapping=aes(x="date", ymin="lower_80", ymax="upper_80"),
-        fill=OKABE_ITO["Forecast"],
-        alpha=0.30,
-    )
+    # 95% confidence band (lighter, outer) — fill mapped for legend entry
+    + geom_ribbon(data=df_ci_95, mapping=aes(x="date", ymin="ymin", ymax="ymax", fill="ci"), alpha=0.20)
+    # 80% confidence band (darker, inner) — fill mapped for legend entry
+    + geom_ribbon(data=df_ci_80, mapping=aes(x="date", ymin="ymin", ymax="ymax", fill="ci"), alpha=0.30)
     # Vertical line at forecast start
     + geom_vline(xintercept=forecast_start, linetype="dashed", color=INK_SOFT, size=0.8)
-    # Forecast period label positioned above the vline
-    + annotate("text", x=forecast_start, y=annotation_y, label="Forecast period", color=INK_MUTED, size=13, ha="center")
+    # Forecast period label offset right so text clears the vline
+    + annotate("text", x=annotation_x, y=annotation_y, label="Forecast period", color=INK_MUTED, size=9, ha="left")
     # Historical line
-    + geom_line(data=df_historical, mapping=aes(x="date", y="value", color="series"), size=1.5)
-    # Forecast line
-    + geom_line(data=df_forecast, mapping=aes(x="date", y="value", color="series"), size=1.5, linetype="dashed")
-    # Color mapping with Okabe-Ito
-    + scale_color_manual(values=OKABE_ITO, name="")
+    + geom_line(data=df_historical, mapping=aes(x="date", y="value", color="series"), size=1.0)
+    # Forecast line (dashed)
+    + geom_line(data=df_forecast, mapping=aes(x="date", y="value", color="series"), size=1.0, linetype="dashed")
+    # Color mapping for lines
+    + scale_color_manual(values=OKABE_ITO)
+    # Fill mapping for CI bands with legend entries
+    + scale_fill_manual(values=CI_COLORS, name="CI bands")
+    # Suppress "series" column header from color legend
+    + guides(color=guide_legend(title=""))
     # Labels
     + labs(
         x="Date",
@@ -124,24 +123,23 @@ plot = (
     # Theme
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.1),
         panel_grid_minor=element_blank(),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_text_x=element_text(angle=45, ha="right"),
         axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, color=INK, weight="medium"),
-        plot_subtitle=element_text(size=14, color=INK_MUTED),
+        plot_title=element_text(size=12, color=INK, weight="medium"),
+        plot_subtitle=element_text(size=9, color=INK_MUTED),
         legend_position="top",
         legend_background=element_rect(fill=ELEVATED_BG, color="none"),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=8, color=INK),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)

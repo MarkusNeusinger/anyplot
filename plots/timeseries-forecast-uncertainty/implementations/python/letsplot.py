@@ -1,7 +1,7 @@
 """ anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-19
+Quality: 89/100 | Updated: 2026-05-19
 """
 # ruff: noqa: F405
 
@@ -24,6 +24,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 INK_GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+ALPHA_95 = 0.24 if THEME == "light" else 0.35
+ALPHA_80 = 0.38 if THEME == "light" else 0.55
 
 # Monthly energy demand: 36 months history + 12 month forecast
 np.random.seed(42)
@@ -60,20 +63,36 @@ forecast_start = dates_forecast[0]
 plot = (
     ggplot()
     # 95% CI (outer, lighter)
-    + geom_ribbon(aes(x="date", ymin="lower_95", ymax="upper_95"), data=df_fc, fill=OKABE_ITO[4], alpha=0.18)
-    # 80% CI (inner, darker)
-    + geom_ribbon(aes(x="date", ymin="lower_80", ymax="upper_80"), data=df_fc, fill=OKABE_ITO[4], alpha=0.38)
-    # Historical solid line (brand green)
-    + geom_line(
-        aes(x="date", y="value", color="series"), data=df_hist[["date", "value", "series"]], size=1.2, linetype="solid"
+    + geom_ribbon(
+        aes(x="date", ymin="lower_95", ymax="upper_95"), data=df_fc, fill=OKABE_ITO[1], alpha=ALPHA_95, color=None
     )
-    # Forecast dashed line (orange)
+    # 80% CI (inner, darker)
+    + geom_ribbon(
+        aes(x="date", ymin="lower_80", ymax="upper_80"), data=df_fc, fill=OKABE_ITO[1], alpha=ALPHA_80, color=None
+    )
+    # Historical solid line (brand green) — tooltips show value on hover in HTML
     + geom_line(
-        aes(x="date", y="value", color="series"), data=df_fc[["date", "value", "series"]], size=1.2, linetype="dashed"
+        aes(x="date", y="value", color="series"),
+        data=df_hist[["date", "value", "series"]],
+        size=1.2,
+        linetype="solid",
+        tooltips=layer_tooltips().line("@value{.0f} MWh").line("@date"),
+    )
+    # Forecast dashed line (orange) — tooltips show forecast and CI bounds on hover
+    + geom_line(
+        aes(x="date", y="value", color="series"),
+        data=df_fc[["date", "value", "lower_80", "upper_80", "lower_95", "upper_95", "series"]],
+        size=1.2,
+        linetype="dashed",
+        tooltips=layer_tooltips()
+        .line("Forecast: @value{.0f} MWh")
+        .line("80% CI: [@lower_80{.0f}, @upper_80{.0f}]")
+        .line("95% CI: [@lower_95{.0f}, @upper_95{.0f}]")
+        .line("@date"),
     )
     # Vertical marker at forecast boundary
     + geom_vline(xintercept=forecast_start.timestamp() * 1000, color=INK_MUTED, size=0.6, linetype="dotted")
-    + scale_color_manual(values={"Historical": OKABE_ITO[0], "Forecast": OKABE_ITO[4]}, name="")
+    + scale_color_manual(values={"Historical": OKABE_ITO[0], "Forecast": OKABE_ITO[1]}, name="")
     + labs(
         x="Date",
         y="Energy Demand (MWh)",
