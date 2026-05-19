@@ -41,7 +41,7 @@ When regenerating an existing implementation, you MUST read these BEFORE writing
 
 - Preserve the bits listed under "Strengths" unchanged.
 - Address every bullet under "Weaknesses" and each ❌ item in the criteria checklist.
-- If a base style rule (palette, theme colors, chrome, etc. from `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md`) conflicts with the previous implementation, update the previous code to match — base style wins.
+- **Base style ALWAYS wins.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This explicitly includes — but is not limited to — **canvas size** (`figsize`/`dpi` for matplotlib/seaborn/plotnine/ggplot2, `width`/`height`/`scale_factor` for plotly/altair/letsplot, `width`/`height` for bokeh/highcharts/pygal), **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (Okabe-Ito positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align.
 - Do NOT discard working structure / data generation / layout choices that the previous review did not flag.
 - Your deliverable is a refined version of the previous file, not a fresh rewrite from the spec.
 
