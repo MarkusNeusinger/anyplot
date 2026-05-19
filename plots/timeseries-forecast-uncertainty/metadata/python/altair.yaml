@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:29:40Z'
-updated: '2026-05-19T14:39:51Z'
+updated: '2026-05-19T21:30:39Z'
 generated_by: claude-sonnet
-workflow_run: 26103650481
+workflow_run: 26125748297
 issue: 3188
 language_version: 3.13.13
 library_version: 6.1.0
@@ -12,101 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/altair/plot-dark.html
-quality_score: 92
+quality_score: 91
 review:
   strengths:
-  - 'Perfect palette compliance: #009E73 historical, #D55E00 forecast — Okabe-Ito
-    order 1→2 correctly applied'
-  - 'Full theme-adaptive chrome: backgrounds, text, grid, legend all flip correctly
-    between light (#FAF8F1) and dark (#1A1A17)'
-  - 'All spec features present: solid historical line, dashed forecast, vertical rule
-    at forecast boundary, nested 80%/95% CI bands with correct opacity hierarchy'
-  - Clever custom legend via invisible size-0 points — clean Altair-idiomatic workaround
-  - Widening CI bands over forecast horizon effectively communicate increasing uncertainty
-  - Explicit font sizes on all elements (title=18, subtitle=14, axis=14, ticks=12,
-    legend=12/14px)
-  - Idiomatic layer composition with alt.layer(), alt.Y2 area encoding, and global
-    configure_* styling
+  - Perfect spec compliance — all required elements present (nested 80%/95% CI bands,
+    dashed forecast, vertical rule, annotation, legend)
+  - Excellent data quality — realistic monthly sales scenario with plausible trend,
+    seasonality, and widening forecast uncertainty
+  - Idiomatic Altair layer composition using Y2 encoding for bands and overlay points
+    for interactive HTML tooltips
+  - Clean, fully theme-adaptive code with thoughtful dark-mode opacity compensation
+    for CI bands
+  - 'Clear visual narrative: green solid (history) → vertical rule → orange dashed
+    + nested bands (forecast)'
   weaknesses:
-  - configure_view(stroke=INK_SOFT) adds a visible box border around the plot area
-    — removing the stroke would give a cleaner, more minimal look
-  - 'DE-01 below publication-ready: design is well-configured but not distinctive
-    — no annotation callouts, no emphasis on key data points, typography is functional
-    but not exceptional'
-  - 'DE-03: storytelling is good (widening bands, color contrast) but could be elevated
-    with a subtle annotation marking the forecast start date or peak uncertainty'
-  - In dark render, the CI bands appear noticeably darker/more saturated than in light
-    render due to rgba opacity behavior on dark backgrounds — consider using fill
-    with explicit dark-mode colors for more consistent cross-theme appearance
+  - 'Dark mode CI band heaviness: brownish-orange fills at reduced opacity still appear
+    quite saturated on #1A1A17, slightly obscuring the dashed forecast line — consider
+    further opacity reduction or a desaturated fill in dark mode'
+  - Tick and axis label sizes (12px/14px) are slightly above the style-guide scale-based
+    targets (10px/12px) — minor sizing concern, does not cause readability issues
+    but makes tick labels slightly large at 3200x1800
+  - 'Invisible-point legend workaround: legend color circles represent fixed RGBA
+    values that don''t perfectly match the actual rendered CI band opacity in each
+    theme'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "timeseries-forecast-uncertainty · python · altair · anyplot.ai" in bold dark ink at ~70% width (expected for long mandated title). Subtitle "Monthly Sales with 80% and 95% Confidence Intervals" in muted secondary ink. Y-axis label "Sales (thousands USD)" and X-axis label "Date" in dark ink. Tick labels in muted secondary tone. All text clearly readable against the light background.
-      Data: Historical line in #009E73 (Okabe-Ito position 1) — solid, strokeWidth=3, clearly prominent. Forecast line in #D55E00 (Okabe-Ito position 2) — dashed, clearly distinct. 80% CI band in semi-transparent orange (~30% opacity), 95% CI band in very light semi-transparent orange (~15% opacity). Both bands visible with correct hierarchy (80% darker, 95% lighter). Vertical dashed rule at Jan 2024 marks forecast boundary.
-      Legend: Right-side legend box with elevated (#FFFDF6) fill, showing 4 entries with correctly colored swatches.
-      Legibility verdict: PASS — all text readable, all data elements visible, correct warm background.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "timeseries-forecast-uncertainty · python · altair · anyplot.ai" in dark ink, ~80% canvas width. Subtitle in lighter dark. Y-axis label "Sales (thousands USD)" and X-axis label "Date" in dark text, proportionally sized. Tick labels (year/month on X, 60-260 on Y) clearly readable. Annotation "Forecast period →" in italic muted ink.
+      Data: Historical data in #009E73 (Okabe-Ito position 1, brand green) as 3px solid line, 2021-2023. Vertical dashed gray rule at 2024-01. Forecast in #D55E00 (Okabe-Ito position 2, vermillion) as 3px dashed line. Two nested semi-transparent orange CI bands: 80% at opacity=0.30 (darker), 95% at opacity=0.15 (lighter). Legend in top-right with framed box showing all four series. All data colors confirm Okabe-Ito order.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title and subtitle render in light ink (#F0EFE8 equivalent) — clearly readable against dark background. Axis labels, tick labels, and legend text all in light/muted tones — no dark-on-dark failures observed. Grid lines are subtle light lines. Legend box uses elevated dark fill (#242420).
-      Data: Historical line in #009E73 — identical green to light render, clearly visible on dark background. Forecast dashed line in #D55E00 — identical orange, also clearly visible. CI bands appear more saturated/opaque in dark mode (rgba opacity on dark background produces more visible orange-brown), but the 80%/95% hierarchy is still distinguishable. Vertical dashed rule is visible in muted tone.
-      Legibility verdict: PASS — all text is light-on-dark with no dark-on-dark failures. Data colors identical to light render (only chrome flipped). Minor note: CI bands appear more prominent/saturated in dark mode due to rgba opacity rendering behavior on dark surfaces.
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, subtitle, axis labels, tick labels, and annotation all render in light text (#F0EFE8 / #B8B7B0 range), clearly readable. No dark-on-dark failures detected. Legend box uses dark elevated background (#242420) with light text — readable throughout.
+      Data: Historical line remains identical #009E73 green. Forecast line remains identical #D55E00 orange dashed. CI bands render as brownish-orange fills on dark background; reduced dark-mode opacity (0.20/0.10) partially compensates but 80% CI is visually heavier than in light mode, slightly dominating the forecast zone. Colors are identical to light render — only chrome flips.
+      Legibility verdict: PASS (CI band heaviness is a design concern, not a legibility failure)
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title=18px, subtitle=14px, axis=14px,
-          ticks=12px, legend=12-14px. Both themes readable. Title at ~70% width expected
-          for long mandated format.'
+        comment: 'All font sizes explicitly set (title=18, axis=14, ticks=12, legend=12/14).
+          Well-proportioned and readable in both themes. Minor: tick/axis sizes slightly
+          above style-guide targets (12px vs 10px ticks, 14px vs 12px axis).'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render. Legend positioned outside
-          plot area.
+        comment: No text overlaps. X-axis labels cleanly staggered. Legend does not
+          overlap data. Annotation is clear.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Historical and forecast lines clearly visible at strokeWidth=3. CI
-          bands appropriately transparent with correct opacity hierarchy (80% darker
-          than 95%).
+        comment: Historical (3px solid) and forecast (3px dashed) lines prominent.
+          CI band transparency hierarchy correct (80% darker than 95%). Vertical rule
+          clearly marks transition.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) and orange (#D55E00) are colorblind-safe Okabe-Ito
-          colors. No red-green dependency.
+        comment: Okabe-Ito positions 1 and 2 (green/orange) are CVD-safe with strong
+          luminance contrast. Nested bands distinguishable by opacity.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Chart fills canvas well. Legend positioned to right without isolating
-          it. No cutoffs.
+        comment: 3200x1800 landscape (800x450 @ scale=4). Plot fills canvas well,
+          margins balanced, legend in right margin without obscuring data.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
         comment: 'Y-axis: ''Sales (thousands USD)'' with units. X-axis: ''Date''.
-          Title correct.'
+          Title in exact mandated format. Subtitle adds descriptive context.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (historical), second #D55E00 (forecast). Light
-          bg #FAF8F1, dark bg #1A1A17. Theme-adaptive chrome correct in both renders.'
+        comment: 'Historical in #009E73 (position 1). Forecast in #D55E00 (position
+          2). Light bg #FAF8F1, dark bg #1A1A17. Chrome tokens flip correctly. Data
+          colors identical across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -116,26 +113,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: theme-adaptive chrome, proper Okabe-Ito
-          palette, dashed forecast line, nested CI bands. Not quite at FiveThirtyEight
-          level — lacks distinctive typographic choices or emphasis callouts.'
+        comment: 'Above library defaults: cohesive two-color narrative, subtitle,
+          vertical rule, italic annotation, nested CI transparency. Not quite ''strong
+          design'' — palette is standard Okabe-Ito, annotation is minimal.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Domain=False removes spines, tickSize=0 removes tick marks, X-axis
-          grid disabled, Y-axis grid at opacity=0.10. Minor: configure_view stroke
-          adds visible box border around plot area.'
+        comment: X-grid disabled, Y-grid at 10% opacity, tickSize=0, domain=False,
+          strokeWidth=0 on view, styled legend. Dark mode CI bands slightly heavier
+          than intended.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: green→orange color shift marks historical/forecast
-          transition, widening CI bands show increasing uncertainty, vertical dashed
-          rule anchors the boundary. Missing: annotation at forecast start or peak
-          uncertainty for maximum storytelling impact.'
+        comment: 'Clear narrative: green solid → vertical rule → orange dashed + annotation
+          + nested bands. Color contrast and annotation actively guide viewer. Widening
+          bands encode temporal uncertainty growth.'
     spec_compliance:
       score: 15
       max: 15
@@ -145,31 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: time series with historical line, dashed forecast, nested
-          CI bands, vertical boundary marker.'
+        comment: 'Correct: time series with historical + forecast + nested CI bands.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: solid historical line, dashed forecast, vertical
-          rule, 80% CI band, 95% CI band, semi-transparent fills (0.15/0.30), clear
-          legend with all series labeled.'
+        comment: 'All present: solid historical line, dashed forecast, 80% CI (darker),
+          95% CI (lighter), vertical rule, semi-transparent fills, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, Sales on Y. Shared Y-axis scale [50,270] correctly shows
-          all data including CI upper bounds.
+        comment: Date on X (temporal), Sales on Y (quantitative). Full range visible
+          within y_scale=[50,270].
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''timeseries-forecast-uncertainty · python · altair · anyplot.ai''
-          — correct format. Legend: ''Historical Data'', ''Forecast'', ''80% CI'',
-          ''95% CI'' — all correctly labeled.'
+        comment: 'Title: ''timeseries-forecast-uncertainty · python · altair · anyplot.ai''.
+          Legend: Historical Data, Forecast, 80% CI, 95% CI.'
     data_quality:
       score: 15
       max: 15
@@ -179,22 +172,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows trend, seasonality, noise in historical; forecast with trend
-          continuation; widening CI bands; both 80% and 95% levels. Full feature coverage.
+        comment: Shows trend + seasonality + noise in history; widening uncertainty
+          in forecast (std=linspace(5,20)); distinct 80%/95% bands.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales data from a business context — neutral, plausible,
-          real-world forecasting scenario (similar to Prophet/ARIMA output).
+        comment: Monthly sales with 3-year history + 12-month forecast, plausible
+          for ARIMA/Prophet output. Neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales 100-210K USD over 4 years. CI widening from ±6K to ±39K (95%)
-          at 12 months — realistic for seasonal sales forecasting.
+        comment: Upward trend $100K-$180K over 3 years with seasonal oscillation is
+          factually plausible. Widening CI is statistically coherent.
     code_quality:
       score: 10
       max: 10
@@ -204,8 +197,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Chart layers → Save structure. No functions
-          or classes.
+        comment: 'Linear flow: imports → theme tokens → data → layers → properties
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,21 +210,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used. No unused imports.
+        comment: os, altair, numpy, pandas — all used, none extraneous.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean layered chart construction. Legend via invisible points is
-          idiomatic Altair. No over-engineering.
+        comment: Clean Altair layer composition. Invisible-overlay-point tooltip pattern
+          is an established Altair idiom. Theme-adaptive opacity adjustment is thoughtful.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Saves plot-{THEME}.png (scale_factor=4.0) and plot-{THEME}.html.
-          Correct API.
+          Current Altair 6.1.0 API.
     library_mastery:
       score: 9
       max: 10
@@ -241,24 +234,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Expertly uses alt.layer(), alt.Y2 for area bands, alt.value() for
-          fixed colors, encoding types (T/Q), configure_* for global styling.
+        comment: Expert use of alt.layer(), alt.Y2, :T temporal encoding, alt.OverlayMarkDef,
+          configure_axis/view/legend separation. Fully leverages Vega-Lite's declarative
+          grammar.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses Altair-distinctive patterns: layer composition, alt.Y2 area
-          encoding, invisible size-0 points for custom legend, HTML export alongside
-          PNG. Missing: selection/interaction or transform filters that would fully
-          distinguish Altair.'
+        comment: 'Distinctively Altair: Y2 encoding for area bands, invisible-size-0-point
+          legend construction, overlay mark tooltips, HTML+PNG dual export. Could
+          push further with alt.selection_point for linked brushing.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - custom-legend
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep:
