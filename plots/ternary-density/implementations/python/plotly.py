@@ -1,13 +1,26 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-density: Ternary Density Plot
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-19
 """
 
 import os
+import sys
 
+
+# Remove the script directory from sys.path so that sibling implementations
+# (e.g. matplotlib.py) do not shadow installed packages.
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _script_dir]
+
+import matplotlib
+
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
+from scipy import ndimage
 from scipy.stats import gaussian_kde
 
 
@@ -17,7 +30,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.25)" if THEME == "light" else "rgba(240,239,232,0.25)"
+GRID = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
 # Data — synthetic sediment composition (sand/silt/clay)
 np.random.seed(42)
@@ -119,40 +132,50 @@ fig.add_trace(
     )
 )
 
-# Contour lines at key density percentiles
+# Smooth density for clean contour extraction
+density_filled = density.copy()
+density_filled[np.isnan(density_filled)] = 0
+smoothed = ndimage.gaussian_filter(density_filled, sigma=2)
+
+# Contour levels from smoothed valid region
+smoothed_valid_vals = smoothed[inside_triangle]
+contour_levels = np.percentile(smoothed_valid_vals[smoothed_valid_vals > 0], [25, 50, 75, 90])
+
+# Extract smooth contour paths via matplotlib (data extraction only, no display)
+fig_tmp, ax_tmp = plt.subplots()
+CS = ax_tmp.contour(xx, yy, smoothed, levels=contour_levels)
+plt.close(fig_tmp)
+
 contour_color = "rgba(255,255,255,0.85)" if THEME == "light" else "rgba(240,239,232,0.85)"
-contour_levels = np.percentile(d_flat, [25, 50, 75, 90])
-for level in contour_levels:
-    level_mask = np.abs(density - level) < (np.nanmax(density) - np.nanmin(density)) * 0.02
-    level_mask = level_mask & valid_mask
-    if np.sum(level_mask) > 10:
-        a_level = sand_grid[level_mask]
-        b_level = silt_grid[level_mask]
-        c_level = clay_grid[level_mask]
-
-        x_level = 0.5 * (2 * b_level + c_level) / 100
-        y_level = (np.sqrt(3) / 2) * c_level / 100
-        cx, cy = np.mean(x_level), np.mean(y_level)
-        angles = np.arctan2(y_level - cy, x_level - cx)
-        sort_idx = np.argsort(angles)
-
-        fig.add_trace(
-            go.Scatterternary(
-                a=np.append(a_level[sort_idx], a_level[sort_idx][0]),
-                b=np.append(b_level[sort_idx], b_level[sort_idx][0]),
-                c=np.append(c_level[sort_idx], c_level[sort_idx][0]),
-                mode="lines",
-                line={"color": contour_color, "width": 2.5},
-                hoverinfo="skip",
-                showlegend=False,
+for segs in CS.allsegs:
+    for seg in segs:
+        if len(seg) < 5:
+            continue
+        x_c, y_c = seg[:, 0], seg[:, 1]
+        # Cartesian → ternary
+        clay_c = y_c * (2 / np.sqrt(3)) * 100
+        silt_c = (x_c - clay_c / 200) * 100
+        sand_c = 100 - silt_c - clay_c
+        # Filter to valid ternary region
+        valid = (sand_c >= 0) & (silt_c >= 0) & (clay_c >= 0)
+        if valid.sum() > 5:
+            fig.add_trace(
+                go.Scatterternary(
+                    a=sand_c[valid],
+                    b=silt_c[valid],
+                    c=clay_c[valid],
+                    mode="lines",
+                    line={"color": contour_color, "width": 2.5},
+                    hoverinfo="skip",
+                    showlegend=False,
+                )
             )
-        )
 
 # Style
 fig.update_layout(
     title={
         "text": "Sediment Composition Distribution · ternary-density · python · plotly · anyplot.ai",
-        "font": {"size": 26, "color": INK},
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
