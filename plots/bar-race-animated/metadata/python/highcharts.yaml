@@ -1,159 +1,184 @@
 library: highcharts
+language: python
 specification_id: bar-race-animated
 created: '2026-01-11T00:19:53Z'
-updated: '2026-01-11T00:27:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886563857
+updated: '2026-05-19T02:27:38Z'
+generated_by: claude-sonnet
+workflow_run: 26071381995
 issue: 3653
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/highcharts/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of small multiples grid approach for static output as
-    spec recommends
-  - Consistent color coding per company across all time periods enables tracking
-  - Clear data labels with dollar formatting ($XXB) on each bar
-  - Good use of Highcharts styling options (margins, font sizes, borders)
-  - Generates both static PNG and interactive HTML output
-  - Realistic tech company market value scenario with plausible evolution
+  - 'Perfect spec compliance: all required bar-race features present with correct
+    static fallback (small multiples grid).'
+  - Clean code structure with seed, adaptive theme tokens, and proper HTML+PNG dual
+    output.
+  - Consistent per-entity Okabe-Ito coloring maintained across all 6 year panels.
+  - Card-like chart containers with rounded corners give the grid a polished, dashboard-like
+    appearance.
+  - Both light and dark renders are fully readable with correct backgrounds and adaptive
+    chrome.
   weaknesses:
-  - Font sizes could be slightly larger for optimal readability at full resolution
-  - Some panels show only 9 companies instead of consistent 10 (visible in 2022 panel)
-  - The individual panel charts have excessive dimensions (1520x1280) that get scaled
-    down significantly in the grid view
-  image_description: The plot displays a 2x3 grid of small multiple bar charts showing
-    "Technology Companies Market Value Evolution (2019-2024)" with the main title
-    "bar-race-animated · highcharts · pyplots.ai" at the top. Each panel represents
-    a different year (2019-2024) with horizontal bar charts showing top 10 technology
-    companies by market value. Bars are color-coded consistently per company (e.g.,
-    TechCorp Alpha in pink/magenta, DataSphere in teal, QuantumByte in yellow, etc.).
-    Each bar has a data label showing the value in $B format. The bars are sorted
-    by value within each panel, and you can observe ranking changes across years -
-    for example, TechCorp Alpha leads in 2019 but DataSphere overtakes by 2024. The
-    Y-axis shows company names and X-axis shows "Market Value ($B)" ranging from 0-400.
-    Each panel has a subtle gray background with white chart background, bordered
-    with rounded corners.
+  - Extreme outlier values (DataSphere in 2022 ~$3000B, TechCorp Alpha in 2024 ~$2926B)
+    distort the shared x-axis scale, compressing most bars in those panels to a fraction
+    of panel width.
+  - No visual storytelling emphasis — no highlighted 'winner' bar, no callout for
+    the most dramatic ranking change, no leader annotation.
+  - 'Design Excellence headroom: DE-01 could reach 6-7 with a subtle rank-change indicator
+    or emphasis on the leading entity per year.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Main title "bar-race-animated · python · highcharts · anyplot.ai" in dark ink, subtitle in muted dark ink, year labels bold and dark — all clearly readable against the light surface.
+      Data: 8 companies colored with Okabe-Ito positions 1–8. First entity (TechCorp Alpha) is #009E73 (brand green). Bars have inline data labels (e.g. "$1888B") in dark ink. All bars distinguishable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Main title, subtitle, year labels, company names, axis tick labels all render in light ink (#F0EFE8 / #B8B7B0). No dark-on-dark failures detected. Grid lines subtle (rgba opacity 10%).
+      Data: Okabe-Ito colors identical to light render for positions 1–7. Adaptive neutral (DigiWave, position 8) correctly flips to #E8E8E0.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
-        passed: true
-        comment: Text is readable but could be slightly larger for optimal viewing;
-          company names and values are clear
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Bars are well-sized and visible; data labels are clear
+        comment: All font sizes explicitly set (52px main title, 38px year labels,
+          22px axis labels, 18px ticks, 19px data labels); all readable in both renders
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions in any of the 6 panels in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Bars visible with data labels; extreme outliers in 2022 (~$3000B)
+          and 2024 (~$2926B) compress most other bars to fraction of panel width
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-safe palette avoiding red-green conflicts
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with 2x3 grid; slight margin imbalance on some
-          panels
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Market Value ($B) is descriptive with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; bars wide enough for shape-independent
+          identification
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2x3 grid fills ~90% of 4800x2700 canvas; balanced margins; nothing
+          cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed (colors match company names), grid is subtle but
-          could be more refined
+        comment: X-axis has units (Market Value $B); y-axis shows entity names
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First entity is #009E73; Okabe-Ito order maintained; backgrounds
+          #FAF8F1/#1A1A17; all chrome is theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above plain defaults with card-like rounded containers and consistent
+          Okabe-Ito palette; not yet publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle 10% opacity grid, borderWidth 0 on bars, credits disabled,
+          custom margins, elevated-bg containers
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Small multiples show time progression effectively but no visual emphasis
+          on ranking leader or most dramatic change
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct horizontal bar chart with ranking changes over time
+        comment: Horizontal bar chart in small-multiples grid; valid static fallback
+          per spec
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Companies on Y-axis, values on X-axis, properly sorted
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Small multiples for static output (as spec recommends), consistent
-          colors per entity, visible time indicators
-      - id: SC-04
-        name: Data Range
+        comment: Bars sorted by value each frame; entity labels attached; visible
+          time indicator; colors consistent per entity
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Consistent axis range (0-400) across all panels enables comparison
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Companies on y-axis, market value on x-axis; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colors are consistent but no explicit legend (acceptable since labels
-          are on bars)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: bar-race-animated · highcharts · pyplots.ai'
+        comment: Title exactly 'bar-race-animated · python · highcharts · anyplot.ai';
+          no legend needed
     data_quality:
-      score: 18
-      max: 20
+      score: 12
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows ranking changes, multiple companies, value evolution; could
-          show more dramatic rank swaps
+        comment: Rankings change year-to-year across 8 entities and 6 snapshots; minor
+          deduction for limited dramatic rank crossings in middle years
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Technology company market values is a realistic, neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Values in billions are appropriate; 10-400B range is plausible for
-          tech companies
+        comment: Fictional tech company names in plausible market-value scenario;
+          neutral topic with descriptive subtitle
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Most values plausible; single extreme outlier (~$3000B for DataSphere
+          in 2022) is unrealistic relative to peers
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,55 +186,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot generation → HTML → screenshot'
+        comment: Linear Imports->Data->Chart loop->HTML assembly->Save; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported modules are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; list comprehension for chart scripts; appropriate
+          complexity
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern Highcharts API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png AND plot.html (which is good for interactive library)
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Properly uses highcharts_core Python bindings, BarSeries, custom
-          chart options, data labels, and generates both PNG and interactive HTML
+        comment: 'Uses Chart, HighchartsOptions, BarSeries, chart.to_js_literal()
+          correctly; per-point color assignment via {color: ...} in series data is
+          idiomatic Highcharts'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses to_js_literal() for HTML embedding, per-point color overrides,
+          and Highcharts format-string data labels (${point.y:.0f}B)
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - subplots
   - html-export
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - time-series
+  dataprep: []
   styling:
   - grid-styling
-  - edge-highlighting
