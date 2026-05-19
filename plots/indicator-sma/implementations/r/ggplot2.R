@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' indicator-sma: Simple Moving Average (SMA) Indicator Chart
-#' Library: ggplot2 | R 4.3
-#' Quality: pending | Created: 2026-05-19
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 86/100 | Created: 2026-05-19
 
 library(ggplot2)
 library(dplyr)
