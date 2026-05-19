@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T21:44:51Z'
-updated: '2026-05-19T19:05:56Z'
+updated: '2026-05-19T19:15:21Z'
 generated_by: claude-sonnet
 workflow_run: 26118352748
 issue: 3188
@@ -12,96 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Correct use of AreaRangeSeries for CI bands — idiomatic and visually clean nested
-    bands with opacity differentiation
-  - 'Full spec compliance: all required features (historical line, dashed forecast,
-    vertical start marker, nested 80%/95% CI, legend) are implemented'
-  - 'Excellent data quality: realistic product demand scenario with sensible seasonality,
-    trend, and widening uncertainty'
-  - 'Perfect palette and theme compliance: Okabe-Ito order respected, chrome tokens
-    fully applied in both themes'
-  - Clean reproducible code with CDN fallback logic for reliable CI execution
+  - 'Correct Okabe-Ito palette: #009E73 for historical (pos 1), #D55E00 for forecast
+    (pos 2), #0072B2 for CI bands (pos 3)'
+  - 'Excellent spec compliance: historical line, dashed forecast, 80% and 95% CI bands,
+    vertical plotLine with ''Forecast Start'' label, and legend all present'
+  - Theme-adaptive chrome properly implemented for both renders — no dark-on-dark
+    failures in dark mode
+  - Clever use of opacity differentiation (FILL_OP_80/FILL_OP_95) to visually nest
+    CI bands without introducing a new color
+  - 'Idiomatic Highcharts: AreaRangeSeries for CI bands, LineSeries for data, plotLines
+    for the forecast start marker, zIndex layering for correct draw order'
+  - All font sizes explicitly set per style guide (56px title, 42px axis labels, 36px
+    ticks/legend)
+  - Seed set for reproducibility, clean KISS code structure, CDN fallback logic is
+    well-organized
+  - Realistic monthly product demand scenario with widening uncertainty over the forecast
+    horizon
   weaknesses:
-  - 'Legend is cut off at the bottom edge in both renders — spacingBottom: 130 is
-    not enough for 4 legend items in a single horizontal row. Increase spacingBottom
-    to ~200, or switch to legend.layout: ''vertical'' and anchor inside the plot area.'
-  - 'Chart frame (top/right border) not removed — the default Highcharts plot border
-    lines are visible. Add plotBorderWidth: 0 to achieve a clean borderless look.'
-  - '95% CI outer band low contrast in dark mode at widest extent — increase FILL_OP_95
-    from 0.25 to 0.30-0.35 in dark mode to keep the outer band visible against #1A1A17.'
+  - Both horizontal and vertical grid lines are present — for a time series, vertical
+    date gridlines add visual noise; consider removing x-axis gridLineWidth to keep
+    only horizontal guides
+  - 'Bottom spacing (spacingBottom: 220) is slightly generous, leaving visible empty
+    space between legend and canvas edge; could be reduced to ~160'
+  - Design Excellence is above median but not publication-ready — no spine removal
+    (L-shaped axes are correct but the overall chart still reads as 'configured Highcharts
+    default')
+  - 'LM-02: AreaRangeSeries and plotLines are used well but the implementation could
+    leverage Highcharts-specific interactive features like shared crosshair or band
+    zone fills for stronger library differentiation'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "timeseries-forecast-uncertainty · python · highcharts · anyplot.ai" spans ~75-80% of plot width in dark ink (#1A1A17) — readable. Y-axis label "Product Demand (Units)" and X-axis label "Date" in dark ink, clearly readable. Tick labels (month/year format, e.g. "Jan 2022") in INK_SOFT (#4A4A44), legible. Vertical dashed "Forecast Start" line with label visible in upper-right area. Legend at very bottom edge — 4 items in one row ("95% Confidence Interval", "80% Confidence Interval", "Historical (Actual)", "Forecast") are substantially cut off/barely visible.
-      Data: Historical series in brand green (#009E73) solid line with circle markers, Jan 2022–Dec 2024. Forecast in vermillion (#D55E00) dashed line with diamond markers, Jan 2025–Dec 2025. CI bands both in #0072B2 blue — 80% CI as darker inner band (0.30 opacity), 95% CI as lighter outer band (0.15 opacity), visually nested and clearly distinguishable. Bands widen progressively toward Nov 2025.
-      Legibility verdict: PASS for all elements except the cut-off legend (FAIL).
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "timeseries-forecast-uncertainty · python · highcharts · anyplot.ai" in dark ink (~65-70% of canvas width), clearly readable. Y-axis label "Product Demand (Units)" in dark ink, X-axis label "Date" in dark ink. Tick labels in softer dark gray (#4A4A44) on both axes. All text fully readable against the light background.
+      Data: Historical line in Okabe-Ito green (#009E73) with solid line and circle markers spanning Jan 2022–Dec 2024. Forecast line in vermillion (#D55E00) with dashed style and diamond markers spanning Jan 2025–Nov 2025. Two nested CI bands in blue (#0072B2): lighter outer band (95% CI) and slightly darker inner band (80% CI), both semi-transparent. Vertical dashed line at forecast start with "Forecast Start" label at top right.
+      Legend: Bottom-centered, four items — "95% Confidence Interval", "80% Confidence Interval", "Historical (Actual)", "Forecast" — all readable with matching colored symbols.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
-      Chrome: Title in light ink (#F0EFE8) — clearly readable against dark background. Y-axis label "Product Demand (Units)" and X-axis label "Date" in light ink, readable. Tick labels in INK_SOFT (#B8B7B0), legible. "Forecast Start" label visible. No dark-on-dark text failure detected for main chrome elements. Same legend cut-off at bottom as light render.
-      Data: Historical series is identical green (#009E73) — data color unchanged from light render as required. Forecast is identical orange (#D55E00). 80% CI inner band renders as solid medium blue (0.40 opacity on dark BG) — clearly visible. 95% CI outer band (0.25 opacity on #1A1A17) is visible in center regions but outer edges of the widening band at far right (Nov 2025) become faint and marginally distinguishable from the dark background.
-      Legibility verdict: PASS for all main elements; MARGINAL for outermost 95% CI edges in dark mode; FAIL for legend (cut off at bottom edge).
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light cream text, clearly readable against dark background. Y-axis and X-axis labels in light ink. Tick labels in light gray (#B8B7B0). No dark-on-dark text failures detected anywhere.
+      Data: Historical green line (#009E73) identical to light render — still clearly visible against the dark background. Forecast vermillion dashed line (#D55E00) identical. CI bands in the same #0072B2 blue but with higher fill opacity (FILL_OP_80=0.40, FILL_OP_95=0.32 for dark), making them slightly more vivid — visually effective on the dark surface. "Forecast Start" label readable in light gray.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (56px title, 42px axis labels, 36px
-          ticks/legend). Readable in both themes. Deduction: legend cut off at bottom
-          edge making legend labels illegible.'
+        comment: All font sizes explicitly set (56px title, 42px axis labels, 36px
+          ticks/legend). Well-proportioned in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlaps. Axis ticks well-spaced.
+        comment: No overlapping elements in either render. Forecast Start label placed
+          at top-right without collision.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Historical and forecast lines and 80% CI band clearly visible in
-          both themes. Minor deduction: outermost 95% CI band edges in dark mode have
-          low contrast against #1A1A17 at 25% fill opacity.'
+        comment: Historical line with circle markers, forecast dashed line with diamond
+          markers, and CI bands all clearly visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Okabe-Ito palette. Series distinguished by both color and
-          line style.
+        comment: Okabe-Ito palette is CVD-safe. Green/orange/blue combination has
+          good contrast separation.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Legend with 4 items in one horizontal row is significantly cut off
-          at bottom edge in both renders. spacingBottom: 130 insufficient.'
+        passed: true
+        comment: Good layout overall but spacingBottom=220 is slightly generous, leaving
+          visible empty space below legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Product Demand (Units)' with units, X-axis 'Date', title
-          in correct format.
+        comment: 'Y-axis: ''Product Demand (Units)'' with units. X-axis: ''Date''.
+          Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, third #0072B2 — Okabe-Ito
-          canonical order. Backgrounds #FAF8F1/#1A1A17 correct. All chrome tokens
-          theme-adaptive.'
+        comment: 'First series #009E73 (historical), second #D55E00 (forecast), third
+          #0072B2 (CI). Background #FAF8F1 light / #1A1A17 dark. Data colors identical
+          between themes. Chrome is theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -109,27 +120,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above library defaults: nested CI bands with opacity differentiation,
-          dashed vs solid line convention, forecast-start plotLine marker. Chart frame
-          (top/right border) not removed — default Highcharts style.'
+        comment: Above generic defaults — correct Okabe-Ito colors, opacity-differentiated
+          CI bands, dashed forecast with distinct markers. Still reads as 'well-configured
+          Highcharts' rather than publication-ready.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid and correct backgrounds. Default Highcharts plot border
-          frame still present (plotBorderWidth not set to 0). Legend cut-off reduces
-          polish.
+        passed: true
+        comment: L-shaped axes (borderWidth=0, plotBorderWidth=0), subtle grid (GRID
+          is very transparent), generous whitespace. Vertical gridlines for dates
+          add slight visual noise.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear narrative: brand green for history, orange dashed for forecast,
-          nested blue CI bands growing wider communicate increasing uncertainty. Forecast
-          Start line gives clear anchor. Good visual hierarchy.'
+        comment: 'Clear narrative: historical trend → growing uncertainty in forecast.
+          Widening CI bands and vertical Forecast Start marker create effective visual
+          story.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,29 +148,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Time series with historical line, forecast line, nested 80%/95% CI
-          bands, and forecast-start marker — all present.
+        comment: Correct time series with forecast and nested CI bands.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid historical, dashed forecast, vertical forecast-start, nested
-          CI at 80% and 95%, semi-transparent fills, legend, color family consistency
-          — all per spec.
+        comment: 'All spec features present: historical solid line, forecast dashed
+          line, vertical forecast-start marker, 80% and 95% CI bands, semi-transparent
+          fills, clear legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Time on X-axis, demand values on Y-axis, all data visible.
+        comment: Date on X-axis, Product Demand on Y-axis. All data ranges correctly
+          shown.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title format correct. Legend labels semantically correct but cut
-          off at bottom canvas edge — not practically readable.
+        passed: true
+        comment: 'Title: ''timeseries-forecast-uncertainty · python · highcharts ·
+          anyplot.ai''. Legend labels match series correctly.'
     data_quality:
       score: 15
       max: 15
@@ -169,23 +180,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Historical with trend+seasonality+noise, forecast with continued
-          seasonality, two CI bands, widening uncertainty over forecast horizon. Full
-          coverage.
+        comment: Shows trend, seasonality, noise in historical. Widening uncertainty
+          in forecast. Both 80% and 95% CI bands clearly nested.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly product demand over 3 years with 12-month ARIMA-style forecast.
-          Real business scenario, neutral domain.
+        comment: Monthly product demand with 3-year history (2022-2024) and 12-month
+          ARIMA-style forecast. Neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Demand 90-160 units, growing trend, seasonal amplitude of 20 units,
-          widening CI (±10 to ±30 for 80% CI) all plausible for moderate-volume product.
+        comment: Product demand 80-230 units plausible. Growing CI widths (±10 to
+          ±30 at 80%, ±18 to ±54 at 95%) realistic for 12-month horizon.
     code_quality:
       score: 10
       max: 10
@@ -195,8 +205,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → config → chart construction
-          → Selenium export. No functions or classes.'
+        comment: Imports → Data → Chart config → Series → Render. No unnecessary functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -208,23 +218,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imported modules are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, practical code. CDN fallback with 3 URLs and retry is appropriate
-          for CI reliability. No over-engineering.
+        comment: CDN fallback loop is slightly verbose but necessary and well-organized.
+          Series setup is clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct Highcharts
-          API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Highcharts
+          11 API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -232,25 +242,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Chart(container='container'), HighchartsOptions, AreaRangeSeries+LineSeries
-          from proper modules, add_series(), datetime timestamp data format, zIndex
-          for layer ordering, plotLines for vertical marker.
+        comment: AreaRangeSeries for CI bands, LineSeries for data, plotLines with
+          labels for markers, datetime axis, zIndex layering — all idiomatic Highcharts
+          patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: AreaRangeSeries (Highcharts-native), plotLines with dashStyle+label
-          for forecast-start, shared tooltip with xDateFormat, dateTimeLabelFormats
-          for month/year ticks — genuinely distinctive Highcharts features.
-  verdict: REJECTED
+        comment: AreaRangeSeries is Highcharts-specific. plotLines with custom label
+          text is a Highcharts feature. Could further leverage crosshair, zone fills,
+          or band areas for stronger differentiation.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
   - hover-tooltips
-  - annotations
   patterns:
   - data-generation
   dataprep:
