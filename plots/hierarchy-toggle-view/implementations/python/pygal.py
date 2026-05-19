@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 hierarchy-toggle-view: Interactive Treemap-Sunburst Toggle View
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-19
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 75/100 | Updated: 2026-05-19
 """
 
 import os
