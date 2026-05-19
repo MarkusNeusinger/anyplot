@@ -91,12 +91,12 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 
 ```json
 {
-  "score": 76,
+  "score": 77,
   "tier": "Good",
   "pass": false,
 
   "visual_quality": {
-    "total": 23,
+    "total": 24,
     "vq01_text_legibility": {"score": 6, "max": 8, "note": "Title slightly oversized for content — fontsize=18pt squeezes against the right edge; reduce to ~14pt"},
     "vq02_no_overlap": {"score": 6, "max": 6, "note": "No overlap"},
     "vq03_element_visibility": {"score": 5, "max": 6, "note": "Visible but markers could be better adapted"},
