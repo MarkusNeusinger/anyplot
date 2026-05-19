@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: mosaic-categorical
 created: '2026-05-19T03:29:22Z'
-updated: '2026-05-19T03:35:40Z'
+updated: '2026-05-19T03:49:45Z'
 generated_by: claude-sonnet
 workflow_run: 26074175137
 issue: 3650
@@ -12,37 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - Full mosaic plot built from scratch with geom_rect() + dplyr — idiomatic and correct
-  - Theme-adaptive chrome works perfectly in both renders; no dark-on-dark failures
-  - X-axis labels with sample sizes elegantly communicate marginal frequencies
-  - Okabe-Ito palette applied in correct order; data colors identical across themes
-  - 'Complete code quality: seed, clean imports, flat structure, correct output filenames'
+  - 'Correct mosaic geometry: column widths and row heights computed exactly per spec
+    (marginal and conditional proportions)'
+  - White percentage labels on each segment dramatically improve readability and enable
+    immediate quantitative comparison
+  - Subtitle with analytical callout (Books leads in satisfaction rate 78%; Electronics
+    dominates by volume) — active data storytelling beyond just displaying data
+  - 'Full theme adaptation: title, axis, legend all use INK/INK_SOFT tokens correctly
+    in both light and dark renders; PAGE_BG used as rectangle border for elegant spacing'
+  - Clean dplyr pipeline for mosaic coordinate computation — elegant and idiomatic
+    R
   weaknesses:
-  - 'Font sizes undersized for 4800x2700 canvas: title=18pt (needs 24pt), axis labels=18pt
-    (needs 20pt), tick labels=14pt (needs 16pt)'
-  - No percentage annotations inside the rectangles — readers must estimate proportions
-    visually
-  - 'No data storytelling element: missing a subtitle, callout, or annotation highlighting
-    the key insight'
-  - Legend box frame is plain; could be borderless or more refined
+  - 'Font sizes are below style guide minimums: title at 18pt (guide requires 24pt),
+    axis labels at 18pt (20pt required), tick labels at 14pt (16pt required) — increase
+    these to ensure legibility at full 4800x2700 resolution'
+  - Books Unsatisfied segment (5/90 approx 5.6%) produces a nearly invisible blue
+    sliver; consider adjusting data so the smallest segment is at least 8-10% for
+    clear visibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface.
-      Chrome: Title "Customer Satisfaction by Product Category · mosaic-categorical · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17), clearly readable. Y-axis label "Proportion of Respondents" and X-axis label in dark INK. Tick labels (0%, 25%, 50%, 75%, 100% and category names with sample sizes) in INK_SOFT (#4A4A44) — readable. Legend box with border shows all three satisfaction levels with colored squares. No "light on light" issues.
-      Data: Four columns with widths proportional to group size (Electronics n=150, Clothing n=140, Food n=120, Books n=90). Satisfied segment = #009E73 (green, bottom), Neutral = #D55E00 (orange, middle), Unsatisfied = #0072B2 (blue, top). Subtle PAGE_BG-colored borders between rectangles.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Customer Satisfaction by Product Category · mosaic-categorical · r · ggplot2 · anyplot.ai" is dark (#1A1A17), clearly readable. Subtitle "Books leads in satisfaction rate (78%); Electronics dominates by volume (n = 150)" is readable in secondary ink. Axis labels ("Proportion of Respondents", "Product Category (column width proportional to group size)") are dark and readable. Y-axis tick labels (0%, 25%, 50%, 75%, 100%) are readable. X-axis category labels ("Electronics (n=150)", "Clothing (n=140)", "Food (n=120)", "Books (n=90)") are readable. Legend ("Customer Satisfaction" with Satisfied/Neutral/Unsatisfied) has elevated light background (#FFFDF6), all text readable.
+      Data: First series (Satisfied) = #009E73 green (correct Okabe-Ito position 1). Second series (Neutral) = #D55E00 orange (position 2). Third series (Unsatisfied) = #0072B2 blue (position 3). White percentage labels on each rectangle. Four columns with proportional widths.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title in off-white #F0EFE8, clearly readable against dark background. Axis labels in #F0EFE8. Tick labels in #B8B7B0 (soft grey), readable. Legend uses #242420 elevated background with #B8B7B0 border. No "dark on dark" failures — all chrome elements are light-colored.
-      Data: Data colors are identical to light render — #009E73 green, #D55E00 orange, #0072B2 blue — confirming only chrome flips between themes. Column structure and proportions unchanged.
-      Legibility verdict: PASS
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels all rendered in light colors (#F0EFE8/#B8B7B0), clearly readable against dark background. Legend box has elevated dark background (#242420) with light text. No dark-on-dark failures observed.
+      Data: Colors IDENTICAL to light render — Satisfied green (#009E73), Neutral orange (#D55E00), Unsatisfied blue (#0072B2). Only chrome flips, data colors stay constant. White percentage labels on colored rectangles remain legible on dark surface.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -50,70 +54,78 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title=18pt (needs 24pt), axis=18pt (needs 20pt), ticks=14pt (needs
-          16pt) — undersized for 4800x2700 canvas but readable
+        comment: 'Font sizes explicitly set but below style guide minimums: title
+          18pt (need 24pt), axis labels 18pt (need 20pt), tick labels 14pt (need 16pt).
+          Text readable but not optimal at full 4800x2700 resolution.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions; category labels with sample sizes display cleanly
+        comment: No overlapping elements; percentage labels well-contained within
+          rectangles, category labels clearly separated
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All rectangles and segments clearly visible in both themes
+        comment: All segments clearly visible including thin Books Unsatisfied slice;
+          white labels aid identification
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; no red-green signal; CVD-safe
+        comment: Okabe-Ito palette is CVD-safe; adequate luminance contrast between
+          green/orange/blue
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions; slight excess whitespace between data and legend
+        comment: Good proportions, mosaic fills canvas well, generous margins, legend
+          well-placed to the right
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: All labels descriptive; X-axis explanation of column widths is informative
+        comment: 'Y: Proportion of Respondents with %; X: Product Category (column
+          width proportional to group size) — both descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Satisfied=#009E73 correct; Okabe-Ito 1-3 order; light
-          bg #FAF8F1; dark bg #1A1A17'
+        comment: 'First series (Satisfied) = #009E73; Neutral = #D55E00; Unsatisfied
+          = #0072B2; light bg = #FAF8F1; dark bg = #1A1A17; data colors identical
+          across themes'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: Correctly applied palette and clean look, but no bold design choices
-          beyond standard theming — missing annotations and subtitle
+        passed: true
+        comment: 'Above default: subtitle with analytical insight and white percentage
+          labels show deliberate design thinking; Okabe-Ito correct; INK/INK_SOFT
+          hierarchy; not exceptional enough for 6+ (standard mosaic layout)'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Grid removed, ticks removed, generous margins, PAGE_BG border gap
-          effect. Legend frame is functional but plain.
+        passed: true
+        comment: Grid removed (appropriate); ticks removed; PAGE_BG as rectangle border
+          creates elegant inter-cell spacing; clean legend with elevated background
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Column widths effectively encode marginal frequencies, but no focal
-          point or annotations highlighting key patterns
+        passed: true
+        comment: Subtitle explicitly calls out key finding; percentage labels enable
+          comparison; column widths visually encode sample sizes; clear reading order
     spec_compliance:
       score: 15
       max: 15
@@ -123,30 +135,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mosaic plot via geom_rect() with proportional column widths
-          and stacked conditional heights
+        comment: Correct mosaic plot; column widths = marginal proportions, heights
+          = conditional proportions, area proportional to cell frequency
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Widths=marginal proportions, heights=conditional proportions, gap
-          spacing, labels identify both variables
+        comment: Proportional widths, conditional heights, gap spacing via PAGE_BG
+          border, labels identifying both variables, color coding present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=product categories, Y=proportion of respondents, all data represented
+        comment: Category on X with centered breaks, proportion on Y with percent_format,
+          all categories and satisfaction levels shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix and spec-id/library/anyplot.ai;
-          legend labels match
+        comment: Title matches required format with descriptive prefix; legend labels
+          Satisfied/Neutral/Unsatisfied match data
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -154,22 +167,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Covers two categorical variables, proportional widths, conditional
-          heights. Optional residual coloring not implemented.
+        comment: Shows marginal proportions, conditional proportions, absolute counts,
+          percentage values; missing residual/independence deviation encoding (optional
+          per spec)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Retail customer satisfaction survey is neutral, realistic, plausible.
-          n=500 total with realistic distribution.
+        comment: Retail customer satisfaction survey is realistic, neutral, business-appropriate;
+          no controversial content
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Group sizes 90-150 and satisfaction proportions realistic for retail
-          survey
+        comment: Satisfaction rates 53-78% are plausible for retail; Books Unsatisfied
+          at ~5.6% creates nearly invisible segment — minor penalty for visual edge
+          case in data choice
     code_quality:
       score: 10
       max: 10
@@ -179,13 +194,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: 'Flat sequential structure: imports → theme tokens → data → plot
+          → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42) at top
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -197,13 +213,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean dplyr pipeline for layout calculation; no fake UI
+        comment: Clean dplyr pipeline with group_by/mutate/cumsum for mosaic coordinates;
+          no fake UI, no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave(sprintf('plot-%s.png', THEME), device = ragg::agg_png) correct
+        comment: Saves as plot-{THEME}.png via ragg::agg_png; correct 16x9 at 300
+          dpi
     library_mastery:
       score: 7
       max: 10
@@ -213,20 +231,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct geom_rect() usage; scale_x_continuous with centered labels;
-          scale_fill_manual with named vector; theme layering
+        comment: Proper grammar-of-graphics approach; geom_rect with aesthetics, scale_fill_manual,
+          scale_x_continuous with custom breaks positioned at category centers — idiomatic
+          ggplot2
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Manual cumsum layout calculation shows deep ggplot2 knowledge. Missing
-          geom_text() segment labels, faceting extensions.
-  verdict: REJECTED
+        passed: true
+        comment: Using geom_rect to implement mosaic plot (not natively in ggplot2)
+          via dplyr cumsum pipeline is distinctively ggplot2-flavored; scale_x_continuous
+          with computed category center breaks is ggplot2-specific technique
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - annotations
   patterns:
   - data-generation
   - groupby-aggregation
