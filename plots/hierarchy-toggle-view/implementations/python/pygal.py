@@ -1,370 +1,306 @@
-""" pyplots.ai
+""" anyplot.ai
 hierarchy-toggle-view: Interactive Treemap-Sunburst Toggle View
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-11
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-19
 """
 
-# Workaround: ensure we import the pygal package, not this file
+import os
 import sys
 from pathlib import Path
 
+from PIL import Image, ImageDraw, ImageFont
 
+
+# Ensure we import the pygal package, not this file (filename collision)
 _this_dir = Path(__file__).parent
 if str(_this_dir) in sys.path:
     sys.path.remove(str(_this_dir))
 
-import pygal  # noqa: E402
-from pygal.style import Style  # noqa: E402
+import pygal
+from pygal.style import Style
 
 
-# Hierarchical data: Company budget allocation (in thousands)
-# Structure: Company -> Departments -> Teams
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+PIL_BG = (250, 248, 241) if THEME == "light" else (26, 26, 23)
+
+# Okabe-Ito palette — position 1 (#009E73) is always first series
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Data: file-system storage allocation (GB) — 4 top-level folders, 3 sub-folders each
 hierarchy = [
-    {"id": "company", "parent": "", "label": "Company", "value": 0},
-    # Level 1: Departments
-    {"id": "engineering", "parent": "company", "label": "Engineering", "value": 0},
-    {"id": "marketing", "parent": "company", "label": "Marketing", "value": 0},
-    {"id": "sales", "parent": "company", "label": "Sales", "value": 0},
-    {"id": "operations", "parent": "company", "label": "Operations", "value": 0},
-    # Level 2: Engineering teams
-    {"id": "backend", "parent": "engineering", "label": "Backend", "value": 1800},
-    {"id": "frontend", "parent": "engineering", "label": "Frontend", "value": 1200},
-    {"id": "data_science", "parent": "engineering", "label": "Data Science", "value": 900},
-    {"id": "devops", "parent": "engineering", "label": "DevOps", "value": 600},
-    # Level 2: Marketing teams
-    {"id": "digital", "parent": "marketing", "label": "Digital", "value": 900},
-    {"id": "brand", "parent": "marketing", "label": "Brand", "value": 600},
-    {"id": "content", "parent": "marketing", "label": "Content", "value": 600},
-    # Level 2: Sales teams
-    {"id": "enterprise", "parent": "sales", "label": "Enterprise", "value": 1000},
-    {"id": "smb", "parent": "sales", "label": "SMB", "value": 500},
-    {"id": "partners", "parent": "sales", "label": "Partners", "value": 300},
-    # Level 2: Operations teams
-    {"id": "it", "parent": "operations", "label": "IT", "value": 500},
-    {"id": "hr", "parent": "operations", "label": "HR", "value": 400},
-    {"id": "finance", "parent": "operations", "label": "Finance", "value": 300},
+    {"id": "root", "parent": "", "label": "Storage (240 GB)", "value": 0},
+    # Top-level categories
+    {"id": "media", "parent": "root", "label": "Media", "value": 0},
+    {"id": "documents", "parent": "root", "label": "Documents", "value": 0},
+    {"id": "apps", "parent": "root", "label": "Applications", "value": 0},
+    {"id": "system", "parent": "root", "label": "System", "value": 0},
+    # Media sub-folders
+    {"id": "videos", "parent": "media", "label": "Videos", "value": 52},
+    {"id": "photos", "parent": "media", "label": "Photos", "value": 24},
+    {"id": "music", "parent": "media", "label": "Music", "value": 12},
+    # Documents sub-folders
+    {"id": "work", "parent": "documents", "label": "Work Docs", "value": 22},
+    {"id": "personal", "parent": "documents", "label": "Personal", "value": 16},
+    {"id": "archived", "parent": "documents", "label": "Archived", "value": 14},
+    # Applications sub-folders
+    {"id": "productivity", "parent": "apps", "label": "Productivity", "value": 28},
+    {"id": "games", "parent": "apps", "label": "Games", "value": 22},
+    {"id": "devtools", "parent": "apps", "label": "Dev Tools", "value": 18},
+    # System sub-folders
+    {"id": "os", "parent": "system", "label": "OS", "value": 16},
+    {"id": "cache", "parent": "system", "label": "Cache", "value": 10},
+    {"id": "logs", "parent": "system", "label": "Logs", "value": 6},
 ]
 
-# Build lookup and calculate parent values
-id_to_node = {n["id"]: n for n in hierarchy}
+# Calculate parent sums bottom-up
 for node in reversed(hierarchy):
     if node["value"] == 0:
-        children_sum = sum(n["value"] for n in hierarchy if n["parent"] == node["id"])
-        node["value"] = children_sum
+        node["value"] = sum(n["value"] for n in hierarchy if n["parent"] == node["id"])
 
-# Color palette - consistent across both views
-# Using Python Blue (#306998) and Yellow (#FFD43B) as primary
-colors = {"engineering": "#306998", "marketing": "#FFD43B", "sales": "#2CA02C", "operations": "#9467BD"}
-
-# Lighter shades for teams within departments
-team_colors = {
-    "backend": "#4A87B8",
-    "frontend": "#6A9FC8",
-    "data_science": "#8AB7D8",
-    "devops": "#AAD0E8",
-    "digital": "#FFE066",
-    "brand": "#FFE899",
-    "content": "#FFF0CC",
-    "enterprise": "#4ABF4A",
-    "smb": "#7AD17A",
-    "partners": "#A9E3A9",
-    "it": "#B08ED3",
-    "hr": "#C8AEDF",
-    "finance": "#E0CEEB",
+# Sub-folder colors: tints of each Okabe-Ito category (data colors are theme-invariant)
+sub_colors = {
+    "videos": "#009E73",
+    "photos": "#4DBB9D",
+    "music": "#99D7C7",
+    "work": "#D55E00",
+    "personal": "#E28B4D",
+    "archived": "#EEB899",
+    "productivity": "#0072B2",
+    "games": "#4D9EC9",
+    "devtools": "#99C9E0",
+    "os": "#CC79A7",
+    "cache": "#DAA0C0",
+    "logs": "#E8C7D8",
 }
 
-# Custom style for better visibility - larger fonts for HTML version
-custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
-    colors=(colors["engineering"], colors["marketing"], colors["sales"], colors["operations"]),
-    title_font_size=40,
-    label_font_size=22,
-    major_label_font_size=20,
-    legend_font_size=20,
-    value_font_size=18,
-    value_label_font_size=18,
+categories = [n for n in hierarchy if n["parent"] == "root"]
+
+# Pygal style for HTML charts (interactive, 1600×900)
+html_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=28,
+    label_font_size=18,
+    major_label_font_size=16,
+    legend_font_size=16,
+    value_font_size=14,
+    stroke_width=3,
 )
 
-# Get departments (level 1) and their children (level 2)
-departments = [n for n in hierarchy if n["parent"] == "company"]
-dept_ids = [d["id"] for d in departments]
-
-# Create treemap - showing team-level breakdown
-treemap = pygal.Treemap(
-    width=2400,
-    height=2700,
-    style=custom_style,
-    title="Treemap View - Budget by Team",
-    show_legend=True,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    print_values=True,
-    print_values_position="center",
-    value_formatter=lambda x: f"${x}K",
-)
-
-# Add data grouped by department (each department as a series)
-for dept in departments:
-    dept_teams = [n for n in hierarchy if n["parent"] == dept["id"]]
-    team_data = [
-        {"value": t["value"], "label": t["label"], "color": team_colors.get(t["id"], colors[dept["id"]])}
-        for t in dept_teams
-    ]
-    treemap.add(f"{dept['label']} (${dept['value']}K)", team_data)
-
-# Create pie/sunburst chart - nested rings showing hierarchy
-# Pygal Pie can create sunburst-like effect with inner_radius
-sunburst = pygal.Pie(
-    width=2400,
-    height=2700,
-    style=custom_style,
-    title="Sunburst View - Budget Hierarchy",
-    inner_radius=0.35,
-    show_legend=True,
-    legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    print_values=True,
-    value_formatter=lambda x: f"${x}K",
-)
-
-# Add all leaf nodes (teams) to show full hierarchy
-# Group by department for color consistency
-for dept in departments:
-    dept_teams = [n for n in hierarchy if n["parent"] == dept["id"]]
-    for team in dept_teams:
-        sunburst.add(
-            f"{dept['label']}: {team['label']}",
-            [{"value": team["value"], "color": team_colors.get(team["id"], colors[dept["id"]])}],
-        )
-
-# Create combined HTML with toggle functionality
-# Render both charts to SVG strings
-treemap_svg = treemap.render(is_unicode=True)
-sunburst_svg = sunburst.render(is_unicode=True)
-
-# HTML with CSS toggle between views
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <title>hierarchy-toggle-view · pygal · pyplots.ai</title>
-    <style>
-        body {{
-            font-family: Arial, sans-serif;
-            background: white;
-            margin: 0;
-            padding: 20px;
-        }}
-        .container {{
-            max-width: 2400px;
-            margin: 0 auto;
-        }}
-        h1 {{
-            text-align: center;
-            color: #306998;
-            font-size: 32px;
-            margin-bottom: 10px;
-        }}
-        .subtitle {{
-            text-align: center;
-            color: #666;
-            font-size: 18px;
-            margin-bottom: 20px;
-        }}
-        .toggle-container {{
-            text-align: center;
-            margin-bottom: 20px;
-        }}
-        .toggle-btn {{
-            padding: 12px 30px;
-            font-size: 18px;
-            margin: 0 10px;
-            cursor: pointer;
-            border: 2px solid #306998;
-            background: white;
-            color: #306998;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-        }}
-        .toggle-btn.active {{
-            background: #306998;
-            color: white;
-        }}
-        .toggle-btn:hover {{
-            background: #FFD43B;
-            border-color: #FFD43B;
-            color: #333;
-        }}
-        .chart-container {{
-            position: relative;
-            width: 100%;
-        }}
-        .chart {{
-            width: 100%;
-            display: none;
-        }}
-        .chart.active {{
-            display: block;
-        }}
-        .chart svg {{
-            max-width: 100%;
-            height: auto;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>hierarchy-toggle-view · pygal · pyplots.ai</h1>
-        <p class="subtitle">Company Budget Allocation - Toggle between Treemap and Sunburst views</p>
-        <div class="toggle-container">
-            <button class="toggle-btn active" onclick="showTreemap()">Treemap View</button>
-            <button class="toggle-btn" onclick="showSunburst()">Sunburst View</button>
-        </div>
-        <div class="chart-container">
-            <div id="treemap" class="chart active">
-                {treemap_svg}
-            </div>
-            <div id="sunburst" class="chart">
-                {sunburst_svg}
-            </div>
-        </div>
-    </div>
-    <script>
-        function showTreemap() {{
-            document.getElementById('treemap').classList.add('active');
-            document.getElementById('sunburst').classList.remove('active');
-            document.querySelectorAll('.toggle-btn')[0].classList.add('active');
-            document.querySelectorAll('.toggle-btn')[1].classList.remove('active');
-        }}
-        function showSunburst() {{
-            document.getElementById('treemap').classList.remove('active');
-            document.getElementById('sunburst').classList.add('active');
-            document.querySelectorAll('.toggle-btn')[0].classList.remove('active');
-            document.querySelectorAll('.toggle-btn')[1].classList.add('active');
-        }}
-    </script>
-</body>
-</html>
-"""
-
-# Save HTML for interactive version
-with open("plot.html", "w") as f:
-    f.write(html_content)
-
-# For PNG, create a combined side-by-side view
-# Update style for combined image - much larger fonts for 4800x2700 canvas for perfect legibility
-combined_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333",
-    foreground_strong="#333",
-    foreground_subtle="#666",
-    colors=(colors["engineering"], colors["marketing"], colors["sales"], colors["operations"]),
+# Pygal style for PNG charts (large canvas, ~2300×2400 each half)
+png_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
     title_font_size=64,
     label_font_size=36,
     major_label_font_size=32,
     legend_font_size=32,
     value_font_size=28,
     value_label_font_size=28,
+    stroke_width=4,
 )
 
-# Create treemap for left side
-treemap_left = pygal.Treemap(
+# --- HTML: interactive toggle view ---
+
+html_treemap = pygal.Treemap(
+    width=1600,
+    height=900,
+    style=html_style,
+    title="Treemap — Disk Storage by Folder",
+    show_legend=True,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=4,
+    print_values=True,
+    print_values_position="center",
+    value_formatter=lambda x: f"{x} GB",
+)
+for cat in categories:
+    items = [n for n in hierarchy if n["parent"] == cat["id"]]
+    html_treemap.add(
+        f"{cat['label']} ({cat['value']} GB)",
+        [{"value": t["value"], "label": t["label"], "color": sub_colors[t["id"]]} for t in items],
+    )
+
+html_sunburst = pygal.Pie(
+    width=1600,
+    height=900,
+    style=html_style,
+    title="Sunburst — Disk Storage Hierarchy",
+    inner_radius=0.35,
+    show_legend=True,
+    legend_at_bottom=True,
+    legend_at_bottom_columns=4,
+    print_values=True,
+    value_formatter=lambda x: f"{x} GB",
+)
+for cat in categories:
+    items = [n for n in hierarchy if n["parent"] == cat["id"]]
+    for item in items:
+        html_sunburst.add(
+            f"{cat['label']}: {item['label']}", [{"value": item["value"], "color": sub_colors[item["id"]]}]
+        )
+
+treemap_svg = html_treemap.render(is_unicode=True)
+sunburst_svg = html_sunburst.render(is_unicode=True)
+
+html_content = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Disk Storage · hierarchy-toggle-view · python · pygal · anyplot.ai</title>
+  <style>
+    * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+    body {{ font-family: Arial, sans-serif; background: {PAGE_BG}; color: {INK}; padding: 24px; }}
+    .container {{ max-width: 1600px; margin: 0 auto; }}
+    h1 {{ text-align: center; color: {OKABE_ITO[0]}; font-size: 26px; margin-bottom: 8px; }}
+    .subtitle {{ text-align: center; color: {INK_MUTED}; font-size: 15px; margin-bottom: 22px; }}
+    .toggle {{ text-align: center; margin-bottom: 18px; }}
+    .btn {{
+      padding: 10px 30px; font-size: 15px; margin: 0 6px; cursor: pointer;
+      border: 2px solid {OKABE_ITO[0]}; background: {PAGE_BG}; color: {OKABE_ITO[0]};
+      border-radius: 6px; font-weight: bold; transition: background 0.2s, color 0.2s;
+    }}
+    .btn.active {{ background: {OKABE_ITO[0]}; color: {PAGE_BG}; }}
+    .chart {{ display: none; width: 100%; }}
+    .chart.active {{ display: block; }}
+    .chart svg {{ max-width: 100%; height: auto; }}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Disk Storage · hierarchy-toggle-view · python · pygal · anyplot.ai</h1>
+    <p class="subtitle">240 GB total — toggle between rectangular (Treemap) and radial (Sunburst) views</p>
+    <div class="toggle">
+      <button class="btn active" id="btn-treemap" onclick="switchView('treemap')">&#9632; Treemap</button>
+      <button class="btn" id="btn-sunburst" onclick="switchView('sunburst')">&#9685; Sunburst</button>
+    </div>
+    <div id="treemap" class="chart active">{treemap_svg}</div>
+    <div id="sunburst" class="chart">{sunburst_svg}</div>
+  </div>
+  <script>
+    var VIEWS = ['treemap', 'sunburst'];
+    function switchView(id) {{
+      var current = document.querySelector('.chart.active');
+      var next = document.getElementById(id);
+      if (current === next) return;
+      // Fade out current
+      current.style.transition = 'opacity 0.3s';
+      current.style.opacity = '0';
+      setTimeout(function() {{
+        current.style.display = 'none';
+        current.classList.remove('active');
+        current.style.opacity = '';
+        current.style.transition = '';
+        // Fade in next
+        next.style.opacity = '0';
+        next.style.display = 'block';
+        next.classList.add('active');
+        requestAnimationFrame(function() {{
+          requestAnimationFrame(function() {{
+            next.style.transition = 'opacity 0.3s';
+            next.style.opacity = '1';
+            setTimeout(function() {{
+              next.style.opacity = '';
+              next.style.transition = '';
+            }}, 310);
+          }});
+        }});
+      }}, 310);
+      // Update buttons immediately
+      VIEWS.forEach(function(v) {{
+        document.getElementById('btn-' + v).classList.remove('active');
+      }});
+      document.getElementById('btn-' + id).classList.add('active');
+    }}
+  </script>
+</body>
+</html>"""
+
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# --- PNG: side-by-side static view (4800×2700 canvas) ---
+
+png_treemap = pygal.Treemap(
     width=2300,
     height=2400,
-    style=combined_style,
+    style=png_style,
     title="Treemap View",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=2,
     print_values=True,
     print_values_position="center",
-    value_formatter=lambda x: f"${x}K",
+    value_formatter=lambda x: f"{x} GB",
     margin_left=20,
     margin_right=20,
 )
+for cat in categories:
+    items = [n for n in hierarchy if n["parent"] == cat["id"]]
+    png_treemap.add(
+        cat["label"], [{"value": t["value"], "label": t["label"], "color": sub_colors[t["id"]]} for t in items]
+    )
 
-for dept in departments:
-    dept_teams = [n for n in hierarchy if n["parent"] == dept["id"]]
-    team_data = [
-        {"value": t["value"], "label": t["label"], "color": team_colors.get(t["id"], colors[dept["id"]])}
-        for t in dept_teams
-    ]
-    treemap_left.add(f"{dept['label']}", team_data)
-
-# Create sunburst for right side
-sunburst_right = pygal.Pie(
+png_sunburst = pygal.Pie(
     width=2300,
     height=2400,
-    style=combined_style,
+    style=png_style,
     title="Sunburst View",
     inner_radius=0.35,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
     print_values=True,
-    value_formatter=lambda x: f"${x}K",
+    value_formatter=lambda x: f"{x} GB",
     margin_left=20,
     margin_right=20,
 )
+for cat in categories:
+    items = [n for n in hierarchy if n["parent"] == cat["id"]]
+    for item in items:
+        png_sunburst.add(item["label"], [{"value": item["value"], "color": sub_colors[item["id"]]}])
 
-for dept in departments:
-    dept_teams = [n for n in hierarchy if n["parent"] == dept["id"]]
-    for team in dept_teams:
-        sunburst_right.add(
-            f"{team['label']}", [{"value": team["value"], "color": team_colors.get(team["id"], colors[dept["id"]])}]
-        )
+png_treemap.render_to_png("treemap_tmp.png")
+png_sunburst.render_to_png("sunburst_tmp.png")
 
-# Render each chart to PNG separately
-treemap_left.render_to_png("treemap_temp.png")
-sunburst_right.render_to_png("sunburst_temp.png")
-
-# Combine using PIL
-import os  # noqa: E402
-
-from PIL import Image, ImageDraw, ImageFont  # noqa: E402
-
-
-# Create combined image
-combined = Image.new("RGB", (4800, 2700), "white")
+# Assemble 4800×2700 canvas
+combined = Image.new("RGB", (4800, 2700), PIL_BG)
 draw = ImageDraw.Draw(combined)
 
-# Add title - using larger fonts for 4800x2700 canvas
 try:
-    title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
-    subtitle_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
+    font_title = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 72)
+    font_sub = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 40)
 except OSError:
-    title_font = ImageFont.load_default()
-    subtitle_font = ImageFont.load_default()
+    font_title = ImageFont.load_default()
+    font_sub = ImageFont.load_default()
 
-# Draw title centered
-title = "Company Budget · hierarchy-toggle-view · pygal · pyplots.ai"
-title_bbox = draw.textbbox((0, 0), title, font=title_font)
-title_width = title_bbox[2] - title_bbox[0]
-draw.text(((4800 - title_width) // 2, 40), title, fill="#306998", font=title_font)
+title_str = "Disk Storage · hierarchy-toggle-view · python · pygal · anyplot.ai"
+tw = draw.textbbox((0, 0), title_str, font=font_title)
+draw.text(((4800 - (tw[2] - tw[0])) // 2, 40), title_str, fill=OKABE_ITO[0], font=font_title)
 
-# Draw subtitle
-subtitle = "Toggle between rectangle (Treemap) and radial (Sunburst) hierarchy views"
-subtitle_bbox = draw.textbbox((0, 0), subtitle, font=subtitle_font)
-subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
-draw.text(((4800 - subtitle_width) // 2, 130), subtitle, fill="#666666", font=subtitle_font)
+sub_str = "240 GB total — Treemap excels at size comparison; Sunburst reveals hierarchy depth"
+sw = draw.textbbox((0, 0), sub_str, font=font_sub)
+draw.text(((4800 - (sw[2] - sw[0])) // 2, 140), sub_str, fill=INK_MUTED, font=font_sub)
 
-# Load and paste treemap (left) - adjusted y-position for larger title
-treemap_img = Image.open("treemap_temp.png")
-treemap_img = treemap_img.resize((2200, 2400), Image.Resampling.LANCZOS)
-combined.paste(treemap_img, (100, 220))
+treemap_img = Image.open("treemap_tmp.png").resize((2200, 2400), Image.Resampling.LANCZOS)
+combined.paste(treemap_img, (100, 250))
 
-# Load and paste sunburst (right) - adjusted y-position for larger title
-sunburst_img = Image.open("sunburst_temp.png")
-sunburst_img = sunburst_img.resize((2200, 2400), Image.Resampling.LANCZOS)
-combined.paste(sunburst_img, (2500, 220))
+sunburst_img = Image.open("sunburst_tmp.png").resize((2200, 2400), Image.Resampling.LANCZOS)
+combined.paste(sunburst_img, (2500, 250))
 
-# Save combined image
-combined.save("plot.png", "PNG")
+combined.save(f"plot-{THEME}.png", "PNG")
 
-# Clean up temporary files
-os.remove("treemap_temp.png")
-os.remove("sunburst_temp.png")
+os.remove("treemap_tmp.png")
+os.remove("sunburst_tmp.png")
