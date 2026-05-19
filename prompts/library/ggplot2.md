@@ -62,7 +62,7 @@ set.seed(42)
 p <- ggplot(df, aes(x = col_x, y = col_y)) +
   geom_point() +
   labs(x = x_label, y = y_label, title = plot_title) +
-  theme_minimal(base_size = 10)
+  theme_minimal(base_size = 8)
 ```
 
 ## Figure Size & Sizing for 3200×1800 px (starting values — review-loop tunes)
@@ -73,12 +73,12 @@ elements for the anyplot canvas:
 ```r
 p <- p +
   theme(
-    text             = element_text(size = 10),  # base text
-    axis.title       = element_text(size = 14),  # axis labels
-    axis.text        = element_text(size = 12),  # tick labels
-    plot.title       = element_text(size = 18),
-    legend.text      = element_text(size = 12),
-    legend.title     = element_text(size = 14)
+    text             = element_text(size = 8),   # base text
+    axis.title       = element_text(size = 12),  # axis labels
+    axis.text        = element_text(size = 10),  # tick labels
+    plot.title       = element_text(size = 14),  # kept compact for the long mandated title
+    legend.text      = element_text(size = 10),
+    legend.title     = element_text(size = 12)
   )
 
 # Element sizes inside geoms (~2-3× ggplot2 defaults, density-aware):
@@ -149,7 +149,7 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
-anyplot_theme <- theme_minimal(base_size = 10) +
+anyplot_theme <- theme_minimal(base_size = 8) +
   theme(
     plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background  = element_rect(fill = PAGE_BG, color = NA),
@@ -224,15 +224,15 @@ df <- tibble::tibble(
 p <- ggplot(df, aes(x, y)) +
   geom_point(color = OKABE_ITO[1], size = 2.5, alpha = 0.7) +
   labs(title = "scatter-basic · r · ggplot2 · anyplot.ai", x = "X", y = "Y") +
-  theme_minimal(base_size = 10) +
+  theme_minimal(base_size = 8) +
   theme(
     plot.background  = element_rect(fill = PAGE_BG, color = PAGE_BG),
     panel.background = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major = element_line(color = INK, linewidth = 0.3),
     panel.grid.minor = element_line(color = INK, linewidth = 0.2),
-    axis.title       = element_text(color = INK,      size = 14),
-    axis.text        = element_text(color = INK_SOFT, size = 12),
-    plot.title       = element_text(color = INK,      size = 18)
+    axis.title       = element_text(color = INK,      size = 12),
+    axis.text        = element_text(color = INK_SOFT, size = 10),
+    plot.title       = element_text(color = INK,      size = 14)
   )
 
 # --- Save -------------------------------------------------------------------

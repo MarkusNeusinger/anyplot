@@ -79,11 +79,11 @@ custom_style = Style(
     foreground_strong=INK,          # title
     foreground_subtle=INK_MUTED,    # tick labels, grid tone
     colors=OKABE_ITO,               # first series = brand green
-    title_font_size=22,
-    label_font_size=14,
-    major_label_font_size=14,
-    legend_font_size=14,
-    value_font_size=12,
+    title_font_size=18,             # kept compact for the long mandated title
+    label_font_size=12,
+    major_label_font_size=12,
+    legend_font_size=12,
+    value_font_size=10,
     stroke_width=2.5,
 )
 

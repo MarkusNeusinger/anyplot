@@ -23,9 +23,11 @@ fig = px.scatter(df, x='col_x', y='col_y')
 
 ```python
 fig.update_layout(
-    title=dict(text=title, font=dict(size=22)),
-    xaxis=dict(title=dict(text=x_label, font=dict(size=16)), tickfont=dict(size=14)),
-    yaxis=dict(title=dict(text=y_label, font=dict(size=16)), tickfont=dict(size=14)),
+    # Title kept compact — the long mandated "{spec-id} · python · plotly · anyplot.ai"
+    # title would overflow at 22+px on this canvas.
+    title=dict(text=title, font=dict(size=18)),
+    xaxis=dict(title=dict(text=x_label, font=dict(size=14)), tickfont=dict(size=12)),
+    yaxis=dict(title=dict(text=y_label, font=dict(size=14)), tickfont=dict(size=12)),
     template='plotly_white',
 )
 
