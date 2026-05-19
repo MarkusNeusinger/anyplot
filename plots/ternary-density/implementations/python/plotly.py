@@ -1,93 +1,109 @@
-""" pyplots.ai
+""" anyplot.ai
 ternary-density: Ternary Density Plot
-Library: plotly 6.5.1 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-11
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-19
 """
 
+import os
+import sys
+
+
+# Remove the script directory from sys.path so that sibling implementations
+# (e.g. matplotlib.py) do not shadow installed packages.
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _script_dir]
+
+import matplotlib
+
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 import numpy as np
 import plotly.graph_objects as go
+from scipy import ndimage
 from scipy.stats import gaussian_kde
 
 
-# Generate synthetic sediment composition data (sand/silt/clay)
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
-# Create clustered compositional data with 3 distinct modes
+# Data — synthetic sediment composition (sand/silt/clay)
+np.random.seed(42)
 n_samples = 500
 
-# Cluster 1: Sand-dominant samples (common in beaches/rivers)
-cluster1_a = np.random.beta(8, 2, n_samples // 3) * 70 + 25  # Sand: 25-95%
-cluster1_b = np.random.beta(2, 5, n_samples // 3) * 40  # Silt: 0-40%
+# Cluster 1: Sand-dominant samples (beaches/river channels)
+cluster1_a = np.random.beta(8, 2, n_samples // 3) * 70 + 25
+cluster1_b = np.random.beta(2, 5, n_samples // 3) * 40
 cluster1_c = 100 - cluster1_a - cluster1_b
 mask1 = cluster1_c >= 0
 cluster1_a, cluster1_b, cluster1_c = cluster1_a[mask1], cluster1_b[mask1], cluster1_c[mask1]
 
-# Cluster 2: Silt-dominant samples (common in floodplains)
-cluster2_b = np.random.beta(6, 2, n_samples // 3) * 60 + 30  # Silt: 30-90%
-cluster2_a = np.random.beta(2, 4, n_samples // 3) * 35  # Sand: 0-35%
+# Cluster 2: Silt-dominant samples (floodplains/estuaries)
+cluster2_b = np.random.beta(7, 2, n_samples // 3) * 55 + 35
+cluster2_a = np.random.beta(2, 5, n_samples // 3) * 30
 cluster2_c = 100 - cluster2_a - cluster2_b
 mask2 = cluster2_c >= 0
 cluster2_a, cluster2_b, cluster2_c = cluster2_a[mask2], cluster2_b[mask2], cluster2_c[mask2]
 
-# Cluster 3: Mixed samples (balanced composition)
-cluster3_a = np.random.beta(3, 3, n_samples // 3) * 50 + 20  # Sand: 20-70%
-cluster3_b = np.random.beta(3, 3, n_samples // 3) * 50 + 10  # Silt: 10-60%
-cluster3_c = 100 - cluster3_a - cluster3_b
-mask3 = cluster3_c >= 0
+# Cluster 3: Clay-dominant mixed samples (deep lake sediments)
+cluster3_c = np.random.beta(6, 2, n_samples // 3) * 50 + 30
+cluster3_a = np.random.beta(2, 4, n_samples // 3) * 35
+cluster3_b = 100 - cluster3_a - cluster3_c
+mask3 = cluster3_b >= 0
 cluster3_a, cluster3_b, cluster3_c = cluster3_a[mask3], cluster3_b[mask3], cluster3_c[mask3]
 
-# Combine all clusters
+# Combine clusters
 sand = np.concatenate([cluster1_a, cluster2_a, cluster3_a])
 silt = np.concatenate([cluster1_b, cluster2_b, cluster3_b])
 clay = np.concatenate([cluster1_c, cluster2_c, cluster3_c])
 
-# Normalize to ensure sum = 100
+# Normalize to sum = 100
 total = sand + silt + clay
 sand = sand / total * 100
 silt = silt / total * 100
 clay = clay / total * 100
 
-# Convert ternary coordinates to Cartesian for KDE
-# Using standard ternary to Cartesian transformation
+# Convert ternary → Cartesian for KDE
 x_cart = 0.5 * (2 * silt + clay) / 100
 y_cart = (np.sqrt(3) / 2) * clay / 100
 
-# Perform 2D kernel density estimation
+# 2D kernel density estimation
 coords = np.vstack([x_cart, y_cart])
 kde = gaussian_kde(coords, bw_method="scott")
 
-# Create grid for density estimation (in Cartesian space)
+# Evaluation grid (Cartesian space)
 grid_size = 100
 x_grid = np.linspace(0, 1, grid_size)
 y_grid = np.linspace(0, np.sqrt(3) / 2, grid_size)
 xx, yy = np.meshgrid(x_grid, y_grid)
 grid_coords = np.vstack([xx.ravel(), yy.ravel()])
 
-# Evaluate KDE on grid
 density = kde(grid_coords).reshape(xx.shape)
 
-# Mask points outside the triangle
-# Point is inside triangle if: y >= 0, y <= sqrt(3)*x, y <= sqrt(3)*(1-x)
+# Mask outside the ternary triangle
 inside_triangle = (yy >= 0) & (yy <= np.sqrt(3) * xx) & (yy <= np.sqrt(3) * (1 - xx))
 density[~inside_triangle] = np.nan
 
-# Convert grid back to ternary coordinates for plotting
-# Inverse transformation: clay = y * 2/sqrt(3) * 100, silt = (x - clay/200) * 100
+# Back to ternary coordinates for plotting
 clay_grid = yy * (2 / np.sqrt(3)) * 100
 silt_grid = (xx - clay_grid / 200) * 100
 sand_grid = 100 - silt_grid - clay_grid
 
-# Create figure with ternary axes
+# Plot
 fig = go.Figure()
 
-# Add density heatmap using scatterternary with colored markers
+# Density layer — Viridis-colored scatter markers
 valid_mask = inside_triangle & ~np.isnan(density)
 a_flat = sand_grid[valid_mask]
 b_flat = silt_grid[valid_mask]
 c_flat = clay_grid[valid_mask]
 d_flat = density[valid_mask]
 
-# Add filled contours as a scatter ternary with colorscale
 fig.add_trace(
     go.Scatterternary(
         a=a_flat,
@@ -100,90 +116,107 @@ fig.add_trace(
             "colorscale": "Viridis",
             "showscale": True,
             "colorbar": {
-                "title": {"text": "Density", "font": {"size": 20}},
-                "tickfont": {"size": 16},
+                "title": {"text": "Density", "font": {"size": 20, "color": INK}},
+                "tickfont": {"size": 16, "color": INK_SOFT},
                 "len": 0.7,
                 "thickness": 25,
                 "x": 1.02,
+                "bgcolor": ELEVATED_BG,
+                "bordercolor": INK_SOFT,
+                "borderwidth": 1,
             },
-            "opacity": 0.8,
+            "opacity": 0.85,
         },
         hovertemplate="Sand: %{a:.1f}%<br>Silt: %{b:.1f}%<br>Clay: %{c:.1f}%<extra></extra>",
         showlegend=False,
     )
 )
 
-# Add contour lines for key density levels
-contour_levels = np.percentile(d_flat, [25, 50, 75, 90])
-for level in contour_levels:
-    # Find points near this density level
-    level_mask = np.abs(density - level) < (np.nanmax(density) - np.nanmin(density)) * 0.02
-    level_mask = level_mask & valid_mask
-    if np.sum(level_mask) > 10:
-        # Sort points by angle from centroid for contour line
-        a_level = sand_grid[level_mask]
-        b_level = silt_grid[level_mask]
-        c_level = clay_grid[level_mask]
+# Smooth density for clean contour extraction
+density_filled = density.copy()
+density_filled[np.isnan(density_filled)] = 0
+smoothed = ndimage.gaussian_filter(density_filled, sigma=2)
 
-        # Convert to Cartesian, compute angles, sort
-        x_level = 0.5 * (2 * b_level + c_level) / 100
-        y_level = (np.sqrt(3) / 2) * c_level / 100
-        cx, cy = np.mean(x_level), np.mean(y_level)
-        angles = np.arctan2(y_level - cy, x_level - cx)
-        sort_idx = np.argsort(angles)
+# Contour levels from smoothed valid region
+smoothed_valid_vals = smoothed[inside_triangle]
+contour_levels = np.percentile(smoothed_valid_vals[smoothed_valid_vals > 0], [25, 50, 75, 90])
 
-        fig.add_trace(
-            go.Scatterternary(
-                a=np.append(a_level[sort_idx], a_level[sort_idx][0]),
-                b=np.append(b_level[sort_idx], b_level[sort_idx][0]),
-                c=np.append(c_level[sort_idx], c_level[sort_idx][0]),
-                mode="lines",
-                line={"color": "rgba(255, 255, 255, 0.6)", "width": 2},
-                hoverinfo="skip",
-                showlegend=False,
+# Extract smooth contour paths via matplotlib (data extraction only, no display)
+fig_tmp, ax_tmp = plt.subplots()
+CS = ax_tmp.contour(xx, yy, smoothed, levels=contour_levels)
+plt.close(fig_tmp)
+
+contour_color = "rgba(255,255,255,0.85)" if THEME == "light" else "rgba(240,239,232,0.85)"
+for segs in CS.allsegs:
+    for seg in segs:
+        if len(seg) < 5:
+            continue
+        x_c, y_c = seg[:, 0], seg[:, 1]
+        # Cartesian → ternary
+        clay_c = y_c * (2 / np.sqrt(3)) * 100
+        silt_c = (x_c - clay_c / 200) * 100
+        sand_c = 100 - silt_c - clay_c
+        # Filter to valid ternary region
+        valid = (sand_c >= 0) & (silt_c >= 0) & (clay_c >= 0)
+        if valid.sum() > 5:
+            fig.add_trace(
+                go.Scatterternary(
+                    a=sand_c[valid],
+                    b=silt_c[valid],
+                    c=clay_c[valid],
+                    mode="lines",
+                    line={"color": contour_color, "width": 2.5},
+                    hoverinfo="skip",
+                    showlegend=False,
+                )
             )
-        )
 
-# Update layout for ternary plot
+# Style
 fig.update_layout(
     title={
-        "text": "Sediment Composition Distribution · ternary-density · plotly · pyplots.ai",
-        "font": {"size": 28},
+        "text": "Sediment Composition Distribution · ternary-density · python · plotly · anyplot.ai",
+        "font": {"size": 28, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     ternary={
         "sum": 100,
+        "bgcolor": PAGE_BG,
         "aaxis": {
-            "title": {"text": "Sand (%)", "font": {"size": 22}},
-            "tickfont": {"size": 16},
+            "title": {"text": "Sand (%)", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 16, "color": INK_SOFT},
             "tickangle": 0,
             "dtick": 20,
-            "gridcolor": "rgba(0, 0, 0, 0.15)",
+            "gridcolor": GRID,
+            "linecolor": INK_SOFT,
             "linewidth": 2,
         },
         "baxis": {
-            "title": {"text": "Silt (%)", "font": {"size": 22}},
-            "tickfont": {"size": 16},
+            "title": {"text": "Silt (%)", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 16, "color": INK_SOFT},
             "tickangle": 45,
             "dtick": 20,
-            "gridcolor": "rgba(0, 0, 0, 0.15)",
+            "gridcolor": GRID,
+            "linecolor": INK_SOFT,
             "linewidth": 2,
         },
         "caxis": {
-            "title": {"text": "Clay (%)", "font": {"size": 22}},
-            "tickfont": {"size": 16},
+            "title": {"text": "Clay (%)", "font": {"size": 22, "color": INK}},
+            "tickfont": {"size": 16, "color": INK_SOFT},
             "tickangle": -45,
             "dtick": 20,
-            "gridcolor": "rgba(0, 0, 0, 0.15)",
+            "gridcolor": GRID,
+            "linecolor": INK_SOFT,
             "linewidth": 2,
         },
-        "bgcolor": "rgba(255, 255, 255, 1)",
     },
-    template="plotly_white",
+    template="none",
     margin={"l": 80, "r": 120, "t": 100, "b": 80},
 )
 
-# Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=1600, height=900, scale=3)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
