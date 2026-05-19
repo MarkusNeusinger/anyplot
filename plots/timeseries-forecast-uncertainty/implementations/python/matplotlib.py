@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
-Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 93/100 | Updated: 2026-05-19
+Library: matplotlib | Python 3.13
+Quality: pending | Updated: 2026-05-19
 """
 
 import os
@@ -19,14 +19,13 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Okabe-Ito palette — positions 1, 2, 6
-HISTORICAL_COLOR = "#009E73"  # Position 1: brand green
-FORECAST_COLOR = "#D55E00"  # Position 2: vermillion
-CI_COLOR = "#56B4E9"  # Position 6: sky blue (for CI bands)
+# Okabe-Ito — pos 1 (historical), pos 2 (forecast), pos 6 (CI bands)
+HISTORICAL_COLOR = "#009E73"
+FORECAST_COLOR = "#D55E00"
+CI_COLOR = "#56B4E9"
 
-# Data - Monthly retail sales with ARIMA-style forecast
+# Data — monthly retail sales, 3-year history + 12-month ARIMA-style forecast
 np.random.seed(42)
-
 n_historical = 36
 n_forecast = 12
 overlap = 1
@@ -34,22 +33,18 @@ n_total = n_historical + n_forecast - overlap
 
 dates = pd.date_range(start="2022-01-01", periods=n_total, freq="MS")
 
-# Historical: trend + seasonality + noise
 t = np.arange(n_historical)
 trend = 100 + t * 1.2
 seasonality = 15 * np.sin(2 * np.pi * t / 12)
 noise = np.random.normal(0, 5, n_historical)
 actual = trend + seasonality + noise
 
-# Forecast: continuation from last historical point
 forecast_start_idx = n_historical - overlap
-forecast_start = actual[forecast_start_idx]
 t_forecast = np.arange(n_forecast)
-forecast_trend = forecast_start + t_forecast * 1.2
+forecast_trend = actual[forecast_start_idx] + t_forecast * 1.2
 forecast_seasonality = 15 * np.sin(2 * np.pi * (t[-1] - overlap + 1 + t_forecast) / 12)
 forecast_values = forecast_trend + forecast_seasonality
 
-# Confidence intervals that widen with forecast horizon (sqrt fan-out)
 uncertainty_growth = np.sqrt(1 + t_forecast * 0.5)
 base_std = 8
 lower_80 = forecast_values - 1.28 * base_std * uncertainty_growth
@@ -61,49 +56,62 @@ historical_dates = dates[:n_historical]
 forecast_dates = dates[forecast_start_idx:]
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 ax.set_axisbelow(True)
 
-# Subtle background tint for forecast region
+# Subtle forecast region tint
 ax.axvspan(forecast_dates[0], forecast_dates[-1], color=INK, alpha=0.03, zorder=0)
 
-# Confidence bands (wider outer band first so narrower sits on top)
-ax.fill_between(forecast_dates, lower_95, upper_95, color=CI_COLOR, alpha=0.20, label="95% Confidence Interval")
-ax.fill_between(forecast_dates, lower_80, upper_80, color=CI_COLOR, alpha=0.30, label="80% Confidence Interval")
+# CI bands — outer 95% first, then 80% sits on top (correct nesting)
+fill_95 = ax.fill_between(forecast_dates, lower_95, upper_95, color=CI_COLOR, alpha=0.20, zorder=1, label="95% CI")
+fill_80 = ax.fill_between(forecast_dates, lower_80, upper_80, color=CI_COLOR, alpha=0.30, zorder=2, label="80% CI")
 
 # Historical solid line
-ax.plot(historical_dates, actual, color=HISTORICAL_COLOR, linewidth=3, label="Historical Data", solid_capstyle="round")
+(hist_line,) = ax.plot(
+    historical_dates,
+    actual,
+    color=HISTORICAL_COLOR,
+    linewidth=2.5,
+    solid_capstyle="round",
+    zorder=4,
+    label="Historical Data",
+)
 
 # Forecast dashed line
-ax.plot(
+(fc_line,) = ax.plot(
     forecast_dates,
     forecast_values,
     color=FORECAST_COLOR,
-    linewidth=3,
+    linewidth=2.5,
     linestyle="--",
-    label="Forecast",
     solid_capstyle="round",
     dash_capstyle="round",
+    zorder=4,
+    label="Forecast",
 )
 
-# Dotted vertical marker at forecast start
-ax.axvline(x=forecast_dates[0], color=INK_SOFT, linewidth=1.5, linestyle=":", alpha=0.7, label="Forecast Start")
+# Forecast start vertical marker
+ax.axvline(x=forecast_dates[0], color=INK_SOFT, linewidth=1.2, linestyle=":", alpha=0.8, zorder=3)
+
+# Focal-point text label at the forecast boundary
+y_max = max(actual.max(), upper_95.max()) + 12
+ax.text(forecast_dates[0], y_max, "Forecast →", color=INK_MUTED, fontsize=8, va="top", ha="left", fontstyle="italic")
 
 # Style
-ax.set_xlabel("Date", fontsize=20, color=INK)
-ax.set_ylabel("Monthly Sales (thousands)", fontsize=20, color=INK)
+ax.set_xlabel("Date", fontsize=14, color=INK)
+ax.set_ylabel("Monthly Sales (thousands)", fontsize=14, color=INK)
 ax.set_title(
-    "timeseries-forecast-uncertainty · python · matplotlib · anyplot.ai", fontsize=24, fontweight="medium", color=INK
+    "timeseries-forecast-uncertainty · python · matplotlib · anyplot.ai", fontsize=18, fontweight="medium", color=INK
 )
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.tick_params(axis="both", labelsize=12, colors=INK_SOFT)
 
-# Date axis: semi-annual major ticks, readable labels
+# Date axis — semi-annual major ticks
 tick_dates = pd.date_range(start=dates[0], end=dates[-1], freq="6MS")
 ax.set_xticks(tick_dates)
 ax.set_xticklabels([d.strftime("%b %Y") for d in tick_dates], rotation=30, ha="right")
 
-# Grid (y-axis only, very subtle)
+# Grid — y-axis only, very subtle
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 # Spines
@@ -112,17 +120,19 @@ for spine in ("top", "right"):
 for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 
-# Legend — outside plot area, bottom-left
-leg = ax.legend(fontsize=16, loc="lower left", framealpha=0.95, bbox_to_anchor=(0, -0.15))
+# Y-axis limits with room for the "Forecast →" label
+y_min = min(actual.min(), lower_95.min()) - 10
+ax.set_ylim(y_min, y_max + 5)
+
+# Legend — correct order: Historical, Forecast, Forecast Start, 80% CI, 95% CI
+fc_start_proxy = plt.Line2D([0], [0], color=INK_SOFT, linestyle=":", linewidth=1.2, label="Forecast Start")
+leg = ax.legend(
+    handles=[hist_line, fc_line, fc_start_proxy, fill_80, fill_95], fontsize=12, loc="upper left", framealpha=0.95
+)
 if leg:
     leg.get_frame().set_facecolor(ELEVATED_BG)
     leg.get_frame().set_edgecolor(INK_SOFT)
     plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Y-axis limits with breathing room
-y_min = min(actual.min(), lower_95.min()) - 10
-y_max = max(actual.max(), upper_95.max()) + 10
-ax.set_ylim(y_min, y_max)
-
 plt.tight_layout()
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
