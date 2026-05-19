@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-19
@@ -25,6 +25,10 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 COLOR_HISTORICAL = OKABE_ITO[0]
 COLOR_FORECAST = OKABE_ITO[1]
+
+# Higher alpha in dark mode — orange over near-black otherwise looks brownish
+ALPHA_95 = 0.30 if THEME == "dark" else 0.22
+ALPHA_80 = 0.42 if THEME == "dark" else 0.30
 
 np.random.seed(42)
 
@@ -88,9 +92,12 @@ sns.set_theme(
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Confidence interval bands (95% lightest, 80% more opaque — nested)
-ax.fill_between(df_wide["date"], df_wide["lower_95"], df_wide["upper_95"], alpha=0.22, color=COLOR_FORECAST)
-ax.fill_between(df_wide["date"], df_wide["lower_80"], df_wide["upper_80"], alpha=0.28, color=COLOR_FORECAST)
+# Subtle forecast-region shading to visually separate forecast from history
+ax.axvspan(dates[n_historical - 1], dates[-1], alpha=0.04, color=INK, zorder=0)
+
+# Confidence interval bands (95% outermost/lightest, 80% inner/more opaque — nested)
+ax.fill_between(df_wide["date"], df_wide["lower_95"], df_wide["upper_95"], alpha=ALPHA_95, color=COLOR_FORECAST)
+ax.fill_between(df_wide["date"], df_wide["lower_80"], df_wide["upper_80"], alpha=ALPHA_80, color=COLOR_FORECAST)
 
 # Seaborn lineplot — idiomatic long-form API with hue + style + dashes
 sns.lineplot(
@@ -118,10 +125,10 @@ ax.text(
     va="top",
 )
 
-# Style
+# Style — title at 11pt, axes at 10pt for clear typographic hierarchy
 ax.set_title(
-    "Stock Price Forecast · timeseries-forecast-uncertainty · python · seaborn · anyplot.ai",
-    fontsize=10,
+    "timeseries-forecast-uncertainty · python · seaborn · anyplot.ai",
+    fontsize=11,
     fontweight="medium",
     color=INK,
     pad=8,
@@ -141,8 +148,8 @@ ax.set_axisbelow(True)
 legend_elements = [
     Line2D([0], [0], color=COLOR_HISTORICAL, linewidth=3, label="Historical"),
     Line2D([0], [0], color=COLOR_FORECAST, linewidth=3, linestyle=(0, (6, 2)), label="Forecast"),
-    Patch(facecolor=COLOR_FORECAST, alpha=0.28, label="80% Confidence"),
-    Patch(facecolor=COLOR_FORECAST, alpha=0.15, label="95% Confidence"),
+    Patch(facecolor=COLOR_FORECAST, alpha=ALPHA_80, label="80% Confidence"),
+    Patch(facecolor=COLOR_FORECAST, alpha=ALPHA_95, label="95% Confidence"),
 ]
 ax.legend(handles=legend_elements, fontsize=8, loc="upper left", framealpha=1.0, fancybox=False, edgecolor=INK_SOFT)
 
