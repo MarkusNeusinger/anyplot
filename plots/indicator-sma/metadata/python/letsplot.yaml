@@ -1,152 +1,190 @@
 library: letsplot
+language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:19:40Z'
-updated: '2026-01-11T00:27:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886563249
+updated: '2026-05-19T01:05:32Z'
+generated_by: claude-sonnet
+workflow_run: 26069024724
 issue: 3651
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/letsplot/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of lets-plot ggplot2-style grammar with proper layering
-  - Clean data transformation using pandas melt for long-format plotting
-  - Good color scheme with Python Blue (#306998) for close price
-  - Proper scaling (scale=3) for 4800x2700 output
-  - HTML export included for interactive viewing
+  - 'Correct Okabe-Ito palette order with Close as #009E73 first series'
+  - Line weight hierarchy (Close at size=2.0, SMAs at size=1.3) creates clear visual
+    prominence for the price series
+  - Full theme-adaptive chrome — all text, backgrounds, and grid colors correctly
+    use light/dark tokens
+  - Informative subtitle referencing golden/death cross signals adds domain context
+  - Clean use of pd.melt + data subsetting to apply different line weights per series
+    in letsplot
+  - Both PNG and HTML outputs saved; proper ggsave with scale=3 for 4800x2700 canvas
+  - Y-axis-only grid with X-axis blank keeps the chart clean for time-series readability
+  - 300 business-day periods with rolling() calculations correctly produce initial
+    NaN gaps for SMA 50 and SMA 200
   weaknesses:
-  - Grid lines on Y-axis not visible as spec requires
-  - Title uses letsplot instead of lets-plot (minor)
+  - Design Excellence is functional but not exceptional — DE-01 uses default theme_minimal
+    with modest customisation beyond palette and subtitle; no annotation markers for
+    crossover events or notable price levels that would elevate the storytelling
+  - 'DE-02 visual refinement is solid but light: spines managed by theme_minimal rather
+    than explicit removal; legend frame present but otherwise no additional polish
+    (e.g. tick mark removal, axis line weight tuning)'
+  - LM-02 under-uses letsplot-distinctive capabilities — the HTML export is there
+    but interactive tooltips or hover features native to letsplot could make the SMA
+    chart significantly more useful
   image_description: |-
-    The plot displays a Simple Moving Average (SMA) chart with time series data spanning approximately January 2024 to March 2025. The chart shows four lines:
-    - Close price (blue, #306998) - the main price line with high volatility, showing fluctuations between ~85 and ~114 USD
-    - SMA 20 (yellow, #FFD43B) - 20-period moving average, closely tracking price movements
-    - SMA 50 (green, #22C55E) - 50-period moving average, showing a smoother trend starting around March
-    - SMA 200 (red, #DC2626) - 200-period moving average, appearing only after ~October as a very smooth line
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface colour, no pure white
+      Chrome: Title "indicator-sma · python · letsplot · anyplot.ai" in dark ink, clearly readable. Subtitle in softer dark ink, readable. Axis labels "Date" and "Price (USD)" in dark ink with correct sizing. Tick labels (Jan '24 … Mar '25 on x; 86–114 on y) rendered in INK_SOFT — all legible.
+      Data: Four lines — Close (#009E73, bold green, thicker), SMA 20 (#D55E00, orange), SMA 50 (#0072B2, blue), SMA 200 (#CC79A7, pink). SMA 200 starts mid-chart as expected due to 200-day window. All lines clearly distinguishable from the off-white background. Legend box with slightly elevated fill, positioned at right, readable.
+      Grid: Subtle horizontal y-axis grid lines only; no x-axis grid. Grid does not compete with data.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
-    The title "indicator-sma · letsplot · pyplots.ai" is displayed at the top. X-axis shows dates labeled by month (Jan-Mar), Y-axis shows "Price (USD)" ranging from 84-114. A legend titled "Series" is positioned on the right side with colored lines for each series. The plot uses a minimal theme with clean white background and subtle grid lines.
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title and subtitle rendered in light ink (#F0EFE8 / #B8B7B0 tokens) against the dark background — clearly readable. Axis labels and tick labels similarly light, no dark-on-dark failures. Legend box uses elevated dark fill #242420 with light text — readable.
+      Data: All four line colours are identical to the light render — Close #009E73, SMA 20 #D55E00, SMA 50 #0072B2, SMA 200 #CC79A7. Line weights and positions unchanged. No data-colour shift between themes.
+      Grid: Subtle horizontal y-axis grid in GRID_COLOR token (#484844 dark) — visible but not dominant.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size with appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or graphical elements; legend is well-positioned
-          outside the plot area
+        comment: All text readable in both themes; correct DPI-based sizes (title=24,
+          axis=20, ticks=16, legend=16)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element collisions; legend placed cleanly at right
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line widths are good but could be slightly thicker for better distinction
-          at high resolution
+        comment: All four lines visible; SMA 200 pink line is slightly thin relative
+          to canvas but remains readable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colors are distinct and colorblind-friendly; blue, yellow, green,
-          red palette provides good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills the canvas well with balanced margins; legend positioned
-          nicely
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Price (USD) with units, X-axis has Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito CVD-safe palette; adequate contrast across all themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 1600x900 base at scale=3 yields 4800x2700; good proportions, nothing
+          clipped
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid lines not visible; spec requests y-axis grid lines for price
-          readability
+        passed: true
+        comment: Title matches spec format; axes labelled 'Date' and 'Price (USD)'
+          with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Close=#009E73; full Okabe-Ito order; backgrounds #FAF8F1
+          light / #1A1A17 dark'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: intentional line weight hierarchy and informative
+          subtitle; not exceptional — no crossover annotations or additional focal-point
+          design'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default: y-axis-only grid, x-axis grid blanked, legend styled;
+          spines handled via theme_minimal rather than explicitly; minimal further
+          polish'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default: line hierarchy directs eye to Close; subtitle mentions
+          golden/death cross; no annotation markers for actual crossover events'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line chart with multiple SMA overlays
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X-axis, price/SMA values on Y-axis correctly mapped
-      - id: SC-03
+        comment: Correct multi-line time-series with SMA overlays
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has all 4 series with distinct colors and legend; missing explicit
-          y-axis grid lines
-      - id: SC-04
-        name: Data Range
+        comment: Close + SMA 20, SMA 50, SMA 200 all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X, price on Y; 300 business-day periods within 250-500 spec
+          range; initial NaN gaps visible for longer SMAs
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows SMA 20, SMA 50, SMA 200 as required
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses spec-id · library · pyplots.ai format but library shows letsplot
-          not lets-plot
+        comment: Title 'indicator-sma · python · letsplot · anyplot.ai' matches required
+          format; legend labels Close/SMA 20/SMA 50/SMA 200
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows price volatility, all three SMA periods with different smoothing
-          behaviors, demonstrates crossover potential
+        comment: All four series shown; rolling windows correctly produce initial
+          gaps; visual hierarchy between Close and SMAs
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price scenario with realistic daily returns and price movements
+        comment: Synthetic stock price with realistic drift+volatility parameters;
+          neutral (no real company); Jan 2024–Mar 2025
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price starting at 100 with realistic fluctuations; 300 periods covers
-          1+ year of trading days
+        comment: Price range ~86–115; business-day frequency; normal(0.0005, 0.015)
+          returns are realistic
     code_quality:
       score: 10
       max: 10
@@ -156,42 +194,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure with no functions/classes
+        comment: No functions or classes; clean procedural flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no unused symbols
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current lets-plot API
+        comment: Data subsetting for per-series line weights is a clean pattern; no
+          fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: ggsave to plot-{THEME}.png (scale=3) and plot-{THEME}.html; no bare
+          plot.png
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses ggplot grammar, scale_x_datetime, theme_minimal, ggsave with
-          scale parameter; could leverage more interactive features
+        comment: Proper grammar-of-graphics layering; scale_color_manual; scale_x_datetime
+          with format; theme composition
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export present; data-subsetting trick for variable line weights
+          is letsplot-friendly; interactive hover features native to letsplot not
+          leveraged
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -202,6 +250,6 @@ impl_tags:
   - data-generation
   - wide-to-long
   dataprep:
-  - rolling-window
   - time-series
+  - rolling-window
   styling: []
