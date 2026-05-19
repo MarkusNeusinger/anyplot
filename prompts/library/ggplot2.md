@@ -73,12 +73,12 @@ elements for the anyplot canvas:
 ```r
 p <- p +
   theme(
-    text             = element_text(size = 8),   # base text
-    axis.title       = element_text(size = 12),  # axis labels
-    axis.text        = element_text(size = 10),  # tick labels
-    plot.title       = element_text(size = 14),  # kept compact for the long mandated title
-    legend.text      = element_text(size = 10),
-    legend.title     = element_text(size = 12)
+    text             = element_text(size = 7),   # base text
+    axis.title       = element_text(size = 10),  # axis labels
+    axis.text        = element_text(size = 8),   # tick labels
+    plot.title       = element_text(size = 12),  # kept compact for the long mandated title
+    legend.text      = element_text(size = 8),
+    legend.title     = element_text(size = 10)
   )
 
 # Element sizes inside geoms (~2-3× ggplot2 defaults, density-aware):
@@ -230,9 +230,9 @@ p <- ggplot(df, aes(x, y)) +
     panel.background = element_rect(fill = PAGE_BG, color = NA),
     panel.grid.major = element_line(color = INK, linewidth = 0.3),
     panel.grid.minor = element_line(color = INK, linewidth = 0.2),
-    axis.title       = element_text(color = INK,      size = 12),
-    axis.text        = element_text(color = INK_SOFT, size = 10),
-    plot.title       = element_text(color = INK,      size = 14)
+    axis.title       = element_text(color = INK,      size = 10),
+    axis.text        = element_text(color = INK_SOFT, size = 8),
+    plot.title       = element_text(color = INK,      size = 12)
   )
 
 # --- Save -------------------------------------------------------------------
