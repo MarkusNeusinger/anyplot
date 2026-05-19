@@ -6,7 +6,7 @@ title: Simple Moving Average (SMA) Indicator Chart
 
 # Specification tracking
 created: 2026-01-11T00:09:18Z
-updated: null
+updated: 2026-05-19T07:52:43Z
 issue: 3651
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - indicator
   data_type:
     - timeseries
     - numeric
@@ -26,3 +25,4 @@ tags:
     - multi
     - overlay
     - trend
+    - technical-analysis
