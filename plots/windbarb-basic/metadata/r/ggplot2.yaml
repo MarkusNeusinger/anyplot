@@ -1,0 +1,231 @@
+library: ggplot2
+language: r
+specification_id: windbarb-basic
+created: '2026-05-19T06:53:51Z'
+updated: '2026-05-19T07:16:18Z'
+generated_by: claude-sonnet
+workflow_run: 26080956260
+issue: 3694
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Full meteorological wind barb geometry implemented from scratch with correct NH
+    convention (staff, half barbs, full barbs, pennants, calm circles)
+  - Physically realistic Rankine vortex model produces a plausible cyclone wind field
+    with counterclockwise circulation, realistic speed range, and proper geographic
+    context
+  - 'Theme adaptation is complete and correct: all chrome tokens threaded through
+    to every text element, backgrounds match target surfaces, data color identical
+    across both renders'
+  weaknesses:
+  - library(dplyr) is imported but never used — remove unused import
+  - Plot title is 22pt instead of the 24pt guideline for the high-resolution canvas
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Surface Winds · windbarb-basic · r · ggplot2 · anyplot.ai" bold dark (#1A1A17), subtitle muted gray, axis labels "Longitude"/"Latitude" dark, tick labels with degree notation (80°W, 40°N etc.) in INK_SOFT — all clearly readable
+      Data: All barbs rendered in #009E73 (brand green); staffs, full barbs, half barbs, and pennant triangles all visible; counterclockwise cyclone pattern evident; "L" annotation marks low-pressure center in dark ink; station dots visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark surface
+      Chrome: Title and axis labels adapt to near-white (#F0EFE8), tick labels to #B8B7B0 (INK_SOFT dark), subtitle to muted token — all clearly readable against dark background; no dark-on-dark text failures detected; "L" marker adapts to INK token (near-white), visible; legend box uses dark elevated background with light text
+      Data: Barb colors identical to light render (#009E73) — only chrome flips between themes; all wind barb elements (staffs, feathers, pennants) remain clearly distinguishable from dark background
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; title 22pt slightly below 24pt guideline
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Good spacing; minor crowding near cyclone center high-speed zone
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All barb elements clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single Okabe-Ito color, CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good utilization; legend box partially overlaps SE-corner barbs
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with degree notation
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 sole data color; correct FAF8F1/1A1A17 backgrounds; full
+          token chain'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom barb geometry from scratch; clean single-color scientific
+          aesthetic; well above configured-default level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Minor grid suppressed, subtle major grid, L-frame axis, generous
+          margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: L annotation creates focal point; cyclone pattern immediately evident;
+          barb legend explains notation
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Full meteorological wind barb chart with all barb types
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Staff, half barb, full barb, pennant, calm circle; NH convention
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: x=longitude, y=latitude; u/v components; 63 stations in range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Surface Winds · windbarb-basic · r · ggplot2 · anyplot.ai — correct
+          format
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: All barb types shown across speed range; calm to pennant-speed winds
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Rankine vortex over eastern North America; correct NH cyclone physics;
+          neutral topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 0-55 knot range plausible; 63 stations in spec range; geographic
+          extent appropriate
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: One helper function make_barb_geometry() — justified by meteorological
+          geometry complexity
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: library(dplyr) imported but not used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean structure; Rankine vortex correct; no fake functionality
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot-{THEME}.png via ragg::agg_png
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layered geoms, scale_*_continuous, coord_cartesian, labs, theme chain
+          — very idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative layered geom combination (point+segment+polygon) with group-aesthetic
+          pennants
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - grid-styling
