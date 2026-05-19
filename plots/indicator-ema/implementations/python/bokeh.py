@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-11
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 74/100 | Updated: 2026-05-19
 """
 
 import numpy as np
