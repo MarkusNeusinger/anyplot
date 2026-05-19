@@ -54,7 +54,10 @@ ax.set_title(title, fontsize=14, fontweight='medium')
 ax.set_xlabel(x_label, fontsize=12)
 ax.set_ylabel(y_label, fontsize=12)
 ax.tick_params(axis='both', labelsize=10)
-ax.legend(fontsize=10)
+# Legend at 10pt — skip ax.legend() for single-series plots (avoids the
+# "No artists with labels found to put in legend" warning)
+if len(ax.get_legend_handles_labels()[0]) > 1:
+    ax.legend(fontsize=10)
 
 # Element sizes
 ax.scatter(x, y, s=100, edgecolors='white', linewidth=0.5)  # s=60-150 (density-aware)

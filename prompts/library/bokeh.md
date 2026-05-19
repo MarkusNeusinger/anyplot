@@ -96,6 +96,10 @@ p.yaxis.axis_label_text_font_size = '14pt'
 p.xaxis.major_label_text_font_size = '12pt'
 p.yaxis.major_label_text_font_size = '12pt'
 
+# Legend text — apply only when a legend is present
+# (set legend_label= on glyphs or configure p.legend after add_layout)
+# p.legend.label_text_font_size = '12pt'
+
 # Element sizes (density-aware — see default-style-guide.md)
 p.scatter(..., size=10)        # ~2-3x default
 p.line(..., line_width=2.5)

@@ -152,7 +152,7 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 6. **X-axis labels cut off in PNG**: Category labels may be clipped at the bottom. Fix by:
    - Increase bottom margin: `chart.options.chart = {'marginBottom': 100, ...}`
    - Or add spacingBottom: `chart.options.chart = {'spacingBottom': 60, ...}`
-   - Ensure labels have `style: {'fontSize': '14px'}` for visibility at 3200x1800
+   - Default `style: {'fontSize': '12px'}` per the new 3200×1800 sizing. If still clipped after the margin fixes, bump to `'14px'` for that specific case — but keep all other label fontsizes at 12px for cross-axis balance.
 
 ## Colors
 

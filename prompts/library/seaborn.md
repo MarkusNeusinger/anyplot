@@ -52,6 +52,9 @@ ax.set_title(title, fontsize=14, fontweight='medium')
 ax.set_xlabel(x_label, fontsize=12)
 ax.set_ylabel(y_label, fontsize=12)
 ax.tick_params(axis='both', labelsize=10)
+# Legend at 10pt — skip for single-series plots (no labeled artists → warning)
+if len(ax.get_legend_handles_labels()[0]) > 1:
+    ax.legend(fontsize=10)
 
 # Or use sns.set_context for global scaling
 sns.set_context("notebook", font_scale=1.0)

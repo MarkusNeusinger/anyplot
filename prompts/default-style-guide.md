@@ -183,12 +183,12 @@ Three library families with different sizing controls:
 |---------|--------------------------------------------|------------------------------------------|------------------------------------------|
 | Canvas (16:9) | `figsize=(8, 4.5)` `dpi=400` | `width=800 height=450 scale=4` | `width=3200 height=1800` |
 | Canvas (1:1) | `figsize=(6, 6)` `dpi=400` | `width=600 height=600 scale=4` | `width=2400 height=2400` |
-| Title | 14pt | 18px | '18pt' |
-| Axis labels | 12pt | 14px | '14pt' |
-| Tick labels | 10pt | 12px | '12pt' |
-| Legend | 10pt | 12px | '12pt' |
+| Title | 14pt | 18px | bokeh `'18pt'`; highcharts `'18px'`; pygal `18` |
+| Axis labels | 12pt | 14px | bokeh `'14pt'`; highcharts `'14px'`; pygal `14` |
+| Tick labels | 10pt | 12px | bokeh `'12pt'`; highcharts `'12px'`; pygal `12` |
+| Legend | 10pt | 12px | bokeh `'12pt'`; highcharts `'12px'`; pygal `12` |
 
-All three families produce the same 3200×1800 (or 2400×2400) output, so text pixel sizes are comparable across libraries.
+All three families produce the same 3200×1800 (or 2400×2400) output, so text pixel sizes are comparable across libraries. The Native-pixel column uses each library's own unit convention — bokeh uses `pt` strings, highcharts uses `px` strings (because it goes through CSS in the rendered HTML), pygal uses unitless integers — see each library's prompt for the exact API.
 
 **Marker and line sizes** vary by library API and aren't directly comparable as a single number — matplotlib's `s=` is in points², plotly's `marker.size` is a pixel diameter, altair's `mark_point(size=...)` is an area, plotnine / lets-plot / ggplot2's `geom_point(size=...)` uses a smaller ggplot scale. See each library's own prompt (`prompts/library/<lib>.md` → "Sizing" section) for the canonical starting values, and adapt to data density per the heuristic below.
 
