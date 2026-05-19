@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:28:14Z'
-updated: '2026-05-19T21:22:08Z'
+updated: '2026-05-19T21:39:03Z'
 generated_by: claude-sonnet
 workflow_run: 26125378350
 issue: 3188
@@ -12,40 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Solid Okabe-Ito palette with correct first-series green (#009E73) and full theme-adaptive
-    chrome in both renders.
-  - Nested 80%/95% CI bands with differentiated alpha (0.30 inner / 0.15 outer) correctly
-    visualize expanding forecast uncertainty.
-  - 'Historical/forecast visual distinction is excellent: solid vs. dashed linestyle
-    + distinct color + vertical dashed divider + annotation — multiple redundant cues.'
-  - All font sizes explicitly set; perfectly proportioned at both desktop and mobile
-    scale.
-  - Realistic electricity demand scenario with natural trend + seasonality; CI widths
-    follow sqrt(t) expansion matching statistical forecasting conventions.
+  - 'Full spec compliance: all required elements (historical line, dashed forecast,
+    80% + 95% nested CI bands, vertical divider, annotation) correctly implemented'
+  - Excellent theme adaptation with all chrome tokens properly wired to both light
+    and dark themes
+  - Realistic electricity demand scenario with genuine trend + seasonality + forecast
+    narrative
+  - Clean grammar-of-graphics composition using idiomatic plotnine patterns
+  - Data storytelling through expanding CI bands and subtitle explanation
   weaknesses:
-  - CI bands missing from legend — spec explicitly requires legend identifying confidence
-    levels; add scale_fill_manual with named ribbon levels for 80% CI and 95% CI.
-  - '"series" header showing in legend — replace name="" with name=None in scale_color_manual
-    to suppress the column name header.'
-  - 'Outer 95% CI band nearly invisible in dark mode — increase alpha from 0.15 to
-    0.20-0.22 so the outer bound is clearly distinguishable against the #1A1A17 surface.'
-  - Annotation/vline cosmetic overlap — shift Forecast period annotation x to forecast_start
-    + DateOffset(months=1) with ha="left" so text clears the vertical line.
+  - Forecast dashed line (size=1.0) is slightly thin for a focal element — with only
+    2 series, thicker lines (1.4-1.6) would give more visual weight to the central
+    forecast value
+  - Legend CI bands header label is awkward — the fill legend title creates a label
+    that reads as a category name rather than a legend section header; consider setting
+    name=\"\" to suppress it or using a more descriptive title like Confidence Interval
+  - Annotation Forecast period at size=9 is on the small side relative to its importance
+    — increasing to size=10-11 would make it more prominent without disrupting layout
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Title "timeseries-forecast-uncertainty · python · plotnine · anyplot.ai" at size=12pt spans ~75% of width (expected for long mandated title). Subtitle readable in muted color. Legend at top shows "series" header (unpolished — should be suppressed) with Historical and Forecast entries. X-axis rotated date labels and Y-axis "Electricity Demand (GWh)" clearly readable. "Forecast period" annotation visible but dashed vline passes slightly through text characters.
-      Data: Historical solid green (#009E73) line Jan 2022–Jan 2025 with seasonal oscillation. Forecast dashed orange (#D55E00) Jan 2025–Jan 2026. Nested CI bands: 80% inner (alpha=0.30) visibly darker, 95% outer (alpha=0.15) visibly lighter — both distinguishable against light background.
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "timeseries-forecast-uncertainty · python · plotnine · anyplot.ai" in dark ink (#1A1A17), subtitle in muted ink, axis labels in dark ink (size=10), tick labels rotated 45° (size=8), legend text readable, annotation "Forecast period" in muted ink (size=9). All text clearly readable against light background.
+      Data: Historical solid line in #009E73 (Okabe-Ito position 1) spanning Jan 2022-Jan 2025; dashed forecast line in #D55E00 (Okabe-Ito position 2); nested CI bands in the same orange with alpha 0.20 (95%) and 0.30 (80%); dashed vertical divider line in INK_SOFT. First series is #009E73 ✓.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black.
-      Chrome: All chrome correctly flipped to light tones. Title, subtitle, axis labels, tick labels, annotation text all clearly readable in light colors. No dark-on-dark failures for text elements.
-      Data: Historical green and forecast orange colors identical to light render. However, outer 95% CI band at alpha=0.15 of #D55E00 on #1A1A17 background produces a very dark brownish-orange that is barely distinguishable from the background surface in some areas — effective contrast is low. Inner 80% band at alpha=0.30 is noticeably more visible.
-      Legibility verdict: PASS for text; PARTIAL FAIL for outer CI band visibility in dark mode (low contrast).
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title, subtitle, axis labels, tick labels, legend text, and "Forecast period" annotation all render in light ink tokens (#F0EFE8 / #B8B7B0 / #A8A79F). No dark-on-dark failures — all text clearly legible against the dark surface.
+      Data: Historical line remains #009E73 (identical to light render); forecast dashed line remains #D55E00 (identical to light render). CI bands appear more saturated/deeper due to dark background contrast — this is expected for the same RGBA fill values on a dark surface, not a color change.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 28
@@ -53,53 +51,51 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, legend=8,
-          subtitle=9). Readable in both themes. No overflow.
+        comment: All font sizes explicitly set; well-proportioned in both themes.
+          Annotation text at size=9 slightly small for its importance.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Dashed vline passes through Forecast period annotation text characters
-          — minor cosmetic overlap, text still readable.
+        comment: No overlapping text; 45° x-axis tick rotation prevents date collisions;
+          top legend clears data area.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines and inner CI band clearly visible. Outer 95% CI band at alpha=0.15
-          on dark background (#1A1A17) has very low effective contrast — barely distinguishable.
+        comment: Lines and bands clearly visible. Forecast dashed line at size=1.0
+          slightly thin for few-series prominence heuristic.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette. Historical/Forecast distinguished by both color
-          and linestyle — CVD-safe dual encoding.
+        comment: Okabe-Ito green/orange CVD-safe; solid vs. dashed linetype provides
+          secondary encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins, data fills 70-80% of canvas.
-          No content cut off.
+        comment: Data fills ~80% canvas width; generous margins; compact top legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units (GWh). X-axis is descriptive. Title format exactly
-          correct.
+        comment: Y-axis has units (GWh); X-axis 'Date' appropriate for time series.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito order). Backgrounds
-          #FAF8F1 light / #1A1A17 dark. All chrome theme-adaptive.'
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          all chrome tokens theme-adaptive in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -109,27 +105,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful design with nested CI bands, dashed forecast, vertical
-          marker, annotation, subtitle. Above configured defaults but 'series' legend
-          header is unpolished.
+        comment: 'Above defaults: nested CI bands with intentional alpha layering,
+          subtitle context, vertical divider, theme adaptation. Not publication-ready
+          — legend CI bands header is awkward.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal removes spines; very subtle grid (alpha=0.1); no minor
-          grid; elevated legend background. 'series' legend header and annotation/vline
-          overlap are minor blemishes.
+        comment: theme_minimal removes top/right spines; subtle grid (alpha=0.1, major
+          only); axis lines set to INK_SOFT; elevated legend background token.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear narrative: solid history to dashed forecast with expanding
-          uncertainty bands. Vline, annotation, and subtitle create effective focal
-          point and context.'
+        comment: Expanding band width communicates uncertainty growth; subtitle explains
+          key message; vertical divider + annotation guide historical→forecast transition;
+          color family creates intuitive narrative.
     spec_compliance:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,30 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: time series with historical data + forecast + nested 80%/95%
-          confidence bands.'
+        comment: 'Correct: time series with solid historical, dashed forecast, nested
+          80%+95% CI bands, vertical forecast-start marker.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Solid historical line, dashed forecast, vertical marker, nested
-          bands all present. MISSING: legend entries for 80% and 95% CI bands — spec
-          explicitly requires legend identifying confidence levels.'
+        passed: true
+        comment: 'All spec features present: historical data, forecast, 80% CI, 95%
+          CI, vertical line, semi-transparent bands, complete legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: date (datetime monthly); Y: electricity demand values. Historical
-          36-month and forecast 12-month periods correctly split. All data visible.'
+        comment: X=date, Y=electricity demand; all 36 historical + 12 forecast points
+          visible.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Title exactly correct. Legend incomplete: ''series'' header shown
-          instead of suppressed; no 80%/95% CI band entries.'
+        passed: true
+        comment: Title matches required format exactly; legend labels match data series.
     data_quality:
       score: 15
       max: 15
@@ -170,22 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows historical trend+seasonality+noise, forecast continuation,
-          expanding uncertainty with two CI levels, clear boundary.
+        comment: Shows historical trend+seasonality, forecast, both CI bands, forecast
+          transition, and expanding uncertainty width.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly electricity demand with 3-year history + 12-month forecast.
-          Real, neutral, comprehensible scenario.
+        comment: Monthly electricity demand forecasting — real, comprehensible, neutral
+          domain with realistic seasonal pattern.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Demand 90-145 GWh monthly plausible for medium utility. CI widths
-          expanding as sqrt(t) matches ARIMA conventions.
+        comment: Values ~95-145 GWh plausible for regional grid; CI expanding from
+          ±10 to ±60 GWh over 12 months realistic for ARIMA/Prophet.
     code_quality:
       score: 10
       max: 10
@@ -195,7 +188,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → tokens → data → plot → save.'
+        comment: 'Clear linear structure: theme tokens → data → plot → save; no functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -207,39 +201,41 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imported plotnine symbols are used. No unused imports.
+        comment: All imports used; no unused symbols.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic grammar-of-graphics composition. Appropriate complexity.
+        comment: Clean grammar-of-graphics composition; appropriate complexity; no
+          over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using plot.save() with correct dpi/size.
+        comment: Saves as plot-{THEME}.png with correct dpi/size parameters.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Proper ggplot2-style layer composition with correct aes(), geom_ribbon,
-          scale_x_datetime, scale_color_manual, and theme() token overrides.
+        comment: 'Expert grammar-of-graphics usage: multiple data sources per geom,
+          scale_color_manual + scale_fill_manual, guides() for legend control, scale_x_datetime
+          for date formatting.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_ribbon (vs matplotlib fill_between), scale_x_datetime with date_breaks/date_labels,
-          annotate() with theme tokens. Recognizably plotnine-specific but not advanced/unique
-          features.
-  verdict: REJECTED
+        comment: Uses geom_ribbon() for CI bands (ggplot grammar-specific), multi-dataframe
+          layer composition, guides() for multi-scale legend control. Patterns are
+          plotnine-specific but not exclusively so vs ggplot2.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
