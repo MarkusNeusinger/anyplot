@@ -1,7 +1,7 @@
 """ anyplot.ai
 ternary-density: Ternary Density Plot
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-19
+Quality: 81/100 | Updated: 2026-05-19
 """
 
 import math
