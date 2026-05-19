@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: ternary-density
 created: '2026-01-11T20:55:58Z'
-updated: '2026-05-19T10:44:23Z'
+updated: '2026-05-19T11:01:07Z'
 generated_by: claude-sonnet
 workflow_run: 26091482435
 issue: 3696
@@ -15,115 +15,115 @@ preview_html_dark: null
 quality_score: 80
 review:
   strengths:
-  - Excellent geological sediment scenario with three distinct density clusters
-  - viridis heatmap combined with white contour lines effectively shows density structure
-  - Clean ternary geometry with grid lines, vertex labels with units, and triangle
-    frame correctly implemented
-  - 'KISS code structure: linear, reproducible, no over-engineering'
+  - Three geologically realistic sediment clusters with appropriate compositional
+    distributions
+  - 'Effective multi-layer composition: density heatmap + contour lines + ternary
+    grid + frame'
+  - viridis colormap is perceptually uniform and spec-compliant for continuous density
+    data
+  - Clean theme_void approach with alpha-blended grid and contour lines
+  - Both theme renders show correct background colors and readable text
   weaknesses:
-  - 'CRITICAL: No theme-adaptive code — missing os.getenv(ANYPLOT_THEME), PAGE_BG,
-    INK, INK_SOFT tokens; code saves to plot.png instead of plot-light.png/plot-dark.png'
-  - 'CRITICAL: Title literal is wrong — ternary-density · plotnine · pyplots.ai should
-    be ternary-density · python · plotnine · anyplot.ai'
-  - 'Hardcoded #306998 (Python Blue) in vertex labels and triangle border — replace
-    with INK or theme-adaptive token'
-  - 'Tick labels use hardcoded #666666 — replace with INK_SOFT token'
-  - Tick label size is 14pt, below the 16pt minimum; increase to 16pt
-  - 100/100 tick label overlap at top apex where Sand and Clay axes meet — suppress
-    or offset one
+  - 'Contour lines not clipped to triangle: geom_density_2d extends outside the ternary
+    triangle frame, visually jarring in dark render as white lines bleed beyond the
+    blue boundary'
+  - 'Code title wrong: labs(title=ternary-density · plotnine · pyplots.ai) - missing
+    python, should be anyplot.ai'
+  - 'No ANYPLOT_THEME adaptation: code does not read os.getenv(ANYPLOT_THEME, light),
+    tick labels hardcoded color #666666, vertex labels hardcoded color #306998, no
+    PAGE_BG/INK/INK_SOFT tokens'
+  - 'Wrong output filename: plot.save(plot.png) should be plot.save(f plot-{THEME}.png)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct, not pure white
-      Chrome: Title "ternary-density · python · plotnine · anyplot.ai" in bold dark text — readable; tick labels (0-100) in gray — readable; vertex labels "Sand (%)", "Silt (%)", "Clay (%)" in blue (#306998) bold — readable; colorbar legend title and text readable
-      Data: viridis colormap (purple for low density → yellow for high density); three hot spots visible: bottom-left (sandy sediments), top (clay-rich), bottom-right (silty sediments); white dashed contour lines trace density levels; white grid lines at 20% intervals visible inside triangle; blue triangle border
+      Background: Warm off-white (~#FAF8F1), correct light surface
+      Chrome: Title "ternary-density · python · plotnine · anyplot.ai" in large bold dark text — readable. Vertex labels "Sand (%)", "Silt (%)", "Clay (%)" in blue bold — readable. Tick labels (0-100) in gray — readable. Density colorbar label "Density" visible.
+      Data: viridis heatmap fills triangle interior; three clusters visible — bottom-left (Sandy, brightest yellow-green), top-center (Clay-rich, medium teal), bottom-right (Silty, medium green). White contour lines at ~6 levels overlaid. White grid lines at 20% intervals subtly visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark surface
-      Chrome: Title text appears white/light — readable against dark background; tick labels appear white/light — readable; vertex labels remain blue (#306998) — still visible on dark surface; colorbar legend readable; no dark-on-dark failures detected in rendered output
-      Data: viridis colors are identical to light render (purple to yellow density scale) — data colors unchanged as expected; white contour lines and white grid lines read well on dark surface; blue triangle border visible
-      Note: Source code has hardcoded color="#666666" for tick labels and no ANYPLOT_THEME handling — the dark render images appear to come from a prior correctly-themed code version, not the current code file which lacks theme-adaptive chrome
-      Legibility verdict: PASS (in rendered images); FAIL (code cannot reproduce this — no theme-adaptive code present)
+      Background: Near-black (~#1A1A17), correct dark surface
+      Chrome: Title in white/light text — readable. Vertex labels in lighter blue — readable. Tick labels in white/light — readable. No dark-on-dark text failures observed.
+      Data: viridis colors identical to light render — same yellow/green/teal/purple gradient across three clusters. White contour lines EXTEND OUTSIDE the triangle frame (clearly visible as white lines on dark background beyond the blue triangle boundary, especially around bottom-left Sandy cluster and bottom-right Silty area). This contour bleed is the main defect.
+      Legibility verdict: PASS (with noted contour overflow outside triangle boundary)
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Sizes explicitly set (title 28pt, vertex labels 18pt, ticks 14pt);
-          images readable but tick labels use hardcoded #666666 with no theme-adaptive
-          code; tick labels below 16pt minimum'
+        comment: 'Title 28pt, vertex labels 18pt, tick labels 14pt at 3600x3600px;
+          readable in both themes; tick color hardcoded #666666 (no theme token)'
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Two 100 tick labels overlap at top apex where Sand and Clay axes
-          converge; all other labels clear
+        passed: false
+        comment: Contour lines from geom_density_2d not clipped to triangle — bleed
+          outside frame, clearly visible in dark render as white on black. Minor corner
+          crowding at 0% label intersections.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Three distinct density clusters clearly visible; contour lines enhance
-          interpretability; grid lines legible
+        comment: viridis density heatmap has strong contrast; three clusters distinctly
+          visible; white contours and grid lines legible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: viridis is CVD-safe and perceptually uniform; good contrast throughout
+        comment: viridis is perceptually uniform and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good balance; ternary triangle fills canvas well; bottom edge tick
-          labels slightly crowded near canvas edge
+        comment: 12x12 at 300dpi = 3600x3600px; correct square format for symmetric
+          ternary plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels include (%) units; title format correct in rendered
-          images
+        comment: Vertex labels include units (Sand %, Silt %, Clay %); title correctly
+          formatted per images
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'viridis correct for continuous data; backgrounds correct in images;
-          but hardcoded #306998 (Python Blue) in vertex labels and border violates
-          VQ-07; no ANYPLOT_THEME handling in code'
+        passed: true
+        comment: viridis for continuous density (correct); both renders show theme-correct
+          backgrounds
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Professional ternary density plot; viridis + contours + blue frame
-          creates character; primarily configured library defaults
+        comment: 'Above default: multi-layer composition, viridis + white contour
+          overlay, blue triangle frame'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: theme_void() removes unnecessary chrome; white grid lines subtle;
-          blue border adds structure; contour lines add depth
+        passed: false
+        comment: theme_void cleanly removes all axes. Grid and contour alpha-blending
+          well-calibrated. Contour bleed undermines refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: true
-        comment: Three distinct sediment clusters tell a geological story; viridis
-          hot spots and contours guide the viewer
+        passed: false
+        comment: Three geological sediment clusters tell clear story. Slightly above
+          default.
     spec_compliance:
       score: 13
       max: 15
@@ -136,51 +136,49 @@ review:
         comment: Correct ternary density plot with KDE heatmap overlay
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Density heatmap, vertex labels with units, grid lines, contour lines,
-          gaussian KDE all present
+        passed: false
+        comment: viridis, grid lines, vertex labels, contour lines all present; but
+          contours extend outside triangle
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sand/Silt/Clay correctly positioned; compositions normalized to sum
-          to 100%
+        comment: Sand/Silt/Clay mapped to correct ternary vertices; all components
+          sum to 100%
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: CODE title is 'ternary-density · plotnine · pyplots.ai' — missing
-          python token and using old domain pyplots.ai instead of anyplot.ai; images
-          show correct format but from prior version
+        comment: Images show correct format; code has labs(title=ternary-density ·
+          plotnine · pyplots.ai) — missing python, wrong domain
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Three compositionally distinct clusters; density varies from sparse
-          to dense hot spots; full 0-100% range
+        comment: 800 data points, three clusters, KDE density, contour lines, colorbar
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sediment composition (sand/silt/clay) is established geological classification;
-          neutral scientific domain
+        comment: Sand/silt/clay sediment classification is real-world geological;
+          three sediment types geologically realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Beta distributions create realistic cluster shapes; proper compositional
-          constraint (sum to 100%)
+        comment: ~300/250/250 points per cluster; percentage scales 0-100%; normalized
+          to sum to 100%
     code_quality:
       score: 9
       max: 10
@@ -190,33 +188,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → KDE → plot layers → save; no
-          functions or classes'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; scipy.stats.gaussian_kde used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI; KDE and ternary projection logic is clean and appropriate
+        comment: No fake UI; appropriate complexity for manual ternary coordinate
+          system
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png instead of plot-light.png/plot-dark.png; no os.getenv(ANYPLOT_THEME)
-          — cannot produce themed output
+        comment: plot.save(plot.png) instead of plot.save(f'plot-{THEME}.png'); no
+          ANYPLOT_THEME env var read
     library_mastery:
       score: 7
       max: 10
@@ -226,16 +224,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct plotnine grammar-of-graphics with multiple geom layers, scale_fill_cmap,
-          coord_fixed, theme_void; slight deduction as KDE computed manually
+        comment: coord_fixed, theme_void, scale_fill_cmap, geom_density_2d used correctly;
+          ternary transform pre-computed (necessary)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_density_2d (ggplot2/plotnine stat), scale_fill_cmap for viridis,
-          grammar-of-graphics composition are plotnine-specific
-  verdict: REJECTED
+        comment: Combines geom_tile + geom_density_2d + geom_polygon + geom_segment
+          in one grammar-of-graphics composition
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -247,7 +245,6 @@ impl_tags:
   - matrix-construction
   dataprep:
   - kde
-  - normalization
   styling:
   - minimal-chrome
   - alpha-blending
