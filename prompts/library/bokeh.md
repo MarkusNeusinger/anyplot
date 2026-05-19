@@ -89,16 +89,20 @@ driver.quit()
 ## Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python
-# Text sizes — title kept compact for the long mandated anyplot title
-p.title.text_font_size = '18pt'
-p.xaxis.axis_label_text_font_size = '14pt'
-p.yaxis.axis_label_text_font_size = '14pt'
-p.xaxis.major_label_text_font_size = '12pt'
-p.yaxis.major_label_text_font_size = '12pt'
+# Text sizes — bokeh fonts render via headless Chrome at CSS pt sizing
+# (1pt ≈ 1.333 source-px), so nominal values must be ~3× larger than the
+# DPI-based equivalents to match the same visual size. The pt values here
+# end up at roughly the same source-pixel height as matplotlib's
+# 14/12/10pt × dpi=400.
+p.title.text_font_size = '56pt'
+p.xaxis.axis_label_text_font_size = '42pt'
+p.yaxis.axis_label_text_font_size = '42pt'
+p.xaxis.major_label_text_font_size = '36pt'
+p.yaxis.major_label_text_font_size = '36pt'
 
 # Legend text — apply only when a legend is present
 # (set legend_label= on glyphs or configure p.legend after add_layout)
-# p.legend.label_text_font_size = '12pt'
+# p.legend.label_text_font_size = '36pt'
 
 # Element sizes (density-aware — see default-style-guide.md)
 p.scatter(..., size=10)        # ~2-3x default

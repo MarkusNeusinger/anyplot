@@ -79,11 +79,15 @@ custom_style = Style(
     foreground_strong=INK,          # title
     foreground_subtle=INK_MUTED,    # tick labels, grid tone
     colors=OKABE_ITO,               # first series = brand green
-    title_font_size=18,             # kept compact for the long mandated title
-    label_font_size=12,
-    major_label_font_size=12,
-    legend_font_size=12,
-    value_font_size=10,
+    # pygal font sizes are unitless integers, rendered into the SVG at the
+    # source-pixel grid (no DPI/scale multiplier). Need ~3× the matplotlib
+    # pt values to match — see default-style-guide.md "Why the Native-pixel
+    # numbers look so much bigger".
+    title_font_size=56,             # kept compact for the long mandated title
+    label_font_size=42,
+    major_label_font_size=36,
+    legend_font_size=36,
+    value_font_size=30,
     stroke_width=2.5,
 )
 

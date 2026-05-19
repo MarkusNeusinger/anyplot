@@ -152,7 +152,7 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 6. **X-axis labels cut off in PNG**: Category labels may be clipped at the bottom. Fix by:
    - Increase bottom margin: `chart.options.chart = {'marginBottom': 100, ...}`
    - Or add spacingBottom: `chart.options.chart = {'spacingBottom': 60, ...}`
-   - Default `style: {'fontSize': '12px'}` per the new 3200×1800 sizing. If still clipped after the margin fixes, bump to `'14px'` for that specific case — but keep all other label fontsizes at 12px for cross-axis balance.
+   - Default `style: {'fontSize': '36px'}` per the new 3200×1800 sizing (native-pixel libraries need ~3× the matplotlib pt value — see default-style-guide.md "Why the Native-pixel numbers look so much bigger"). If still clipped after the margin fixes, bump to `'42px'` for that specific case — but keep all other label fontsizes at 36px for cross-axis balance.
 
 ## Colors
 
@@ -195,19 +195,22 @@ chart.options.chart = {
     'backgroundColor': PAGE_BG,
     'style': {'color': INK},
 }
-chart.options.title = {'text': title, 'style': {'fontSize': '18px', 'color': INK}}
+# Native-pixel sizing: highcharts fonts go through CSS in the rendered
+# HTML at the source-pixel grid (no scale multiplier), so the px values
+# here must be ~3× the matplotlib pt values to match the same visual size.
+chart.options.title = {'text': title, 'style': {'fontSize': '56px', 'color': INK}}
 chart.options.x_axis = {
-    'title': {'text': x_label, 'style': {'fontSize': '14px', 'color': INK}},
-    'labels': {'style': {'fontSize': '12px', 'color': INK_SOFT}},
+    'title': {'text': x_label, 'style': {'fontSize': '42px', 'color': INK}},
+    'labels': {'style': {'fontSize': '36px', 'color': INK_SOFT}},
     'lineColor': INK_SOFT, 'tickColor': INK_SOFT, 'gridLineColor': GRID,
 }
 chart.options.y_axis = {
-    'title': {'text': y_label, 'style': {'fontSize': '14px', 'color': INK}},
-    'labels': {'style': {'fontSize': '12px', 'color': INK_SOFT}},
+    'title': {'text': y_label, 'style': {'fontSize': '42px', 'color': INK}},
+    'labels': {'style': {'fontSize': '36px', 'color': INK_SOFT}},
     'lineColor': INK_SOFT, 'tickColor': INK_SOFT, 'gridLineColor': GRID,
 }
 chart.options.legend = {
-    'itemStyle': {'color': INK_SOFT, 'fontSize': '12px'},
+    'itemStyle': {'color': INK_SOFT, 'fontSize': '36px'},
     'backgroundColor': ELEVATED_BG, 'borderColor': INK_SOFT, 'borderWidth': 1,
 }
 ```
