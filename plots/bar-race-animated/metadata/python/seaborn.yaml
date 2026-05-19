@@ -1,0 +1,251 @@
+library: seaborn
+language: python
+specification_id: bar-race-animated
+created: '2026-05-19T01:59:08Z'
+updated: '2026-05-19T02:17:29Z'
+generated_by: claude-sonnet
+workflow_run: 26071243720
+issue: 3653
+language_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Perfect spec compliance: small multiples correctly substitutes for animation
+    per seaborn static-only nature, with all required features (sorted bars, consistent
+    entity colors, visible time indicators)'
+  - Rank-change highlighting (colored bar edges plus up/down value badges) adds genuine
+    storytelling value beyond a plain bar chart grid
+  - Theme adaptation is flawlessly implemented — all chrome tokens (INK, INK_SOFT,
+    PAGE_BG) thread through every text and spine element
+  - Fully flat, deterministic, readable code with no unnecessary abstractions
+  weaknesses:
+  - 'Library mastery score limited: rank-badge and edge-highlighting operate at raw
+    matplotlib ax.patches level rather than leveraging seaborn-specific higher-level
+    capabilities beyond a single barplot() call per panel'
+  - Value labels at fontsize=14 are slightly undersized for the 4800x2700 px canvas
+    (guideline suggests 16pt for secondary text)
+  - 6 entities/6 time points is on the low end; the spec recommends 10-20 entities
+    for the bar race format — adding more entities would better showcase the ranking
+    dynamics
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Main title "Tech Company Rankings · bar-race-animated · python · seaborn · anyplot.ai" in dark #1A1A17 ink, clearly readable. Panel year titles (2014–2024) in bold dark text. X-axis labels "Market Cap ($ Billion)" in INK_SOFT. Y-axis company name labels and tick labels in INK_SOFT — all readable.
+      Data: Six Okabe-Ito colors: Alpha Corp #009E73 (brand green, first series correct), Beta Tech #D55E00 (vermillion), Gamma Systems #0072B2 (blue), Delta Networks #CC79A7 (pink/purple), Epsilon Data #E69F00 (orange), Zeta Cloud #56B4E9 (sky blue). Value labels ($120B–$1100B) right-aligned. Rank-change badge "▲2" visible in Delta Networks 2020 panel in entity color.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Main title in light #F0EFE8 ink, readable against dark background. Panel year titles in white/off-white. Axis labels and tick labels in light secondary ink (#B8B7B0). No dark-on-dark text failures observed — all chrome tokens adapt correctly.
+      Data: Bar colors identical to light render (Okabe-Ito positions 1–6 unchanged: #009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9). Value labels and rank badges readable against dark background.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title 24pt, panel titles 20pt, axis
+          labels 20pt, tick labels 16pt, value labels 14pt); readable in both themes.
+          Value labels at 14pt slightly small for high-DPI canvas.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Labels fit cleanly in all panels; rank badge in 2020 panel positioned
+          correctly. Minor crowding in 6-panel layout but no collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars clearly distinguishable; distinct Okabe-Ito colors; rank-mover
+          highlighted edges visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe by design.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16x9 figsize, tight_layout applied; nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis labelled 'Market Cap ($ Billion)' with units; main title includes
+          spec-id, library, language, and anyplot.ai.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First entity (Alpha Corp) = #009E73; Okabe-Ito order followed for
+          all 6 entities; backgrounds are #FAF8F1 / #1A1A17; both themes correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Rank-change edge highlighting and up/down badges with entity-colored
+          labels add genuine polish above defaults. Intentional visual hierarchy per
+          panel.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; x-axis grid at alpha=0.10; explicit spine
+          and tick color tokens. 6-panel grid slightly cramped but well-managed.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Rank-change badges guide viewer to notable shifts. Consistent color
+          identity across panels enables easy entity tracking.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Small multiples of sorted horizontal bar charts is the correct static
+          alternative for a bar race; spec explicitly endorses this approach.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bars sorted by value per frame; entity labels attached; time indicator
+          as panel title; entity color consistent across all panels.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X = market cap, Y = company names; all 6 entities visible in every
+          panel.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format: ''Tech Company Rankings · bar-race-animated · python
+          · seaborn · anyplot.ai'' — correctly prefixed with descriptive title.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows sorted rankings, value progression, rank-change indicators,
+          consistent entity colors; 6 snapshots across a decade. 6 entities slightly
+          below spec's recommended 10-20.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Fictional tech company names are neutral; market cap values ($120B-$1100B)
+          are plausible for large-cap tech over 2014-2024.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Growth trajectories are realistic (corrections, surges, steady risers);
+          no implausible outliers.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Data is fully hardcoded; deterministic output.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only os, sys, matplotlib, pandas, seaborn; all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear data structure; rank delta computation is concise; no fake
+          UI elements.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; uses current seaborn 0.13 API with hue+palette+legend=False.
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.barplot() with hue, palette, and order parameters is idiomatic
+          seaborn horizontal bars; sns.set_theme() with rc dict for global theming
+          is correct.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Rank-badge and edge-highlighting logic operates at raw matplotlib
+          patch level rather than seaborn-specific higher-level features. Seaborn
+          usage limited to a single barplot call per panel.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - subplots
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - edge-highlighting
