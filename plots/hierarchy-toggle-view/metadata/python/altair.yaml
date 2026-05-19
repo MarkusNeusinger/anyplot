@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: hierarchy-toggle-view
 created: '2026-01-11T09:30:49Z'
-updated: '2026-05-19T08:43:18Z'
+updated: '2026-05-19T08:58:16Z'
 generated_by: claude-sonnet
 workflow_run: 26085145976
 issue: 3697
@@ -12,136 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 90
 review:
   strengths:
-  - 'Correct Okabe-Ito palette with #009E73 as first series (Engineering) and canonical
-    ordering (#D55E00, #0072B2, #CC79A7)'
-  - Genuinely interactive toggle via Altair binding_select — both treemap and sunburst
-    chart types implemented with consistent department colors
-  - 'Excellent code quality: clean KISS structure, appropriate complexity for the
-    manual binary-split treemap layout, no fake UI elements'
-  - Canvas utilization is excellent — treemap fills the full 1600x900 area with well-proportioned
-    tiles
-  - Realistic neutral TechCorp organizational data with authentic department and team
-    naming (Frontend/Backend/DevOps etc.)
-  - Variable label font sizes scaled to headcount values via alt.Size — adds intentional
-    visual hierarchy to tile labels
+  - Elegant interactive toggle using Altair binding_select + selection_point — idiomatic
+    and non-trivial
+  - 'Correct Okabe-Ito palette (Engineering = #009E73 first) with full theme-adaptive
+    chrome for both light and dark renders'
+  - Both treemap (mark_rect with x/y/x2/y2) and sunburst (mark_arc with theta/theta2/radius/radius2)
+    correctly implemented as Altair layers
+  - Realistic organizational hierarchy data with meaningful storytelling subtitle
+    highlighting key insight
+  - Clean flat code structure appropriate for the complexity
   weaknesses:
-  - 'Dark mode tile borders invisible: mark_rect(stroke=PAGE_BG) in dark mode sets
-    stroke to #1A1A17 — same as background — making adjacent same-department tiles
-    (e.g., Backend/Frontend green, HR/Legal pink) visually merge. Fix: use INK_SOFT
-    or a neutral rgba stroke color visible in both themes.'
-  - 'Design storytelling lacks focal point: treemap displays data correctly but has
-    no emphasis on key insight. No visual emphasis on the largest team (Backend 62),
-    no annotation or color intensity variation to guide the viewer.'
-  - 'DE-01 below publication threshold: clean design but not refined enough. Needs
-    stronger visual hierarchy, more intentional spacing, and possible weight variation
-    in tile label typography.'
-  - 'Sunburst text labels missing: the sunburst view (HTML) has no text labels on
-    arcs, only tooltips. Adding mark_text radial labels for at least department ring
-    would improve readability in sunburst mode.'
-  - No animated transitions between treemap and sunburst views — toggle is an instant
-    opacity switch with no animation.
+  - Binary-split treemap layout produces irregular rectangle proportions; squarified
+    algorithm would give better aesthetic results
+  - Cell label font sizes are value-mapped (14-24px range) making smallest team labels
+    borderline at the lower end — raise minimum to 16px
+  - Minor whitespace gap between title area and top edge of treemap reduces canvas
+    utilization slightly
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white approximately #FAF8F1 — correct theme surface, not pure white.
-      Chrome: Title "hierarchy-toggle-view · python · altair · anyplot.ai" in 28px dark ink (#1A1A17) — clearly readable. Subtitle in muted dark gray (#4A4A44) — readable. Legend on right with white/cream elevated box, dark department label text, 4 color swatches.
-      Data: Treemap with 11 leaf nodes in 4 departments. Engineering (#009E73 green): DevOps, Data Sci, Backend, Frontend, QA. Sales (#D55E00 orange): SMB, Enterprise, Partners. Marketing (#0072B2 blue): Events, Content, Digital. Operations (#CC79A7 pink): Legal, HR, Finance. First series correctly #009E73. White bold labels centered in tiles; font sizes scale with headcount value (14–24px base, readable at 3x export). Tile areas proportional to headcount values.
-      Legibility verdict: PASS — all text readable against light background.
+      Background: Warm near-white (#FAF8F1) — configure_view fill set correctly
+      Chrome: Title "hierarchy-toggle-view · python · altair · anyplot.ai" in dark ink, large and bold — readable. Subtitle (Engineering leads with 232 staff / 46% headcount context) in smaller dark text — readable. Legend at top-right with warm-white elevated background (#FFFDF6), dark title/label text — readable.
+      Data: Four departments as Okabe-Ito colored rectangles: Engineering=#009E73 (green), Sales=#D55E00 (orange), Marketing=#0072B2 (blue), Operations=#CC79A7 (pink). Leaf team nodes labeled in bold white text, sizes proportional to headcount. First series correctly #009E73.
+      Legibility verdict: PASS — all text (title, subtitle, cell labels, legend) readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title in light off-white (#F0EFE8 INK token) — readable against dark background. Subtitle in medium gray (#B8B7B0 INK_SOFT) — readable. Legend box in elevated dark surface (#242420) with light label text — readable. No dark-on-dark text failures for title/subtitle/legend.
-      Data: Same department colors as light render — Engineering #009E73, Sales #D55E00, Marketing #0072B2, Operations #CC79A7 — identical to light render (only chrome flipped). White bold tile labels remain readable on colored tile backgrounds. ISSUE: tile stroke set to PAGE_BG (#1A1A17 in dark mode) — borders between same-department adjacent tiles are invisible, causing Backend/Frontend (green) and HR/Legal (pink) pairs to appear visually merged without clear separation.
-      Legibility verdict: PASS — all text elements readable; tile border merging is a visibility issue not a legibility failure.
+      Background: Warm near-black (#1A1A17) — configure_view fill set correctly for dark theme
+      Chrome: Title in warm off-white (#F0EFE8) — readable against dark surface. Subtitle in slightly muted tone — legible. Legend background switches to elevated dark (#242420) with light-colored labels (#B8B7B0) — readable.
+      Data: Colors identical to light render — Engineering=#009E73, Sales=#D55E00, Marketing=#0072B2, Operations=#CC79A7. White cell labels on same Okabe-Ito backgrounds — unchanged and visible.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements readable in dark theme.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 28px, legend 18/20px explicitly set; tile labels sized via
-          alt.Size range=[14,24]px, readable at 3x export. Smallest tiles borderline
-          adequate.
+        comment: Title 28px, legend title 20px, legend labels 18px explicitly set.
+          Cell labels value-mapped 14-24px — borderline minimum but readable at rendered
+          resolution.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; all 11 tile labels centered in non-overlapping
-          rectangles; legend separate from plot area.
+        comment: No overlapping text; all cell labels centered within their rectangles.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Treemap tiles clearly visible with strong Okabe-Ito colors. Deduction:
-          dark mode stroke=PAGE_BG makes same-department tile borders invisible, adjacent
-          same-color tiles merge visually.'
+        comment: Treemap rectangles fill canvas; all department tiles clearly visible
+          with white labels.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; white text on colored tile backgrounds
-          provides strong contrast in both themes.
+        comment: Okabe-Ito palette is CVD-safe; white text on colored rectangles provides
+          high contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Treemap fills full 1600x900 canvas; legend compact and adjacent;
-          title spacing appropriate; excellent canvas utilization.
+        comment: Treemap fills ~75% of canvas. Legend sits outside data area (~8%
+          horizontal). Minor gap between title and treemap top edge.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes needed for treemap; title is descriptive; subtitle contextualizes
-          the interactive toggle.
+        comment: Title format correct; no axis labels needed for treemap — appropriate.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Engineering first as #009E73; Sales #D55E00, Marketing #0072B2,
-          Operations #CC79A7 — correct Okabe-Ito order. Backgrounds #FAF8F1 light
-          / #1A1A17 dark. Theme-adaptive chrome tokens correctly applied.'
+        comment: 'First series Engineering=#009E73. Remaining: #D55E00, #0072B2, #CC79A7
+          — correct Okabe-Ito order. Backgrounds theme-correct in both renders.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional clean treemap with correct warm background, Okabe-Ito
-          palette, and variable-size labels. Above a raw default, but lacks publication-ready
-          polish or exceptional design choices.
+        comment: Clean professional treemap with correct palette and theme-adaptive
+          chrome. Dynamic label sizing is thoughtful. Binary-split layout produces
+          irregular proportions. Well-configured library output.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Axes and grid correctly absent for treemap; tile strokes provide
-          separation; legend styled with elevated background. Deduction: dark mode
-          tile border invisibility issue; legend box slightly prominent.'
+        comment: No unnecessary chrome. PAGE_BG-colored cell borders (strokeWidth=3)
+          create clean separation. Legend custom-styled with theme tokens. Solid refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Variable label font sizes create some visual hierarchy; department
-          color grouping organizes data. No emphasis on key insight, no focal point
-          or narrative emphasis beyond raw display.
+        passed: true
+        comment: Subtitle explicitly calls out key insight (Engineering dominance).
+          Color+area encoding enables immediate department comparison. Good visual
+          hierarchy.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -149,57 +132,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Both chart types implemented: treemap via mark_rect with binary-split
-          coordinate layout; sunburst via mark_arc with polar theta/radius encoding.
-          Interactive toggle via binding_select + selection_point + condition(opacity).'
+        comment: Both treemap (mark_rect) and sunburst (mark_arc with theta/radius)
+          implemented as layered chart with dropdown toggle.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Toggle dropdown ✓, consistent colors ✓, shared container ✓, tooltips
-          on both views ✓. Missing: smooth animated layout transitions (instant opacity
-          toggle only — hard constraint in Altair binding system).'
+        comment: Dropdown toggle (binding_select) ✓; consistent colors across views
+          ✓; tooltips on both views ✓; view switching via conditional opacity ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Leaf node area proportional to headcount via coordinate computation;
-          department→color; labels shown in tiles; hierarchy correctly encoded.
+        comment: Hierarchical data correctly structured (Company → Dept → Team). Leaf
+          values map to area (treemap) and angle (sunburst).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'hierarchy-toggle-view · python · altair · anyplot.ai'.
-          Legend labels match department names with correct Okabe-Ito colors.
+        comment: 'Title: ''hierarchy-toggle-view · python · altair · anyplot.ai''
+          ✓. Department legend labels match data ✓.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows 2-level hierarchy with 4 departments and 11 leaf teams; meaningful
-          size variation (20-62 headcount). Could benefit from a 3rd hierarchy level
-          to fully demonstrate depth capability.
+        comment: All hierarchy levels shown (root, department, team). Both treemap
+          and sunburst views implemented. 19 nodes across 3 levels.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: TechCorp organizational structure with authentic naming (Engineering/Frontend/Backend/DevOps/QA/DataSci,
-          Sales/Enterprise/SMB/Partners, etc.) — neutral business context.
+        comment: TechCorp org structure with realistic department and team names (Backend,
+          Frontend, DevOps, QA, Data Sci, Enterprise, SMB, etc.).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Headcounts 20-62 per team realistic; Engineering largest (232 total)
-          makes domain sense; relative proportions plausible for a tech company.
+        comment: Team headcounts (20-62) and department totals realistic for mid-size
+          tech company. Engineering at 46% is plausible.
     code_quality:
       score: 10
       max: 10
@@ -209,67 +189,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → parent aggregation → treemap
-          layout → sunburst layout → chart → save. No functions or classes.'
+        comment: 'Flat script: imports → data → treemap layout → sunburst layout →
+          chart → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data is effectively deterministic.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all actively used. No unused imports.
+        comment: os, altair, numpy, pandas — all used, no extraneous imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Binary-split treemap layout algorithm (stack-based) is necessarily
-          complex for manual coordinate computation; appropriate for the task. No
-          fake UI; interactivity is genuine Altair bindings.
+        comment: Custom treemap layout algorithm appropriately complex for a library
+          without native treemap. Sunburst angle computation clean.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html.
-          Correct output names and current Altair API.
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html ✓.
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct use of mark_rect/mark_text/mark_arc, alt.layer(), alt.condition(),
-          configure_view/title/legend. Deduction: treemap uses manual coordinate computation
-          rather than Vega-Lite built-in transforms.'
+        comment: 'Full declarative encoding: mark_rect, mark_arc, mark_text with correct
+          channels (x/y/x2/y2 for treemap; theta/theta2/radius/radius2 for sunburst).
+          alt.layer() composition and alt.condition() for selection-driven opacity.'
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Excellent use of binding_select + selection_point + condition(opacity)
-          to toggle between two completely different chart types — distinctly Altair/Vega-Lite
-          capability. Combined alt.layer() approach for interactive view switching
-          is characteristically declarative Altair.
-  verdict: REJECTED
+        comment: alt.binding_select + alt.selection_point for interactive dropdown
+          toggle is distinctively Vega-Lite/Altair. Layered treemap+sunburst with
+          conditional opacity is elegant Altair-specific pattern.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   - layer-composition
-  - hover-tooltips
+  - polar-projection
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - edge-highlighting
