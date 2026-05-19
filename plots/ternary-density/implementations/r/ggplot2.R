@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' ternary-density: Ternary Density Plot
-#' Library: ggplot2 | R 4.x
-#' Quality: pending | Created: 2026-05-19
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 89/100 | Created: 2026-05-19
 
 library(ggplot2)
 library(MASS)
