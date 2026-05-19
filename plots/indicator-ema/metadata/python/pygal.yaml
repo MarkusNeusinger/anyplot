@@ -1,160 +1,183 @@
 library: pygal
+language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:19:44Z'
-updated: '2026-01-11T00:27:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886563253
+updated: '2026-05-19T05:16:31Z'
+generated_by: claude-sonnet
+workflow_run: 26076885400
 issue: 3652
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent visual clarity with distinct line styles (solid, dashed, dotted) for
-    each series
-  - Proper use of pygal Style class for customizing fonts and colors to work at the
-    large canvas size
-  - Price line is appropriately thicker than EMA lines as per spec
-  - Clean, readable code following KISS principles
-  - Good use of major x-axis labels to reduce clutter while maintaining date readability
+  - Correct Okabe-Ito palette with brand green (#009E73) as first series (Close Price)
+  - 'Full spec compliance: price line, EMA 12-day (dashed), EMA 26-day (dashed), crossover
+    dots all present'
+  - Crossover detection and highlighting with pink dots adds meaningful data storytelling
+  - 'Distinctive pygal features: per-series stroke_style with dasharray, x_labels_major
+    for periodic tick control, legend_at_bottom_columns, HTML export'
+  - 'Excellent theme adaptation: warm #FAF8F1 / #1A1A17 backgrounds, INK/INK_MUTED
+    tokens applied throughout'
+  - 'Perfect code quality: flat script, seeded RNG, clean imports, correct plot-{THEME}.png
+    + .html outputs'
   weaknesses:
-  - The grid only shows horizontal lines (y-guides); adding subtle vertical guidelines
-    could improve date reference
-  - Crossover points between EMAs are not highlighted as suggested in the spec Notes
-    section
-  image_description: The plot displays a line chart showing stock price data with
-    two EMA overlays over 120 trading days (January to May 2024). The close price
-    is shown as a solid blue line with visible volatility and a general downtrend
-    from ~$150 to ~$130. The 12-day EMA is displayed as a yellow/gold dashed line
-    that closely follows the price movements. The 26-day EMA appears as a red dotted
-    line that is smoother and slower to react. The title "indicator-ema · pygal ·
-    pyplots.ai" is displayed at the top. The Y-axis shows "Price ($)" ranging from
-    approximately 126 to 162, and the X-axis shows "Date" with rotated date labels
-    at 45 degrees. A legend at the bottom shows "Close Price", "EMA 12-day", and "EMA
-    26-day" with their respective colors and line styles. The plot has subtle horizontal
-    grid lines and a clean white background.
+  - Design uses grid on both axes (show_x_guides=True + show_y_guides=True) — for
+    a line chart the style guide prefers Y-axis grid only; X-axis grid adds visual
+    noise
+  - Font sizes (title=72, labels=48, major_labels=42) are significantly above the
+    pixel-based guide recommendations (28/22/18) — renders look fine but this diverges
+    from the standard
+  - 'DE-01/DE-02 are at defaults: standard pygal look without exceptional aesthetic
+    polish or spine-removal refinement (pygal does not expose spine control)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct; no pure white
+      Chrome: Title "indicator-ema · python · pygal · anyplot.ai" dark and clearly readable. X-axis "Date" and Y-axis "Price ($)" labels dark and legible. Date tick labels rotated 45° (every 20th date: 2024-01-03, 2024-01-30, 2024-02-27, 2024-03-26, 2024-04-23, 2024-05-21) — all readable. Price tick labels (128–162) clearly visible. Legend at bottom (4 columns) readable.
+      Data: Close Price solid green (#009E73, weight 8), EMA 12-day dashed orange (#D55E00, weight 5), EMA 26-day dashed blue (#0072B2, weight 5), Crossovers pink dots (#CC79A7) at EMA cross points. All series clearly distinguishable.
+      Legibility verdict: PASS — all text and data elements readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct; no pure black
+      Chrome: Title and axis labels light-colored on dark background — clearly readable. Tick labels light on dark — no dark-on-dark failure detected. Legend text at bottom readable.
+      Data: Data colors identical to light render — green #009E73 (Close Price), orange #D55E00 (EMA 12-day), blue #0072B2 (EMA 26-day), pink #CC79A7 (Crossovers). Brand green #009E73 clearly visible on dark background. Horizontal grid lines subtle but present.
+      Legibility verdict: PASS — all text and data elements readable against dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and legend text are all clearly readable at the
-          large canvas size
+        comment: All text readable in both themes; font sizes (title=72, labels=48)
+          exceed pixel-based guide (28/22) but render correctly at 4800x2700
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; x-axis labels are rotated and major
-          labels spaced well
+        comment: x_labels_major every 20 dates prevents overlap; all elements well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are clearly visible with appropriate stroke widths; price line
-          is thicker than EMAs as specified
+        comment: 'All series clearly visible: solid thick price line, dashed thinner
+          EMAs, pink crossover dots'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red colors are distinguishable; yellow could be
-          slightly harder for some colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas with plot filling most of the area; legend at
-          bottom is well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label Price ($) with units; X-axis has Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette is CVD-safe; no red-green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape, legend at bottom with 4 columns, good canvas
+          usage
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Title correct format; X='Date', Y='Price ($)' with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order, correct backgrounds #FAF8F1/#1A1A17,
+          colors identical between themes'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Grid is subtle but only horizontal lines; missing vertical guidelines
+        comment: Professional look but standard pygal aesthetic; no exceptional visual
+          polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 2
+        max: 6
+        passed: false
+        comment: Grid on both axes adds noise (Y-axis only preferred); pygal lacks
+          spine-removal capability
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Crossover dots highlight key signals; different stroke weights (8
+          vs 5) and dasharray patterns guide the viewer
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct line chart type for EMA indicator overlay
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X-axis, Price on Y-axis correctly assigned
-      - id: SC-03
+        comment: Line chart with EMA overlay — correct chart type
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has price line with two EMAs overlaid; distinct colors and line styles
-          used; EMA lines are thinner than price line. Missing crossover point highlighting
-      - id: SC-04
-        name: Data Range
+        comment: Close Price, EMA 12-day, EMA 26-day, crossover detection and highlighting
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show complete range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=dates, Y=price; 120 trading days (within 60-200 spec range)
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all three series with period information
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title follows exact format {spec-id} · {library} · pyplots.ai
+        comment: Title 'indicator-ema · python · pygal · anyplot.ai' correct; all
+          series labeled in legend
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows price movement with both short and long EMAs; shows EMA crossovers
-          occurring; shows downtrend and consolidation patterns
+        comment: Price line, short EMA, long EMA, crossover detection — all aspects
+          covered
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price scenario with realistic random walk behavior; plausible
-          price range around $130-$162
+        comment: Stock price starting at $150 over 120 business days — realistic and
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 120 trading days is appropriate; prices are realistic for a mid-cap
-          stock
+        comment: Price range ~$128-$162 is appropriate for stock data
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,42 +185,49 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Flat sequential script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data
+        comment: np.random.seed(42) — deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, pandas, pygal, Style)
+        comment: 'All imports used: os, sys, numpy, pandas, pygal, pygal.style'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and appropriate; sys.path fix for shadowing is justified
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also unnecessarily saves plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses pygal Style class for customization, line chart with dashed
-          line styles, major/minor x-labels, legend at bottom
+        comment: Proper Style() pattern, chart.add() with stroke_style, x_labels_major,
+          render_to_png + render()
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-series dasharray dashing, x_labels_major for tick control, legend_at_bottom_columns,
+          HTML interactive export
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -207,4 +237,5 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
+  - rolling-window
   styling: []
