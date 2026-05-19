@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:53:45Z'
-updated: '2026-05-19T00:47:57Z'
+updated: '2026-05-19T01:04:30Z'
 generated_by: claude-sonnet
 workflow_run: 26068814534
 issue: 3651
@@ -15,83 +15,96 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all four series (Price, SMA 20, SMA 50, SMA 200) rendered
-    with correct Okabe-Ito colors in the required order'
-  - Complete theme adaptation — both light and dark renders pass legibility checks
-    with no dark-on-dark failures
-  - 'Idiomatic plotnine code: tidy data reshaping with pd.melt() and pd.Categorical
-    for deterministic legend order'
-  - All style-guide font sizes applied correctly (24/20/16pt hierarchy)
-  - Y-only grid with suppressed x-grid and minor grid is the right aesthetic choice
-    for a financial time series
+  - 'Theme-adaptive chrome is fully implemented: PAGE_BG, ELEVATED_BG, INK, INK_SOFT
+    tokens used throughout all text and panel elements'
+  - Correct Okabe-Ito palette with Price as first series (#009E73) and subsequent
+    SMAs following canonical order
+  - All font sizes explicitly set per style guide (title=24pt, axis labels=20pt, tick
+    labels=16pt, legend=16pt)
+  - 'Idiomatic plotnine grammar of graphics: wide-to-long reshape via pd.melt, scale_x_datetime
+    with date formatting, Categorical series ordering for legend control'
+  - 'Data storytelling: engineered bull-to-bear market with death cross annotation
+    as clear focal point, thickness hierarchy (price 2.5 vs SMA 1.2) guides viewer
+    attention'
+  - Y-axis-only grid at alpha=0.10 is appropriately subtle; x-axis grid removed for
+    clean look
+  - Crossover detection adds domain-specific value beyond basic spec requirements
   weaknesses:
-  - All four lines share the same size=1.5 — the spec calls for the price line to
-    be displayed prominently; making price slightly thicker (e.g. 2.0–2.5) and SMAs
-    thinner would reinforce the visual hierarchy
-  - No crossover annotations or reference events; the spec explicitly mentions golden/death
-    cross signals as key applications — even a subtle annotation would elevate storytelling
+  - SMA lines at size=1.2 may render thin at 4800x2700 canvas — consider 1.5–1.8 for
+    better visibility of the SMA 50 and SMA 200 overlays
+  - SMA 200 only appears in the final ~100 of 300 data points, making it visually
+    brief; extending the dataset to 400+ days would give the 200-day SMA more screen
+    presence
+  - 'Design Excellence ceiling: no descriptive title prefix (e.g., ''Bull-to-Bear
+    Transition · indicator-sma · ...''), no annotation labels on the crossover line
+    identifying it as ''Death Cross'''
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "indicator-sma · python · plotnine · anyplot.ai" in bold dark ink, clearly visible. Axis labels "Date" and "Price ($)" in dark ink. Tick labels (month/year on x, price values on y) in INK_SOFT #4A4A44, all readable. Legend box with elevated #FFFDF6 background at top-left.
-      Data: Price line in #009E73 (teal), SMA 20 in #D55E00 (orange), SMA 50 in #0072B2 (blue), SMA 200 in #CC79A7 (pink). First series correctly #009E73. All lines clearly distinguishable.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correctly matches the style guide light surface; not pure white.
+      Chrome: Title "indicator-sma · python · plotnine · anyplot.ai" is bold and clearly readable (dark ink on light background). Axis labels "Date" and "Price ($)" are visible. Date tick labels (Feb 2024–Feb 2025) are rotated 30° and legible. Price tick labels (120, 140, 160) are readable. Legend in top-left with elevated background shows Price, SMA 20, SMA 50, SMA 200.
+      Data: Price line in #009E73 (brand green), prominent at size=2.5. SMA 20 in #D55E00 (orange), SMA 50 in #0072B2 (blue), SMA 200 in #CC79A7 (pink) — first series is #009E73 ✓. A vertical dashed gray line marks the death cross around Dec 2024. Bull run visible Jan–Aug 2024, decline thereafter.
+      Legibility verdict: PASS — all text clearly readable against light background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in light #F0EFE8, clearly readable. Axis labels and tick labels in #B8B7B0, clearly readable against dark background. Legend box uses elevated #242420 fill. No dark-on-dark text failures observed — all chrome elements adapted correctly.
-      Data: Colors identical to light render — teal, orange, blue, pink unchanged, confirming only chrome flipped. Brand green #009E73 clearly visible on dark surface.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correctly matches the style guide dark surface; not pure black.
+      Chrome: Title readable in light text (#F0EFE8) on dark background. Axis labels and tick labels rendered in #B8B7B0 (INK_SOFT dark token) — clearly visible against #1A1A17. No dark-on-dark failures detected. Legend background uses #242420 (ELEVATED_BG dark) with light text.
+      Data: Colors are identical to light render — Price #009E73, SMA 20 #D55E00, SMA 50 #0072B2, SMA 200 #CC79A7. The death cross vertical line uses INK_SOFT (#B8B7B0 in dark mode), visible but appropriately subtle. Same bull-to-bear narrative is clear.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes set to style-guide values (24pt title, 20pt axis,
-          16pt ticks/legend); readable in both themes
+        comment: 'All font sizes explicitly set: title=24pt, axis=20pt, ticks=16pt,
+          legend=16pt. Both renders clearly readable.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend top-left away from data; rotated x-axis labels avoid collision
+        comment: No overlapping elements. Date labels rotated 30° to prevent collision.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: All four lines clearly distinguishable at size=1.5, alpha=0.9
+        comment: Price line prominent at 2.5 width. SMA lines at 1.2 are somewhat
+          thin for 4800x2700 canvas. SMA 200 only visible for final ~100 data points.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-4 are CVD-safe
+        comment: Okabe-Ito palette is CVD-safe. 4 series are distinguishable by hue
+          and brightness.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape at 300 dpi; good proportions, nothing cut off
+        comment: 16:9 format, data fills canvas well, legend positioned top-left without
+          occluding data. Nothing cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date and Price ($) with units; title matches required format
+        comment: Date (x) and Price ($) (y) with units. Title matches required format
+          exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order; correct FAF8F1/1A1A17 backgrounds'
+        comment: 'First series Price = #009E73 ✓. Okabe-Ito order followed ✓. Backgrounds
+          #FAF8F1 light / #1A1A17 dark ✓. Both renders theme-correct ✓.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -99,22 +112,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Correct Okabe-Ito palette, theme adaptation with warm backgrounds,
-          elevated legend fill — above generic defaults
+        comment: 'Above default: thickness hierarchy (price 2.5 vs SMA 1.2), semantic
+          crossover colors (golden/death), theme-adaptive design throughout. Not quite
+          ''publication-ready'' level but clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-only grid, x-grid suppressed, minor grid removed, theme_minimal()
-          eliminates clutter
+        comment: theme_minimal() removes top/right spines. X-axis grid explicitly
+          removed. Y-axis major grid at alpha=0.10. Legend with elevated background
+          and border.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Clear uptrend visible, SMA lag behavior shown, but no crossover annotations
-          or emphasis on key signals
+        comment: Clear bull-to-bear narrative engineered into data. Death cross annotation
+          creates focal point. Price line prominence guides viewer attention.
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-line time series with SMA overlays is exactly correct
+        comment: Line chart with SMA overlays — exactly as specified.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Price, SMA 20, SMA 50, SMA 200 all present; legend labels each; SMA
-          200 correctly starts at day 200
+        comment: Price line, SMA 20, SMA 50, SMA 200, legend, y-axis grid — all present.
+          Crossover annotation is a bonus.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price; all 300 periods shown
+        comment: Date on x-axis, Price ($) on y-axis, all four series correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is indicator-sma · python · plotnine · anyplot.ai; legend shows
-          Price, SMA 20, SMA 50, SMA 200
+        comment: 'Title ''indicator-sma · python · plotnine · anyplot.ai'' ✓. Legend
+          labels: Price, SMA 20, SMA 50, SMA 200 ✓.'
     data_quality:
       score: 15
       max: 15
@@ -154,22 +169,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Price volatility + smoothing at three lags; SMA 200 null period realistically
-          represented
+        comment: Shows all three SMA periods plus price, crossover signal, trend reversal,
+          NaN behavior for long SMAs.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Plausible daily stock price (~$150 base, realistic drift/volatility);
-          neutral
+        comment: Stock price data is a clear, neutral, comprehensible business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 business days (within 250-500 spec range); price range $140-$210
-          is realistic
+        comment: 300 business days (~14 months), price range $120-185, daily volatility
+          0.012 — all realistic for a mid-cap stock.
     code_quality:
       score: 10
       max: 10
@@ -179,32 +193,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Imports → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used, none unused
+        comment: All imported symbols are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: pd.melt() for tidy reshape, pd.Categorical for legend order; no fake
-          UI
+        comment: Clean, Pythonic. Layer-behind/layer-ahead trick with data subsets
+          is elegant.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves as plot-{THEME}.png. No deprecated API.
     library_mastery:
       score: 8
       max: 10
@@ -214,20 +228,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Proper ggplot grammar; tidy data via pd.melt(); pd.Categorical for
-          controlled legend ordering; scale_color_manual() with named values dict
+        comment: 'Expert grammar of graphics usage: pd.melt for long format, scale_x_datetime
+          with date formatting, Categorical for legend ordering, scale_color_manual
+          with named dict.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: scale_x_datetime() with date_breaks/date_labels formatting; explicit
-          categorical ordering; theme element customisation — solid but no faceting
-          or advanced plotnine features
+        comment: 'Uses plotnine/ggplot2-specific patterns: Categorical series ordering,
+          annotate(''vline''), legend_position as coordinate tuple, separate geom_line
+          calls with data subsets for rendering order control.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - layer-composition
+  - annotations
   patterns:
   - data-generation
   - wide-to-long
@@ -236,3 +253,4 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
+  - grid-styling
