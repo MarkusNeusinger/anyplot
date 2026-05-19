@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-density: Ternary Density Plot
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-19
@@ -83,7 +83,7 @@ for collection in ax.collections:
     collection.set_clip_path(triangle_clip)
 
 # KDE contour lines — thicker for visibility at full resolution
-sns.kdeplot(x=x, y=y, levels=10, color=ACCENT, linewidths=2.0, ax=ax, zorder=6)
+sns.kdeplot(x=x, y=y, levels=10, color=ACCENT, linewidths=3.0, ax=ax, zorder=6)
 
 for collection in ax.collections:
     collection.set_clip_path(triangle_clip)
@@ -101,7 +101,7 @@ cbar.set_ticks([0, 0.5, 1.0])
 cbar.ax.set_yticklabels(["Low", "Medium", "High"])
 for lbl in cbar.ax.get_yticklabels():
     lbl.set_color(INK_SOFT)
-    lbl.set_fontsize(14)
+    lbl.set_fontsize(16)
 cbar.ax.tick_params(colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
@@ -113,13 +113,24 @@ ax.text(0.5, sqrt3_2 + 0.08, "Clay (%)", ha="center", va="bottom", fontsize=22, 
 # Percentage tick labels along each edge
 for i in [2, 4, 6, 8]:
     frac = i / 10
-    ax.text(frac, -0.04, f"{int(frac * 100)}", ha="center", va="top", fontsize=14, color=INK_SOFT)
+    ax.text(frac, -0.04, f"{int(frac * 100)}", ha="center", va="top", fontsize=16, color=INK_SOFT)
     ax.text(
-        0.5 * frac - 0.04, sqrt3_2 * frac, f"{int(frac * 100)}", ha="right", va="center", fontsize=14, color=INK_SOFT
+        0.5 * frac - 0.04, sqrt3_2 * frac, f"{int(frac * 100)}", ha="right", va="center", fontsize=16, color=INK_SOFT
     )
     ax.text(
-        1 - 0.5 * frac + 0.04, sqrt3_2 * frac, f"{int(frac * 100)}", ha="left", va="center", fontsize=14, color=INK_SOFT
+        1 - 0.5 * frac + 0.04, sqrt3_2 * frac, f"{int(frac * 100)}", ha="left", va="center", fontsize=16, color=INK_SOFT
     )
+
+# Cluster annotations — label each density peak for data storytelling
+ann_kw = {
+    "fontsize": 15,
+    "fontweight": "bold",
+    "color": INK,
+    "bbox": {"boxstyle": "round,pad=0.3", "facecolor": PAGE_BG, "edgecolor": INK_SOFT, "alpha": 0.75},
+}
+ax.text(0.13, 0.04, "Sandy\nsoils", ha="center", va="center", **ann_kw)
+ax.text(0.80, 0.11, "Silty\nsoils", ha="center", va="center", **ann_kw)
+ax.text(0.53, 0.50, "Clay-rich\nsoils", ha="center", va="center", **ann_kw)
 
 # Style
 ax.set_title(
