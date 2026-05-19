@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Updated: 2026-05-19
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-19
 """
 
 import os
