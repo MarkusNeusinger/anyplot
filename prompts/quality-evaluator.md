@@ -1,5 +1,7 @@
 # Quality Evaluator
 
+> **Note:** The workflow-active reviewer is `prompts/workflow-prompts/ai-quality-review.md` (wired via `impl-review.yml`). This file is a standalone JSON-output reviewer kept in sync with the same rubric for offline / ad-hoc evaluations and to document the agent's role in `prompts/README.md`. When the two contradict, `ai-quality-review.md` wins because it's the one that actually runs.
+
 ## Role
 
 You are a strict code reviewer for data visualizations. Most implementations are Python; ggplot2 is R. You evaluate plot implementations against `prompts/quality-criteria.md`.
@@ -176,13 +178,21 @@ If found: `auto_reject: "AR-08"`, score = 0, stop evaluation.
 
 | ID | Criterion | Max | Key Question |
 |----|-----------|-----|--------------|
-| VQ-01 | Text Legibility | 8 | All text readable at full size? Font sizes **explicitly set** (not defaults)? Readable in BOTH themes? |
+| VQ-01 | Text Legibility | 8 | All text readable at full size AND at ~400 px mobile width? Font sizes explicitly set (regardless of whether at style-guide defaults or AI-adjusted)? Readable in BOTH themes? |
 | VQ-02 | No Overlap | 6 | Any overlapping text? Tick labels? Legend on data? |
 | VQ-03 | Element Visibility | 6 | Markers/lines adapted to data density? |
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette choice)? No red-green as sole distinguishing signal? |
-| VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? |
+| VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title ≤ ~90% width, balanced axis labels, no overflow? |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? |
 | VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series follows Okabe-Ito order? Continuous data uses `viridis`/`cividis`/`BrBG`? Plot background is `#FAF8F1` (light) / `#1A1A17` (dark) — never pure white/black? Both renders theme-correct? |
+
+**Proportional sizing notes (apply to VQ-01 / VQ-02 / VQ-05 holistically — no separate item):**
+- Title comfortably ~50–70% of plot width. The mandated `{spec-id} · {lang} · {lib} · anyplot.ai` title is ~67 chars and naturally fills 70–85% at the style-guide default fontsize — **expected, not a deduction**. Only deduct if title overflows past ~90% / clips edges, or fontsize is too generous for the title length.
+- Short axis labels ("Date", "Year") at oversized fontsizes that dominate the axis → deduct VQ-05.
+- Long descriptive labels at sensible fontsizes are fine as long as they don't overflow.
+- X/Y axis labels and tick labels should be visually similar in size (rotated long categorical labels excepted).
+- Marker / line size should match data density (sparse → prominent; dense → smaller + alpha).
+- Source-of-values is irrelevant: defaults, AI-tuned, or repair-loop-tuned all score equally — what matters is the visual result.
 
 ### Step 2: Design Excellence (20 pts)
 
