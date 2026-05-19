@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-race-animated: Animated Bar Chart Race
-Library: highcharts | Python 3.13
-Quality: 91/100 | Created: 2026-01-11
+Library: highcharts unknown | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-19
 """
 
 import os
