@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-19
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 81/100 | Created: 2026-05-19
 """
 
 import math
