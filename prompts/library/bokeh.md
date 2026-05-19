@@ -22,6 +22,12 @@ p = figure(
     title=title,
     x_axis_label=x_label,
     y_axis_label=y_label,
+    toolbar_location=None,   # IMPORTANT: bokeh's default toolbar (above the plot)
+                             # adds ~30-50px above the canvas, so the saved screenshot
+                             # ends up SHORTER than `height=` (e.g. 3200×1800 became
+                             # 3200×1661 in the May 2026 fan-out). Disable it for the
+                             # static catalog renders — the HTML preview retains the
+                             # default toolbar via `output_file(...)` if needed.
     min_border_bottom=160,   # room for 34pt x-tick labels + 42pt x-axis label
     min_border_left=180,     # room for 34pt y-tick labels + 42pt y-axis label
     min_border_top=110,      # room for 50pt title
