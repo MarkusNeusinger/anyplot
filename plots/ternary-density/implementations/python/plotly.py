@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 ternary-density: Ternary Density Plot
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-19
+Quality: 91/100 | Updated: 2026-05-19
 """
 
 import os
