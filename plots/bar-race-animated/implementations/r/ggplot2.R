@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' bar-race-animated: Animated Bar Chart Race
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 83/100 | Created: 2026-05-19
+#' Quality: 87/100 | Created: 2026-05-19
 
 library(ggplot2)
 library(dplyr)
