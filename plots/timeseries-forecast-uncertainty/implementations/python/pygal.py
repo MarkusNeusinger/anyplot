@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 92/100 | Created: 2026-05-16
+Quality: 92/100 | Updated: 2026-05-19
 """
 
 import os
@@ -69,12 +69,12 @@ custom_style = Style(
     stroke_width=3,
 )
 
-# Create chart
+# Create chart — show_x_guides=True draws a vertical line at x_labels_major positions
 chart = pygal.Line(
     width=4800,
     height=2700,
     style=custom_style,
-    show_x_guides=False,
+    show_x_guides=True,
     show_y_guides=True,
     show_legend=True,
     legend_at_bottom=False,
@@ -83,13 +83,15 @@ chart = pygal.Line(
     print_values_position="top",
 )
 
-chart.title = "timeseries-forecast-uncertainty · pygal · anyplot.ai"
+chart.title = "timeseries-forecast-uncertainty · python · pygal · anyplot.ai"
 chart.x_title = "Month"
 chart.y_title = "Sales ($)"
 
-# Thin x-axis labels: show every 6 months for readability
+# Sparse x-axis labels: show every 6 months for readability
 sparse_labels = [x_labels[i] if i % 6 == 0 else "" for i in range(len(x_labels))]
 chart.x_labels = sparse_labels
+# Draw the vertical forecast boundary guide only at the split month
+chart.x_labels_major = ["Jan 25"]
 
 # Prepare data series
 historical_data = list(actual[:split_idx])
