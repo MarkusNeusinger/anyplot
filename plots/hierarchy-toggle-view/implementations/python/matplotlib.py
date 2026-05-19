@@ -1,7 +1,7 @@
 """ anyplot.ai
 hierarchy-toggle-view: Interactive Treemap-Sunburst Toggle View
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 83/100 | Created: 2026-05-19
+Quality: 81/100 | Created: 2026-05-19
 """
 
 import os
