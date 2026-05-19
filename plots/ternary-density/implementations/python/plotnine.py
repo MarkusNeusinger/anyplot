@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 ternary-density: Ternary Density Plot
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-11
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-19
 """
 
 import numpy as np
