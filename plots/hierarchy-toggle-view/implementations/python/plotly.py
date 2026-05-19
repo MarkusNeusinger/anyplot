@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 hierarchy-toggle-view: Interactive Treemap-Sunburst Toggle View
-Library: plotly | Python 3.13
-Quality: 92/100 | Updated: 2026-05-19
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-19
 """
 
 import os
