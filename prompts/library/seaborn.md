@@ -48,13 +48,13 @@ plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
 ```python
 # Text sizes (seaborn uses matplotlib underneath) — title kept compact to avoid
 # overflow of the long mandated "{spec-id} · python · seaborn · anyplot.ai" title.
-ax.set_title(title, fontsize=14, fontweight='medium')
-ax.set_xlabel(x_label, fontsize=12)
-ax.set_ylabel(y_label, fontsize=12)
-ax.tick_params(axis='both', labelsize=10)
-# Legend at 10pt — skip for single-series plots (no labeled artists → warning)
+ax.set_title(title, fontsize=12, fontweight='medium')
+ax.set_xlabel(x_label, fontsize=10)
+ax.set_ylabel(y_label, fontsize=10)
+ax.tick_params(axis='both', labelsize=8)
+# Legend at 8pt — skip for single-series plots (no labeled artists → warning)
 if len(ax.get_legend_handles_labels()[0]) > 1:
-    ax.legend(fontsize=10)
+    ax.legend(fontsize=8)
 
 # Or use sns.set_context for global scaling
 sns.set_context("notebook", font_scale=1.0)

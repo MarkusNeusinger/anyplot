@@ -50,11 +50,11 @@ plot = (
 ```python
 plot = plot + theme(
     figure_size=(8, 4.5),
-    text=element_text(size=8),            # Base text
-    axis_title=element_text(size=12),     # Axis labels
-    axis_text=element_text(size=10),      # Tick labels
-    plot_title=element_text(size=14),     # Title — kept compact to fit the long mandated title
-    legend_text=element_text(size=10)
+    text=element_text(size=7),            # Base text
+    axis_title=element_text(size=10),     # Axis labels
+    axis_text=element_text(size=8),       # Tick labels
+    plot_title=element_text(size=12),     # Title — kept compact to fit the long mandated title
+    legend_text=element_text(size=8)
 )
 
 # Element sizes in geoms (density-aware — see default-style-guide.md)

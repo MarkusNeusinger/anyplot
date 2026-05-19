@@ -22,10 +22,10 @@ p = figure(
     title=title,
     x_axis_label=x_label,
     y_axis_label=y_label,
-    min_border_bottom=180,   # room for 36pt x-tick labels + 42pt x-axis label
-    min_border_left=200,     # room for 36pt y-tick labels + 42pt y-axis label
-    min_border_top=120,      # room for 56pt title
-    min_border_right=60,
+    min_border_bottom=160,   # room for 34pt x-tick labels + 42pt x-axis label
+    min_border_left=180,     # room for 34pt y-tick labels + 42pt y-axis label
+    min_border_top=110,      # room for 50pt title
+    min_border_right=50,
 )
 ```
 
@@ -98,19 +98,19 @@ driver.quit()
 
 ```python
 # Text sizes — bokeh fonts render via headless Chrome at CSS pt sizing
-# (1pt ≈ 1.333 source-px), so nominal values must be ~3× larger than the
-# DPI-based equivalents to match the same visual size. The pt values here
-# end up at roughly the same source-pixel height as matplotlib's
-# 14/12/10pt × dpi=400.
-p.title.text_font_size = '56pt'
+# (1pt ≈ 1.333 source-px). The pt values here end up at roughly the same
+# source-pixel height as matplotlib 12/10/8pt @ dpi=400 (target ~67 px
+# for title). See default-style-guide.md "Why the Native-pixel numbers
+# look so much bigger".
+p.title.text_font_size = '50pt'
 p.xaxis.axis_label_text_font_size = '42pt'
 p.yaxis.axis_label_text_font_size = '42pt'
-p.xaxis.major_label_text_font_size = '36pt'
-p.yaxis.major_label_text_font_size = '36pt'
+p.xaxis.major_label_text_font_size = '34pt'
+p.yaxis.major_label_text_font_size = '34pt'
 
 # Legend text — apply only when a legend is present
 # (set legend_label= on glyphs or configure p.legend after add_layout)
-# p.legend.label_text_font_size = '36pt'
+# p.legend.label_text_font_size = '34pt'
 
 # Element sizes (density-aware — see default-style-guide.md)
 p.scatter(..., size=10)        # ~2-3x default

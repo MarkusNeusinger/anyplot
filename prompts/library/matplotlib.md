@@ -50,14 +50,14 @@ plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
 ```python
 # Text sizes — title kept compact because the mandated "{spec-id} · python · matplotlib · anyplot.ai"
 # title is ~67 chars and would overflow at 16+pt on the 3200px-wide canvas.
-ax.set_title(title, fontsize=14, fontweight='medium')
-ax.set_xlabel(x_label, fontsize=12)
-ax.set_ylabel(y_label, fontsize=12)
-ax.tick_params(axis='both', labelsize=10)
-# Legend at 10pt — skip ax.legend() for single-series plots (avoids the
+ax.set_title(title, fontsize=12, fontweight='medium')
+ax.set_xlabel(x_label, fontsize=10)
+ax.set_ylabel(y_label, fontsize=10)
+ax.tick_params(axis='both', labelsize=8)
+# Legend at 8pt — skip ax.legend() for single-series plots (avoids the
 # "No artists with labels found to put in legend" warning)
 if len(ax.get_legend_handles_labels()[0]) > 1:
-    ax.legend(fontsize=10)
+    ax.legend(fontsize=8)
 
 # Element sizes
 ax.scatter(x, y, s=100, edgecolors='white', linewidth=0.5)  # s=60-150 (density-aware)
@@ -76,10 +76,10 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for the review-step c
 ## Styling
 
 ```python
-ax.set_xlabel(x_label, fontsize=12)
-ax.set_ylabel(y_label, fontsize=12)
-ax.set_title(title, fontsize=14, fontweight='medium')
-ax.legend(fontsize=10)  # if needed (omit for single-series)
+ax.set_xlabel(x_label, fontsize=10)
+ax.set_ylabel(y_label, fontsize=10)
+ax.set_title(title, fontsize=12, fontweight='medium')
+ax.legend(fontsize=8)  # if needed (omit for single-series)
 plt.tight_layout()
 ```
 
