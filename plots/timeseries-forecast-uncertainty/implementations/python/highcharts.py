@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-19
@@ -22,9 +22,11 @@ from selenium.webdriver.chrome.options import Options
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+FORECAST_BG = "rgba(213,94,0,0.06)" if THEME == "light" else "rgba(213,94,0,0.10)"
 
 # Okabe-Ito palette (sequential positions)
 BRAND = "#009E73"  # position 1 — historical data
@@ -67,6 +69,7 @@ upper_95 = forecast_values + ci_95
 historical_timestamps = [int(d.timestamp() * 1000) for d in historical_dates]
 forecast_timestamps = [int(d.timestamp() * 1000) for d in forecast_dates]
 forecast_start_ts = forecast_timestamps[0]
+forecast_end_ts = forecast_timestamps[-1] + 30 * 24 * 3600 * 1000
 
 # Download Highcharts JS with fallback URLs and per-URL retry
 hc_urls = [
@@ -123,24 +126,24 @@ chart.options.chart = {
     "borderWidth": 0,
     "plotBorderWidth": 0,
     "spacingTop": 40,
-    "spacingBottom": 220,
+    "spacingBottom": 180,
     "spacingLeft": 60,
     "spacingRight": 80,
 }
 
 chart.options.title = {
     "text": "timeseries-forecast-uncertainty · python · highcharts · anyplot.ai",
-    "style": {"fontSize": "56px", "fontWeight": "medium", "color": INK},
+    "style": {"fontSize": "66px", "fontWeight": "medium", "color": INK},
     "margin": 30,
 }
 
 chart.options.x_axis = {
     "type": "datetime",
-    "title": {"text": "Date", "style": {"fontSize": "42px", "color": INK}, "margin": 15},
-    "labels": {"style": {"fontSize": "36px", "color": INK_SOFT}},
+    "title": {"text": "Date", "style": {"fontSize": "56px", "color": INK}, "margin": 15},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "dateTimeLabelFormats": {"month": "%b %Y"},
-    "gridLineWidth": 1,
-    "gridLineColor": GRID,
+    "crosshair": {"color": GRID, "width": 2, "snap": True},
+    "gridLineWidth": 0,
     "lineColor": INK_SOFT,
     "tickColor": INK_SOFT,
     "plotLines": [
@@ -151,18 +154,19 @@ chart.options.x_axis = {
             "dashStyle": "Dash",
             "label": {
                 "text": "Forecast Start",
-                "style": {"fontSize": "36px", "color": INK_SOFT, "fontWeight": "normal"},
+                "style": {"fontSize": "38px", "color": INK_SOFT, "fontWeight": "normal"},
                 "rotation": 0,
                 "y": -10,
             },
             "zIndex": 5,
         }
     ],
+    "plotBands": [{"from": forecast_start_ts, "to": forecast_end_ts, "color": FORECAST_BG}],
 }
 
 chart.options.y_axis = {
-    "title": {"text": "Product Demand (Units)", "style": {"fontSize": "42px", "color": INK}, "margin": 15},
-    "labels": {"style": {"fontSize": "36px", "color": INK_SOFT}},
+    "title": {"text": "Product Demand (Units)", "style": {"fontSize": "56px", "color": INK}, "margin": 15},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "gridLineWidth": 1,
     "gridLineColor": GRID,
     "lineColor": INK_SOFT,
@@ -174,9 +178,12 @@ chart.options.legend = {
     "layout": "horizontal",
     "align": "center",
     "verticalAlign": "bottom",
-    "itemStyle": {"fontSize": "36px", "color": INK_SOFT},
-    "symbolWidth": 24,
-    "symbolHeight": 14,
+    "itemStyle": {"fontSize": "44px", "color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "symbolWidth": 28,
+    "symbolHeight": 16,
     "symbolRadius": 3,
     "margin": 20,
     "padding": 16,
@@ -185,13 +192,15 @@ chart.options.legend = {
 chart.options.tooltip = {
     "shared": True,
     "style": {"fontSize": "36px", "color": INK},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
     "xDateFormat": "%B %Y",
     "valueDecimals": 1,
 }
 
 chart.options.plot_options = {"line": {"lineWidth": 4, "marker": {"radius": 6}}, "arearange": {"lineWidth": 0}}
 
-# 95% CI outer band — same color as 80%, lighter opacity creates visual nesting
+# 95% CI outer band — lighter opacity creates visual nesting
 ci_95_series = AreaRangeSeries()
 ci_95_series.name = "95% Confidence Interval"
 ci_95_series.data = [
@@ -203,7 +212,7 @@ ci_95_series.line_width = 0
 ci_95_series.marker = {"enabled": False}
 ci_95_series.z_index = 0
 
-# 80% CI inner band — same color, higher opacity stands out in front
+# 80% CI inner band — higher opacity stands out in front
 ci_80_series = AreaRangeSeries()
 ci_80_series.name = "80% Confidence Interval"
 ci_80_series.data = [
