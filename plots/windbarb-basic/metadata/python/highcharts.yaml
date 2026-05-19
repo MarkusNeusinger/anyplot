@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: windbarb-basic
 created: '2026-01-11T09:35:19Z'
-updated: '2026-05-19T06:56:34Z'
+updated: '2026-05-19T07:10:36Z'
 generated_by: claude-sonnet
 workflow_run: 26080790453
 issue: 3694
@@ -12,110 +12,114 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/highcharts/plot-dark.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Perfect spec compliance with correct windbarb chart type and meteorological convention
-  - 'Fully theme-adaptive: correct backgrounds, all chrome tokens applied, data color
-    identical across themes'
-  - All font sizes explicitly set at appropriate scale for 4800x2700 canvas
-  - Clever JS injection workaround correctly preserves per-barb y-position (speed
-    on y-axis)
-  - Clean KISS structure with perfect reproducibility (seed=42)
+  - Perfect spec compliance — all required wind barb features correctly implemented
+    using Highcharts windbarb series type
+  - Excellent data storytelling — pre-frontal to post-frontal synoptic transect narrative
+    is meteorologically meaningful and visually clear
+  - Correct meteorological convention — barbs point FROM wind direction, speed encoded
+    via barb notation (half/full barbs and pennants)
+  - Both light and dark themes pass readability checks with no dark-on-dark or light-on-light
+    failures
+  - Speed category coloring using Okabe-Ito positions 1–4 (teal, orange, blue, pink)
+    adds a meaningful secondary data dimension to the visualization
   weaknesses:
-  - Demo data never reaches 50+ knots so pennant (triangle) symbols are never shown
-    — a key feature called out in the spec; add 2-3 stations with 50-80 knot winds
-  - No calm-wind open-circle (<2.5 kn) demonstrated — also mentioned in spec
-  - 'No visual storytelling (DE-03): all barbs same color and weight; color-code by
-    speed category using Okabe-Ito to create visual hierarchy'
-  - Layout has dead band above data (y-axis to 40 but max data ~33 kn); extending
-    to ~85 kn with pennant-speed stations would fill it
+  - Y-axis max set to 90 when data peaks at ~68 knots — ~25% of vertical chart area
+    is unused empty space; set max to ~75 or use auto-scaling
+  - Legend clips at the bottom edge of both light and dark renders — increase marginBottom
+    from 200 to ~280px to give the speed-category legend room
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "windbarb-basic · python · highcharts · anyplot.ai" in bold dark ink — readable. X-axis label "Weather Station Index" and y-axis label "Wind Speed (knots)" in dark ink — readable. Tick labels in slightly lighter dark grey — readable.
-      Data: 20 wind barbs in brand green #009E73, positioned at their y-axis wind speed values (5–33 kn). Barbs show varying orientations (direction) and barb counts. Grid lines are subtle horizontal rules at very low opacity.
+      Background: Warm cream #FAF8F1 — correct, not pure white
+      Chrome: Title "windbarb-basic · python · highcharts · anyplot.ai" in bold dark ink — readable. Subtitle in smaller secondary text — readable. Y-axis label "Wind Speed (knots)" and X-axis label "Weather Station Index" — both readable. Tick labels in INK_SOFT — readable.
+      Data: 25 wind barbs color-coded by speed category: teal (#009E73) for Light <20 kt, orange (#D55E00) for Moderate 20-34 kt, blue (#0072B2) for Strong 35-49 kt, pink/purple (#CC79A7) for Gale ≥50 kt. Speed increases left-to-right creating frontal transect narrative. Y-axis spans 0-90 but data peaks at ~68 kt leaving ~25% unused headroom.
+      Layout: Legend at bottom partially clipped at image edge.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light near-white ink — readable. Axis labels in light ink — readable. Tick labels in lighter grey tone — readable. No dark-on-dark text failures observed.
-      Data: Wind barbs identical in position, orientation, and color (#009E73) to the light render — data colors unchanged between themes as required.
+      Background: Deep warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle in light/white text — clearly readable. Axis labels and tick marks use light chrome tokens — readable. No dark-on-dark text issues detected anywhere.
+      Data: Wind barb colors identical to light render — teal, orange, blue, pink/purple unchanged. Only background, text, and grid chrome flipped to dark-mode values. Grid lines subtle and visible.
+      Layout: Same legend clipping at bottom edge as light render.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: 56px title, 40px axis labels, 32px
-          ticks; readable in both themes'
+        comment: All text readable in both themes; font sizes explicitly set; legend
+          labels slightly small but legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Barbs well-spaced; no text collisions
+        comment: Barbs well-spaced across transect; no text collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: vectorLength=80, lineWidth=6; barbs clearly visible at 4800x2700
+        comment: All barbs clearly distinguishable in both light and dark renders
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Single CVD-safe series #009E73; good contrast on both surfaces'
+        comment: Four Okabe-Ito colors; no red-green-only distinction; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
-        passed: true
-        comment: Good proportions; slight dead band at top (y-axis to 40, data max
-          ~33 kn)
+        passed: false
+        comment: Y-axis max 90 wastes ~25% vertical space (data peaks ~68 kt); legend
+          clips at bottom edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Wind Speed (knots) includes units; Weather Station Index is descriptive
+        comment: Wind Speed (knots) and Weather Station Index with units; title format
+          correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; #FAF8F1/#1A1A17 backgrounds; all chrome theme-adaptive'
+        comment: 'First category #009E73; Okabe-Ito positions 1-4 in order; correct
+          backgrounds in both themes'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean, well-configured default appearance with brand color; not at
-          publication-polish level
+        passed: true
+        comment: Speed category coloring adds meaningful dimension; subtitle provides
+          narrative context; clean professional appearance
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Subtle grid (rgba 0.10), theme-adaptive chrome, generous margins;
-          minimal Highcharts frame
+        passed: true
+        comment: Theme-adaptive chrome tokens; subtle grid; otherwise standard Highcharts
+          defaults
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Raw data display; no visual hierarchy or emphasis distinguishing
-          high-wind from low-wind stations
+        passed: true
+        comment: Clear frontal transect narrative with speed rising left-to-right;
+          category colors create visual hierarchy
     spec_compliance:
       score: 15
       max: 15
@@ -125,55 +129,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Highcharts windbarb chart using dedicated windbarb module
+        comment: Correct Highcharts windbarb series type with proper barb rendering
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Half/full barbs rendered; meteorological direction convention; y-position
-          encodes speed
+        comment: Staff pointing from-wind direction; barb notation for speed; meteorological
+          convention correct
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Station index x, wind speed (knots) y; u/v correctly converted to
-          speed+direction
+        comment: Station index on X; wind speed in knots on Y; meteorological direction
+          encoded correctly
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly windbarb-basic · python · highcharts · anyplot.ai;
-          legend disabled for single series
+        comment: Title windbarb-basic · python · highcharts · anyplot.ai matches required
+          format; speed-category legend present
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Shows speed/direction variation (5-33 kn) but no pennants (50+ kn)
-          and no calm-wind circle (<2.5 kn) — both called out in spec
+        passed: true
+        comment: Multiple speed ranges and directions demonstrated; speed encoding
+          via barb notation visible
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Weather station transect is realistic meteorological scenario; station
-          indices 0-19 are generic
+        comment: Meteorological synoptic transect pre-frontal to post-frontal is plausible;
+          neutral subject
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 5-33 kn realistic surface wind; physically correct meteorological
-          direction convention
+        comment: Wind speeds ~4-68 knots; realistic for frontal passage scenario
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -181,57 +184,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports > Data > Plot config > JS injection > HTML > PNG; no functions/classes
+        comment: No functions or classes; flat script
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: JS literal patching is documented necessary workaround for highcharts_core
-          dict serialization limitation
+        passed: false
+        comment: JS string injection to append windbarb series is necessary workaround
+          for highcharts_core but fragile
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct Chart(container) + HighchartsOptions.from_dict pattern; inline
-          JS for headless Chrome; JS patching workaround is non-idiomatic but necessary
+        comment: Proper HighchartsOptions.from_dict(); correct module chain (highcharts
+          → more → datagrouping → windbarb); Selenium container.screenshot
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts dedicated windbarb module — meteorology-specific
-          chart type unique to Highcharts; direction property in object-format data
-  verdict: REJECTED
+        comment: Windbarb series type (Highcharts-specific); module loading; tooltip
+          pointFormat with meteorological notation
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling: []
