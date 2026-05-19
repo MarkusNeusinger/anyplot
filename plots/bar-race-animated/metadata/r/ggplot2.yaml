@@ -1,0 +1,264 @@
+library: ggplot2
+language: r
+specification_id: bar-race-animated
+created: '2026-05-19T02:10:39Z'
+updated: '2026-05-19T02:29:50Z'
+generated_by: claude-sonnet
+workflow_run: 26071722470
+issue: 3653
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Correctly implements small multiples (facet_wrap) as the static alternative to
+    animation, per library spec and spec notes
+  - 'All font sizes properly set to recommended values: title 24pt, subtitle 18pt,
+    axis title 20pt, tick labels 16pt, legend 16pt, strip 18pt'
+  - Value labels on bars add meaningful data context without clutter
+  - Informative subtitle provides clear narrative insight about the GDP race
+  - Full theme-adaptive chrome (PAGE_BG, INK, INK_SOFT, ELEVATED_BG) correctly applied
+    to both themes
+  - 'Correct Okabe-Ito palette: Africa=#009E73 as first categorical series, full order
+    for 5 continents'
+  - The '___' separator trick for per-facet sorted bars is elegant and idiomatic ggplot2
+  - set.seed(42) present; all imports used; clean linear script
+  weaknesses:
+  - geom_text value labels at size=4.5 are slightly small for a 4800x2700 canvas;
+    size 5.5-6.5 would be more legible at full resolution
+  - Design lacks a focal point — no highlighted country trajectory or callout annotation
+    to guide viewer attention across the chronological facets
+  - panel.border is not explicitly removed, leaving a box frame around each facet
+    panel; adding panel.border = element_blank() would add refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, fills the full canvas including between facets
+      Chrome: Title "GDP per Capita Rankings · bar-race-animated · r · ggplot2 · anyplot.ai" in bold dark ink at 24pt — clearly readable. Subtitle at 18pt in secondary dark ink readable. Strip year labels (1952, 1967, 1977, 1987, 1997, 2007) in bold 18pt on elevated off-white backgrounds. X-axis label "GDP per Capita (USD)" at 20pt readable. Country names on y-axis at 16pt readable. Dollar tick labels on x-axis at 16pt readable. Legend at bottom shows continent colors with readable text.
+      Data: Horizontal bars colored by continent — Africa (#009E73 green), Americas (#D55E00 orange-red), Asia (#0072B2 blue), Europe (#CC79A7 reddish-purple), Oceania (#E69F00 orange-yellow). 6 facets in 2x3 grid show top-10 countries for years 1952, 1967, 1977, 1987, 1997, 2007. Value labels at bar ends (e.g. $108K for Kuwait in 1952). Bars sorted descending by value. Kuwait dominates 1952; Norway rises to top by 2007.
+      Legibility verdict: PASS — all text is readable against the light background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, fills canvas completely
+      Chrome: Title in primary light ink (#F0EFE8) — fully readable. Subtitle in secondary light ink — readable. Strip year labels in bright light text on dark elevated (#242420) backgrounds. Country names on y-axis in primary light ink — readable. X-axis tick labels in secondary ink token (#B8B7B0) — readable. Legend shows identical continent colors with light text against elevated dark background. No dark-on-dark failures detected; chrome adapts correctly.
+      Data: Bar colors are identical to the light render — Africa green, Americas orange, Asia blue, Europe purple, Oceania yellow-orange. Consistency is correct. Value labels at bar ends visible in INK_SOFT (#B8B7B0). Subtle x-axis vertical grid lines visible against dark background.
+      Legibility verdict: PASS — all text is readable against the dark background, chrome adapts correctly.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title 24pt, subtitle 18pt, axis title 20pt, tick labels 16pt, legend
+          16pt, strip 18pt all correctly sized; geom_text value labels at size=4.5
+          slightly below optimal for 4800x2700 canvas but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No collisions; slight crowding in facets with many short bars but
+          expand=c(0,0.28) gives adequate space for value labels
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All bars clearly visible at alpha=0.9; five continents well-differentiated;
+          value labels at bar ends add clarity
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito is CVD-safe; five continents well-differentiated; no red-green
+          as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 2x3 facet grid works well for 6 time snapshots on landscape canvas;
+          slight internal crowding with 10 bars per panel
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: GDP per Capita (USD) with units on x-axis; no y-axis label needed
+          since country names are self-explanatory
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Africa=#009E73 as first categorical series; full Okabe-Ito order
+          for 5 continents; background #FAF8F1 light / #1A1A17 dark; both renders
+          theme-correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Above default (4): intentional continent-based color hierarchy,
+          bold title with narrative subtitle, strip backgrounds using elevated colors,
+          consistent typographic hierarchy; limited by no highlighted trajectory or
+          focal annotations'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): y-axis grid removed, x-axis grid very subtle
+          at 0.25 linewidth, no minor grid, strip backgrounds use ELEVATED_BG; panel.border
+          not explicitly removed'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): narrative subtitle gives clear insight; chronological
+          facet progression tells the arc; continent colors reveal geographic patterns;
+          no highlighted trajectory or callout annotations'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Small multiples via facet_wrap is the correct and specified static
+          alternative for ggplot2; correctly renders each time snapshot as a sorted
+          bar chart
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bars sorted by value per time point via slice_max+reorder; entity
+          labels on y-axis; time indicator via facet strip labels; consistent entity
+          colors across all frames
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=GDP per capita value, Y=ranked countries, fill=continent, facets=year;
+          all data correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'GDP per Capita Rankings · bar-race-animated · r · ggplot2
+          · anyplot.ai' matches required format; legend labels are continent names
+          with correct colors
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows ranked bars, time evolution, entity tracking, category coloring,
+          and value annotations; individual country trajectory hard to follow across
+          facets by nature of format
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses real gapminder historical data; GDP per capita values are authentic
+          and politically neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $0K-$108K range is realistic; dollar formatting with K suffix is
+          appropriate for the domain
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear script with no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; gapminder is a fixed deterministic dataset
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 5 imports (ggplot2, dplyr, scales, ragg, gapminder) are actually
+          used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: The '___' separator trick for per-facet sorted bars is a genuine
+          idiomatic ggplot2 pattern; clean dplyr piping; no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf; uses ragg::agg_png device
+          correctly
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Excellent grammar-of-graphics: aes mapping, facet_wrap with free
+          scales, coord_flip, scale_fill_manual, scale_x_discrete with label function,
+          expansion(), proper theme layering; not full 5 due to no panel.border removal'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: reorder(cntry_yr, gdpPercap) with '___' separator is a genuine ggplot2-specific
+          pattern for sorted faceted bars; scales::label_dollar with suffix; expansion(mult)
+          for label room; above default (1) but not maximally distinctive
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - gapminder
+  techniques:
+  - faceting
+  - annotations
+  patterns:
+  - dataset-loading
+  - groupby-aggregation
+  dataprep: []
+  styling:
+  - alpha-blending

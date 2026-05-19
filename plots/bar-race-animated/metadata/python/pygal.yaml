@@ -1,210 +1,251 @@
 library: pygal
+language: python
 specification_id: bar-race-animated
 created: '2026-01-11T00:21:12Z'
-updated: '2026-01-11T00:57:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886563904
+updated: '2026-05-19T02:25:43Z'
+generated_by: claude-sonnet
+workflow_run: 26071319187
 issue: 3653
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/pygal/plot.html
-quality_score: 87
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/pygal/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent small multiples approach to represent animation in a static format
-  - Clear ranking progression visible across years (NVIDIA rise is engaging)
-  - Consistent color coding allows tracking entities across panels
-  - Good use of value labels on bars showing exact market cap
-  - Clean title format and professional appearance
-  - Both PNG and interactive HTML output generated
+  - Key-trend narrative subtitle provides immediate data insight without requiring
+    the viewer to analyze all six panels
+  - 'Per-panel ranking labels (e.g. ''China: #6'') create a clear visual arc across
+    the small multiples'
+  - Consistent Okabe-Ito color coding allows entity tracking across all time panels
+  - 'Correct theme-adaptive chrome: backgrounds, text, and grid all flip appropriately
+    in both renders'
+  - Factually accurate GDP data with correct relative proportions across the entire
+    time range
   weaknesses:
-  - Per-chart legends are redundant since global legend exists (adds visual noise)
-  - Some value labels on smaller bars may be hard to read
-  - Heavy reliance on PIL/Pillow for composition rather than pygal native features
-  image_description: 'The plot displays a 3x2 grid of horizontal bar charts showing
-    tech company market cap evolution from 2019 to 2024. Each panel represents one
-    year with bars sorted by value (descending). The main title "bar-race-animated
-    · pygal · pyplots.ai" is centered at the top in a large, readable font. Each bar
-    shows its value label (e.g., "$1,200B") positioned in the middle of the bar. Companies
-    are color-coded consistently across all panels: Apple (blue), Microsoft (yellow),
-    Alphabet (green), Amazon (orange), Meta (purple), Tesla (red), NVIDIA (lime green),
-    Samsung (brown). A global legend appears at the bottom of the image showing all
-    company-color mappings. The charts effectively show ranking changes over time
-    - notably NVIDIA rises from near-bottom positions in 2019 to #1 by 2024, while
-    Tesla and Microsoft also show dramatic growth. Meta shows volatility with a dip
-    in 2022. The bars are properly sorted by value within each year panel, demonstrating
-    the "race" concept through small multiples. The layout is clean with white backgrounds,
-    subtle grid lines, and properly scaled axes that adjust per year to accommodate
-    the data range.'
+  - Individual pygal chart panels show default grid lines and frame borders; set show_x_guides=False
+    or show_y_guides=False to improve DE-02 visual refinement
+  - HTML output covers only the 2023 snapshot with no temporal interactivity — adding
+    multiple year panels or reusing the sorted charts list would better serve the
+    bar-race concept
+  - In-bar value labels are slightly small in the 4800x2700 composite; increasing
+    value_font_size to 34-40 would improve legibility at full resolution
+  - HTML chart creation duplicates the data-and-style logic from the PNG loop; reuse
+    the final chart from the charts list
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Main title "GDP Country Rankings · bar-race-animated · python · pygal · anyplot.ai" in large bold dark text; trend subtitle in smaller dark text; panel titles with year and ranking (e.g. "2000 · China: #6") in dark text; Y-axis country labels in dark text; X-axis "GDP (Trillion USD)" label readable; value labels ("$10.2T") inside bars in dark text
+      Data: USA bars in #009E73 (brand green, first series correct); China #D55E00; Japan #0072B2; Germany #CC79A7; UK #E69F00; India #56B4E9; France #F0E442 — full Okabe-Ito order; bars sized proportionally to GDP values; bars sorted by value in each panel
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle in light #F0EFE8 text, clearly visible; panel titles in light text; Y-axis country labels in light text; X-axis labels in light text; value labels inside bars visible (slightly small at composite resolution but no dark-on-dark failure)
+      Data: All entity colors identical to light render — USA #009E73, China #D55E00, Japan #0072B2, Germany #CC79A7, UK #E69F00, India #56B4E9, France #F0E442; only chrome flips between themes
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 34
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Main title and axis labels readable, some value labels inside bars
-          slightly small
+        comment: Fonts explicitly set (title 72px, panel title 52px, label 36px, value
+          28px); all readable in both themes; in-bar value labels slightly small in
+          final 4800x2700 composite
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: Minimal overlap; country labels clean on Y-axis; value labels positioned
+          without collision
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Bars well-sized and visible, good spacing between bars
+        comment: Bars clearly visible with distinct Okabe-Ito colors; proportional
+          bar lengths accurately encode GDP; slightly thin at composite scale
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: 8 distinct colors that are colorblind-friendly
+        comment: Okabe-Ito is CVD-safe; adequate contrast between all entities
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good grid space usage, but per-chart legends add redundancy
+        comment: 3x2 grid fills canvas well; title and legend properly placed; minor
+          inter-panel margin wasted
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: X-axis labeled Market Cap ($B), Y-axis has no explicit label
+        comment: X-axis labeled GDP (Trillion USD) with units; main title descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle, per-chart legends redundant with global legend
+        comment: 'First entity (USA) uses #009E73; multi-series follows canonical
+          Okabe-Ito order; backgrounds are #FAF8F1 / #1A1A17; chrome flips correctly
+          in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: key-trend subtitle, per-panel ranking labels, consistent
+          entity color tracking; clearly above library defaults; individual chart
+          panels could be more refined'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Moderate refinement; theme tokens applied; pygal default grid and
+          frame borders visible in panels; no spine removal possible via pygal API
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: key trend narrative and per-panel ranking callouts
+          create clear visual arc; entity color consistency enables cross-panel tracking'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct horizontal bar chart, properly sorted per time period
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Companies on Y-axis, market cap on X-axis, correctly sorted
-      - id: SC-03
-        name: Required Features
         score: 4
         max: 5
         passed: true
-        comment: Small multiples for animation, sorted bars, consistent colors, time
-          indicator as year titles
-      - id: SC-04
-        name: Data Range
+        comment: 'Correct chart type: horizontal bar chart; small multiples is appropriate
+          static alternative per spec; not animated'
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Sorted bars per frame, entity labels, time indicator, consistent
+          entity colors all present; HTML only shows 2023 snapshot
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes auto-scale appropriately per year
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: GDP on X-axis with correct scale; entities on Y-axis; all 7 countries
+          across 6 time points
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Global legend correctly maps colors to companies
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses bar-race-animated · pygal · pyplots.ai
+        comment: Title matches required format; legend correctly labels all 7 entities
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows ranking changes well, demonstrates race concept effectively
+        comment: Shows ranked progression, different growth rates, rank changes across
+          6 snapshots; covers the bar-race concept well
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Tech company market cap is real, neutral, comprehensible scenario
+        comment: 'Country GDP over decades: real-world, well-known, neutral domain'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values plausible for tech market caps, NVIDIA 2024 value slightly
-          aggressive
+        comment: Values approximate real data (USA ~$10T in 2000, ~$27T in 2023; China
+          rise from $1.2T to $17.5T); proportions factually correct
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear flow, uses PIL for grid composition adding complexity
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set
+        comment: Linear imports -> data -> chart loop -> PIL composite -> save; no
+          classes or functions
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded data; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All imports used; cairosvg, PIL, pygal, os, sys, BytesIO all exercised
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Uses current pygal API
+        max: 2
+        passed: false
+        comment: HTML section duplicates chart creation logic; some verbosity in slot
+          construction per bar
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no deprecated API calls
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal HorizontalBar with Style theming, SVG->PNG pipeline, and
+          value_formatter; heavy PIL compositing reduces pygal's share of the work
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal HorizontalBar with custom Style, print_values, value_formatter,
-          and HTML export. Relies heavily on PIL for composition.
+        comment: 'Per-bar color via pygal slot dict ({value: v, color: hex}) is a
+          distinctive pygal pattern; value_formatter for custom labels; interactive
+          HTML output'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   - pillow
   techniques:
-  - subplots
   - html-export
-  - annotations
+  - custom-legend
+  - subplots
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling: []
