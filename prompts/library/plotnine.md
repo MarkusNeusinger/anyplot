@@ -44,27 +44,29 @@ plot = (
 )
 ```
 
-## Figure Size & Sizing for 4800×2700 px
+## Figure Size & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python
 plot = plot + theme(
-    figure_size=(16, 9),
-    text=element_text(size=14),           # Base text
-    axis_title=element_text(size=20),     # Axis labels
-    axis_text=element_text(size=16),      # Tick labels
-    plot_title=element_text(size=24),     # Title
-    legend_text=element_text(size=16)
+    figure_size=(8, 4.5),
+    text=element_text(size=10),           # Base text
+    axis_title=element_text(size=14),     # Axis labels
+    axis_text=element_text(size=12),      # Tick labels
+    plot_title=element_text(size=18),     # Title
+    legend_text=element_text(size=12)
 )
 
-# Element sizes in geoms
-+ geom_point(size=4)    # ~3-4x default
-+ geom_line(size=1.5)   # line width
+# Element sizes in geoms (density-aware — see default-style-guide.md)
++ geom_point(size=2.5)   # ~2-3x library default
++ geom_line(size=1.0)    # line width (plotnine scale is finer than matplotlib's)
 ```
+
+See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Save (PNG)
 
 ```python
-plot.save(f'plot-{THEME}.png', dpi=300)
+plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
 ```
 
 ## Brewer Palettes
@@ -157,7 +159,7 @@ anyplot_theme = theme(
 )
 
 plot = (ggplot(df, aes('x', 'y')) + geom_point(color=OKABE_ITO[0]) + anyplot_theme)
-ggsave(plot, filename=f'plot-{THEME}.png', dpi=300, width=16, height=9)
+ggsave(plot, filename=f'plot-{THEME}.png', dpi=400, width=8, height=4.5)
 ```
 
 ## Output Files

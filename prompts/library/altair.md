@@ -9,18 +9,20 @@ import altair as alt
 ## Create Chart
 
 ```python
-chart = alt.Chart(df).mark_point(size=150).encode(  # size ~3-4x default
+chart = alt.Chart(df).mark_point(size=60).encode(  # size ~2-3x default, density-aware
     x='col_x:Q',
     y='col_y:Q'
 ).properties(
-    width=1600,
-    height=900,
-    title=alt.Title(title, fontSize=28)
+    width=800,
+    height=450,
+    title=alt.Title(title, fontSize=22)
 ).configure_axis(
-    labelFontSize=18,
-    titleFontSize=22
+    labelFontSize=14,
+    titleFontSize=16
 )
 ```
+
+See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Encoding Types
 
@@ -52,9 +54,9 @@ x='date:T'
 ## Save (PNG)
 
 ```python
-# Target: 4800 × 2700 px (see default-style-guide.md)
-# 1600 × 3 = 4800, 900 × 3 = 2700
-chart.save(f'plot-{THEME}.png', scale_factor=3.0)
+# Target: 3200 × 1800 px (see default-style-guide.md)
+# 800 × scale_factor=4 = 3200, 450 × 4 = 1800
+chart.save(f'plot-{THEME}.png', scale_factor=4.0)
 ```
 
 **Note**: Requires `vl-convert-python` for PNG export.
@@ -105,7 +107,7 @@ INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 chart = (
     base_chart
-    .properties(background=PAGE_BG, width=1600, height=900)
+    .properties(background=PAGE_BG, width=800, height=450)
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
     .configure_axis(
         domainColor=INK_SOFT, tickColor=INK_SOFT,
@@ -119,7 +121,7 @@ chart = (
     )
 )
 
-chart.save(f'plot-{THEME}.png')
+chart.save(f'plot-{THEME}.png', scale_factor=4.0)
 chart.save(f'plot-{THEME}.html')
 ```
 

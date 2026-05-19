@@ -19,26 +19,28 @@ fig.add_trace(go.Scatter(x=x, y=y))
 fig = px.scatter(df, x='col_x', y='col_y')
 ```
 
-## Layout & Sizing for 4800×2700 px
+## Layout & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python
 fig.update_layout(
-    title=dict(text=title, font=dict(size=28)),
-    xaxis=dict(title=dict(text=x_label, font=dict(size=22)), tickfont=dict(size=18)),
-    yaxis=dict(title=dict(text=y_label, font=dict(size=22)), tickfont=dict(size=18)),
+    title=dict(text=title, font=dict(size=22)),
+    xaxis=dict(title=dict(text=x_label, font=dict(size=16)), tickfont=dict(size=14)),
+    yaxis=dict(title=dict(text=y_label, font=dict(size=16)), tickfont=dict(size=14)),
     template='plotly_white',
 )
 
-# Marker/line sizes
-fig.update_traces(marker=dict(size=12))   # ~3-4x default
-fig.update_traces(line=dict(width=3))
+# Marker/line sizes (density-aware — see default-style-guide.md)
+fig.update_traces(marker=dict(size=10))
+fig.update_traces(line=dict(width=2.5))
 ```
+
+See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Save (PNG)
 
 ```python
-# Target: 4800 × 2700 px (see default-style-guide.md)
-fig.write_image(f'plot-{THEME}.png', width=1600, height=900, scale=3)
+# Target: 3200 × 1800 px (800 × scale=4). See default-style-guide.md.
+fig.write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
 ```
 
 **Note**: Requires `kaleido` for PNG export.
@@ -101,7 +103,7 @@ fig.update_layout(
     ),
 )
 
-fig.write_image(f'plot-{THEME}.png', width=1600, height=900, scale=3)
+fig.write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
 fig.write_html(f'plot-{THEME}.html', include_plotlyjs='cdn')
 ```
 

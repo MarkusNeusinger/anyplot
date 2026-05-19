@@ -10,10 +10,10 @@ from pygal.style import Style
 ## Create Chart
 
 ```python
-# Target: 4800 × 2700 px (see default-style-guide.md)
+# Target: 3200 × 1800 px (see default-style-guide.md)
 chart = pygal.Bar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     title=title,
     x_title=x_label,
     y_title=y_label
@@ -56,7 +56,7 @@ with open(f'plot-{THEME}.html', 'wb') as f:
     f.write(chart.render())
 ```
 
-## Sizing + Theme for 4800×2700 px
+## Sizing + Theme for 3200×1800 px (starting values — review-loop tunes)
 
 pygal's `Style` object carries ALL theme tokens. Derive them from `ANYPLOT_THEME`.
 
@@ -79,16 +79,18 @@ custom_style = Style(
     foreground_strong=INK,          # title
     foreground_subtle=INK_MUTED,    # tick labels, grid tone
     colors=OKABE_ITO,               # first series = brand green
-    title_font_size=28,
-    label_font_size=18,
-    major_label_font_size=16,
-    legend_font_size=16,
-    value_font_size=14,
-    stroke_width=3,
+    title_font_size=22,
+    label_font_size=14,
+    major_label_font_size=14,
+    legend_font_size=14,
+    value_font_size=12,
+    stroke_width=2.5,
 )
 
 chart = pygal.Bar(style=custom_style)
 ```
+
+See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Grid
 
