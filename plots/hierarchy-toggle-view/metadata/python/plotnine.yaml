@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: hierarchy-toggle-view
 created: '2026-01-11T21:04:35Z'
-updated: '2026-05-19T08:37:48Z'
+updated: '2026-05-19T08:51:25Z'
 generated_by: claude-sonnet
 workflow_run: 26085242963
 issue: 3697
@@ -12,48 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 75
+quality_score: 71
 review:
   strengths:
-  - 'Excellent data quality: realistic research budget scenario with 15 nodes across
-    2 hierarchy levels, perfect scale'
-  - Clean dual-view layout showing both treemap and sunburst simultaneously — a legitimate
-    and well-executed static alternative to the interactive toggle
-  - Correct use of scale_fill_identity() for direct color mapping in plotnine
-  - theme_void() appropriately removes all chartjunk for this custom chart type
-  - Parent values correctly computed as sum of children; proportional areas and angles
-    are accurate
-  - Data labels placed within segments showing both name and budget value
+  - Creative dual-view implementation showing treemap and sunburst side-by-side, requiring
+    manual computation of rectangle and wedge geometry entirely within plotnine's
+    grammar
+  - Consistent color mapping between both views aids cross-view comparison; center
+    'Total $1370K' annotation creates a clear focal point on the sunburst
+  - Realistic and neutral research budget domain with plausible value distribution;
+    all 15 hierarchy nodes correctly represented
   weaknesses:
-  - 'Critical: No ANYPLOT_THEME implementation — code has zero os.getenv(''ANYPLOT_THEME'',
-    ''light'') logic; all annotation text colors are hardcoded dark values (#333333,
-    #666666, #555555) that are near-invisible on the dark (#1A1A17) background (~1.4:1
-    contrast)'
-  - 'Critical: Wrong palette — uses Python brand colors (#306998, #FFD43B, #2E8B57,
-    #E07B39) instead of Okabe-Ito; first series (Biology) must be #009E73 not #306998;
-    #306998 is explicitly named as a non-compliant legacy color'
-  - 'Critical: Wrong output filename — saves to plot.png instead of plot-light.png
-    / plot-dark.png; requires two saves with theme-conditional logic'
-  - Title mismatch in source code — line 267 contains 'hierarchy-toggle-view · plotnine
-    · pyplots.ai' missing 'python' and using wrong domain; should be 'hierarchy-toggle-view
-    · python · plotnine · anyplot.ai'
-  - Font sizes below minimums — main title size=18 (min 24pt), subtitle size=13, view
-    headers size=16; all should be increased for 4800x2700 canvas
+  - 'No theme-adaptive logic: Code does not read ANYPLOT_THEME env var. Hardcoded
+    dark text colors (#333333, #555555, #666666) produce dark-on-dark text failures
+    in the dark render. Must add PAGE_BG, INK, INK_SOFT tokens and apply to all annotate()
+    color arguments.'
+  - 'Wrong output filename: plot.save(''plot.png'') should be plot.save(f''plot-{THEME}.png'',
+    dpi=300). Without this the pipeline cannot produce themed artifacts.'
+  - 'Non-Okabe-Ito palette: Colors (#306998, #FFD43B, #2E8B57, #E07B39) violate the
+    mandatory Okabe-Ito rule. Use #009E73, #D55E00, #0072B2, #CC79A7 for the four
+    groups.'
+  - 'Wrong title: Code has ''hierarchy-toggle-view · plotnine · pyplots.ai'' — must
+    be ''hierarchy-toggle-view · python · plotnine · anyplot.ai''.'
+  - 'Sunburst outer-ring label crowding: Smaller segments (Inorganic $80K, Analytic
+    $70K) have overlapping labels. Raise child_sweep threshold from 0.2 to 0.3.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct theme surface
-      Chrome: Title "hierarchy-toggle-view · python · plotnine · anyplot.ai" visible in blue (#306998); subtitle "Research Department Budget Allocation" in medium gray; section headers "Treemap View" and "Sunburst View" in dark text — all readable on light background
-      Data: Treemap uses 4 colors (teal/Biology, orange/Chemistry, blue/Physics, magenta/Computing) with white borders; sunburst uses same 4 colors in two concentric rings; data labels (name + budget) visible in white or dark text depending on segment color; center circle shows "Total $1370K"
-      Legibility verdict: PASS — all text readable against light background
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "hierarchy-toggle-view · python · plotnine · anyplot.ai" in blue (#306998) readable; subtitle "Research Department Budget Allocation" in dark gray readable on light bg; "Treemap View"/"Sunburst View" section headers readable
+      Data: Treemap with 4 color groups (bio=#306998 blue, chem=#FFD43B yellow, phys=#2E8B57 sea-green, comp=#E07B39 orange); sunburst with 2 concentric rings; center "Total/$1370K" annotation; white segment borders for definition; first series is NOT #009E73 (Okabe-Ito violation)
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct dark theme surface
-      Chrome: Title in #306998 (borderline ~3:1 contrast on dark — marginal); section headers "Treemap View" and "Sunburst View" hardcoded to #333333 (dark charcoal) — approximately 1.4:1 contrast on #1A1A17 background = near-invisible dark-on-dark FAILURE; subtitle in #666666 (~2.4:1 contrast — below WCAG AA); no ANYPLOT_THEME logic in code so all annotations use same hardcoded dark values as light render
-      Data: Colors are identical to light render (teal, orange, blue, magenta) — data color consistency is correct
-      Legibility verdict: FAIL — section headers (#333333 on #1A1A17) are critically under-contrasted (dark-on-dark); subtitle (#666666) also insufficient contrast; only the blue title (#306998) has marginal readability
+      Background: Dark near-black (#1A1A17) — correct dark theme surface
+      Chrome: Section headers "Treemap View"/"Sunburst View" use hardcoded color="#333333" (very dark gray) — DARK-ON-DARK failure on near-black background. Subtitle uses "#666666" — marginal contrast. Center "$1370K" uses "#555555" — near-invisible. Title in #306998 blue is readable. Code has no ANYPLOT_THEME logic.
+      Data: Colors are identical to light render (Okabe-Ito independence maintained — data colors don't flip, only chrome should)
+      Legibility verdict: FAIL — section headers and subtitle are dark-on-dark due to hardcoded color values without theme adaptation
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 19
       max: 30
       items:
       - id: VQ-01
@@ -61,76 +58,79 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: 'Sizes explicitly set but below minimums (title=18 vs >=24pt); dark
-          render has dark-on-dark text (#333333/#666666 on #1A1A17)'
+        comment: 'Light render fully readable; dark render has dark-on-dark failures:
+          hardcoded #333333 section headers and #555555/#666666 subtitle/center annotation
+          on #1A1A17 background. No ANYPLOT_THEME logic in code.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 4
         max: 6
-        passed: true
-        comment: All labels placed cleanly with no collisions in either render
+        passed: false
+        comment: Sunburst outer-ring labels crowd in smaller segments (Inorganic $80K,
+          Analytic $70K). Treemap labels clean.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Treemap rectangles and sunburst wedges clearly visible and well-sized
+        comment: All segments and labels clearly visible at 4800x2700. Sizes work
+          well.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Four hues (teal, orange, blue, magenta) are CVD-distinguishable;
-          dark text on yellow segment correct
+        passed: false
+        comment: Colors distinguishable but not Okabe-Ito CVD-safe. Yellow (#FFD43B)
+          has marginal luminance.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Side-by-side layout effective; slight empty space on far right of
-          canvas
+        comment: Good 16:9 canvas use with side-by-side views. Slight empty margin
+          on treemap right side.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: theme_void() appropriate; title descriptive; segment data labels
-          serve as context
+        comment: theme_void() correct for chart type. Data labels include dollar values.
+          Section headers and subtitle provide context.
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Non-compliant: uses #306998 (legacy Python Blue, explicitly a 0-point
-          trigger); full palette is Python brand not Okabe-Ito; no ANYPLOT_THEME adaptation
-          = dark chrome failure'
+        comment: 'Non-compliant: Python-themed colors (#306998, #FFD43B, #2E8B57,
+          #E07B39) instead of Okabe-Ito. First series not #009E73. No theme-adaptive
+          chrome — hardcoded dark text colors fail in dark render.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Clean dual-view layout with good segment labeling; reasonable visual
-          effect but not publication-ready; wrong palette detracts
+        comment: Creative dual-view requiring manual geometry. Intentional color palette
+          with consistent cross-view mapping. Above library defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void() appropriate and effective; white cell borders provide
-          clean separation; generous whitespace
+        comment: theme_void() gives clean canvas. White segment borders provide definition.
+          Center annotation adds polish. Outer-ring label crowding reduces refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Dual-view shows data from two complementary perspectives; center
-          Total label adds context; no particular insight emphasized
+        comment: Center 'Total' annotation creates focal point. Side-by-side enables
+          direct comparison. Consistent color coding links views.
     spec_compliance:
-      score: 12
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -138,94 +138,94 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Both treemap (area-proportional rectangles) and sunburst (radial
-          segments) correctly implemented; toggle omitted (acceptable for static library)
+        comment: Both treemap and sunburst correctly implemented. Static side-by-side
+          is correct alternative to toggle for plotnine.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Both chart types present with 2-level hierarchy and consistent color
-          mapping; interactive features appropriately omitted
+        comment: Both views with consistent colors and two-level hierarchy. No toggle
+          (static limitation). Hover state N/A.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Values correctly determine rectangle areas and wedge angles; parent
-          values aggregated from children correctly
+        comment: Area proportional to values in treemap; angles proportional in sunburst.
+          Parent values correctly summed.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 1
         max: 3
-        passed: true
-        comment: Rendered image shows correct title; source code line 267 has wrong
-          format ('hierarchy-toggle-view · plotnine · pyplots.ai' missing 'python'
-          and wrong domain)
+        passed: false
+        comment: Code has 'hierarchy-toggle-view · plotnine · pyplots.ai' — missing
+          'python' language token, wrong domain 'pyplots.ai' vs 'anyplot.ai'. Images
+          appear from prior corrected version.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all aspects: 4 top-level departments + 11 sub-departments
-          (2 hierarchy levels), both chart types, budget values on all segments'
+        comment: Full two-level hierarchy in both representations. Values vary meaningfully
+          (70K-200K). All 15 nodes represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Research department budget allocation across Biology, Chemistry,
-          Physics, Computing is neutral and plausible
+        comment: Research department budget allocation — neutral, realistic, professionally
+          relevant.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sub-department budgets $70K-$200K, department totals $280K-$420K,
-          total $1.37M — realistic for university research
+        comment: Budget values plausible; relative sizes contextually sensible (ML/AI
+          largest, Physics total leading).
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Flat structure: data -> processing -> treemap calc -> sunburst calc
-          -> plot -> save; no functions or classes'
+        comment: No functions/classes; linear flow. Polygon geometry loop near-duplicated
+          for inner/outer rings — slightly verbose.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic
+        comment: Fully deterministic; no random data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pandas, and all listed plotnine components are used
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Python; no fake interactivity; some repetition in sunburst
-          ring code is acceptable
+        comment: Appropriate complexity for dual-geometry visualization. No fake interactive
+          elements.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png instead of plot-{THEME}.png; no ANYPLOT_THEME logic
-          present
+        comment: Saves to 'plot.png' instead of 'plot-{THEME}.png'. Code ignores ANYPLOT_THEME
+          env var entirely — no themed output.
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -233,22 +233,23 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar with geom_rect, geom_polygon, geom_text, annotate,
-          scale_fill_identity — idiomatic plotnine
+        comment: 'Correct plotnine grammar: ggplot() + geom_rect() + geom_polygon()
+          + geom_text() + annotate() + scale_fill_identity(). Proper use of scale_fill_identity()
+          for literal color strings.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: scale_fill_identity() and polygon-based sunburst are somewhat distinctive;
-          overall approach is largely manual coordinate computation rather than leveraging
-          plotnine grammar strengths
+        passed: true
+        comment: Creative use of geom_polygon() to construct sunburst arcs from numpy
+          angle arrays — non-obvious in plotnine. Multi-geom layer composition for
+          dual visualization is distinctive.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - layer-composition
+  - annotations
   patterns:
   - iteration-over-groups
   dataprep: []
