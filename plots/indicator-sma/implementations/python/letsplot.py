@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-19
@@ -57,6 +57,10 @@ df_long = df.melt(
     id_vars=["date"], value_vars=["Close", "SMA 20", "SMA 50", "SMA 200"], var_name="series", value_name="price"
 )
 
+# Separate data for line-weight hierarchy: Close thicker, SMAs thinner
+df_sma = df_long[df_long["series"] != "Close"]
+df_close = df_long[df_long["series"] == "Close"]
+
 # Plot
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -68,6 +72,7 @@ anyplot_theme = theme(
     axis_text=element_text(color=INK_SOFT, size=16),
     axis_line=element_line(color=INK_SOFT),
     plot_title=element_text(color=INK, size=24),
+    plot_subtitle=element_text(color=INK_SOFT, size=16),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=16),
     legend_title=element_text(color=INK, size=18),
@@ -75,10 +80,17 @@ anyplot_theme = theme(
 
 plot = (
     ggplot(df_long, aes(x="date", y="price", color="series"))
-    + geom_line(size=1.5)
+    + geom_line(data=df_sma, size=1.3)
+    + geom_line(data=df_close, size=2.0)
     + scale_color_manual(values=COLORS)
-    + scale_x_datetime()
-    + labs(title="indicator-sma · python · letsplot · anyplot.ai", x="Date", y="Price (USD)", color="Series")
+    + scale_x_datetime(format="%b '%y")
+    + labs(
+        title="indicator-sma · python · letsplot · anyplot.ai",
+        subtitle="Close price (bold) vs. 20 / 50 / 200-day SMAs — watch for golden/death cross signals",
+        x="Date",
+        y="Price (USD)",
+        color="Series",
+    )
     + theme_minimal()
     + anyplot_theme
     + ggsize(1600, 900)
