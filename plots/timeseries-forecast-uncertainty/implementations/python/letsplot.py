@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-19
@@ -59,17 +59,29 @@ forecast_start = dates_forecast[0]
 # Plot — theme_classic gives L-shaped spines; theme() overrides specific elements
 plot = (
     ggplot()
-    # 95% CI (outer, lighter)
-    + geom_ribbon(aes(x="date", ymin="lower_95", ymax="upper_95"), data=df_fc, fill=OKABE_ITO[4], alpha=0.18)
+    # 95% CI (outer, lighter) — alpha raised to 0.24 for dark-mode visibility
+    + geom_ribbon(aes(x="date", ymin="lower_95", ymax="upper_95"), data=df_fc, fill=OKABE_ITO[4], alpha=0.24)
     # 80% CI (inner, darker)
     + geom_ribbon(aes(x="date", ymin="lower_80", ymax="upper_80"), data=df_fc, fill=OKABE_ITO[4], alpha=0.38)
-    # Historical solid line (brand green)
+    # Historical solid line (brand green) — tooltips show value on hover in HTML
     + geom_line(
-        aes(x="date", y="value", color="series"), data=df_hist[["date", "value", "series"]], size=1.2, linetype="solid"
+        aes(x="date", y="value", color="series"),
+        data=df_hist[["date", "value", "series"]],
+        size=1.2,
+        linetype="solid",
+        tooltips=layer_tooltips().line("@value{.0f} MWh").line("@date"),
     )
-    # Forecast dashed line (orange)
+    # Forecast dashed line (orange) — tooltips show forecast and CI bounds on hover
     + geom_line(
-        aes(x="date", y="value", color="series"), data=df_fc[["date", "value", "series"]], size=1.2, linetype="dashed"
+        aes(x="date", y="value", color="series"),
+        data=df_fc[["date", "value", "lower_80", "upper_80", "lower_95", "upper_95", "series"]],
+        size=1.2,
+        linetype="dashed",
+        tooltips=layer_tooltips()
+        .line("Forecast: @value{.0f} MWh")
+        .line("80% CI: [@lower_80{.0f}, @upper_80{.0f}]")
+        .line("95% CI: [@lower_95{.0f}, @upper_95{.0f}]")
+        .line("@date"),
     )
     # Vertical marker at forecast boundary
     + geom_vline(xintercept=forecast_start.timestamp() * 1000, color=INK_MUTED, size=0.6, linetype="dotted")
