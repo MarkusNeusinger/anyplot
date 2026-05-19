@@ -6,7 +6,7 @@ title: Mosaic Plot for Categorical Association Analysis
 
 # Specification tracking
 created: 2026-01-11T00:09:10Z
-updated: null
+updated: 2026-05-19T03:01:40Z
 issue: 3650
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - mosaic
-    - heatmap
   data_type:
     - categorical
     - frequency
