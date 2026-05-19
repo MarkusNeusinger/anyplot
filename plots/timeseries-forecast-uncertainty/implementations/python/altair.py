@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 94/100 | Updated: 2026-05-16
+Quality: 94/100 | Updated: 2026-05-19
 """
 
 import os
@@ -22,7 +22,6 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 # Okabe-Ito palette
 BRAND = "#009E73"  # First series - historical data
 FORECAST_COLOR = "#D55E00"  # Second series - forecast
-NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"
 
 # Data - Monthly sales with 36 months history + 12 months forecast
 np.random.seed(42)
@@ -48,7 +47,7 @@ lower_95 = forecast_values - 1.96 * forecast_std
 upper_95 = forecast_values + 1.96 * forecast_std
 
 # Create DataFrames
-historical_df = pd.DataFrame({"date": historical_dates, "actual": historical_values, "series": "Historical"})
+historical_df = pd.DataFrame({"date": historical_dates, "actual": historical_values})
 
 forecast_df = pd.DataFrame(
     {
@@ -58,7 +57,6 @@ forecast_df = pd.DataFrame(
         "upper_80": upper_80,
         "lower_95": lower_95,
         "upper_95": upper_95,
-        "series": "Forecast",
     }
 )
 
@@ -111,7 +109,7 @@ forecast_line = (
 forecast_start = pd.DataFrame({"date": [pd.Timestamp("2024-01-01")]})
 vertical_rule = alt.Chart(forecast_start).mark_rule(strokeWidth=2, strokeDash=[6, 3], color=INK_SOFT).encode(x="date:T")
 
-# Add legend data for clarity
+# Legend via invisible points (standard Altair pattern for layered charts with alt.value() colors)
 legend_df = pd.DataFrame(
     {
         "date": [historical_dates[0], forecast_dates[0], forecast_dates[0]],
@@ -142,7 +140,7 @@ chart = (
         height=900,
         background=PAGE_BG,
         title=alt.Title(
-            "timeseries-forecast-uncertainty · altair · anyplot.ai",
+            "timeseries-forecast-uncertainty · python · altair · anyplot.ai",
             fontSize=28,
             anchor="middle",
             color=INK,
@@ -156,12 +154,13 @@ chart = (
         titleFontSize=22,
         labelColor=INK_SOFT,
         titleColor=INK,
-        domainColor=INK_SOFT,
-        tickColor=INK_SOFT,
+        domain=False,
+        tickSize=0,
         gridColor=INK,
         gridOpacity=0.10,
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0)
+    .configure_axisX(grid=False)
+    .configure_view(fill=PAGE_BG, stroke=None, strokeWidth=0)
     .configure_legend(
         titleFontSize=16,
         labelFontSize=14,
