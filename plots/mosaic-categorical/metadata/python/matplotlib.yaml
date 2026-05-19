@@ -1,165 +1,177 @@
 library: matplotlib
+language: python
 specification_id: mosaic-categorical
 created: '2026-01-11T00:18:59Z'
-updated: '2026-01-11T00:22:57Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886558911
+updated: '2026-05-19T03:30:12Z'
+generated_by: claude-sonnet
+workflow_run: 26073602689
 issue: 3650
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent visual clarity with well-proportioned rectangles and clear frequency
-    labels
-  - Perfect title format following pyplots.ai conventions
-  - Classic Titanic dataset provides an intuitive real-world example of categorical
-    association
-  - Good use of matplotlib patches for custom mosaic construction
-  - Colorblind-safe blue/yellow color scheme with good contrast
-  - Clean, readable code following KISS principles
+  - 'Perfect spec compliance: all mosaic features (proportional widths/heights, gap
+    spacing, color coding, count labels) correctly implemented'
+  - Theme adaptation is thorough — backgrounds, text, spines, legend frames, and count
+    label colors all adapt correctly; no dark-on-dark failures
+  - Historically accurate Titanic data tells a compelling story; survival rate gradient
+    across classes is immediately visible from the mosaic proportions
+  - Count labels in white bold at fontsize=20 are clearly readable against both data
+    colors
+  - Footer annotation (visible in rendered output) adds quantitative narrative context
   weaknesses:
-  - Spec recommends using statsmodels.graphics.mosaicplot but implementation uses
-    manual patches approach
-  - Legend placement in upper-right could be better integrated
-  - Shade variations within survival categories (3 blues, 3 yellows) may cause confusion
-    about what they represent
-  image_description: 'The mosaic plot displays Titanic passenger survival data across
-    three classes (First, Second, Third). The visualization uses a rectangular area
-    divided into columns by passenger class, where column widths are proportional
-    to total passengers in each class. Within each column, two stacked rectangles
-    show "Survived" (blue shades: #306998, #4A90C2, #6EB5E0) and "Did Not Survive"
-    (yellow/gold shades: #FFD43B, #E8C547, #D4A84A). Rectangle heights represent conditional
-    survival proportions within each class. Frequency counts are clearly displayed
-    in white bold text inside each cell: First class (136 survived, 64 died), Second
-    class (87 survived, 93 died), Third class (119 survived, 381 died). The title
-    follows the required format "Titanic Passenger Survival by Class · mosaic-categorical
-    · matplotlib · pyplots.ai". A legend in the upper right identifies the color coding
-    for "Survived" and "Did Not Survive". Axis labels clearly indicate "Passenger
-    Class" (x-axis) and "Survival Status" (y-axis). The plot effectively shows the
-    stark survival rate differences: First class ~68%, Second ~48%, Third ~24%. The
-    overall layout is clean with rounded rectangle corners and white edge highlighting.'
+  - Tick label size is 14pt (labelsize=14) — should be 16pt to match the style guide
+    recommendation for 4800x2700px renders
+  - All four spines are kept; while defensible for a mosaic enclosed framing, removing
+    top and right would yield a cleaner look
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "Titanic Passenger Survival · mosaic-categorical · python · matplotlib · anyplot.ai" in dark ink (INK=#1A1A17), fontsize=24; X-axis label "Passenger Class" and Y-axis label "Survival Status" in dark ink, fontsize=20; tick labels (First, Second, Third; Survived, Did Not Survive) in muted dark (INK_SOFT), labelsize=14
+      Data: Six mosaic cells — Survived in #009E73 (brand green, Okabe-Ito position 1), Did Not Survive in #D55E00 (vermillion, position 2); white bold count labels (136, 64, 87, 93, 119, 381) at fontsize=20; column widths reflect class marginal proportions; Third class column is largest
+      Footer: "Survival rate — 1st class: 68% · 2nd class: 48% · 3rd class: 24% · 44pp class divide" in themed box
+      Legend: Upper-right, warm-tinted frame (#FFFDF6), text in INK_SOFT
+      Legibility verdict: PASS — all text clearly readable; only minor note is tick labels at 14pt vs 16pt guideline
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels all flip to light text (#F0EFE8 / #B8B7B0) — clearly readable against dark background; no dark-on-dark failures
+      Data: Colors are identical to light render — Survived #009E73 and Did Not Survive #D55E00 unchanged; white count labels remain readable; data encoding identical
+      Footer: Annotation box adapts with dark elevated background (#242420); text readable
+      Legend: Dark elevated background (#242420), text in light muted tone (#B8B7B0)
+      Legibility verdict: PASS — all text clearly readable in dark theme; theme adaptation is thorough
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, class labels at 18pt, frequency
-          labels at 20pt - all perfectly readable
+        comment: All text readable in both themes; tick labels at 14pt (guideline
+          is 16pt) is the only minor shortfall
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, all elements well-separated with gap spacing
+        comment: No overlapping text or elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rectangle sizes perfectly adapted to data, all cells visible with
-          clear boundaries
+        comment: All six mosaic cells and white count labels are clearly visible
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow color scheme is colorblind-safe, but slight shade variations
-          within categories could be confusing
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well, minor whitespace imbalance
-          on left
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels Passenger Class and Survival Status
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1 and 2; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized; nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No grid (appropriate for mosaic), but legend placement could be better
-          integrated
+        passed: true
+        comment: Correct title format; descriptive x/y labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; backgrounds #FAF8F1 light / #1A1A17 dark;
+          both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom palette, white count labels, full theme adaptation; above
+          average but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Tick marks removed, gap spacing, legend frame themed; all four spines
+          kept (appropriate for enclosed mosaic)
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Class-survival gradient immediately visible; count labels quantify;
+          footer annotation adds narrative
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct mosaic plot type showing contingency table relationships
+        comment: Correct mosaic plot via statsmodels.graphics.mosaicplot
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: First variable (Class) mapped to columns, second (Survival) to rows
-          within columns
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: proportional widths, proportional heights,
-          gap spacing, color coding, category labels'
-      - id: SC-04
-        name: Data Range
+        comment: Proportional widths/heights, gap spacing, color coding, count labels
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, no truncation
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Passenger class x-axis, survival status y-axis; full 3x2 table shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Survived and Did Not Survive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format with spec-id, library, and pyplots.ai
+        comment: Title format correct; legend labels both outcomes with correct colors
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows association between categorical variables clearly, different
-          proportions across groups
+        comment: Full 3x2 contingency; marginal and conditional proportions both visible
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Titanic survival data is a classic, neutral, real-world scenario
+        comment: Titanic data; historically accurate and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Realistic Titanic-like proportions, though not exact historical data
+        comment: Counts 64-381; ~880 total; historically accurate proportions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,54 +179,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, calculations, plot, save'
+        comment: Flat script, no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: Hardcoded static data; deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only used imports; sys.path manipulation is a pipeline workaround
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, no fake UI; properties callback is idiomatic
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Spec recommends statsmodels.graphics.mosaicplot but uses custom patches
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct facecolor
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ax= integration with statsmodels mosaic; properties lambda;
+          mpatches for legend
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of FancyBboxPatch for rounded rectangles, could use mosaicplot
-          as spec suggests
+        comment: statsmodels mosaic for proportional area encoding; mpatches.Patch
+          typed legend; properties callback pattern
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - statsmodels
   techniques:
-  - annotations
-  - patches
   - custom-legend
+  - patches
   patterns:
-  - data-generation
-  - iteration-over-groups
-  - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
-  - minimal-chrome
   - edge-highlighting
