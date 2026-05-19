@@ -1,7 +1,7 @@
 """ anyplot.ai
 hierarchy-toggle-view: Interactive Treemap-Sunburst Toggle View
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 71/100 | Updated: 2026-05-19
+Quality: 69/100 | Updated: 2026-05-19
 """
 
 import numpy as np
