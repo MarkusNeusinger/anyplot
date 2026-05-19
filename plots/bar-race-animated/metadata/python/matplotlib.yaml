@@ -1,0 +1,257 @@
+library: matplotlib
+language: python
+specification_id: bar-race-animated
+created: '2026-05-19T01:52:40Z'
+updated: '2026-05-19T02:23:59Z'
+generated_by: claude-sonnet
+workflow_run: 26071101066
+issue: 3653
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
+review:
+  strengths:
+  - 'Excellent Nvidia storytelling: sparkline inset, arrow annotation with ×23 multiplier,
+    and path-effect value labels create a clear focal point across all 6 panels'
+  - Correct use of small multiples as the approved static alternative to animation,
+    covering all 6 time snapshots (2019–2024)
+  - Strong matplotlib feature usage — path_effects for text stroke, inset_axes for
+    the embedded sparkline, GridSpec for precise panel layout
+  - 'Perfect theme implementation: #FAF8F1/#1A1A17 backgrounds, all chrome tokens
+    (INK/INK_SOFT/INK_MUTED) applied correctly, data colors identical across both
+    renders'
+  - Clean code structure with proper Okabe-Ito palette assignment, all spec-required
+    static features present (sorted bars, time indicator, consistent entity colors)
+  weaknesses:
+  - Value labels are fontsize=13 and x-axis 'Market Cap ($B)' labels are fontsize=14
+    — both below the recommended minimums (16pt for tick/value labels, 20pt for axis
+    labels) for the 4800×2700px canvas; at full resolution these will be noticeably
+    small
+  - No grid lines present — even subtle y-axis grid lines (alpha=0.10) would aid bar-length
+    comparison across the sorted rankings in each panel
+  - figsize=(20, 11) deviates from the standard landscape canvas (16×9 → 4800×2700px);
+    while close in pixel count the non-standard size may affect rendering consistency
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 across all 6 panels — correct.
+      Chrome: Suptitle "Tech Giant Market Cap · bar-race-animated · python · matplotlib · anyplot.ai" at 24pt in dark ink, clearly readable. Panel year titles (2019–2024) at 20pt bold dark ink, clearly readable. Y-axis company name labels at 16pt in INK_SOFT (#4A4A44), readable. X-axis "Market Cap ($B)" labels at 14pt in INK_MUTED — present but slightly small for the canvas. Value labels at 13pt — legible at display size but below guide recommendations.
+      Data: 7 companies colored in Okabe-Ito order by alphabetical assignment — Alphabet=#009E73 (green), Amazon=#D55E00 (vermillion), Apple=#0072B2 (blue), Meta=#CC79A7 (pink), Microsoft=#E69F00 (orange), Nvidia=#56B4E9 (sky blue), Tesla=#F0E442 (yellow). First Okabe-Ito color (#009E73) correctly assigned. Bars sorted descending by value (highest at top) in each panel. 2024 panel has arrow annotation "×23 since 2019" pointing to Nvidia's bar and a sparkline inset showing Nvidia's 2019→2024 trajectory.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 across all 6 panels — correct.
+      Chrome: Suptitle, panel year titles, company labels, and axis labels all rendered in light-ink adaptive tokens (INK=#F0EFE8, INK_SOFT=#B8B7B0, INK_MUTED=#A8A79F) — clearly visible against the dark background. No dark-on-dark failures detected. The annotation box uses ELEVATED_BG (#242420) with appropriate light text. Sparkline uses INK_MUTED for x-tick labels.
+      Data: Bar colors are identical to the light render (Okabe-Ito positions 1–7 unchanged). Nvidia sky-blue bars and value labels maintain the same brand color styling. The sparkline fill_between area (alpha=0.15) is subtle but visible.
+      Legibility verdict: PASS — all text readable against the warm near-black background, no dark-on-dark issues.
+  criteria_checklist:
+    visual_quality:
+      score: 24
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Suptitle 24pt and panel titles 20pt meet guidelines; x-axis labels
+          14pt (guide: 20pt) and value labels 13pt (guide: 16pt) are below recommended
+          sizes for 4800x2700px canvas. Both themes readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Clean layout overall; minor space pressure in 2024 panel with sparkline
+          and annotation competing for space with value labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All bars clearly visible; Tesla yellow (#F0E442) on bars is acceptable;
+          Nvidia's $145B bar in 2019 is very short but labeled.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe by design.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 6-panel 2x3 grid is clean and well-proportioned. figsize=(20,11)
+          slightly non-standard vs 16x9 guideline. Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Market Cap ($B) on each panel; suptitle in correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Alphabet gets #009E73 (first Okabe-Ito position). Backgrounds #FAF8F1
+          light / #1A1A17 dark. Colors identical across both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): path_effects on Nvidia labels, sparkline inset,
+          deliberate Nvidia narrative thread, intentional color emphasis. Not at max
+          due to small multiples being the fallback approach.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): top/right/bottom spines removed, tick length=0,
+          bar edges set to PAGE_BG for clean definition. No grid lines — a missed
+          opportunity for bar comparison.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Strong: Nvidia''s ×23 rise is the clear focal point, arrow annotation
+          with multiplier, sparkline showing full trajectory. The reordering across
+          panels communicates the race narrative effectively.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Small multiples grid is the correct static alternative for animated
+          bar chart race per spec note and library guide.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Bars sorted by value at each frame (ascending, highest at top). Entity
+          labels on y-axis. Year as time indicator. Consistent entity colors across
+          all panels.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: market cap values. Y: companies sorted by value. All 7 entities
+          and 6 time points shown.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''Tech Giant Market Cap · bar-race-animated · python · matplotlib
+          · anyplot.ai'' matches the required format. Y-axis labels serve as legend.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows ranking changes, value changes, race dynamics across 6 time
+          points. Nvidia narrative adds depth. Minor deduction: only 6 discrete snapshots
+          limit smoothness.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tech company market cap data is realistic, well-known, neutral, and
+          approximately matches real figures.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Billions of dollars, realistic range $75B–$3,750B across the period.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes, linear flat structure.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Hardcoded data, fully deterministic.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All 4 imports used: os, patheffects, pyplot, GridSpec.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI. Clean iteration. strict=False on zip is defensive but
+          not harmful.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png. No deprecated APIs.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Axes methods throughout. GridSpec for multi-panel. inset_axes for
+          embedded sparkline. Modern patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: matplotlib.patheffects (withStroke + Normal) for Nvidia label stroke
+          — specialized and distinctive. inset_axes, fill_between, annotate with arrowprops
+          — strong matplotlib feature set.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - subplots
+  - inset-axes
+  - manual-ticks
+  patterns:
+  - iteration-over-groups
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
