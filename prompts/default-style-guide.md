@@ -213,7 +213,7 @@ Marker and line sizes should adapt to how dense the data is — no fixed values:
 
 The review step checks these proportions visually from the source PNG. There are no hard pixel thresholds — violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), VQ-05 (Layout & Canvas) categories rather than triggering a separate pass/fail. This keeps the contract holistic: a single visual problem (oversized short axis label, overlapping ticks) can reduce points in multiple categories.
 
-- **Title proportion:** Title takes ~50–70% of the plot width. Too narrow → fontsize probably too small. Too wide / overflowing → fontsize probably too big or title too verbose.
+- **Title proportion:** Title comfortably takes ~50–70% of the plot width. The mandated `{spec-id} · {lang} · {lib} · anyplot.ai` title is ~67 chars long and naturally fills 70–85% at the style-guide default fontsize — this is **expected**, not a violation. Only flag if title overflows past ~90% of width OR fontsize is too generous for the content.
 - **Axis label proportionality:** Short labels ("Date", "Year") should not dominate the axis with oversized fontsizes. Long descriptive labels ("Fläche von Häusern in Quadratmetern") are fine as long as they don't overflow — the "no overflow" rule covers that case.
 - **Axis label balance:** X-axis label and Y-axis label are visually similar in size — one much larger than the other without semantic reason is a violation.
 - **Tick label balance:** X-axis and Y-axis tick labels are visually similar in size (exception: rotated long categorical labels).
@@ -253,4 +253,4 @@ The AI makes the following design decisions for each visualization:
 - Data label placement
 - Annotations and callouts (only when specification explicitly requests them)
 
-**Priority:** Clarity, beauty, and readability at full resolution (~13 million pixels).
+**Priority:** Clarity, beauty, and readability at full resolution (~5.76 million pixels) AND when scaled down to mobile width (~400 px).

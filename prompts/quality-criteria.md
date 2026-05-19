@@ -90,10 +90,10 @@ A static library (matplotlib, seaborn, plotnine) simulates interactive features 
 
 | Format | Size | Aspect Ratio |
 |--------|------|--------------|
-| **Landscape** | 4800 × 2700 px | 16:9 |
-| **Square** | 3600 × 3600 px | 1:1 |
+| **Landscape** | 3200 × 1800 px | 16:9 |
+| **Square** | 2400 × 2400 px | 1:1 |
 
-**Both have ~13M pixels** → same font sizes work for both.
+**Both have ~5.76M pixels** → same font sizes work for both.
 
 **AI decides freely** which format is best for the specific plot.
 
@@ -153,14 +153,16 @@ A static library (matplotlib, seaborn, plotnine) simulates interactive features 
 
 ### VQ-01: Text Legibility (8 Points)
 
-All text must be clearly readable at 4800×2700 / 3600×3600 px.
+All text must be clearly readable at 3200×1800 / 2400×2400 px and remain legible when the PNG is scaled down to ~400 px (mobile viewport). See `prompts/default-style-guide.md` → "Visual Sizing Defaults" for per-library-family starting values and "Proportional Sizing" for the proportional checks.
+
+**Source-of-values is irrelevant** for VQ-01: defaults, AI-tuned, or repair-loop-tuned all score equally — what matters is the visual result. If the AI deviates from the style-guide defaults because the plot looks better that way (e.g. shrinking the title to fit a long mandated string, or growing tick labels for a sparse plot), that is **not** a deduction.
 
 | Points | Criterion |
 |--------|-----------|
-| 8 | All font sizes explicitly set: Title ≥24pt, Labels ≥20pt, Ticks ≥16pt, all perfectly readable |
-| 5 | All readable, but relying on library defaults rather than explicit sizing |
-| 3 | Partially too small |
-| 0 | Text hard to read |
+| 8 | All font sizes explicitly set and the result looks well-proportioned: no overflow, balanced X/Y axis labels + ticks, readable at both desktop and mobile widths. Title fits without clipping — for the long mandated `{spec-id} · {lang} · {lib} · anyplot.ai` format ~70–85% of width is expected and fine; shorter custom titles aim for ~50–70%. Deviations from style-guide defaults are fine if they improve the result. |
+| 5 | All readable but relying on library defaults rather than explicit sizing |
+| 3 | Partially too small OR proportions clearly off (e.g. short axis label "Date" disproportionately oversized, title overflowing >90% of width or clipping the canvas edges) |
+| 0 | Text hard to read at the canvas size, or text element unreadable in one of the two themes |
 
 **Key distinction:** Score of 8 requires **explicitly setting** font sizes, not just lucky defaults.
 
