@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-race-animated: Animated Bar Chart Race
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 75/100 | Updated: 2026-05-19
+Quality: 78/100 | Updated: 2026-05-19
 """
 
 import numpy as np

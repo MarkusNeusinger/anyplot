@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: bar-race-animated
 created: '2026-01-11T00:21:50Z'
-updated: '2026-05-19T02:09:51Z'
+updated: '2026-05-19T02:25:29Z'
 generated_by: claude-sonnet
 workflow_run: 26071447018
 issue: 3653
@@ -12,94 +12,89 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/letsplot/plot-dark.html
-quality_score: 75
+quality_score: 78
 review:
   strengths:
-  - Small multiples approach correctly chosen per spec for non-animated output; 2x2
-    grid effectively shows rank changes over time
-  - 'Strong data storytelling: CineCloud''s rise from last to first and FlixNet''s
-    decline from first to last is immediately apparent across 4 panels'
-  - gggrid() used correctly and idiomatically for lets-plot to combine independent
-    plots into a grid
-  - 'Clean KISS code structure: seeded RNG, flat script, no fake functionality, pd.Categorical
-    for bar ordering'
+  - Small multiples grid with sorted bars at each snapshot cleanly satisfies the animated
+    spec for a static library
+  - Consistent entity colors across all panels enable visual tracking of platform
+    trajectories
+  - Good use of letsplot gggrid() for panel composition — idiomatic and distinctive
+  - Value labels at bar ends add quantitative readability
+  - Grid lines removed, legend omitted — clean visual refinement
   weaknesses:
-  - 'Non-Okabe-Ito palette: #306998 (Python blue), #FFD43B, #DC2626 etc. violate the
-    mandatory palette rule; must use [''#009E73'', ''#D55E00'', ''#0072B2'', ''#CC79A7'',
-    ''#E69F00'', ''#56B4E9'']'
-  - 'No ANYPLOT_THEME handling: code ignores ANYPLOT_THEME env var; both renders will
-    be identical (light-only); must add os.getenv() and set PAGE_BG/INK/INK_SOFT tokens
-    for plot_background, panel_background, axis_text, axis_title, plot_title'
-  - 'Wrong output filenames: saves as ''plot.png'' and ''plot.html'' instead of f''plot-{THEME}.png''
-    and f''plot-{THEME}.html'''
-  - 'Wrong title in code: ''bar-race-animated · letsplot · pyplots.ai'' must be ''bar-race-animated
-    · python · letsplot · anyplot.ai'''
-  - 'Missing value labels: geom_text with subscriber values beside bars makes the
-    chart much more readable'
+  - 'Palette is non-compliant: custom hexes including #306998 (Python Blue) must be
+    replaced with Okabe-Ito (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9)
+    — first platform must get #009E73'
+  - 'Title string in code is wrong: bar-race-animated · letsplot · pyplots.ai must
+    be bar-race-animated · python · letsplot · anyplot.ai'
+  - No ANYPLOT_THEME detection; output filenames must be plot-{THEME}.png and plot-{THEME}.html
+  - 2023 subscriber values are unrealistically high (696M peak); reduce max to ~300M
+    to stay plausible
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1), not pure white — PASS
-      Chrome: Title "bar-race-animated · python · letsplot · anyplot.ai" in dark text, clearly readable. Year panel labels (2016, 2018, 2021, 2023) bold and prominent. Platform labels, x-axis tick labels, and "Subscribers (millions)" axis title all readable in dark ink.
-      Data: 6 platforms colored distinctively — FlixNet blue (#306998, non-Okabe-Ito), ViewHub orange, StreamMax teal (~#059669), MediaFlow light blue, WatchNow pink, CineCloud gold. Value labels (124M, 94M, etc.) shown beside each bar. Bars clearly sized and sorted by value.
-      Legibility verdict: PASS
+      Background: Light near-white (appears white/off-white from theme_minimal); 2x2 grid of horizontal bar chart panels
+      Chrome: Title "bar-race-animated · python · letsplot · anyplot.ai" at top (dark, bold, readable); panel year headings (2016, 2018, 2021, 2023) bold and large; platform labels on Y-axis dark and readable; axis tick labels dark and readable; X-axis label "Subscribers (millions)" clearly visible
+      Data: Six platforms colored with custom hexes (#306998 blue, orange-red, red, teal, purple, orange) consistently across all panels; value labels (e.g. 124M, 94M) visible at bar ends; bars sorted by descending subscriber count; dramatic ranking changes visible across panels
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black dark background — PASS (appears to originate from a previous code version with ANYPLOT_THEME handling; current code lacks this)
-      Chrome: Title and all labels use white/light text, clearly readable against dark surface. Year labels, platform names, tick labels all visible. No dark-on-dark failures observed.
-      Data: Bar colors are identical to the light render — correct per spec. Value labels visible in white.
-      Legibility verdict: PASS
-
-    NOTE: Significant discrepancy between current code and rendered images. Code saves as 'plot.png' (not plot-{THEME}.png), has title 'bar-race-animated · letsplot · pyplots.ai' (not correct format), lacks ANYPLOT_THEME handling, and lacks geom_text for value labels. Images appear to originate from an earlier, more complete version of the code.
+      Background: Dark near-black; same 2x2 grid layout
+      Chrome: All text flips to light/white — title, panel year headings, platform labels, tick labels, axis label all readable against dark surface; no dark-on-dark failures observed
+      Data: Bar colors are visually identical to light render (Okabe-Ito data colors should be constant — but here custom hexes are constant, which is at least internally consistent); value labels remain visible
+      Legibility verdict: PASS — all text clearly readable against dark background; theme adaptation appears functional despite missing explicit ANYPLOT_THEME code
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set (28pt year labels, 18pt axis title, 16-18pt
-          ticks); readable in both renders
+        comment: All sizes explicitly set (title 32pt, panel years 28pt, axis_title
+          18pt, ticks 16-18pt); axis_title slightly below 20pt guideline
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No overlapping text or bars; well-spaced 2x2 layout
+        comment: No collisions across all four panels
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Bars clearly sized and distinguishable; good color contrast
+        comment: Bars clear (width=0.7, alpha=0.9); value labels at bar ends add clarity
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
-        passed: true
-        comment: Custom colors are distinguishable but not Okabe-Ito; adequate contrast
+        passed: false
+        comment: Colors visually distinct but custom palette not CVD-safe (Okabe-Ito
+          would be)
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 2x2 grid uses canvas well; slight wasted space in panels where x-axis
-          extends past longest bar
+        comment: 2x2 grid fills 4800x2700 canvas well; minor excess whitespace between
+          panels
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Subscribers (millions) with unit; clear year panel titles
+        comment: X-axis 'Subscribers (millions)' with units; Y-axis blank (appropriate)
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'FAIL: #306998 (Python blue) explicitly non-compliant; custom palette
-          not Okabe-Ito; code lacks ANYPLOT_THEME handling'
+        comment: 'Non-compliant: custom hexes [#306998, #FFD43B, #DC2626, #059669,
+          #7C3AED, #EA580C]; #306998 is explicitly prohibited; first color must be
+          #009E73'
     design_excellence:
       score: 12
       max: 20
@@ -108,80 +103,76 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: true
-        comment: Clean small-multiples approach; palette is wrong but layout shows
-          intent; standard configured-defaults level
+        passed: false
+        comment: Well-configured defaults; non-compliant palette prevents higher score
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-grid and minor grid removed; legend hidden; theme_minimal base;
-          no explicit spine removal or ANYPLOT_THEME adaptive panel background
+        comment: Grid mostly removed, legend removed, theme_minimal base — good refinement
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Sorted bars across 4 time snapshots clearly tell the story of CineCloud's
-          rise and FlixNet's fall
+        comment: Sorted bars with consistent colors tell clear story of competitive
+          dynamics; value labels quantify changes
     spec_compliance:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Small multiples of ranked horizontal bars is the spec-prescribed
-          fallback for non-animated static output
+        comment: Small multiples grid is correct static alternative for animated spec
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bars sorted per snapshot; entity labels on y-axis; year titles as
-          time indicators; consistent color per entity
+        comment: Sorted bars, entity labels, time indicator, consistent entity colors
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=subscriber value, Y=platform, coord_flip applied; all 6 entities
-          shown
+        comment: Horizontal bars correct; all 6 platforms in all 4 panels
       - id: SC-04
         name: Title & Legend
         score: 1
         max: 3
         passed: false
-        comment: Code title is 'bar-race-animated · letsplot · pyplots.ai' — missing
-          'python' language token and wrong domain 'pyplots.ai'
+        comment: Code has 'bar-race-animated · letsplot · pyplots.ai' — missing python,
+          wrong domain pyplots.ai
     data_quality:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 6 entities over 4 time points; rank reversals clearly visible; slightly
-          missing entity that holds steady to contrast
+        comment: 'Full ranking dynamics shown: dramatic position changes, diverse
+          growth rates, all 6 entities in all frames'
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Streaming platform subscriber counts: plausible, neutral, business
-          domain'
+        comment: Fictional streaming platforms with plausible names; neutral business
+          scenario
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 2
         max: 4
-        passed: true
-        comment: Starting values 28-120M, final values 179-696M over 8 years; growth
-          rates credible
+        passed: false
+        comment: 2016 values realistic (28M-124M); 2023 peak of 696M implausibly high
+          — no streaming service reaches this; cap at ~300M
     code_quality:
       score: 9
       max: 10
@@ -191,8 +182,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports, data, plot loop, gggrid, save; no functions
-          or classes'
+        comment: 'Clean procedural flow: imports -> data -> loop -> gggrid -> save'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -204,48 +194,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, lets_plot — all used
+        comment: Only used imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Loop over snapshot years is clean; pd.Categorical for ordering is
-          idiomatic; no fake UI
+        comment: Clean, appropriate complexity; pd.Categorical for ordering is idiomatic
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as 'plot.png' and 'plot.html' — must be f'plot-{THEME}.png'
-          and f'plot-{THEME}.html'
+        comment: Saves to plot.png/plot.html instead of plot-{THEME}.png/html; no
+          os.getenv('ANYPLOT_THEME') detection
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar; gggrid for multi-panel; but missing canonical
-          ANYPLOT_THEME pattern required for all lets-plot implementations
+        comment: 'Strong ggplot2-grammar: coord_flip, scale_fill_manual, pd.Categorical
+          sorted axis, theme customization'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: gggrid() is distinctive to lets-plot; HTML export leverages interactive
-          output capability
+        comment: gggrid() is a distinctive letsplot-native feature for composing multi-panel
+          figures
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
+  - faceting
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - minimal-chrome
