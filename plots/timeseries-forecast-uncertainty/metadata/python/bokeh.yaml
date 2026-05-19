@@ -2,9 +2,9 @@ library: bokeh
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:30:50Z'
-updated: '2026-05-19T19:27:39Z'
+updated: '2026-05-19T20:27:47Z'
 generated_by: claude-sonnet
-workflow_run: 26118322591
+workflow_run: 26122581513
 issue: 3188
 language_version: 3.13.13
 library_version: 3.9.0
@@ -12,109 +12,95 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/bokeh/plot-dark.html
-quality_score: 90
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: all required features present (historical line, dashed
-    forecast, nested 80%/95% CI bands, vertical forecast separator, connection line,
-    HoverTool)'
-  - 'Flawless code quality: KISS structure, seed set, all imports used, clean ColumnDataSource
-    pattern throughout'
-  - 'Excellent data quality: realistic monthly sales scenario with trend, seasonality,
-    and growing uncertainty that matches forecasting real-world behaviour'
-  - 'Strong Bokeh feature usage: Span glyph for forecast boundary, HoverTool with
-    vline mode and datetime formatters showing CI bounds on hover, explicit Legend
-    layout'
-  - Correct Okabe-Ito palette with proper first-series green (#009E73), second-series
-    vermillion (#D55E00), and same-hue alpha-blending for nested CI bands
-  - Both light (#FAF8F1) and dark (#1A1A17) themes correctly applied with all chrome
-    tokens — no dark-on-dark or light-on-light failures
-  - 'Good design refinement: no border frame (outline_line_color=None), y-only subtle
-    grid at 10% alpha, L-shaped axis frame, styled legend with generous padding'
+  - 'Perfect spec compliance: all required elements present (solid/dashed distinction,
+    two CI levels, vertical separator, annotation, hover tooltips with CI data)'
+  - 'Excellent data quality: realistic sales scenario, logically consistent CI widths,
+    growing uncertainty correctly modeled'
+  - Clean, reproducible code following idiomatic Bokeh patterns
+  - 'Theme adaptation is thorough: backgrounds, text, grid, legend, axis lines all
+    correctly switch between light and dark'
+  - Good storytelling through the combination of separator line, annotation, and visual
+    hierarchy of solid vs dashed lines
   weaknesses:
-  - 'Minor right-edge padding: confidence bands extend to the very right boundary
-    of the canvas with no breathing room — add a small x_range buffer past the last
-    forecast date (e.g. p.x_range.end = pd.Timestamp(''2026-02-01'') or set a manual
-    x_range with 1–2 month right padding)'
-  - 'Design Excellence ceiling: implementation follows the style-guide template closely;
-    to reach DE-01=6+ it would benefit from one expressive touch — e.g. a subtle annotation
-    labelling the forecast start (''Forecast →''), or a headline-style sub-title strip
-    beneath the main title hinting at the story (e.g. ''Sales trend upward with widening
-    uncertainty'')'
+  - CI band color (#CC79A7, OI-4) is visually disconnected from the forecast line
+    (#D55E00, OI-2); palette skips OI-3, breaking canonical Okabe-Ito order for legend
+    items
+  - Should use Bokeh Band model instead of manually constructing patch polygons for
+    CI bands — more idiomatic and concise
+  - Y-grid opacity (10%) is at the lower edge of visibility; 15% would be more intentional
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "timeseries-forecast-uncertainty · python · bokeh · anyplot.ai" in dark INK (#1A1A17), spanning ~65% of plot width — expected for the long mandated format. Y-axis label "Sales (thousands)" in dark INK, rotated. X-axis label "Date" present. Tick labels in INK_SOFT (#4A4A44), readable against the warm background. Legend top-left with all four entries (Historical Data, Forecast, 80% CI, 95% CI) — dark-bordered box with elevated-BG fill, text in INK_SOFT.
-      Data: Historical data as a solid green (#009E73) line covering the left ~75% of the plot, showing a rising trend with seasonal oscillations (values ~75–125). Forecast shown as a dashed orange (#D55E00) line in the right ~25%. Nested CI bands both in reddish-purple (#CC79A7): outer 95% band at fill_alpha=0.15 (light) and inner 80% band at fill_alpha=0.30 (darker), clearly distinguishable. A vertical dashed line in INK_SOFT marks the forecast start. Right edge is slightly tight — CI bands extend to the canvas boundary with minimal horizontal padding.
-      Legibility verdict: PASS — all title, axis labels, and tick text readable against the warm off-white surface.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "timeseries-forecast-uncertainty · python · bokeh · anyplot.ai" in bold dark ink, clearly readable. Axis labels "Date" and "Sales (thousands)" in dark INK, readable. Tick labels (Jan 2022–Jan 2026, 60–170) in INK_SOFT, readable. "Forecast ▶" annotation in INK_SOFT, readable. Legend text in INK_SOFT on ELEVATED_BG box, readable.
+      Data: Historical line in #009E73 (bluish-green, first Okabe-Ito). Forecast dashed line in #D55E00 (vermillion, second Okabe-Ito). CI bands in #CC79A7 (reddish-purple, fourth Okabe-Ito) at fill_alpha 0.30 (80%) and 0.15 (95%). Vertical dashed separator in INK_SOFT at Jan 2025.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light cream (#F0EFE8), clearly visible against the dark surface. Y-axis label and tick labels in light-grey INK_SOFT (#B8B7B0) — readable, no dark-on-dark failures detected. Legend box uses elevated dark (#242420) fill with INK_SOFT text — legible.
-      Data: Historical green (#009E73) line and dashed orange (#D55E00) forecast are identical in hue to the light render — only chrome flips. Reddish-purple (#CC79A7) CI bands at same alpha levels retain the nested structure. Vertical separator line visible in INK_SOFT.
-      Legibility verdict: PASS — no dark-on-dark text failures; all labels readable against the dark background.
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light #F0EFE8, clearly readable. Axis labels in INK (#F0EFE8), readable. Tick labels in INK_SOFT (#B8B7B0), readable. "Forecast ▶" annotation in INK_SOFT, readable. Legend text on #242420 elevated fill, readable. No dark-on-dark failures detected.
+      Data: Historical line still #009E73 — identical to light render. Forecast dashed line still #D55E00. CI bands same #CC79A7 color, appears more muted/saturated against dark background but both 80% and 95% levels are distinguishable. Colors are identical to light render (only chrome flipped).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set at guide values (56pt title, 42pt
-          axis labels, 36pt ticks/legend). Proportional and readable in both themes.
-          Minor: x-axis date labels appear tight at thumbnail scale but code sets
-          correct 36pt; one point held for the slight right-edge crowding.'
+        comment: All font sizes explicitly set (56pt title, 42pt axis labels, 36pt
+          ticks/legend, 32pt annotation). Both renders fully legible; proportions
+          well-balanced.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps data or other text. Legend is top-left, away from
-          forecast bands. Datetime tick labels auto-spaced by Bokeh with no crowding.
+        comment: Legend in top-left above data range; annotation in open space; no
+          text-on-text or text-on-data collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Historical line (line_width=3, green), forecast line (dashed orange),
-          and both CI band layers are all clearly visible. Alpha 0.15/0.30 correctly
-          distinguishes 95%/80% bands.
+        comment: line_width=3 appropriate for 36-48 data points; CI bands at fill_alpha=0.30/0.15
+          clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe. Historical vs forecast distinguished by both
-          color and line-style (solid vs dashed), not color alone.
+        comment: 'Okabe-Ito selection; #009E73 vs #D55E00 distinct under deuteranopia/protanopia.
+          CI bands use alpha for differentiation.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Good canvas utilization. One point deducted: CI bands extend to
-          the right canvas boundary with no horizontal breathing room — x_range should
-          include a 1–2 month buffer after the last forecast date.'
+        comment: Generous min_border reserves; L-shaped frame; good canvas utilization
+          across full 3200x1800. Right-side padding prevents edge clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Sales (thousands)' has explicit unit. X-axis 'Date' is appropriate
-          for a datetime axis. Title is the mandated format.
+        comment: Y-axis 'Sales (thousands)' includes units; X-axis 'Date' appropriate
+          for datetime axis; title follows spec format.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'First series green (#009E73) ✓. Second series orange/vermillion
-          (#D55E00) ✓. CI bands use same-hue (#CC79A7) at different alpha — appropriate
-          for nested uncertainty regions of the same series. Backgrounds #FAF8F1/#1A1A17
-          ✓. All chrome tokens correctly themed in both renders ✓.'
+        passed: false
+        comment: 'First series correctly #009E73, second #D55E00. CI bands use OI-4
+          (#CC79A7) for both levels, skipping OI-3 (#0072B2), breaking canonical order.
+          Backgrounds and chrome are theme-correct in both renders.'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -122,27 +108,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Clearly above library defaults: intentional Okabe-Ito palette with
-          alpha-blending for CI bands, no border frame, L-shaped axes, well-sized
-          typography hierarchy. Not quite publication-ready (would need expressive
-          annotation or title emphasis to reach 6+).'
+        comment: 'Above Bokeh defaults: L-shaped frame, semi-transparent nested CI
+          bands, enlarged legend glyphs. CI band color (#CC79A7) disconnected from
+          forecast line color (#D55E00) — same color family would be more cohesive.'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Good refinement: y-axis-only grid at 10% alpha, border box removed
-          (outline_line_color=None), legend with padding=30 and glyph_width=60. Axes
-          retain L-shaped frame.'
+        comment: Subtle y-only grid (alpha=0.10), x-grid suppressed, top/right spines
+          removed, L-shaped axes, generous margins. Grid opacity at 10% is near-invisible;
+          15% would be better.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy guides the viewer: the nested CI bands visually
-          encode growing uncertainty, the vertical separator marks the historical/forecast
-          transition, and color contrast (green vs orange) immediately distinguishes
-          observed from predicted. Story is implicit but effective.'
+        comment: 'Clear hierarchy: solid green history → vertical separator + annotation
+          → dashed orange forecast with widening CI bands. Good visual flow. No annotation
+          of key historical insights.'
     spec_compliance:
       score: 15
       max: 15
@@ -152,32 +136,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time-series forecast with nested uncertainty bands. Solid
-          historical line, dashed forecast, two CI bands (80%/95%), vertical separator
-          — all correct.
+        comment: 'Correct: time series with solid historical line, dashed forecast
+          line, nested confidence bands, vertical separator.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: historical solid line, dashed forecast, 80% CI
-          band, 95% CI band, vertical forecast-start line, connection line, HoverTool
-          with CI values on hover.'
+        comment: 'All features: solid/dashed distinction, Span separator, two CI levels
+          (80%/95%), semi-transparent fills, legend, connection line, HoverTool with
+          CI details.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=Sales (thousands). Historical left, forecast right. Y-range
-          55–175 accommodates all data including max CI bounds (~160).
+        comment: Datetime x-axis correct; y-axis in thousands; 80% CI narrower/darker
+          than 95% CI as required.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''timeseries-forecast-uncertainty · python · bokeh · anyplot.ai''
-          ✓. Legend: ''Historical Data'', ''Forecast'', ''80% Confidence Interval'',
-          ''95% Confidence Interval'' ✓.'
+        comment: 'Title: ''timeseries-forecast-uncertainty · python · bokeh · anyplot.ai''.
+          Legend: Historical Data, Forecast, 80% CI, 95% CI.'
     data_quality:
       score: 15
       max: 15
@@ -187,25 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: historical trend+seasonality+noise, forecast
-          continuation, growing uncertainty (uncertainty_80 from 5→15, uncertainty_95
-          from 8→25), nested CI structure visually demonstrating widening confidence
-          envelope.'
+        comment: Shows upward trend, seasonal oscillations, two CI levels, growing
+          uncertainty over forecast horizon.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly product sales data with 3-year history and 12-month forecast
-          — real-world plausible, neutral business scenario.
+        comment: Monthly product sales 2022-2024 with 12-month forecast. Plausible
+          business scenario, neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales range 75–135k with growing uncertainty is realistic. ~50% trend
-          growth over 3 years is plausible for a growing product line. Seasonal amplitude
-          of 15 (~15%) is reasonable.
+        comment: Sales 70-160k, seasonal amplitude ~15k, uncertainty growing from
+          ±5-8k to ±15-25k. 95% CI always wider than 80% CI.
     code_quality:
       score: 10
       max: 10
@@ -215,56 +194,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens → data → figure → styling → plot elements → legend
-          → save. No functions or classes.'
+        comment: 'Linear: imports → tokens → data → figure → style → glyphs → tools
+          → legend → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before any random calls.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (env var), time (sleep), Path (file resolve),
-          numpy, pandas, bokeh.io/models/plotting, selenium.'
+        comment: 'All imports actively used: os, time, Path, numpy, pandas, all bokeh
+          models, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and idiomatic. ColumnDataSource used consistently. Patch-based
-          CI bands are the correct Bokeh approach. No over-engineering.
+        comment: Clean, Pythonic; no fake UI elements; appropriate complexity. Patch-based
+          CI bands slightly more verbose than Band model but valid.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Uses Selenium for screenshot
-          per library guide. Current Bokeh API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh 3.x API
+          used throughout.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert idiomatic Bokeh: ColumnDataSource throughout, patch() for
-          filled areas, Span for reference line, HoverTool with renderers list, explicit
-          Legend via add_layout.'
+        comment: ColumnDataSource throughout, HoverTool with formatters, Span, Label,
+          Legend via add_layout, Range1d. Uses patch instead of Bokeh's Band model
+          for CI bands — less idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses clearly Bokeh-specific features: Span glyph (not available
-          in most other libraries), HoverTool with vline mode showing CI values on
-          hover, interactive HTML export alongside PNG. Would need a callback or linked
-          selection to reach 5/5.'
+        comment: HoverTool with CI data in tooltips (Bokeh-exclusive interactive feature),
+          Span model, dual HTML+PNG output, ColumnDataSource columns powering hover
+          display.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -272,6 +250,7 @@ impl_tags:
   techniques:
   - hover-tooltips
   - html-export
+  - annotations
   - custom-legend
   patterns:
   - data-generation
