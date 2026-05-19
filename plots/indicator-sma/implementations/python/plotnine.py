@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-19
@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    annotate,
     element_line,
     element_rect,
     element_text,
@@ -30,17 +31,21 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito palette — first series always #009E73
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+GOLDEN_COLOR = "#E69F00"  # amber — Okabe-Ito position 5, "golden" signal
+DEATH_COLOR = INK_SOFT  # muted gray — "death" signal, theme-adaptive
 
-# Data - stock price with exponential-decay trend (strong early momentum fading to mild reversion)
+# Data — bull market (days 1–150) followed by bear market (days 150–300),
+# engineered to produce a visible death cross once SMA 200 is available
 np.random.seed(42)
 n_days = 300
 dates = pd.date_range("2024-01-01", periods=n_days, freq="B")
 
 base_price = 150
-returns = np.random.normal(0.0003, 0.015, n_days)
-trend = np.exp(-np.linspace(0, 2, n_days)) * 0.003 - 0.0005
+returns = np.random.normal(0.0, 0.012, n_days)
+trend = np.zeros(n_days)
+trend[:150] = 0.002  # moderate uptrend
+trend[150:] = -0.003  # sharper reversal
 returns = returns + trend
 close = base_price * np.cumprod(1 + returns)
 
@@ -50,23 +55,32 @@ df["sma_20"] = df["close"].rolling(window=20).mean()
 df["sma_50"] = df["close"].rolling(window=50).mean()
 df["sma_200"] = df["close"].rolling(window=200).mean()
 
+# Detect SMA 50 / SMA 200 crossovers (golden cross & death cross)
+valid = df.dropna(subset=["sma_50", "sma_200"]).copy()
+valid["diff"] = valid["sma_50"] - valid["sma_200"]
+valid["prev_diff"] = valid["diff"].shift(1)
+crossovers = valid[valid["prev_diff"].notna() & (valid["prev_diff"] * valid["diff"] < 0)].copy()
+crossovers["cross_type"] = crossovers["diff"].apply(lambda d: "Golden Cross" if d > 0 else "Death Cross")
+
 # Reshape to long format for plotnine
 df_long = pd.melt(
     df, id_vars=["date"], value_vars=["close", "sma_20", "sma_50", "sma_200"], var_name="series", value_name="price"
 )
-
 series_labels = {"close": "Price", "sma_20": "SMA 20", "sma_50": "SMA 50", "sma_200": "SMA 200"}
 df_long["series"] = df_long["series"].map(series_labels)
-
 series_order = ["Price", "SMA 20", "SMA 50", "SMA 200"]
 df_long["series"] = pd.Categorical(df_long["series"], categories=series_order, ordered=True)
 
 colors = {"Price": OKABE_ITO[0], "SMA 20": OKABE_ITO[1], "SMA 50": OKABE_ITO[2], "SMA 200": OKABE_ITO[3]}
 
-# Plot
+# Separate data to draw SMAs behind price line at different thicknesses
+price_data = df_long[df_long["series"] == "Price"]
+sma_data = df_long[df_long["series"] != "Price"]
+
 plot = (
     ggplot(df_long, aes(x="date", y="price", color="series"))
-    + geom_line(size=1.5, alpha=0.9)
+    + geom_line(data=sma_data, size=1.2, alpha=0.85)  # SMAs drawn first (behind price)
+    + geom_line(data=price_data, size=2.5, alpha=0.95)  # Price drawn on top, prominently
     + scale_color_manual(values=colors)
     + scale_x_datetime(date_breaks="2 months", date_labels="%b %Y")
     + labs(x="Date", y="Price ($)", title="indicator-sma · python · plotnine · anyplot.ai", color="")
@@ -89,5 +103,10 @@ plot = (
     )
 )
 
-# Save
+# Annotate crossover signals with vertical dashed lines
+for _, row in crossovers.iterrows():
+    is_golden = row["cross_type"] == "Golden Cross"
+    color = GOLDEN_COLOR if is_golden else DEATH_COLOR
+    plot = plot + annotate("vline", xintercept=row["date"], color=color, size=0.9, alpha=0.7, linetype="dashed")
+
 plot.save(f"plot-{THEME}.png", dpi=300)
