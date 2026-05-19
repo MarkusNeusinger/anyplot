@@ -1,7 +1,7 @@
 """ anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-19
+Quality: 90/100 | Updated: 2026-05-19
 """
 
 import os
@@ -112,13 +112,27 @@ ax.plot(
     markeredgewidth=1.5,
 )
 
-# Style
-ax.set_xlabel("Date", fontsize=14, color=INK)
-ax.set_ylabel("Monthly Sales (thousands)", fontsize=14, color=INK)
-ax.set_title(
-    "timeseries-forecast-uncertainty · python · matplotlib · anyplot.ai", fontsize=15, fontweight="medium", color=INK
+# Callout annotation at the forecast peak — surfaces the projected peak value
+peak_val = forecast_values[peak_idx]
+ax.annotate(
+    f"Peak ≈ {peak_val:.0f}k",
+    xy=(forecast_dates[peak_idx], peak_val),
+    xytext=(0, 16),
+    textcoords="offset points",
+    color=INK_MUTED,
+    fontsize=8,
+    ha="center",
+    va="bottom",
+    fontstyle="italic",
 )
-ax.tick_params(axis="both", labelsize=12, colors=INK_SOFT)
+
+# Style
+ax.set_xlabel("Date", fontsize=12, color=INK)
+ax.set_ylabel("Monthly Sales (thousands)", fontsize=12, color=INK)
+ax.set_title(
+    "timeseries-forecast-uncertainty · python · matplotlib · anyplot.ai", fontsize=14, fontweight="medium", color=INK
+)
+ax.tick_params(axis="both", labelsize=10, colors=INK_SOFT)
 
 # Date axis — semi-annual major ticks
 tick_dates = pd.date_range(start=dates[0], end=dates[-1], freq="6MS")
@@ -148,7 +162,7 @@ ci_80_handle = Patch(facecolor=CI_COLOR, alpha=0.55, label="80% CI")
 ci_95_handle = Patch(facecolor=CI_COLOR, alpha=0.25, label="95% CI")
 leg = ax.legend(
     handles=[hist_line, fc_line, fc_start_proxy, ci_80_handle, ci_95_handle],
-    fontsize=12,
+    fontsize=10,
     loc="upper left",
     framealpha=0.95,
 )
