@@ -1,165 +1,179 @@
 library: highcharts
+language: python
 specification_id: ternary-density
 created: '2026-01-11T10:09:28Z'
-updated: '2026-01-11T10:12:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20893328012
+updated: '2026-05-19T10:47:48Z'
+generated_by: claude-sonnet
+workflow_run: 26091674754
 issue: 3696
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-density/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ternary-density/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of ternary density using Highcharts heatmap with custom
-    SVG renderer overlays
-  - Uses viridis colormap correctly with proper perceptual uniformity
-  - Three distinct density clusters clearly demonstrate multimodal compositional data
-  - Grid lines drawn at correct angles for ternary plots (parallel to each edge)
-  - Realistic geological sediment composition context
-  - Proper masking of heatmap cells outside the triangle boundary using barycentric
-    coordinates
+  - Complete ternary-to-Cartesian KDE pipeline with barycentric masking correctly
+    produces a masked heatmap with no density bleed outside the triangle
+  - Highcharts SVG renderer used creatively for the triangle outline, internal grid
+    lines, and all vertex/tick labels — idiomatic and distinctive
+  - 'Full theme-adaptive chrome: all six tokens threaded throughout; both renders
+    are visually correct'
+  - Geologically realistic three-mode dataset with clear narrative matches the spec
+    sediment composition application
   weaknesses:
-  - Minor jagged edges visible at triangle boundaries due to square heatmap cell rasterization
-  - Tick labels only appear on the bottom edge; left and right edges lack percentage
-    markers
-  image_description: 'The plot displays a ternary density visualization showing sediment
-    composition (sand/silt/clay) as a kernel density heatmap within an equilateral
-    triangle. The triangle has three labeled vertices: "Sand (100%)" at bottom-left
-    in blue text, "Silt (100%)" at bottom-right in blue text, and "Clay (100%)" at
-    the top in blue text. The density is represented using a viridis colormap ranging
-    from dark purple (low density, 0) to bright yellow (high density, 1). Three distinct
-    density clusters are visible: (1) a high-density yellow cluster in the bottom-left
-    corner corresponding to sand-dominated compositions, (2) a high-density cluster
-    in the upper portion corresponding to clay-rich sediments, and (3) a moderate-density
-    region at the top-right edge corresponding to silt-dominated compositions. Grid
-    lines are visible within the triangle at 10% intervals, appearing as subtle gray
-    lines. The bottom edge has percentage tick labels (20%, 40%, 60%, 80%). A color
-    legend labeled "Density" appears on the right side showing the scale from 0 to
-    1. The title follows the correct format "ternary-density · highcharts · pyplots.ai"
-    with a subtitle indicating "Sediment Composition: Sand/Silt/Clay Distribution
-    (n=500)".'
+  - Title font size (48px) renders relatively small on 3600x3600 canvas — increase
+    to 64-72px for stronger visual hierarchy
+  - No contour lines at key density levels — spec suggests showing contour lines at
+    key density thresholds (25%/50%/75%) for easier interpretation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "ternary-density · python · highcharts · anyplot.ai" in dark INK (#1A1A17), subtitle in INK_SOFT, vertex labels (Sand/Clay/Silt) 42px bold in dark ink, tick labels 26px in INK_MUTED — all clearly readable
+      Data: Viridis heatmap filling equilateral triangle; three distinct density peaks (yellow=high, dark purple=low); subtle dashed grid lines at 10% intervals at opacity 0.25
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all labels correctly flip to light ink (#F0EFE8 / #B8B7B0); no dark-on-dark failures observed; colorbar legend uses elevated background #242420 with border
+      Data: Viridis heatmap colors identical to light render — three clusters in same positions and hues; data-ink ratio unchanged between themes
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: 'All text clearly readable: title at 52px, vertex labels at 36px,
-          tick labels at 24px'
+        comment: All text readable in both themes; title at 48px is slightly small
+          for 3600x3600 canvas
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels well-positioned outside
-          the triangle
+        comment: No overlapping elements; vertex labels, tick labels, and subtitle
+          well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density heatmap cells clearly visible; minor jagged edges at triangle
-          boundaries
+        comment: Three density modes distinct and prominent; viridis range well-utilised
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses viridis colormap which is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; triangle fills most of plot area; legend
-          well-positioned
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Ternary plots lack traditional axes; vertex labels identify components
-          but no unit descriptions
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid lines visible at appropriate opacity; legend clearly labeled
-          Density
+        comment: Viridis is colorblind-safe; no red-green encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 3600x3600 canvas appropriate for ternary; margins accommodate
+          all labels
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Vertex labels and subtitle describe components; title format is correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis used for continuous density data (correct); backgrounds
+          #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom triangle SVG rendering, barycentric masking, three geologically-realistic
+          clusters, viridis colormap — well above defaults
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, grid lines at opacity 0.25, clean colorbar with elevated
+          background and border
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three labeled geological modes create clear narrative; yellow peaks
+          guide viewer; subtitle provides context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct ternary density plot with KDE heatmap overlay
+        comment: Correct ternary density plot using Highcharts heatmap module
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Three components correctly mapped to ternary coordinates
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: KDE density, perceptually uniform colormap,
-          grid lines, vertex labels'
-      - id: SC-04
-        name: Data Range
+        comment: KDE overlay, viridis colormap, ternary grid lines, vertex labels,
+          triangle masking — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full triangle visible; all compositions representable
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct ternary-to-Cartesian transform; sand/silt/clay mapped to
+          correct vertices
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Density with 0-1 scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: ternary-density · highcharts · pyplots.ai'
+        comment: Title is exactly 'ternary-density · python · highcharts · anyplot.ai';
+          density colorbar present
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct clusters demonstrating multimodal density
+        comment: Multi-modal density, full triangle coverage, KDE smoothing, barycentric
+          masking all fully realised
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: 'Excellent real-world scenario: sediment composition is classic geological
-          application'
+        comment: Sediment composition is canonical ternary geology application; Dirichlet
+          clusters are plausible; no controversial content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 500 samples appropriate; Dirichlet distribution creates realistic
-          compositional data
+        comment: n=500, three distinct modes, proportions sum to 100% via Dirichlet
+          distribution
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -167,43 +181,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script structure: imports → data generation → KDE → HTML
-          generation → screenshot'
+        comment: Flat procedural script, no classes or functions
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic data
+        comment: np.random.seed(42) set early
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports are used; no unnecessary imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Inline JS correct for Highcharts/Selenium; turboThreshold:0 handles
+          large dataset correctly
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly but minor deduction for code complexity
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_features:
-      score: 3
-      max: 5
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts heatmap with custom renderer for triangle overlay;
-          creative approach but does not leverage full interactivity
+        comment: Heatmap module, colorAxis with stops, chart load event, nullColor:transparent,
+          turboThreshold — all idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Highcharts SVG renderer for custom triangle, grid lines, and vertex
+          labels — distinctively Highcharts
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -212,14 +233,12 @@ impl_tags:
   techniques:
   - html-export
   - colorbar
-  - annotations
-  - patches
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - kde
+  - normalization
   styling:
   - custom-colormap
-  - grid-styling
+  - alpha-blending
