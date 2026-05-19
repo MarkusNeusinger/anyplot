@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-19
+Quality: 86/100 | Updated: 2026-05-19
 """
 
 import os
