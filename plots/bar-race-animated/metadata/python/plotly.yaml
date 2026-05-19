@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-race-animated
 created: '2026-01-11T00:19:26Z'
-updated: '2026-05-19T02:01:24Z'
+updated: '2026-05-19T02:20:56Z'
 generated_by: claude-sonnet
 workflow_run: 26071044074
 issue: 3653
@@ -12,50 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/plotly/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Full Plotly animation implemented: go.Figure with frames, updatemenus (play/pause),
-    and year slider — correct idiomatic usage of Plotly''s animation API'
-  - 'Correct Okabe-Ito palette applied in canonical order; USA (first entity) gets
-    #009E73; all 7 Okabe-Ito colors used for 7 countries'
-  - 'Theme adaptation works correctly: PAGE_BG, INK, INK_SOFT, GRID all flip between
-    light (#FAF8F1) and dark (#1A1A17); no dark-on-dark text failures'
-  - Explicit font sizes throughout (title 28px, axis labels 22px, tick labels 18-20px,
-    bar value labels 18px)
-  - HTML output includes play/pause buttons and year scrubber slider — satisfies all
-    interactive spec requirements
-  - Flat procedural code with np.random.seed(42) — clean, reproducible, no functions/classes
-  - Data scenario (country GDP 1995-2023) is realistic and neutral; correct output
-    files (plot-{THEME}.png + plot-{THEME}.html)
+  - 'Full Plotly animation API used correctly: go.Frame array, updatemenus play/pause,
+    sliders timeline scrubber — distinctly Plotly features that cannot be replicated
+    in static libraries'
+  - 'Perfect spec compliance: sorted bars per frame, consistent entity colors, visible
+    year indicator via slider, configurable animation speed (600ms frame, 300ms transition)'
+  - Both renders theme-adapt correctly; GRID, INK, INK_SOFT, PAGE_BG, and ELEVATED_BG
+    tokens all wired through to every relevant layout element in both the animated
+    and PNG figures
+  - Realistic GDP data with accurate proportions and genuine rank changes (China's
+    rise from last to 2nd, Germany overtaking Japan) makes for compelling animation
+    content
   weaknesses:
-  - 'Design lacks visual polish: no spine removal on the static PNG axes, grid at
-    25% opacity (style guide specifies 10-15%)'
-  - 'DE-03 storytelling is absent in the PNG: static snapshot shows final rankings
-    without emphasizing the interesting story (China''s rise from ~5th to 2nd, Germany
-    overtaking Japan in late period) — consider rank number labels (#1, #2...) or
-    a subtitle annotation'
-  - 'DQ-03 data accuracy: Japan (7.7T) and Germany (7.2T) are 60-80% above their real
-    2023 nominal GDP (~4.2T and ~4.5T respectively); the simulation''s growth rates
-    are too high for these economies; also Germany surpassed Japan in 2023 making
-    the Japan>Germany ordering historically incorrect'
-  - 'Right-side canvas whitespace: USA bar reaches only ~85% of x-axis width, leaving
-    significant empty space; right margin could be tighter or value labels placed
-    inside bars to improve canvas utilization'
-  - 'No rank labels (#1, #2, etc.) on bars to reinforce the racing/ranking narrative
-    of the chart type'
+  - 'Grid opacity set to 0.25 instead of style guide-specified 0.10 — grid lines are
+    2.5x more prominent than intended; fix: GRID = "rgba(26,26,23,0.10)" if THEME
+    == "light" else "rgba(240,239,232,0.10)"'
+  - 'DE-01 remains at configured-default level: no typographic hierarchy beyond font
+    sizes, no visual emphasis on the leading bar or fastest-rising entity to create
+    a focal point'
+  - Only 7 entities in the dataset; specification recommends 10-20 for richer competitive
+    dynamics — consider adding India, Canada, South Korea, Italy
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "GDP Rankings · bar-race-animated · python · plotly · anyplot.ai" centered in dark text (#1A1A17), clearly readable. X-axis label "GDP (Trillion USD) — 2023 snapshot" with units, readable. Country tick labels (left y-axis) in dark secondary text, readable. X-axis tick labels 0–30 in secondary dark text, readable.
-      Data: 7 horizontal bars in Okabe-Ito order — USA (#009E73 green, longest at 26.1T), China (#D55E00 orange-red at 13.1T), Japan (#0072B2 blue at 7.7T), Germany (#CC79A7 pink at 7.2T), France (#56B4E9 sky-blue at 4.1T), UK (#E69F00 amber at 3.7T), Brazil (#F0E442 yellow at 3.4T). Value labels outside bars ("26.1T" etc.) in dark ink. Subtle vertical grid lines visible. Bars sorted descending (USA top, Brazil bottom).
-      Legibility verdict: PASS — all text clearly readable against warm off-white background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "GDP Rankings · bar-race-animated · python · plotly · anyplot.ai" in 28px dark INK text, centered; subtitle in smaller gray INK_SOFT text; X-axis label "GDP (Trillion USD) — 2023 snapshot" in 22px; tick labels 18px — all clearly readable against light background
+      Data: 7 horizontal bars sorted descending (USA top, Brazil bottom); colors follow Okabe-Ito order — USA #009E73 (brand green), China #D55E00, Germany #CC79A7, Japan #0072B2, UK #E69F00, France #56B4E9, Brazil #F0E442; rank labels (#1–#7) and GDP values outside bars in dark INK text
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
-      Chrome: Title in light text (#F0EFE8), clearly readable. Axis labels in light text, readable. Country tick labels in light secondary text (#B8B7B0), readable. Tick numbers on x-axis in light secondary text, readable. No dark-on-dark failures observed.
-      Data: Bar colors are IDENTICAL to light render — USA green #009E73, China orange-red, Japan blue, Germany pink, France sky-blue, UK amber, Brazil yellow. Data identity preserved across themes. Value labels ("26.1T", etc.) rendered in #F0EFE8 (INK for dark theme), clearly visible on the dark background.
-      Legibility verdict: PASS — all text readable against near-black background; theme adaptation correct throughout.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels, and rank/value labels all render in light cream/off-white INK token; no dark-on-dark failures observed; all text elements clearly distinguishable against near-black surface
+      Data: Identical bar colors to light render — #009E73, #D55E00, #CC79A7, #0072B2, #E69F00, #56B4E9, #F0E442 all unchanged confirming correct Okabe-Ito immutability across themes; brand green #009E73 remains vivid on dark surface
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -63,54 +54,50 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
-          labels 18-20px, bar value labels 18px; both themes fully readable'
+        comment: All font sizes explicitly set (title 28px, axis 22px, ticks/labels
+          18px); readable in both themes; minor deduction for subtitle size
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; bar labels, y-axis labels, and tick marks are
-          all well-spaced
+        comment: No overlapping elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All 7 bars visible, colors clearly distinct, value labels readable
+        comment: All bars clearly visible; rank/value labels positioned outside bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; no red-green as sole signal
+        comment: Okabe-Ito is CVD-safe; no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions overall; right side has notable empty space as USA
-          bar reaches only ~85% of x-axis range
+        comment: 4800x2700px effective; balanced margins; nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted; x-axis label includes units (Trillion
-          USD) and snapshot year
+        comment: X-axis has descriptive label with units; title correctly formatted
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'USA (first entity) = #009E73; Okabe-Ito canonical order followed;
-          backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct; data colors identical
-          across themes'
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds #FAF8F1/#1A1A17;
+          chrome tokens flip correctly'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -118,24 +105,22 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Clean well-configured default appearance; correct palette and no
-          legend, but no typographic weight hierarchy, no rank annotations, no highlights
-          of notable data moments
+        comment: Well-configured defaults; correct palette and rank labels; no typographic
+          or visual hierarchy innovation beyond defaults
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: Grid at 25% opacity exceeds the 10-15% guideline; no spine removal
-          on axes; minimal refinement beyond correct color palette
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Sorted bars inherently communicate ranking; animation is excellent
-          storytelling in HTML; but static PNG has no emphasis on interesting dynamics
-          (China's rise, Germany overtaking Japan)
+        comment: Generous margins and clean layout; grid opacity 0.25 exceeds recommended
+          0.10
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Subtitle explicitly identifies narrative; rank labels provide hierarchy;
+          animation delivers the race story dynamically
     spec_compliance:
       score: 15
       max: 15
@@ -145,31 +130,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct animated horizontal bar chart with full Plotly animation
-          API
+        comment: Animated horizontal bar chart race with per-frame sorted bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bars sorted at each frame, entity labels on y-axis, year slider as
-          time indicator, play/pause controls, consistent entity colors
+        comment: Sorted frames, consistent colors, year slider, play/pause controls,
+          configurable speed
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=GDP value, Y=countries (sorted by GDP per frame), horizontal orientation
-          correct
+        comment: Horizontal orientation, GDP on x-axis, countries on y-axis, 29 time
+          points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'GDP Rankings · bar-race-animated · python · plotly · anyplot.ai'
-          — correct format; no legend (appropriate, country labels on y-axis)
+        comment: Correct title format; no legend needed; entity identity via y-axis
+          labels
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -177,23 +161,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key bar-race features: multiple entities, time evolution,
-          position changes, ranking reversals, value labels'
+        comment: Multiple entities competing with rank changes; dominant leader and
+          dramatic risers
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Country GDP over time is a canonical, neutral, comprehensible bar-race
-          application
+        comment: Major economy GDP — real, comprehensible, politically neutral
       - id: DQ-03
         name: Appropriate Scale
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Japan shows 7.7T (real ~4.2T, 84% over), Germany shows 7.2T (real
-          ~4.5T, 60% over), France 4.1T (real ~2.9T, 41% over); also Germany surpassed
-          Japan in 2023 but data shows Japan>Germany, reversing historical fact
+        passed: true
+        comment: GDP values (USA ~26T, China ~13T, Japan ~4T in 2023) match approximately
+          correct real-world proportions
     code_quality:
       score: 10
       max: 10
@@ -203,14 +185,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat procedural structure: imports → data → animation frames → figure
-          → save'
+        comment: 'Flat script: constants -> data -> animation frames -> figures ->
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -222,43 +204,39 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: List comprehensions for frames, clean separation of animation vs
-          PNG figure, no over-engineering
+        comment: Appropriate complexity; clean separation of animation and PNG figures;
+          no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct naming
-          convention
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct dimensions
     library_mastery:
-      score: 10
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Uses go.Figure(frames=...) with go.Frame objects — Plotly's idiomatic
-          animation pattern; updatemenus and sliders are the canonical way to add
-          controls
+        comment: go.Frame, go.Figure(frames=...), updatemenus, sliders — all recommended
+          Plotly animation patterns
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Frames + updatemenus (play/pause) + sliders (year scrubber) are Plotly-exclusive
-          features impossible to replicate in matplotlib/seaborn/ggplot2
-  verdict: REJECTED
+        comment: Plotly animation with timeline slider and play/pause is genuinely
+          distinctive; animated hover templates not customized
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
-  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
