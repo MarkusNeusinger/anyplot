@@ -1,156 +1,184 @@
 library: matplotlib
+language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:17:32Z'
-updated: '2026-01-11T00:20:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886559895
+updated: '2026-05-19T05:01:42Z'
+generated_by: claude-sonnet
+workflow_run: 26076491369
 issue: 3652
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/matplotlib/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
 review:
   strengths:
-  - Excellent adherence to specification with price line and two EMA periods
-  - Crossover points clearly highlighted with prominent red markers and white edges
-  - Clean, professional appearance with appropriate color choices
-  - Proper use of pandas ewm() for authentic EMA calculation
-  - Good text sizing and rotation for date labels
-  - Realistic financial data simulation
+  - Regime shading between EMA lines is an elegant storytelling device that encodes
+    market structure (bullish/bearish) visually
+  - 'Full theme-adaptive chrome: all non-data elements correctly flip between light
+    and dark without changing data colors'
+  - Visual hierarchy (price linewidth 2.5 > EMA 2.0 > crossover markers) naturally
+    draws the eye in the correct reading order
+  - All font sizes explicitly set to spec (title 24pt, labels 20pt, ticks 16pt) —
+    consistent readability at 4800x2700 canvas resolution
   weaknesses:
-  - Legend overlaps with the initial price data slightly in upper left
-  - Could add shaded regions between EMA lines to better visualize convergence/divergence
-  - Crossover markers lack labels explaining whether golden cross or death cross
-  image_description: 'The plot displays a financial time series chart spanning from
-    January 2024 to June 2024. Three lines are shown: a dark gray/black "Price" line
-    showing daily closing prices with significant volatility, a blue "EMA 12" (12-period
-    Exponential Moving Average) line that follows the price more closely, and a yellow/gold
-    "EMA 26" (26-period EMA) line that is smoother and lags more behind price movements.
-    The price starts around $150-165, trends downward to approximately $118-120 in
-    late March, then fluctuates between $120-135 for the remainder of the period.
-    Red circular markers with white edges highlight crossover points where the EMA
-    12 crosses the EMA 26 line. The chart has a clean white background with subtle
-    gray dashed grid lines, properly formatted date labels on the x-axis (rotated
-    for readability), and "Price ($)" on the y-axis. The title follows the correct
-    format: "indicator-ema · matplotlib · pyplots.ai". Legend is positioned in the
-    upper left corner.'
+  - Okabe-Ito positions 4 and 5 used for crossover markers out of canonical order
+    — position 3 (#0072B2) skipped; sequential order should be preserved even for
+    supplementary legend entries
+  - The two annotation boxes (Golden Cross and Death Cross) land very close together
+    in the Jan-Feb 2024 area, causing slight visual crowding near the initial crossover
+    event
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "indicator-ema · python · matplotlib · anyplot.ai" in dark medium-weight text; subtitle in muted ink; axis labels "Price (USD)" and "Date" clearly readable; tick labels rotated 30° at 16pt, readable; legend frame with light elevated background (#FFFDF6)
+      Data: Price line in dark near-black (INK token); EMA 12 in #009E73 (brand green, first series correct); EMA 26 in #D55E00 (vermillion, second series correct); regime shading between EMAs in green-tint (bullish) and orange-tint (bearish); gold upward triangles (#E69F00) and pink downward triangles (#CC79A7) for crossover markers; annotation boxes with arrow callouts for first golden/death cross events
+      Legibility verdict: PASS — all text readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and axis labels in light cream (#F0EFE8); tick labels in muted light token (#B8B7B0); legend frame uses dark elevated surface (#242420); annotation boxes use dark elevated background with colored borders — all readable
+      Data: Price line becomes white for contrast on dark background; EMA 12 remains #009E73 (identical to light render); EMA 26 remains #D55E00 (identical to light render); all crossover marker colors identical to light render; regime shading colors unchanged
+      Legibility verdict: PASS — no dark-on-dark failures; all text is light-colored against the dark surface
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, dates rotated appropriately
+        comment: Title 24pt, axis labels 20pt, tick labels 16pt all explicitly set;
+          readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Golden Cross and Death Cross annotation boxes are crowded in Jan-Feb
+          2024 area and slightly overlap; both remain readable
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Lines visible with good thickness, crossover markers prominent with
-          white edge highlighting
+        comment: Price line (2.5), EMA lines (2.0), crossover markers (s=280) all
+          well-sized for the 4800x2700 canvas
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Dark gray, blue, and yellow palette is colorblind-safe with good
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Date and Price ($) with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: CVD-safe Okabe-Ito colors; good luminance contrast between price/EMA/markers
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized, balanced margins, legend does not crowd
+          data
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle with alpha=0.3, but legend partially overlaps the
-          price peak area at the beginning
+        passed: true
+        comment: Price (USD) and Date with correct units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: 'EMA 12 correctly uses #009E73 (pos 1), EMA 26 uses #D55E00 (pos
+          2), backgrounds correct; crossover markers cherry-pick Okabe-Ito positions
+          5 and 4 out of order, skipping position 3'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design clearly above defaults: regime shading, branded annotation
+          boxes with arrow callouts, subtitle typographic hierarchy, theme-adaptive
+          legend'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed, tick marks removed (length=0), y-axis-only
+          grid at alpha=0.10, legend frame styled; minor deduction for annotation
+          placement crowding the left chart margin
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Regime shading encodes market structure; visual hierarchy guides
+          the viewer; annotations label key narrative events
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct EMA overlay chart with price line and two EMA lines
+        comment: EMA overlay chart with price line and dual EMA lines, correct chart
+          type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, price/EMA values on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Price line, two EMA periods (12 and 26), crossover highlighting,
-          distinct colors per spec
-      - id: SC-04
-        name: Data Range
+        comment: Price line prominent, two EMA lines overlaid (12-day, 26-day), distinct
+          colors, EMA lines thinner than price, crossover points highlighted, legend
+          with period labels
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points with appropriate range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Dates on x-axis, price on y-axis, all 120 trading days shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Price, EMA 12, and EMA 26
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format indicator-ema · matplotlib · pyplots.ai
+        comment: Title follows required format; legend labels Price, EMA 12, EMA 26,
+          Golden Cross, Death Cross
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows downtrend, crossovers, price volatility; could show clearer
-          bullish/bearish phases
+        comment: Shows price action, both EMA lines, crossover signals (golden and
+          death), regime shading, trending behavior
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price scenario with realistic random walk simulation starting
-          at $150
+        comment: ~$150 stock price over 120 trading days with standard 12/26 EMA periods;
+          neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 120 trading days is appropriate; prices in realistic range $118-165
+        comment: Price range $120-$170 plausible for a mid-cap stock; EMA convergence/divergence
+          behavior is mathematically correct
     code_quality:
       score: 10
       max: 10
@@ -160,46 +188,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports, data, plot, save structure, no functions/classes
+        comment: 'Flat structure: imports -> tokens -> data -> plot -> style -> save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib, numpy, pandas imported and all used
+        comment: All imported modules are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean Pythonic code; proxy artist pattern for legend entries is idiomatic
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; uses current matplotlib 3.x API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses pandas ewm() for EMA calculation, matplotlib Axes methods correctly,
-          but no advanced matplotlib-specific features like fills between lines
+        comment: Axes methods throughout, DateFormatter/MonthLocator for date axis,
+          proper plt.setp for batch label styling
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: fill_between with where and interpolate=True for regime shading is
+          distinctively matplotlib; ax.annotate with arrowprops is matplotlib-specific;
+          deducted 1pt as the overall pattern is replicable in most charting libraries
+          at a high level
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - custom-legend
   patterns:
   - data-generation
   - explicit-figure
@@ -208,5 +247,4 @@ impl_tags:
   - rolling-window
   styling:
   - alpha-blending
-  - grid-styling
   - edge-highlighting

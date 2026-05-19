@@ -1,157 +1,190 @@
 library: plotnine
+language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:19:30Z'
-updated: '2026-01-11T00:26:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886561624
+updated: '2026-05-19T05:25:18Z'
+generated_by: claude-sonnet
+workflow_run: 26076820142
 issue: 3652
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of EMA indicator chart with all required features
-  - Clean, professional visual design with appropriate line weights differentiating
-    price from EMAs
-  - Crossover points are highlighted with green dots, adding valuable trading signal
-    visualization
-  - Proper use of long-format data structure which is idiomatic for plotnine/ggplot2
-  - Well-chosen colors that are colorblind-accessible
-  - Code is clean, reproducible, and follows KISS principles
+  - 'Full spec compliance: price line, both EMAs, crossover detection, and thickness
+    hierarchy all implemented correctly'
+  - EMA spread ribbon between the two EMA lines adds meaningful visual context without
+    cluttering
+  - Correct ewm(adjust=False) EMA calculation and long-format DataFrame pattern is
+    idiomatic plotnine
+  - Both theme renders show correct data colors and legible chrome
+  - np.random.seed(42) plus realistic stock price random walk produces a compelling
+    example dataset
   weaknesses:
-  - Grid lines are either missing or too subtle to be visible, making it harder to
-    read exact values
-  - Limited use of plotnine-specific features; implementation could leverage more
-    grammar of graphics capabilities
-  image_description: 'The plot displays an Exponential Moving Average (EMA) indicator
-    chart with 120 trading days of synthetic stock price data spanning from January
-    2024 to June 2024. Three lines are visible: a blue "Close Price" line (thickest,
-    most volatile), a red "EMA-12" line (medium thickness, smoother), and a yellow
-    "EMA-26" line (medium thickness, smoothest). Green dots mark 6 crossover points
-    where the EMA-12 crosses the EMA-26 line. The title "indicator-ema · plotnine
-    · pyplots.ai" appears at the top in bold. The Y-axis shows "Price ($)" ranging
-    from ~125 to ~163, and the X-axis shows "Date" with monthly labels (Jan 2024 through
-    Jun 2024) rotated 45 degrees. A legend box on the right shows the three series.
-    The plot uses a minimal theme with light gray grid lines and a clean white background.'
+  - 'Source code uses non-Okabe-Ito colors (#306998, #E24A33, #FFD43B) and no ANYPLOT_THEME
+    env-var reading — must read os.getenv("ANYPLOT_THEME", "light") and apply PAGE_BG/ELEVATED_BG/INK/INK_SOFT
+    tokens to all chrome elements'
+  - Output saved as plot.png — must be f"plot-{THEME}.png" (plot-light.png / plot-dark.png)
+  - 'Legend background hard-coded to fill=white — must use ELEVATED_BG token (#FFFDF6
+    light / #242420 dark)'
+  - 'Title in source has wrong format (indicator-ema · plotnine · pyplots.ai) — must
+    include language and correct domain: indicator-ema · python · plotnine · anyplot.ai'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct, not pure white
+      Chrome: Title "indicator-ema · python · plotnine · anyplot.ai" in bold dark text (clearly readable). Axis labels "Date" and "Price ($)" in dark text. Tick labels at 45° angle for x-axis — all readable against light background. Legend on right with light/white background and dark text.
+      Data: Close Price line in teal/green (#009E73 — Okabe-Ito position 1). EMA-12 in orange (Okabe-Ito position 2/5). EMA-26 in steel blue (Okabe-Ito position 3). Shaded ribbon between EMAs. Pink/rose crossover markers at EMA crossing points.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (~#1A1A17) — correct, not pure black
+      Chrome: Title visible in lighter text against dark background. Axis labels and tick labels appear in lighter colors with adequate contrast. Legend has dark background with light text. No dark-on-dark text failure detected.
+      Data: Colors identical to light render — Close Price teal/green, EMA-12 orange, EMA-26 blue (data color stability confirmed). Ribbon between EMAs appears as dark brownish-orange with alpha. Crossover markers remain visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold 24pt, axis titles are 20pt, tick labels are 16pt, all
-          perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; x-axis labels rotated to prevent collision
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Lines are well-sized (1.8 for price, 1.2 for EMAs), crossover points
-          clearly visible with green dots
+        comment: All font sizes explicitly set (24pt title, 20pt axis, 16pt ticks).
+          Both renders legible. Minor deduction for dark-theme text color adaptation
+          uncertainty in source.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 45-degree date labels prevent tick overlap; no text collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: All lines and crossover markers clearly visible. Minor deduction
+          for slight crowding when EMAs converge near the ribbon.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, red, and yellow are distinguishable for most colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions with 16:9 aspect ratio, plot fills canvas well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Price ($) with units, X-axis has Date
+        comment: Okabe-Ito palette; green/orange/blue are CVD-safe. Crossover points
+          use shape+color distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 16:9 canvas well-utilized. Legend placement good. Minor deduction
+          for margins near chart edges.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Date and Price ($) with units; correct title format in rendered image.
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: false
-        comment: Grid lines are too subtle or missing, making it harder to read exact
-          values
+        comment: 'Images show #009E73 as first series and theme-appropriate backgrounds,
+          but source code uses legacy #306998 (Python Blue), #E24A33, #FFD43B — non-Okabe-Ito.
+          Crossover points use custom non-standard color. Partial credit for correct
+          rendered output.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: thickness hierarchy, EMA ribbon for spread context,
+          crossover point highlights. Not yet publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: theme_minimal() base with L-shaped axis lines and subtle grid. Legend
+          background hard-coded white rather than ELEVATED_BG. Margins not maximally
+          generous.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Crossover markers and EMA ribbon guide viewer toward trading signals.
+          Bold price line draws eye first. Falls short of 6 because no contextual
+          labels anchor trend phases.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct EMA overlay chart with price line and two EMA lines
+        comment: Correct EMA overlay chart with price line and multiple EMA lines.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, price values on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: price line, two EMAs, distinct colors,
-          thinner EMA lines, crossover highlighting'
-      - id: SC-04
-        name: Data Range
+        comment: Price line prominent; EMA-12 and EMA-26 overlaid; distinct colors;
+          EMA lines thinner; crossover points highlighted; all series labeled.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data, no clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=date, Y=Price ($); full 120-day range visible; EMAs track price
+          correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Close Price, EMA-12, and EMA-26
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: indicator-ema · plotnine · pyplots.ai'
+        comment: Title indicator-ema · python · plotnine · anyplot.ai correct per
+          rendered image. Legend labels Close Price, EMA-12, EMA-26 match series.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows uptrend, downtrend, consolidation phases; multiple crossovers;
-          both bullish and bearish signals
+        comment: 'Shows all EMA aspects: trend following, divergence/convergence,
+          crossover events, spread via ribbon.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price scenario is realistic and neutral; price range ~$125-163
-          is plausible
+        comment: Synthetic stock price using Gaussian random walk with drift; Jan-Jun
+          2024 trading days; plausible price levels.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 120 trading days is appropriate; values realistic for a mid-cap stock
+        comment: 120 trading days, seed(42), EMA spans 12/26 are standard financial
+          indicators, ewm(adjust=False) is correct calculation.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -159,42 +192,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data generation → plot → save'
+        comment: 'Flat script: imports, data, plot, save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports are used; no extraneous imports.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Crossover detection loop is idiomatic. Long-format DataFrame via
+          pd.concat is clean.
       - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 0
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Output & API
         score: 0
-        max: 5
+        max: 1
         passed: false
-        comment: Uses basic plotnine features. Could leverage more advanced grammar
-          of graphics features.
+        comment: Code saves to plot.png instead of f"plot-{THEME}.png". Pipeline requires
+          plot-light.png / plot-dark.png.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Multiple named geom layers, aes with data-level overrides, inherit_aes=False
+          for crossover layer, scale_x_datetime with date_labels. Well above default.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Multi-geom layer composition (3x geom_line + geom_point for crossovers),
+          scale_color_manual with named dict, inherit_aes=False override — plotnine/ggplot2
+          specific patterns.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -203,7 +246,6 @@ impl_tags:
   patterns:
   - data-generation
   - wide-to-long
-  - iteration-over-groups
   dataprep:
   - time-series
   - rolling-window
