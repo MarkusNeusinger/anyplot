@@ -1,10 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-19
 """
 
-import json
 import os
 import tempfile
 import time
@@ -13,6 +12,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from highcharts_core.chart import Chart
+from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.area import LineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -62,99 +64,114 @@ sma20_data = [[t, round(v, 2)] for t, v in zip(timestamps, df["sma_20"], strict=
 sma50_data = [[t, round(v, 2)] for t, v in zip(timestamps, df["sma_50"], strict=True) if not np.isnan(v)]
 sma200_data = [[t, round(v, 2)] for t, v in zip(timestamps, df["sma_200"], strict=True) if not np.isnan(v)]
 
-# Chart options
-chart_options = {
-    "chart": {
-        "type": "line",
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": PAGE_BG,
-        "marginBottom": 200,
-        "marginLeft": 220,
-        "marginRight": 100,
-        "marginTop": 180,
-        "style": {"fontFamily": "Arial, sans-serif"},
-    },
-    "title": {
-        "text": "indicator-sma · python · highcharts · anyplot.ai",
-        "style": {"fontSize": "64px", "fontWeight": "bold", "color": INK},
-        "y": 70,
-    },
-    "subtitle": {
-        "text": "Stock Price with 20, 50, and 200-day Simple Moving Averages",
-        "style": {"fontSize": "36px", "color": INK_SOFT},
-        "y": 130,
-    },
-    "xAxis": {
-        "type": "datetime",
-        "title": {"text": "Date", "style": {"fontSize": "40px", "color": INK}, "margin": 25},
-        "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "format": "{value:%b %Y}", "y": 35},
-        "gridLineWidth": 1,
-        "gridLineColor": GRID,
-        "lineWidth": 2,
-        "lineColor": INK_SOFT,
-        "tickWidth": 2,
-        "tickColor": INK_SOFT,
-        "tickLength": 12,
-    },
-    "yAxis": {
-        "title": {"text": "Price (USD)", "style": {"fontSize": "40px", "color": INK}, "margin": 25},
-        "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "format": "${value:.0f}", "x": -15},
-        "gridLineWidth": 1,
-        "gridLineColor": GRID,
-        "lineWidth": 2,
-        "lineColor": INK_SOFT,
-    },
-    "legend": {
-        "enabled": True,
-        "align": "right",
-        "verticalAlign": "top",
-        "layout": "vertical",
-        "x": -60,
-        "y": 120,
-        "itemStyle": {"fontSize": "28px", "color": INK_SOFT},
-        "itemMarginBottom": 15,
-        "symbolWidth": 40,
-        "symbolHeight": 18,
-        "backgroundColor": ELEVATED_BG,
-    },
-    "tooltip": {
-        "shared": True,
-        "valueDecimals": 2,
-        "valuePrefix": "$",
-        "headerFormat": '<span style="font-size: 22px">{point.key:%b %d, %Y}</span><br/>',
-        "style": {"fontSize": "22px"},
-    },
-    "plotOptions": {"line": {"lineWidth": 4, "marker": {"enabled": False}}, "series": {"animation": False}},
-    "credits": {"enabled": False},
-    "series": [
-        {"name": "Close Price", "data": close_data, "color": CLOSE_COLOR, "lineWidth": 5, "zIndex": 4},
-        {"name": "SMA 20", "data": sma20_data, "color": SMA20_COLOR, "lineWidth": 3, "dashStyle": "Solid", "zIndex": 3},
-        {
-            "name": "SMA 50",
-            "data": sma50_data,
-            "color": SMA50_COLOR,
-            "lineWidth": 3,
-            "dashStyle": "ShortDash",
-            "zIndex": 2,
-        },
-        {
-            "name": "SMA 200",
-            "data": sma200_data,
-            "color": SMA200_COLOR,
-            "lineWidth": 3,
-            "dashStyle": "LongDash",
-            "zIndex": 1,
-        },
-    ],
+# Build chart via highcharts_core SDK
+chart = Chart(container="container")
+chart.options = HighchartsOptions()
+
+chart.options.chart = {
+    "type": "line",
+    "width": 4800,
+    "height": 2700,
+    "backgroundColor": PAGE_BG,
+    "plotBorderWidth": 0,
+    "marginBottom": 200,
+    "marginLeft": 220,
+    "marginRight": 100,
+    "marginTop": 180,
+    "style": {"fontFamily": "Arial, sans-serif"},
 }
+
+chart.options.title = {
+    "text": "indicator-sma · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "64px", "fontWeight": "bold", "color": INK},
+    "y": 70,
+}
+
+chart.options.subtitle = {
+    "text": "Stock Price with 20, 50, and 200-day Simple Moving Averages",
+    "style": {"fontSize": "36px", "color": INK_SOFT},
+    "y": 130,
+}
+
+# tickInterval = monthly; dateTimeLabelFormats eliminates year-boundary duplication
+chart.options.x_axis = {
+    "type": "datetime",
+    "title": {"text": "Date", "style": {"fontSize": "40px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "y": 35},
+    "tickInterval": 30 * 24 * 3600 * 1000,
+    "dateTimeLabelFormats": {"month": "%b %Y", "year": "%Y"},
+    "gridLineWidth": 1,
+    "gridLineColor": GRID,
+    "lineWidth": 0,
+    "tickWidth": 2,
+    "tickColor": INK_SOFT,
+    "tickLength": 12,
+}
+
+chart.options.y_axis = {
+    "title": {"text": "Price (USD)", "style": {"fontSize": "40px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "28px", "color": INK_SOFT}, "format": "${value:.0f}", "x": -15},
+    "gridLineWidth": 1,
+    "gridLineColor": GRID,
+    "lineWidth": 0,
+}
+
+chart.options.legend = {
+    "enabled": True,
+    "align": "right",
+    "verticalAlign": "top",
+    "layout": "vertical",
+    "x": -60,
+    "y": 120,
+    "itemStyle": {"fontSize": "28px", "color": INK_SOFT},
+    "itemMarginBottom": 15,
+    "symbolWidth": 40,
+    "symbolHeight": 18,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+}
+
+chart.options.tooltip = {
+    "shared": True,
+    "valueDecimals": 2,
+    "valuePrefix": "$",
+    "headerFormat": '<span style="font-size: 22px">{point.key:%b %d, %Y}</span><br/>',
+    "style": {"fontSize": "22px"},
+}
+
+chart.options.plot_options = {"line": {"lineWidth": 4, "marker": {"enabled": False}}, "series": {"animation": False}}
+
+chart.options.credits = {"enabled": False}
+
+# Build series using LineSeries SDK objects
+series_specs = [
+    ("Close Price", close_data, CLOSE_COLOR, 5, "Solid", 4),
+    ("SMA 20", sma20_data, SMA20_COLOR, 3, "Solid", 3),
+    ("SMA 50", sma50_data, SMA50_COLOR, 3, "ShortDash", 2),
+    ("SMA 200", sma200_data, SMA200_COLOR, 3, "LongDash", 1),
+]
+
+series_list = []
+for name, data, color, line_width, dash_style, z_index in series_specs:
+    s = LineSeries()
+    s.name = name
+    s.data = data
+    s.color = color
+    s.line_width = line_width
+    s.dash_style = dash_style
+    s.z_index = z_index
+    s.marker = {"enabled": False}
+    series_list.append(s)
+
+chart.options.series = series_list
 
 # Download Highcharts JS from jsdelivr (inline embed required for headless Chrome)
 highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@12/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=60) as response:
     highcharts_js = response.read().decode("utf-8")
 
-chart_options_json = json.dumps(chart_options)
+chart_js = chart.to_js_literal()
 
 # Inline HTML for headless screenshot
 inline_html = f"""<!DOCTYPE html>
@@ -165,9 +182,7 @@ inline_html = f"""<!DOCTYPE html>
 </head>
 <body style="margin:0; background-color: {PAGE_BG};">
     <div id="container" style="width: 4800px; height: 2700px;"></div>
-    <script>
-        Highcharts.chart('container', {chart_options_json});
-    </script>
+    <script>{chart_js}</script>
 </body>
 </html>"""
 
@@ -180,9 +195,7 @@ cdn_html = f"""<!DOCTYPE html>
 </head>
 <body style="margin:0; background-color: {PAGE_BG};">
     <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>
-        Highcharts.chart('container', {chart_options_json});
-    </script>
+    <script>{chart_js}</script>
 </body>
 </html>"""
 
