@@ -19,24 +19,26 @@ plot = (
 )
 ```
 
-## Figure Size & Sizing for 4800×2700 px
+## Figure Size & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python
-# Base size (scaled 3x on export = 4800 × 2700 px)
-plot = plot + ggsize(1600, 900)
+# Base size (scaled 4x on export = 3200 × 1800 px)
+plot = plot + ggsize(800, 450)
 
 # Text and element sizes
 plot = plot + theme(
-    axis_title=element_text(size=20),
-    axis_text=element_text(size=16),
-    plot_title=element_text(size=24),
-    legend_text=element_text(size=16)
+    axis_title=element_text(size=16),
+    axis_text=element_text(size=14),
+    plot_title=element_text(size=22),
+    legend_text=element_text(size=14)
 )
 
-# Element sizes in geoms
-+ geom_point(size=4)    # ~3-4x default
-+ geom_line(size=1.5)   # line width
+# Element sizes in geoms (density-aware — see default-style-guide.md)
++ geom_point(size=2.5)   # ~2-3x default
++ geom_line(size=1.0)    # line width
 ```
+
+See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Save (PNG + HTML)
 
@@ -46,8 +48,8 @@ from lets_plot import ggsave
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
 
-# PNG: scale 3x to get 4800 × 2700 px
-ggsave(plot, f'plot-{THEME}.png', scale=3)
+# PNG: scale 4x to get 3200 × 1800 px
+ggsave(plot, f'plot-{THEME}.png', scale=4)
 
 # HTML (interactive)
 ggsave(plot, f'plot-{THEME}.html')

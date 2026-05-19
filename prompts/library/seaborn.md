@@ -22,7 +22,8 @@ from matplotlib.figure import Figure
 ## Create Figure
 
 ```python
-fig, ax = plt.subplots(figsize=(16, 9))
+# Target: 3200 × 1800 px (8 × 400dpi). See default-style-guide.md "Visual Sizing Defaults".
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 ```
 
 ## Plot Methods
@@ -39,24 +40,24 @@ fig = g.figure
 ## Save
 
 ```python
-plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
 ```
 
-## Sizing for 4800×2700 px
+## Sizing for 3200×1800 px (starting values — adjust per plot, review-loop tunes)
 
 ```python
 # Text sizes (seaborn uses matplotlib underneath)
-ax.set_title(title, fontsize=24, fontweight='medium')
-ax.set_xlabel(x_label, fontsize=20)
-ax.set_ylabel(y_label, fontsize=20)
-ax.tick_params(axis='both', labelsize=16)
+ax.set_title(title, fontsize=18, fontweight='medium')
+ax.set_xlabel(x_label, fontsize=14)
+ax.set_ylabel(y_label, fontsize=14)
+ax.tick_params(axis='both', labelsize=12)
 
 # Or use sns.set_context for global scaling
-sns.set_context("talk", font_scale=1.2)
+sns.set_context("notebook", font_scale=1.0)
 
-# Element sizes in seaborn functions
-sns.scatterplot(..., s=200)           # marker size
-sns.lineplot(..., linewidth=3)        # line width
+# Element sizes in seaborn functions (density-aware — see default-style-guide.md)
+sns.scatterplot(..., s=100)           # marker size, 60-150 typical
+sns.lineplot(..., linewidth=2.5)      # line width
 
 # Spine removal (default: remove top + right)
 ax.spines['top'].set_visible(False)
@@ -65,6 +66,8 @@ ax.spines['right'].set_visible(False)
 # Grid (subtle, y-axis preferred)
 ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
 ```
+
+See `prompts/default-style-guide.md` "Proportional Sizing" for the review-step criteria.
 
 ## API Compatibility (0.14+)
 
@@ -142,7 +145,7 @@ sns.set_theme(
 )
 
 # After plotting
-plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight', facecolor=PAGE_BG)
+plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
 ```
 
 ## Output Files

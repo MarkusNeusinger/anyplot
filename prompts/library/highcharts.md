@@ -88,7 +88,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
 </head>
 <body style="margin:0; background:{PAGE_BG};">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
@@ -107,7 +107,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
@@ -118,17 +118,24 @@ driver.quit()
 Path(temp_path).unlink()  # Clean up temp file
 ```
 
-## Sizing for 4800×2700 px
+## Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 Size + text sizes + marker sizes (the theme/color concerns are covered in the "Theme-adaptive Chrome" section below — do not duplicate):
 
 ```python
-# Marker sizes (in plotOptions)
+# Marker sizes (in plotOptions) — density-aware, see default-style-guide.md
 chart.options.plot_options = {
-    'scatter': {'marker': {'radius': 8}},  # ~3-4x default
-    'line': {'lineWidth': 3}
+    'scatter': {'marker': {'radius': 6}},  # ~2-3x default
+    'line': {'lineWidth': 2.5}
 }
 ```
+
+See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
+
+**IMPORTANT:** Three places encode the canvas size — keep them in sync:
+1. Selenium `--window-size=3200,1800`
+2. HTML `<div id="container" style="width: 3200px; height: 1800px;">`
+3. `chart.options.chart = {'width': 3200, 'height': 1800, ...}` (see below)
 
 ## Output Files
 
@@ -143,9 +150,9 @@ chart.options.plot_options = {
 4. **Screenshot timing**: Use `time.sleep(5)` for reliable rendering
 5. **Encoding errors**: Always use `encoding="utf-8"` in NamedTemporaryFile (Highcharts JS contains special Unicode characters)
 6. **X-axis labels cut off in PNG**: Category labels may be clipped at the bottom. Fix by:
-   - Increase bottom margin: `chart.options.chart = {'marginBottom': 150, ...}`
-   - Or add spacingBottom: `chart.options.chart = {'spacingBottom': 80, ...}`
-   - Ensure labels have `style: {'fontSize': '24px'}` for visibility at 4800x2700
+   - Increase bottom margin: `chart.options.chart = {'marginBottom': 100, ...}`
+   - Or add spacingBottom: `chart.options.chart = {'spacingBottom': 60, ...}`
+   - Ensure labels have `style: {'fontSize': '14px'}` for visibility at 3200x1800
 
 ## Colors
 
@@ -184,23 +191,23 @@ GRID        = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0
 
 chart.options.chart = {
     'type': 'column',
-    'width': 4800, 'height': 2700,
+    'width': 3200, 'height': 1800,
     'backgroundColor': PAGE_BG,
     'style': {'color': INK},
 }
-chart.options.title = {'text': title, 'style': {'fontSize': '28px', 'color': INK}}
+chart.options.title = {'text': title, 'style': {'fontSize': '22px', 'color': INK}}
 chart.options.x_axis = {
-    'title': {'text': x_label, 'style': {'fontSize': '22px', 'color': INK}},
-    'labels': {'style': {'fontSize': '18px', 'color': INK_SOFT}},
+    'title': {'text': x_label, 'style': {'fontSize': '16px', 'color': INK}},
+    'labels': {'style': {'fontSize': '14px', 'color': INK_SOFT}},
     'lineColor': INK_SOFT, 'tickColor': INK_SOFT, 'gridLineColor': GRID,
 }
 chart.options.y_axis = {
-    'title': {'text': y_label, 'style': {'fontSize': '22px', 'color': INK}},
-    'labels': {'style': {'fontSize': '18px', 'color': INK_SOFT}},
+    'title': {'text': y_label, 'style': {'fontSize': '16px', 'color': INK}},
+    'labels': {'style': {'fontSize': '14px', 'color': INK_SOFT}},
     'lineColor': INK_SOFT, 'tickColor': INK_SOFT, 'gridLineColor': GRID,
 }
 chart.options.legend = {
-    'itemStyle': {'color': INK_SOFT},
+    'itemStyle': {'color': INK_SOFT, 'fontSize': '14px'},
     'backgroundColor': ELEVATED_BG, 'borderColor': INK_SOFT, 'borderWidth': 1,
 }
 ```
