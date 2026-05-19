@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-19
@@ -37,6 +37,12 @@ ema_26 = price_series.ewm(span=26, adjust=False).mean().values
 
 df = pd.DataFrame({"date_num": range(120), "close": price, "ema_12": ema_12, "ema_26": ema_26})
 
+# Detect EMA-12/EMA-26 crossovers for signal annotations
+diff = ema_12 - ema_26
+sign_changes = np.where(np.diff(np.sign(diff)) != 0)[0]
+bullish_crosses = [int(i) for i in sign_changes if diff[i + 1] > 0]
+bearish_crosses = [int(i) for i in sign_changes if diff[i + 1] < 0]
+
 df_price = df[["date_num", "close"]].rename(columns={"close": "value"}).copy()
 df_price["series"] = "Close Price"
 
@@ -50,38 +56,58 @@ df_ema_only = pd.concat([df_ema12, df_ema26], ignore_index=True)
 
 date_labels = {i: dates[i].strftime("%b %d") for i in range(0, 120, 20)}
 
-# Theme — separate geom_line calls avoid duplicate color+size legend (VQ-07 fix)
+# Theme — Y-axis-only major grid (style guide: line charts use Y grid only)
 anyplot_theme = theme(  # noqa: F405
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
     panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
-    panel_grid_major=element_line(color=RULE, size=0.5),  # noqa: F405
+    panel_grid_major_y=element_line(color=RULE, size=0.5),  # noqa: F405
+    panel_grid_major_x=element_blank(),  # noqa: F405
     panel_grid_minor=element_blank(),  # noqa: F405
     axis_title=element_text(size=20, color=INK),  # noqa: F405
     axis_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
     axis_line=element_line(color=INK_SOFT),  # noqa: F405
     plot_title=element_text(size=24, color=INK),  # noqa: F405
+    plot_subtitle=element_text(size=16, color=INK_SOFT),  # noqa: F405
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),  # noqa: F405
     legend_text=element_text(size=16, color=INK_SOFT),  # noqa: F405
     legend_title=element_text(size=18, color=INK),  # noqa: F405
     legend_position="right",
 )
 
-# Plot — price line thicker; EMA lines thinner; single color legend only
+# Plot — crossover vlines first so lines render on top; interactive tooltips (letsplot-exclusive)
 plot = (
     ggplot(mapping=aes(x="date_num", y="value", color="series"))  # noqa: F405
-    + geom_line(data=df_price, size=2.5, alpha=0.85)  # noqa: F405
-    + geom_line(data=df_ema_only, size=1.5)  # noqa: F405
+    + geom_line(  # noqa: F405
+        data=df_price,
+        size=2.5,
+        alpha=0.85,
+        tooltips=layer_tooltips().title("Close Price").line("$@value"),  # noqa: F405
+    )
+    + geom_line(  # noqa: F405
+        data=df_ema_only,
+        size=1.5,
+        tooltips=layer_tooltips().title("@series").line("$@value"),  # noqa: F405
+    )
     + scale_color_manual(values=COLORS, name="Series")  # noqa: F405
     + scale_x_continuous(  # noqa: F405
         breaks=list(date_labels.keys()), labels=list(date_labels.values())
     )
     + labs(  # noqa: F405
-        x="Date", y="Price (USD)", title="indicator-ema · python · letsplot · anyplot.ai"
+        x="Date",
+        y="Price (USD)",
+        title="indicator-ema · python · letsplot · anyplot.ai",
+        subtitle="EMA-12 × EMA-26 crossovers — dashed lines mark bullish ↑ and bearish ↓ signals",
     )
     + theme_minimal()  # noqa: F405
     + anyplot_theme
     + ggsize(1600, 900)  # noqa: F405
 )
+
+# Annotate crossover signals after base plot is built
+for x in bullish_crosses:
+    plot = plot + geom_vline(xintercept=x, color="#009E73", linetype="dashed", size=0.8, alpha=0.4)  # noqa: F405
+for x in bearish_crosses:
+    plot = plot + geom_vline(xintercept=x, color="#D55E00", linetype="dashed", size=0.8, alpha=0.4)  # noqa: F405
 
 # Save
 export_ggsave(plot, f"plot-{THEME}.png", path=".", scale=3)
