@@ -97,7 +97,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 
   "visual_quality": {
     "total": 23,
-    "vq01_text_legibility": {"score": 5, "max": 8, "note": "Readable but relying on defaults (font sizes not explicitly set)"},
+    "vq01_text_legibility": {"score": 6, "max": 8, "note": "Title slightly oversized for content — fontsize=18pt squeezes against the right edge; reduce to ~14pt"},
     "vq02_no_overlap": {"score": 6, "max": 6, "note": "No overlap"},
     "vq03_element_visibility": {"score": 5, "max": 6, "note": "Visible but markers could be better adapted"},
     "vq04_color_accessibility": {"score": 2, "max": 2, "note": "CVD-safe contrast beyond palette choice"},
@@ -150,7 +150,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
   ],
 
   "weaknesses": [
-    "Relying on default font sizes instead of explicit settings",
+    "Title at fontsize=18pt squeezes against the right edge — reduce to ~14pt for the long mandated anyplot title format",
     "No design refinement beyond library defaults",
     "No data storytelling - visual emphasis or hierarchy would improve the plot"
   ],
