@@ -1,159 +1,185 @@
 library: letsplot
+language: python
 specification_id: mosaic-categorical
 created: '2026-01-11T00:18:55Z'
-updated: '2026-01-11T00:23:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886562618
+updated: '2026-05-19T03:41:42Z'
+generated_by: claude-sonnet
+workflow_run: 26074113174
 issue: 3650
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/letsplot/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of mosaic plot using geom_rect with proper proportional
-    sizing
-  - Clear visualization of the association between passenger class and survival rate
-  - Well-chosen color scheme (Python Blue/Yellow) with good contrast and accessibility
-  - Frequency labels inside rectangles enhance data communication
-  - Proper title format and descriptive axis labels
+  - 'Perfect spec compliance: all mosaic proportionality rules correctly implemented
+    with real Titanic data'
+  - 'Correct Okabe-Ito palette with #009E73 as first series; both themes render properly
+    with full chrome adaptation'
+  - Interactive tooltips via layer_tooltips() showcase letsplots distinctive capability
+    with meaningful field labels
+  - Informative subtitle provides a specific quantitative data story that helps viewers
+    immediately understand the main finding
+  - All imports are used and the code structure is clean and readable
   weaknesses:
-  - Legend positioned slightly far from the main plot area
-  - Could leverage lets-plot interactive features (hover tooltips) since HTML export
-    is already generated
-  - Minor visual gap inconsistency between horizontal segments
-  image_description: 'The plot displays a mosaic chart visualizing Titanic-like survival
-    data cross-tabulated by passenger class and survival status. Four vertical columns
-    represent First Class, Second Class, Third Class, and Crew, with widths proportional
-    to the total count of passengers in each class. Each column is divided into two
-    stacked rectangles: blue (Python Blue #306998) for "Survived" and yellow (Python
-    Yellow #FFD43B) for "Did Not Survive". The heights within each column represent
-    the conditional proportions of survival. White frequency labels are displayed
-    in each rectangle (202, 123, 118, 167, 178, 528, 212, 673). The title reads "mosaic-categorical
-    · letsplot · pyplots.ai" at the top. The x-axis is labeled "Passenger Class (width
-    proportional to count)" and the y-axis is labeled "Survival Rate (%)". A legend
-    on the right identifies the two survival status categories. The grid is hidden
-    for a clean appearance.'
+  - Canvas height is 960 rather than 900 (standard landscape baseline), producing
+    a 4800x2880 output instead of 4800x2700; minor but diverges from the style guide
+  - Legend retains a visible rectangular border (element_rect with color=INK_SOFT)
+    adding unnecessary visual weight for a minimal aesthetic; set color=transparent
+  - geom_text label size (13) may be on the smaller side for the densest segments;
+    size 14-15 would improve readability at full resolution
+  - 'Design excellence is functional but not particularly refined: no suppression
+    of tick marks, no visual emphasis technique to highlight the key finding'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "mosaic-categorical · python · letsplot · anyplot.ai" in bold dark ink; subtitle in INK_SOFT; x-axis label "Passenger Class (width ∝ count)" and y-axis label "Survival Rate (%)" in dark ink; tick labels (class names, 0/25/50/75/100) in INK_SOFT — all clearly readable
+      Data: Four columns (First Class, Second Class, Third Class, Crew) with widths proportional to headcount; teal (#009E73) bottom segments for Survived, orange (#D55E00) top segments for Did Not Survive; bold white text labels show count and percentage in each segment; legend on right with "Survival Status" title
+      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle render in off-white (#F0EFE8); axis labels and tick labels render in light gray (#B8B7B0); legend text and title also adapt to light colors — all clearly readable against the dark surface; no dark-on-dark failures detected
+      Data: Colors are identical to light render — teal (#009E73) and orange (#D55E00) unchanged; white bold text labels remain readable on colored segments
+      Legibility verdict: PASS — all text elements clearly readable against the warm near-black background; chrome correctly flips while data colors remain constant
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick labels, and frequency annotations are all
-          clearly readable at full size
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; all labels and annotations are well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Rectangles are well-sized and clearly visible; small deduction for
-          minor gaps between segments
+        comment: All chrome text sized explicitly; geom_text size=13 is functional
+          but slightly small for densest segments
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or elements; column gaps prevent visual confusion
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All rectangles and labels clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and yellow provide excellent contrast and are colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas space; legend positioned well on the right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with context (width proportional to count, Survival
-          Rate %)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1 and 2; CVD-safe, no red-green-only signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 1600x960 base (4800x2880 final) slightly deviates from 4800x2700
+          standard; otherwise well-proportioned
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is removed (good), but legend could be positioned closer to
-          the plot
+        passed: true
+        comment: X-axis notes width ∝ count; Y-axis shows (%) units; title follows
+          required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; light bg #FAF8F1, dark bg
+          #1A1A17; data colors identical across themes'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Solid professional output with correct palette and meaningful subtitle;
+          not particularly artful beyond functional requirements
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid removed, rectangle gaps aid readability, axis lines styled;
+          but legend retains visible border adding visual weight
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle provides specific quantitative insight; visual column comparison
+          makes class disparity apparent; column widths encode class size
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct mosaic plot with rectangles proportional to cell frequencies
+        comment: 'Correct mosaic plot: widths proportional to marginals, heights to
+          conditional proportions, areas to cell frequencies'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: category_1 (class) determines column width, category_2 (survival)
-          determines segment height
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Shows proportional widths, conditional heights, frequency labels,
-          gap spacing
-      - id: SC-04
-        name: Data Range
+        comment: Gap spacing, category labels, color coding by category_2, frequency/proportion
+          labels all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within 0-100% range on both axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X shows Passenger Class (cat1), Y shows Survival Rate %, all 8 cells
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Survived and Did Not Survive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format mosaic-categorical · letsplot · pyplots.ai
+        comment: Title mosaic-categorical · python · letsplot · anyplot.ai; legend
+          Survival Status with matching labels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clear association pattern (higher class = higher survival);
-          demonstrates varying column widths and segment heights well
+        comment: 'All mosaic features demonstrated: proportional widths, conditional
+          heights, gaps, value labels, legend, subtitle'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Titanic survival data is a classic, well-known dataset for demonstrating
-          categorical associations
+        comment: 'Titanic survival by passenger class: well-known historical dataset,
+          factual and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Frequencies and proportions are realistic for Titanic data
+        comment: Real historical frequencies (118-673 range); percentages correct
+          and match known Titanic survival statistics
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,52 +187,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure without functions/classes
+        comment: No functions or classes; flat linear script
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded frequencies), no random seed needed
+        comment: Fully deterministic; no random numbers
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 18 imported symbols are actually used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Loop-based rectangle construction is clear and well-structured; descriptive
+          variable naming
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Proper ggplot2 grammar with layered geoms; theme_minimal base + custom
+          overrides; scale functions with explicit breaks — all idiomatic letsplot
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of ggplot grammar with geom_rect and geom_text; could have
-          used more lets-plot specific features like interactive tooltips
+        comment: layer_tooltips is genuinely letsplot-distinctive with useful field
+          labels (Class, Status, Count, Share); HTML export adds interactivity; could
+          go further with letsplot-specific visual features
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
+  - html-export
   - annotations
   - manual-ticks
-  - html-export
   patterns:
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
-  - minimal-chrome
   - edge-highlighting
