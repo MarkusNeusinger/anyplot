@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: timeseries-forecast-uncertainty
 created: '2026-05-16T22:38:27Z'
-updated: '2026-05-19T13:29:23Z'
+updated: '2026-05-19T13:45:39Z'
 generated_by: claude-sonnet
 workflow_run: 26099521154
 issue: 3188
@@ -12,137 +12,134 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 81
 review:
   strengths:
   - 'Correct Okabe-Ito palette with #009E73 as first series (Historical) and #D55E00
-    for forecast — palette compliance is perfect'
-  - Full theme-adaptive chrome in both renders — no dark-on-dark failures; all text
-    readable in light and dark themes
-  - 'Idiomatic ggplot2 layer composition: geom_ribbon beneath geom_line, named aesthetics
-    in aes() for a combined color+fill legend'
-  - 'Spec-complete: vertical dashed separator, nested 80%/95% CI bands, solid historical
-    + dashed forecast, legend with all four series'
-  - Realistic and neutral scenario (monthly sales forecast) with plausible $52K–$75K
-    scale and appropriate CI widths
-  - Clean KISS code structure with set.seed(42) and correct plot-{THEME}.png save
-    API using ragg device
+    for forecast/CI bands'
+  - Elegant use of geom_ribbon() with nested alpha levels (0.15/0.25) communicates
+    95%/80% CI bands clearly
+  - 'Clear visual narrative: green historical line → dashed vertical divider → dashed
+    orange forecast with CI bands'
+  - Both themes correctly adapt chrome (backgrounds, text, grid) using INK/INK_SOFT
+    theme tokens
+  - Proper ggsave with ragg device, ANYPLOT_THEME env var handling, correct output
+    filename pattern
+  - 'All required spec features present: solid historical line, dashed forecast, vertical
+    forecast-start marker, nested CI bands, legend'
   weaknesses:
-  - 'Code/image mismatch — title in current code is missing ''r ·'': has ''timeseries-forecast-uncertainty
-    · ggplot2 · anyplot.ai'' but should be ''timeseries-forecast-uncertainty · r ·
-    ggplot2 · anyplot.ai''; also forecast geom_line is missing linetype=''dashed''
-    and y-axis label differs from images'
-  - 'CI bands render as dark opaque fills on dark theme: alpha 0.15/0.25 of #D55E00
-    on #1A1A17 yields near-solid brownish regions with indistinguishable 80% vs 95%
-    bands'
-  - 'Grid lines too prominent for a line chart: uses solid INK color (full-opacity
-    near-black/near-white) for both x and y major gridlines — should remove x-axis
-    gridlines and use INK_SOFT or low-opacity for remaining grid'
-  - Unused library(tidyr) import — no tidyr functions are called in the script
-  - 'Legend background uses PAGE_BG rather than ELEVATED_BG (#FFFDF6 light / #242420
-    dark) per style guide'
-  - Fixed-width confidence intervals (constant forecast_std=2500) — real forecast
-    uncertainty widens over the horizon; widening CI bands would better demonstrate
-    the feature
+  - 'Right-edge clipping: CI bands extend flush to canvas boundary with no right-side
+    padding — add scale_x_date(expand = expansion(mult = c(0.02, 0.05)))'
+  - 'CI band opacity inconsistency: alpha=0.15/0.25 looks subtle on light background
+    but heavy/saturated on dark (#1A1A17) — reduce to ~0.10/0.18'
+  - 'Code title missing ''· r ·'': line 75 reads ''timeseries-forecast-uncertainty
+    · ggplot2 · anyplot.ai'' — fix to ''timeseries-forecast-uncertainty · r · ggplot2
+    · anyplot.ai'''
+  - 'Unused imports: library(dplyr) and library(tidyr) are loaded but never called
+    — remove both'
+  - 'Oversized font sizes: axis.title=20pt and axis.text=16pt are too large; reduce
+    to axis.title=12, axis.text=10, plot.title=14, legend.text=10'
+  - 'Y-axis label lacks units: ''Monthly Sales'' should be ''Monthly Sales ($)'' for
+    VQ-06 compliance'
+  - 'Constant CI width: forecast_std=2500 is fixed, so uncertainty bands don''t widen
+    over time as expected in real forecasts'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface.
-      Chrome: Title "timeseries-forecast-uncertainty · r · ggplot2 · anyplot.ai" in dark ink, clearly readable, ~65% canvas width. Axis labels "Date" and "Monthly Sales" in dark ink (size 20). Tick labels "$55K"–"$75K" and date labels ("Apr '22" … "Apr '25") in INK_SOFT, all readable. Legend at top with four entries: Historical (green line), Forecast (orange dashed line), 95% CI (fill swatch), 80% CI (fill swatch). Both CI swatches show same orange color in legend.
-      Data: Historical line is #009E73 brand green — first Okabe-Ito color confirmed. Forecast line is #D55E00 orange (dashed). 95% CI band is light salmon/peach fill (alpha 0.15); 80% CI band is slightly more opaque (alpha 0.25) — visually distinct and readable. Dashed vertical separator at forecast start visible.
-      Grid: Both x and y major gridlines visible in solid dark ink — slightly more prominent than optimal for a line chart.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "timeseries-forecast-uncertainty · r · ggplot2 · anyplot.ai" in dark ink, ~70% plot width. Axis labels "Date" and "Monthly Sales" in dark ink (size=20pt, slightly oversized). Tick labels "$60K/$70K/$80K" and year labels in INK_SOFT (size=16pt). Legend at top: "95% CI", "80% CI", "Historical", "Forecast" — all readable.
+      Data: Historical line in #009E73 (brand green) from 2022–2024. Dashed forecast line in #D55E00 (vermillion). 95% CI band: very light orange (alpha=0.15). 80% CI band: medium orange (alpha=0.25). Dashed grey vertical line at ~Jan 2025 marking forecast start. CI bands extend to right canvas edge with no padding — minor clipping.
+      Legibility verdict: PASS (all text readable, minor axis label oversizing)
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Title in near-white light ink, clearly readable. Axis labels and tick labels in light INK_SOFT — no dark-on-dark failure. Legend text in light ink. All chrome is correctly inverted for dark theme.
-      Data: Historical line is same #009E73 green — identical to light render (data colors unchanged). Forecast line is same #D55E00 orange. HOWEVER, the CI bands — which were light peach fills in the light render — now appear as dark brownish-red opaque regions due to alpha blending on dark background. At alpha 0.15 and 0.25, #D55E00 on #1A1A17 yields near-solid dark fills with very little differentiation between 80% and 95% CI bands. The forecast line is still legible against the dark CI region.
-      Grid: Grid lines appear as subtle lighter lines on dark background — acceptable visibility.
-      Legibility verdict: PASS for chrome legibility (title, labels, ticks all readable). PARTIAL FAIL for CI band visual differentiation — the 80% vs 95% distinction is lost in the dark theme due to insufficient contrast between the two alpha levels on dark background.
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light #F0EFE8 ink — clearly readable. Axis labels and tick labels in #B8B7B0 (INK_SOFT for dark) — all readable. No dark-on-dark failures. Legend entries readable in light text.
+      Data: Historical line #009E73 and forecast line #D55E00 are IDENTICAL to light render — only chrome flips. CI bands appear significantly more opaque/heavy on dark background (alpha=0.15/0.25 over #1A1A17 makes orange fills look bold rather than subtle). Same right-edge clipping of CI bands present.
+      Legibility verdict: PASS (all text readable), but CI band weight imbalance between themes is a design concern — the uncertainty bands dominate the forecast region in dark mode rather than reading as subtle shading.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 23
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=24, axis.title=20, axis.text=16,
-          legend.text=16). All text readable in both themes. Axis label size 20 slightly
-          generous for short 'Date' label on 4800px canvas but within acceptable range.
+        comment: 'Font sizes explicitly set but oversized: axis.title=20pt, axis.text=16pt,
+          plot.title=24pt — recommend 12/10/14pt. All text readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements in either render.
+        comment: No text/element collisions in either theme.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Lines clearly visible in both themes. CI bands at alpha 0.15/0.25
-          on dark background render as dark opaque fills — 80% vs 95% CI barely distinguishable
-          in dark render.
+        comment: Historical and forecast lines clearly visible. CI bands visible but
+          clipped at right canvas edge with no padding — rightmost forecast uncertainty
+          region cut off.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Okabe-Ito #009E73 + #D55E00 combination is CVD-safe. No red-green-only
-          signaling.'
+        comment: Okabe-Ito positions 1 and 2 used; CVD-safe; distinct hue contrast
+          between historical (green) and forecast (orange).
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: Well-balanced layout. Forecast occupies expected ~15% of x-axis given
-          6/42 months ratio. Good canvas utilization.
+        comment: Generally clean layout. Right-edge clipping of CI bands (no x-axis
+          expansion) is a notable layout issue. Canvas 4800x2700 (non-standard but
+          same 16:9 ratio).
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Title correct in images. Y-axis shows 'Monthly Sales' with '$55K'
-          tick format communicating units. X-axis 'Date' descriptive.
+        comment: Y-axis 'Monthly Sales' is descriptive but lacks explicit unit notation.
+          X-axis 'Date' is fine.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17,
-          theme-adaptive chrome in both renders.'
+        comment: 'First series #009E73, second #D55E00. Backgrounds #FAF8F1/#1A1A17.
+          INK/INK_SOFT tokens correctly applied. Data colors identical across themes.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured library default with nested CI bands and theme adaptation.
-          Grid with prominent solid-ink lines and identical legend swatches for both
-          CI levels reduce polish. Not at publication quality.
+        passed: true
+        comment: Correct palette, intentional color hierarchy (green/orange), alpha-layered
+          CI bands. Above generic defaults but not publication-ready. CI band opacity
+          imbalance between themes detracts.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Spines removed via theme_minimal. Grid has both x and y major lines
-          (y-only preferred for line chart) using solid INK rather than low-opacity.
-          Legend box lacks elevated background per style guide.
+        passed: true
+        comment: theme_minimal removes spines; grid is subtle; legend background matches
+          plot. Good refinement. CI band weight inconsistency between themes is a
+          polish issue.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color coding (green=reliable historical, orange=uncertain forecast)
-          creates implicit narrative. Vertical separator and nested CI bands effectively
-          communicate forecast boundary. Above default baseline.
+        comment: 'Clear visual narrative: historical trend to forecast with uncertainty.
+          Vertical dashed line creates strong visual break. Color contrast guides
+          eye naturally. Above default data display.'
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -150,31 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series forecast plot with uncertainty bands, historical
-          line, forecast line, nested CI bands, and vertical separator.
+        comment: Correct time series with historical/forecast split, nested CI bands,
+          forecast-start marker.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: solid historical line, dashed forecast, vertical
-          separator, nested 80%/95% CI bands, semi-transparent fills, legend.'
+        comment: 'All spec features: solid historical line, dashed forecast, vertical
+          marker, 80%+95% CI bands, alpha fills, legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, sales on y-axis, CI bands correctly bound forecast
-          line, historical and forecast connect at right point.
+        comment: Date on x, sales on y. All series correctly mapped to respective
+          geoms.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 'Code/image mismatch: current code has title ''timeseries-forecast-uncertainty
-          · ggplot2 · anyplot.ai'' (missing ''r ·''). Images show correct format.
-          Code also missing linetype=''dashed'' on forecast geom_line and y-label
-          differs from images. Legend labels are correct.'
+        passed: true
+        comment: 'Rendered title correct: ''timeseries-forecast-uncertainty · r ·
+          ggplot2 · anyplot.ai''. Legend labels correct. Note: source code title string
+          missing ''· r ·'' — fix for reproducibility.'
     data_quality:
       score: 14
       max: 15
@@ -184,23 +180,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Shows historical trend, seasonal variation, forecast, and two CI
-          levels. Minor limitation: fixed-width CI rather than widening uncertainty
-          over forecast horizon.'
+        comment: 'All chart elements present. Minor: CI width is constant (forecast_std=2500
+          fixed) rather than widening over time as in real forecasts.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly sales forecast with 3-year history — canonical, neutral real-world
-          business scenario.
+        comment: Monthly sales data, 3-year history + 6-month forecast, business scenario,
+          neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales $52K–$75K, forecast std ~$2.5K, CI widths ~$4–6K — all plausible
-          for small/medium business monthly forecasting.
+        comment: Sales $50K-$80K range, ~7% forecast uncertainty, 6-month horizon
+          — all realistic.
     code_quality:
       score: 9
       max: 10
@@ -210,8 +205,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: tokens -> data -> plot -> save. No functions or
-          classes.'
+        comment: 'Clean linear flow: tokens → data generation → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -223,51 +218,51 @@ review:
         score: 1
         max: 2
         passed: false
-        comment: library(tidyr) imported but no tidyr functions called. dplyr may
-          also be unused (tibble::tibble uses explicit namespace; tail() is base R).
+        comment: library(dplyr) and library(tidyr) imported but not functionally used.
+          Code uses tibble::tibble() via namespace, all else is base R or ggplot2.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable R code. Appropriate complexity. No over-engineering.
+        comment: Clean, idiomatic R/ggplot2. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf. Uses modern linewidth= not
-          deprecated size= for line geoms.
+        comment: ggsave with ragg device, plot-{THEME}.png filename, correct API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Proper ggplot2 grammar: layered geoms in correct order, scale_color_manual/scale_fill_manual
-          with named aesthetics for combined legend, theme_minimal base with theme()
-          overrides. Correct aes() string values for automatic legend entries.'
+        comment: 'Excellent ggplot2 grammar: geom_ribbon() for CI bands, proper geom
+          layering, scale_color_manual()+scale_fill_manual() with named vectors and
+          breaks. Textbook ggplot2 usage.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: geom_ribbon() is ggplot2's idiomatic uncertainty band geom. Named-aesthetic
-          legend technique for combined color+fill legend is a distinctly ggplot2
-          pattern. Good but not exceptional.
-  verdict: REJECTED
+        comment: Good use of geom_ribbon() alpha layering (ggplot2-specific idiom)
+          and named-vector color scales with breaks ordering. Could use more ggplot2-specific
+          features like scale_x_date formatting or theme() composition patterns.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - ragg
   techniques:
   - layer-composition
   - custom-legend
   patterns:
   - data-generation
   dataprep:
-  - cumulative-sum
   - time-series
+  - cumulative-sum
   styling:
   - alpha-blending
