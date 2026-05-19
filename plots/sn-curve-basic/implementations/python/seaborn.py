@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: seaborn | Python 3.13
-Quality: 91/100 | Created: 2026-01-15
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-19
 """
 
 import os
