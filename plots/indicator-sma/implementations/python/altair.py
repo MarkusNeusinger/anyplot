@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-11
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 76/100 | Updated: 2026-05-19
 """
 
 import altair as alt
