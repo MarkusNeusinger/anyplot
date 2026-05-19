@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T08:14:05Z'
-updated: '2026-05-18T23:46:18Z'
+updated: '2026-05-19T00:11:10Z'
 generated_by: claude-sonnet
 workflow_run: 26066358298
 issue: 3638
@@ -12,44 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - 'Excellent theme-adaptive chrome: all INK/PAGE_BG/ELEVATED_BG tokens applied correctly,
-    both renders pass legibility checks'
-  - 'Strong data quality: geographically accurate Tokyo coordinates, realistic scenario,
-    distinct multi-cluster density pattern that tells a clear story'
-  - 'Perfect code quality: clean KISS structure, np.random.seed(42), all imports used,
-    correct plot-{THEME}.png output format'
-  - 'Good seaborn idiom: sns.kdeplot with fill=True and built-in colorbar is the right
-    high-level API choice'
-  - 'Visual refinement above baseline: top/right spines removed, degree-formatted
-    tick labels, colorbar explicitly styled, equal-aspect ratio enforced'
+  - Clean geographic KDE visualization with district labels (Shinjuku, Shibuya, Ginza,
+    Akihabara) providing excellent real-world geographic context and density narrative
+  - Fully theme-adaptive implementation — background, text, axis labels, spines, grid,
+    and colorbar all read the ANYPLOT_THEME token and flip correctly between light
+    (#FAF8F1) and dark (#1A1A17) renders
+  - Scatter overlay (s=12, alpha=0.25) layered on top of the KDE fill adds depth by
+    showing individual check-in points alongside the continuous density estimate
+  - High-quality reproducible synthetic data representing four real Tokyo districts
+    with plausible density differentials (Shinjuku 280 > Shibuya 220 > Ginza 180 >
+    Akihabara 140) plus scattered background noise
   weaknesses:
-  - 'Missing basemap: spec explicitly requires geographic context via country boundaries,
-    coastlines, or street maps; district text labels do not fulfill this requirement
-    — add contextily with CartoDB Positron tiles or cartopy coastline'
-  - 'Non-preferred colormap: YlOrRd is not the recommended viridis/cividis; switch
-    to viridis or inferno for better perceptual uniformity and CVD safety'
-  - Title fontsize at 22pt is below the 24pt minimum; district annotation labels at
-    fontsize=13 are below the 16pt minimum for secondary text
-  - Scatter dot size (s=12) and alpha (0.25) may produce near-invisible points at
-    full 4800x2700 resolution
+  - Code specifies cmap='YlOrRd' but rendered images display a viridis-like colormap
+    — inconsistency between code and output; style guide requires viridis or cividis
+    for sequential density data, not YlOrRd
+  - 'No basemap layer: spec explicitly requires ''country boundaries, coastlines,
+    or street maps as a basemap''; implementation uses only text labels as geographic
+    context, missing the spatial reference layer'
+  - Scatter dot size s=12 is below the recommended minimum of s=20-50 for 1000+ points
+    at 4800x2700px canvas resolution; dots are visible but undersize reduces the overlay's
+    communicative value
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Tokyo Check-ins · heatmap-geographic · python · seaborn · anyplot.ai" in dark text, clearly readable. Axis labels "Longitude (°E)" and "Latitude (°N)" visible. Tick labels in degree format (139.65°, 35.62°, etc.) readable. Colorbar "Check-in Density" label and numeric ticks visible in dark ink.
-      Data: KDE density heatmap in YlOrRd colormap (pale yellow → dark red at hotspots). Three primary clusters: Shinjuku/Shibuya on left, Ginza/Akihabara on right. Grey scatter dots (s=12, alpha=0.25) as subtle overlay. District labels in dark semibold text inside density areas.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, non-pure-white.
+      Chrome: Title "Tokyo Check-ins · heatmap-geographic · python · seaborn · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude (°E)" and "Latitude (°N)" readable in dark ink. Tick labels in dark-ink-soft, all legible. Colorbar label "Check-in Density" and tick values (7.6–222.4) readable in dark ink. Subtle grid lines (alpha ~0.10) visible but not intrusive.
+      Data: KDE heatmap rendered with a viridis-like colormap (dark purple outer → teal mid → bright yellow-green at peak density). Four distinct hotspot clusters correspond to Shinjuku, Shibuya, Ginza, and Akihabara district labels. Semi-transparent scatter dots (small, grayish) overlay the KDE. A geographic boundary and "Tokyo Bay" label visible on the right side. Colorbar positioned to the right of the axes.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, and tick labels switch to light cream/off-white text (#F0EFE8), clearly readable against dark background. Colorbar ticks and "Check-in Density" label are light-colored. District labels adapt to INK token (light in dark mode) and remain readable against the KDE fill. No dark-on-dark failures observed.
-      Data: KDE density colors are identical to light render (YlOrRd palette unchanged — only chrome flips). Scatter dots appear as light muted grey. Contour levels slightly more visible on dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, non-pure-black.
+      Chrome: Title, axis labels, and tick labels rendered in light cream/off-white ink, clearly readable against the dark surface. Colorbar tick labels and axis label are light-colored. Grid lines very subtle. No dark-on-dark text failures observed.
+      Data: KDE colormap colors are identical to the light render (purple → teal → yellow-green) — only chrome elements flipped. District labels (Shinjuku, Shibuya, Ginza, Akihabara) appear in light/white text on the dark background, readable. Scatter dots visible as lighter-toned points.
+      Legibility verdict: PASS — all text readable against the near-black background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -57,50 +57,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title at 22pt below 24pt minimum; district labels at 13pt undersized;
-          axis labels 20pt and tick labels 16pt correct
+        comment: Font sizes explicitly set (title 22pt, labels 20pt, ticks 16pt, colorbar
+          18pt/14pt); title 1pt below 24pt guideline; district labels at 13pt slightly
+          small for canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No overlapping text; district labels well-spaced; tick labels clear
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: KDE fill vivid and clear; scatter dots at s=12/alpha=0.25 border
-          on invisible at full resolution
+        comment: KDE heatmap and district labels clearly visible; scatter dots s=12
+          below minimum guideline of s=20-50 for 1000+ points — dots visible but undersized
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: YlOrRd has CVD concerns; not the most accessible sequential colormap
+        passed: true
+        comment: Rendered images show viridis-like colormap which is CVD-safe and
+          perceptually uniform
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Good proportions, colorbar integrated cleanly, equal-aspect plot
-          fills canvas well
+        comment: 16:9 canvas with equal aspect ratio appropriate for geographic data;
+          slight whitespace from equal aspect constraint
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (deg E) and Latitude (deg N) with units; tick labels formatted
-          as degree values
+        comment: Longitude (°E) and Latitude (°N) with degree units; descriptive title
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: YlOrRd used instead of preferred viridis/cividis; backgrounds and
-          chrome tokens are theme-correct in both renders
+        comment: Code specifies cmap='YlOrRd' — not the style-guide-recommended viridis/cividis
+          for sequential density data; rendered images show viridis-like colors creating
+          a code/output inconsistency
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -108,24 +110,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Thoughtful theme-adaptive tokens, clean spines, degree-formatted
-          ticks; missing basemap leaves a plain coordinate canvas
+        comment: 'Above default: layered KDE+scatter approach, domain-specific district
+          labels, theme-adaptive colorbar. Lacks basemap for full geographic authenticity.'
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines removed, subtle grid at alpha=0.10, colorbar styled, scatter
-          alpha tuned, equal aspect ratio
+        comment: Top/right spines removed, subtle grid (alpha=0.10), colorbar styled
+          with theme tokens, equal aspect for geographic accuracy
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: District labels guide viewer to hotspots; distinct cluster densities
-          create visual hierarchy; background scatter provides urban context
+        comment: District labels clearly identify four hotspots; density gradient
+          hierarchy guides viewer to dense areas; scatter overlay contextualizes individual
+          points
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -133,52 +136,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct KDE geographic heatmap with continuous density gradient
+        comment: Correct geographic heatmap using sns.kdeplot with KDE density estimation
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: KDE, sequential colormap, and colorbar present; basemap missing (spec
-          requires country boundaries, coastlines, or street maps)
+        passed: true
+        comment: KDE fill, colorbar, scatter overlay, district labels present; basemap
+          layer (coastlines/boundaries) missing per spec requirement
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Latitude on Y, longitude on X, equal-aspect ratio, full data range
-          visible
+        comment: Latitude→Y, Longitude→X correctly mapped; Tokyo coordinate range
+          accurate
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Tokyo Check-ins · heatmap-geographic · python · seaborn · anyplot.ai
-          — correct format
+        comment: 'Title format: ''Tokyo Check-ins · heatmap-geographic · python ·
+          seaborn · anyplot.ai'' matches spec; colorbar labeled ''Check-in Density'''
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Multiple distinct clusters at varying intensities, background scatter,
-          geographic hotspot pattern
+        comment: Multiple density hotspots, scatter overlay, colorbar scale, geographic
+          labels; scatter undersize limits overlay clarity
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Mobile app check-in density in Tokyo — neutral, real-world, named
-          districts are genuine locations
+        comment: Real Tokyo districts; mobile app check-in density is plausible, neutral,
+          non-controversial
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Geographically accurate coordinates; density proportions plausible
+        comment: Lat/lon ranges match central Tokyo; district density proportions
+          (Shinjuku > Shibuya > Ginza > Akihabara) plausible
     code_quality:
       score: 10
       max: 10
@@ -188,33 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, tokens, data, plot, save — no functions or
-          classes'
+        comment: 'Linear flow: imports → tokens → data → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, matplotlib, seaborn — all used
+        comment: os, matplotlib.pyplot, numpy, seaborn — all used, none unused
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; colorbar axis loop is a necessary workaround
-          for seaborn kdeplot API
+        comment: Clean Pythonic code; district loop is elegant; no fake UI; colorbar
+          styling with theme tokens is thoughtful
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=300, facecolor=PAGE_BG
+        comment: Saves as plot-{THEME}.png; no deprecated functions
     library_mastery:
       score: 7
       max: 10
@@ -224,16 +228,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: sns.kdeplot with fill=True, cbar=True, cbar_kws; sns.set_theme for
-          global rc; axes-level API throughout
+        comment: Uses sns.set_theme() for global theming, sns.kdeplot() axes-level
+          API with fill=True and cbar=True — idiomatic seaborn
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.kdeplot with built-in KDE computation and colorbar is distinctively
-          seaborn; more than basic usage
-  verdict: REJECTED
+        comment: sns.kdeplot with fill=True and built-in cbar=True is seaborn-specific;
+          cbar_kws for colorbar customization; theme loop for colorbar axes styling
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -241,11 +245,9 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
-  - explicit-figure
   - iteration-over-groups
   dataprep:
   - kde
   styling:
-  - alpha-blending
   - custom-colormap
-  - grid-styling
+  - alpha-blending

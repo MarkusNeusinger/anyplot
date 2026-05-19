@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-18
+Quality: 83/100 | Updated: 2026-05-19
 """
 
 import os
