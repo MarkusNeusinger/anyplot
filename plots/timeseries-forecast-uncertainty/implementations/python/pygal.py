@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-19
@@ -60,8 +60,8 @@ x_labels = [d.strftime("%b %y") for d in dates]
 # CI series carry the actual historical values in the history region so the erase
 # fill covers the same area as the orange fill → zero net band in that region.
 #
-# 80% CI shown as dashed INK_MUTED boundary lines inside the 95% band; using
-# INK_MUTED (gray) gives contrast against the orange background.
+# 80% CI shown as dashed INK boundary lines inside the 95% band; INK (full
+# contrast) is more visible than INK_MUTED against the orange background.
 #
 # pygal's guide-line CSS hardcodes stroke:black, which is invisible on dark
 # backgrounds. SVG post-processing fixes regular guides to INK_MUTED and the
@@ -70,8 +70,8 @@ x_labels = [d.strftime("%b %y") for d in dates]
 # Series order (→ palette index):
 #   0  upper_95 fill    rgba(213,94,0,α)    95% CI orange band  (α=0.25 dark/0.20 light)
 #   1  lower_95 erase   PAGE_BG             opaque background erase
-#   2  upper_80 line    INK_MUTED           80% CI upper dashed boundary
-#   3  lower_80 line    INK_MUTED           80% CI lower dashed boundary
+#   2  upper_80 line    INK                 80% CI upper dashed boundary
+#   3  lower_80 line    INK                 80% CI lower dashed boundary
 #   4  historical line  BRAND               solid green line
 #   5  forecast line    FORECAST_COLOR      dashed orange line
 
@@ -84,12 +84,12 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=(CI_95_FILL, PAGE_BG, INK_MUTED, INK_MUTED, BRAND, FORECAST_COLOR),
-    title_font_size=18,
-    label_font_size=12,
-    major_label_font_size=12,
-    legend_font_size=12,
-    value_font_size=10,
+    colors=(CI_95_FILL, PAGE_BG, INK, INK, BRAND, FORECAST_COLOR),
+    title_font_size=56,
+    label_font_size=42,
+    major_label_font_size=36,
+    legend_font_size=36,
+    value_font_size=30,
     stroke_width=2.5,
 )
 
@@ -97,7 +97,7 @@ chart = pygal.Line(
     width=3200,
     height=1800,
     style=custom_style,
-    show_x_guides=True,
+    show_x_guides=False,
     show_y_guides=True,
     show_legend=True,
     legend_at_bottom=True,
