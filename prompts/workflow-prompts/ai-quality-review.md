@@ -69,7 +69,7 @@ A plot that's perfect in one theme but unreadable in the other still **fails** �
 
 Visually estimate from each PNG — no pixel measurement needed. These are soft proportional checks **without hard thresholds**. Violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), and VQ-05 (Layout & Canvas) categories rather than triggering a separate pass/fail item. A single visual problem can reduce points in multiple categories simultaneously (holistic, not strict).
 
-- **Title proportion:** Title occupies ~50–70% of the plot width. Too narrow → fontsize probably too small (deduct VQ-01). Too wide / overflowing → fontsize probably too big OR title too verbose (deduct VQ-01 + VQ-05).
+- **Title proportion:** Title comfortably occupies ~50–70% of the plot width. **Note:** the mandated `{spec-id} · {lang} · {lib} · anyplot.ai` title is ~67 chars; at the style-guide default fontsize it naturally fills ~70–85% on landscape. That is **expected and not a deduction** — the AI made the right tradeoff. Only deduct if either: (a) the title overflows beyond ~90% of plot width / clips edges, or (b) the fontsize is too generous for the title length (squeezed look, no breathing room) → VQ-01 + VQ-05.
 - **Axis label proportionality:** Short labels with few words ("Date", "Year") must not dominate the axis with oversized fontsizes. Long descriptive labels ("Fläche von Häusern in Quadratmetern", "Average temperature in °C") are completely fine as long as they don't overflow — the "No overflow" check below covers that. Disproportionately oversized short labels → deduct VQ-05.
 - **Axis label balance:** X-axis and Y-axis labels are visually similar in size. One much larger than the other without semantic reason → deduct VQ-05.
 - **Tick label balance:** X-axis and Y-axis tick labels are visually similar in size. Exception: rotated long categorical labels may legitimately look wider.
@@ -78,9 +78,13 @@ Visually estimate from each PNG — no pixel measurement needed. These are soft 
 - **Marker / line density appropriateness:** Sparse data (< 50 points) should have prominent markers; dense data (> 500 points) should have smaller markers + `alpha < 1` to combat overplotting → deduct VQ-03 when poorly chosen.
 
 **Required:** Note specific violations in `weaknesses` with enough context for the repair loop to fix them. Examples:
-- "X-axis label 'Date' is oversized at fontsize=24pt, dominates the axis disproportional to its info content — reduce to ~12pt."
-- "Title overflows ~95% of plot width — reduce title fontsize from 22 to 14, or accept that the long mandated anyplot title needs ~14pt at this canvas."
-- "Sparse scatter (32 points) but marker size=6 px makes them barely visible — increase to size=12-16."
+- "X-axis label 'Date' is oversized at fontsize=18pt, dominates the axis disproportional to its info content — reduce to ~10pt."
+- "Title overflows beyond plot edge (~95% width) — reduce title fontsize from 18pt to 12pt."
+- "Sparse scatter (32 points) but marker size=4 px makes them barely visible — increase to size=10-14."
+
+**Counter-examples (NOT deductions):**
+- "Title spans ~80% of width at fontsize=14pt." → Expected for the long mandated anyplot title; no deduction.
+- "Y-axis label 'Fläche von Häusern in Quadratmetern' takes ~40% of axis length at fontsize=12pt." → Genuinely long label at sensible fontsize; no deduction as long as it doesn't overflow the axis.
 
 ### 6. Check for Auto-Reject (AR-08)
 

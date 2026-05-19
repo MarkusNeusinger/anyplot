@@ -109,18 +109,18 @@ np.random.seed(42)
 study_hours = np.random.normal(6, 2, 80)
 exam_scores = study_hours * 8 + np.random.normal(0, 5, 80) + 30
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+# Plot — see default-style-guide.md "Visual Sizing Defaults" for the canvas + sizing values
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
-ax.scatter(study_hours, exam_scores, alpha=0.7, s=200,
+ax.scatter(study_hours, exam_scores, alpha=0.7, s=100,
            color=BRAND, edgecolors=PAGE_BG, linewidth=0.5)
 
-# Style
-ax.set_xlabel('Study Hours per Day', fontsize=20, color=INK)
-ax.set_ylabel('Exam Score (%)', fontsize=20, color=INK)
+# Style — title kept compact because the mandated anyplot title is ~67 chars long
+ax.set_xlabel('Study Hours per Day', fontsize=12, color=INK)
+ax.set_ylabel('Exam Score (%)', fontsize=12, color=INK)
 ax.set_title('scatter-basic · python · matplotlib · anyplot.ai',
-             fontsize=24, fontweight='medium', color=INK)
-ax.tick_params(axis='both', labelsize=16, colors=INK_SOFT)
+             fontsize=14, fontweight='medium', color=INK)
+ax.tick_params(axis='both', labelsize=10, colors=INK_SOFT)
 ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 for s in ('left', 'bottom'):
@@ -128,7 +128,7 @@ for s in ('left', 'bottom'):
 ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
 
 plt.tight_layout()
-plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight', facecolor=PAGE_BG)
+plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
 ```
 
 **The generated script must be run twice by the pipeline** — once with `ANYPLOT_THEME=light`, once with `ANYPLOT_THEME=dark` — producing `plot-light.png` and `plot-dark.png`. Interactive libraries additionally produce `plot-light.html` and `plot-dark.html`.
@@ -366,7 +366,7 @@ np.random.seed(42)
 ...
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 ...
 
 # Style
@@ -374,7 +374,7 @@ ax.set_xlabel(...)
 ...
 
 # Save
-plt.savefig('plot.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
 ```
 
 ### Import Organization
@@ -404,7 +404,7 @@ Blank line between groups. Only import what you use.
 
 ```python
 ax.scatter(study_hours, exam_scores,
-           alpha=0.7, s=200,
+           alpha=0.7, s=100,
            color=BRAND, edgecolors=PAGE_BG)
 ```
 
@@ -414,13 +414,13 @@ ax.scatter(study_hours, exam_scores,
 
 Must pass all visual quality criteria (VQ-01 through VQ-06) and design excellence criteria (DE-01 through DE-03) from `prompts/quality-criteria.md`.
 
-**IMPORTANT: Large Canvas Size!**
+**IMPORTANT: Standard Canvas Size**
 
-anyplot renders at **4800 × 2700 px** (16:9) or **3600 × 3600 px** (1:1) — standard element sizes are too small!
+anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — library default sizes are still too small at this canvas!
 
-- Elements should be **~3-4x larger** than library defaults
-- See `prompts/default-style-guide.md` for aesthetic principles and sizing
-- See `prompts/library/{library}.md` for library-specific sizes
+- Elements should be **~2-3x larger** than library defaults
+- See `prompts/default-style-guide.md` for "Visual Sizing Defaults" + "Proportional Sizing" criteria
+- See `prompts/library/{library}.md` for library-specific starting values
 
 **Aesthetic requirements from style guide:**
 - Follow minimalism: every element must earn its place
