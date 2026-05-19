@@ -1,226 +1,248 @@
 library: pygal
+language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T22:40:50Z'
-updated: '2026-01-10T23:02:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20885435790
+updated: '2026-05-19T00:30:09Z'
+generated_by: claude-sonnet
+workflow_run: 26066738252
 issue: 3638
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/pygal/plot.html
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/pygal/plot-dark.html
+quality_score: 73
 review:
   strengths:
-  - Excellent implementation of a geographic heatmap in pygal despite the library
-    not having native support
-  - Creative use of custom Graph subclass to extend pygal capabilities for geographic
-    visualization
-  - Smooth Gaussian-blurred heatmap with proper transparency for basemap visibility
-  - Well-designed colorbar with gradient segments and appropriate tick labels
-  - California coastline approximation adds valuable geographic context
-  - Three distinct density clusters clearly demonstrate the spatial density concept
-  - Clean color interpolation for smooth gradients
-  - Good use of YlOrRd sequential colormap which is colorblind-accessible
+  - 'Good geographic composition: California outline, three-cluster density data,
+    and viridis colormap work together effectively'
+  - Correct geographic coordinate mapping with lat/lon axes and south-to-north y-axis
+    orientation
+  - Both renders pass theme readability checks with appropriate backgrounds and legible
+    text in both themes
+  - Realistic, neutral data context using California air quality monitoring stations
+  - 2D histogram + Gaussian smoothing correctly implements the spec KDE requirement
   weaknesses:
-  - Code structure uses a custom class (GeoHeatmap) instead of KISS pattern - necessary
-    for this complex visualization but deviates from guidelines
-  - Grid lines could be more subtle (currently at 0.5 opacity, could be 0.3)
-  image_description: 'The plot displays a geographic heatmap of California showing
-    spatial density of environmental monitoring stations. The visualization features
-    a light blue (#e8f4f8) background representing the geographic area with California''s
-    coastline rendered as dark gray polylines. A continuous color gradient heatmap
-    is overlaid, using a YlOrRd (yellow-orange-red) colormap where yellow represents
-    low density (0.0) and deep red represents high density (105.5). Three distinct
-    hotspot clusters are clearly visible: one in Northern California around 38.5°N/-122.5°W,
-    one on the Central Coast around 36.5°N/-121.5°W, and one in Southern California
-    around 34°N/-118°W. Blue circular markers (r=12) with dark borders represent individual
-    station locations, scattered across the heatmap. The colorbar on the right shows
-    the "Density" scale with 5 tick values. A legend below the colorbar identifies
-    the blue markers as "Station". Axis labels show "Longitude (°)" and "Latitude
-    (°)" with appropriate tick marks. The title follows the correct format: "heatmap-geographic
-    · pygal · pyplots.ai".'
+  - 'Station scatter points use Python Blue #306998 instead of Okabe-Ito green #009E73
+    (VQ-07 = 0)'
+  - 'Code file has critical gaps: no ANYPLOT_THEME support, saves to bare plot.png,
+    missing HTML output for interactive pygal — images appear generated from a different
+    code version'
+  - Class/method structure violates KISS (CQ-01); noqa lint-disable comments present
+    (policy violation)
+  - Pygal interactive SVG and HTML capabilities not leveraged at all (LM-02 = 1)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — PASS
+      Chrome: Title "PM2.5 Air Quality - heatmap-geographic - python - pygal - anyplot.ai" in dark text, clearly readable. Axis labels "Latitude (deg)" and "Longitude (deg)" with units readable. Tick labels readable. Colorbar "Density" label and values readable.
+      Data: Viridis colormap (purple at low density, teal/cyan at medium, yellow at high). Three distinct density hotspots visible for Northern CA, Central Coast, and Southern CA. California coastline in dark gray. Small blue scatter dots (#306998) for monitoring stations.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (~#1A1A17) — PASS
+      Chrome: Title, axis labels, tick labels, and colorbar labels all rendered in light text — clearly readable against the dark background. No dark-on-dark failures observed.
+      Data: Viridis colors identical to light render (data colors unchanged between themes, only chrome flipped). California coastline appears light gray/white against dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, tick marks, and colorbar labels are all clearly
-          readable at appropriate font sizes
+        comment: Font sizes explicitly set (axis_font_size=48, tick_font_size=36);
+          all text readable in both renders
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; labels are well-spaced
+        comment: No overlapping labels or elements
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Heatmap cells visible with good transparency; scatter points sized
-          appropriately but some overlap in dense areas
+        comment: Heatmap cells clearly visible; station dots visible but somewhat
+          small
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: YlOrRd colormap is colorblind-safe sequential palette; blue markers
-          contrast well
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins; colorbar and legend
-          well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Longitude (°), Latitude (°)'
+        comment: Viridis is perceptually uniform and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Plot fills ~70% of canvas; slight blank area at edges
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Latitude and Longitude with degree units; Density colorbar label
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Grid lines visible but somewhat distracting at 0.5 opacity
+        comment: 'Station scatter points use Python Blue #306998 instead of Okabe-Ito
+          #009E73'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Professional geographic visualization with California outline and
+          viridis heatmap; not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid lines, clean colorbar, coastline adds geographic refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Three density hotspots create natural focal points but no additional
+          emphasis or annotations
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct geographic heatmap with continuous color gradient showing
-          spatial density
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Latitude/longitude correctly mapped to y/x axes; values correctly
-          weighted
-      - id: SC-03
+        comment: Geographic heatmap with continuous density gradient; correct chart
+          type
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has KDE-smoothed heatmap, colorbar, coastline context; scatter overlay
-          adds nice detail
-      - id: SC-04
-        name: Data Range
+        comment: KDE/smoothing, colormap, colorbar, coastline all present; missing
+          HTML output for interactive pygal
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within California bounds (32.5-42°N, -125 to -114°W)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude on X-axis, latitude on Y-axis, all data visible within
+          California bounds
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar labeled Density, station legend correct
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title format correct with middot separator
+        comment: Rendered title matches required format with descriptive prefix; colorbar
+          and station legend present
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows three distinct density clusters with varying intensities; demonstrates
-          hotspot identification well
+        comment: Shows clustering, density variation, point overlay, California-wide
+          coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Environmental monitoring stations across California is a realistic,
-          neutral scenario
+        comment: California environmental monitoring stations with PM2.5 AQI readings;
+          neutral and realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: California coordinates are accurate; density values from AQI readings
-          are plausible
+        comment: Lat 32.5-42N and lon -125 to -114W match California geography; 500
+          points realistic
     code_quality:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 1
         max: 3
         passed: false
-        comment: Uses custom class extending Graph; not the simple KISS pattern but
-          necessary for this visualization
+        comment: Defines GeoHeatmap class with _plot and _compute methods; violates
+          KISS flat-script pattern
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set for reproducibility
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All imports (sys, numpy, Graph, Style) are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: No fake UI elements; penalized for noqa lint-disable comments and
+          sys.path manipulation
       - id: CQ-05
-        name: Output Correct
-        score: 2
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 5
-      max: 5
+        passed: false
+        comment: Saves to bare plot.png not plot-{THEME}.png; no ANYPLOT_THEME environment
+          variable reading; no HTML output
+    library_mastery:
+      score: 3
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
         max: 5
-        passed: true
-        comment: Excellent use of pygal SVG capabilities through custom Graph subclass;
-          implements custom _plot() method; uses Style system; advanced SVG node manipulation
+        passed: false
+        comment: Uses pygal internal graph infrastructure but relies heavily on direct
+          SVG manipulation rather than high-level API
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Pygal interactive SVG/HTML output not leveraged; used purely as SVG
+          scaffolding
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
-  - annotations
-  - patches
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep:
   - binning
-  - kde
+  - interpolation
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
