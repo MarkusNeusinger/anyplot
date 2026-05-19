@@ -227,7 +227,7 @@ jobs:
         # block the main regeneration pipeline. Skip cleanly and continue.
         continue-on-error: true
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@dde2242db6af13460b916652159b6ba19a598f30  # v1
+        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: '--model haiku'
@@ -243,7 +243,7 @@ jobs:
         # rather than aborting the dispatch.
         continue-on-error: true
         timeout-minutes: 15
-        uses: anthropics/claude-code-action@dde2242db6af13460b916652159b6ba19a598f30  # v1
+        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: '--model haiku'
