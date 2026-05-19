@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-race-animated: Animated Bar Chart Race
-Library: seaborn | Python 3.13
-Quality: pending | Created: 2026-05-19
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 74/100 | Created: 2026-05-19
 """
 
 import os
