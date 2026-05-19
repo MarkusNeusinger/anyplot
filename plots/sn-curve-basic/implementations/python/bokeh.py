@@ -1,173 +1,205 @@
-""" pyplots.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-15
+Library: bokeh | Python 3.13
+Quality: 93/100 | Updated: 2026-05-19
 """
 
-import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Label, Span
-from bokeh.plotting import figure
+import os
+import sys
+import time
+from pathlib import Path
 
 
-# Data - Typical S-N fatigue test results for steel specimens
+# Remove the current directory from sys.path to avoid circular imports with bokeh.py
+sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd(), os.path.dirname(__file__))]
+
+import numpy as np  # noqa: E402
+from bokeh.io import output_file, save  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, Label, Span  # noqa: E402
+from bokeh.plotting import figure  # noqa: E402
+from selenium import webdriver  # noqa: E402
+from selenium.webdriver.chrome.options import Options  # noqa: E402
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+BRAND = "#009E73"  # Okabe-Ito position 1 — data series
+ULT_COLOR = "#D55E00"  # Okabe-Ito position 2 — Ultimate Strength line
+ENDU_COLOR = "#0072B2"  # Okabe-Ito position 3 — Endurance Limit line
+YIELD_COLOR = "#E69F00"  # Okabe-Ito position 5 — Yield Strength line
+
+# Data — S-N fatigue test results for steel specimens (Basquin equation)
 np.random.seed(42)
 
-# Generate realistic S-N curve data points
-# Basquin equation: S = A * N^b (power law relationship)
-# Using typical steel fatigue parameters
-A = 1200  # MPa (coefficient)
+A = 1200  # MPa coefficient
 b = -0.12  # Basquin exponent
 
-# Create stress levels with multiple specimens at each level
 stress_levels = np.array([450, 400, 350, 320, 300, 280, 260, 250, 240, 230, 220, 210])
 
-# Generate cycles for each stress level with realistic scatter
 cycles_list = []
 stress_list = []
 
-for stress in stress_levels:
-    # Calculate theoretical cycles from Basquin equation
-    N_theoretical = (stress / A) ** (1 / b)
-    # Add scatter (typical for fatigue data)
+for stress_val in stress_levels:
+    N_theoretical = (stress_val / A) ** (1 / b)
     n_specimens = np.random.randint(2, 5)
     scatter = np.random.lognormal(0, 0.3, n_specimens)
     cycles_actual = N_theoretical * scatter
     cycles_list.extend(cycles_actual)
-    stress_list.extend([stress] * n_specimens)
+    stress_list.extend([stress_val] * n_specimens)
 
 cycles = np.array(cycles_list)
 stress = np.array(stress_list)
 
-# Material properties reference values
 ultimate_strength = 500  # MPa
 yield_strength = 350  # MPa
-endurance_limit = 200  # MPa (below which infinite life expected)
+endurance_limit = 200  # MPa
 
-# Fit line data (using Basquin equation)
 cycles_fit = np.logspace(2, 7, 100)
 stress_fit = A * (cycles_fit**b)
 
-# Create ColumnDataSource for data points
 source = ColumnDataSource(data={"cycles": cycles, "stress": stress})
-
-# Create ColumnDataSource for fit line
 source_fit = ColumnDataSource(data={"cycles_fit": cycles_fit, "stress_fit": stress_fit})
 
-# Create figure with log scales
+# Plot
 p = figure(
-    width=4800,
-    height=2700,
-    title="sn-curve-basic · bokeh · pyplots.ai",
+    width=3200,
+    height=1800,
+    title="sn-curve-basic · python · bokeh · anyplot.ai",
     x_axis_label="Number of Cycles to Failure (N)",
     y_axis_label="Stress Amplitude (MPa)",
     x_axis_type="log",
     y_axis_type="log",
-    y_range=(150, 600),
+    y_range=(150, 650),
     x_range=(100, 2e7),
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Plot S-N curve fit line
 p.line(
     x="cycles_fit",
     y="stress_fit",
     source=source_fit,
     line_width=5,
-    line_color="#306998",
+    line_color=BRAND,
     line_alpha=0.9,
     legend_label="Basquin Fit (S = A·N^b)",
 )
 
-# Plot data points
 p.scatter(
     x="cycles",
     y="stress",
     source=source,
-    size=22,
-    fill_color="#306998",
-    fill_alpha=0.7,
-    line_color="#1a3d5c",
-    line_width=2,
+    size=18,
+    fill_color=BRAND,
+    fill_alpha=0.65,
+    line_color=PAGE_BG,
+    line_width=1.5,
     legend_label="Fatigue Test Data",
 )
 
-# Add horizontal reference lines for material properties
-ultimate_line = Span(
-    location=ultimate_strength, dimension="width", line_color="#c0392b", line_width=4, line_dash="dashed"
+hover = HoverTool(tooltips=[("Cycles to Failure", "@cycles{0.00e+0}"), ("Stress Amplitude", "@stress{0} MPa")])
+p.add_tools(hover)
+
+# Reference lines for material properties
+p.add_layout(
+    Span(location=ultimate_strength, dimension="width", line_color=ULT_COLOR, line_width=4, line_dash="dashed")
 )
-p.add_layout(ultimate_line)
+p.add_layout(Span(location=yield_strength, dimension="width", line_color=YIELD_COLOR, line_width=4, line_dash="dashed"))
+p.add_layout(Span(location=endurance_limit, dimension="width", line_color=ENDU_COLOR, line_width=4, line_dash="dashed"))
 
-yield_line = Span(location=yield_strength, dimension="width", line_color="#e67e22", line_width=4, line_dash="dashed")
-p.add_layout(yield_line)
-
-endurance_line = Span(
-    location=endurance_limit, dimension="width", line_color="#27ae60", line_width=4, line_dash="dashed"
+p.add_layout(
+    Label(
+        x=150,
+        y=535,
+        text=f"Ultimate Strength ({ultimate_strength} MPa)",
+        text_font_size="28pt",
+        text_color=ULT_COLOR,
+        text_font_style="bold",
+    )
 )
-p.add_layout(endurance_line)
-
-# Add labels for reference lines
-ultimate_label = Label(
-    x=150,
-    y=520,
-    text=f"Ultimate Strength ({ultimate_strength} MPa)",
-    text_font_size="22pt",
-    text_color="#c0392b",
-    text_font_style="bold",
+p.add_layout(
+    Label(
+        x=150,
+        y=368,
+        text=f"Yield Strength ({yield_strength} MPa)",
+        text_font_size="28pt",
+        text_color=YIELD_COLOR,
+        text_font_style="bold",
+    )
 )
-p.add_layout(ultimate_label)
-
-yield_label = Label(
-    x=150,
-    y=365,
-    text=f"Yield Strength ({yield_strength} MPa)",
-    text_font_size="22pt",
-    text_color="#e67e22",
-    text_font_style="bold",
+p.add_layout(
+    Label(
+        x=150,
+        y=210,
+        text=f"Endurance Limit ({endurance_limit} MPa)",
+        text_font_size="28pt",
+        text_color=ENDU_COLOR,
+        text_font_style="bold",
+    )
 )
-p.add_layout(yield_label)
 
-endurance_label = Label(
-    x=150,
-    y=208,
-    text=f"Endurance Limit ({endurance_limit} MPa)",
-    text_font_size="22pt",
-    text_color="#27ae60",
-    text_font_style="bold",
-)
-p.add_layout(endurance_label)
+# Style — font sizes per default-style-guide.md "Visual Sizing Defaults" for bokeh
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Style the plot
-p.title.text_font_size = "36pt"
-p.title.text_color = "#2c3e50"
-p.xaxis.axis_label_text_font_size = "26pt"
-p.yaxis.axis_label_text_font_size = "26pt"
-p.xaxis.major_label_text_font_size = "22pt"
-p.yaxis.major_label_text_font_size = "22pt"
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
 
-# Legend styling
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
 p.legend.location = "bottom_left"
-p.legend.label_text_font_size = "22pt"
-p.legend.background_fill_alpha = 0.9
-p.legend.border_line_width = 2
-p.legend.border_line_color = "#cccccc"
-p.legend.glyph_width = 50
-p.legend.glyph_height = 35
-p.legend.spacing = 12
-p.legend.padding = 20
+p.legend.label_text_font_size = "34pt"
+p.legend.label_text_color = INK_SOFT
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.glyph_width = 55
+p.legend.glyph_height = 40
+p.legend.spacing = 18
+p.legend.padding = 24
 
-# Grid styling
-p.grid.grid_line_alpha = 0.3
-p.grid.grid_line_dash = [6, 4]
+# Save HTML
+output_file(f"plot-{THEME}.html")
+save(p)
 
-# Background
-p.background_fill_color = "#fafafa"
-p.border_fill_color = "#ffffff"
+# Save PNG via headless Chrome (Selenium)
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
 
-# Axis styling
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
-p.xaxis.major_tick_line_width = 2
-p.yaxis.major_tick_line_width = 2
-
-# Save as PNG
-export_png(p, filename="plot.png")
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
