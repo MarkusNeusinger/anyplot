@@ -68,6 +68,202 @@ variants:
         - {find: "width=4800",  replace: "width=2400"}
         - {find: "height=2700", replace: "height=1350"}
 
+  A_canvas_half_dpi_double:
+    description: "Canvas figsize/width halved, DPI/scale doubled. Output stays 4800x2700 px. For DPI/scale libs, fonts/lines/markers (all in pt) auto-double via DPI. For native-px libs (bokeh/highcharts/pygal): explicit ~2x on font/line/marker."
+    patches:
+      matplotlib:
+        - {find: "figsize=(16, 9)", replace: "figsize=(8, 4.5)"}
+        - {find: "dpi=300",         replace: "dpi=600"}
+      seaborn:
+        - {find: "figsize=(16, 9)", replace: "figsize=(8, 4.5)"}
+        - {find: "dpi=300",         replace: "dpi=600"}
+      plotnine:
+        - {find: "figure_size=(16, 9)", replace: "figure_size=(8, 4.5)"}
+        - {find: "dpi=300",             replace: "dpi=600"}
+      plotly:
+        - {find: "width=1600", replace: "width=800"}
+        - {find: "height=900", replace: "height=450"}
+        - {regex: 'scale=3\b', replace: "scale=6"}
+      altair:
+        - {find: "width=1600",         replace: "width=800"}
+        - {find: "height=900",         replace: "height=450"}
+        - {find: "scale_factor=3.0",   replace: "scale_factor=6.0"}
+      letsplot:
+        - {find: "ggsize(1600, 900)",  replace: "ggsize(800, 450)"}
+        - {regex: 'scale=3\b',         replace: "scale=6"}
+      bokeh:
+        - {find: "width=4800",  replace: "width=2400"}
+        - {find: "height=2700", replace: "height=1350"}
+        - {find: "width=3600",  replace: "width=1800"}
+        - {find: "height=3600", replace: "height=1800"}
+        - {find: "W, H = 4800, 2700", replace: "W, H = 2400, 1350"}
+        - {find: "W, H = 3600, 3600", replace: "W, H = 1800, 1800"}
+        - {find: '"28pt"', replace: '"56pt"'}
+        - {find: '"22pt"', replace: '"44pt"'}
+        - {find: '"18pt"', replace: '"36pt"'}
+        - {find: '"16pt"', replace: '"32pt"'}
+        - {regex: 'line_width\s*=\s*4\b', replace: "line_width=8"}
+        - {regex: 'line_width\s*=\s*3\b', replace: "line_width=6"}
+        - {regex: 'line_width\s*=\s*2\b', replace: "line_width=4"}
+      highcharts:
+        - {find: "--window-size=4800,2700", replace: "--window-size=2400,1350"}
+        - {find: "--window-size=3600,3600", replace: "--window-size=1800,1800"}
+        - {find: '"width": 4800,',  replace: '"width": 2400,'}
+        - {find: '"height": 2700,', replace: '"height": 1350,'}
+        - {find: '"width": 3600,',  replace: '"width": 1800,'}
+        - {find: '"height": 3600,', replace: '"height": 1800,'}
+        - {find: 'style="width: 4800px; height: 2700px;"', replace: 'style="width: 2400px; height: 1350px;"'}
+        - {find: 'style="width: 3600px; height: 3600px;"', replace: 'style="width: 1800px; height: 1800px;"'}
+        - {find: '"fontSize": "28px"', replace: '"fontSize": "56px"'}
+        - {find: '"fontSize": "22px"', replace: '"fontSize": "44px"'}
+        - {find: '"fontSize": "18px"', replace: '"fontSize": "36px"'}
+        - {find: '"fontSize": "16px"', replace: '"fontSize": "32px"'}
+        - {regex: '"lineWidth":\s*4\b', replace: '"lineWidth": 8'}
+        - {regex: '"radius":\s*6\b',    replace: '"radius": 12'}
+        - {regex: '"radius":\s*5\b',    replace: '"radius": 10'}
+      pygal:
+        - {find: "width=4800",  replace: "width=2400"}
+        - {find: "height=2700", replace: "height=1350"}
+        - {find: "width=3600",  replace: "width=1800"}
+        - {find: "height=3600", replace: "height=1800"}
+        - {regex: 'title_font_size\s*=\s*28\b',       replace: "title_font_size=56"}
+        - {regex: 'label_font_size\s*=\s*22\b',       replace: "label_font_size=44"}
+        - {regex: 'major_label_font_size\s*=\s*18\b', replace: "major_label_font_size=36"}
+        - {regex: 'legend_font_size\s*=\s*16\b',      replace: "legend_font_size=32"}
+        - {regex: 'value_font_size\s*=\s*14\b',       replace: "value_font_size=28"}
+        - {regex: 'stroke_width\s*=\s*3\b',           replace: "stroke_width=6"}
+
+  B_canvas_2400_keep_dpi:
+    description: "Source PNG shrinks to 2400x1350 (no DPI compensation). Fonts/lines/markers unchanged in pt/px - become relatively 2x larger. Trade-off: less 4K-detail, smaller bytes."
+    patches:
+      matplotlib:
+        - {find: "dpi=300", replace: "dpi=150"}
+      seaborn:
+        - {find: "dpi=300", replace: "dpi=150"}
+      plotnine:
+        - {find: "dpi=300", replace: "dpi=150"}
+      plotly:
+        - {find: "width=1600", replace: "width=800"}
+        - {find: "height=900", replace: "height=450"}
+      altair:
+        - {find: "width=1600", replace: "width=800"}
+        - {find: "height=900", replace: "height=450"}
+      letsplot:
+        - {find: "ggsize(1600, 900)", replace: "ggsize(800, 450)"}
+      bokeh:
+        - {find: "width=4800",  replace: "width=2400"}
+        - {find: "height=2700", replace: "height=1350"}
+        - {find: "width=3600",  replace: "width=1800"}
+        - {find: "height=3600", replace: "height=1800"}
+        - {find: "W, H = 4800, 2700", replace: "W, H = 2400, 1350"}
+        - {find: "W, H = 3600, 3600", replace: "W, H = 1800, 1800"}
+      highcharts:
+        - {find: "--window-size=4800,2700", replace: "--window-size=2400,1350"}
+        - {find: "--window-size=3600,3600", replace: "--window-size=1800,1800"}
+        - {find: '"width": 4800,',  replace: '"width": 2400,'}
+        - {find: '"height": 2700,', replace: '"height": 1350,'}
+        - {find: '"width": 3600,',  replace: '"width": 1800,'}
+        - {find: '"height": 3600,', replace: '"height": 1800,'}
+        - {find: 'style="width: 4800px; height: 2700px;"', replace: 'style="width: 2400px; height: 1350px;"'}
+        - {find: 'style="width: 3600px; height: 3600px;"', replace: 'style="width: 1800px; height: 1800px;"'}
+      pygal:
+        - {find: "width=4800",  replace: "width=2400"}
+        - {find: "height=2700", replace: "height=1350"}
+        - {find: "width=3600",  replace: "width=1800"}
+        - {find: "height=3600", replace: "height=1800"}
+
+  C_outliers_only:
+    description: "Only patch bokeh/highcharts/pygal (the 3 native-px outliers). Font x ~2.5, line x ~2.5, marker x ~2.5. Other 6 libraries unchanged."
+    patches:
+      bokeh:
+        - {find: '"28pt"', replace: '"70pt"'}
+        - {find: '"22pt"', replace: '"55pt"'}
+        - {find: '"18pt"', replace: '"45pt"'}
+        - {find: '"16pt"', replace: '"40pt"'}
+        - {regex: 'line_width\s*=\s*4\b', replace: "line_width=10"}
+        - {regex: 'line_width\s*=\s*3\b', replace: "line_width=8"}
+        - {regex: 'line_width\s*=\s*2\b', replace: "line_width=5"}
+      highcharts:
+        - {find: '"fontSize": "28px"', replace: '"fontSize": "70px"'}
+        - {find: '"fontSize": "22px"', replace: '"fontSize": "55px"'}
+        - {find: '"fontSize": "18px"', replace: '"fontSize": "45px"'}
+        - {find: '"fontSize": "16px"', replace: '"fontSize": "40px"'}
+        - {regex: '"lineWidth":\s*4\b', replace: '"lineWidth": 10'}
+        - {regex: '"radius":\s*6\b',    replace: '"radius": 15'}
+        - {regex: '"radius":\s*5\b',    replace: '"radius": 12'}
+      pygal:
+        - {regex: 'title_font_size\s*=\s*28\b',       replace: "title_font_size=70"}
+        - {regex: 'label_font_size\s*=\s*22\b',       replace: "label_font_size=55"}
+        - {regex: 'major_label_font_size\s*=\s*18\b', replace: "major_label_font_size=45"}
+        - {regex: 'legend_font_size\s*=\s*16\b',      replace: "legend_font_size=40"}
+        - {regex: 'value_font_size\s*=\s*14\b',       replace: "value_font_size=35"}
+        - {regex: 'stroke_width\s*=\s*3\b',           replace: "stroke_width=8"}
+
+  D_canvas_half_dpi_double_plus_aggressive_outliers:
+    description: "A + C combined with aggressive (~3x) outlier boost. Upper-bound sanity check - tests if A's gain plus extra outlier-headroom over-saturates."
+    patches:
+      matplotlib:
+        - {find: "figsize=(16, 9)", replace: "figsize=(8, 4.5)"}
+        - {find: "dpi=300",         replace: "dpi=600"}
+      seaborn:
+        - {find: "figsize=(16, 9)", replace: "figsize=(8, 4.5)"}
+        - {find: "dpi=300",         replace: "dpi=600"}
+      plotnine:
+        - {find: "figure_size=(16, 9)", replace: "figure_size=(8, 4.5)"}
+        - {find: "dpi=300",             replace: "dpi=600"}
+      plotly:
+        - {find: "width=1600", replace: "width=800"}
+        - {find: "height=900", replace: "height=450"}
+        - {regex: 'scale=3\b', replace: "scale=6"}
+      altair:
+        - {find: "width=1600",         replace: "width=800"}
+        - {find: "height=900",         replace: "height=450"}
+        - {find: "scale_factor=3.0",   replace: "scale_factor=6.0"}
+      letsplot:
+        - {find: "ggsize(1600, 900)",  replace: "ggsize(800, 450)"}
+        - {regex: 'scale=3\b',         replace: "scale=6"}
+      bokeh:
+        - {find: "width=4800",  replace: "width=2400"}
+        - {find: "height=2700", replace: "height=1350"}
+        - {find: "width=3600",  replace: "width=1800"}
+        - {find: "height=3600", replace: "height=1800"}
+        - {find: "W, H = 4800, 2700", replace: "W, H = 2400, 1350"}
+        - {find: "W, H = 3600, 3600", replace: "W, H = 1800, 1800"}
+        - {find: '"28pt"', replace: '"84pt"'}
+        - {find: '"22pt"', replace: '"66pt"'}
+        - {find: '"18pt"', replace: '"54pt"'}
+        - {find: '"16pt"', replace: '"48pt"'}
+        - {regex: 'line_width\s*=\s*4\b', replace: "line_width=12"}
+        - {regex: 'line_width\s*=\s*3\b', replace: "line_width=9"}
+        - {regex: 'line_width\s*=\s*2\b', replace: "line_width=6"}
+      highcharts:
+        - {find: "--window-size=4800,2700", replace: "--window-size=2400,1350"}
+        - {find: "--window-size=3600,3600", replace: "--window-size=1800,1800"}
+        - {find: '"width": 4800,',  replace: '"width": 2400,'}
+        - {find: '"height": 2700,', replace: '"height": 1350,'}
+        - {find: '"width": 3600,',  replace: '"width": 1800,'}
+        - {find: '"height": 3600,', replace: '"height": 1800,'}
+        - {find: 'style="width: 4800px; height: 2700px;"', replace: 'style="width: 2400px; height: 1350px;"'}
+        - {find: 'style="width: 3600px; height: 3600px;"', replace: 'style="width: 1800px; height: 1800px;"'}
+        - {find: '"fontSize": "28px"', replace: '"fontSize": "84px"'}
+        - {find: '"fontSize": "22px"', replace: '"fontSize": "66px"'}
+        - {find: '"fontSize": "18px"', replace: '"fontSize": "54px"'}
+        - {find: '"fontSize": "16px"', replace: '"fontSize": "48px"'}
+        - {regex: '"lineWidth":\s*4\b', replace: '"lineWidth": 12'}
+        - {regex: '"radius":\s*6\b',    replace: '"radius": 18'}
+        - {regex: '"radius":\s*5\b',    replace: '"radius": 15'}
+      pygal:
+        - {find: "width=4800",  replace: "width=2400"}
+        - {find: "height=2700", replace: "height=1350"}
+        - {find: "width=3600",  replace: "width=1800"}
+        - {find: "height=3600", replace: "height=1800"}
+        - {regex: 'title_font_size\s*=\s*28\b',       replace: "title_font_size=84"}
+        - {regex: 'label_font_size\s*=\s*22\b',       replace: "label_font_size=66"}
+        - {regex: 'major_label_font_size\s*=\s*18\b', replace: "major_label_font_size=54"}
+        - {regex: 'legend_font_size\s*=\s*16\b',      replace: "legend_font_size=48"}
+        - {regex: 'value_font_size\s*=\s*14\b',       replace: "value_font_size=42"}
+        - {regex: 'stroke_width\s*=\s*3\b',           replace: "stroke_width=9"}
+
   palette_tableau:
     description: "Tableau-10 categorical palette in place of Okabe-Ito (visual sanity check, not a real proposal)."
     patches:

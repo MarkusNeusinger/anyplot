@@ -35,11 +35,14 @@ import atexit
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
 import sys
+import threading
 import time
 import webbrowser
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
@@ -142,10 +145,13 @@ def apply_patches(text: str, patches: list[Patch]) -> tuple[str, int]:
 
 
 _pending_restores: dict[Path, str] = {}
+_restores_lock = threading.Lock()
 
 
 def _restore_all() -> None:
-    for path, original in list(_pending_restores.items()):
+    with _restores_lock:
+        items = list(_pending_restores.items())
+    for path, original in items:
         try:
             path.write_text(original)
         except Exception as exc:
@@ -153,7 +159,8 @@ def _restore_all() -> None:
                   f"will retry on next cleanup hook",
                   file=sys.stderr)
             continue
-        _pending_restores.pop(path, None)
+        with _restores_lock:
+            _pending_restores.pop(path, None)
 
 
 def _signal_handler(signum: int, frame: Any) -> None:
@@ -183,13 +190,15 @@ def patched_in_place(impl_path: Path, patches: list[Patch]):
         yield 0
         return
     patched, n_applied = apply_patches(original, patches)
-    _pending_restores[impl_path] = original
+    with _restores_lock:
+        _pending_restores[impl_path] = original
     try:
         impl_path.write_text(patched)
         yield n_applied
     finally:
         impl_path.write_text(original)
-        _pending_restores.pop(impl_path, None)
+        with _restores_lock:
+            _pending_restores.pop(impl_path, None)
 
 
 def render_one_theme(impl_path: Path, run_dir: Path, theme: str) -> None:
@@ -199,10 +208,20 @@ def render_one_theme(impl_path: Path, run_dir: Path, theme: str) -> None:
     cmd = ["uv", "run", "python", "-P", str(impl_path)]
     log = run_dir / f"run-{theme}.log"
     with log.open("w") as f:
-        f.write(f"$ ANYPLOT_THEME={theme} {' '.join(cmd)}\n\n")
+        f.write(f"$ ANYPLOT_THEME={theme} DISPLAY={env.get('DISPLAY', '')} {' '.join(cmd)}\n\n")
+        # If DISPLAY is already set (shared Xvfb started by main), use it directly.
+        # Otherwise fall back to per-render xvfb-run -a, then native (no X).
+        if env.get("DISPLAY"):
+            subprocess.run(
+                cmd,
+                cwd=run_dir, env=env, check=True,
+                stdout=f, stderr=subprocess.STDOUT,
+                timeout=RENDER_TIMEOUT_SEC,
+            )
+            return
         try:
             subprocess.run(
-                ["xvfb-run"] + cmd,
+                ["xvfb-run", "-a"] + cmd,
                 cwd=run_dir, env=env, check=True,
                 stdout=f, stderr=subprocess.STDOUT,
                 timeout=RENDER_TIMEOUT_SEC,
@@ -214,6 +233,27 @@ def render_one_theme(impl_path: Path, run_dir: Path, theme: str) -> None:
                 stdout=f, stderr=subprocess.STDOUT,
                 timeout=RENDER_TIMEOUT_SEC,
             )
+
+
+def start_shared_xvfb() -> tuple[subprocess.Popen, str] | tuple[None, None]:
+    """Start a single Xvfb for the whole experiment. Returns (proc, ':N')."""
+    if not shutil.which("Xvfb"):
+        return None, None
+    for n in range(99, 200):
+        if Path(f"/tmp/.X{n}-lock").exists():
+            continue
+        proc = subprocess.Popen(
+            ["Xvfb", f":{n}", "-screen", "0", "1920x1080x24", "-nolisten", "tcp"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+        time.sleep(0.7)
+        if proc.poll() is None and Path(f"/tmp/.X{n}-lock").exists():
+            return proc, f":{n}"
+        try:
+            proc.terminate()
+        except Exception:
+            pass
+    raise RuntimeError("No free Xvfb display in :99..:199")
 
 
 def run_one_combination(
@@ -348,8 +388,10 @@ def write_compare_html(
   <label>Thumbnail width:
     <select onchange="document.documentElement.style.setProperty('--thumb', this.value)">
       <option value="160px">160px (mobile thumbnail)</option>
-      <option value="320px" selected>320px (grid)</option>
+      <option value="320px">320px (grid)</option>
+      <option value="375px" selected>375px (iPhone viewport)</option>
       <option value="640px">640px (detail)</option>
+      <option value="700px">700px (Plot-of-the-Day)</option>
       <option value="1200px">1200px (large)</option>
     </select>
   </label>
@@ -404,6 +446,9 @@ def parse_args() -> argparse.Namespace:
                    help=f"Output directory (default: {DEFAULT_OUTPUT_ROOT}/<timestamp>)")
     p.add_argument("--open", dest="open_browser", action="store_true",
                    help="Open compare.html in the default browser when done")
+    p.add_argument("--parallel", type=int, default=1,
+                   help="Parallel (spec, library) workers. Each worker runs variants "
+                        "serially since they patch the same source file. Default 1.")
     return p.parse_args()
 
 
@@ -439,23 +484,74 @@ def main() -> int:
         print("Patches will still be reverted via try/finally, but verify with `git status` after.\n")
 
     total = len(specs) * len(libraries) * len(variants) * len(themes)
+    parallel = max(1, int(args.parallel))
     print(f"[style-experiment] {total} render(s) -> {output_root}")
-    print(f"[style-experiment] specs={specs} libs={libraries} variants={variant_names} themes={themes}\n")
+    print(f"[style-experiment] specs={specs} libs={libraries} variants={variant_names} themes={themes}")
+    print(f"[style-experiment] parallel workers={parallel} (one per spec,library pair)")
 
+    # Single shared Xvfb avoids xvfb-run display-allocation races with parallel workers.
+    xvfb_proc, xvfb_display = (None, None)
+    if not os.environ.get("DISPLAY"):
+        xvfb_proc, xvfb_display = start_shared_xvfb()
+        if xvfb_display:
+            os.environ["DISPLAY"] = xvfb_display
+            print(f"[style-experiment] shared Xvfb on {xvfb_display} (pid {xvfb_proc.pid})")
+            atexit.register(lambda: (xvfb_proc.terminate(), xvfb_proc.wait(timeout=3)) if xvfb_proc else None)
+
+    # Auto-detect a real chromedriver for bokeh's export_png (Ubuntu's /usr/bin/chromedriver is a snap stub).
+    # Selenium-manager downloads one to ~/.cache/selenium on first selenium.webdriver.Chrome() call.
+    if not os.environ.get("BOKEH_CHROMEDRIVER_PATH"):
+        cache = Path.home() / ".cache" / "selenium" / "chromedriver"
+        candidates = sorted(cache.glob("*/[0-9]*/chromedriver")) if cache.is_dir() else []
+        if candidates:
+            os.environ["BOKEH_CHROMEDRIVER_PATH"] = str(candidates[-1])
+            print(f"[style-experiment] BOKEH_CHROMEDRIVER_PATH={candidates[-1]}")
+        else:
+            print("[style-experiment] WARN: no selenium-managed chromedriver in cache; "
+                  "bokeh's export_png may fail. Run any bokeh impl using selenium.webdriver.Chrome "
+                  "once to populate ~/.cache/selenium, then retry.")
+    print()
+
+    work_units = [(spec, lib) for spec in specs for lib in libraries]
+    print_lock = threading.Lock()
     all_records: list[RunRecord] = []
-    i = 0
-    for spec in specs:
-        for lib in libraries:
-            for variant in variants:
-                i += 1
-                print(f"[{i}/{len(specs)*len(libraries)*len(variants)}] "
-                      f"{spec} / {lib} / {variant.name}")
-                records = run_one_combination(spec, lib, variant, themes, output_root)
-                for r in records:
-                    status = "OK" if r.success else "FAIL"
-                    print(f"    {r.theme:5s}  {status:4s}  {r.duration_sec}s"
-                          + (f"  ({r.error[:80]})" if r.error else ""))
-                all_records.extend(records)
+    records_lock = threading.Lock()
+    counter = {"done": 0}
+    total_units = len(work_units)
+
+    def process_unit(spec_lib: tuple[str, str]) -> list[RunRecord]:
+        spec, lib = spec_lib
+        unit_records: list[RunRecord] = []
+        for variant in variants:
+            recs = run_one_combination(spec, lib, variant, themes, output_root)
+            unit_records.extend(recs)
+        with print_lock:
+            counter["done"] += 1
+            n_ok = sum(1 for r in unit_records if r.success)
+            n_total = len(unit_records)
+            tag = "OK" if n_ok == n_total else f"{n_ok}/{n_total} ok"
+            print(f"[{counter['done']}/{total_units}] {spec} / {lib}: {tag}")
+            for r in unit_records:
+                if not r.success:
+                    print(f"    FAIL  {r.variant} {r.theme}: {(r.error or '')[:100]}")
+        return unit_records
+
+    if parallel == 1:
+        for unit in work_units:
+            recs = process_unit(unit)
+            all_records.extend(recs)
+    else:
+        with ThreadPoolExecutor(max_workers=parallel) as executor:
+            futures = {executor.submit(process_unit, u): u for u in work_units}
+            for fut in as_completed(futures):
+                try:
+                    recs = fut.result()
+                except Exception as exc:
+                    with print_lock:
+                        print(f"[style-experiment] ERROR in {futures[fut]}: {exc}")
+                    continue
+                with records_lock:
+                    all_records.extend(recs)
 
     write_manifest(output_root, all_records, variants)
     write_compare_html(output_root, all_records, variants, specs, libraries, themes)
