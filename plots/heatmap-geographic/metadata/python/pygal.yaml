@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T22:40:50Z'
-updated: '2026-05-18T23:55:56Z'
+updated: '2026-05-19T00:10:45Z'
 generated_by: claude-sonnet
 workflow_run: 26066738252
 issue: 3638
@@ -12,50 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 76
 review:
   strengths:
-  - Creative custom GeoHeatmap(Graph) subclass that properly extends pygal's internal
-    rendering pipeline via _plot() and _compute()
-  - Smooth density gradient with variable-opacity cells creates a visually clean heatmap
-    in light mode
-  - 'All spec-required features present: KDE-equivalent smoothing, colormap with transparency,
-    colorbar legend, coastline overlay, scatter point overlay'
-  - Good data storytelling -- three distinct hotspots with geographic context are
-    immediately readable
-  - np.random.seed(42) ensures reproducibility
+  - Custom GeoHeatmap class extending pygal's Graph base is an idiomatic and technically
+    correct approach for custom chart types in pygal
+  - Gaussian smoothing (manual convolution) creates smooth density appearance from
+    histogram data
+  - Colorbar with gradient segments and labeled tick values is well-designed
+  - Variable opacity (0.4-0.85) based on density value allows underlying geographic
+    context to show through
+  - California PM2.5 monitoring scenario is realistic and data values are plausible
+  - Both light and dark renders display with correct background themes and readable
+    text
   weaknesses:
-  - 'CRITICAL -- code/image mismatch: Code saves to plot.png not plot-{THEME}.png;
-    no ANYPLOT_THEME env-var read; background=''white'' (not theme-adaptive); all
-    text fill hardcoded to #333333 (black on dark background). Geographic data uses
-    California extent (lat 32.5-42, lon -125 to -114) but images show European extent
-    -- code cannot reproduce the shown images'
-  - 'Title wrong in code: ''heatmap-geographic - pygal - pyplots.ai'' -- missing python,
-    domain should be anyplot.ai; correct format: ''PM2.5 Air Quality - heatmap-geographic
-    - python - pygal - anyplot.ai'''
-  - 'Missing HTML output: Pygal''s distinctive feature is interactive SVG/HTML; chart.render()
-    written to plot-{THEME}.html is required'
-  - 'Dark-mode basemap: Inner plot rectangle uses hardcoded fill=#e8f4f8 -- in dark
-    mode this light-blue rect blends with the dark background to produce an olive/khaki
-    wash; should use the theme-adaptive background color'
-  - 'Colormap dark-end issue: Lowest-value cells use #ffffb2 (pale yellow) with partial
-    opacity; on dark background this creates the olive artifact -- consider making
-    near-zero cells fully transparent'
+  - Colormap should be viridis or cividis (or Reds/Blues for polarity-semantic heatmaps)
+    — YlOrRd is not in the approved list per the style guide
+  - 'Title separators use '' - '' (hyphen) instead of '' · '' (middle dot); fix: ''PM2.5
+    Air Quality · heatmap-geographic · python · pygal · anyplot.ai'''
+  - 'No ANYPLOT_THEME env var handling: background, plot_background, and all SVG fill
+    attributes are hardcoded — must read os.getenv(''ANYPLOT_THEME'', ''light'') and
+    derive PAGE_BG/INK tokens'
+  - 'Plot background uses #e8f4f8 (blue-gray) instead of the required #FAF8F1 (light)
+    / #1A1A17 (dark)'
+  - Output file saved as plot.png instead of f'plot-{THEME}.png'
+  - The rendered coordinate display (European range ~44-60°N) does not match California
+    data description — data coordinates may be getting incorrectly mapped through
+    pygal's coordinate system
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) -- correct theme surface
-      Chrome: Title "PM2.5 Air Quality - heatmap-geographic - python - pygal - anyplot.ai" readable in dark text. Axis labels "Latitude (N)" and "Longitude (E)" with units are clearly readable. Tick labels (44/47/50/54/57/60 on Y; -8/-2/+4/+10/+16/+22 on X) are legible. Colorbar labels (0-159) readable.
-      Data: Three hotspot clusters visible with YlOrRd gradient (pale yellow -> orange -> deep red for high density). Teal/green station dots overlay the clusters. Dark-gray coastlines provide geographic context. Variable-opacity cells fade to transparent for low-density areas, allowing warm background to show through cleanly.
+      Background: Warm off-white approximately #FAF8F1; plot area is light blue-gray (#e8f4f8)
+      Chrome: Title "PM2.5 Air Quality - heatmap-geographic - python - pygal - anyplot.ai" in dark text — readable. Axis labels "Longitude (°)" and "Latitude (°)" in dark bold text — readable. Tick labels dark and well-spaced — readable. Colorbar "Density" label and tick values (77.2, 57.9, 38.6, 19.3, 0.0) in dark text — readable.
+      Data: Three density hotspot clusters shown via YlOrRd gradient (yellow=low, red=high). Teal-blue station scatter dots overlaid. Dark gray coastline polyline. Colorbar gradient on right side.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) -- correct dark theme surface
-      Chrome: Title, axis labels, and tick labels appear in light text and are readable against the dark background. Colorbar labels visible. No dark-on-dark failures for text elements.
-      Data: Colors are the same YlOrRd gradient as light render -- data colors are identical (positions 1-7 unchanged). However, the low-density heatmap cells (pale yellow #ffffb2 at partial opacity) blend with the dark background to produce an olive/khaki wash over the map area. This is caused by the hardcoded #e8f4f8 background rectangle inside the plot area interacting with the dark theme. The three hotspot clusters (orange-red) remain clearly distinguishable. Station dots (teal-green) are visible.
-      Legibility verdict: PASS for text; DEGRADED for map basemap area due to olive color wash from non-theme-adaptive background rect
+      Background: Near-black approximately #1A1A17; plot area also very dark (near-black)
+      Chrome: Title appears in white/light text — readable. Axis labels appear in light text — readable. Tick labels appear in light-colored text — readable. Colorbar labels appear in light text — readable. No dark-on-dark text failures detected.
+      Data: Same YlOrRd density gradient colors as light render — hotspot reds and yellows identical, confirming data colors are theme-independent. Teal-green station dots visible. Coastline appears as light gray polyline.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 24
       max: 30
       items:
       - id: VQ-01
@@ -63,50 +61,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All labels readable in both renders; tick labels slightly small in
-          dark render
+        comment: Font sizes generous (axis 48px, ticks 36px); both renders readable.
+          Minor deduction for hardcoded fill=#333333 instead of theme-adaptive tokens.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: Tick and colorbar labels well-spaced. Minor crowding in dense scatter
+          point regions is expected.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Light render excellent; dark render has olive background wash for
-          low-density cells
+        comment: Heatmap, coastline, scatter points, colorbar all clearly visible.
+          Slight deduction for scatter points (r=12) obscuring heatmap in dense areas.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: No red-green sole signal; station dots teal, CVD-safe
+        passed: false
+        comment: YlOrRd not optimal for CVD; deuteranopia users may struggle with
+          yellow-red gradient. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions; dark-mode basemap rectangle creates jarring olive
-          tint
+        comment: 4800x2700 canvas used well. Colorbar well-placed. Minor wasted space
+          at top margin.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled with units; title follows correct format in rendered
-          image
+        comment: Longitude (°) and Latitude (°) descriptive with units. Title present.
       - id: VQ-07
         name: Palette Compliance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Backgrounds correct in images; YlOrRd explicitly cited as example
-          in spec
+        passed: false
+        comment: 'Plot backgrounds appear theme-correct (#FAF8F1 light / #1A1A17 dark).
+          YlOrRd used instead of approved viridis/cividis/Reds for continuous data.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -114,22 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom SVG-level GeoHeatmap class with colorbar, station legend,
-          coastlines -- above default but not exceptional
+        comment: Custom GeoHeatmap class with SVG node manipulation is sophisticated.
+          Variable opacity and colorbar show design intent. Non-standard blue plot
+          background and clinical aesthetic limit score.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Clean axis labels, subtle grid lines; dark render olive basemap is
-          a notable refinement miss
+        comment: No default spine clutter. Grid lines at 0.5 opacity are appropriately
+          subtle. Coastline adds refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Three hotspots visually distinct; colorbar anchors scale; coastlines
-          tie data to geography
+        comment: Three density clusters immediately identifiable. Coastline provides
+          geographic context. Color gradient naturally draws eye to hotspots. Lacks
+          annotation on peak clusters.
     spec_compliance:
       score: 13
       max: 15
@@ -139,29 +140,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Geographic heatmap with smooth density estimation
+        comment: Correct geographic heatmap with spatial density visualization.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Gaussian-smoothed 2D histogram, YlOrRd colormap with opacity, colorbar,
-          coastlines -- all present
+        comment: 'Has: 2D histogram + Gaussian smoothing, sequential colormap, colorbar,
+          coastline boundary, variable transparency. Missing: proper basemap (coastline
+          is a rough approximation).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Latitude on Y, longitude on X, density as color
+        comment: Lat/Lon correctly mapped on Y/X axes; density shown via color intensity.
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: Image shows correct title; code has 'heatmap-geographic - pygal -
-          pyplots.ai' -- missing python, wrong domain
+        comment: All required components present but title uses ' - ' (hyphen) separators
+          instead of required ' · ' (middle dot) format.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
@@ -169,23 +171,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: KDE-like smoothing, colorbar, scatter overlay, coastline context,
-          variable opacity
+        comment: Demonstrates density heatmap, geographic coordinates, coastline overlay,
+          scatter overlay, colorbar, and Gaussian smoothing — full coverage.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: PM2.5 air quality monitoring scenario is realistic, plausible, and
-          neutral
+        comment: 'California PM2.5 monitoring is realistic and neutral. Minor concern:
+          rendered coordinates appear in European range, inconsistent with California
+          data.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: PM2.5 values 0-159 realistic; geographic extent sensible
+        comment: 500 data points in sensible range. Exponential distribution with
+          scale=50 for PM2.5 is plausible.
     code_quality:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: CQ-01
@@ -193,64 +197,66 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Custom class necessary for pygal geographic extension; acceptable
-          trade-off
+        comment: GeoHeatmap class is necessary for pygal custom rendering. Reasonably
+          structured but adds complexity.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Only used imports; sys path manipulation justified
+        passed: false
+        comment: 'sys path manipulation with # noqa: E402 comments indicates a workaround;
+          not clean.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: No fake UI. Appropriate complexity for the custom chart type.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves to plot.png not plot-{THEME}.png; no ANYPLOT_THEME; no HTML
-          output
+        comment: Saves to plot.png not plot-{THEME}.png. ANYPLOT_THEME env var not
+          read. All colors hardcoded.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Extends pygal.graph.graph.Graph, uses self.svg.node() for SVG generation,
+          uses Style object — all idiomatic pygal patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Extends Graph, overrides _plot() and _compute(), uses self.svg.node()
-          API correctly
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Uses SVG pipeline; misses pygal's defining interactive HTML output
-          feature
+        comment: Class inheritance from Graph base and direct SVG node manipulation
+          are distinctive pygal capabilities. Custom _plot() and _compute() overrides
+          are the canonical extension pattern.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - custom-legend
-  - annotations
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep:
   - binning
+  - interpolation
   styling:
   - alpha-blending
   - custom-colormap
