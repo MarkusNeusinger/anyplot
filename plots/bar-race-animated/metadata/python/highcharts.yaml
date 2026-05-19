@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: bar-race-animated
 created: '2026-01-11T00:19:53Z'
-updated: '2026-05-19T02:14:51Z'
+updated: '2026-05-19T02:27:38Z'
 generated_by: claude-sonnet
 workflow_run: 26071381995
 issue: 3653
@@ -12,45 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/highcharts/plot-dark.html
-quality_score: 85
+quality_score: 83
 review:
   strengths:
-  - 'Perfect spec compliance: small multiples correctly implements the bar-race spec
-    fallback with all required features (sorted bars, entity labels, time indicator,
-    consistent colors).'
-  - 'Flawless code quality: clean KISS structure, seed set, correct output files (plot-light/dark.png
-    and .html).'
-  - 'Excellent palette and theme compliance: Okabe-Ito in canonical order with adaptive
-    neutral for position 8; correct background tokens in both themes with no dark-on-dark
-    failures.'
-  - Per-point Highcharts color assignment enables per-entity color tracking across
-    panels — core bar-race mechanic correctly implemented.
+  - 'Perfect spec compliance: all required bar-race features present with correct
+    static fallback (small multiples grid).'
+  - Clean code structure with seed, adaptive theme tokens, and proper HTML+PNG dual
+    output.
+  - Consistent per-entity Okabe-Ito coloring maintained across all 6 year panels.
+  - Card-like chart containers with rounded corners give the grid a polished, dashboard-like
+    appearance.
+  - Both light and dark renders are fully readable with correct backgrounds and adaptive
+    chrome.
   weaknesses:
-  - 'Design Excellence gap (DE-03): no emphasis or annotation highlights the most
-    dramatic rank changes — DigiWave''s crash from ~125B (2020) to ~10B (2022) is
-    the key story and goes unannounced. Add rank number labels (#1, #2...) next to
-    bars or a callout on the most dramatic mover.'
-  - 'DE-01 moderate: elevated panel backgrounds are a nice touch but the overall look
-    remains a clean default grid — no typographic hierarchy beyond year labels. Bold
-    or larger data labels for top-ranked bars would raise this.'
-  - 'LM-02 minor: Highcharts multi-chart assembly is functional but doesn''t leverage
-    synchronized crosshair, shared tooltip, or rank-based plotBands/annotations that
-    are distinctive Highcharts features.'
+  - Extreme outlier values (DataSphere in 2022 ~$3000B, TechCorp Alpha in 2024 ~$2926B)
+    distort the shared x-axis scale, compressing most bars in those panels to a fraction
+    of panel width.
+  - No visual storytelling emphasis — no highlighted 'winner' bar, no callout for
+    the most dramatic ranking change, no leader annotation.
+  - 'Design Excellence headroom: DE-01 could reach 6-7 with a subtle rank-change indicator
+    or emphasis on the leading entity per year.'
   image_description: |-
     Light render (plot-light.png):
       Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Main title "bar-race-animated · python · highcharts · anyplot.ai" in dark ink (52px bold), subtitle in INK_MUTED (30px). Year panel titles in dark INK (38px bold). Company labels on y-axis in INK_SOFT (22px). Market Value ($B) axis label in INK (22px). Tick labels in INK_SOFT (18px). All readable.
-      Data: TechCorp Alpha = #009E73 (green, position 1), DataSphere = #D55E00 (vermillion, position 2), CloudNine = #0072B2 (blue, position 3), InnovateTech = #CC79A7 (reddish purple, position 4), CyberCore = #E69F00 (orange, position 5), QuantumByte = #56B4E9 (sky blue, position 6), NetPrime = #F0E442 (yellow, position 7), DigiWave = #1A1A1A (adaptive neutral, position 8). First series is #009E73. Data labels show $XB formatted values on bars.
+      Chrome: Main title "bar-race-animated · python · highcharts · anyplot.ai" in dark ink, subtitle in muted dark ink, year labels bold and dark — all clearly readable against the light surface.
+      Data: 8 companies colored with Okabe-Ito positions 1–8. First entity (TechCorp Alpha) is #009E73 (brand green). Bars have inline data labels (e.g. "$1888B") in dark ink. All bars distinguishable.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Dark near-black #1A1A17 — correct, not pure black.
-      Chrome: Main title and subtitle in light INK (#F0EFE8) — clearly readable. Year panel titles in light INK. Company labels in INK_SOFT (#B8B7B0). Axis labels in light INK. Tick labels in INK_SOFT. No dark-on-dark failures detected. Elevated panel backgrounds are #242420 providing subtle separation from page background.
-      Data: Data colors for positions 1–7 are identical to light render (#009E73, #D55E00, #0072B2, #CC79A7, #E69F00, #56B4E9, #F0E442). DigiWave correctly switches to #E8E8E0 (near-white adaptive neutral) — correctly handles dark mode for position 8. Bar colors clearly distinguishable against dark background.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Main title, subtitle, year labels, company names, axis tick labels all render in light ink (#F0EFE8 / #B8B7B0). No dark-on-dark failures detected. Grid lines subtle (rgba opacity 10%).
+      Data: Okabe-Ito colors identical to light render for positions 1–7. Adaptive neutral (DigiWave, position 8) correctly flips to #E8E8E0.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -58,79 +54,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (title 52px, year labels 38px bold, company
-          labels 22px, axis label 22px, ticks 18px, data labels 19px). Data labels
-          at 19px are minimum for canvas size.
+        comment: All font sizes explicitly set (52px main title, 38px year labels,
+          22px axis labels, 18px ticks, 19px data labels); all readable in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text; company labels and bar data labels all clear.
+        comment: No text collisions in any of the 6 panels in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Bars clearly visible with consistent pointWidth=58; no crowding across
-          6 panels.
+        comment: Bars visible with data labels; extreme outliers in 2022 (~$3000B)
+          and 2024 (~$2926B) compress most other bars to fraction of panel width
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; all 8 bars distinguishable without
-          relying on hue alone.
+        comment: Okabe-Ito palette is CVD-safe; bars wide enough for shape-independent
+          identification
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 6 panels fill the 4800x2700 canvas well (~75% utilization). Minor
-          deduction for tight 28px gap between panels.
+        comment: 2x3 grid fills ~90% of 4800x2700 canvas; balanced margins; nothing
+          cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X-axis: ''Market Value ($B)'' with unit; main title correctly formatted;
-          subtitle provides context.'
+        comment: X-axis has units (Market Value $B); y-axis shows entity names
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (TechCorp Alpha) is #009E73; all 8 entities follow
-          Okabe-Ito canonical order with correct position-8 adaptive neutral; backgrounds
-          #FAF8F1/#1A1A17; chrome theme-correct in both renders.'
+        comment: 'First entity is #009E73; Okabe-Ito order maintained; backgrounds
+          #FAF8F1/#1A1A17; all chrome is theme-adaptive'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Well-configured above defaults: correct palette, elevated panel
-          backgrounds with rounded corners. But fundamentally a small-multiples grid
-          without exceptional visual hierarchy.'
+        passed: true
+        comment: Above plain defaults with card-like rounded containers and consistent
+          Okabe-Ito palette; not yet publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: no bar borders (borderWidth:0), subtle GRID-colored
-          gridlines, elevated panel backgrounds (ELEVATED_BG), no legend, rounded
-          corners on containers.'
+        comment: Subtle 10% opacity grid, borderWidth 0 on bars, credits disabled,
+          custom margins, elevated-bg containers
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Consistent per-entity colors allow cross-panel tracking. Sorted ordering
-          reveals ranking. But no emphasis highlights dramatic movers (DigiWave crash
-          in 2022 is key story).
+        comment: Small multiples show time progression effectively but no visual emphasis
+          on ranking leader or most dramatic change
     spec_compliance:
       score: 15
       max: 15
@@ -140,54 +130,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct small-multiples horizontal bar chart per spec fallback for
-          static/non-animated output.
+        comment: Horizontal bar chart in small-multiples grid; valid static fallback
+          per spec
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bars sorted by value at each frame; entity labels attached to bars;
-          visible time indicator (year labels); consistent entity colors across frames.
+        comment: Bars sorted by value each frame; entity labels attached; visible
+          time indicator; colors consistent per entity
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Market Value ($B); Y-axis: companies sorted by value; bars
-          encode value correctly.'
+        comment: Companies on y-axis, market value on x-axis; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''bar-race-animated · python · highcharts · anyplot.ai'';
-          no legend (appropriately disabled).'
+        comment: Title exactly 'bar-race-animated · python · highcharts · anyplot.ai';
+          no legend needed
     data_quality:
-      score: 14
+      score: 12
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows 8 entities over 6 time snapshots with clear ranking changes
-          (DigiWave crash, QuantumByte rise).
+        comment: Rankings change year-to-year across 8 entities and 6 snapshots; minor
+          deduction for limited dramatic rank crossings in middle years
       - id: DQ-02
         name: Realistic Context
         score: 4
         max: 5
         passed: true
-        comment: Fictional tech company names with plausible market cap values in
-          a neutral business context. Slightly generic.
+        comment: Fictional tech company names in plausible market-value scenario;
+          neutral topic with descriptive subtitle
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Market values range ~10B-450B, appropriate for mid-large tech firms
-          2019-2024.
+        comment: Most values plausible; single extreme outlier (~$3000B for DataSphere
+          in 2022) is unrealistic relative to peers
     code_quality:
       score: 10
       max: 10
@@ -197,34 +186,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports → theme tokens → data → loop over years → HTML
-          assembly → save.'
+        comment: Linear Imports->Data->Chart loop->HTML assembly->Save; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused libraries.
+        comment: All imported modules are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loop over years; per-point color assignment is concise; HTML
-          assembly readable.
+        comment: Clean, Pythonic; list comprehension for chart scripts; appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Highcharts
-          API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
     library_mastery:
       score: 7
       max: 10
@@ -234,17 +222,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct Chart/HighchartsOptions/BarSeries API; container specified;
-          data labels via data_labels dict; options via dict assignments.
+        comment: 'Uses Chart, HighchartsOptions, BarSeries, chart.to_js_literal()
+          correctly; per-point color assignment via {color: ...} in series data is
+          idiomatic Highcharts'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Per-point color assignment via data dict; formatted data labels with
-          ${point.y:.0f}B syntax; HTML multi-chart assembly. Could leverage synchronized
-          axes, custom tooltips, or plotBands.
-  verdict: REJECTED
+        passed: true
+        comment: Uses to_js_literal() for HTML embedding, per-point color overrides,
+          and Highcharts format-string data labels (${point.y:.0f}B)
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
