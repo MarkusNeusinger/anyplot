@@ -6,7 +6,7 @@ title: Exponential Moving Average (EMA) Indicator Chart
 
 # Specification tracking
 created: 2026-01-11T00:09:02Z
-updated: null
+updated: 2026-05-19T12:47:32Z
 issue: 3652
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - indicator
   data_type:
     - timeseries
     - numeric
