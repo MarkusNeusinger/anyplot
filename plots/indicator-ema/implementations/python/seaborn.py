@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-11
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-19
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,81 +12,119 @@ import pandas as pd
 import seaborn as sns
 
 
-# Generate realistic stock price data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette — positions 1, 2, 3
+OKABE = ["#009E73", "#D55E00", "#0072B2"]
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+
+# Data — $200 starting price with higher volatility to diverge from sibling impls
 np.random.seed(42)
-n_days = 120
+n_days = 150
+dates = pd.date_range(start="2024-03-01", periods=n_days, freq="B")
+returns = np.random.normal(0.001, 0.025, n_days)
+price = 200 * np.cumprod(1 + returns)
 
-# Create date range for trading days
-dates = pd.date_range(start="2024-01-02", periods=n_days, freq="B")
-
-# Generate price data with realistic stock movement pattern
-# Start at $150, add trend and volatility
-returns = np.random.normal(0.0008, 0.018, n_days)
-price = 150 * np.cumprod(1 + returns)
-
-# Calculate EMAs using pandas ewm
 price_series = pd.Series(price)
 ema_12 = price_series.ewm(span=12, adjust=False).mean().values
 ema_26 = price_series.ewm(span=26, adjust=False).mean().values
 
-# Create DataFrame
-df = pd.DataFrame({"date": dates, "close": price, "ema_12": ema_12, "ema_26": ema_26})
+df = pd.DataFrame({"date": dates, "Close Price": price, "EMA 12": ema_12, "EMA 26": ema_26})
 
-# Prepare data for seaborn (long format)
-df_long = df.melt(id_vars=["date"], value_vars=["close", "ema_12", "ema_26"], var_name="series", value_name="price")
+# Crossover detection before melting
+cross_up = (df["EMA 12"].shift(1) < df["EMA 26"].shift(1)) & (df["EMA 12"] > df["EMA 26"])
+cross_down = (df["EMA 12"].shift(1) > df["EMA 26"].shift(1)) & (df["EMA 12"] < df["EMA 26"])
 
-# Map series names to display labels
-series_labels = {"close": "Close Price", "ema_12": "EMA 12", "ema_26": "EMA 26"}
-df_long["series_label"] = df_long["series"].map(series_labels)
+# Long format for idiomatic seaborn hue grouping
+df_long = df.melt(
+    id_vars=["date"], value_vars=["Close Price", "EMA 12", "EMA 26"], var_name="series", value_name="price"
+)
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-sns.set_style("whitegrid")
+# Plot
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Define colors: Python Blue for price, Python Yellow for short EMA, distinct color for long EMA
-palette = {"Close Price": "#306998", "EMA 12": "#FFD43B", "EMA 26": "#E74C3C"}
+palette = {"Close Price": OKABE[0], "EMA 12": OKABE[1], "EMA 26": OKABE[2]}
 
-# Line widths: price thicker, EMAs thinner
-linewidths = {"Close Price": 3.5, "EMA 12": 2.5, "EMA 26": 2.5}
+sns.lineplot(
+    data=df_long,
+    x="date",
+    y="price",
+    hue="series",
+    hue_order=["Close Price", "EMA 12", "EMA 26"],
+    palette=palette,
+    ax=ax,
+)
 
-# Plot each series with seaborn
-for series_label in ["Close Price", "EMA 12", "EMA 26"]:
-    series_data = df_long[df_long["series_label"] == series_label]
-    sns.lineplot(
-        data=series_data,
-        x="date",
-        y="price",
-        ax=ax,
-        color=palette[series_label],
-        linewidth=linewidths[series_label],
-        label=series_label,
-    )
+# Set linewidths: price thicker, EMAs thinner
+for line, lw in zip(ax.get_lines(), [3.5, 2.5, 2.5], strict=False):
+    line.set_linewidth(lw)
 
-# Find crossover points (where EMA 12 crosses EMA 26)
-cross_up = (df["ema_12"].shift(1) < df["ema_26"].shift(1)) & (df["ema_12"] > df["ema_26"])
-cross_down = (df["ema_12"].shift(1) > df["ema_26"].shift(1)) & (df["ema_12"] < df["ema_26"])
+# Crossover markers — green up triangle (bullish), vermillion down triangle (bearish)
+ax.scatter(
+    df.loc[cross_up, "date"],
+    df.loc[cross_up, "EMA 12"],
+    color=OKABE[0],
+    s=250,
+    zorder=5,
+    marker="^",
+    edgecolors=PAGE_BG,
+    linewidth=1.0,
+)
+ax.scatter(
+    df.loc[cross_down, "date"],
+    df.loc[cross_down, "EMA 12"],
+    color=OKABE[1],
+    s=250,
+    zorder=5,
+    marker="v",
+    edgecolors=PAGE_BG,
+    linewidth=1.0,
+)
 
-# Mark crossover points
-for idx in df[cross_up].index:
-    ax.scatter(df.loc[idx, "date"], df.loc[idx, "ema_12"], color="#27AE60", s=200, zorder=5, marker="^")
-for idx in df[cross_down].index:
-    ax.scatter(df.loc[idx, "date"], df.loc[idx, "ema_12"], color="#C0392B", s=200, zorder=5, marker="v")
+# Style
+ax.set_title("indicator-ema · python · seaborn · anyplot.ai", fontsize=24, fontweight="bold", pad=20, color=INK)
+ax.set_xlabel("Date", fontsize=20, color=INK)
+ax.set_ylabel("Price (USD)", fontsize=20, color=INK)
+ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Styling
-ax.set_title("indicator-ema \u00b7 seaborn \u00b7 pyplots.ai", fontsize=24, fontweight="bold", pad=20)
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Price (USD)", fontsize=20)
-ax.tick_params(axis="both", labelsize=16)
-
-# Format x-axis dates
 fig.autofmt_xdate(rotation=30)
 
-# Legend
-ax.legend(fontsize=16, loc="upper left", framealpha=0.9)
+# Legend — clean single entry per series from hue grouping
+legend = ax.legend(fontsize=16, loc="upper left")
+legend.get_frame().set_facecolor(ELEVATED_BG)
+legend.get_frame().set_edgecolor(INK_SOFT)
+for text in legend.get_texts():
+    text.set_color(INK)
 
-# Grid styling
-ax.grid(True, alpha=0.3, linestyle="--")
+# Grid — y-axis only, subtle
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8)
 ax.set_axisbelow(True)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
