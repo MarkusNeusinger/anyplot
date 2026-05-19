@@ -1,7 +1,7 @@
 """ anyplot.ai
 ternary-density: Ternary Density Plot
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 77/100 | Updated: 2026-05-19
+Quality: 72/100 | Updated: 2026-05-19
 """
 
 import numpy as np
