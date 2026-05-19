@@ -1,7 +1,7 @@
-""" pyplots.ai
+""" anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: plotly 6.5.2 | Python 3.13.11
-Quality: 94/100 | Created: 2026-01-15
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-19
 """
 
 import numpy as np
