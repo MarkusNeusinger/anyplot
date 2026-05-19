@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ternary-density: Ternary Density Plot
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-19
@@ -16,6 +16,7 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_path,
+    geom_point,
     geom_polygon,
     geom_segment,
     geom_text,
@@ -23,6 +24,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    layer_tooltips,
     scale_fill_viridis,
     theme,
 )
@@ -168,18 +170,23 @@ labels_data = pd.DataFrame(
     {"x": [-0.06, 1.06, 0.5], "y": [-0.05, -0.05, sqrt3 / 2 + 0.06], "label": ["Sand", "Silt", "Clay"]}
 )
 
+# Scatter data for interactive HTML tooltips showing composition at each point
+df_scatter = pd.DataFrame(
+    {"x": x_data, "y": y_data, "Sand": sand.round(1), "Silt": silt.round(1), "Clay": clay.round(1)}
+)
+
 # Plot
 plot = (
     ggplot()
     + geom_polygon(aes(x="x", y="y", fill="density", group="id"), data=df_polygons, color=None, alpha=0.9)
     + scale_fill_viridis(name="KDE Density", option="viridis")
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_grid, color=INK_SOFT, size=0.7, alpha=0.4)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_grid, color=INK_SOFT, size=1.0, alpha=0.5)
     + (
         geom_segment(
             aes(x="x", y="y", xend="xend", yend="yend"),
             data=df_contours,
             color="white",
-            size=1.5,
+            size=2.5,
             alpha=0.9,
             linetype="dashed",
         )
@@ -187,6 +194,14 @@ plot = (
         else geom_path(aes(x="x", y="y"), data=pd.DataFrame({"x": [], "y": []}))
     )
     + geom_path(aes(x="x", y="y"), data=df_triangle, color=INK, size=2.0)
+    + geom_point(
+        aes(x="x", y="y"),
+        data=df_scatter,
+        color="white",
+        size=1,
+        alpha=0.01,
+        tooltips=layer_tooltips().line("Sand: @Sand%").line("Silt: @Silt%").line("Clay: @Clay%"),
+    )
     + geom_text(aes(x="x", y="y", label="label"), data=labels_data, color=INK, size=14, fontface="bold")
     + labs(title="Sediment Composition · ternary-density · python · letsplot · anyplot.ai", x="", y="")
     + coord_fixed(ratio=1)
@@ -198,7 +213,7 @@ plot = (
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_line=element_blank(),
-        plot_title=element_text(size=22, face="bold", color=INK),
+        plot_title=element_text(size=24, face="bold", color=INK),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_title=element_text(size=16, color=INK),
         legend_text=element_text(size=14, color=INK_SOFT),
