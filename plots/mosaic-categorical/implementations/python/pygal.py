@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 mosaic-categorical: Mosaic Plot for Categorical Association Analysis
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-19
@@ -13,9 +13,11 @@ import numpy as np
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+RULE = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
 
 # Okabe-Ito palette — first series is always brand green
 OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7")
@@ -41,7 +43,9 @@ class MosaicPlot(Graph):
         self.gap_ratio = kwargs.pop("gap_ratio", 0.02)
         self.ink = kwargs.pop("ink", INK)
         self.ink_soft = kwargs.pop("ink_soft", INK_SOFT)
+        self.ink_muted = kwargs.pop("ink_muted", INK_MUTED)
         self.page_bg = kwargs.pop("page_bg", PAGE_BG)
+        self.rule = kwargs.pop("rule", RULE)
         super().__init__(*args, **kwargs)
 
     def _plot(self):
@@ -63,10 +67,10 @@ class MosaicPlot(Graph):
         plot_width = self.view.width
         plot_height = self.view.height
 
-        margin_left = 410
+        margin_left = 440
         margin_right = 80
-        margin_top = 120
-        margin_bottom = 300
+        margin_top = 100
+        margin_bottom = 380
 
         available_width = plot_width - margin_left - margin_right
         available_height = plot_height - margin_top - margin_bottom
@@ -101,6 +105,8 @@ class MosaicPlot(Graph):
                     continue
 
                 color = self.cell_colors[i % len(self.cell_colors)]
+                freq = self.contingency_data.get((row, col), 0)
+                pct = row_proportions[i] * 100
 
                 rect = self.svg.node(
                     mosaic_group,
@@ -109,50 +115,87 @@ class MosaicPlot(Graph):
                     y=current_y,
                     width=max(col_width, 1),
                     height=max(cell_height, 1),
-                    rx=5,
-                    ry=5,
+                    rx=6,
+                    ry=6,
                 )
                 rect.set("fill", color)
                 rect.set("stroke", self.page_bg)
                 rect.set("stroke-width", "5")
-                rect.set("fill-opacity", "0.88")
+                rect.set("fill-opacity", "0.90")
 
-                freq = self.contingency_data.get((row, col), 0)
-                if cell_height > 70 and col_width > 100:
-                    label_size = min(40, int(min(col_width, cell_height) * 0.28))
+                # SVG tooltip for interactive HTML — pygal-native feature
+                tooltip = self.svg.node(rect, "title")
+                tooltip.text = f"{row} · {col}: {freq:,} ({pct:.1f}% of {col} users)"
+
+                if cell_height > 80 and col_width > 110:
+                    label_size = min(44, int(min(col_width, cell_height) * 0.26))
                     text_x = current_x + col_width / 2
-                    text_y = current_y + cell_height / 2
 
-                    count_node = self.svg.node(mosaic_group, "text", x=text_x, y=text_y)
-                    count_node.set("text-anchor", "middle")
-                    count_node.set("dominant-baseline", "middle")
-                    count_node.set("fill", "#ffffff")
-                    count_node.set("style", f"font-size:{label_size}px;font-weight:bold;font-family:sans-serif")
-                    count_node.text = f"{freq:,}"
+                    if cell_height > 130 and col_width > 160:
+                        # Dual label: count (bold, upper) + percentage (smaller, lower)
+                        count_node = self.svg.node(
+                            mosaic_group, "text", x=text_x, y=current_y + cell_height / 2 - label_size * 0.28
+                        )
+                        count_node.set("text-anchor", "middle")
+                        count_node.set("dominant-baseline", "middle")
+                        count_node.set("fill", "#ffffff")
+                        count_node.set(
+                            "style",
+                            f"font-size:{label_size}px;font-weight:700;font-family:sans-serif;letter-spacing:-0.5px",
+                        )
+                        count_node.text = f"{freq:,}"
+
+                        pct_size = max(int(label_size * 0.62), 22)
+                        pct_node = self.svg.node(
+                            mosaic_group, "text", x=text_x, y=current_y + cell_height / 2 + label_size * 0.52
+                        )
+                        pct_node.set("text-anchor", "middle")
+                        pct_node.set("dominant-baseline", "middle")
+                        pct_node.set("fill", "rgba(255,255,255,0.80)")
+                        pct_node.set("style", f"font-size:{pct_size}px;font-family:sans-serif;font-weight:500")
+                        pct_node.text = f"{pct:.0f}%"
+                    else:
+                        # Single count label for smaller cells
+                        count_node = self.svg.node(mosaic_group, "text", x=text_x, y=current_y + cell_height / 2)
+                        count_node.set("text-anchor", "middle")
+                        count_node.set("dominant-baseline", "middle")
+                        count_node.set("fill", "#ffffff")
+                        count_node.set("style", f"font-size:{label_size}px;font-weight:700;font-family:sans-serif")
+                        count_node.text = f"{freq:,}"
 
                 current_y += cell_height + row_gap
 
-            # Column label
-            col_label_size = 44
+            # Column label — bold, prominent
+            col_label_size = 46
             label_x = current_x + col_width / 2
-            label_y = y_offset + available_height + 72
+            label_y = y_offset + available_height + 76
             col_label_node = self.svg.node(mosaic_group, "text", x=label_x, y=label_y)
             col_label_node.set("text-anchor", "middle")
             col_label_node.set("fill", self.ink)
-            col_label_node.set("style", f"font-size:{col_label_size}px;font-weight:bold;font-family:sans-serif")
+            col_label_node.set(
+                "style", f"font-size:{col_label_size}px;font-weight:700;font-family:sans-serif;letter-spacing:0.5px"
+            )
             col_label_node.text = col
 
-            # Proportion sub-label
-            prop_label_y = label_y + 56
+            # Hairline separator between label and proportion sublabel
+            sep_y = label_y + 16
+            half_w = min(col_width * 0.35, 100)
+            sep_line = self.svg.node(mosaic_group, "line", x1=label_x - half_w, y1=sep_y, x2=label_x + half_w, y2=sep_y)
+            sep_line.set("stroke", self.ink_muted)
+            sep_line.set("stroke-width", "1.5")
+            sep_line.set("stroke-opacity", "0.45")
+
+            # Proportion sub-label — italic, muted
+            prop_label_y = label_y + 58
             prop_node = self.svg.node(mosaic_group, "text", x=label_x, y=prop_label_y)
             prop_node.set("text-anchor", "middle")
-            prop_node.set("fill", self.ink_soft)
-            prop_node.set("style", "font-size:32px;font-family:sans-serif")
-            prop_node.text = f"({col_proportions[j] * 100:.1f}%)"
+            prop_node.set("fill", self.ink_muted)
+            prop_node.set("style", "font-size:34px;font-style:italic;font-family:sans-serif")
+            prop_node.text = f"{col_proportions[j] * 100:.1f}% of sessions"
 
             current_x += col_width + col_gap
 
-        # Row legend (left side)
+        # Row legend (left side) — larger swatches, refined alignment
         first_col = self.col_labels[0]
         first_col_total = col_totals[0] if col_totals[0] > 0 else 1
         for i, row in enumerate(self.row_labels):
@@ -164,45 +207,55 @@ class MosaicPlot(Graph):
             row_prop = self.contingency_data.get((row, first_col), 0) / first_col_total
             center_y = y_offset + drawing_height * (cumulative + row_prop / 2) + i * row_gap
 
-            swatch_size = 36
-            swatch_x = x_offset - 240
+            swatch_size = 40
+            swatch_x = x_offset - 260
             swatch_y = center_y - swatch_size / 2
 
             swatch = self.svg.node(
-                mosaic_group, "rect", x=swatch_x, y=swatch_y, width=swatch_size, height=swatch_size, rx=5, ry=5
+                mosaic_group, "rect", x=swatch_x, y=swatch_y, width=swatch_size, height=swatch_size, rx=6, ry=6
             )
             swatch.set("fill", color)
             swatch.set("stroke", self.ink_soft)
             swatch.set("stroke-width", "1.5")
-            swatch.set("fill-opacity", "0.88")
+            swatch.set("fill-opacity", "0.90")
 
-            row_label_size = 36
-            text_x = swatch_x + swatch_size + 14
+            row_label_size = 38
+            text_x = swatch_x + swatch_size + 16
             text_y = center_y + row_label_size * 0.36
             row_label_node = self.svg.node(mosaic_group, "text", x=text_x, y=text_y)
             row_label_node.set("text-anchor", "start")
             row_label_node.set("fill", self.ink)
-            row_label_node.set("style", f"font-size:{row_label_size}px;font-family:sans-serif")
+            row_label_node.set("style", f"font-size:{row_label_size}px;font-family:sans-serif;font-weight:500")
             row_label_node.text = row
 
         # X-axis title
         x_title_x = x_offset + available_width / 2
-        x_title_y = y_offset + available_height + 200
+        x_title_y = y_offset + available_height + 216
         x_title_node = self.svg.node(mosaic_group, "text", x=x_title_x, y=x_title_y)
         x_title_node.set("text-anchor", "middle")
-        x_title_node.set("fill", self.ink)
-        x_title_node.set("style", "font-size:48px;font-weight:bold;font-family:sans-serif")
-        x_title_node.text = "Device Type"
+        x_title_node.set("fill", self.ink_soft)
+        x_title_node.set("style", "font-size:50px;font-weight:700;font-family:sans-serif;letter-spacing:1px")
+        x_title_node.text = "DEVICE TYPE"
 
         # Y-axis title (rotated)
-        y_title_x = x_offset - 380
+        y_title_x = x_offset - 400
         y_title_y = y_offset + available_height / 2
         y_title_node = self.svg.node(mosaic_group, "text", x=y_title_x, y=y_title_y)
         y_title_node.set("text-anchor", "middle")
-        y_title_node.set("fill", self.ink)
-        y_title_node.set("style", "font-size:48px;font-weight:bold;font-family:sans-serif")
+        y_title_node.set("fill", self.ink_soft)
+        y_title_node.set("style", "font-size:50px;font-weight:700;font-family:sans-serif;letter-spacing:1px")
         y_title_node.set("transform", f"rotate(-90, {y_title_x}, {y_title_y})")
-        y_title_node.text = "App Category"
+        y_title_node.text = "APP CATEGORY"
+
+        # Key insight annotation — guides viewer to the most striking pattern
+        insight_y = y_offset + available_height + 318
+        insight_node = self.svg.node(mosaic_group, "text", x=x_title_x, y=insight_y)
+        insight_node.set("text-anchor", "middle")
+        insight_node.set("fill", self.ink_muted)
+        insight_node.set("style", "font-size:34px;font-style:italic;font-family:sans-serif")
+        insight_node.text = (
+            "Key insight: Desktop skews heavily towards Productivity (57%) — nearly 4× the Mobile rate (15%)"
+        )
 
     def _compute(self):
         n_rows = len(self.row_labels) if self.row_labels else 1
@@ -214,7 +267,6 @@ class MosaicPlot(Graph):
 
 
 # App engagement data: device type vs. app category
-# Shows how usage patterns differ across Mobile, Tablet, and Desktop
 np.random.seed(42)
 
 data = {
@@ -242,7 +294,7 @@ custom_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=OKABE_ITO,
-    title_font_size=56,
+    title_font_size=68,
     legend_font_size=40,
     label_font_size=40,
     value_font_size=32,
@@ -267,7 +319,9 @@ chart = MosaicPlot(
     show_y_labels=False,
     ink=INK,
     ink_soft=INK_SOFT,
+    ink_muted=INK_MUTED,
     page_bg=PAGE_BG,
+    rule=RULE,
 )
 
 # Dummy series required to trigger pygal's rendering pipeline
