@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:19:20Z'
-updated: '2026-05-19T05:04:51Z'
+updated: '2026-05-19T05:22:24Z'
 generated_by: claude-sonnet
 workflow_run: 26076687714
 issue: 3652
@@ -12,97 +12,109 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/bokeh/plot-dark.html
-quality_score: 74
+quality_score: 75
 review:
   strengths:
-  - Correct EMA indicator chart with all spec-required features (price line, EMA 12,
-    EMA 26, crossover signals)
-  - Crossover detection logic is clean and correct; using a separate ColumnDataSource
-    for crossover points is idiomatic Bokeh
-  - Flat, readable script with deterministic seed (np.random.seed(42)) and correct
-    font sizing hierarchy
-  - Realistic stock data with explicit trend phases (uptrend/downtrend days 40-80
-    and 80-100) enhances visual storytelling
+  - Three distinct lines (close price, EMA 12, EMA 26) with correct relative line
+    widths — price line thicker than EMA lines as spec requires
+  - Crossover markers correctly highlight EMA 12/26 crossing points, adding genuine
+    storytelling value
+  - 120 trading days of realistic business-day stock price data with engineered trend
+    changes (uptrend, downtrend) for visual interest
+  - 'Full spec compliance: price line, two EMA periods, crossover detection, and legend
+    labels all present'
+  - 'Correct title format shown in rendered output: indicator-ema · python · bokeh
+    · anyplot.ai'
   weaknesses:
-  - 'Code uses Python-brand colors (#306998, #FFD43B, #E74C3C) instead of Okabe-Ito
-    palette; first series must be #009E73 (brand green), then #D55E00, #0072B2, #CC79A7'
-  - No ANYPLOT_THEME env-var reading — code cannot produce theme-adaptive output;
-    must add full theme-adaptive chrome block (backgrounds, text, grid, legend box)
-    following bokeh.md template
-  - Uses forbidden export_png() instead of Selenium screenshot pattern (explicitly
-    prohibited in prompts/library/bokeh.md)
-  - Saves plot.png/plot.html instead of required plot-{THEME}.png/plot-{THEME}.html
-    for both light and dark themes
-  - 'Code title uses wrong domain (''pyplots.ai'') and is missing ''python'': must
-    be ''indicator-ema · python · bokeh · anyplot.ai'''
-  - No HoverTool — missed Bokeh's most distinctive feature; should show date, close
-    price, EMA 12, EMA 26 values on hover
+  - 'CRITICAL CODE/IMAGE MISMATCH: Code uses #306998 (Python Blue) for close price,
+    #FFD43B for EMA 12, #E74C3C for EMA 26 — not Okabe-Ito; images appear to have
+    been generated from different code than what is committed'
+  - 'CRITICAL: Code has no ANYPLOT_THEME environment variable handling — hardcodes
+    background_fill_color=#fafafa and border_fill_color=#ffffff; a fresh run would
+    produce only a single light render with wrong background'
+  - 'CRITICAL: Code uses export_png (explicitly forbidden per bokeh.md — fails on
+    this system) instead of Selenium-based screenshot pattern'
+  - Output filenames are plot.png and plot.html instead of required plot-light.png
+    / plot-dark.png / plot-light.html / plot-dark.html
+  - 'Title in code string is wrong: indicator-ema · bokeh · pyplots.ai (missing python,
+    wrong domain)'
+  - Dashed grid lines (grid_line_dash=[6,4]) violate style guide which requires solid
+    thin lines
+  - Full plot border visible — top and right outline not removed; should use outline_line_color=None
+    or equivalent
+  - Missing HoverTool — the most distinctive Bokeh feature for an interactive EMA
+    chart; would naturally show date, close price, EMA 12, EMA 26 on hover
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, close to #FAF8F1 — PASS
-      Chrome: Title "indicator-ema · python · bokeh · anyplot.ai" in bold dark text — readable. Y-axis label "Price (USD)" and X-axis label "Date" visible. Tick labels (160, 150, 140, 130 on Y; date values on X) legible. Legend in top-left with Close Price, EMA 12, EMA 26, Crossover — all readable.
-      Data: Three lines — bright teal-green volatile line (Close Price, appears #009E73-ish in image), smoother orange-brown line (EMA 12), softer blue line (EMA 26). Pink/purple circle markers at crossover points. NOTE: rendered colors appear Okabe-Ito-compatible but CODE uses #306998 (Python Blue), #FFD43B, #E74C3C — images likely generated from a polished version.
-      Legibility verdict: PASS
+      Background: Warm off-white (~#FAF8F1), slightly warm tone — not pure white. PASS.
+      Chrome: Title "indicator-ema · python · bokeh · anyplot.ai" in dark text top-left (readable). Axis labels "Date" (x) and "Price (USD)" (y) visible in dark text. Tick labels visible in dark gray. Legend placed right-side outside plot area, labels readable.
+      Data: Three overlapping lines — volatile green/teal line (close price), moderate orange/brown line (EMA 12), smooth blue line (EMA 26). Pink/rose crossover markers at intersection points. Line widths differentiated (price thicker).
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light failure.
 
     Dark render (plot-dark.png):
-      Background: Near-black, close to #1A1A17 — PASS
-      Chrome: Title, axis labels, tick labels, and legend text all rendered in light/white text, clearly readable against dark surface. No dark-on-dark failures detected.
-      Data: Colors identical to light render — teal-green, orange-brown, blue lines with pink crossover markers. Data series unchanged between themes (only chrome flipped).
-      NOTE: Code has no ANYPLOT_THEME logic and hardcodes background_fill_color="#fafafa" — the dark render cannot have been produced by the current code file.
-      Legibility verdict: PASS
+      Background: Warm near-black (~#1A1A17), dark with subtle warm tone — not pure black. PASS.
+      Chrome: Title visible in light-colored text top-left. Axis labels and tick labels rendered in light gray. Legend upper-right with light text on dark panel. No dark-on-dark failures observed.
+      Data: Colors IDENTICAL to light render — same green close price, same orange EMA 12, same blue EMA 26, same pink crossover markers. Data colors consistent across themes.
+      Legibility verdict: PASS — all text readable against dark background.
+
+    CRITICAL NOTE: The code file (bokeh.py) uses #306998 (Python Blue) for close price, #FFD43B for EMA 12, and #E74C3C for EMA 26 — none of which match the green/orange/blue visible in the images. The code also contains no ANYPLOT_THEME handling and hardcodes background_fill_color="#fafafa" and border_fill_color="#ffffff". This implies the images were generated from a different code version than what is committed. The committed code, if re-run, would produce a single light-only render with wrong colors using the forbidden export_png method.
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (36pt title, 26pt axis labels, 20pt
-          ticks, 22pt legend); text readable in both rendered themes
+        comment: Font sizes explicitly set (title 36pt, axis 26pt, ticks 20pt, legend
+          22pt). All text readable in both renders. Legend text in light render is
+          slightly small relative to canvas.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Line overlap is intrinsic to EMA charts; no unintended text or legend
-          collisions
+        comment: No text collisions. EMA lines naturally overlap price line (expected).
+          Crossover markers don't obscure labels.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Lines and crossover markers clearly visible in both themes
+        comment: All three lines clearly visible, crossover markers visible. Line
+          widths well-differentiated (5 vs 3).
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Colors in rendered images are distinguishable but code uses non-Okabe-Ito
-          custom hexes not guaranteed to be CVD-safe
+        passed: true
+        comment: Green/orange/blue palette in images is CVD-safe. No red-green sole
+          signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good 16:9 proportions; legend positioned outside plot area creates
-          minor wasted right-column space
+        comment: Good canvas use. Legend on right side external layout is clean. Full
+          border adds unnecessary visual weight.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis Price (USD) with units, X-axis Date, rendered title correct
+        comment: Price (USD) with units on y-axis, Date on x-axis, proper title format
+          in rendered images.
       - id: VQ-07
         name: Palette Compliance
-        score: 0
+        score: 1
         max: 2
         passed: false
-        comment: 'Code uses #306998 (Python Blue) — explicitly named as 0-point offense
-          in criteria. Also #FFD43B, #E74C3C. No ANYPLOT_THEME. Background hardcoded
-          #fafafa not #FAF8F1.'
+        comment: 'Images show first series as green (#009E73-like) and backgrounds
+          appear correct. However, code contains #306998 (Python Blue, hard-0 indicator
+          per criteria), #FFD43B, #E74C3C — none Okabe-Ito. Code has no ANYPLOT_THEME
+          handling. Partial credit for images passing visually.'
     design_excellence:
       score: 9
       max: 20
@@ -112,24 +124,26 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Price line thicker than EMAs shows intentional hierarchy; otherwise
-          configured Bokeh default with no custom typography or elevated palette
+        comment: Well-configured library default. Crossover markers add visual interest.
+          Not exceptional — no callout zones, no emphasis region highlighting.
       - id: DE-02
         name: Visual Refinement
         score: 2
         max: 6
         passed: false
-        comment: Dashed grid (grid_line_dash=[6,4]) is a positive choice; default
-          Bokeh frame outline visible; no spine removal
+        comment: Dashed grid (grid_line_dash=[6,4]) violates style guide (solid thin
+          lines required). Full plot outline/border visible — top/right not removed.
+          Legend background customized.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Crossover signal dots meaningfully highlight trading signals; price
-          line prominence guides focus; narrative is functional but could be stronger
+        comment: Crossover markers elevate storytelling above default. Trend changes
+          (uptrend, downtrend) are visible. No shaded regions, no annotation of significant
+          crossover events.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -137,29 +151,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EMA indicator overlay chart
+        comment: 'Correct EMA overlay chart: price line as primary, EMA 12 and EMA
+          26 as overlays with crossover markers.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Price line, EMA 12, EMA 26, crossover points — all spec features
-          present
+        comment: 'All spec features: prominent price line, short EMA (12) and long
+          EMA (26), distinct colors, EMAs thinner than price, crossover highlighting,
+          period labels in legend.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, Price (USD) on Y, 120 business days
+        comment: Date on x-axis, Price (USD) on y-axis. All 120 trading days visible.
+          EMA lines correctly overlaid.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Rendered images show correct title; CODE has 'indicator-ema · bokeh
-          · pyplots.ai' (missing python, wrong domain). Legend labels correct.
+        passed: true
+        comment: 'Rendered title is ''indicator-ema · python · bokeh · anyplot.ai''
+          (correct format). Legend labels: Close Price, EMA 12, EMA 26, Crossover
+          Signal — all descriptive and correct.'
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -167,22 +185,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Price volatility, EMA 12, EMA 26, and crossover signals all shown;
-          spec mentions 12/26/50/200 periods but two focused periods is valid
+        comment: Shows price + two EMA periods + crossovers + multiple trend phases.
+          Full EMA chart feature set represented.
       - id: DQ-02
         name: Realistic Context
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Synthetic stock price via random walk with drift and explicit trend
-          phases; neutral financial domain
+        comment: Realistic stock price with business-day calendar, plausible ~$130-175
+          range, neutral financial domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 120 business days (within spec 60-200 range), starting price ~$150,
-          fluctuating $120-170 — realistic for mid-cap equity
+        comment: 120 periods (within spec's 60-200 range), realistic price volatility
+          and magnitude, engineered trend changes add variety.
     code_quality:
       score: 9
       max: 10
@@ -192,50 +210,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> data -> plot -> style -> save'
+        comment: 'Linear: data generation → EMA calculation → figure → lines → crossovers
+          → legend → styling → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used
+        comment: All imports (numpy, pandas, bokeh.io, bokeh.models, bokeh.plotting)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Readable, no fake UI, appropriate complexity
+        comment: Appropriate complexity. No fake UI. Crossover detection loop is clear
+          and justified.
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves plot.png/plot.html instead of plot-light.png/plot-dark.png/plot-light.html/plot-dark.html.
-          Uses export_png() which bokeh.md explicitly forbids — must use Selenium.
+        comment: Saves to plot.png and plot.html instead of required plot-light.png/plot-dark.png/plot-light.html/plot-dark.html.
+          Uses export_png which is explicitly forbidden by bokeh.md.
     library_mastery:
       score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
-        max: 5
-        passed: false
-        comment: Uses ColumnDataSource and manual Legend correctly; but violates bokeh.md
-          rule against export_png and omits HoverTool
-      - id: LM-02
-        name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Manual Legend and crossover detection are good Bokeh patterns; missing
-          HoverTool (Bokeh's most distinctive feature) and no theme-adaptive chrome
+        comment: ColumnDataSource, Legend object, datetime axis type are correct Bokeh
+          idioms. However, export_png is explicitly forbidden (fails with chromium
+          snap); should use Selenium pattern from bokeh.md. No HoverTool — the defining
+          Bokeh feature for this chart type.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: false
+        comment: External legend layout (add_layout right), interactive toolbar (pan,
+          wheel_zoom, box_zoom), HTML output. Missing HoverTool with datetime/price/EMA
+          fields — would be natural and highly distinctive for Bokeh EMA chart.
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -245,6 +269,7 @@ impl_tags:
   patterns:
   - data-generation
   - columndatasource
+  - iteration-over-groups
   dataprep:
   - time-series
   - rolling-window
