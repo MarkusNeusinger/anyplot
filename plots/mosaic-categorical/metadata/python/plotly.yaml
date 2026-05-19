@@ -1,156 +1,190 @@
 library: plotly
+language: python
 specification_id: mosaic-categorical
 created: '2026-01-11T00:19:56Z'
-updated: '2026-01-11T00:27:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886559014
+updated: '2026-05-19T03:23:16Z'
+generated_by: claude-sonnet
+workflow_run: 26073733901
 issue: 3650
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent use of Plotly shapes API to build a custom mosaic plot that Plotly does
-    not natively support
-  - Clean, readable code with well-organized shape and annotation construction
-  - Colorblind-safe color scheme using Python-themed colors
-  - Count labels inside rectangles provide clear data communication
-  - Correct proportional widths for columns and heights for subdivisions
-  - Interactive HTML export alongside static PNG
+  - 'Perfect palette compliance: #009E73 first, #D55E00 second, correct Okabe-Ito
+    order, theme-adaptive chrome working in both renders'
+  - All font sizes explicitly set at correct pixel sizes; both renders are fully legible
+  - 'Mosaic layout is geometrically correct: column widths = marginal proportions,
+    heights = conditional proportions, areas proportional to frequencies'
+  - Titanic data is accurate, historically grounded, and immediately interpretable
+  - Idiomatic Plotly patterns (legend proxies, invisible hover markers) used correctly
+  - Rich hover tooltips leverage Plotly distinctive interactivity (count + within-class
+    % + overall share)
   weaknesses:
-  - Missing hover tooltips that could show percentages and counts on interaction
-  - Legend positioned slightly far from the plot area
-  image_description: 'The plot displays a mosaic plot showing Titanic survival data
-    by passenger class. Three vertical columns represent First, Second, and Third
-    class passengers, with widths proportional to the total passengers in each class
-    (Third being the widest). Each column is divided into two stacked rectangles:
-    blue (Python Blue #306998) for "Survived" and yellow (#FFD43B) for "Did Not Survive".
-    The heights within each column represent conditional proportions - First class
-    shows the highest survival rate (~62%), Second class ~41%, and Third class the
-    lowest (~25%). Each rectangle displays the actual count (203, 122, 118, 167, 178,
-    528). The title follows the correct format "mosaic-categorical · plotly · pyplots.ai".
-    A legend on the right identifies the color coding. The y-axis shows "Proportion"
-    from 0 to 1, and the x-axis shows "Passenger Class" with labels First, Second,
-    Third below each column.'
+  - 'DE-01 held at 5/8: no descriptive title prefix or focal annotation to elevate
+    to publication tier'
+  - 'LM-01 slight gap: proportion arithmetic and layout calculations are all manual;
+    a helper or partial use of a layout utility would be cleaner'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "mosaic-categorical · python · plotly · anyplot.ai" in dark ink, clearly readable. Axis labels "Passenger Class" and "Proportion" in dark ink. Y-axis tick labels (0, 0.2, 0.4, 0.6, 0.8, 1.0) in dark gray (INK_SOFT). Bold class labels "First", "Second", "Third" below columns in dark ink. All chrome elements readable.
+      Data: Three mosaic columns with widths proportional to class size (Third widest ~54%, First ~25%, Second ~22%). Survived segments in #009E73 (brand green) at top; Did Not Survive in #D55E00 (vermillion) at bottom. White bold count annotations inside each segment (203, 122, 118, 167, 178, 528). Legend on right with subtle border.
+      Legibility verdict: PASS — all text readable against warm off-white background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light cream text, clearly readable. Axis labels and tick labels in light gray (INK_SOFT for dark). Class labels below columns in light text. Legend box uses elevated dark background (#242420) with light border. No dark-on-dark failures detected.
+      Data: Colors are identical to light render — #009E73 green for Survived, #D55E00 vermillion for Did Not Survive. Count annotations remain white bold text, fully legible on both colored backgrounds. Rectangle borders adapt to dark background for clean separation.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt, annotations
-          at 20pt - all clearly readable
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px, count annotations 20px, class labels 22px, legend 18px. Fully
+          readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, class labels well-spaced below rectangles
+        comment: No overlapping text or data elements. Count annotations sit cleanly
+          within rectangles. Class labels below do not overlap anything.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rectangles are well-sized and clearly visible, counts displayed prominently
+        comment: Rectangles are large and saturated. White bold count annotations
+          are highly visible on both colored surfaces.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow palette is colorblind-safe
+        comment: Okabe-Ito green and vermillion are CVD-safe. White text on colored
+          rectangles passes contrast. No red-green sole encoding.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas utilization but legend is slightly isolated to the right
+        comment: Plot fills canvas well (~65% of width). Margins generous but not
+          wasteful. Legend well-positioned to the right near the data.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis has Proportion, X-axis has Passenger Class - descriptive but
-          no units
+        comment: Passenger Class and Proportion are descriptive. Title follows required
+          format exactly.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: No grid (appropriate for mosaic), legend well-formatted but could
-          be positioned better
+        comment: 'First series (Survived) = #009E73. Second (Did Not Survive) = #D55E00
+          (Okabe-Ito position 2). Light bg = #FAF8F1, dark bg = #1A1A17. Data colors
+          identical across themes; chrome adapts correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clearly above a configured default. Custom-built mosaic with deliberate
+          Okabe-Ito colors, bold white count annotations, gap spacing, and bold class
+          labels below axis. Not quite at publication polish (no subtitle, no focal
+          annotation).
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No grid (appropriate), rectangle borders match background for subtle
+          separation, legend has INK_SOFT border, x-axis tick labels suppressed in
+          favour of custom bold class labels below. Multiple deliberate refinements.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Layout immediately conveys class-survival relationship. Varying widths
+          show class sizes simultaneously. Green-on-top ordering aids comparison.
+          Count annotations provide quantitative context.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct mosaic plot with rectangles proportional to frequencies
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Class as columns (width = marginal proportion), Survival as rows
-          (height = conditional proportion)
-      - id: SC-03
+        comment: 'Correct mosaic plot: column widths = marginal proportions, heights
+          within columns = conditional proportions, area proportional to cell frequency.'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has gap spacing, color coding, labels; builds mosaic manually with
-          Plotly shapes instead of statsmodels
-      - id: SC-04
-        name: Data Range
+        comment: Marginal and conditional proportions correctly encoded; gap spacing;
+          both variables labelled; color coding; count annotations.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, y-axis 0-1 appropriate for proportions
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Class on x-axis with proportional widths, survival within columns
+          with proportional heights. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Survived and Did Not Survive
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses mosaic-categorical · plotly · pyplots.ai
+        comment: Title mosaic-categorical · python · plotly · anyplot.ai matches required
+          format. Legend labels Survived and Did Not Survive match data.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varying proportions across classes demonstrating association
+        comment: Shows marginal distribution (column widths) and conditional distribution
+          (heights), count annotations, full 3x2 contingency table.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Titanic survival data is a classic, neutral, real-world example for
-          contingency tables
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Counts are realistic and match known Titanic statistics
+        comment: 'Titanic survival data: well-known historical dataset, neutral scientific/historical
+          context, real-world meaningful categories.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Proportions match historical Titanic records (First ~62% survival,
+          Second ~41%, Third ~25%). Class size distribution also historically accurate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,54 +192,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → pivot → shapes/annotations → figure
-          → save'
+        comment: Imports -> Data -> Plot setup -> Shape/annotation generation -> Figure
+          assembly -> Save. Linear, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: Data is fully hardcoded; output is deterministic with no randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly.graph_objects used - all necessary
+        comment: Only os, pandas, and plotly.graph_objects imported; all are used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean nested loops for shape/annotation generation. Invisible-marker
+          legend pattern and per-cell hover scatter are idiomatic Plotly. No over-engineering.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png and plot.html - minor issue with unused seed
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API
+          used throughout.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Correctly uses go.Figure() with shapes for custom mosaic (no native
+          Plotly mosaic type). Legend-proxy pattern and per-cell invisible hover markers
+          are idiomatic. Slight deduction: proportion arithmetic all manually coded.'
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Plotly shapes API and HTML export; missing hover tooltips for
-          interactivity
+        comment: Rich interactive hover tooltips (hovertemplate showing count, within-class
+          %, and share-of-all) and HTML export are Plotly-specific features unavailable
+          in static libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
+  - hover-tooltips
+  - custom-legend
   - html-export
   patterns:
-  - data-generation
   - long-to-wide
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - edge-highlighting
