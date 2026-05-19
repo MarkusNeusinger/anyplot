@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-19
+Quality: 84/100 | Repaired: 2026-05-19
 """
 
 import os
@@ -66,7 +66,7 @@ chart = pygal.Line(
     x_label_rotation=45,
     show_dots=False,
     legend_at_bottom=True,
-    legend_box_size=30,
+    legend_box_size=45,
     margin=60,
     spacing=30,
     interpolate="cubic",
@@ -81,8 +81,14 @@ sma_20_list = [None if pd.isna(v) else float(v) for v in df["sma_20"]]
 sma_50_list = [None if pd.isna(v) else float(v) for v in df["sma_50"]]
 sma_200_list = [None if pd.isna(v) else float(v) for v in df["sma_200"]]
 
-# Close price as solid line; SMAs use dashed stroke_style to distinguish from price
-chart.add("Close Price", close_list)
+# Annotate market bottom with a tooltip label to guide the viewer's eye
+min_idx = int(df["close"].idxmin())
+close_annotated = [
+    {"value": float(v), "label": "Market Bottom"} if i == min_idx else float(v) for i, v in enumerate(df["close"])
+]
+
+# Close price as bold solid line; heavier width creates clear primary/secondary hierarchy
+chart.add("Close Price", close_annotated, stroke_style={"width": 7})
 chart.add("SMA 20", sma_20_list, stroke_style={"width": 3, "dasharray": "8, 4"})
 chart.add("SMA 50", sma_50_list, stroke_style={"width": 4, "dasharray": "16, 6"})
 chart.add("SMA 200", sma_200_list, stroke_style={"width": 5, "dasharray": "24, 8"})
