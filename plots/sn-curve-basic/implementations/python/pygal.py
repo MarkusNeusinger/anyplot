@@ -1,24 +1,39 @@
-""" pyplots.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 78/100 | Created: 2026-01-15
+Library: pygal | Python 3.13
+Quality: 78/100 | Updated: 2026-05-19
 """
 
-import numpy as np
-import pygal
-from pygal.style import Style
+import os
+import sys
 
+import numpy as np
+
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Remove current dir from sys.path to avoid shadowing the pygal package
+_cwd = sys.path[0] if sys.path[0] else "."
+if _cwd in sys.path:
+    sys.path.remove(_cwd)
+
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+sys.path.insert(0, _cwd)
 
 # Data: Fatigue test results for steel specimens
 np.random.seed(42)
 
-# Stress levels (MPa) - from high to low
 stress_levels = np.array([450, 400, 350, 300, 275, 250, 225, 210, 200, 195])
-
-# Generate cycles to failure with realistic scatter (Basquin relationship: S = A * N^b)
 base_cycles = np.array([1e2, 5e2, 2e3, 1e4, 3e4, 1e5, 4e5, 1e6, 5e6, 1e7])
 
-# Add multiple test specimens per stress level (3-5 samples each) with scatter
 cycles_data = []
 stress_data = []
 
@@ -32,15 +47,13 @@ for stress, base_n in zip(stress_levels, base_cycles, strict=True):
 cycles_data = np.array(cycles_data)
 stress_data = np.array(stress_data)
 
-# Fit Basquin equation: S = A * N^b (linear in log-log space)
+# Basquin equation fit: S = A * N^b (linear in log-log space)
 log_cycles = np.log10(cycles_data)
 log_stress = np.log10(stress_data)
 coeffs = np.polyfit(log_cycles, log_stress, 1)
-b = coeffs[0]  # slope (negative for S-N curve)
-log_A = coeffs[1]  # intercept
-A = 10**log_A
+b = coeffs[0]
+A = 10 ** coeffs[1]
 
-# Generate fitted curve points with more points for smooth line
 fit_cycles = np.logspace(2, 7, 100)
 fit_stress = A * (fit_cycles**b)
 
@@ -49,87 +62,80 @@ ultimate_strength = 520
 yield_strength = 350
 endurance_limit = 190
 
-# Create XY data points for pygal
 xy_points = [(float(c), float(s)) for c, s in zip(cycles_data, stress_data, strict=True)]
-
-# Fitted curve points as list of tuples
 fit_points = [(float(c), float(s)) for c, s in zip(fit_cycles, fit_stress, strict=True)]
 
-# Custom style for 4800x2700 canvas with larger fonts
+# Style
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FF6B35", "#E74C3C", "#27AE60", "#8E44AD"),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=36,
-    stroke_width=6,
+    stroke_width=3,
     opacity=0.9,
     opacity_hover=1.0,
 )
 
-# Create XY chart with logarithmic x-axis
+# Plot
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="sn-curve-basic · pygal · pyplots.ai",
+    title="sn-curve-basic · python · pygal · anyplot.ai",
     x_title="Cycles to Failure (N)",
     y_title="Stress Amplitude (MPa)",
     logarithmic=True,
     show_dots=True,
-    dots_size=16,
+    dots_size=12,
     stroke=True,
     show_x_guides=True,
     show_y_guides=True,
-    x_label_rotation=0,
+    x_label_rotation=90,
     legend_at_bottom=True,
     legend_box_size=32,
     margin=80,
-    truncate_legend=-1,
     range=(150, 550),
 )
 
-# Add series in logical order for legend: data → fit → references (high to low)
-
-# 1. Test data points (primary data - most important)
-chart.add("Test Data", xy_points, dots_size=20, stroke=False, show_dots=True)
-
-# 2. Fitted Basquin curve (derived from data)
+# Series: Test Data first (primary), then derived/reference
+chart.add("Test Data", xy_points, dots_size=16, stroke=False, show_dots=True)
 chart.add(
     "Basquin Fit (S-N Curve)",
     fit_points,
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 8, "dasharray": "20, 10"},
+    stroke_style={"width": 6, "dasharray": "20, 10"},
 )
-
-# 3. Reference lines in descending order of stress value
-# Ultimate Strength (highest)
-ultimate_line = [(100, ultimate_strength), (1e7, ultimate_strength)]
 chart.add(
     f"Ultimate Strength ({ultimate_strength} MPa)",
-    ultimate_line,
+    [(100, ultimate_strength), (1e7, ultimate_strength)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 4},
+    stroke_style={"width": 6},
 )
-
-# Yield Strength (middle)
-yield_line = [(100, yield_strength), (1e7, yield_strength)]
-chart.add(f"Yield Strength ({yield_strength} MPa)", yield_line, stroke=True, show_dots=False, stroke_style={"width": 4})
-
-# Endurance Limit (lowest)
-endurance_line = [(100, endurance_limit), (1e7, endurance_limit)]
 chart.add(
-    f"Endurance Limit ({endurance_limit} MPa)", endurance_line, stroke=True, show_dots=False, stroke_style={"width": 4}
+    f"Yield Strength ({yield_strength} MPa)",
+    [(100, yield_strength), (1e7, yield_strength)],
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": 6},
+)
+chart.add(
+    f"Endurance Limit ({endurance_limit} MPa)",
+    [(100, endurance_limit), (1e7, endurance_limit)],
+    stroke=True,
+    show_dots=False,
+    stroke_style={"width": 6},
 )
 
-# Save outputs
-chart.render_to_file("plot.html")
-chart.render_to_png("plot.png")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
