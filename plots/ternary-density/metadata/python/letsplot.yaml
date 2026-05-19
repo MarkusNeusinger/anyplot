@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: ternary-density
 created: '2026-01-11T21:17:48Z'
-updated: '2026-05-19T10:44:58Z'
+updated: '2026-05-19T11:08:44Z'
 generated_by: claude-sonnet
 workflow_run: 26091769735
 issue: 3696
@@ -12,50 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/letsplot/plot-dark.html
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - 'Full spec compliance: ternary heatmap with KDE, contour lines at 25/50/75% density
-    levels, grid lines, and clearly labeled vertices'
-  - Impressive manual KDE + marching-squares contour implementation within letsplot's
-    grammar-of-graphics framework
-  - Theme-adaptive chrome correctly applied across both renders — warm backgrounds,
-    INK/INK_SOFT tokens on title, legend, and grid
-  - Realistic and neutral sediment-composition (sand/silt/clay) context with three
-    distinct Dirichlet-generated clusters
-  - Viridis colormap is the correct choice for continuous density data per style guide
-  - Clean flat-script structure with np.random.seed(42) for reproducibility; all imports
-    are used
-  - Both PNG and HTML outputs saved correctly; ggsize(1600, 900) + scale=3 achieves
-    4800×2700 px
+  - Correct viridis colormap for continuous density data
+  - 'Full spec compliance: ternary structure, KDE overlay, contour lines at 25/50/75%,
+    vertex labels, grid lines'
+  - Excellent data quality with geologically realistic sediment clusters via Dirichlet
+    distributions
+  - Theme-adaptive chrome works correctly in both light and dark renders
+  - Distinctive use of letsplot layer_tooltips for interactive HTML showing composition
+    per point
+  - 'Perfect code quality: seed set, KISS structure, clean imports'
+  - Title format is exactly correct
   weaknesses:
-  - Density layer has a mosaic/pixelated appearance due to the polygon-per-cell approach
-    — geom_tile would produce a smoother heatmap
-  - Plot title font size is 22 instead of the recommended 24 (per style guide for
-    DPI-based libs); minor but should be bumped
-  - White dashed contour lines are thin relative to the large canvas (size=1.5 at
-    scale=3 is only 4.5px); increase to size=2.5–3 for better visibility on the final
-    4800×2700 output
-  - letsplot-distinctive features are underused — the HTML output has no interactive
-    tooltips configured (e.g., geom_point with aes tooltip), which is a signature
-    letsplot capability
-  - Grid lines (alpha=0.4, size=0.7) are fairly faint; could be slightly more visible
-    at the rendered resolution
+  - Density rendered as discrete polygon tiles (grid_res=100) creates a slightly pixelated/tiled
+    visual appearance instead of a smooth continuous density surface
+  - Vertex labels use size=14 which is somewhat small — size=16 or larger would improve
+    readability at full resolution
+  - Wasted canvas space around the triangular plot area on the sides
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "Sediment Composition · ternary-density · python · letsplot · anyplot.ai" is bold, dark (#1A1A17), clearly readable. Vertex labels "Clay" (top), "Sand" (bottom-left), "Silt" (bottom-right) are bold dark text, clearly readable against the light background. KDE Density legend has dark title and secondary text, visible against elevated-bg legend frame.
-      Data: Viridis colormap density heatmap fills equilateral triangle; three distinct clusters visible (upper/Clay-rich, bottom-left/Sand-rich, bottom-right/Silt-rich). White dashed contour lines at three density levels are visible but thin. Triangle border is dark and bold. Internal grid lines are subtle.
-      Legibility verdict: PASS — all text is readable against the light background.
+      Background: Warm off-white (~#FAF8F1) — correct light surface, no pure white.
+      Chrome: Title "Sediment Composition · ternary-density · python · letsplot · anyplot.ai" in dark ink at top, fully readable. Vertex labels "Clay" (top), "Sand" (bottom-left), "Silt" (bottom-right) in bold dark ink, clearly visible. Legend "KDE Density" with viridis colorbar on right, dark text on elevated-bg frame.
+      Data: Viridis density overlay fills the equilateral triangle. Three distinct high-density clusters are visible — one near the Clay apex (yellow-green peak), one near the Sand apex (yellow-green peak), one near the Silt region. White dashed contour lines mark the 25%/50%/75% density levels. Subtle grid lines inside the triangle show compositional guides. Density tiles slightly pixelated due to discrete polygon rendering.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title is light (#F0EFE8), clearly readable. Vertex labels are light-colored and readable. Legend title and text are light-colored, visible against the elevated-bg (#242420) legend frame. No dark-on-dark failures detected.
-      Data: Viridis colormap colors are identical to the light render — same yellow-green hotspots, same purple-blue cold zones. White dashed contour lines remain visible. Triangle border is light-colored in dark mode.
-      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures.
+      Background: Warm near-black (~#1A1A17) — correct dark surface, no pure black.
+      Chrome: Title and vertex labels rendered in light ink (#F0EFE8) — all clearly readable against dark background. Legend "KDE Density" with light text on elevated dark frame (#242420). No dark-on-dark failures observed.
+      Data: Viridis colormap colors are identical to the light render — same three cluster peaks in yellow-green, same purple/blue outer regions. Data colors unchanged between themes. White contour lines and grid lines remain visible.
+      Legibility verdict: PASS — all text readable, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -63,78 +53,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; title at size=22 is slightly below
-          the recommended 24pt for DPI-based libs
+        comment: 'Font sizes explicitly set: title=24, legend_title=16, legend_text=14,
+          vertex labels=14 (bold). All readable in both themes; vertex labels slightly
+          small.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Vertex labels, legend, and contour lines have no collisions
+        comment: No overlapping elements — vertex labels outside triangle, legend
+          separate.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Density heatmap and clusters clearly visible; mosaic/pixelated appearance
-          from polygon-per-cell approach is a minor quality deduction; contour lines
-          slightly thin
+        comment: Density visible and communicates clusters; discrete polygon tiles
+          create slight pixelation at grid_res=100.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe; white contour lines
-          have good contrast
+        comment: Viridis is perceptually uniform and colorblind-safe; white contour
+          lines have strong contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Triangle fills canvas well; legend positioned cleanly to the right;
-          nothing cut off
+        comment: Triangle fills most of 16:9 canvas with legend; some wasted horizontal
+          space on sides of triangle.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels serve as axis labels; title follows required format
-          with descriptive prefix
+        comment: Descriptive title with spec-id format; vertex labels serve as compositional
+          axis labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis colormap correct for continuous density data; backgrounds
-          #FAF8F1/#1A1A17 correct; both renders theme-compliant'
+        comment: 'scale_fill_viridis used for continuous density data. Backgrounds:
+          #FAF8F1 light / #1A1A17 dark. Theme chrome correct in both renders.'
     design_excellence:
-      score: 14
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Professional composition with warm theme-adaptive chrome, viridis
-          density overlay, white dashed contour lines, bold vertex labels, and subtle
-          grid. Elevated above defaults but pixelated density layer limits polish.
+        comment: 'Above-default design: viridis density with white contour lines on
+          clean ternary layout is professional. Pixelated polygon tiles prevent top-tier
+          polish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes fully hidden (appropriate for ternary), subtle grid at alpha=0.4,
-          legend has custom background/border. Could be more refined with slightly
-          bolder contours and smoother density.
+        comment: Panel grid removed, axes hidden, custom interior grid lines, legend
+          styled. Polygon tiling slightly rough.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three distinct compositional clusters clearly guide the viewer; contour
-          lines indicate density levels; sediment context communicates geological
-          insight. Title provides domain framing.
+        comment: Three distinct sediment clusters clearly visible; contour lines at
+          25/50/75% density aid interpretation. Good visual hierarchy through density
+          gradient.
     spec_compliance:
       score: 15
       max: 15
@@ -144,28 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary density plot with KDE heatmap overlay
+        comment: Correct ternary density plot with KDE overlay.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Density heatmap, contour lines at key levels (25/50/75%), visible
-          grid lines, labeled vertices — all present
+        comment: Ternary diagram, KDE density heatmap, viridis colormap, grid lines,
+          vertex labels, contour lines at density levels — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sand/Silt/Clay correctly mapped to ternary coordinates; constraint
-          enforced via Dirichlet distribution
+        comment: Ternary-to-Cartesian conversion correct; all three components (sand/silt/clay)
+          correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Sediment Composition · ternary-density · python · letsplot
-          · anyplot.ai'' — correct format; legend labeled ''KDE Density'''
+          · anyplot.ai'' — exact format. Legend: ''KDE Density'' with viridis scale.'
     data_quality:
       score: 15
       max: 15
@@ -175,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows full ternary density structure with three distinct clusters,
-          KDE computation, and contour lines at multiple levels
+        comment: Three distinct compositional clusters via Dirichlet distributions
+          demonstrate density variation and multimodal structure.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sediment composition (sand/silt/clay) is a canonical real-world ternary
-          application; neutral scientific domain
+        comment: Sediment composition (sand/silt/clay) is a real geological use case
+          explicitly mentioned in the spec.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 points (180+160+160) is ideal for KDE estimation; proportions
-          enforced to sum to 100% via Dirichlet
+        comment: Dirichlet-generated proportions sum to 100%; cluster parameters (alpha)
+          produce geologically plausible compositions.
     code_quality:
       score: 10
       max: 10
@@ -200,33 +190,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: 'Flat code: imports → data → computation → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported letsplot symbols are used in the plot construction
+        comment: All imported lets_plot symbols are used in the plot construction.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Manual KDE and marching squares are complex but necessary for this
-          plot type in letsplot; no fake UI
+        comment: Manual KDE and contour computation is appropriate given letsplot
+          lacks native ternary density geoms. Well-organized.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html; correct output
-          naming
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. ggsave with scale=3.
+          Current API.
     library_mastery:
       score: 7
       max: 10
@@ -236,30 +227,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper ggplot grammar layering with multiple geoms, scale_fill_viridis
-          for continuous data, coord_fixed for aspect ratio, theme for chrome — idiomatic
+        comment: 'Uses ggplot grammar correctly: geom_polygon/segment/path/text/point
+          layered with scale_fill_viridis, coord_fixed, ggsize, ggsave with scale.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML output is produced (letsplot interactive strength), but no interactive
-          tooltips are configured in the HTML — the primary letsplot differentiator
-          over static libs is underutilized
+        comment: layer_tooltips().line() for interactive HTML showing Sand/Silt/Clay
+          percentages on hover — a genuinely distinctive letsplot feature.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - colorbar
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - kde
   styling:
-  - alpha-blending
-  - custom-colormap
   - minimal-chrome
+  - custom-colormap
+  - alpha-blending
