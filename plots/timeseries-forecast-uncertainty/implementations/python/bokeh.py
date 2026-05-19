@@ -1,7 +1,7 @@
 """ anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-19
+Quality: 90/100 | Updated: 2026-05-19
 """
 
 import os
@@ -67,16 +67,18 @@ p = figure(
 )
 
 # Style title and axes
-p.title.text_font_size = "18pt"
+p.title.text_font_size = "56pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "14pt"
-p.yaxis.axis_label_text_font_size = "14pt"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "12pt"
-p.yaxis.major_label_text_font_size = "12pt"
+p.xaxis.major_label_text_font_size = "36pt"
+p.yaxis.major_label_text_font_size = "36pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
 # Background — outline=None removes the enclosing box (top/right spines equivalent)
 p.background_fill_color = PAGE_BG
@@ -168,16 +170,16 @@ legend = Legend(
     location="top_left",
 )
 
-legend.label_text_font_size = "12pt"
+legend.label_text_font_size = "36pt"
 legend.label_text_color = INK_SOFT
 legend.background_fill_color = ELEVATED_BG
 legend.background_fill_alpha = 0.95
 legend.border_line_color = INK_SOFT
-legend.border_line_width = 1
-legend.padding = 15
-legend.spacing = 8
-legend.glyph_width = 30
-legend.glyph_height = 20
+legend.border_line_width = 2
+legend.padding = 30
+legend.spacing = 16
+legend.glyph_width = 60
+legend.glyph_height = 40
 p.add_layout(legend)
 
 # Set y-axis range with room for confidence bands
