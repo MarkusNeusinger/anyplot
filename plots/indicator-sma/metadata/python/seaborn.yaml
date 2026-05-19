@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:18:05Z'
-updated: '2026-05-19T00:43:47Z'
+updated: '2026-05-19T00:54:16Z'
 generated_by: claude-sonnet
 workflow_run: 26068687834
 issue: 3651
@@ -12,40 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: close price + all three SMA periods (20, 50, 200) rendered
-    correctly with Okabe-Ito palette in canonical order'
-  - 'Excellent theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are
-    fully readable with correct chrome tokens throughout'
-  - 'Idiomatic seaborn: data reshaped to long format for native hue-based multi-series
-    plotting — the correct seaborn pattern'
-  - 'Complete code quality: seed set, clean imports, KISS structure, correct output
-    filenames'
-  - 'Realistic data: geometric random walk with drift produces convincing stock-like
-    price action; SMA 200 correctly starts late due to 200-day window'
+  - Full theme-adaptive chrome implementation with all six design tokens (PAGE_BG,
+    ELEVATED_BG, INK, INK_SOFT, legend frame) correctly switching between light and
+    dark renders
+  - 'Idiomatic seaborn usage: wide-to-long reshape via pd.melt plus hue/palette dict
+    provides automatic legend and Okabe-Ito colour assignment in canonical order'
+  - All four spec data series present (Close Price, SMA 20, SMA 50, SMA 200) with
+    correct rolling-window NaN behaviour shown for SMA 200 appearing only after day
+    200
+  - All font sizes explicitly set to spec-correct values (title=24, axis labels=20,
+    tick labels=16, legend=16) ensuring full legibility at 4800×2700 px
+  - Realistic geometric random walk data with upward drift produces a natural-looking
+    stock price chart; np.random.seed(42) ensures reproducibility
   weaknesses:
-  - 'Design Excellence is low (10/20): DE-01=4 (configured default, no visual personality),
-    DE-03=2 (no storytelling — viewer must find their own story). The chart displays
-    data correctly but applies no emphasis to key relationships like price-vs-SMA
-    crossovers or trend phases.'
-  - 'Library Mastery limited (6/10): LM-01=4 (uses long-format hue correctly but no
-    advanced seaborn features), LM-02=2 (no distinctively seaborn technique — the
-    chart could be reproduced in plain matplotlib with minor changes). Could leverage
-    seaborn''s fill_between equivalent, confidence bands, or styled despine.'
+  - Design storytelling is minimal — no visual emphasis on crossover events or trend
+    phases; close price volatility vs. SMA smoothness creates implicit hierarchy but
+    the designer made no deliberate storytelling choice (DE-03 limited to default
+    2/6)
+  - All four lines share linewidth=2.2, which is slightly below the recommended 2.5
+    minimum for primary lines; differentiating the close price (e.g. 2.8–3.0) from
+    the SMA lines (e.g. 1.8–2.0) would improve visual hierarchy
+  - Aesthetic sophistication remains at well-configured-default level (DE-01=4/8)
+    — no distinctive typographic or compositional choices that elevate it beyond a
+    standard seaborn output
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "indicator-sma · python · seaborn · anyplot.ai" in dark text at top, clearly readable. Y-axis label "Price ($)" and X-axis label "Date" both clearly legible. Tick labels (dates on X, prices 85–120 on Y) readable in dark text. X-axis labels rotated ~30 degrees, no overlap.
-      Data: Four line series — Close Price in brand green (#009E73), SMA 20 in vermillion (#D55E00), SMA 50 in blue (#0072B2), SMA 200 in reddish purple (#CC79A7). Price starts ~100, dips to ~88, recovers to ~120. SMA 200 only appears from ~2025-11 onward (correct: 200-day window). Legend at top-left with all four series labeled, on warm elevated background.
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: Warm off-white #FAF8F1 — correct, no pure-white visible
+      Chrome: Title "indicator-sma · python · seaborn · anyplot.ai" in dark ink, clearly readable. Axis labels "Date" and "Price ($)" in dark ink. Tick labels (date strings on x-axis rotated 30°, price values on y-axis) in INK_SOFT dark grey — all readable. Legend box has ELEVATED_BG fill, four entries with readable dark labels.
+      Data: Four lines — Close Price in #009E73 (brand green, most visually prominent due to volatility), SMA 20 in #D55E00 (orange-vermillion), SMA 50 in #0072B2 (blue), SMA 200 in #CC79A7 (pink/reddish purple). SMA 200 only appears from ~day 200 onward (Oct 2025), correctly reflecting the rolling-window NaN behaviour. Y-axis grid lines are subtle and light.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title, axis labels, and tick labels all rendered in light text (#F0EFE8 / #B8B7B0 range), clearly readable against dark background. No dark-on-dark failures detected. Legend on dark elevated background (#242420) with light text.
-      Data: Identical data colors to light render — Close Price (#009E73), SMA 20 (#D55E00), SMA 50 (#0072B2), SMA 200 (#CC79A7). Only chrome elements (background, text, grid, legend frame) flip.
-      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark issues
+      Background: Warm near-black #1A1A17 — correct, no pure-black visible
+      Chrome: Title, axis labels, and tick labels rendered in light off-white (#F0EFE8 / #B8B7B0 range) — all readable against the dark surface. Legend box has dark elevated fill with light text labels. No dark-on-dark failures observed.
+      Data: Data colours are identical to the light render — Close Price #009E73, SMA 20 #D55E00, SMA 50 #0072B2, SMA 200 #CC79A7. Grid lines are subtle and visible on the dark background.
+      Legibility verdict: PASS — all text clearly readable; brand green #009E73 remains well-visible on the dark surface.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -56,48 +60,46 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 24pt, labels 20pt, ticks 16pt,
-          legend 16pt. Both themes fully readable.'
+        comment: 'All sizes explicitly set: title=24, axis labels=20, ticks=16, legend=16;
+          readable in both themes'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X-axis dates rotated 30 degrees, no label collisions. Legend at top-left
-          does not overlap data.
+        comment: Date labels rotated 30°, no overlaps; legend does not obscure data
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines clearly visible at linewidth=2.2. All four series distinguishable
-          throughout.
+        comment: Four lines clearly visible with linewidth=2.2 at 300-point density
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; series are distinguishable without
-          relying on hue alone.
+        comment: Okabe-Ito palette is CVD-safe; adequate luminance contrast between
+          all four series
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well. Balanced margins. Nothing cut off.
+        comment: 16:9 canvas well utilised, balanced margins, tight_layout applied
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Price ($)'' with units. X-axis: ''Date''. Both descriptive.'
+        comment: 'Y-axis: ''Price ($)'' includes units; X-axis: ''Date'' is descriptive'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (brand green), then #D55E00, #0072B2, #CC79A7
-          in canonical Okabe-Ito order. Backgrounds correct in both themes.'
+        comment: 'Close Price=#009E73 first; SMA 20/50/200 follow Okabe-Ito positions
+          2-4; backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive in both renders'
     design_excellence:
       score: 10
       max: 20
@@ -106,25 +108,24 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Well-configured default. Correct palette and theme adaptation, but
-          no distinctive visual personality. No typography hierarchy beyond sizing,
-          no deliberate emphasis.
+        passed: true
+        comment: 'Well-configured default: correct palette, spines removed, legend
+          styled — not exceptional but above generic'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed and remaining spines colored with INK_SOFT.
-          Y-axis-only grid at alpha=0.12. set_axisbelow(True). Good but not perfectly
-          polished.
+        comment: Top/right spines removed, y-axis grid at alpha=0.12, legend frame
+          configured, date labels rotated
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
         passed: false
-        comment: Data displayed correctly but no visual hierarchy or storytelling.
-          No emphasis on crossover signals, trend phases, or golden/death cross events.
+        comment: Data displayed but no deliberate storytelling — no crossover emphasis,
+          no trend annotation, no line-weight hierarchy distinguishing close price
+          from SMAs
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +135,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct SMA indicator chart with price and three SMA overlays.
+        comment: 'Correct: line chart with close price + three SMA overlays'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Close price + SMA 20/50/200 all present. Legend with period labels.
-          Y-axis grid. Distinct colors per series.
+        comment: 'All spec features present: close price, SMA 20/50/200, legend with
+          period labels, y-axis grid'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=price ($). All series visible. SMA 200 correctly starts
-          late.
+        comment: X=date, Y=price; 300 business days; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''indicator-sma · python · seaborn · anyplot.ai''. Legend:
-          Close Price, SMA 20, SMA 50, SMA 200.'
+        comment: 'Title: ''indicator-sma · python · seaborn · anyplot.ai'' — exact
+          required format; legend: ''Close Price'', ''SMA 20'', ''SMA 50'', ''SMA
+          200'''
     data_quality:
       score: 15
       max: 15
@@ -165,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: price volatility, three SMA smoothing levels,
-          initial NaN period for SMA 200, uptrend and downtrend phases.'
+        comment: 'Shows all aspects: price volatility, short/medium/long-term smoothing,
+          NaN behaviour for SMA 200'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic stock price scenario using geometric random walk with drift.
-          Neutral business/finance topic.
+        comment: Geometric random walk with realistic drift and volatility parameters;
+          300 business days; standard technical analysis scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price range ~85-120. Daily drift 0.05%, volatility 1.5% — realistic
-          stock parameters. 300 trading days (~15 months) appropriate for SMA 200.
+        comment: Starting ~$100, ending ~$112-115; daily returns N(0.0005, 0.015)
+          realistic for equities
     code_quality:
       score: 10
       max: 10
@@ -190,63 +191,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → theme tokens → data generation → plot → style
-          → save. No functions or classes.'
+        comment: Imports → tokens → data → reshape → plot → style → save; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports (os, matplotlib, numpy, pandas, seaborn) are used.
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. No over-engineering. pd.melt for long format is
-          the appropriate approach for seaborn hue.
+        comment: Clean and Pythonic; pd.melt reshape is appropriate for seaborn hue
+          API
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No deprecated API usage.
+        comment: Saves as plot-{THEME}.png; no deprecated API usage
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses seaborn's recommended long-format + hue pattern for multi-series.
-          sns.set_theme with RC params. Correct use of palette dict with hue_order.
+        comment: Long-format data + hue + palette dict is the canonical seaborn pattern
+          for multi-series; hue_order controls series ordering
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses seaborn hue-based line coloring but no distinctively seaborn
-          technique. Could be replicated in matplotlib with minor syntax changes.
-          No fill_between, confidence bands, or statistical overlays.
-  verdict: REJECTED
+        passed: true
+        comment: pd.melt + hue-based lineplot with automatic legend is distinctly
+          seabornian vs. matplotlib's manual plt.plot() loop; palette dict maps series
+          names to colours elegantly
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques:
-  - custom-legend
+  techniques: []
   patterns:
   - data-generation
   - wide-to-long
   - explicit-figure
   dataprep:
-  - rolling-window
   - time-series
+  - rolling-window
   styling:
   - grid-styling
