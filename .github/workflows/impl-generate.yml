@@ -361,6 +361,26 @@ jobs:
           printf '%s\n' "$CHANGE_REQUEST" > /tmp/anyplot-change-request.txt
           echo "::notice::Change request staged: ${CHANGE_REQUEST}"
 
+      # When triggered from a non-main branch via workflow_dispatch (typical for
+      # iterative prompt-change testing), overlay the trigger branch's prompts/
+      # directory onto the implementation branch (which was just created from
+      # main). Claude commits only the implementation file (see Step 7 of
+      # impl-generate-claude.md → `git add plots/.../{LIBRARY}{EXT}`), so the
+      # overlaid prompts/ never end up in the resulting PR. The later "Create
+      # library metadata file" step re-checks out origin/$BRANCH, which discards
+      # the overlay automatically. No-op on main + on label triggers.
+      - name: Overlay prompts/ from trigger ref (branch-level prompt iteration)
+        if: github.ref_name != 'main' && github.event_name == 'workflow_dispatch'
+        env:
+          TRIGGER_REF: ${{ github.ref_name }}
+        run: |
+          if ! git fetch origin "$TRIGGER_REF" 2>/dev/null; then
+            echo "::notice::Trigger ref $TRIGGER_REF not found on origin — skipping overlay (workflow runs against main's prompts)"
+            exit 0
+          fi
+          git checkout "origin/$TRIGGER_REF" -- prompts/
+          echo "::notice::Overlaid prompts/ from $TRIGGER_REF — Claude will read these instead of main's prompts"
+
       - name: Run Claude Code to generate implementation
         id: claude
         continue-on-error: true
