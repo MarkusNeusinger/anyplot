@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: bar-race-animated
 created: '2026-01-11T00:55:51Z'
-updated: '2026-05-19T02:00:55Z'
+updated: '2026-05-19T02:14:44Z'
 generated_by: claude-sonnet
 workflow_run: 26071113117
 issue: 3653
@@ -12,97 +12,93 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/bokeh/plot-dark.html
-quality_score: 78
+quality_score: 87
 review:
   strengths:
-  - Consistent Okabe-Ito color mapping across all 4 panels makes entity tracking easy
-    and spec-compliant
-  - Within-bar platform labels and right-side value labels provide all needed information
-    without cluttering the axes
-  - Flat seed-controlled script with clean Bokeh idioms; Selenium screenshot follows
-    bokeh.md exactly
-  - 4-snapshot progression clearly communicates rank reversals (CineCloud ascending
-    from last to first is striking in 2023)
+  - 'Perfect data quality: realistic streaming domain with full coverage of rank changes
+    and sensible growth trajectories'
+  - Consistent Okabe-Ito entity colors across all four panels make competitive movement
+    immediately trackable
+  - Clean typography hierarchy with bold year headers, white bar labels, and themed
+    value labels
+  - Flawless theme adaptation — both light and dark renders fully readable with no
+    dark-on-dark issues
+  - Idiomatic Bokeh code with ColumnDataSource, HoverTool, and gridplot
   weaknesses:
-  - 'Gridplot gap region not themed: in dark mode the spacing between the 4 panels
-    renders as a bright white cross-separator; set the gridplot outer background to
-    #1A1A17'
-  - CineCloud 28M bar in 2016 is too short for its label causing overflow and overlap
-    with the value label; conditionally place labels outside bars when bar width is
-    less than text width
-  - 'No animation or interactive timeline: Bokeh supports CustomJS-based slider animation
-    that would satisfy the spec''s interactive-version guidance'
-  - X-axis range is padded uniformly across all panels leaving 85% empty space in
-    early-year panels; per-panel dynamic range or a tighter shared max would improve
-    layout
+  - Very short bars (CineCloud, WatchNow in 2016) have platform labels overflowing
+    the bar boundary — clamp label x-position or render outside in INK_SOFT for bars
+    below a width threshold
+  - Bokeh HTML artifact could include a Slider + CustomJS animation to deliver the
+    actual bar race experience instead of only a static screenshot
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — PASS
-      Chrome: Title "bar-race-animated · python · bokeh · anyplot.ai" in dark ink at top — readable. Bold year labels (2016, 2018, 2021, 2023) in dark INK above each panel — readable. X-axis tick labels in INK_SOFT gray — readable. Value labels (e.g. "124M") in INK_SOFT at bar ends — readable.
-      Data: Okabe-Ito colors correctly ordered — StreamMax=#009E73, ViewHub=#D55E00, FlixNet=#0072B2, WatchNow=#CC79A7, CineCloud=#E69F00, MediaFlow=#56B4E9. White platform labels inside bars. Color legend strip at bottom.
-      Legibility verdict: PASS — minor issue: CineCloud label overflows its 28M bar in 2016 panel.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "bar-race-animated · python · bokeh · anyplot.ai" in bold dark ink at top, readable. Year headers (2016, 2018, 2021, 2023) bold dark ink above each panel, readable. X-axis labels "Subscribers (millions)" in dark ink on bottom panels, readable. Tick labels in INK_SOFT (#4A4A44), readable.
+      Data: Six platforms colored with full Okabe-Ito palette — StreamMax #009E73 (green, first entity), ViewHub #D55E00 (orange), FlixNet #0072B2 (blue), WatchNow #CC79A7 (pink), CineCloud #E69F00 (yellow-orange), MediaFlow #56B4E9 (sky blue). White platform labels inside bars, INK_SOFT value labels outside bars. Legend strip at bottom.
+      Legibility verdict: PASS — all text readable; minor: very short bars in 2016 cause label overflow beyond bar boundary but remain legible
 
     Dark render (plot-dark.png):
-      Background: Dark near-black ~#1A1A17 for panel areas — PASS
-      Chrome: Title and year labels appear in light/cream tones (F0EFE8) on dark background — readable. Axis tick labels in light gray (B8B7B0) on dark background — readable. Value labels in light gray — readable. No dark-on-dark text failures within the panels. NOTABLE FAILURE: gridplot gap/spacing region between the 4 panels renders as a bright white cross-shaped separator, not themed to dark. This is a chrome compliance issue.
-      Data: Colors identical to light render — Okabe-Ito positions 1-6 unchanged as required. White labels inside bars readable on colored bars.
-      Legibility verdict: PASS for panel text content; PARTIAL FAIL for gridplot chrome (white separator visible in dark mode).
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title visible in light ink (#F0EFE8). Year headers visible in light ink. Axis labels and tick labels visible in light/soft ink (#F0EFE8 / #B8B7B0). Subtle x-grid as faint light lines (INK alpha=0.08). Legend text in #B8B7B0, readable.
+      Data: All six Okabe-Ito colors identical to light render — StreamMax still #009E73, ViewHub #D55E00, FlixNet #0072B2, WatchNow #CC79A7, CineCloud #E69F00, MediaFlow #56B4E9. White platform labels inside colored bars remain legible on dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all chrome correctly flipped to light tokens
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 8
         max: 8
         passed: true
-        comment: Year labels, axis labels, and value labels properly sized. CineCloud
-          2016 bar label overflows its bar due to very short bar width.
+        comment: 'All sizes explicitly set: title 32pt, year headers 36pt, axis labels
+          22pt, tick labels 18pt, bar labels 18pt bold, value labels 16pt'
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: true
-        comment: CineCloud label and value text collide in 2016 panel. All other panels
-          are clean.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All 6 platforms visible and distinguishable. Very short bars in 2016
-          (CineCloud, WatchNow) are legible but cramped.
+        comment: Minor overflow for very short bars in 2016 (CineCloud 28M, WatchNow
+          43M) — platform labels extend beyond bar boundary into empty space; value
+          labels unobstructed
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars at height=0.65 with alpha=0.9 and page-color borders are crisp
+          and clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. No red-green sole signal.
+        comment: Full Okabe-Ito palette, CVD-safe. White text on colored bars provides
+          strong contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 2x2 grid with title and legend strip well-structured. Large empty
-          horizontal space in 2016/2018 panels due to shared wide x-range.
+        comment: 2x2 grid fills canvas well; minor unused vertical space (~225px)
+          at bottom of 4800x2700 frame
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct. Subscribers (millions) axis label on bottom
-          panels.
+        comment: Subscribers (millions) with units on bottom row panels; title in
+          correct format
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Okabe-Ito order correct and panel backgrounds correct (#FAF8F1/#1A1A17).
-          However gridplot gap in dark mode renders as bright white instead of #1A1A17,
-          breaking dark chrome consistency.'
+        passed: true
+        comment: 'StreamMax first entity uses #009E73; subsequent platforms follow
+          Okabe-Ito order; backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,24 +106,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Consistent entity-color mapping across panels, within-bar labeling,
-          clean legend strip. Above default but no innovative design leap.
+        comment: 'Above baseline defaults: platform labels inside bars, value labels
+          at bar ends, clean year headers, consistent entity colors enabling cross-panel
+          comparison'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Y-axis hidden, x-grid very subtle (alpha=0.08), page-bg bar edges
-          for definition, no outline. Clean minimal approach.
+        comment: Y-axis hidden, subtle x-grid alpha=0.08, no outline, line_color=PAGE_BG
+          bar borders for definition
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 4-snapshot progression shows ranking reversals effectively. Sorted
-          bars at each frame make comparison intuitive.
+        comment: '4-panel progression tells clear competitive story: FlixNet leads
+          early, StreamMax overtakes by 2021, CineCloud surges to #1 by 2023. Consistent
+          colors make rank changes readable'
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,54 +133,55 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Small multiples is the spec-endorsed fallback. Bokeh CustomJS animation
-          capability was not used; -1 for missed opportunity.
+        comment: Small multiples is valid static fallback per spec. Bokeh's JS-driven
+          Slider+CustomJS animation could have been used in HTML artifact for the
+          full bar race experience
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Bars sorted per snapshot, entity labels attached, year time indicator
-          present. Missing interactive animation controls Bokeh could provide.
+        comment: Bars sorted by value in each panel, entity labels on bars, year header
+          time indicator, consistent entity colors across panels
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=subscribers, Y=sorted rank, 6 entities with 4 time snapshots. All
-          correctly mapped.
+        comment: Horizontal bars correctly map subscriber count to bar length; y-positions
+          represent sorted rank
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend strip covers all 6 platforms
-          with correct Okabe-Ito colors.
+        comment: Title exactly matches required format; bottom legend strip shows
+          all 6 platforms with correct Okabe-Ito colors
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows ranking changes, relative growth, value evolution. Only 4 of
-          8 years shown; denser coverage would strengthen the race narrative.
+        comment: Covers ranking changes, trajectory crossings, dramatic late-stage
+          surge (CineCloud 28M to 696M), and gradual relative decline of early leaders
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Streaming platform subscriber competition is real-world plausible
-          and politically neutral.
+        comment: 'Streaming platform subscriber counts: neutral, comprehensible, business-relevant
+          scenario with realistic fictional names'
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 28M-696M range is inflated vs real 2023 streaming data (~260M for
-          largest service), but acceptable for demo purposes.
+        comment: Values range 28M (2016) to 696M (2023). Growth rates 8-55%/yr plausible
+          for streaming era. No impossible proportions
     code_quality:
       score: 10
       max: 10
@@ -192,32 +191,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear: imports -> tokens -> data generation -> plot loop -> layout
+          -> save. No functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports are used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clear, appropriately complex. Selenium screenshot follows bokeh.md
-          guidelines exactly.
+        comment: Clean Pythonic code. zip(..., strict=True) is elegant. No fake UI
+          elements
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Current Bokeh API throughout.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png using current Bokeh
+          3.x API + Selenium screenshot pattern
     library_mastery:
       score: 7
       max: 10
@@ -227,16 +228,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource, HoverTool, Range1d, Title glyph, gridplot, output_file/save,
-          Selenium all used idiomatically per bokeh.md.
+        comment: Correctly uses ColumnDataSource, HoverTool, gridplot, Range1d, Title
+          model, and add_layout — idiomatic Bokeh patterns throughout
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool with formatted tooltips, interactive HTML output, gridplot
-          layout used. Did not leverage CustomJS animation which is Bokeh's most distinctive
-          feature for this spec.
+        comment: HTML output with interactive HoverTool tooltips, gridplot for multi-panel
+          composition, headless-Chrome screenshot. Does not use Bokeh's most distinctive
+          capability for this type (CustomJS/Slider animation)
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -244,7 +245,6 @@ impl_tags:
   techniques:
   - hover-tooltips
   - html-export
-  - annotations
   - subplots
   patterns:
   - data-generation
@@ -253,5 +253,5 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting
   - minimal-chrome
+  - edge-highlighting

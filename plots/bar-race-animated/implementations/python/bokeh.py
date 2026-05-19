@@ -1,7 +1,7 @@
 """ anyplot.ai
 bar-race-animated: Animated Bar Chart Race
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-19
+Quality: 87/100 | Updated: 2026-05-19
 """
 
 import os
