@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
-Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-19
+Library: plotnine | Python 3.13
+Quality: pending | Updated: 2026-05-19
 """
 
 import os
@@ -104,12 +104,12 @@ plot = (
     )
     # Vertical line at forecast start
     + geom_vline(xintercept=forecast_start, linetype="dashed", color=INK_SOFT, size=0.8)
-    # Forecast period label positioned above the vline
-    + annotate("text", x=forecast_start, y=annotation_y, label="Forecast period", color=INK_MUTED, size=13, ha="center")
+    # Forecast period label above the boundary line
+    + annotate("text", x=forecast_start, y=annotation_y, label="Forecast period", color=INK_MUTED, size=9, ha="center")
     # Historical line
-    + geom_line(data=df_historical, mapping=aes(x="date", y="value", color="series"), size=1.5)
-    # Forecast line
-    + geom_line(data=df_forecast, mapping=aes(x="date", y="value", color="series"), size=1.5, linetype="dashed")
+    + geom_line(data=df_historical, mapping=aes(x="date", y="value", color="series"), size=1.0)
+    # Forecast line (dashed)
+    + geom_line(data=df_forecast, mapping=aes(x="date", y="value", color="series"), size=1.0, linetype="dashed")
     # Color mapping with Okabe-Ito
     + scale_color_manual(values=OKABE_ITO, name="")
     # Labels
@@ -124,24 +124,23 @@ plot = (
     # Theme
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
+        figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
-        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.1),
         panel_grid_minor=element_blank(),
-        axis_title=element_text(size=20, color=INK),
-        axis_text=element_text(size=16, color=INK_SOFT),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
         axis_text_x=element_text(angle=45, ha="right"),
         axis_line=element_line(color=INK_SOFT, size=0.5),
-        plot_title=element_text(size=24, color=INK, weight="medium"),
-        plot_subtitle=element_text(size=14, color=INK_MUTED),
+        plot_title=element_text(size=12, color=INK, weight="medium"),
+        plot_subtitle=element_text(size=9, color=INK_MUTED),
         legend_position="top",
         legend_background=element_rect(fill=ELEVATED_BG, color="none"),
-        legend_text=element_text(size=16, color=INK_SOFT),
-        legend_title=element_text(size=16, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=8, color=INK),
     )
 )
 
 # Save
-plot.save(f"plot-{THEME}.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
