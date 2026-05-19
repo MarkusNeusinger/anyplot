@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: ternary-density
 created: '2026-05-19T10:51:26Z'
-updated: '2026-05-19T10:56:49Z'
+updated: '2026-05-19T11:16:25Z'
 generated_by: claude-sonnet
 workflow_run: 26091862460
 issue: 3696
@@ -12,92 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-d
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 87
 review:
   strengths:
-  - Correct ternary-to-Cartesian coordinate transformation with proper equilateral
-    triangle geometry
-  - Triangle interior masking with NA values produces a clean, precise boundary on
-    the density raster
-  - Perfect theme adaptation — chrome tokens wired through all text, legend, and background
-    elements; both renders pass legibility
-  - Viridis heatmap + semi-transparent white contour line overlay is an excellent
-    visual choice for density visualization
-  - Three realistic sediment facies with distinct beta-distributed clustering tells
-    a clear geological story
+  - Viridis colormap correctly applied to continuous density data — perceptually uniform
+    and CVD-safe
+  - Three geological facies (sandy, silty, clayey) produce clearly distinct density
+    clusters with immediate visual impact
+  - theme_void with triangle-masked density creates a clean, uncluttered ternary canvas
+  - White contour lines at 0.55 alpha elegantly guide interpretation of density gradients
+  - 'Full theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders are
+    correct with no dark-on-dark issues'
+  - set.seed(42) + beta distributions produce realistic geological proportions
+  - Custom colorbar sizing (barwidth=1.8, barheight=14) is well-proportioned relative
+    to the square canvas
+  - MASS::kde2d used correctly for 2D kernel density on ternary Cartesian coordinates
   weaknesses:
-  - Legend text at 14pt is below the 16pt minimum recommended for the 3600x3600 canvas;
-    legend title at 18pt is fine
-  - Subtitle at 15pt is slightly small for the canvas size (recommend 16-18pt)
-  - No in-plot facies annotations near each density peak — the subtitle provides context
-    but the viewer must infer which peak belongs to which facies
-  - Ternary reference grid lines lack percentage labels (20%, 40%, 60%, 80%); viewers
-    cannot read component proportions from the plot
+  - 'Subtitle text (''Sediment composition: kernel density...'') is clipped at the
+    left edge in both renders — ''Se'' from ''Sediment'' is cut off, indicating the
+    text extends beyond the canvas boundary'
+  - No percentage tick labels on the ternary grid edges in the code (geom_segment
+    draws lines only, no annotate for 20%/40%/60%/80% labels) — reference grid lacks
+    quantitative context without labels
+  - 'DE-01 below 6: design is professional but does not reach publication-ready —
+    lacks facies-cluster annotations or other storytelling annotations that would
+    elevate it to FiveThirtyEight-level polish'
+  - DE-02 could reach 6 with slightly reduced plot margin asymmetry — the 80pt left/right
+    margins may be causing subtitle clipping
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "ternary-density · r · ggplot2 · anyplot.ai" in dark ink, clearly readable. Subtitle in dark secondary ink, readable (slightly small at 15pt). Vertex labels "Sand", "Silt", "Clay" bold, clearly readable. Colorbar title "Density" and tick labels readable.
-      Data: Viridis colormap (purple=low, yellow-green=high) fills the triangle interior. Three distinct density peaks near each vertex. White semi-transparent contour lines overlay the heatmap. Faint grid lines at 20/40/60/80% intervals. Triangle border in dark ink.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
+      Chrome: Title "ternary-density · r · ggplot2 · anyplot.ai" centered in dark (#1A1A17) ink, clearly readable. Subtitle in INK_SOFT color but slightly clipped at left edge — "Se" from "Sediment" is cut off. Vertex labels "Sand" (top), "Silt" (bottom-left), "Clay" (bottom-right) in bold dark ink, well-sized and readable. Colorbar "Density" label and tick values (1–6) in appropriate sizes, readable.
+      Data: Viridis colormap from deep purple (low density) to bright yellow (high density). Three prominent density clusters: top cluster (Sandy facies), bottom-left (Silty facies), bottom-right (Clayey facies). White contour lines at 0.55 alpha overlay the density, clearly visible. Ternary grid lines in INK_SOFT at 0.30 alpha — subtle but present. Triangle border in INK at 1.4 linewidth creates a clean enclosure.
+      Legibility verdict: PASS — all text readable against the light background. Minor issue: subtitle left-edge clipping.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title, subtitle, and vertex labels switch to light ink (#F0EFE8/#B8B7B0), all clearly readable against dark background. Colorbar text is light and legible. Triangle border visible in light ink. No dark-on-dark failures detected.
-      Data: Viridis colormap is pixel-identical to light render — three density peaks at same positions with same colors. Contour lines identical. Data colors unchanged between themes as required.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title and vertex labels rendered in light ink (#F0EFE8), clearly readable against dark background. Subtitle also light-colored, same left-edge clipping as light render. Colorbar labels in INK_SOFT (#B8B7B0), readable. Legend background uses ELEVATED_BG (#242420). No dark-on-dark failures observed — all text uses light tokens correctly.
+      Data: Viridis colormap colors are identical to the light render — purple-to-yellow progression unchanged. Same three density clusters visible. White contour lines appear equally visible. Grid lines subtle at 0.30 alpha in INK_SOFT.
+      Legibility verdict: PASS — all text readable against the dark background. No dark-on-dark issues. Subtitle clipping persists identically.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Title 24pt OK; subtitle 15pt and legend text 14pt slightly below
-          recommended 16pt minimum for 3600x3600 canvas
+        comment: All sizes explicitly set (title 24pt, subtitle 15pt, vertex labels
+          size=9, legend 18/14pt). Minor subtitle left-edge clipping in both renders
+          deducts 1pt.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements; vertex labels, colorbar, title well-separated
+        comment: 'No significant text collisions. Minor concern: percentage reference
+          labels (if present) and vertex labels are close at corners.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Three density peaks clearly visible; white contours legible; triangle
-          border strong
+        comment: Density heatmap, contour lines, grid, and triangle border all clearly
+          visible and well-adapted to the ternary canvas.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is CVD-safe and perceptually uniform
+        comment: Viridis is CVD-safe and perceptually uniform. White contour lines
+          provide sufficient contrast at 0.55 alpha.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Square 12x12in @ 300dpi appropriate for symmetric ternary plot; good
-          whitespace
+        comment: Square 12x12 canvas appropriate for ternary. Triangle fills canvas
+          well with good margins. Subtitle clipping slightly penalizes layout score.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title uses correct anyplot format; subtitle provides geological context
+        comment: Title matches required format exactly. Vertex labels (Sand/Silt/Clay)
+          and subtitle describe the geological context clearly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Viridis correct for continuous density data; backgrounds #FAF8F1/#1A1A17
-          correct; both renders theme-correct'
+        comment: 'Viridis used for continuous density data — correct. Light background
+          #FAF8F1 and dark background #1A1A17 both correct. Chrome is fully theme-adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -105,22 +115,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: custom ternary coordinate system, viridis+white-contour
-          combination, clean triangle-only view, elevated legend background'
+        comment: 'Above default (4): custom colorbar sizing, alpha-tuned contour lines,
+          masked density outside triangle, elevated legend background. Below 6: lacks
+          facies-cluster annotations or publication-level typography refinement.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void() removes all unnecessary chrome; very subtle grid (alpha=0.30);
-          elevated legend box; generous coordinate padding
+        comment: 'Above default (2): theme_void removes all decoration, subtle 0.30-alpha
+          grid, strong 1.4-linewidth border, proportional colorbar. Subtitle clipping
+          prevents reaching 6.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Three facies peaks visible but no in-plot facies labels; subtitle
-          provides text context only
+        comment: 'Above default (2): three geological facies create immediate multi-cluster
+          narrative, yellow hotspots provide focal hierarchy, subtitle adds geological
+          framing. Would reach 6 with in-plot cluster annotations.'
     spec_compliance:
       score: 15
       max: 15
@@ -130,27 +143,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct ternary density plot with KDE overlay
+        comment: Correct ternary density plot using KDE on ternary Cartesian coordinates.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Viridis colormap, grid lines beneath density, vertex labels, contour
-          lines all present
+        comment: Density heatmap, contour lines, visible grid, vertex labels, perceptually-uniform
+          colormap — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Three components sum to 100%; 1800 points; three distinct clusters
+        comment: Sand/silt/clay correctly transformed to Cartesian ternary coordinates.
+          All data range visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'ternary-density · r · ggplot2 · anyplot.ai' correct format;
-          colorbar labeled 'Density'
+        comment: Title exactly 'ternary-density · r · ggplot2 · anyplot.ai'. Density
+          colorbar correctly labeled.
     data_quality:
       score: 15
       max: 15
@@ -160,22 +174,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: KDE heatmap, contour lines, ternary grid, triangle boundary, three
-          distinct facies all present
+        comment: Three distinct geological facies demonstrate multiple density modes,
+          covering the full compositional simplex with meaningful cluster separation.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Sediment composition (sand/silt/clay) is a classic geological application;
-          neutral and realistic
+        comment: Sand/silt/clay sediment composition is a canonical real-world ternary
+          dataset. Geological facies classification is scientifically grounded and
+          politically neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Beta(8,2) distributions produce realistic near-vertex clustering;
-          600 pts/facies ideal for KDE
+        comment: Beta distributions with realistic cluster positions, proportions
+          sum to 1, 1800 total points appropriate for KDE bandwidth.
     code_quality:
       score: 10
       max: 10
@@ -185,49 +200,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean procedural script
+        comment: 'Flat script: imports → tokens → data → grid → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) present
+        comment: set.seed(42) at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: ggplot2, MASS (kde2d), ragg — all used, none extraneous
+        comment: ggplot2 (plot), MASS (kde2d), ragg (device) — all used, no extras.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized; no fake UI; coordinate math clearly commented
+        comment: Clean pipeline, no fake UI, appropriate complexity for a ternary
+          KDE plot.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: sprintf('plot-%s.png', THEME) produces correct filenames
+        comment: Saves as plot-{THEME}.png via ggsave with ragg device. No deprecated
+          API.
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: geom_raster(interpolate=TRUE), geom_contour(), scale_fill_viridis_c(),
-          guide_colorbar(), coord_fixed() — all idiomatic ggplot2
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Custom ternary-Cartesian transform, triangle masking with NA, MASS::kde2d,
-          multi-layer composition. Lacks percentage tick labels on ternary grid.
+        comment: 'Grammar of graphics correctly applied: geom layers compose cleanly,
+          scale_fill_viridis_c is the ggplot2-native viridis call, coord_fixed maintains
+          aspect ratio, theme_void + theme() layering is idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_raster(interpolate=TRUE) for smooth density rendering, guide_colorbar
+          with custom dimensions, scale_fill_viridis_c with na.value='transparent'
+          for masked triangle — all distinctively ggplot2.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -242,6 +262,6 @@ impl_tags:
   dataprep:
   - kde
   styling:
+  - minimal-chrome
   - custom-colormap
   - alpha-blending
-  - minimal-chrome
