@@ -2,9 +2,9 @@ library: letsplot
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:34:36Z'
-updated: '2026-05-16T22:45:57Z'
-generated_by: claude-haiku
-workflow_run: 25974733360
+updated: '2026-05-19T13:24:07Z'
+generated_by: claude-sonnet
+workflow_run: 26099465079
 issue: 3188
 language_version: 3.13.13
 library_version: 4.9.0
@@ -12,40 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/letsplot/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Proper theme-adaptive implementation with correct chrome flipping in both light
-    and dark renders
-  - Accurate Okabe-Ito palette usage with correct brand color (#009E73) for historical
-    series
-  - Effective nested confidence bands with well-chosen alpha transparency (0.35 for
-    80%, 0.2 for 95%)
-  - Clean, reproducible code with realistic synthetic data and proper seeding
-  - All spec requirements met with visual clarity and correct styling
+  - 'Full spec compliance: all required elements (solid/dashed lines, nested CI bands,
+    vline marker, legend, caption) correctly implemented'
+  - 'Excellent theme adaptation: all chrome tokens flip correctly between light and
+    dark without any dark-on-dark failures'
+  - 'Clean data story: green-to-orange color contrast plus solid-to-dashed linetype
+    creates immediate visual clarity of past vs. future'
+  - 'Perfect code quality: reproducible, KISS structure, idiomatic lets-plot API usage'
   weaknesses:
-  - 'Generic design defaults: could benefit from explicit spine removal (top/right)
-    per style guide'
-  - Grid styling uses defaults; could be refined to y-axis-only with lower opacity
-  - Legend frame styling and positioning could be more refined for stronger visual
-    hierarchy
+  - 95% CI band (alpha=0.18) is very subtle in dark render — consider increasing to
+    0.22-0.25 or adding a thin boundary line to the outer ribbon for better dark-mode
+    visibility
+  - 'LM-02 could be higher: no use of lets-plot-exclusive interactive features (e.g.,
+    tooltips in the HTML output, geom_errorbar alternatives, or lets-plot built-in
+    theming beyond basics)'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 - correct color, not pure white
-      Chrome: Title, axis labels, tick labels all rendered in dark ink (#1A1A17) - fully readable against light background
-      Data: Green solid line (#009E73) for historical, orange dashed line (#E69F00) for forecast, two nested orange bands (alpha 0.35 and 0.2)
-      Elements: Vertical dotted line at forecast start, legend on right identifying series
-      Legibility verdict: PASS - All text clear and readable, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "timeseries-forecast-uncertainty · python · letsplot · anyplot.ai" in dark ink, clearly readable. Axis labels "Date" and "Energy Demand (MWh)" in dark ink. Tick labels in dark secondary ink. All text readable.
+      Data: Historical line in #009E73 (brand green, solid). Forecast line in #E69F00 (orange, dashed). Two nested CI bands both in orange: 80% inner (alpha=0.38, darker), 95% outer (alpha=0.18, lighter). Vertical dotted line at forecast start (2026-01). Bottom legend "Historical" / "Forecast". Caption "Bands: 80% CI (darker) · 95% CI (lighter)".
+      Legibility verdict: PASS — all elements clearly readable and distinguishable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 - correct color, not pure black
-      Chrome: Title, axis labels, tick labels rendered in light tones (#F0EFE8 for title, #B8B7B0 for ticks) - fully readable against dark background
-      Data: Green (#009E73) and orange (#E69F00) - identical to light render, confirming chrome-only adaptation
-      Elements: Vertical dotted line clear, legend readable
-      Legibility verdict: PASS - All text clear and readable, no dark-on-dark failures, axis text has proper contrast
+      Background: Near-black (#1A1A17) — correct dark surface, warm not pure black
+      Chrome: Title in light cream text (INK_SOFT token), clearly readable. Axis labels, tick labels, legend text, and caption all in light-colored text. No dark-on-dark failures detected.
+      Data: Colors identical to light render — #009E73 historical line, #E69F00 forecast line and CI bands. 80% CI band (alpha=0.38) clearly visible as brownish-orange fill. 95% CI band (alpha=0.18) subtle but distinguishable via boundary lines and slight tonal difference from background.
+      Legibility verdict: PASS — all text readable; 95% CI band slightly subtle but still functional
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -53,70 +51,70 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes appropriately scaled
-          for 4800×2700 canvas
+        comment: All font sizes explicitly set; proportions good in both renders
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Date labels well-spaced, legend positioned without collision
+        comment: No text collisions in either render
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Lines sized appropriately (1.5pt), bands transparent enough to see
-          through
+        comment: Lines clearly visible; 95% CI band subtle in dark render (alpha=0.18
+          too low for dark surface)
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is colorblind-safe; green/orange have adequate
-          contrast
+        comment: CVD-safe green/orange pair with dual encoding (color + linestyle)
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, nothing cut off, generous margins
+        comment: 3200x1800 canvas well-utilized; balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units, correct title format
+        comment: Y-axis has units (MWh); title in correct format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds correct
-          for both themes'
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds #FAF8F1/#1A1A17;
+          all chrome theme-adaptive'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Follows style guide defaults; professional but generic styling
+        passed: true
+        comment: 'Above default: warm backgrounds, Okabe-Ito, linetype differentiation.
+          Not quite strong design.'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Standard letsplot defaults; minimal spine customization or grid refinement
+        passed: true
+        comment: L-spines via theme_classic, subtle y-only grid, warm backgrounds.
+          Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Nested bands create visual hierarchy; distinct line styles and vertical
-          marker guide viewer effectively
+        comment: Clear past-to-future narrative with color+linestyle contrast, vline
+          boundary, widening uncertainty bands
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +124,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct time series with confidence bands
+        comment: 'Correct: time series with forecast uncertainty bands and boundary
+          marker'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All elements present: historical line, forecast, bands, marker,
-          legend'
+        comment: 'All required: solid/dashed lines, nested CI bands, vline, legend,
+          caption'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date axis spans both periods, stock price axis shows all values
+        comment: 'X: datetime, Y: energy demand; all data visible'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title correct format, legend identifies series
+        comment: Correct title format; legend labels Historical/Forecast
     data_quality:
       score: 15
       max: 15
@@ -155,19 +154,20 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: historical, forecast, both CIs, horizon marker'
+        comment: Seasonal oscillation, trend, noise, growing uncertainty all demonstrated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price scenario is neutral and realistic
+        comment: Energy demand forecasting — real, neutral, business use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values plausible for stock price; uncertainty grows with horizon
+        comment: 400-620 MWh plausible; seasonal amplitude and uncertainty growth
+          realistic
     code_quality:
       score: 10
       max: 10
@@ -177,31 +177,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple, straightforward code
+        comment: 'Linear: imports → tokens → data → plot → save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports used
+        comment: Only used imports; noqa appropriate for lets_plot wildcard
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; no fake UI
+        comment: Clean grammar-of-graphics composition; well-organized theme tokens
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png and .html
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly
     library_mastery:
       score: 8
       max: 10
@@ -211,14 +211,15 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ggplot-style API correctly used; proper aes() and manual scales
+        comment: 'Expert use of lets-plot grammar: geom_ribbon, geom_line, geom_vline,
+          scale_color_manual, theme_classic, ggsize, ggsave'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Uses letsplot-specific ggsize() and ggsave(scale=); LetsPlot.setup_html();
-          not extraordinary
+        passed: true
+        comment: Uses datetime-as-milliseconds xintercept (lets-plot specific), HTML
+          export, multi-layer ribbon composition
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -227,7 +228,6 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - explicit-figure
   dataprep:
   - time-series
   styling:
