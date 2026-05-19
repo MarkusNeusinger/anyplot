@@ -1,126 +1,86 @@
-""" pyplots.ai
+"""anyplot.ai
 mosaic-categorical: Mosaic Plot for Categorical Association Analysis
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-11
+Library: matplotlib | Python 3.13
+Quality: 91/100 | Updated: 2026-05-19
 """
 
-import matplotlib.patches as mpatches
-import matplotlib.pyplot as plt
-import numpy as np
+import os
+import sys
 
 
-# Set seed for reproducibility
-np.random.seed(42)
+sys.path = [p for p in sys.path if "implementations" not in p]  # noqa: E402
 
-# Create contingency table data: Titanic-style survival by class
-# Rows: Passenger Class (First, Second, Third)
-# Columns: Survived (Yes, No)
-categories_1 = ["First", "Second", "Third"]
-categories_2 = ["Survived", "Did Not Survive"]
+import matplotlib.patches as mpatches  # noqa: E402
+import matplotlib.pyplot as plt  # noqa: E402
+from statsmodels.graphics.mosaicplot import mosaic  # noqa: E402
 
-# Frequency data (realistic Titanic-like proportions)
-# Each row: [Survived, Did Not Survive]
-contingency = np.array(
-    [
-        [136, 64],  # First class: 68% survival
-        [87, 93],  # Second class: 48% survival
-        [119, 381],  # Third class: 24% survival
-    ]
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette — first series always #009E73
+CELL_COLORS = {"Survived": "#009E73", "Did Not Survive": "#D55E00"}
+
+# Data: Titanic passenger survival by class (realistic proportions)
+counts = {
+    ("First", "Survived"): 136,
+    ("First", "Did Not Survive"): 64,
+    ("Second", "Survived"): 87,
+    ("Second", "Did Not Survive"): 93,
+    ("Third", "Survived"): 119,
+    ("Third", "Did Not Survive"): 381,
+}
+
+# Plot: core mosaic via statsmodels
+fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+fig, rects = mosaic(
+    counts,
+    ax=ax,
+    gap=0.015,
+    properties=lambda key: {"facecolor": CELL_COLORS[key[1]], "edgecolor": PAGE_BG, "linewidth": 3},
+    labelizer=lambda key: str(counts[key]),
+    title="",
+    axes_label=True,
+    statistic=False,
 )
 
-# Calculate proportions for mosaic
-row_totals = contingency.sum(axis=1)
-total = contingency.sum()
-col_widths = row_totals / total
-col_heights = contingency / row_totals[:, np.newaxis]
+# Style cell count labels (white for contrast against colored cells)
+for text in ax.texts:
+    text.set_color("white")
+    text.set_fontsize(20)
+    text.set_fontweight("bold")
 
-# Color scheme using Python colors
-colors = [
-    ["#306998", "#FFD43B"],  # First class: Blue (survived), Yellow (not survived)
-    ["#4A90C2", "#E8C547"],  # Second class: Lighter shades
-    ["#6EB5E0", "#D4A84A"],  # Third class: Even lighter shades
-]
-
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Gap between rectangles
-gap = 0.02
-
-# Draw mosaic rectangles
-x_start = 0
-for i, cat1 in enumerate(categories_1):
-    width = col_widths[i] - gap
-    y_start = 0
-
-    for j in range(len(categories_2)):
-        height = col_heights[i, j] - gap / 2
-
-        # Draw rectangle
-        rect = mpatches.FancyBboxPatch(
-            (x_start + gap / 2, y_start + gap / 4),
-            width,
-            height,
-            boxstyle="round,pad=0,rounding_size=0.01",
-            facecolor=colors[i][j],
-            edgecolor="white",
-            linewidth=3,
-        )
-        ax.add_patch(rect)
-
-        # Add frequency label in center of rectangle
-        freq = contingency[i, j]
-        cx = x_start + gap / 2 + width / 2
-        cy = y_start + gap / 4 + height / 2
-
-        # Only show label if rectangle is large enough
-        if height > 0.08:
-            ax.text(cx, cy, f"{freq}", ha="center", va="center", fontsize=20, fontweight="bold", color="white")
-
-        y_start += height + gap / 2
-
-    # Add class label below each column
-    cx = x_start + gap / 2 + width / 2
-    ax.text(cx, -0.08, cat1, ha="center", va="top", fontsize=18, fontweight="bold")
-
-    x_start += col_widths[i]
-
-# Calculate average y positions for row labels based on actual data
-# Survived is the bottom section (index 0)
-avg_survived_height = col_heights[:, 0].mean()
-avg_not_survived_height = col_heights[:, 1].mean()
-
-survived_y = avg_survived_height / 2
-not_survived_y = avg_survived_height + avg_not_survived_height / 2
-
-# Add row labels on the left side
-ax.text(-0.04, survived_y, "Survived", ha="right", va="center", fontsize=18, fontweight="bold", rotation=0)
-ax.text(-0.04, not_survived_y, "Did Not\nSurvive", ha="right", va="center", fontsize=18, fontweight="bold", rotation=0)
-
-# Set axis properties
-ax.set_xlim(-0.18, 1.02)
-ax.set_ylim(-0.15, 1.05)
-ax.set_aspect("equal")
-ax.axis("off")
-
-# Add title
+# Style
 ax.set_title(
-    "Titanic Passenger Survival by Class · mosaic-categorical · matplotlib · pyplots.ai",
+    "Titanic Passenger Survival · mosaic-categorical · python · matplotlib · anyplot.ai",
     fontsize=24,
-    fontweight="bold",
+    fontweight="medium",
+    color=INK,
     pad=20,
 )
+ax.set_xlabel("Passenger Class", fontsize=20, color=INK, labelpad=12)
+ax.set_ylabel("Survival Status", fontsize=20, color=INK, labelpad=12)
+ax.tick_params(length=0, labelcolor=INK_SOFT, labelsize=14)
 
-# Add legend
-legend_elements = [
-    mpatches.Patch(facecolor="#306998", edgecolor="white", linewidth=2, label="Survived"),
-    mpatches.Patch(facecolor="#FFD43B", edgecolor="white", linewidth=2, label="Did Not Survive"),
+for spine in ax.spines.values():
+    spine.set_color(INK_SOFT)
+
+# Legend
+legend_handles = [
+    mpatches.Patch(facecolor=color, edgecolor=INK_SOFT, linewidth=1.5, label=label)
+    for label, color in CELL_COLORS.items()
 ]
-ax.legend(handles=legend_elements, loc="upper right", fontsize=16, framealpha=0.95, edgecolor="gray")
+leg = ax.legend(handles=legend_handles, loc="upper right", fontsize=16)
+leg.get_frame().set_facecolor(ELEVATED_BG)
+leg.get_frame().set_edgecolor(INK_SOFT)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Add axis labels as text
-ax.text(0.5, -0.13, "Passenger Class", ha="center", va="top", fontsize=20, fontweight="bold")
-ax.text(-0.15, 0.5, "Survival Status", ha="right", va="center", fontsize=20, fontweight="bold", rotation=90)
-
+# Save
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
