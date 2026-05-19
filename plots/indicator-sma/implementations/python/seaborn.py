@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-sma: Simple Moving Average (SMA) Indicator Chart
-Library: seaborn | Python 3.13
-Quality: pending | Updated: 2026-05-19
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-19
 """
 
 import os
