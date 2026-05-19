@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
-Library: altair 6.0.0 | Python 3.13
-Quality: pending | Created: 2026-05-19
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-19
 """
 
 import os
