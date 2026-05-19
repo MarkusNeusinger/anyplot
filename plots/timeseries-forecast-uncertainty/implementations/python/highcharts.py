@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: highcharts unknown | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-19
@@ -33,7 +33,7 @@ CI_COLOR = "#0072B2"  # position 3 — both CI bands (opacity differentiates)
 
 # Theme-adaptive CI fill opacity for dark-mode distinction
 FILL_OP_80 = 0.30 if THEME == "light" else 0.40
-FILL_OP_95 = 0.15 if THEME == "light" else 0.25
+FILL_OP_95 = 0.15 if THEME == "light" else 0.32
 
 # Data — monthly product demand with 3-year history and 12-month ARIMA-style forecast
 np.random.seed(42)
@@ -120,8 +120,10 @@ chart.options.chart = {
     "width": 3200,
     "height": 1800,
     "backgroundColor": PAGE_BG,
+    "borderWidth": 0,
+    "plotBorderWidth": 0,
     "spacingTop": 40,
-    "spacingBottom": 130,
+    "spacingBottom": 220,
     "spacingLeft": 60,
     "spacingRight": 80,
 }
@@ -169,11 +171,15 @@ chart.options.y_axis = {
 
 chart.options.legend = {
     "enabled": True,
+    "layout": "horizontal",
+    "align": "center",
+    "verticalAlign": "bottom",
     "itemStyle": {"fontSize": "36px", "color": INK_SOFT},
     "symbolWidth": 24,
     "symbolHeight": 14,
     "symbolRadius": 3,
     "margin": 20,
+    "padding": 16,
 }
 
 chart.options.tooltip = {
