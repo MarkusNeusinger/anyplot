@@ -1,7 +1,7 @@
 """ anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-16
+Quality: 90/100 | Updated: 2026-05-19
 """
 
 import os
@@ -10,6 +10,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 
 
 # Theme tokens
@@ -21,45 +23,31 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Okabe-Ito palette
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
-COLOR_HISTORICAL = OKABE_ITO[0]  # Green
-COLOR_FORECAST = OKABE_ITO[1]  # Vermillion
+COLOR_HISTORICAL = OKABE_ITO[0]
+COLOR_FORECAST = OKABE_ITO[1]
 
-# Set seed for reproducibility
 np.random.seed(42)
 
-# Generate stock price time series with forecast
-n_historical = 60  # 60 trading days (~3 months)
-n_forecast = 20  # 20 trading days (~4 weeks)
-n_total = n_historical + n_forecast
+# Data — stock price with ~3-month history and 4-week forecast
+n_historical = 60
+n_forecast = 20
+dates = pd.date_range(start="2025-01-01", periods=n_historical + n_forecast, freq="B")
 
-dates = pd.date_range(start="2025-01-01", periods=n_total, freq="B")  # Business days
-
-# Generate historical stock prices with trend and volatility
 t = np.arange(n_historical)
-base_price = 150
-trend = 0.15 * t  # Slight upward trend
-volatility = 2.5 * np.sin(2 * np.pi * t / 20)  # 20-day cycles
-noise = np.random.normal(0, 1.5, n_historical)
-historical_prices = base_price + trend + volatility + noise
+historical_prices = 150 + 0.15 * t + 2.5 * np.sin(2 * np.pi * t / 20) + np.random.normal(0, 1.5, n_historical)
 
-# Generate forecast with increasing uncertainty
-t_forecast = np.arange(n_historical, n_total)
-trend_forecast = base_price + 0.15 * t_forecast
-seasonality_forecast = 2.5 * np.sin(2 * np.pi * t_forecast / 20)
-forecast_prices = trend_forecast + seasonality_forecast
+t_fc = np.arange(n_historical, n_historical + n_forecast)
+forecast_prices = 150 + 0.15 * t_fc + 2.5 * np.sin(2 * np.pi * t_fc / 20)
 
-# Confidence intervals widen over forecast horizon
-forecast_horizon = np.arange(1, n_forecast + 1)
-std_base = 1.5
-std_growth = std_base * np.sqrt(forecast_horizon)
-
+horizon = np.arange(1, n_forecast + 1)
+std_growth = 1.5 * np.sqrt(horizon)
 lower_95 = forecast_prices - 1.96 * std_growth
 upper_95 = forecast_prices + 1.96 * std_growth
 lower_80 = forecast_prices - 1.28 * std_growth
 upper_80 = forecast_prices + 1.28 * std_growth
 
-# Create DataFrame
-df = pd.DataFrame(
+# Wide-form for CI bands; long-form for seaborn's data-aware lineplot
+df_wide = pd.DataFrame(
     {
         "date": dates,
         "actual": list(historical_prices) + [np.nan] * n_forecast,
@@ -71,7 +59,14 @@ df = pd.DataFrame(
     }
 )
 
-# Configure seaborn theme with theme-adaptive colors
+long_data = pd.concat(
+    [
+        df_wide[["date", "actual"]].rename(columns={"actual": "price"}).assign(series="Historical"),
+        df_wide[["date", "forecast"]].rename(columns={"forecast": "price"}).assign(series="Forecast"),
+    ]
+).dropna()
+
+# Configure seaborn theme
 sns.set_theme(
     style="ticks",
     rc={
@@ -89,52 +84,60 @@ sns.set_theme(
     },
 )
 
-# Create figure
+# Plot
 fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
-# Plot confidence intervals (95% lighter, 80% darker)
-ax.fill_between(df["date"], df["lower_95"], df["upper_95"], alpha=0.15, color=COLOR_FORECAST, label="95% Confidence")
-ax.fill_between(df["date"], df["lower_80"], df["upper_80"], alpha=0.25, color=COLOR_FORECAST, label="80% Confidence")
+# Confidence interval bands (95% lightest, 80% more opaque — nested)
+ax.fill_between(df_wide["date"], df_wide["lower_95"], df_wide["upper_95"], alpha=0.15, color=COLOR_FORECAST)
+ax.fill_between(df_wide["date"], df_wide["lower_80"], df_wide["upper_80"], alpha=0.28, color=COLOR_FORECAST)
 
-# Plot historical data
-ax.plot(df["date"], df["actual"], color=COLOR_HISTORICAL, linewidth=3, label="Historical", zorder=3)
-
-# Plot forecast with dashed line
-ax.plot(
-    df[df["forecast"].notna()]["date"],
-    df[df["forecast"].notna()]["forecast"],
-    color=COLOR_FORECAST,
+# Seaborn lineplot — idiomatic long-form API with hue + style + dashes
+sns.lineplot(
+    data=long_data,
+    x="date",
+    y="price",
+    hue="series",
+    style="series",
+    palette={"Historical": COLOR_HISTORICAL, "Forecast": COLOR_FORECAST},
+    dashes={"Historical": (1, 0), "Forecast": (6, 2)},
     linewidth=3,
-    linestyle="--",
-    label="Forecast",
-    zorder=3,
+    ax=ax,
+    legend=False,
 )
 
-# Add vertical line at forecast start
-forecast_start = dates[n_historical - 1]
-ax.axvline(x=forecast_start, color=INK_SOFT, linestyle=":", linewidth=1.5, alpha=0.5)
+# Forecast boundary marker
+ax.axvline(x=dates[n_historical - 1], color=INK_SOFT, linestyle=":", linewidth=1.5, alpha=0.5)
 
-# Styling
+# Style
 ax.set_title(
-    "timeseries-forecast-uncertainty · seaborn · anyplot.ai", fontsize=24, fontweight="medium", color=INK, pad=20
+    "timeseries-forecast-uncertainty · python · seaborn · anyplot.ai",
+    fontsize=24,
+    fontweight="medium",
+    color=INK,
+    pad=20,
 )
 ax.set_xlabel("Date", fontsize=20, color=INK)
 ax.set_ylabel("Stock Price ($)", fontsize=20, color=INK)
 ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
 
-# Remove top and right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
+sns.despine(ax=ax)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-# Subtle grid on y-axis only
 ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 ax.set_axisbelow(True)
 
-# Legend
-ax.legend(fontsize=16, loc="upper left", framealpha=1.0, fancybox=False, edgecolor=INK_SOFT)
+# Combined legend: line handles + CI band patches
+legend_elements = [
+    Line2D([0], [0], color=COLOR_HISTORICAL, linewidth=3, label="Historical"),
+    Line2D([0], [0], color=COLOR_FORECAST, linewidth=3, linestyle=(0, (6, 2)), label="Forecast"),
+    Patch(facecolor=COLOR_FORECAST, alpha=0.28, label="80% Confidence"),
+    Patch(facecolor=COLOR_FORECAST, alpha=0.15, label="95% Confidence"),
+]
+ax.legend(handles=legend_elements, fontsize=16, loc="upper left", framealpha=1.0, fancybox=False, edgecolor=INK_SOFT)
 
 plt.tight_layout()
+
+# Save
 plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
