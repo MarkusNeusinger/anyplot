@@ -29,6 +29,7 @@ from plotnine import (
     ggplot, aes,
     geom_point, geom_line, geom_bar, geom_boxplot,
     labs, theme, theme_minimal,
+    element_text, element_rect, element_line,
     scale_fill_brewer, scale_color_brewer
 )
 ```

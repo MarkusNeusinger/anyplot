@@ -447,11 +447,11 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — l
 ```python
 THEME = os.getenv("ANYPLOT_THEME", "light")  # already defined at top
 
-# matplotlib/seaborn/plotnine (static, PNG only)
-plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight', facecolor=PAGE_BG)
+# matplotlib/seaborn/plotnine (static, PNG only) — figsize=(8, 4.5) dpi=400 → 3200×1800
+plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
 
-# plotly (PNG + HTML)
-fig.write_image(f'plot-{THEME}.png', width=1600, height=900, scale=3)
+# plotly (PNG + HTML) — width=800 height=450 scale=4 → 3200×1800
+fig.write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
 fig.write_html(f'plot-{THEME}.html', include_plotlyjs='cdn')
 
 # bokeh (PNG + HTML)
