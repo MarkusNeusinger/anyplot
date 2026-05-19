@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 90/100 | Updated: 2026-05-19
@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Legend, Span
+from bokeh.models import ColumnDataSource, HoverTool, Label, Legend, Range1d, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -55,6 +55,11 @@ upper_80 = forecast + uncertainty_80
 lower_95 = forecast - uncertainty_95
 upper_95 = forecast + uncertainty_95
 
+# X-range with right padding (2 months past last forecast date)
+x_start = dates_hist[0]
+x_end = dates_forecast[-1] + pd.DateOffset(months=2)
+x_range = Range1d(start=x_start.timestamp() * 1000, end=x_end.timestamp() * 1000)
+
 # Create figure
 p = figure(
     width=3200,
@@ -63,7 +68,12 @@ p = figure(
     x_axis_label="Date",
     y_axis_label="Sales (thousands)",
     x_axis_type="datetime",
+    x_range=x_range,
     toolbar_location=None,
+    min_border_bottom=180,
+    min_border_left=200,
+    min_border_top=120,
+    min_border_right=60,
 )
 
 # Style title and axes
@@ -136,6 +146,19 @@ forecast_start = Span(
 )
 p.add_layout(forecast_start)
 
+# Annotation labelling the forecast region
+forecast_label = Label(
+    x=dates_forecast[0].timestamp() * 1000,
+    y=168,
+    x_units="data",
+    y_units="data",
+    text="Forecast ▶",
+    text_color=INK_SOFT,
+    text_font_size="32pt",
+    x_offset=20,
+)
+p.add_layout(forecast_label)
+
 # HoverTool for historical data
 hover_hist = HoverTool(
     renderers=[hist_line],
@@ -182,7 +205,7 @@ legend.glyph_width = 60
 legend.glyph_height = 40
 p.add_layout(legend)
 
-# Set y-axis range with room for confidence bands
+# Set y-axis range with room for confidence bands and annotation
 p.y_range.start = 55
 p.y_range.end = 175
 
