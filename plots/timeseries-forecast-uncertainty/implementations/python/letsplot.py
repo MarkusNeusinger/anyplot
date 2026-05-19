@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-19
@@ -24,6 +24,9 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 INK_GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+ALPHA_95 = 0.24 if THEME == "light" else 0.35
+ALPHA_80 = 0.38 if THEME == "light" else 0.55
 
 # Monthly energy demand: 36 months history + 12 month forecast
 np.random.seed(42)
@@ -59,10 +62,14 @@ forecast_start = dates_forecast[0]
 # Plot — theme_classic gives L-shaped spines; theme() overrides specific elements
 plot = (
     ggplot()
-    # 95% CI (outer, lighter) — alpha raised to 0.24 for dark-mode visibility
-    + geom_ribbon(aes(x="date", ymin="lower_95", ymax="upper_95"), data=df_fc, fill=OKABE_ITO[4], alpha=0.24)
+    # 95% CI (outer, lighter)
+    + geom_ribbon(
+        aes(x="date", ymin="lower_95", ymax="upper_95"), data=df_fc, fill=OKABE_ITO[1], alpha=ALPHA_95, color=None
+    )
     # 80% CI (inner, darker)
-    + geom_ribbon(aes(x="date", ymin="lower_80", ymax="upper_80"), data=df_fc, fill=OKABE_ITO[4], alpha=0.38)
+    + geom_ribbon(
+        aes(x="date", ymin="lower_80", ymax="upper_80"), data=df_fc, fill=OKABE_ITO[1], alpha=ALPHA_80, color=None
+    )
     # Historical solid line (brand green) — tooltips show value on hover in HTML
     + geom_line(
         aes(x="date", y="value", color="series"),
@@ -85,7 +92,7 @@ plot = (
     )
     # Vertical marker at forecast boundary
     + geom_vline(xintercept=forecast_start.timestamp() * 1000, color=INK_MUTED, size=0.6, linetype="dotted")
-    + scale_color_manual(values={"Historical": OKABE_ITO[0], "Forecast": OKABE_ITO[4]}, name="")
+    + scale_color_manual(values={"Historical": OKABE_ITO[0], "Forecast": OKABE_ITO[1]}, name="")
     + labs(
         x="Date",
         y="Energy Demand (MWh)",
