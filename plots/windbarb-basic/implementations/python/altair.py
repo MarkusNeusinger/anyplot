@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 windbarb-basic: Wind Barb Plot for Meteorological Data
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-19
@@ -14,9 +14,10 @@ import pandas as pd
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND = "#009E73"  # Okabe-Ito position 1
+BRAND = "#009E73"  # Okabe-Ito position 1 — used for calm circles
 
 # Data — synthetic wind observations from a 6×5 grid of weather stations
 np.random.seed(42)
@@ -68,7 +69,7 @@ for _, row in barbed_df.iterrows():
         bpos = 0.85 - pos_offset
         bx = row["x"] + ux_s * staff_len * bpos
         by = row["y"] + uy_s * staff_len * bpos
-        pennant_records.append({"x": bx, "y": by, "angle": (row["direction"] + 270) % 360})
+        pennant_records.append({"x": bx, "y": by, "angle": (row["direction"] + 270) % 360, "speed": spd})
         pos_offset += 0.20
     remaining -= num_pennants * 50
 
@@ -77,7 +78,7 @@ for _, row in barbed_df.iterrows():
         bpos = 0.85 - pos_offset
         bx = row["x"] + ux_s * staff_len * bpos
         by = row["y"] + uy_s * staff_len * bpos
-        barb_records.append({"x": bx, "y": by, "x2": bx + px_s * 0.35, "y2": by + py_s * 0.35})
+        barb_records.append({"x": bx, "y": by, "x2": bx + px_s * 0.35, "y2": by + py_s * 0.35, "speed": spd})
         pos_offset += 0.15
     remaining -= num_full * 10
 
@@ -85,20 +86,28 @@ for _, row in barbed_df.iterrows():
         bpos = 0.85 - pos_offset
         bx = row["x"] + ux_s * staff_len * bpos
         by = row["y"] + uy_s * staff_len * bpos
-        barb_records.append({"x": bx, "y": by, "x2": bx + px_s * 0.18, "y2": by + py_s * 0.18})
+        barb_records.append({"x": bx, "y": by, "x2": bx + px_s * 0.18, "y2": by + py_s * 0.18, "speed": spd})
 
-barb_df = pd.DataFrame(barb_records) if barb_records else pd.DataFrame(columns=["x", "y", "x2", "y2"])
-pennant_df = pd.DataFrame(pennant_records) if pennant_records else pd.DataFrame(columns=["x", "y", "angle"])
+barb_df = pd.DataFrame(barb_records) if barb_records else pd.DataFrame(columns=["x", "y", "x2", "y2", "speed"])
+pennant_df = pd.DataFrame(pennant_records) if pennant_records else pd.DataFrame(columns=["x", "y", "angle", "speed"])
+
+# Continuous speed color encoding — cividis for CVD-safe sequential scale
+speed_color = alt.Color(
+    "speed:Q",
+    scale=alt.Scale(scheme="cividis", domainMin=0, domainMax=60),
+    legend=alt.Legend(title="Wind Speed (kt)", orient="bottom-right"),
+)
 
 # Layer 1: Staff lines
 staff = (
     alt.Chart(barbed_df)
-    .mark_rule(strokeWidth=2.5, color=BRAND)
+    .mark_rule(strokeWidth=2.5)
     .encode(
         x=alt.X("x:Q", title="Longitude (°E)", scale=alt.Scale(domain=[-0.5, 11])),
         y=alt.Y("y:Q", title="Latitude (°N)", scale=alt.Scale(domain=[-0.8, 9])),
         x2="x2:Q",
         y2="y2:Q",
+        color=speed_color,
         tooltip=[
             alt.Tooltip("x:Q", title="Longitude", format=".1f"),
             alt.Tooltip("y:Q", title="Latitude", format=".1f"),
@@ -110,7 +119,9 @@ staff = (
 
 # Layer 2: Barb line segments (full and half barbs)
 if len(barb_df) > 0:
-    barbs = alt.Chart(barb_df).mark_rule(strokeWidth=2.5, color=BRAND).encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q")
+    barbs = (
+        alt.Chart(barb_df).mark_rule(strokeWidth=2.5).encode(x="x:Q", y="y:Q", x2="x2:Q", y2="y2:Q", color=speed_color)
+    )
 else:
     barbs = alt.Chart(pd.DataFrame({"x": []})).mark_point()
 
@@ -118,8 +129,13 @@ else:
 if len(pennant_df) > 0:
     pennants = (
         alt.Chart(pennant_df)
-        .mark_point(shape="triangle", filled=True, size=400, color=BRAND)
-        .encode(x="x:Q", y="y:Q", angle=alt.Angle("angle:Q", scale=alt.Scale(domain=[0, 360], range=[0, 360])))
+        .mark_point(shape="triangle", filled=True, size=700)
+        .encode(
+            x="x:Q",
+            y="y:Q",
+            angle=alt.Angle("angle:Q", scale=alt.Scale(domain=[0, 360], range=[0, 360])),
+            color=speed_color,
+        )
     )
 else:
     pennants = alt.Chart(pd.DataFrame({"x": []})).mark_point()
@@ -151,7 +167,7 @@ chart = (
             subtitle="Half barb = 5 kt  |  Full barb = 10 kt  |  ▲ Pennant = 50 kt  |  ○ Calm < 2.5 kt",
         ),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke="transparent")
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -163,6 +179,7 @@ chart = (
         titleFontSize=22,
     )
     .configure_title(color=INK, subtitleColor=INK_SOFT, fontSize=28, subtitleFontSize=20)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
 chart.save(f"plot-{THEME}.png", scale_factor=3.0)
