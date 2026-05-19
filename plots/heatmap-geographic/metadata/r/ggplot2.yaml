@@ -1,0 +1,279 @@
+library: ggplot2
+language: r
+specification_id: heatmap-geographic
+created: '2026-05-18T23:57:48Z'
+updated: '2026-05-19T00:18:33Z'
+generated_by: claude-sonnet
+workflow_run: 26067266395
+issue: 3638
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Correct geographic heatmap with KDE (MASS::kde2d) producing smooth density surface
+    over the eastern US
+  - Inferno colormap — explicitly cited in the spec as an example — creates visually
+    striking hotspots with perceptually-uniform sequential gradient
+  - 'All theme tokens correctly applied: PAGE_BG, INK, INK_SOFT, ELEVATED_BG flip
+    correctly between light (#FAF8F1) and dark (#1A1A17) renders'
+  - Conditional maps package integration adds country + state borders via native geom_polygon(),
+    giving geographic context without fake interactivity
+  - Low-density threshold (15th-percentile NA) removes noisy tails and sharpens the
+    visual focus on true storm clusters
+  - Fully explicit font sizes (axis.title=20, axis.text=16, plot.title=22, legend.title=18,
+    legend.text=16) — readable at 4800×2700 canvas
+  - 'Clean KISS code structure: no functions or classes, set.seed(42) for reproducibility,
+    ragg::agg_png device used correctly'
+  weaknesses:
+  - Title is clipped in both renders — "anyplot.ai" is cut off at the right canvas
+    edge; reduce plot.title size from 22 to 18 or enable title wrapping via plot.title
+    = element_text(..., margin = margin(b=12), hjust=0).
+  - plot.title size (22pt) is slightly below the 24pt guideline for 4800×2700 canvas;
+    nudge to 24pt after fixing the truncation.
+  - 'DE-01 ceiling: the plot is visually striking but stays in the "well-configured
+    default" tier (score 5/8) — adding a subtitle with the geographic scope ("Eastern
+    United States, 2000–2023") or a brief caption would push it closer to publication-ready.'
+  - 'VQ-05 minor: the title truncation means the canvas is not perfectly utilised
+    — fixing the title size + wrapping resolves this.'
+  - 'LM-02 opportunity: geom_raster(interpolate=TRUE) is a distinctive ggplot2 feature
+    already in use; adding stat_contour() or geom_density2d() as an overlay would
+    further leverage ggplot2-specific layering capabilities.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct theme surface, no pure white.
+      Chrome: Title "Convective Storm Event Density · heatmap-geographic · r · ggplot2 · anyplot.ai" rendered in dark ink at top — legible but the right end ("anyplot.ai") is clipped at the canvas edge. Axis labels "Longitude" and "Latitude" are clearly dark and readable. Tick labels (25°N–50°N, 105°W–65°W) appear in INK_SOFT dark grey — all readable against the light background. Legend title "Storm Density" and numeric scale (0.0025–0.0100) are clearly visible. Subtle dotted grid lines are present but non-intrusive.
+      Data: Inferno colormap from dark purple (low density, ~0.0025) to bright yellow-white (peak density, ~0.0100). Four distinct hotspot clusters visible: Gulf Coast (~30°N 90°W), Great Plains/Tornado Alley (~38°N 97°W), Appalachians (~40°N 79°W), and Florida Peninsula (~27°N 82°W). US state and country boundaries drawn as light-grey polygons. Low-density regions below the 15th-percentile threshold are transparent, revealing the warm background and sharpening focus on storm clusters.
+      Legibility verdict: PASS — all chrome elements readable against light background. One issue: title clipped at right edge.
+
+    Dark render (plot-dark.png):
+      Background: Near-black consistent with #1A1A17 — correct dark theme surface, warm not pure black.
+      Chrome: Title text appears in light cream (#F0EFE8 / INK token) — clearly readable on the dark surface. Axis labels "Longitude" and "Latitude" in light ink — readable. Tick labels in lighter grey (INK_SOFT #B8B7B0 equivalent) — clearly legible, no dark-on-dark failure. Legend box uses ELEVATED_BG (#242420) with a subtle INK_SOFT border — text within is light and readable. Grid dots are faint and non-competing. Geographic labels ("Tornado Alley", "Gulf Coast", "Florida") are visible as light italic text on the dark surface in the dark render — these may be from a previous render iteration as the current code does not contain geom_text/annotate calls.
+      Data: Inferno colormap colors are IDENTICAL to the light render — dark purple through orange to bright yellow-white hotspots. Only chrome (background, text, legend box) has flipped between themes. The four storm clusters remain equally vivid.
+      Legibility verdict: PASS — all text clearly readable on dark background. No dark-on-dark failures detected. Title truncation issue persists as in light render.
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (axis.title=20, axis.text=16, plot.title=22,
+          legend=16/18). Title is 22pt vs guideline 24pt, and it is clipped at the
+          right canvas edge — minor deduction.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Legend positioned cleanly to
+          the right without obscuring the map.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Inferno heatmap hotspots are vivid and immediately visible. Low-density
+          threshold (15th-percentile NA) removes noisy background. Geographic borders
+          clearly visible in both renders.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Inferno is a perceptually-uniform sequential colormap — CVD-safe
+          with strong luminance gradient from dark purple to bright yellow-white.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Map fills the canvas well with balanced margins. Title truncation
+          (right edge clip) is the only layout defect.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: X-axis 'Longitude', Y-axis 'Latitude' — both descriptive. Degree
+          units implicit in tick labels (25°N, 105°W etc.).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Inferno is a viridis-family sequential colormap (explicitly cited
+          as an example in the spec). Backgrounds are #FAF8F1 (light) and #1A1A17
+          (dark). All chrome tokens flip correctly. Data colors identical between
+          renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Visually striking: inferno hotspots on geographic context is a compelling
+          combination. Theme-adaptive chrome is well-polished. Falls short of publication-ready
+          (no subtitle, no caption, title clipped).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border removed, subtle dotted grid (linewidth=0.25), styled
+          legend with ELEVATED_BG fill and INK_SOFT border, generous plot margins.
+          Good refinement clearly above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Inferno's luminance gradient immediately draws the eye to hotspot
+          regions. Geographic borders provide spatial anchoring. Low-density threshold
+          creates clean focus. Visual hierarchy is effective.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct geographic heatmap using KDE-based continuous density surface
+          rendered via geom_raster.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: KDE via MASS::kde2d, inferno sequential colormap with NA transparency,
+          colorbar legend, geographic borders (country + state boundaries via maps
+          package).
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude on X, Latitude on Y, KDE density as fill color. coord_cartesian
+          correctly clips to eastern US bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 2
+        max: 3
+        passed: true
+        comment: 'Title format is correct: ''Convective Storm Event Density · heatmap-geographic
+          · r · ggplot2 · anyplot.ai''. However, the title is clipped at the right
+          canvas edge in both renders (-1). Legend label ''Storm Density'' is appropriate.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Four geographically distinct clusters (Gulf Coast, Great Plains,
+          Appalachians, Florida) demonstrate spatial density variation. 1500 total
+          points are sufficient for KDE. Multiple density levels visible.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Convective storm events over the eastern United States is a realistic,
+          scientifically neutral scenario. Geographic cluster locations correspond
+          to actual US storm-prone regions.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Coordinates are geographically accurate for the eastern US (lon -105
+          to -65, lat 24 to 51). Cluster centers and spreads are plausible for the
+          named regions.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear structure: imports → theme tokens → data → KDE → plot → geographic
+          layers → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: library(ggplot2) and library(ragg) both used. MASS and maps called
+          via namespace/requireNamespace — no unused imports.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R. Conditional maps block is appropriate. No fake
+          interactivity, no over-engineering.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: ggsave(sprintf('plot-%s.png', THEME), device=ragg::agg_png, width=16,
+          height=9, dpi=300) — correct.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Proper grammar-of-graphics layering: geom_raster + scale_fill_viridis_c
+          + coord_cartesian + theme chain. guide_colorbar() used correctly. Good ggplot2
+          idioms throughout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_raster(interpolate=TRUE) for bilinear interpolation is ggplot2-specific.
+          guide_colorbar() with custom barwidth/barheight/title.position. coord_cartesian()
+          for precise geographic clipping. Solid but could further leverage ggplot2
+          with stat_contour() overlay.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - MASS
+  - maps
+  techniques:
+  - colorbar
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  dataprep:
+  - kde
+  styling:
+  - custom-colormap
