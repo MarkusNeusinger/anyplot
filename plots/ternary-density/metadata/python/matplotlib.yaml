@@ -1,225 +1,264 @@
 library: matplotlib
+language: python
 specification_id: ternary-density
 created: '2026-01-11T09:30:09Z'
-updated: '2026-01-11T09:34:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20892890775
+updated: '2026-05-19T10:34:30Z'
+generated_by: claude-sonnet
+workflow_run: 26091001770
 issue: 3696
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-density/matplotlib/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 92
 review:
   strengths:
-  - Excellent implementation of a complex ternary diagram from scratch using matplotlib
-    primitives
-  - Proper use of scipy gaussian_kde with Silverman bandwidth selection
-  - Clear visual separation of three density clusters representing different sediment
-    types
-  - Perceptually uniform viridis colormap as specified
-  - Clean contour lines help interpret density levels
-  - Grid lines appropriately subtle beneath density layer
-  - Correct title format with spec-id and library
+  - Complete ternary diagram built from scratch using only matplotlib primitives (Polygon,
+    contourf, contour, text) — no specialized ternary library needed
+  - Viridis colormap with overlaid white contour lines creates an elegant, readable
+    density surface
+  - Three geologically distinct sediment clusters are clearly visible with strong
+    focal points
+  - All theme tokens properly threaded through colorbar label, ticks, vertex labels,
+    and edge annotations — both renders are fully readable
+  - Correct ternary-to-Cartesian transformation with three grid families (constant
+    Sand/Silt/Clay) at 20/40/60/80% levels
+  - Square 12×12 canvas (3600×3600 px at 300 dpi) is the right format choice for a
+    symmetric triangular plot
+  - Silverman bandwidth selection and 800-point dataset yield smooth, well-resolved
+    KDE without over-smoothing
   weaknesses:
-  - Helper function ternary_to_cartesian() slightly deviates from strict KISS principle,
-    though it improves readability
-  - Grid percentage labels along triangle edges could better indicate which component
-    they measure
-  - Figure uses square aspect ratio (12x12) which is acceptable but does not match
-    the 16:9 or 1:1 sizing guidance exactly
-  image_description: 'The plot displays a ternary density visualization for sediment
-    composition analysis showing Sand, Silt, and Clay percentages. The triangular
-    diagram has three clearly labeled vertices: "Sand (%)" at the bottom-left, "Silt
-    (%)" at the bottom-right, and "Clay (%)" at the top. The density is visualized
-    using a viridis colormap (purple to yellow gradient) with values ranging from
-    0.0 to approximately 5.4. Three distinct density clusters are visible: a high-density
-    yellow region near the Sand vertex (bottom-left), another high-density yellow
-    region near the Clay vertex (top), and a moderate-density region near the Silt
-    vertex (bottom-right). White contour lines clearly delineate the density levels.
-    Dashed gray grid lines at 20%, 40%, 60%, and 80% intervals are visible beneath
-    the density layer. Percentage tick labels appear along each edge of the triangle.
-    A colorbar on the right shows the "Density" scale. The title includes both a descriptive
-    name "Sediment Composition Analysis" and the required format "ternary-density
-    · matplotlib · pyplots.ai".'
+  - Edge tick labels (13pt) and axis direction labels (14pt) are somewhat small for
+    the large canvas — spec recommends 16pt for tick labels and 20pt for axis labels
+    at 3600×3600 px
+  - Rotated 'Clay (%)' and 'Silt (%)' direction labels along the left/right edges
+    are slightly tight against the tick numbers and could benefit from more offset
+    or slightly larger font
+  - 'DE-01 could push higher: the overall background composition is clean but the
+    colorbar placement slightly breaks the equilateral symmetry of the triangle —
+    centering the colorbar vertically relative to the triangle height would improve
+    balance'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct surface, not pure white
+      Chrome: Title "Sediment Composition Analysis / ternary-density · python · matplotlib · anyplot.ai" in dark #1A1A17, clearly readable. Bold vertex labels Sand/Silt/Clay in dark ink. Edge tick numbers (20/40/60/80) in muted gray. Axis direction labels "Clay (%)", "Silt (%)", "Sand (%)" in soft gray italic. Colorbar label "Density" and ticks in dark ink. All text readable.
+      Data: Viridis colormap density heatmap with three distinct bright-yellow/green density peaks (three sediment clusters). White contour lines (6 levels) overlaid clearly. Dashed gray grid lines at 20/40/60/80% intervals visible beneath density surface. Triangle boundary in soft gray.
+      Legibility verdict: PASS — all text is clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, not pure black
+      Chrome: Title, vertex labels, edge ticks, and colorbar label all render in light-colored text, clearly visible against the dark background. No dark-on-dark issues detected. Colorbar tick labels in light ink. Axis direction labels legible.
+      Data: Viridis colormap colors are identical to the light render — same three density clusters with the same yellow-green peaks and purple-blue low-density regions. White contour lines equally visible on dark background.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at ~24pt, vertex labels at ~20pt, tick labels at ~14-16pt,
-          all perfectly readable
+        comment: 'Title 24pt and vertex labels 22pt are correct; edge tick labels
+          13pt and direction labels 14pt are slightly small for 3600px canvas (guideline:
+          16pt ticks, 20pt axis labels)'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels well-positioned outside
-          the triangle
+        comment: No major overlaps; rotated Clay/Silt direction labels are slightly
+          tight against tick numbers but readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Density visualization fills the triangle well, contour lines visible,
-          appropriate alpha (0.85)
+        comment: Density surface and white contour lines are fully visible; grid lines
+          appropriately subtle beneath density layer
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses viridis colormap which is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good proportions, but square figure (12x12) results in some empty
-          space; plot uses adequate canvas area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Sand (%), Silt (%), Clay (%) at vertices'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform and CVD-safe; white contours provide
+          redundant structure encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 12x12 (3600x3600 px) appropriate for equilateral triangle;
+          nothing cut off; colorbar well placed
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid lines are subtle but percentage labels could better indicate
-          which component they represent
+        passed: true
+        comment: Vertex labels Sand/Silt/Clay present; edge scale labels Sand(%)/Silt(%)/Clay(%)
+          present; descriptive title present
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous data uses viridis (correct); light background #FAF8F1,
+          dark background #1A1A17 (correct); no categorical misuse'
+    design_excellence:
+      score: 16
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Custom ternary coordinate system built from matplotlib primitives;
+          viridis+contourf+contour combination is visually compelling; three geological
+          clusters create visual interest
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: ax.axis('off') removes all standard chrome; alpha values carefully
+          layered (0.85 density, 0.6 contour, 0.35 grid); colorbar shrink=0.65 and
+          pad=0.02 refined
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Three distinct geological sediment clusters are clearly readable
+          focal points; viridis guides eye to high-density zones; contour lines help
+          quantitative reading
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct ternary density plot with KDE heatmap overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Three components (Sand, Silt, Clay) correctly mapped to ternary coordinates
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has KDE density estimation, viridis colormap, grid lines, vertex
-          labels, contour lines
-      - id: SC-04
-        name: Data Range
+        comment: Perceptually uniform colormap (viridis) ✓; grid beneath density layer
+          ✓; vertex labels ✓; contour lines at key density levels ✓
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within triangle, density range shown in colorbar
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct ternary-to-Cartesian transformation; components sum to 100%
+          enforced via normalization; all three components shown
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled Density
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses {spec-id} · {library} · pyplots.ai format correctly in subtitle
+        comment: 'Title: ''Sediment Composition Analysis\nternary-density · python
+          · matplotlib · anyplot.ai'' — correct format with descriptive prefix'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows three distinct clusters representing different sediment types;
-          could show more variation in cluster shapes
+        comment: 800-point dataset with three distinct clusters; full ternary space
+          coverage; KDE computed on full composition space
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sediment composition (sand/silt/clay) is a classic geological use
-          case for ternary diagrams
+        comment: Sediment composition (sand/silt/clay) is a canonical geological ternary
+          application; neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values sum to 100%, clusters at realistic compositions
+        comment: 800 points appropriate for KDE density estimation; Silverman bandwidth
+          selection; percentages sum to 100%
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Contains a helper function ternary_to_cartesian() which deviates
-          from strict KISS, but is justified for ternary coordinate conversion
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (matplotlib, numpy, scipy.stats.gaussian_kde)
+        comment: os, matplotlib.pyplot, numpy, Polygon, gaussian_kde — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Well-structured with clear logical sections; appropriate complexity
+          for a custom coordinate system
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; uses ax methods throughout
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Excellent use of matplotlib contourf for density, contour for lines,
-          Polygon patch for boundary, manual grid construction, colorbar customization
+        comment: Axes methods used; contourf/contour idiomatically combined; Polygon
+          patch for boundary; colorbar properly attached
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative use of matplotlib primitives to build a full ternary diagram
+          without any specialized library; manual grid line computation in ternary
+          coordinates is a genuine matplotlib strength exercise
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - colorbar
-  - patches
   - annotations
+  - patches
   patterns:
   - data-generation
-  - iteration-over-groups
+  - matrix-construction
   dataprep:
   - kde
   styling:
+  - minimal-chrome
   - custom-colormap
   - alpha-blending
-  - minimal-chrome
-  - grid-styling
