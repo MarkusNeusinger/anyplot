@@ -1,0 +1,254 @@
+library: ggplot2
+language: r
+specification_id: indicator-sma
+created: '2026-05-19T00:48:34Z'
+updated: '2026-05-19T01:07:37Z'
+generated_by: claude-sonnet
+workflow_run: 26069093538
+issue: 3651
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - 'Full spec compliance: all three SMA periods (20/50/200) rendered with correct
+    Okabe-Ito color ordering, proper null-value handling at SMA 200 start, and clear
+    legend labels'
+  - 'Perfect theme-adaptive chrome in both renders: backgrounds (#FAF8F1 light / #1A1A17
+    dark), text, grid, and legend box all correctly flip between light/dark themes'
+  - 'Exemplary idiomatic ggplot2: tidy data pipeline (pivot_longer → factor reorder
+    → scale_color_manual + scale_linewidth_manual → guides(linewidth=''none'')) is
+    the canonical multi-series line chart pattern'
+  weaknesses:
+  - 'Code-image mismatch: rendered images show ''Golden Cross''/''Death Cross'' dashed-line
+    annotations, but the current ggplot2.R file does not contain geom_vline/annotate/geom_text
+    code for these markers — verify images reflect the actual committed code'
+  - library(dplyr) is imported but unused; remove or replace with actual dplyr calls
+  - sma() helper function violates KISS pattern; replace with zoo::rollmean(x, k,
+    fill=NA, align='right') to eliminate the custom function definition
+  - Plot title is 22pt; nudge to 24pt to meet the style guide minimum for DPI-based
+    libraries
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, correct theme surface
+      Chrome: Title "Daily Close Price · indicator-sma · r · ggplot2 · anyplot.ai" bold dark text at 22pt, clearly readable. Axis labels "Date" and "Price (USD)" in dark ink at 20pt. Tick labels in muted dark gray at 16pt, rotated 30° on x-axis. All chrome elements clearly readable against the light background.
+      Data: Four lines — Price in #009E73 (first series, brand green), SMA 20 in #D55E00 (vermillion), SMA 50 in #0072B2 (blue), SMA 200 in #CC79A7 (pink/purple). Price line slightly thicker. Subtle y-axis grid lines. Horizontal top legend. Images also show dashed vertical crossover annotations ("Golden Cross"/"Death Cross") not present in current code.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — not pure black, correct dark theme surface
+      Chrome: Same title/axis/tick layout but with light text colors (#F0EFE8 range for primary, #B8B7B0 for secondary). No dark-on-dark failures detected. Legend box uses elevated dark background #242420 with subtle border. All chrome clearly readable against the dark background.
+      Data: All four line colors are identical to the light render (#009E73, #D55E00, #0072B2, #CC79A7) — theme isolation is correct; only chrome flips. Crossover annotations also visible in same yellow/orange color.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Sizes explicitly set: title 22pt (slightly below 24pt min), axis
+          labels 20pt, ticks 16pt, legend 16pt; all readable in both themes'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: X-axis labels rotated 30 degrees avoids overlap; annotation labels
+          in dense late-2023 crossover region slightly cramped but readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All four lines clearly visible; price at 1.4px vs 1.0px for SMAs
+          gives appropriate hierarchy
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette fully CVD-safe; all series distinguishable without
+          hue alone
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Data fills canvas well; compact horizontal top legend; no clipped
+          elements
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Date on x-axis (appropriate for date), Price (USD) on y-axis with
+          dollar formatting
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Price=#009E73 (pos 1), SMA20=#D55E00 (2), SMA50=#0072B2 (3), SMA200=#CC79A7
+          (4); backgrounds #FAF8F1/#1A1A17; chrome fully theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured default: explicit Okabe-Ito palette, elevated legend
+          box with ELEVATED_BG fill and border, bold title; not yet FiveThirtyEight-level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid at linewidth 0.25, minor grid suppressed, theme_minimal
+          base, rotated x-labels, no top/right spines
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Price line slightly thicker for hierarchy; crossover annotations
+          visible in rendered images but not present in current R code
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct: price line with three SMA overlays (20/50/200-period)'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: prominent price line, three distinct SMA lines, legend
+          with period labels, y-axis grid, 500 periods'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on x-axis, Price (USD) on y-axis; SMA 200 correctly starts after
+          day 200
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title format correct: ''Daily Close Price · indicator-sma · r ·
+          ggplot2 · anyplot.ai''; legend labels Price/SMA 20/SMA 50/SMA 200 correct'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: price volatility, SMA lag at different periods,
+          SMA 200 null start, crossover dynamics'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Stock price starting $148 with realistic parameters (mu=0.04%, sigma=1.6%);
+          neutral financial domain
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range $130-$175 plausible for mid-cap stock; 500 trading days
+          ≈ 2 years; realistic drift and volatility
+    code_quality:
+      score: 8
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: false
+        comment: sma() helper function defined in script; violates no-functions pattern;
+          could use zoo::rollmean instead
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 1
+        max: 2
+        passed: false
+        comment: library(dplyr) imported but not explicitly used; tidyr is explicitly
+          namespaced
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; clean structure; correct check.names=FALSE for column
+          names with spaces
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf; uses ragg::agg_png; modern
+          linewidth= API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Textbook ggplot2: pivot_longer → factor reorder → scale_color_manual
+          + scale_linewidth_manual → guides(linewidth=''none'')'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: scale_linewidth_manual + guides(linewidth='none') is characteristically
+          ggplot2; scale_x_date with date_breaks/date_labels; factor reordering for
+          legend control
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - dplyr
+  - tidyr
+  - scales
+  - ragg
+  techniques: []
+  patterns:
+  - data-generation
+  - wide-to-long
+  dataprep:
+  - rolling-window
+  - time-series
+  styling:
+  - grid-styling
