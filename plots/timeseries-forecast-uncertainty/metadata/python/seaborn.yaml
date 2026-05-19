@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:28:34Z'
-updated: '2026-05-19T14:42:24Z'
+updated: '2026-05-19T14:53:47Z'
 generated_by: claude-sonnet
 workflow_run: 26103863079
 issue: 3188
@@ -12,44 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 91
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (history, forecast, boundary marker,
-    nested 80%+95% CI bands) present and correctly implemented.'
-  - 'Excellent data storytelling arc: green solid history → dotted boundary → dashed
-    orange forecast with widening bands naturally guides viewer past→future.'
-  - 'Full Okabe-Ito palette compliance, correct theme-adaptive chrome in both renders,
-    correct backgrounds (#FAF8F1 / #1A1A17).'
-  - Custom legend combining Line2D and Patch handles cleanly labels all four visual
-    elements.
-  - Seaborn long-form API with hue+style+dashes is idiomatic and handles dual line
-    differentiation elegantly.
+  - 'Full spec compliance: all required features (solid/dashed lines, nested CI bands,
+    vertical boundary, forecast annotation, 4-element legend) are present and correct'
+  - 'Smart dual encoding: color + line style distinguishes historical from forecast,
+    accessible to CVD users'
+  - Growing uncertainty bands effectively communicate the core insight of forecast
+    uncertainty
+  - Idiomatic seaborn usage with long-form data and combined hue+style+dashes semantic
+    mapping
+  - Perfect theme adaptation in both light and dark renders with correct token usage
+    throughout
   weaknesses:
-  - The 95% CI outer band (alpha=0.15) on dark background (#1A1A17) blends into a
-    dark brownish tone — considerably less visible than on light render. Raise alpha
-    to ~0.20 for the outer band.
-  - No descriptive title prefix (e.g. "Stock Price Forecast · timeseries-forecast-uncertainty
-    · python · seaborn · anyplot.ai") — missed opportunity for storytelling context.
-  - Forecast boundary vertical line has no label or annotation — add a small text
-    marker ("Forecast →") near the dividing line to sharpen data story.
-  - figsize=(16,9) dpi=300 produces 4800×2700 px instead of the standard 3200×1800
-    (figsize=(8,4.5) dpi=400).
+  - CI band colors in dark mode appear brownish (orange alpha-blended over near-black)
+    — slightly reduces visual clarity of band distinction; consider slightly higher
+    alpha values or adding forecast-region background shading
+  - Fontsize hierarchy is compressed (title=10 = axis labels=10, no size differentiation)
+    — title at fontsize=12 and axes at fontsize=10 would create clearer typographic
+    hierarchy
+  - 'LM-02: CI bands, custom legend, and annotation are all raw matplotlib rather
+    than seaborn-distinctive features'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white.
-      Chrome: Title in dark ink, fully readable. Axis labels "Date" and "Stock Price ($)" in dark ink, readable. Tick labels (month/year + price) in INK_SOFT muted dark, readable.
-      Data: Historical solid green line (#009E73) Jan–Mar 2025 ~$150–$161. Forecast dashed orange (#D55E00) April 2025 continuing from history. Nested CI bands: 80% more opaque orange, 95% lighter pale-orange — widening over forecast horizon. Dotted vertical boundary line in INK_SOFT.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "Stock Price Forecast · timeseries-forecast-uncertainty · python · seaborn · anyplot.ai" spans ~85% image width at fontsize=10, dark ink on light background — readable. Axis labels "Stock Price ($)" and "Date" in dark ink at fontsize=10 — readable. Tick labels (Jan 2025, Feb 2025, Mar 2025, Apr 2025 on X; 150–175 on Y) in dark gray at fontsize=8 — readable.
+      Data: Historical line in #009E73 (solid, linewidth=3); Forecast line in #D55E00 (dashed, linewidth=3); 80% CI band in orange at alpha=0.28 (inner); 95% CI band in orange at alpha=0.22 (outer/peach); gray dotted vertical boundary line; "Forecast →" annotation in muted gray. First series correctly uses #009E73.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light cream, readable. Axis labels and tick labels in light tones (INK_SOFT B8B7B0), readable. No dark-on-dark failures detected.
-      Data: Historical green (#009E73) and forecast orange (#D55E00) lines identical to light render. CI bands behave differently on dark surface: 80% band (alpha=0.28) appears as saturated bright orange; 95% band (alpha=0.15) blends into dark brownish-orange — distinguishable but considerably less prominent than in light render.
-      Legibility verdict: PASS — text readable, but 95% CI outer band loses visual prominence on dark surface.
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in light gray/white — readable. Axis labels in light gray — readable. Tick labels in muted gray — readable. Legend box uses elevated dark #242420 with light text — readable. No dark-on-dark failures observed.
+      Data: Historical line #009E73 and forecast line #D55E00 are identical to light render. CI bands appear darker/brownish due to orange alpha-blending against dark background, but both 80% and 95% bands remain distinguishable. Grid lines subtle.
+      Legibility verdict: PASS — all text readable against dark background; brand green #009E73 visible; no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -57,76 +56,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=24, labels=20, ticks=16). Proportions
-          correct, both themes fully readable.
+        comment: All font sizes explicitly set (title=10, axes=10, ticks=8, legend=8);
+          compact title intentional to fit long mandated string; readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between legend, tick labels, title, or data lines.
+        comment: Legend upper-left clears data region; annotation at boundary doesn't
+          conflict; tick labels non-overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Lines prominent, 80% CI visible in both themes. 95% CI outer band
-          at alpha=0.15 loses visual prominence on dark surface (dark brownish blend).
+        comment: linewidth=3 prominent; nested CI bands at distinct alphas (0.28/0.22)
+          clearly layered; dotted divider visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green + orange CVD-safe. Line style (solid vs dashed) adds
-          redundant encoding.
+        comment: Green/orange CVD-safe; dual encoding (solid/dashed) provides redundant
+          channel
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend well-placed in upper-left.
+        comment: Plot fills canvas well, balanced margins, legend doesn't crowd data
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Stock Price ($)'' with units. X-axis: ''Date''. Title
-          in correct mandated format.'
+        comment: Y-axis 'Stock Price ($)' with units; X-axis 'Date' appropriate for
+          datetime
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00 (Okabe-Ito positions 1-2).
-          Backgrounds #FAF8F1 / #1A1A17 correct. Chrome adapts correctly in both renders.'
+        comment: 'First series #009E73 (Okabe-Ito pos 1); second #D55E00 (pos 2);
+          backgrounds #FAF8F1/#1A1A17; both renders theme-correct'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: intentional color choices, alpha-blended nested
-          CI bands, custom legend with Line2D+Patch. No descriptive title prefix or
-          focal-point emphasis at forecast boundary.'
+        comment: 'Strong design: intentional color hierarchy, dual encoding, warm
+          backgrounds, custom legend; above defaults but not FiveThirtyEight publication
+          polish'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Despined (top/right), spine edges styled to INK_SOFT, y-only grid
-          at alpha=0.15, legend with fancybox=False. Tick marks still visible; refinement
-          is good but not perfect.
+        comment: 'Good: top/right spines removed, y-axis-only grid alpha=0.15, set_axisbelow,
+          custom tick colors, legend fancybox=False'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Past→future narrative clear via green solid / dotted boundary /
-          dashed orange forecast with widening bands. Missing: annotation or label
-          at forecast start to anchor viewer attention.'
+        comment: 'Good: widening CI bands communicate growing uncertainty; vertical
+          boundary + annotation guide reader; green-to-orange transition marks historical/forecast
+          shift'
     spec_compliance:
       score: 15
       max: 15
@@ -136,27 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: time series with forecast and nested confidence intervals.'
+        comment: 'Correct: time series with historical, forecast, and nested confidence
+          bands'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Historical solid line, dashed forecast, vertical boundary marker,
-          80% CI, 95% CI — all present.
+        comment: Solid historical, dashed forecast, vertical boundary, nested 80%+95%
+          CI bands, 4-element legend
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, stock price on Y, history/forecast regions correctly populated.
+        comment: Date on X, Stock Price on Y, all data in view, forecast starts where
+          historical ends
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title matches mandated format exactly. Legend: Historical, Forecast,
-          80% Confidence, 95% Confidence.'
+        comment: Title matches '{Descriptive} · {spec-id} · python · seaborn · anyplot.ai';
+          legend labels correct
     data_quality:
       score: 15
       max: 15
@@ -166,22 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: historical variability, forecast projection,
-          both CI levels, growing uncertainty over time.'
+        comment: 'Shows all aspects: volatile historical trend, forecast mean, both
+          CI levels, uncertainty widening, clear transition'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price forecasting with 3-month history and 4-week projection.
-          Neutral domain, realistic price range ~$150-175.
+        comment: Realistic stock price scenario ($150-175), business-day frequency,
+          3-month history + 4-week forecast
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Growth rate, noise, cyclical component, CI widths (1.28σ/1.96σ ×
-          √horizon) are realistic for equity forecasting.
+        comment: Plausible price range; std_growth=1.5*sqrt(horizon) correctly models
+          expanding uncertainty over forecast horizon
     code_quality:
       score: 10
       max: 10
@@ -191,32 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: tokens → data → plot → save. No functions or classes.'
+        comment: 'Flat: imports → tokens → data → DataFrame → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no unused packages.
+        comment: All 7 imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Wide+long form data split appropriate for seaborn's
-          API.
+        comment: Clean, Pythonic; long-form reshape is idiomatic; custom legend handles
+          necessary; no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. Current seaborn/matplotlib API.
+        comment: Saves plot-{THEME}.png at dpi=400 with bbox_inches='tight' and facecolor;
+          current API
     library_mastery:
       score: 7
       max: 10
@@ -226,23 +230,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Long-form DataFrame API with hue+style+dashes dict is idiomatic seaborn.
-          sns.set_theme() and sns.despine() used correctly.
+        comment: Idiomatic long-form data with sns.lineplot(hue, style, dashes), sns.set_theme(rc=),
+          sns.despine(); falls back to matplotlib for CI bands (unavoidable)
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: hue+style+dashes palette control is seaborn-specific. CI bands use
-          matplotlib fill_between (necessary but not seaborn-native). No FacetGrid
-          or relplot.
-  verdict: REJECTED
+        comment: Uses seaborn's combined hue+style+dashes semantic mapping (per-group
+          dash patterns distinctively seaborn); CI bands and custom legend are matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - custom-legend
   patterns:
   - data-generation
+  - wide-to-long
   dataprep:
   - time-series
   styling:
