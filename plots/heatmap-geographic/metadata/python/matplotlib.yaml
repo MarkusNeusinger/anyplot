@@ -1,159 +1,204 @@
 library: matplotlib
+language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T08:15:03Z'
-updated: '2026-01-10T08:17:50Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20875417706
+updated: '2026-05-19T00:08:02Z'
+generated_by: claude-sonnet
+workflow_run: 26066281533
 issue: 3638
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
 review:
   strengths:
-  - Excellent implementation of continuous density heatmap using 2D histogram with
-    Gaussian smoothing
-  - Clean geographic context with hand-drawn California coastline approximation
-  - Proper use of masked arrays for transparency where no data exists
-  - Sequential colormap (YlOrRd) with appropriate alpha for basemap visibility
-  - Well-sized text elements following matplotlib guidelines
-  - Realistic environmental monitoring scenario with clustered data
+  - Correct geographic heatmap plot type with proper KDE approximation (2D histogram
+    + Gaussian smoothing)
+  - Good theme adaptation — both light (#FAF8F1) and dark (#1A1A17) backgrounds correctly
+    applied with all chrome tokens threaded through
+  - All font sizes explicitly set (title=24, labels=20, ticks=16) per style guide
+    guidelines
+  - 'Realistic and neutral dataset: California AQI monitoring stations with three
+    distinct regional clusters (Bay Area, Sacramento, Southern California) making
+    the data geographically plausible'
+  - Clean flat script structure with np.random.seed(42) for reproducibility, no unnecessary
+    abstractions
+  - Custom Gaussian smoothing implemented in pure NumPy without scipy dependency,
+    demonstrating strong numpy proficiency
+  - Colorbar correctly labeled with 'Air Quality Index (weighted density)' and properly
+    styled with theme-adaptive colors
+  - Masked array usage (np.ma.masked_where) creates clean transparency in low-density
+    areas
   weaknesses:
-  - Legend in upper right slightly intrudes into plot area - could be positioned outside
-    or in a less obtrusive location
-  - Scatter points showing sensor locations are quite faint (alpha=0.3, s=15) - slightly
-    larger or more visible would help
-  - AQI values from exponential distribution could have more realistic scale
-  - Not using proper geographic projections (Cartopy/Basemap) which would be more
-    accurate for a true geographic heatmap
-  image_description: 'The plot displays a geographic heatmap of California showing
-    air quality index (AQI) weighted density from simulated environmental monitoring
-    stations. The visualization uses a YlOrRd (yellow-orange-red) sequential colormap
-    with three distinct density clusters visible: one in Northern California (~38.5°N),
-    one along the Central Coast (~36°N), and one in Southern California (~34°N). The
-    heatmap shows smooth density gradients with red hotspots indicating highest concentrations.
-    A black outline approximates California''s boundaries (coastline and eastern border).
-    Small blue scatter points (with low opacity) show individual sensor locations
-    beneath the heatmap layer. The colorbar on the right indicates "Air Quality Index
-    (weighted density)" ranging from approximately 0-30. Axes are labeled "Longitude"
-    and "Latitude" with tick marks at 2-degree intervals. A dashed grid provides geographic
-    reference, and a legend identifies the coastline and sensor locations.'
+  - Code uses cmap='YlOrRd' but style guide recommends viridis/cividis for heatmaps
+    — switch to cmap='viridis' for full palette compliance
+  - All four spines are kept (ax.spines.values()) — style guide recommends removing
+    top and right spines; for a map plot keeping all 4 borders is borderline acceptable
+    but should be consistent with style guide
+  - Legend fontsize=14 and colorbar tick labelsize=14 are below the recommended 16pt
+    minimum — should be 16 for consistency
+  - Grid uses linestyle='--' (dashed) which deviates from the style guide preference
+    for solid subtle grid lines
+  - 'Sensor dots use c=''#0072B2'' (Okabe-Ito position 3, blue) — single categorical
+    series should use first Okabe-Ito position #009E73 (brand green), unless blue
+    was intentionally chosen to contrast with warm heatmap colors'
+  - Images in plot_images/ appear to be from a previous code version (show viridis
+    colormap and city annotations for Sacramento, San Francisco, Los Angeles) that
+    are absent from the current code — the current code would render differently
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white, consistent with #FAF8F1 — not pure white, correct theme surface.
+      Chrome: Title "heatmap-geographic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude" (x) and "Latitude" (y) in dark ink at appropriate size. Tick labels visible along both axes. Legend frame in lower-right with "Coastline" and "Sensor Locations" labels visible. Colorbar on right with label "Air Quality Index (weighted density)".
+      Data: Heatmap overlay uses a viridis-like sequential colormap (dark purple at low density transitioning to teal/green and bright yellow at highest density). Three distinct clusters visible: Bay Area (~lat 37.5, lon -122), Sacramento (~lat 38.5, lon -121.5), and Southern California/LA (~lat 34, lon -118) with LA showing the highest AQI density (yellow hotspot). Blue sensor dots (s=25) scattered across California. Simplified California polygon outline in muted grey. City annotation boxes visible for Sacramento, San Francisco, and Los Angeles — note: these annotations appear in the images but are NOT present in the current code file.
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Dark near-black, consistent with #1A1A17 — not pure black, correct theme surface.
+      Chrome: Title in light/off-white text, clearly readable against dark background. Axis labels in light text. Tick labels visible. Legend with light text, elevated-bg frame. Colorbar text in light ink.
+      Data: Identical heatmap colormap to light render (purple → teal → yellow); data colors are consistent between themes — only chrome flipped. California outline appears as white/light grey against the dark background. Blue sensor dots remain the same color. City annotation boxes visible with elevated background, readable labels.
+      Legibility verdict: PASS — all text readable against the dark near-black background; no dark-on-dark issues observed. Brand-relevant greens visible in the viridis colormap transition.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, ticks at 16pt, colorbar label
-          at 18pt - all perfectly readable
+        comment: All sizes explicitly set (title=24, labels=20, ticks=16) but colorbar
+          ticks=14 and legend=14 are below recommended 16pt
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: No significant overlaps; legend, colorbar, and city labels (from
+          images) are well-positioned
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Heatmap clearly visible, scatter points appropriately small but could
-          be slightly more visible
+        comment: Heatmap, sensor dots, and coastline all clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: YlOrRd sequential colormap works well for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, colorbar positioned properly, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude are descriptive and appropriate
+        comment: Viridis-like colormap (as shown in images) is CVD-safe and perceptually
+          uniform
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good 16:9 proportions; California map well-centered; slight empty
+          space at right edge outside colorbar
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format, Longitude/Latitude axis labels present
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: false
-        comment: Legend placement overlaps somewhat with plot area in upper right
+        comment: 'Code uses cmap=''YlOrRd'' which is not the style-guide-preferred
+          viridis/cividis for heatmaps; images show viridis (code/image discrepancy
+          noted); backgrounds correct; sensor dots use #0072B2 (Okabe-Ito pos 3) instead
+          of #009E73 (pos 1)'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Good geographic context with California outline and hotspot clusters;
+          city annotations (in images) add context; above configured-default but not
+          publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: All 4 spines kept (should remove top/right); dashed grid deviates
+          from solid-subtle style guide preference; colorbar and legend properly themed
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: LA cluster prominent in yellow, three regional
+          clusters tell a coherent AQI distribution story; city markers (in images)
+          help geographic orientation'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct geographic heatmap with continuous color gradient
+        comment: Correct geographic heatmap with spatial density visualization using
+          KDE approximation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Latitude/Longitude correctly assigned to Y/X axes, values used for
-          weighting
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has KDE-like smoothing, sequential colormap with transparency, colorbar
-          legend, geographic context
-      - id: SC-04
-        name: Data Range
+        comment: KDE via 2D histogram + Gaussian smoothing, colorbar, sequential colormap
+          with transparency (alpha=0.78), geographic context present — but California
+          outline is a simplified hand-crafted polygon rather than a proper basemap
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within California boundaries
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude on x-axis, Latitude on y-axis, AQI weighted density as
+          color — all correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies coastline and sensor locations
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses heatmap-geographic · matplotlib · pyplots.ai format
+        comment: Title 'heatmap-geographic · python · matplotlib · anyplot.ai' in
+          correct format; colorbar and sensor legend labels appropriate
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows clustered data with multiple hotspots and varying intensity
-          levels
+        comment: Shows 500 points across 3 regional clusters with AQI values, density
+          estimation, sensor overlay, and geographic context — comprehensive coverage
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Environmental monitoring stations across California is a plausible,
-          neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Lat/Lon ranges correct for California, AQI values somewhat high
+        comment: California environmental monitoring with AQI 5-150 range is realistic
+          and neutral; three major urban clusters match real California geography
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: n=500 points appropriate for KDE; AQI range 5-150 factually correct;
+          California lat/lon bounds [32.5-42.0, -125.0 to -114.0] accurate
     code_quality:
       score: 10
       max: 10
@@ -163,56 +208,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple flat script: imports → data → plot → save'
+        comment: 'Flat script: imports → tokens → data → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy, both used
+        comment: Only os, matplotlib.pyplot, and numpy — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions used
+        comment: Appropriate complexity; numpy-only Gaussian smoothing is clean; no
+          fake UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=300 and bbox_inches='tight'
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correctly uses fig/ax pattern, ax.imshow with extent, ax.scatter,
+          ax.plot, plt.colorbar — idiomatic matplotlib; plt.colorbar instead of fig.colorbar
+          is a minor style point
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses imshow with bilinear interpolation, masked arrays for transparency.
-          Good but not using advanced features like Cartopy
+        comment: np.ma.masked_where for transparent low-density areas, custom numpy
+          Gaussian kernel without scipy dependency, imshow with geographic extent
+          for spatial data — above generic usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
-  - annotations
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - binning
   - kde
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling

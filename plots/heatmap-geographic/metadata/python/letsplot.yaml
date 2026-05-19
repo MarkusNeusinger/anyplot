@@ -1,156 +1,188 @@
 library: letsplot
+language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T08:17:01Z'
-updated: '2026-01-10T08:19:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20875421595
+updated: '2026-05-19T00:02:01Z'
+generated_by: claude-sonnet
+workflow_run: 26066885663
 issue: 3638
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent use of KDE for continuous density estimation creating smooth heatmap
-    effect
-  - Great real-world scenario with California seismic data and appropriate fault-line
-    clustering
-  - 'Well-layered composition: filled contours + coastline + point markers with size
-    encoding'
-  - Color scheme effectively communicates density gradient
-  - Clean, minimal visual design with proper legends
+  - 'Excellent multi-layer geographic composition: geom_contourf + geom_path + geom_point
+    + geom_text integrate cleanly'
+  - Correct viridis colorscale for continuous density data with fully adaptive chrome
+    in both themes
+  - Interactive tooltips via layer_tooltips() and HTML output leverage letsplot's
+    distinctive capabilities
+  - coord_fixed() preserves correct geographic proportions
+  - Synthetic California seismic data with realistic fault-zone clustering is compelling
+    and neutral
   weaknesses:
-  - Title format starts with description rather than spec-id heatmap-geographic
-  - Layout has some unused canvas space on the right side
-  - Coastline is simplified; spec suggests more geographic context options
-  - Could leverage interactive tooltips for the HTML output
-  image_description: 'The plot displays a geographic heatmap of seismic activity density
-    across California. The main visualization shows filled contours with a sequential
-    color gradient from light yellow (low density, ~0) through orange to dark red
-    (high density, ~0.25). Two distinct high-density hotspots are visible: one around
-    the San Francisco Bay area (latitude ~37.5-38) and another around Los Angeles
-    (latitude ~34). A simplified black coastline outline runs diagonally across the
-    plot from northwest to southeast. Individual seismic events are shown as circular
-    markers with yellow fill and blue/teal outlines, sized by magnitude (legend shows
-    5, 10, 15 scale). The plot has proper axis labels ("Longitude" and "Latitude"),
-    a descriptive title following the required format, two legends (Event Density
-    colorbar and Magnitude size legend), and uses a minimal gray theme with subtle
-    grid lines.'
+  - 'Scatter overlay uses #0072B2 (stroke) and #E69F00 (fill) — single-series categorical
+    should start with #009E73 (Okabe-Ito position 1)'
+  - Simplified 11-point California coastline produces a jagged diagonal shape rather
+    than a recognizable coastline; even a slightly more detailed polygon (30-50 points)
+    would significantly improve geographic realism
+  - 'DE-01 headroom: the focal hierarchy could be sharpened (e.g., increase alpha
+    on the density layer in high-density zones or add a subtle annotation callout
+    at the peak hotspot)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "Seismic Activity Density · heatmap-geographic · python · letsplot · anyplot.ai" in dark bold ink, fully readable. Axis labels "Longitude" and "Latitude" in dark ink, readable. Tick labels in secondary dark ink (#4A4A44), readable. City labels "San Francisco" and "Los Angeles" in bold dark ink, readable. Legend text (Event Density, Magnitude) readable against off-white legend background.
+      Data: Viridis colorscale density heatmap — deep purple at low density transitioning through cyan to yellow-green at peak hotspots. Two distinct hotspot blobs: SF cluster (upper-left, higher peak) and LA cluster (lower-right). Individual scatter points with orange/yellow (#E69F00) fill and blue (#0072B2) stroke, sized by magnitude. Simplified California coastline as thin dark diagonal line. First categorical series color is NOT #009E73 — scatter uses #0072B2 stroke + #E69F00 fill.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light ink (#F0EFE8), readable. Axis labels in light ink, readable. Tick labels in secondary light ink (#B8B7B0), readable. City labels rendered in white/light text, clearly readable against dark background. Legend frames use dark elevated background (#242420) with light legend text. Coastline switches from dark to white/light (INK_SOFT token applied correctly). No dark-on-dark failures observed.
+      Data: Viridis density colors are IDENTICAL to light render — purple/cyan/yellow-green unchanged. Scatter point colors (orange fill, blue stroke) also identical. Only chrome elements flip.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is bold and ~24pt, axis labels ~20pt, tick labels ~16pt, legend
-          text appropriately sized
+        comment: All text readable in both themes with explicit sizes. Minor deduction
+          for city labels at 13pt being slightly small relative to canvas density.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        comment: San Francisco label sits inside a dense scatter cluster, slightly
+          competing with points in the light render.
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Contours visible, markers appropriately sized with alpha, some overlap
-          in dense regions expected for heatmaps
+        comment: Density contours, scatter points (alpha=0.5), coastline, and labels
+          all clearly distinguishable. Small scatter points at low magnitude can be
+          hard to spot.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Yellow-orange-red sequential colormap is colorblind-safe
+        comment: Viridis is perceptually uniform and CVD-safe; Okabe-Ito colors used
+          for scatter overlay.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good overall but some unused canvas space on right side
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Longitude and Latitude are descriptive geographic terms
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Subtle gray grid, legends well-placed on the right side
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct geographic heatmap with KDE-based density contours
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Latitude/longitude correctly mapped to y/x axes
-      - id: SC-03
-        name: Required Features
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has KDE, sequential colormap, colorbar, geographic context; basemap
-          is simplified
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Axes show full California region
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Square format (3600x3600 px at scale=3), coord_fixed maintains geographic
+          proportions, nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both Event Density and Magnitude legends accurate
-      - id: SC-06
-        name: Title Format
+        comment: Longitude and Latitude labels with descriptive title.
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: Starts with description rather than spec-id heatmap-geographic
-    data_quality:
-      score: 19
+        comment: 'Density correctly uses viridis. Backgrounds correct. Scatter points
+          use #0072B2 stroke + #E69F00 fill (positions 3 and 5), but single-series
+          scatter should start with #009E73 (position 1).'
+    design_excellence:
+      score: 12
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
         max: 8
         passed: true
-        comment: Shows multiple density clusters, varying magnitudes, sparse and dense
-          regions
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: Multi-layer geographic composition shows clear design intent. Size
+          encoding for magnitude adds third data dimension. Above default (4) but
+          lacks additional polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
         passed: true
-        comment: Seismic activity in California is a perfect neutral real-world scenario
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: theme_minimal with subtle grid opacity, correct backgrounds, styled
+          legend frames. Simplified 11-point coastline produces rough jagged line.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual hotspot regions (SF and LA) create natural focal points. City
+          labels provide narrative context. Magnitude size encoding supports multi-variate
+          storytelling.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Coordinates realistic for California, magnitudes in realistic seismic
-          range
+        comment: Geographic heatmap with KDE-based continuous density.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: KDE with gaussian_kde, viridis colormap, colorbar, bandwidth parameter,
+          transparency. Missing proper geographic boundary data — 11-point hardcoded
+          coastline is too simplified.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Longitude on x, Latitude on y, density via color.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format. Both Event Density colorbar and Magnitude size
+          legend present.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows density gradient, individual event overlay with size encoding,
+          city labels for geographic context.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic California seismic events clustered around fault-line regions.
+          Very plausible and neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Latitude 32-40, Longitude -124 to -116; 600 events with exponential
+          magnitude distributions — realistic.
     code_quality:
       score: 10
       max: 10
@@ -160,55 +192,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → data → plot → save structure
+        comment: No functions or classes; flat script.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported symbols are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Well-structured with clear data → KDE → plot → save flow.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale=3) and plot-{THEME}.html.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses geom_contourf, scale_fill_gradient2, ggsize; could leverage
-          interactive tooltips
+        comment: Proper grammar of graphics with geom layers, scales, coord, theme.
+          coord_fixed() for geographic proportions.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: layer_tooltips() (letsplot-specific), geom_contourf, geom_path, HTML
+          output. Strong use of letsplot capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
+  - colorbar
   patterns:
   - data-generation
-  - matrix-construction
   dataprep:
   - kde
   styling:
-  - custom-colormap
   - alpha-blending
-  - grid-styling
+  - custom-colormap
