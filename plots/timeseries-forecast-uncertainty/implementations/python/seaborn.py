@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-19
@@ -85,11 +85,11 @@ sns.set_theme(
 )
 
 # Plot
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 # Confidence interval bands (95% lightest, 80% more opaque — nested)
-ax.fill_between(df_wide["date"], df_wide["lower_95"], df_wide["upper_95"], alpha=0.15, color=COLOR_FORECAST)
+ax.fill_between(df_wide["date"], df_wide["lower_95"], df_wide["upper_95"], alpha=0.22, color=COLOR_FORECAST)
 ax.fill_between(df_wide["date"], df_wide["lower_80"], df_wide["upper_80"], alpha=0.28, color=COLOR_FORECAST)
 
 # Seaborn lineplot — idiomatic long-form API with hue + style + dashes
@@ -108,18 +108,27 @@ sns.lineplot(
 
 # Forecast boundary marker
 ax.axvline(x=dates[n_historical - 1], color=INK_SOFT, linestyle=":", linewidth=1.5, alpha=0.5)
+ax.text(
+    dates[n_historical - 1],
+    0.97,
+    "  Forecast →",
+    transform=ax.get_xaxis_transform(),
+    color=INK_SOFT,
+    fontsize=8,
+    va="top",
+)
 
 # Style
 ax.set_title(
-    "timeseries-forecast-uncertainty · python · seaborn · anyplot.ai",
-    fontsize=24,
+    "Stock Price Forecast · timeseries-forecast-uncertainty · python · seaborn · anyplot.ai",
+    fontsize=10,
     fontweight="medium",
     color=INK,
-    pad=20,
+    pad=8,
 )
-ax.set_xlabel("Date", fontsize=20, color=INK)
-ax.set_ylabel("Stock Price ($)", fontsize=20, color=INK)
-ax.tick_params(axis="both", labelsize=16, colors=INK_SOFT)
+ax.set_xlabel("Date", fontsize=10, color=INK)
+ax.set_ylabel("Stock Price ($)", fontsize=10, color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
 sns.despine(ax=ax)
 ax.spines["left"].set_color(INK_SOFT)
@@ -135,9 +144,9 @@ legend_elements = [
     Patch(facecolor=COLOR_FORECAST, alpha=0.28, label="80% Confidence"),
     Patch(facecolor=COLOR_FORECAST, alpha=0.15, label="95% Confidence"),
 ]
-ax.legend(handles=legend_elements, fontsize=16, loc="upper left", framealpha=1.0, fancybox=False, edgecolor=INK_SOFT)
+ax.legend(handles=legend_elements, fontsize=8, loc="upper left", framealpha=1.0, fancybox=False, edgecolor=INK_SOFT)
 
 plt.tight_layout()
 
 # Save
-plt.savefig(f"plot-{THEME}.png", dpi=300, bbox_inches="tight", facecolor=PAGE_BG)
+plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
