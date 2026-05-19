@@ -1,7 +1,7 @@
 """ anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: highcharts unknown | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-16
+Quality: 81/100 | Updated: 2026-05-19
 """
 
 import os
