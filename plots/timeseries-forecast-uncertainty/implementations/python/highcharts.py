@@ -1,5 +1,5 @@
-""" anyplot.ai
-timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
+"""anyplot.ai
+timeseries-forecast-uncertainty · python · highcharts · anyplot.ai
 Library: highcharts unknown | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-19
 """
@@ -17,6 +17,19 @@ from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.area import AreaRangeSeries, LineSeries
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+
+
+def _download_js(urls):
+    for url in urls:
+        req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"})
+        for attempt in range(2):
+            try:
+                with urllib.request.urlopen(req, timeout=30) as response:
+                    return response.read().decode("utf-8")
+            except (urllib.error.URLError, urllib.error.HTTPError):
+                if attempt == 0:
+                    time.sleep(1)
+    return None
 
 
 # Theme tokens
@@ -71,52 +84,24 @@ forecast_timestamps = [int(d.timestamp() * 1000) for d in forecast_dates]
 forecast_start_ts = forecast_timestamps[0]
 
 # Download Highcharts JS from CDN with fallbacks
-cdn_urls = [
-    "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.min.js",
-    "https://unpkg.com/highcharts@11/highcharts.js",
-    "https://code.highcharts.com/highcharts.js",
-]
-
-highcharts_js = None
-for url in cdn_urls:
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"})
-    max_retries = 2
-    for attempt in range(max_retries):
-        try:
-            with urllib.request.urlopen(req, timeout=30) as response:
-                highcharts_js = response.read().decode("utf-8")
-                break
-        except (urllib.error.URLError, urllib.error.HTTPError):
-            if attempt < max_retries - 1:
-                time.sleep(1)
-    if highcharts_js:
-        break
-
+highcharts_js = _download_js(
+    [
+        "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts.min.js",
+        "https://unpkg.com/highcharts@11/highcharts.js",
+        "https://code.highcharts.com/highcharts.js",
+    ]
+)
 if not highcharts_js:
     raise RuntimeError("Could not download Highcharts from any CDN")
 
 # Download Highcharts More for arearange
-cdn_more_urls = [
-    "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts-more.min.js",
-    "https://unpkg.com/highcharts@11/highcharts-more.js",
-    "https://code.highcharts.com/highcharts-more.js",
-]
-
-highcharts_more_js = None
-for url in cdn_more_urls:
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36"})
-    max_retries = 2
-    for attempt in range(max_retries):
-        try:
-            with urllib.request.urlopen(req, timeout=30) as response:
-                highcharts_more_js = response.read().decode("utf-8")
-                break
-        except (urllib.error.URLError, urllib.error.HTTPError):
-            if attempt < max_retries - 1:
-                time.sleep(1)
-    if highcharts_more_js:
-        break
-
+highcharts_more_js = _download_js(
+    [
+        "https://cdn.jsdelivr.net/npm/highcharts@11/highcharts-more.min.js",
+        "https://unpkg.com/highcharts@11/highcharts-more.js",
+        "https://code.highcharts.com/highcharts-more.js",
+    ]
+)
 if not highcharts_more_js:
     raise RuntimeError("Could not download Highcharts More from any CDN")
 
@@ -127,27 +112,27 @@ chart.options = HighchartsOptions()
 # Chart configuration
 chart.options.chart = {
     "type": "line",
-    "width": 4800,
-    "height": 2700,
+    "width": 3200,
+    "height": 1800,
     "backgroundColor": PAGE_BG,
-    "spacingTop": 60,
-    "spacingBottom": 120,
-    "spacingLeft": 100,
-    "spacingRight": 120,
+    "spacingTop": 40,
+    "spacingBottom": 100,
+    "spacingLeft": 60,
+    "spacingRight": 80,
 }
 
 # Title
 chart.options.title = {
-    "text": "timeseries-forecast-uncertainty · highcharts · anyplot.ai",
-    "style": {"fontSize": "28px", "fontWeight": "medium", "color": INK},
-    "margin": 40,
+    "text": "timeseries-forecast-uncertainty · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "18px", "fontWeight": "medium", "color": INK},
+    "margin": 30,
 }
 
 # X-axis (datetime)
 chart.options.x_axis = {
     "type": "datetime",
-    "title": {"text": "Date", "style": {"fontSize": "22px", "color": INK}, "margin": 25},
-    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "title": {"text": "Date", "style": {"fontSize": "14px", "color": INK}, "margin": 15},
+    "labels": {"style": {"fontSize": "12px", "color": INK_SOFT}},
     "dateTimeLabelFormats": {"month": "%b %Y"},
     "gridLineWidth": 1,
     "gridLineColor": GRID,
@@ -157,13 +142,13 @@ chart.options.x_axis = {
         {
             "value": forecast_start_ts,
             "color": INK_SOFT,
-            "width": 3,
+            "width": 2,
             "dashStyle": "Dash",
             "label": {
                 "text": "Forecast Start",
-                "style": {"fontSize": "18px", "color": INK_SOFT, "fontWeight": "normal"},
+                "style": {"fontSize": "12px", "color": INK_SOFT, "fontWeight": "normal"},
                 "rotation": 0,
-                "y": -15,
+                "y": -10,
             },
             "zIndex": 5,
         }
@@ -172,28 +157,28 @@ chart.options.x_axis = {
 
 # Y-axis
 chart.options.y_axis = {
-    "title": {"text": "Product Demand (Units)", "style": {"fontSize": "22px", "color": INK}, "margin": 25},
-    "labels": {"style": {"fontSize": "18px", "color": INK_SOFT}},
+    "title": {"text": "Product Demand (Units)", "style": {"fontSize": "14px", "color": INK}, "margin": 15},
+    "labels": {"style": {"fontSize": "12px", "color": INK_SOFT}},
     "gridLineWidth": 1,
     "gridLineColor": GRID,
     "lineColor": INK_SOFT,
     "tickColor": INK_SOFT,
 }
 
-# Legend with larger symbols
+# Legend
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"fontSize": "18px", "color": INK_SOFT},
-    "symbolWidth": 40,
-    "symbolHeight": 24,
+    "itemStyle": {"fontSize": "12px", "color": INK_SOFT},
+    "symbolWidth": 24,
+    "symbolHeight": 14,
     "symbolRadius": 3,
-    "margin": 30,
+    "margin": 20,
 }
 
 # Tooltip
 chart.options.tooltip = {
     "shared": True,
-    "style": {"fontSize": "16px", "color": INK},
+    "style": {"fontSize": "12px", "color": INK},
     "xDateFormat": "%B %Y",
     "valueDecimals": 1,
 }
@@ -207,8 +192,8 @@ ci_95_series.name = "95% Confidence Interval"
 ci_95_series.data = [
     {"x": forecast_timestamps[i], "low": float(lower_95[i]), "high": float(upper_95[i])} for i in range(n_forecast)
 ]
-ci_95_series.color = "#56B4E9" if THEME == "light" else "#87CEEB"
-ci_95_series.fill_opacity = 0.15
+ci_95_series.color = "#56B4E9"
+ci_95_series.fill_opacity = 0.25
 ci_95_series.line_width = 0
 ci_95_series.marker = {"enabled": False}
 ci_95_series.z_index = 0
@@ -265,7 +250,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_more_js}</script>
 </head>
 <body style="margin:0; background:{PAGE_BG};">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
@@ -284,7 +269,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
