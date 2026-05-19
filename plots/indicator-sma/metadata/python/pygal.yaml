@@ -1,156 +1,185 @@
 library: pygal
+language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:19:54Z'
-updated: '2026-01-11T00:27:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886562646
+updated: '2026-05-19T01:03:45Z'
+generated_by: claude-sonnet
+workflow_run: 26068883802
 issue: 3651
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/pygal/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Clean implementation with proper geometric Brownian motion for realistic stock
-    data
-  - Good color scheme with distinct colors for each series
-  - Proper handling of NaN values for early SMA periods (None conversion for pygal)
-  - High-resolution output (4800x2700) with appropriately scaled fonts
-  - Both PNG and HTML output for flexibility
+  - Perfect Okabe-Ito palette with correct ordering (#009E73 first) and theme-adaptive
+    chrome in both light and dark renders
+  - 'Strong visual hierarchy: close price (stroke-width 7, solid) vs SMA lines (thinner,
+    dashed, graduated dash length 8,4/16,6/24,8) immediately communicates primary
+    vs secondary data'
+  - Cubic interpolation (pygal-specific) makes SMA lines smooth and professional;
+    dasharray stroke patterns encode SMA period length visually
+  - Clean reproducible GBM data simulation with np.random.seed(42); NaN-to-None conversion
+    for pygal handled correctly for SMA warmup periods
+  - Both PNG and HTML output files produced correctly; value_formatter formats prices
+    as dollars; all font sizes explicitly set for high-res canvas
   weaknesses:
-  - Does not leverage distinctive pygal features like custom tooltips, fill options,
-    or secondary Y-axis
-  - Legend placement in top-left corner could be optimized
-  image_description: The plot displays a Simple Moving Average (SMA) chart with four
-    lines on a white background. The blue line (Close Price) shows the raw stock price
-    data with high volatility, starting around $160, dropping to $125-130 range mid-year,
-    then recovering to $155+ before falling again. The yellow line (SMA 20) follows
-    the price closely with slight smoothing. The red line (SMA 50) provides more smoothing
-    and starts around day 50. The green line (SMA 200) is the smoothest and appears
-    only in the final third of the chart starting around day 200. The title "indicator-sma
-    · pygal · pyplots.ai" is displayed at the top. The y-axis shows "Price (USD)"
-    ranging from ~126 to ~160, and the x-axis shows "Date" with dates from 2025-01-02
-    to 2026-01-15 at 45-degree rotation. A legend in the top-left corner identifies
-    all four series.
+  - 'DE-03: ''Market Bottom'' annotation is a tooltip label (dict entry) — only visible
+    in interactive HTML, not in static PNG renders; the intended focal point is absent
+    from the static image that most users see'
+  - 'DE-01: Design is well-crafted but reads as a sophisticated chart config rather
+    than an exceptional publication-quality visualization; a visible crossover marker
+    or reference band could elevate the narrative'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "indicator-sma · python · pygal · anyplot.ai" in dark ink at top — clearly readable. Y-axis label "Price (USD)" and X-axis label "Date" in dark ink — readable with units. Tick labels in muted dark gray — all readable against light background. No light-on-light issues.
+      Data: Close Price as heavy solid teal line (#009E73, stroke-width 7); SMA 20 as thin orange dashed line (#D55E00, dasharray 8,4); SMA 50 as blue dashed line (#0072B2, dasharray 16,6); SMA 200 as pink/purple dashed line (#CC79A7, dasharray 24,8, starts partway through). Y-axis grid lines subtle. Legend at bottom with 4 items in 2 columns.
+      Legibility verdict: PASS — all text clearly readable, no contrast failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all rendered in light ink — clearly readable against the dark background. Muted tick labels in light gray tone. Legend text at bottom appears in light color and is readable. No dark-on-dark failures detected; no near-black text on near-black background.
+      Data: Data colors are identical to light render — Close Price #009E73, SMA 20 #D55E00, SMA 50 #0072B2, SMA 200 #CC79A7 — only chrome flips. Brand green #009E73 reads well on dark surface.
+      Legibility verdict: PASS — all text clearly readable in dark theme, no contrast failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: All text is readable at full size, title and axis labels are clear,
-          tick labels could be slightly larger
+        comment: All font sizes explicitly set (title 72px, label 48px, major_label
+          42px, legend 48px); all text clearly readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text, x-axis labels are well-spaced with rotation
+        comment: X-axis labels shown every 30 trading days with 45 degree rotation;
+          no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are clearly visible with appropriate stroke width, good differentiation
-          between series
+        comment: Lines clearly visible with graduated stroke widths and dash patterns;
+          SMA 200 None-padded start rendered correctly
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, red, green palette is colorblind-friendly with distinct
-          hues
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization, plot fills most of the space, minor margin
-          imbalance with legend on left
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) and Date are descriptive with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito is CVD-safe; 4 series distinguished by hue + dash pattern
+          + line weight
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 landscape; plot fills canvas well; legend at bottom does
+          not crowd data
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Y-axis grid is present and subtle, legend is clear but positioned
-          slightly far from the data
+        comment: Price (USD) and Date — descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series Okabe-Ito order; backgrounds
+          #FAF8F1/#1A1A17; chrome flips correctly in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional hierarchy through stroke width and dash patterns; above
+          well-configured default but not FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only, cubic interpolation, legend at bottom, explicit
+          margin/spacing, opacity tuned
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Line weight hierarchy present but Market Bottom annotation is tooltip-only
+          (not visible in PNG); primary storytelling focal point absent from static
+          output
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart with multiple SMA overlays
+        comment: Line chart with multi-period SMA overlays — correct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dates on X-axis, prices on Y-axis, correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: close price, SMA 20, SMA 50, SMA 200 with
-          distinct colors'
-      - id: SC-04
-        name: Data Range
+        comment: Close price, SMA 20/50/200, legend with period labels, Y-axis grid;
+          300 data points within 250-500 spec range
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis auto-scaled appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Dates on X, prices on Y; NaN converted to None for SMA warmup; all
+          series correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly identify Close Price, SMA 20, SMA 50, SMA
-          200
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Title follows format: indicator-sma · pygal · pyplots.ai'
+        comment: 'Title: ''indicator-sma · python · pygal · anyplot.ai''; legend:
+          Close Price, SMA 20, SMA 50, SMA 200'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows downtrend, recovery, and crossover signals; SMA 200 appears
-          late but demonstrates all SMA behavior
+        comment: GBM shows realistic price variation, trend changes, and multi-period
+          SMA behavior including 200-day late start
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price scenario with realistic geometric Brownian motion, 300
-          trading days
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Price range $125-160 is realistic for a stock
+        comment: Business-day stock simulation in neutral financial context; price
+          range $128-$160 plausible
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 300 trading days within spec, initial $150, mu=0.0003/sigma=0.015
+          realistic parameters, seed=42
     code_quality:
       score: 10
       max: 10
@@ -160,51 +189,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports, data, plot, save structure, no functions/classes
+        comment: 'Linear: imports -> tokens -> data -> style -> chart -> save; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: numpy, pandas, pygal, Style'
+        comment: os, numpy, pandas, pygal, pygal.style.Style — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Idiomatic list comprehensions; dict-based annotation follows pygal
+          data format; no fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html for interactivity
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html — both required for
+          interactive pygal library
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Basic pygal.Line usage with custom Style, but does not leverage advanced
-          pygal features like tooltips configuration, interpolation options, or dynamic
-          rendering
+        passed: true
+        comment: Correct Style object pattern, x_labels assignment, chart.add() with
+          stroke_style, value_formatter, legend positioning
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: interpolate=cubic (smooth SMA curves), stroke_style with SVG dasharray,
+          value_formatter, label dict for tooltip annotation — distinctive pygal mechanisms
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - annotations
   patterns:
   - data-generation
   dataprep:
-  - rolling-window
   - time-series
+  - rolling-window
   styling: []
