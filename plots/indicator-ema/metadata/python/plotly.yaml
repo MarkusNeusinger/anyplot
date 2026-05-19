@@ -1,161 +1,184 @@
 library: plotly
+language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:19:58Z'
-updated: '2026-01-11T00:27:23Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886559830
+updated: '2026-05-19T04:53:36Z'
+generated_by: claude-sonnet
+workflow_run: 26076624381
 issue: 3652
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/plotly/plot.html
-quality_score: 94
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of EMA indicator with clear visual hierarchy (price line
-    prominent, EMA lines thinner)
-  - Crossover detection and highlighting with appropriate markers (triangle-up for
-    golden cross, triangle-down for death cross)
-  - Custom hover templates providing formatted dates and prices
-  - Generates both PNG and interactive HTML output leveraging Plotly's strength
-  - Clean, well-organized code following KISS principles
+  - 'Perfect spec compliance: all required features present (price line, EMA 12, EMA
+    26, distinct colors, width hierarchy, crossover markers, labeled legend)'
+  - 'Comprehensive theme-adaptive chrome: all tokens applied to every element including
+    the range slider; both renders pass readability'
+  - 'Excellent data quality: realistic stock price arc with correct EWM calculation,
+    both crossover types present, neutral business context'
+  - Idiomatic Plotly range slider with matching theme background — a distinctive,
+    library-specific feature that adds genuine utility to the financial chart
   weaknesses:
-  - Could add rangeslider for interactive time selection (Plotly's distinctive feature)
-  - Legend with 5 items is slightly verbose; could consider grouping or repositioning
-  image_description: 'The plot displays an Exponential Moving Average (EMA) indicator
-    chart with stock price data from January 2024 to June 2024. The main price line
-    is shown in a prominent dark blue color with a thicker line width (~3px). Two
-    EMA lines are overlaid: EMA 12 (short-term) in yellow/gold color and EMA 26 (long-term)
-    in red, both with thinner line widths (~2px). The chart shows an uptrend starting
-    around $150, with a consolidation phase in the middle, then resuming the uptrend
-    to reach approximately $188 by June 2024. Two crossover markers are visible: a
-    green upward triangle (Golden Cross) near early January around $151 and another
-    in early April around $156, plus a red downward triangle (Death Cross) in early
-    March around $160. The title "indicator-ema · plotly · pyplots.ai" is centered
-    at the top. The Y-axis shows "Price (USD)" with dollar-formatted values ($150-$190),
-    and the X-axis shows "Date" with monthly intervals. A legend is positioned in
-    the upper-left corner with a semi-transparent white background, showing all five
-    series. The grid is subtle with light gray lines.'
+  - Chart frame border visible on all four sides — removing it with xaxis.showline=False/yaxis.showline=False
+    would give a cleaner look
+  - Both X and Y grids shown — style guide recommends Y-axis grid only for line charts;
+    xaxis.showgrid=False would reduce visual noise
+  - Golden/death cross markers are present but silent — a text annotation at the golden
+    cross event would elevate storytelling
+  - Using go.Scatter for price is correct but go.Candlestick (OHLC) would be the highest-fidelity
+    Plotly financial chart
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "indicator-ema · python · plotly · anyplot.ai" in dark #1A1A17, clearly readable. Axis labels "Date" and "Price (USD)" in #1A1A17. Tick labels in muted #4A4A44. All readable against light background.
+      Data: Price line in #009E73 (Okabe-Ito pos 1), EMA 12 in #D55E00 (pos 2), EMA 26 in #0072B2 (pos 3), Golden Cross markers in #CC79A7 (pos 4), Death Cross markers in #E69F00 (pos 5). Range slider at bottom. Legend in upper-left with elevated background.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels in light #F0EFE8, tick labels in #B8B7B0. All readable against dark background. No dark-on-dark failures observed. Legend box uses #242420 elevated dark background.
+      Data: All data colors identical to light render — #009E73 price, #D55E00 EMA 12, #0072B2 EMA 26, #CC79A7 golden cross, #E69F00 death cross. Only chrome flips between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title (32pt), axis labels (24pt), tick labels (18pt) all clearly
-          readable at full size
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, legend is well-positioned and does
-          not overlap data
+        comment: Title 28px, axis labels 22px, tick labels 18px, legend 18px — all
+          explicitly set, readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend in upper-left clear of data; tick labels and series labels
+          all unobstructed
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines appropriately sized; price line prominent (width 3), EMA lines
-          thinner (width 2). Crossover markers clearly visible with white borders
+        comment: Price line width 3, EMA lines width 2, crossover markers size 16
+          — appropriate for data density
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, red color scheme is colorblind-friendly with high contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, good use of space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) with currency format and Date are descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette is CVD-safe; series also distinguishable by marker
+          type
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Main chart fills ~70% vertical space; range slider is appropriate
+          use of remaining area; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.2), legend well-placed but takes significant
-          space with 5 items
+        comment: 'Y-axis: Price (USD) with units; X-axis: Date'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; multi-series Okabe-Ito order; backgrounds
+          #FAF8F1/#1A1A17; both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Line width hierarchy, crossover markers with page-background borders,
+          elevated legend — clearly above defaults but not FiveThirtyEight-level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid at 10% opacity is subtle; both axes have gridlines (y-only would
+          be cleaner); Plotly frame border visible
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Crossover markers are storytelling devices; price line width creates
+          hierarchy; data arc reads naturally; missing text annotation at golden cross
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart with EMA overlay
+        comment: 'Correct EMA overlay chart: price line with two EMA lines'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, price/EMA values on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Price line prominent, two distinct EMA periods (12, 26), crossover
-          points highlighted, legend labels each EMA with period
-      - id: SC-04
-        name: Data Range
+        comment: Price, EMA 12, EMA 26, distinct colors, width hierarchy, crossover
+          highlighting, period labels all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X, Price (USD) on Y; all 120 trading days visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Price, EMA 12, EMA 26, Golden Cross, Death
-          Cross
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format indicator-ema · plotly · pyplots.ai
+        comment: 'Title: indicator-ema · python · plotly · anyplot.ai; legend labels
+          descriptive and correct'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows uptrend, consolidation, both golden cross and death cross signals,
-          EMA crossovers
+        comment: Price volatility, two EMA periods, both crossover types, distinct
+          market phases all shown
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Stock price scenario is realistic; price movements and volatility
-          are plausible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Price values ($150-$188) are realistic for a stock, 120 trading days
-          is appropriate
+        comment: Plausible mid-cap stock $150-$190 over 120 trading days; neutral
+          business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: seed(42), ewm(span=12/26, adjust=False) correct; price range and
+          ~1.5% daily volatility realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,43 +186,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data generation, EMA calculation, plot,
-          save'
+        comment: 'Linear: imports → tokens → data → plot → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly.graph_objects - all used
+        comment: os, numpy, pandas, plotly.graph_objects — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and Pythonic; conditional trace addition is appropriate; no
+          over-engineering
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png (correct) but minor point deduction for dual output
-    library_features:
-      score: 3
-      max: 5
+        comment: plot-{THEME}.png + plot-{THEME}.html; current Plotly API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Figure() + add_trace(go.Scatter()) correct for multi-series; hovermode=x
+          unified, hovertemplate, rangeslider, tickformat=$,.0f all idiomatic
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses graph_objects, custom hover templates, and HTML export. Could
-          leverage more Plotly-specific features like rangeslider
+        comment: Range slider (cannot be replicated in matplotlib), unified X hover
+          mode, HTML export, dollar-formatted ticks
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -208,9 +238,9 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - time-series
   dataprep:
+  - time-series
   - rolling-window
+  - cumulative-sum
   styling:
-  - grid-styling
   - edge-highlighting
