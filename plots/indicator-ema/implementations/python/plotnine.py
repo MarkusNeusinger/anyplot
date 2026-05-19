@@ -1,7 +1,7 @@
 """ anyplot.ai
 indicator-ema: Exponential Moving Average (EMA) Indicator Chart
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 79/100 | Updated: 2026-05-19
+Quality: 84/100 | Updated: 2026-05-19
 """
 
 import numpy as np
