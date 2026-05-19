@@ -1,7 +1,7 @@
 """ anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-19
+Quality: 90/100 | Updated: 2026-05-19
 """
 
 import os
