@@ -1,151 +1,186 @@
 library: bokeh
+language: python
 specification_id: windbarb-basic
 created: '2026-01-11T20:53:01Z'
-updated: '2026-01-11T20:55:56Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20901644037
+updated: '2026-05-19T07:17:52Z'
+generated_by: claude-sonnet
+workflow_run: 26080471126
 issue: 3694
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/windbarb-basic/python/bokeh/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent implementation of meteorological wind barb notation with correct geometry
-  - Proper handling of calm wind indicator as open circle
-  - Good use of Bokeh multi_line and patches for efficient rendering
-  - Clear legend explaining barb notation
-  - Well-sized canvas (4800x2700) with appropriate font sizes
+  - Wind barb geometry calculation is mathematically correct (FROM convention, proper
+    speed decomposition into pennants/long/half barbs)
+  - Efficient use of Bokeh's multi_line and patches for rendering all barb elements
+    in bulk calls — idiomatic Bokeh pattern
+  - Clean ColumnDataSource pattern throughout; reproducible with np.random.seed(42)
+  - Real-world meteorological context (Great Plains surface winds) with accurate notation
+    legend at bottom
+  - Both renders show correct theme backgrounds (warm off-white / near-black) and
+    readable text in both light and dark themes
   weaknesses:
-  - Legend annotation text at bottom is quite small relative to the large canvas
-  - Data context uses generic grid units rather than realistic meteorological scenario
-    (lat/lon, station names)
-  - Could leverage Bokeh interactive features (hover tooltips showing wind speed/direction)
-  image_description: 'The plot displays a 6x5 grid (30 points) of wind barbs on a
-    clean white background with subtle dashed gridlines. Each wind barb consists of
-    a blue staff (#306998) pointing in the direction from which the wind blows, with
-    various combinations of half barbs (5 knots), full barbs (10 knots), and triangular
-    pennants (50 knots) attached to indicate wind speed. Yellow observation points
-    (#FFD43B) with blue borders mark each grid location. One calm wind indicator (open
-    circle with no staff) is visible at approximately (10, 4). The title "windbarb-basic
-    · bokeh · pyplots.ai" appears in the top-left corner. X-axis is labeled "X Position
-    (grid units)" and Y-axis "Y Position (grid units)". A legend annotation at the
-    bottom explains: "Half barb = 5 kt | Full barb = 10 kt | Pennant (flag) = 50 kt".
-    The wind barbs show varied directions and speeds, demonstrating the full range
-    of meteorological notation.'
+  - 'Source code on disk uses #306998 (Python blue) and export_png with bare plot.png
+    — does not match generated images; must use Okabe-Ito #009E73, Selenium HTML→PNG
+    output, and ANYPLOT_THEME adaptation per bokeh.md'
+  - Calm wind circles (< 2.5 kt) are never demonstrated; add a few forced calm-wind
+    data points (u=v=0) to showcase this spec feature
+  - Top and right plot spines not removed — use p.outline_line_color = None for cleaner
+    appearance
+  - No color-by-speed encoding or HoverTool — Bokeh's interactive advantage (show
+    speed/direction on hover) is not leveraged
+  - Legend annotation uses fixed text_color='#444444' which may be low contrast on
+    dark background — should use INK_SOFT token
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — correct theme surface
+      Chrome: Title "Great Plains Surface Winds · windbarb-basic · python · bokeh · anyplot.ai" in dark ink at top — clearly readable. Y-axis label "Y Position (grid units)" rotated on left — readable. Tick labels visible in secondary ink. Bottom legend annotation readable at 18pt.
+      Data: 30 wind barbs in teal-green color consistent with Okabe-Ito #009E73. Various barb configurations: half-barbs (5 kt), long barbs (10 kt), pennants (50 kt triangles). Subtle dashed grid lines.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Near-black consistent with #1A1A17 — correct dark theme surface
+      Chrome: Title and axis labels render in light-colored text — readable against dark background. Tick labels visible in lighter tone. Bottom legend annotation has reduced contrast (fixed #444444 text color) but still legible.
+      Data: Teal-green barbs identical in color to light render — only chrome has flipped as expected. All barb elements (staffs, long barbs, half-barbs, pennants) remain clearly visible on dark surface. Brand green #009E73 highly visible on #1A1A17.
+      Legibility verdict: PASS — main text elements readable; minor concern with legend annotation contrast (fixed color not fully theme-adaptive)
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 18pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements; grid spacing prevents barb overlap
+        comment: Title 28pt, axis labels 22pt, tick labels 18pt, legend annotation
+          18pt — all explicitly set and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 30 barbs in 6x5 grid; well-spaced with no overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Barbs are well-sized and visible; markers slightly small for canvas
-          size
+        comment: Barb staffs, long barbs, half-barbs, and pennants all clearly distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) with yellow accent is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units (grid units)
+        comment: Single teal-green on contrasting backgrounds; CVD-safe Okabe-Ito
+          color
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Grid fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Both axes labeled with units, descriptive title in correct spec-id
+          format
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: false
-        comment: Legend text at bottom is very small/hard to read at full resolution
+        comment: 'Images show Okabe-Ito compliant green and correct theme backgrounds;
+          source code on disk contains #306998 (Python blue) and no ANYPLOT_THEME
+          adaptation — discrepancy between code and images'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean professional meteorological layout; single-color scheme appropriate
+          but lacks color-by-speed encoding or other sophistication
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Subtle dashed grid (alpha=0.3) refined; all four spines present (top/right
+          not removed); generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Geographic context via title; notation legend guides interpretation;
+          no visual hierarchy distinguishing notable wind patterns
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct wind barb plot with proper meteorological notation
+        comment: Correct meteorological wind barb chart with proper notation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly mapped to grid positions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All features present: half barbs, full barbs, pennants, calm indicator'
-      - id: SC-04
-        name: Data Range
+        score: 3
+        max: 4
+        passed: false
+        comment: Staff direction (FROM convention), long barbs, half barbs, pennants
+          all present; calm wind open circles NOT demonstrated
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Grid X/Y positions correctly mapped; u/v components correctly drive
+          barb geometry
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend annotation correctly explains notation
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: windbarb-basic · bokeh · pyplots.ai'
+        comment: Title matches {Descriptive} · {spec-id} · {language} · {library}
+          · anyplot.ai format; bottom annotation explains notation
     data_quality:
-      score: 17
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
-        passed: true
-        comment: Shows varied wind speeds and directions; could show more extreme
-          pennant cases
+        score: 4
+        max: 6
+        passed: false
+        comment: Varied speeds with half-barbs, long barbs, pennants; calm wind circles
+          absent (random uniform range never produces < 2.5 kt)
       - id: DQ-02
         name: Realistic Context
         score: 5
-        max: 7
-        passed: true
-        comment: Generic grid units rather than realistic lat/lon or station names
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
         max: 5
         passed: true
-        comment: Wind speeds in realistic range (0-50+ knots)
+        comment: Great Plains surface winds is a genuine neutral meteorological scenario;
+          6x5 station grid realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Wind speeds in 5-42 kt range are meteorologically appropriate for
+          surface observations
     code_quality:
       score: 9
       max: 10
@@ -155,12 +190,12 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → geometry calculation → plot →
-          save'
+        comment: Clear Imports → Data → Geometry → Plot → Save flow; no unnecessary
+          functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -168,36 +203,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, bokeh modules)
+        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Manual wind barb geometry calculation is appropriate for this plot
+          type; well-structured loop
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves as plot.png (correct but minor deduction for code complexity)
-    library_features:
-      score: 3
-      max: 5
+        comment: Code uses export_png(p, filename='plot.png') — wrong method (should
+          use Selenium per bokeh.md); bare plot.png instead of plot-{THEME}.png; no
+          HTML output; no ANYPLOT_THEME adaptation
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: ColumnDataSource, multi_line, patches, scatter — idiomatic Bokeh
+          patterns; missing Selenium HTML→PNG output
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses ColumnDataSource, multi_line, patches correctly but no interactive
-          features like hover tooltips
+        passed: false
+        comment: multi_line for bulk segment rendering and patches for pennants are
+          Bokeh-distinctive; no HoverTool for interactive wind speed/direction display
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - patches
   - annotations
+  - patches
+  - html-export
   patterns:
   - data-generation
   - columndatasource
