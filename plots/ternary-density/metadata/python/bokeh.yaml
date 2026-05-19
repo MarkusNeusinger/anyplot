@@ -1,201 +1,246 @@
 library: bokeh
+language: python
 specification_id: ternary-density
 created: '2026-01-11T10:06:41Z'
-updated: '2026-01-11T10:09:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20893327097
+updated: '2026-05-19T11:19:20Z'
+generated_by: claude-sonnet
+workflow_run: 26091783515
 issue: 3696
-python_version: 3.13.11
-library_version: 3.8.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-density/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ternary-density/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/bokeh/plot-dark.html
+quality_score: 72
 review:
   strengths:
-  - Excellent implementation of ternary coordinate transformation with proper Cartesian
-    mapping
-  - Well-designed multi-cluster synthetic data that clearly demonstrates density variation
-  - Viridis colormap is perceptually uniform and accessible
-  - Clean grid lines with appropriate transparency (alpha=0.4)
-  - Professional title format and color scheme (#306998 blue throughout)
+  - 'Excellent data quality: three distinct geological sediment clusters with realistic
+    compositional ranges that sum to 100%'
+  - Correct ternary-to-Cartesian coordinate transformation with proper masking of
+    density outside the triangle
+  - Viridis256 is the correct continuous colormap choice for density data; nan_color
+    transparency keeps outside-triangle area clean
+  - All font sizes explicitly set at appropriate scale (36pt / 32pt / 18pt) for the
+    4800x2700 canvas
+  - KDE with Scott bandwidth auto-selection produces smooth, interpretable density
+    contours
   weaknesses:
-  - Color bar on right edge appears compressed/cut off with the Density title label
-    hard to read
-  - The helper function ternary_to_cartesian() could be inlined to follow pure KISS
-    style (minor)
-  image_description: 'The plot displays a ternary density visualization showing sediment
-    composition data (Sand, Silt, Clay). The triangle is well-proportioned with vertices
-    clearly labeled in blue bold text ("Sand" at bottom-left, "Silt" at bottom-right,
-    "Clay" at top). A Viridis colormap heatmap fills the triangle showing density
-    distribution with three distinct high-density regions (yellow/bright green): one
-    prominent cluster near the Sand vertex (sandy sediments), one near the bottom-right
-    area (silty sediments), and one near the top-left area (clayey sediments). Grid
-    lines are visible at 10% intervals with percentage labels (20%, 40%, 60%, 80%)
-    along each edge. The title "Sediment Composition · ternary-density · bokeh · pyplots.ai"
-    appears at the top in blue text. A color bar labeled "Density" appears on the
-    right edge showing the continuous density scale from 1 to 5.'
+  - '#306998 (Python Blue) used throughout chrome (triangle outline, grid lines, vertex
+    labels, colorbar title) — must be replaced with theme-adaptive INK/INK_SOFT tokens'
+  - 'No ANYPLOT_THEME environment variable read; no theme-adaptive chrome — dark render
+    has low-contrast secondary text (#666666 on #1A1A17)'
+  - Grid lines extend outside the triangle boundary (stray diagonals visible in upper-left
+    area); the mask is only applied to the density image, not to the p.line() glyphs
+  - Uses forbidden export_png() instead of Selenium + output_file; does not produce
+    plot-light.png, plot-dark.png, plot-light.html, plot-dark.html
+  - Code title string missing python token and uses wrong domain pyplots.ai instead
+    of anyplot.ai
+  - Helper function ternary_to_cartesian() violates KISS; double for-loop mask should
+    be vectorized
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (~#FAF8F1) — correct light theme surface
+      Chrome: Title "Sediment Composition · ternary-density · python · bokeh · anyplot.ai" in 36pt blue (#306998) — readable; vertex labels "Sand", "Silt", "Clay" in bold 32pt #306998 — readable; edge tick labels (20%–80%) in 18pt #666666 — readable on light background; colorbar "Density" label visible
+      Data: Viridis heatmap (dark purple → teal → yellow) filling the equilateral triangle with three distinct density clusters near Sand (lower-left), Clay (top), and Silt (lower-right) vertices; grid lines at 10% intervals inside triangle with alpha 0.4; minor stray grid lines extending outside triangle in upper-left area
+      Legibility verdict: PASS (all text readable, minor grid artifact outside triangle)
+
+    Dark render (plot-dark.png):
+      Background: Near-black (~#1A1A17) — correct dark theme surface
+      Chrome: Title and vertex labels in #306998 (Python Blue) — marginally readable but not theme-adapted; edge tick labels in #666666 (medium gray on #1A1A17 near-black) — noticeably low contrast, harder to read; colorbar labels similarly low-contrast; same stray grid lines visible outside triangle
+      Data: Viridis heatmap colors IDENTICAL to light render — same three clusters, same purple-to-yellow range; no data color drift between themes
+      Legibility verdict: PARTIAL FAIL — primary title/vertex labels readable with #306998; secondary tick labels (#666666) have insufficient contrast on #1A1A17 dark background; not using INK_SOFT token (#B8B7B0) as required for dark theme
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 21
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 5
+        max: 8
         passed: true
-        comment: Title at 36pt, vertex labels at 32pt, tick labels at 18pt - all clearly
-          readable
+        comment: 'Font sizes explicitly set (36pt title, 32pt vertex labels, 18pt
+          ticks), but #666666 tick labels have low contrast on dark background (#1A1A17)'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: No overlapping text elements, labels positioned well outside the
-          triangle
+        comment: Grid lines extend visibly outside the triangle boundary in upper-left
+          area of both renders (stray diagonals from p.line() not clipped to triangle)
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Density heatmap clearly visible with good alpha (0.85), grid lines
-          appropriately subtle
+        comment: Density heatmap clearly visible with viridis; minor distraction from
+          stray grid lines outside triangle
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good triangle positioning but slightly more whitespace on sides than
-          needed
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Vertex labels clearly show component names (Sand, Silt, Clay)
+        comment: Viridis is CVD-safe; good luminance contrast across heatmap range
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Triangle fills 70-75% of canvas; reasonable margins; slight unused
+          space in corners
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Vertex labels Sand/Silt/Clay serve as axis identifiers; descriptive
+          title present
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: Color bar appears compressed/cut off on right edge with Density label
-          hard to read
+        comment: 'Uses #306998 (Python Blue) for chrome — explicit VQ-07=0 trigger.
+          No ANYPLOT_THEME read; no theme-adaptive chrome. Viridis256 correct for
+          continuous data.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Visually coherent ternary density with viridis; professional specialized
+          layout; chrome uses hardcoded Python Blue reducing polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Custom ternary grid with alpha blending (0.4), density at 0.85 alpha;
+          stray grid lines outside triangle break polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Three well-separated density clusters (Sandy, Silty, Clayey sediments)
+          tell clear geological story
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
         comment: Correct ternary density plot with KDE heatmap overlay
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Three components (sand, silt, clay) correctly mapped to triangle
-          vertices
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has density heatmap, grid lines, vertex labels, percentage markers,
-          colorbar
-      - id: SC-04
-        name: Data Range
+        comment: KDE density overlay (viridis), ternary grid lines at 10% intervals,
+          vertex labels, color bar all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within triangle bounds (0-100% range)
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Correct ternary-to-Cartesian transformation; three-component data
+          correctly mapped
+      - id: SC-04
+        name: Title & Legend
         score: 2
-        max: 2
+        max: 3
         passed: true
-        comment: Color bar shows density scale correctly
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: Sediment Composition · ternary-density · bokeh
-          · pyplots.ai'
+        comment: 'Code has wrong title: missing ''python'' token and uses ''pyplots.ai''
+          instead of ''anyplot.ai''; rendered image appears correct (likely prior
+          run)'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Three distinct clusters visible showing different sediment compositions
+        comment: Three distinct sediment clusters demonstrate full compositional range;
+          density modes clearly visible
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Good geological sediment scenario (sand/silt/clay), very plausible
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Percentages sum to 100%, realistic compositional data
+        comment: Geological sediment composition (sand/silt/clay) is standard scientific
+          domain, neutral and realistic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All proportions sum to 100%; cluster ranges are scientifically plausible
+          for sediment classification
     code_quality:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Linear structure with minimal helper function for coordinate conversion
+        comment: Defines ternary_to_cartesian() helper function; violates no-functions
+          rule
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at start
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, bokeh, scipy.stats)
+        comment: All imports used; no dead imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
+        max: 2
         passed: true
-        comment: Using current Bokeh APIs
+        comment: Double nested for-loop for triangle mask (O(n^2)) when vectorized
+          NumPy would work; otherwise readable
       - id: CQ-05
-        name: Output Correct
-        score: 1
+        name: Output & API
+        score: 0
         max: 1
-        passed: true
-        comment: Saves as plot.png via export_png
-    library_features:
+        passed: false
+        comment: Uses export_png(filename='plot.png') — forbidden by bokeh.md; should
+          use Selenium + output_file; does not produce plot-{THEME}.png or HTML artifacts
+    library_mastery:
       score: 5
-      max: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: 'Uses Bokeh-specific features: figure(), image(), Label, ColorBar,
-          LinearColorMapper'
+        comment: Uses LinearColorMapper, ColorBar, p.image(), Label, p.add_layout()
+          correctly; missing ColumnDataSource and Selenium HTML export pattern
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: p.image() with LinearColorMapper and nan_color transparency is Bokeh-specific;
+          missing HTML output omits Bokeh's primary differentiator
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -203,15 +248,13 @@ impl_tags:
   techniques:
   - colorbar
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep:
   - kde
+  - normalization
   styling:
   - custom-colormap
   - alpha-blending
   - minimal-chrome
-  - grid-styling

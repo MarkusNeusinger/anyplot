@@ -21,7 +21,8 @@ from matplotlib.figure import Figure
 ## Create Figure
 
 ```python
-fig, ax = plt.subplots(figsize=(16, 9))
+# Target: 3200 × 1800 px (8 × 400dpi). See default-style-guide.md "Visual Sizing Defaults".
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 ```
 
 ## Plot Methods
@@ -41,22 +42,22 @@ plt.scatter(x, y)
 ## Save
 
 ```python
-plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight')
+plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
 ```
 
-## Sizing for 4800×2700 px
+## Sizing for 3200×1800 px (starting values — adjust per plot, review-loop tunes)
 
 ```python
 # Text sizes
-ax.set_title(title, fontsize=24, fontweight='medium')
-ax.set_xlabel(x_label, fontsize=20)
-ax.set_ylabel(y_label, fontsize=20)
-ax.tick_params(axis='both', labelsize=16)
-ax.legend(fontsize=16)
+ax.set_title(title, fontsize=18, fontweight='medium')
+ax.set_xlabel(x_label, fontsize=14)
+ax.set_ylabel(y_label, fontsize=14)
+ax.tick_params(axis='both', labelsize=12)
+ax.legend(fontsize=12)
 
 # Element sizes
-ax.scatter(x, y, s=200, edgecolors='white', linewidth=0.5)  # s=150-300
-ax.plot(x, y, linewidth=3)   # linewidth=2-4 (not 1!)
+ax.scatter(x, y, s=100, edgecolors='white', linewidth=0.5)  # s=60-150 (density-aware)
+ax.plot(x, y, linewidth=2.5)   # ~2-3 for primary lines
 
 # Grid (subtle, y-axis preferred)
 ax.yaxis.grid(True, alpha=0.2, linewidth=0.8)
@@ -66,13 +67,15 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 ```
 
+See `prompts/default-style-guide.md` "Proportional Sizing" for the review-step criteria — short labels at oversized fonts cost points; long descriptive labels at normal fonts are fine.
+
 ## Styling
 
 ```python
-ax.set_xlabel(x_label, fontsize=20)
-ax.set_ylabel(y_label, fontsize=20)
-ax.set_title(title, fontsize=24, fontweight='medium')
-ax.legend(fontsize=16)  # if needed (omit for single-series)
+ax.set_xlabel(x_label, fontsize=14)
+ax.set_ylabel(y_label, fontsize=14)
+ax.set_title(title, fontsize=18, fontweight='medium')
+ax.legend(fontsize=12)  # if needed (omit for single-series)
 plt.tight_layout()
 ```
 
@@ -121,7 +124,7 @@ INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED   = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-fig, ax = plt.subplots(figsize=(16, 9), facecolor=PAGE_BG)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 ax.set_title(..., color=INK)
@@ -140,7 +143,7 @@ if leg:
 ax.annotate(..., color=INK,
             bbox=dict(facecolor=ELEVATED_BG, edgecolor=INK_SOFT, alpha=0.9))
 
-plt.savefig(f'plot-{THEME}.png', dpi=300, bbox_inches='tight', facecolor=PAGE_BG)
+plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
 ```
 
 ## Output Files

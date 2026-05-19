@@ -25,8 +25,21 @@ Read both sources to understand what needs to be fixed:
 ## Step 2: Read reference files
 
 1. `prompts/library/{LIBRARY}.md` - Library-specific rules + theme-adaptive chrome mapping
-2. `prompts/default-style-guide.md` - Canonical Okabe-Ito palette + theme tokens (re-read if VQ-07 or VQ-04 failed)
+2. `prompts/default-style-guide.md` - Canonical Okabe-Ito palette + theme tokens (re-read if VQ-07 or VQ-04 failed), plus "Visual Sizing Defaults" and "Proportional Sizing" sections (re-read if VQ-01 / VQ-02 / VQ-05 failed)
 3. `plots/{SPEC_ID}/specification.md` - The specification
+
+**Visual-sizing fixes (when VQ-01 / VQ-02 / VQ-05 failed):**
+- Title too big / overflows → reduce fontsize or shorten title text
+- Short axis label disproportionately big ("Date" dominates axis) → reduce that label's fontsize while keeping the other axis-label/tick fontsizes balanced
+- Long descriptive label overflows axis → reduce fontsize OR rotate ticks/labels
+- Text overlaps → adjust margins, rotate ticks, reduce label fontsize, or move legend
+- Sparse data with tiny markers → increase `s=` / `size=` / `marker.size=` / `marker.radius`
+- Dense data with oversized markers / overplotting → reduce marker size + add `alpha=0.5-0.7`
+
+Adjust the canvas-controlling knobs of the relevant library family:
+- DPI-based (matplotlib / seaborn / plotnine): `figsize`, `dpi`, `fontsize=`
+- Scale-based (plotly / altair / lets-plot): `width`/`height`/`scale_factor`, theme font sizes
+- Native-pixel (bokeh / highcharts / pygal): `width`/`height` directly, `text_font_size` / `style.fontSize` / `Style(... _font_size=...)` — for highcharts keep the three canvas-size spots in sync (Selenium `--window-size`, HTML `<div style="width:height:">`, `chart.options.chart = {'width':,'height':}`); for bokeh keep Selenium `W, H` matching `figure(width=, height=)`
 
 **Do NOT re-read `prompts/quality-criteria.md`** — the review already distilled all criteria into `review.criteria_checklist` in the metadata YAML (Step 1). Use that checklist directly: items with `passed: false` are the ones to fix.
 

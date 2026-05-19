@@ -11,10 +11,10 @@ from bokeh.io import output_file, save
 ## Create Figure
 
 ```python
-# Target: 4800 × 2700 px (see default-style-guide.md)
+# Target: 3200 × 1800 px (see default-style-guide.md)
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     title=title,
     x_axis_label=x_label,
     y_axis_label=y_label
@@ -65,7 +65,9 @@ save(p)
 
 # Screenshot it with headless Chrome — Selenium 4 / Selenium Manager
 # auto-resolves a working driver for the system Chrome.
-W, H = 4800, 2700
+# IMPORTANT: W,H must match the figure's width/height above, otherwise the
+# bokeh canvas paints into the upper-left corner with white space around it.
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
@@ -84,20 +86,22 @@ driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 ```
 
-## Sizing for 4800×2700 px
+## Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python
 # Text sizes
-p.title.text_font_size = '28pt'
-p.xaxis.axis_label_text_font_size = '22pt'
-p.yaxis.axis_label_text_font_size = '22pt'
-p.xaxis.major_label_text_font_size = '18pt'
-p.yaxis.major_label_text_font_size = '18pt'
+p.title.text_font_size = '22pt'
+p.xaxis.axis_label_text_font_size = '16pt'
+p.yaxis.axis_label_text_font_size = '16pt'
+p.xaxis.major_label_text_font_size = '14pt'
+p.yaxis.major_label_text_font_size = '14pt'
 
-# Element sizes
-p.scatter(..., size=15)        # ~3-4x default
-p.line(..., line_width=3)
+# Element sizes (density-aware — see default-style-guide.md)
+p.scatter(..., size=10)        # ~2-3x default
+p.line(..., line_width=2.5)
 ```
+
+See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Colors
 

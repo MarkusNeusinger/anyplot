@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: timeseries-forecast-uncertainty
 created: '2026-01-07T16:28:45Z'
-updated: '2026-05-16T22:23:43Z'
-generated_by: claude-haiku
-workflow_run: 25974397400
+updated: '2026-05-19T12:20:22Z'
+generated_by: claude-sonnet
+workflow_run: 26095403759
 issue: 3188
 language_version: 3.13.13
 library_version: 3.10.9
@@ -12,116 +12,113 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/timeserie
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/timeseries-forecast-uncertainty/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 94
+quality_score: 88
 review:
   strengths:
-  - Perfect theme-adaptive implementation with both renders readable and identical
-    data colors
-  - 'Excellent palette compliance with Okabe-Ito colors in correct positions (#009E73
-    primary, #D55E00 secondary, #56B4E9 supporting)'
-  - 'Strong visual storytelling: historical→forecast transition with expanding confidence
-    bands narrates decreasing certainty over time'
-  - Professional code quality with proper reproducibility (seed=42) and KISS structure
-  - Complete specification compliance with all required features implemented
-  - Clear visual hierarchy and focal points without needing annotations
-  - Well-positioned legend outside plot area with proper dark/light theme styling
-  - Realistic data generation with proper uncertainty growth (sqrt-based fan-out pattern)
-  weaknesses: []
+  - 'Full theme-adaptive chrome: all chrome tokens (INK, INK_SOFT, INK_MUTED, PAGE_BG,
+    ELEVATED_BG) correctly applied in both light and dark renders — no dark-on-dark
+    or light-on-light failures'
+  - 'Correct Okabe-Ito color assignment: historical green (pos 1) → forecast orange
+    (pos 2) → CI sky-blue (pos 6), identical across both themes'
+  - Growing uncertainty bands with sqrt(1 + t × 0.5) growth create a realistic, statistically-motivated
+    visualization of forecast uncertainty
+  - Custom Patch legend handles give CI bands their own clearly differentiated legend
+    entries with correct visual alphas (0.55 vs 0.25)
+  - Peak marker and 'Forecast →' annotation create a clear visual focal point and
+    guide reader attention to the forecast region
+  weaknesses:
+  - Title fontsize=15pt spans ~80% of plot width, marginally over the 50–70% proportional
+    guideline — reduce to 14pt for better proportion
+  - DE-01 and DE-03 ceiling limited by lack of subtitle or source annotation; storytelling
+    could be stronger with a brief callout annotation near the peak or a confidence-level
+    explanation within the chart
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) as specified
-      Chrome: Title, axis labels ("Date", "Monthly Sales (thousands)"), and tick labels all clearly visible in dark colors (INK #1A1A17 for title/labels, INK_SOFT #4A4A44 for ticks). Y-axis grid is subtle (alpha=0.15). Spines properly styled (top/right removed, left/bottom in INK_SOFT).
-      Data: Historical period (2022-2025-01) shown as solid green line (#009E73, linewidth=3) with trend and seasonality. Forecast period (2025-01-2026-01) shown as dashed orange line (#D55E00) with two sky-blue confidence bands (#56B4E9): lighter band (alpha=0.2) for 95% CI, darker band (alpha=0.3) for 80% CI. Bands widen rightward showing increasing uncertainty. Dotted vertical line marks forecast start.
-      Legend: Positioned at bottom-left outside plot area, identifies all 5 elements with proper styling (elevated frame #FFFDF6, text in INK_SOFT).
-      Legibility verdict: PASS - All text perfectly readable, proper contrast, no collisions, all elements visible
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "timeseries-forecast-uncertainty · python · matplotlib · anyplot.ai" in dark #1A1A17 ink, 15pt, spans ~80% of plot width. Axis labels "Date" and "Monthly Sales (thousands)" in #1A1A17, 14pt. Tick labels in #4A4A44, 12pt, rotated 30° on x-axis. All readable.
+      Data: Historical line in #009E73 (solid, 2.5pt), forecast dashed line in #D55E00, CI bands in #56B4E9 (80% alpha=0.30, 95% alpha=0.20). Peak marker circle on forecast line. Vertical dotted line at forecast start.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) as specified
-      Chrome: Title, axis labels, and tick labels all clearly visible in light colors (INK #F0EFE8 for title/labels, INK_SOFT #B8B7B0 for ticks). Excellent contrast against dark surface. Y-axis grid properly adapted to dark theme. No "dark-on-dark" text failures.
-      Data: Historical line remains identical #009E73 (brand green, solid). Forecast line remains identical #D55E00 (orange, dashed). Confidence bands remain identical #56B4E9 with same alpha values (0.2 and 0.3). Dotted vertical forecast-start line visible in dark gray. All data colors prove perfect theme-adaptive implementation.
-      Legend: Dark elevated background (#242420) with light gray edges (INK_SOFT), light text for readability.
-      Legibility verdict: PASS - All text clearly readable on dark background, no contrast failures, data colors identical to light render, proper theme adaptation throughout
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and axis labels in #F0EFE8 (near-white), tick labels in #B8B7B0, all clearly readable. Legend frame uses #242420 elevated bg with #B8B7B0 text. "Forecast →" annotation in #A8A79F — visible. No dark-on-dark failures.
+      Data: Historical #009E73 and forecast #D55E00 colors identical to light render as required. CI bands in #56B4E9 slightly darker against near-black surface but still distinguishable (80% vs 95% nesting visible).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 24pt, labels 20pt, ticks 16pt);
-          perfectly readable in both light and dark renders
+        comment: All text readable in both themes. Title at 15pt proportional for
+          long mandated string but spans ~80% of plot width (50-70% guideline).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend outside plot area, date labels rotated 30°, no collisions
-          detected in either render
+        comment: No overlapping text, markers, or legend elements.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements clearly visible: lines (3pt), bands (alpha 0.2-0.3),
-          grid (alpha 0.15), markers (dotted line)'
+        comment: All data elements clearly visible at this density.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette (CVD-safe), good contrast between overlapping elements,
-          no red-green-only signals
+        comment: Full Okabe-Ito palette, CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 16:9 landscape (4800×2700 px), balanced margins, plot fills 50-70%
-          of canvas, nothing cut-off
+        comment: Canvas 3200x1800 correct. Title spans ~80% of width, marginally over
+          70% guideline. No overflow.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: ''Monthly Sales (thousands)''; title
-          format correct'
+        comment: Y-axis label includes units. Title in required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Perfect Okabe-Ito: first series #009E73, second #D55E00, supporting
-          #56B4E9; backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
+        comment: 'First series #009E73, second #D55E00, CI #56B4E9. Backgrounds correct.
+          Data colors identical across themes.'
     design_excellence:
-      score: 16
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Custom Okabe-Ito palette with intentional hierarchy; color gradient
-          (solid→dashed) guides narrative; legend styled with elevated frame; professional
-          polish
+        comment: Deliberate color roles, nested CI bands, custom legend handles, focal
+          peak marker, 'Forecast →' annotation. Above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Spines customized (top/right removed), subtle grid (alpha 0.15),
-          generous whitespace, legend frame styled, rounded line caps
+        comment: Top/right spines removed, y-axis-only grid at alpha=0.15, subtle
+          forecast region tint, theme-adaptive spines.
       - id: DE-03
         name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Clear visual hierarchy (historical solid→forecast dashed); focal
-          point on forecast with expanding bands; narrative of decreasing certainty
-          visualized effectively
+        comment: Clear temporal narrative, vertical boundary line, growing uncertainty
+          bands, peak marker focal point.
     spec_compliance:
       score: 15
       max: 15
@@ -131,29 +128,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Time series with forecast and confidence intervals; all subtypes
-          present
+        comment: Correct time series with forecast and nested uncertainty bands.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Solid line (historical), dashed line (forecast), nested bands (95%/80%),
-          vertical marker, clear legend
+        comment: Solid historical line, dashed forecast, vertical marker, 80% CI,
+          95% CI, semi-transparent fills, full legend.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on x-axis, sales on y-axis, 36 historical + 12 forecast months
-          with 1-month overlap for continuity
+        comment: Dates on X, monthly sales on Y, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'timeseries-forecast-uncertainty · matplotlib · anyplot.ai';
-          legend labels accurate
+        comment: 'Title in required format. Legend: Historical Data, Forecast, Forecast
+          Start, 80% CI, 95% CI.'
     data_quality:
       score: 15
       max: 15
@@ -163,22 +158,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: trend, seasonality, noise, forecast, multiple
-          confidence levels, uncertainty growth'
+        comment: Full dataset with actual, forecast, lower/upper 80%, lower/upper
+          95%. Growing uncertainty modeled.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Monthly retail sales domain; 3-year history + 12-month forecast;
-          realistic scenario; neutral context
+        comment: Monthly retail sales, 3-year history + 12-month ARIMA forecast. Seasonal
+          + trend + noise. Plausible neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Trend 1.2/month (plausible growth), seasonality 15 units (~12% of
-          mean), noise σ=5; confidence interval growth sqrt-based
+        comment: Values 80-180k reasonable for retail. Uncertainty grows from ±10
+          to ±25k over 12-month horizon. 36+12 points within spec range.
     code_quality:
       score: 10
       max: 10
@@ -188,58 +183,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: constants → data → plot → save; no functions/classes'
+        comment: Flat sequential code, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; all data generation deterministic
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib, numpy, pandas; all imports used
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, matplotlib.patches.Patch.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity, no fake UI or over-engineering
+        comment: Well-structured theme token pattern, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png, dpi=300, bbox_inches='tight', current API
+        comment: Saves as plot-{THEME}.png, current matplotlib API.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of fig/ax pattern, ax methods, environment-variable theme
-          tokens, proper spine/grid customization, date handling, legend positioning
+        comment: Axes-method pattern throughout. Custom legend handles via Line2D
+          + Patch. Proper bbox_inches='tight' save.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses fill_between with nested alpha, axvline for markers, theme-adaptive
-          styling; solid execution but standard techniques
+        comment: fill_between for nested CI bands with correct z-ordering, axvspan
+          for region tint, ax.set_axisbelow(True), semi-annual date tick generation.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - custom-legend
+  - annotations
+  - manual-ticks
+  - patches
   patterns:
   - data-generation
   - explicit-figure
+  dataprep:
   - time-series
-  dataprep: []
   styling:
   - alpha-blending
   - grid-styling

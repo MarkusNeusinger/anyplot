@@ -1,160 +1,178 @@
 library: plotly
+language: python
 specification_id: ternary-density
 created: '2026-01-11T09:31:17Z'
-updated: '2026-01-11T09:35:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20892890889
+updated: '2026-05-19T10:48:57Z'
+generated_by: claude-sonnet
+workflow_run: 26091196427
 issue: 3696
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ternary-density/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ternary-density/plotly/plot.html
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ternary-density/python/plotly/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Excellent implementation of ternary density using Scatterternary with KDE-colored
-    markers
-  - Proper Viridis colormap as specified for perceptually uniform density visualization
-  - Grid lines visible beneath density layer as required
-  - Interactive hover tooltips showing Sand/Silt/Clay percentages
-  - Clean, well-structured code with proper seed for reproducibility
-  - Contour lines at percentile levels (25th, 50th, 75th, 90th) enhance interpretation
-  - Realistic sediment composition context with distinct clusters
+  - 'Perfect spec compliance: KDE, contour lines at percentile levels, vertex labels,
+    grid, and viridis density colormap all delivered'
+  - Geologically realistic three-cluster dataset (beach/floodplain/deep-lake) makes
+    excellent use of the sediment composition context
+  - 'Theme-adaptive chrome correctly applied across all elements: title, axis labels,
+    tick fonts, colorbar, backgrounds'
+  - Flat canvas size (4800x2700) and font sizes within spec
+  - Matplotlib used only for data extraction (contour paths) with plt.close() properly
+    called — no fake interactivity
   weaknesses:
-  - Contour lines (white with alpha 0.6) could be more prominent for easier density
-    level interpretation
-  - Grid at alpha 0.15 is quite subtle; alpha 0.25-0.3 might improve readability
-  - Silt-dominant and mixed clusters are less visually distinct than the sand-dominant
-    cluster
-  image_description: 'The plot displays a ternary density visualization for sediment
-    composition with three vertices labeled Sand (%), Silt (%), and Clay (%). The
-    density is rendered using small circular markers colored according to the Viridis
-    colormap, ranging from dark purple (low density ~0) to yellow (high density ~6).
-    The triangular plot shows multiple density hotspots: a prominent high-density
-    region (yellow) near the Sand vertex indicating sand-dominant samples, and additional
-    concentration areas visible in teal/green colors in the mid-regions. White contour
-    lines overlay the density field at key percentile levels. Grid lines at 20% intervals
-    are visible beneath the density layer. A vertical colorbar on the right shows
-    the density scale. The title follows the correct format with the spec-id, library,
-    and pyplots.ai branding.'
+  - Tick font size is 16px vs recommended 18px for pixel-based libraries — minor readability
+    reduction at full canvas
+  - White contour color (rgba(255,255,255,0.85)) in the light theme has variable contrast
+    against bright viridis regions; a dark semi-transparent color would maintain contrast
+    across both themes more robustly
+  - Scatter-marker density approach creates a slightly dotted texture rather than
+    a fully smooth continuous heatmap surface
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "Sediment Composition Distribution · ternary-density · python · plotly · anyplot.ai" in dark ink, clearly readable. Axis labels Sand (%), Silt (%), Clay (%) in dark ink at 22px, readable. Tick labels at 0/20/40/60/80/100 in secondary ink at 16px, readable though slightly small.
+      Data: Viridis-colored scatter markers (~10000 points) fill the ternary triangle showing three distinct density clusters — sand apex (top), silt corner (bottom-left), clay corner (bottom-right). White contour lines at 25/50/75/90th percentile density levels overlay the surface. Viridis colorbar on right labeled "Density".
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title in light text (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in secondary light text (#B8B7B0), readable. Colorbar fonts are light-themed. No dark-on-dark failures observed.
+      Data: Same viridis colorscale as light render — data colors identical, only chrome flips. Three density clusters more visually dramatic against the dark surface; yellow-green peaks contrast sharply with deep-purple low-density areas. White contour lines highly visible in dark theme.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, tick labels at 16pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; labels well positioned outside triangle
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Marker size of 6 works well for density visualization; slightly small
-          but density pattern is clear
+        comment: All text readable in both themes; tick font 16px slightly below recommended
+          18px for pixel-based libs
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor tick label crowding on ternary axes at lower values
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Density surface and contour lines clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is perceptually uniform and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization; triangle fills ~60% of plot area; colorbar
-          well positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'All three axes labeled with units: Sand (%), Silt (%), Clay (%)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Viridis is perceptually uniform and colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 px, good proportions, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid visible at alpha 0.15; colorbar present but grid could be slightly
-          more prominent
+        comment: Sand (%), Silt (%), Clay (%) with units; descriptive title
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous density data; correct backgrounds #FAF8F1/#1A1A17'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Viridis density surface + contour lines at percentile levels + themed
+          colorbar show deliberate design choices
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: template=none removes defaults; styled colorbar with themed fonts/border/bg;
+          ternary bg matches page surface
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three clusters map to distinct geological environments; contours
+          guide viewer; viridis naturally encodes density
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct ternary density plot with KDE overlay
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Three components correctly mapped to ternary axes
-      - id: SC-03
+        comment: Correct ternary density chart using go.Scatterternary with KDE-colored
+          markers
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Density heatmap via KDE present; contour lines present; contours
-          are subtle white lines
-      - id: SC-04
-        name: Data Range
+        comment: KDE via gaussian_kde, contour lines at 25/50/75/90th percentiles,
+          vertex labels, visible grid
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible; axes span 0-100%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Sand/silt/clay correctly mapped; all values normalized to sum to
+          100%
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar accurately shows density scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Title correctly formatted with description, spec-id, library, and
-          pyplots.ai
+        comment: Title matches required format; colorbar labeled Density
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3 distinct clusters as intended; mixed cluster less visible
-          than sand-dominant
+        comment: Three geologically distinct clusters demonstrate sand/silt/clay dominated
+          sediment environments
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sediment composition is classic geological application; neutral scientific
-          context
+        comment: Sediment composition is canonical ternary dataset from geoscience;
+          cluster parameters are geologically plausible
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Percentages 0-100 appropriate; cluster distributions plausible for
-          real sediment
+        comment: 500 samples within 100-5000 recommended range; values 0-100% summing
+          to 100%
     code_quality:
       score: 10
       max: 10
@@ -164,46 +182,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, data generation, KDE, plot, save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set at beginning
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, plotly.graph_objects, scipy.stats.gaussian_kde'
+        comment: All imports used; matplotlib for contour extraction, scipy for KDE
+          and smoothing
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Matplotlib contour extraction is legitimate data-extraction pattern,
+          not fake UI
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png (4800x2700) and plot-{THEME}.html
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses Plotly Scatterternary with interactive hover tooltips; exports
-          both PNG and HTML
+        comment: go.Scatterternary is correct Plotly trace for ternary coordinates;
+          layout ternary dict properly configured
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Colorbar in marker dict, hovertemplate with ternary formatting, HTML
+          export; slight deduction for matplotlib contour workaround
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - matplotlib
   techniques:
   - colorbar
   - hover-tooltips
@@ -213,7 +241,7 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - kde
+  - normalization
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling

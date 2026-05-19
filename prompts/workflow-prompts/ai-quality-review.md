@@ -65,6 +65,23 @@ For `plot-dark.png` (background should be `#1A1A17`):
 
 A plot that's perfect in one theme but unreadable in the other still **fails** — both renders must pass. Be strict: a plot that ships to the website broken on dark mode is worse than one that fails review and gets repaired.
 
+### 5d. MANDATORY: Proportional Sizing Check (both renders)
+
+Visually estimate from each PNG — no pixel measurement needed. These are soft proportional checks **without hard thresholds**. Violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), and VQ-05 (Layout & Canvas) categories rather than triggering a separate pass/fail item. A single visual problem can reduce points in multiple categories simultaneously (holistic, not strict).
+
+- **Title proportion:** Title occupies ~50–70% of the plot width. Too narrow → fontsize probably too small (deduct VQ-01). Too wide / overflowing → fontsize probably too big OR title too verbose (deduct VQ-01 + VQ-05).
+- **Axis label proportionality:** Short labels with few words ("Date", "Year") must not dominate the axis with oversized fontsizes. Long descriptive labels ("Fläche von Häusern in Quadratmetern", "Average temperature in °C") are completely fine as long as they don't overflow — the "No overflow" check below covers that. Disproportionately oversized short labels → deduct VQ-05.
+- **Axis label balance:** X-axis and Y-axis labels are visually similar in size. One much larger than the other without semantic reason → deduct VQ-05.
+- **Tick label balance:** X-axis and Y-axis tick labels are visually similar in size. Exception: rotated long categorical labels may legitimately look wider.
+- **No overlap:** No text overlaps with other text, with data elements, or with legend/annotation boxes → deduct VQ-02 (severe overlap = 0).
+- **No overflow:** No text extends beyond axis bounds, plot bounds, or the canvas frame → deduct VQ-05.
+- **Marker / line density appropriateness:** Sparse data (< 50 points) should have prominent markers; dense data (> 500 points) should have smaller markers + `alpha < 1` to combat overplotting → deduct VQ-03 when poorly chosen.
+
+**Required:** Note specific violations in `weaknesses` with enough context for the repair loop to fix them. Examples:
+- "X-axis label 'Date' is oversized at fontsize=24pt, dominates the axis disproportional to its info content — reduce to ~12pt."
+- "Title overflows ~95% of plot width — reduce title fontsize from 22 to 14, or accept that the long mandated anyplot title needs ~14pt at this canvas."
+- "Sparse scatter (32 points) but marker size=6 px makes them barely visible — increase to size=12-16."
+
 ### 6. Check for Auto-Reject (AR-08)
 
 **For static libraries (matplotlib, seaborn, plotnine, ggplot2) only:**
@@ -84,11 +101,11 @@ Read `prompts/quality-criteria.md` and evaluate:
 #### Visual Quality (30 pts)
 | ID | Criterion | Max | Check |
 |----|-----------|-----|-------|
-| VQ-01 | Text Legibility | 8 | Font sizes explicitly set? Readable at full size in BOTH themes? |
-| VQ-02 | No Overlap | 6 | All text readable? No collisions? |
-| VQ-03 | Element Visibility | 6 | Markers/lines adapted to density? |
+| VQ-01 | Text Legibility | 8 | Font sizes explicitly set? Readable at full size in BOTH themes? Mobile-readable when scaled to ~400 px? Apply Proportional Sizing Check (5d). |
+| VQ-02 | No Overlap | 6 | All text readable? No collisions with other text or with data? See 5d. |
+| VQ-03 | Element Visibility | 6 | Markers/lines adapted to density? See 5d data-density appropriateness. |
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette)? No red-green as sole signal? |
-| VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? |
+| VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title 50–70% width, balanced axis labels, no overflow — see 5d. |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? |
 | VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series follows Okabe-Ito order? Continuous data uses `viridis`/`cividis`/`BrBG`? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
 

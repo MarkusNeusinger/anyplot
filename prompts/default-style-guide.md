@@ -1,30 +1,32 @@
 # AnyPlot.ai Default Style Guide
 
-Style requirements for consistent, beautiful visualizations at large canvas sizes.
+Style requirements for consistent, beautiful visualizations at a mid-sized canvas.
 
-## Important: Large Canvas Size
+## Standard Canvas Size
 
-anyplot renders at high resolution (~13 million pixels). All element sizes must be scaled for visibility!
+anyplot renders at ~5.76 million pixels — a mid-sized canvas that balances Hi-Res sharpness for desktop monitors with mobile readability and reasonable file sizes.
 
-**Common Mistake:** Using default/standard sizes results in tiny, hard-to-see elements.
+**Common Mistake:** Using library defaults (e.g. matplotlib `fontsize=10`, plotly `marker.size=6`) still produces elements that are too small. Use the "Visual Sizing Defaults" table below as a starting point — the AI may adjust if the plot context demands it, and the review step checks proportions.
 
 ---
 
 ## Dimensions
 
-Two formats are allowed (similar pixel count for consistent font sizing):
+Two formats are allowed (same pixel count for consistent font sizing across both):
 
 | Format | Size | Aspect Ratio | Use Case |
 |--------|------|--------------|----------|
-| **Landscape** | 4800 × 2700 px | 16:9 | Default, most plots |
-| **Square** | 3600 × 3600 px | 1:1 | Symmetric plots (pie, radar, heatmaps, grid-based) |
+| **Landscape** | 3200 × 1800 px | 16:9 | Default, most plots |
+| **Square** | 2400 × 2400 px | 1:1 | Symmetric plots (pie, radar, heatmaps, grid-based) |
 
 **AI decides freely** which format is best for each specific plot.
 
 **Why these sizes?**
-- Landscape: 4800 × 2700 = 12.96 million pixels
-- Square: 3600 × 3600 = 12.96 million pixels
-- Same pixel area → same font sizes work for both
+- Landscape: 3200 × 1800 = 5.76 million pixels
+- Square: 2400 × 2400 = 5.76 million pixels
+- Same pixel area → the same font sizes work for both formats
+- Big enough to stay sharp at typical 1920–2560 px desktop widths
+- Small enough that mobile loads (and the `400w` / `800w` srcset variants) stay snappy
 
 ---
 
@@ -171,32 +173,53 @@ Before finalizing any plot, consider removing:
 
 ---
 
-## Visual Sizing Principles
+## Visual Sizing Defaults
 
-Since we render at ~13 million pixels, elements must be **visually prominent**:
+**These are starting values — the AI may adjust if the plot context demands it.** The review step then checks proportions (see "Proportional Sizing" below) and the repair loop tunes any element that's off.
 
-### Text
+Three library families with different sizing controls:
 
-Two font size groups exist due to how libraries render (DPI-based vs. pixel-based):
+| Element | DPI-based (matplotlib, seaborn, plotnine) | Scale-based (plotly, altair, lets-plot) | Native-pixel (bokeh, highcharts, pygal) |
+|---------|--------------------------------------------|------------------------------------------|------------------------------------------|
+| Canvas (16:9) | `figsize=(8, 4.5)` `dpi=400` | `width=800 height=450 scale=4` | `width=3200 height=1800` |
+| Canvas (1:1) | `figsize=(6, 6)` `dpi=400` | `width=600 height=600 scale=4` | `width=2400 height=2400` |
+| Title | 18pt | 22px | '22pt' |
+| Axis labels | 14pt | 16px | '16pt' |
+| Tick labels | 12pt | 14px | '14pt' |
+| Legend | 12pt | 14px | '14pt' |
 
-| Element | DPI-based (matplotlib, seaborn, plotnine, letsplot) | Pixel-based (plotly, bokeh, altair, highcharts, pygal) |
-|---------|------------------------------------------------------|--------------------------------------------------------|
-| Title | 24pt | 28px |
-| Axis labels | 20pt | 22px |
-| Tick labels | 16pt | 18px |
-| Legend | 16pt | 16px |
+All three families produce the same 3200×1800 (or 2400×2400) output, so text pixel sizes are comparable across libraries.
 
-DPI-based libraries use `figsize=(16, 9)` + `dpi=300` = 4800x2700px. Pixel-based libraries set dimensions directly.
+**Marker and line sizes** vary by library API and aren't directly comparable as a single number — matplotlib's `s=` is in points², plotly's `marker.size` is a pixel diameter, altair's `mark_point(size=...)` is an area, plotnine / lets-plot / ggplot2's `geom_point(size=...)` uses a smaller ggplot scale. See each library's own prompt (`prompts/library/<lib>.md` → "Sizing" section) for the canonical starting values, and adapt to data density per the heuristic below.
 
-### Data Elements
-- **Points/Markers**: Clearly visible, not tiny dots
-- **Lines**: Thick enough to see clearly
-- **Bars**: With subtle edges for definition
+### Data-density Heuristic
+
+Marker and line sizes should adapt to how dense the data is — no fixed values:
+
+- **Few datapoints (< 50)** → larger, prominent markers; thicker lines.
+- **Medium density (50–500)** → defaults from the table above.
+- **High density (> 500)** → smaller markers + `alpha < 1` to combat overplotting; consider hex-bin / 2D-histogram alternatives.
+- **Few series (1–3)** → thicker lines for prominence.
+- **Many series (> 5)** → thinner lines so all stay visible.
 
 ### General Rules
-- Elements should be **~3-4x larger** than standard defaults
-- When in doubt, make it bigger
-- Test: Would this be readable on a 4K monitor?
+- Elements should be **~2-3× larger** than the library's standard defaults.
+- When in doubt, make it bigger.
+- Test: Would this be readable on a typical 1920–2560 px desktop monitor, AND on a 400 px mobile width?
+
+---
+
+## Proportional Sizing
+
+The review step checks these proportions visually from the source PNG. There are no hard pixel thresholds — violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), VQ-05 (Layout & Canvas) categories rather than triggering a separate pass/fail. This keeps the contract holistic: a single visual problem (oversized short axis label, overlapping ticks) can reduce points in multiple categories.
+
+- **Title proportion:** Title takes ~50–70% of the plot width. Too narrow → fontsize probably too small. Too wide / overflowing → fontsize probably too big or title too verbose.
+- **Axis label proportionality:** Short labels ("Date", "Year") should not dominate the axis with oversized fontsizes. Long descriptive labels ("Fläche von Häusern in Quadratmetern") are fine as long as they don't overflow — the "no overflow" rule covers that case.
+- **Axis label balance:** X-axis label and Y-axis label are visually similar in size — one much larger than the other without semantic reason is a violation.
+- **Tick label balance:** X-axis and Y-axis tick labels are visually similar in size (exception: rotated long categorical labels).
+- **No overlap:** Text never overlaps with other text or with data elements.
+- **No overflow:** No text extends beyond axis bounds, plot bounds, or frame.
+- **Marker / line density appropriateness:** Element sizes match the data-density heuristic above (sparse → prominent; dense → smaller + alpha).
 
 ---
 
