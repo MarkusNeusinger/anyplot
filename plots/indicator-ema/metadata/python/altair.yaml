@@ -1,161 +1,192 @@
 library: altair
+language: python
 specification_id: indicator-ema
 created: '2026-01-11T01:10:42Z'
-updated: '2026-01-11T01:13:34Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20887177103
+updated: '2026-05-19T05:04:46Z'
+generated_by: claude-sonnet
+workflow_run: 26076751703
 issue: 3652
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Clean declarative approach using Altair data transformation via pd.melt and scale
-    encodings
-  - Proper differentiation between price line (thicker) and EMA lines (thinner) using
-    strokeWidth encoding
-  - Excellent use of tooltips with formatted values for interactive exploration
-  - Good color scheme distinguishing all three series
-  - Correct EMA calculation using pandas ewm()
-  - Professional title and axis formatting
+  - 'Perfect theme-adaptive chrome: INK/INK_SOFT tokens used correctly throughout;
+    grid color formula (INK at 0.10 opacity) exactly matches the rgba style-guide
+    spec in both themes'
+  - StrokeWidth encoding via alt.Scale creates clean visual hierarchy (price line
+    3.5px vs EMA lines 2.5px) using idiomatic Altair declarative grammar
+  - Crossover markers use 4th Okabe-Ito color (#CC79A7) as deliberate focal points
+    highlighting key EMA trading signals
+  - EMA calculation uses industry-standard ewm(span=12/26, adjust=False) with realistic
+    financial parameters (0.05% drift, 2% daily vol, business-day frequency)
   weaknesses:
-  - No grid lines make it harder to read precise values from the chart
-  - Legend position in top-left slightly overlaps the data region during the initial
-    peak period
-  - Missing crossover point highlighting that spec mentions as consider highlighting
-  image_description: 'The plot displays a stock price chart with Exponential Moving
-    Average overlays spanning January 2024 to June 2024. Three line series are shown:
-    the Close Price in blue (thicker line), EMA 12 in golden yellow, and EMA 26 in
-    coral/red. The price starts around $100, peaks near $110 in early January, then
-    trends downward to the $80-86 range by June with typical market volatility. The
-    EMAs smooth the price movements as expected, with the shorter EMA 12 responding
-    faster to price changes than EMA 26. The legend is positioned in the top-left
-    corner. X-axis labels show month-year format at -45 degrees, and Y-axis displays
-    "Price (USD)" with a non-zero scale starting around $76. Title correctly uses
-    the spec-id · library · pyplots.ai format.'
+  - configure_view uses stroke=INK_SOFT which keeps a visible frame border; setting
+    stroke=None would give a cleaner minimal aesthetic and improve DE-02
+  - 'DE-01 stops short of strong design: no narrative layer (background shading for
+    bull/bear phases, annotation at a key crossover) prevents reaching publication-ready
+    tier'
+  - LM-02 could leverage Altair's interactive selection or transform_filter for more
+    library-distinctive usage
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title 'indicator-ema · python · altair · anyplot.ai' in dark ink (#1A1A17), clearly readable. Y-axis label 'Price (USD)' and X-axis label 'Date' in dark ink (#1A1A17), readable. Tick labels in secondary ink (#4A4A44) at 18px, readable. Legend box with elevated fill (#FFFDF6) and soft stroke, labels and title legible.
+      Data: Three lines — Close Price in #009E73 (green, thicker 3.5px), EMA 12 in #D55E00 (orange, 2.5px), EMA 26 in #0072B2 (blue, 2.5px). Pink diamond crossover markers (#CC79A7, opacity 0.85) at ~7 EMA intersection events. Grid extremely subtle (INK at 0.10 opacity).
+      Legibility verdict: PASS — all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct warm near-black, not pure black
+      Chrome: Title in light near-white (#F0EFE8), clearly readable against dark background. Axis labels in light (#F0EFE8), tick labels in soft light gray (#B8B7B0), all legible. Legend box with elevated dark fill (#242420), text in #B8B7B0/#F0EFE8. No dark-on-dark failures detected.
+      Data: Colors identical to light render — #009E73 green price line, #D55E00 orange EMA 12, #0072B2 blue EMA 26, #CC79A7 diamond crossover markers. Grid extremely subtle (near-white INK at 0.10 opacity on dark surface).
+      Legibility verdict: PASS — all text clearly readable against dark background; data colors unchanged from light render
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and clear (~28pt), axis labels are readable (~18-22pt),
-          tick labels are appropriately sized
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text; X-axis labels angled at -45 degrees prevent
-          collision
+        comment: 'All font sizes explicitly set: title 28px, axis labels 22px, tick
+          labels 18px, legend 18/20px — correct per pixel-based library guidelines'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: labelAngle=-45 prevents x-axis crowding; no text collisions in either
+          render
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Lines are clearly visible with good stroke widths (3.5 for price,
-          2.5 for EMAs); minor deduction as lines could benefit from slightly more
-          differentiation
+        comment: Price line 3.5px, EMA lines 2.5px clearly differentiated; crossover
+          markers size=300 visible at full resolution
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red are distinguishable and reasonably colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions with chart filling canvas well; legend placement
-          is functional but slightly overlaps early data region
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price (USD) and Date are descriptive with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette; green/orange/blue well-separated perceptually
+          and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills ~75% of 4800x2700 canvas; legend within plot area, margins
+          balanced, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: 'Y: ''Price (USD)'' with unit; X: ''Date''; title matches required
+          format'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 correct; EMA 12 #D55E00, EMA 26 #0072B2 follow
+          Okabe-Ito order; backgrounds #FAF8F1/#1A1A17 correct; chrome adapts correctly
+          in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Legend well-configured with larger symbols; however, no grid is present
-          to aid reading values
+        comment: Well-configured with correct palette, themed chrome, differentiated
+          line widths, crossover markers. Above defaults but not publication-ready
+          — lacks annotations, shading, or deeper narrative
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Very subtle grid (0.10 opacity using INK token). configure_view keeps
+          soft frame border (stroke=INK_SOFT); removing it would add more refinement.
+          Tick sizes and axis chrome explicitly styled
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: false
+        comment: Crossover markers as deliberate focal points; thicker price line
+          vs thinner EMA lines creates visual hierarchy. No annotations but visual
+          hierarchy guides reader
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct EMA overlay line chart
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X, price/EMA values on Y correctly assigned
-      - id: SC-03
+        comment: 'Correct EMA overlay chart: price line + two EMA lines layered, crossover
+          points highlighted'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has price line and two EMAs with proper legend labels; missing crossover
-          point highlighting as suggested in spec
-      - id: SC-04
-        name: Data Range
+        comment: Price line prominent (thicker), EMA lines thinner, distinct colors
+          per period, crossover events marked, periods labeled in legend
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate Y-axis scale (non-zero, tight range)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: date:T → X, value:Q → Y (zero=False), series:N → color; 120 business
+          days fully visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Close Price, EMA 12, EMA 26 clearly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: indicator-ema · altair · pyplots.ai'
+        comment: Title 'indicator-ema · python · altair · anyplot.ai' correct; legend
+          labels 'Close Price', 'EMA 12', 'EMA 26' clear and match data
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows downtrend with volatility, EMA smoothing behavior, and EMA
-          lag differences; could show a clearer trend reversal/crossover
+        comment: 'All EMA indicator features present: price, short EMA (12), long
+          EMA (26), crossover signals; both bullish and bearish crossovers visible'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock price scenario with plausible daily returns and price
-          movement
+        comment: Realistic stock price simulation with np.random.seed(42), business-day
+          frequency, Jan-Jun 2024 date range; neutral financial context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic ($76-$110 range); 120 business days is appropriate
-          per spec
+        comment: ~$76-110 price range realistic; 0.05% daily drift + 2% volatility
+          are realistic equity parameters; EMA periods 12 and 26 are industry-standard
+          MACD components
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,49 +194,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Flat: imports → data generation → EMA calculation → crossover detection
+          → melt → scales → chart → save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducibility
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: os, altair, numpy, pandas — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic style; legend=None on strokeWidth encoding avoids
+          duplicate legend entry elegantly
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair 5.x API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also saves plot.html (both acceptable for Altair)
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png (scale_factor=3.0) and plot-{THEME}.html;
+          Altair 6.0.0 API
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Long-format data for multi-series; declarative color + strokeWidth
+          scales with domain/range; alt.layer for separate data sources; full configure_*
+          theming pipeline
+      - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses Altair declarative grammar effectively: scale domains for colors/stroke
-          widths, configure_* methods, tooltips for interactivity, melted data format
-          for layering. Could use selection/interactivity features more.'
+        comment: Layer composition combining different datasets; strokeWidth as declarative
+          encoding channel driven by Scale — distinctly Altair and difficult to replicate
+          without manual iteration in other libraries
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
@@ -213,4 +255,5 @@ impl_tags:
   dataprep:
   - time-series
   - rolling-window
-  styling: []
+  styling:
+  - alpha-blending

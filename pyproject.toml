@@ -139,6 +139,11 @@ ignore = [
     "B008",  # Do not perform function call in argument defaults (FastAPI Depends pattern)
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# pygal.py shares its name with the installed pygal package; sys.path must be patched
+# before importing it, which puts non-import code before the package imports (E402).
+"plots/*/implementations/python/pygal.py" = ["E402"]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"

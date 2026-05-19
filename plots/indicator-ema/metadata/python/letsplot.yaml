@@ -1,153 +1,187 @@
 library: letsplot
+language: python
 specification_id: indicator-ema
 created: '2026-01-11T00:20:31Z'
-updated: '2026-01-11T00:28:37Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20886563964
+updated: '2026-05-19T05:18:50Z'
+generated_by: claude-sonnet
+workflow_run: 26077017260
 issue: 3652
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/letsplot/plot.html
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-ema/python/letsplot/plot-dark.html
 quality_score: 92
 review:
   strengths:
-  - Excellent use of wide-to-long data transformation for ggplot-style plotting
-  - Proper EMA calculation using pandas ewm with correct span parameters
-  - Good visual hierarchy with thicker price line and thinner EMA lines via scale_size_manual
-  - Clean, readable code following KISS principle
-  - Correct title format and clear axis labeling with units
+  - Perfect theme-adaptive chrome — all six token variables (PAGE_BG, ELEVATED_BG,
+    INK, INK_SOFT, RULE) threaded through every element; both renders pass readability
+    checks
+  - 'Strong spec compliance — all required features implemented: dual EMA overlay,
+    line weight hierarchy, crossover annotations, proper legend labeling'
+  - Excellent letsplot library mastery — layer_tooltips() with custom title/line format
+    is genuinely library-distinctive; HTML export is correctly included
+  - Realistic financial data with correct EMA calculation using pandas ewm(span=...,
+    adjust=False)
+  - Clean KISS code structure with reproducible seed
   weaknesses:
-  - Legend shows duplicate Series header for both color and size aesthetics (minor
-    visual duplication)
-  - Could highlight EMA crossover points as suggested in spec notes (optional enhancement)
-  image_description: 'The plot displays an EMA (Exponential Moving Average) indicator
-    chart with 120 trading days of simulated stock price data. Three lines are shown:
-    a blue "Close Price" line (thicker, more volatile), a yellow "EMA 12" line (smoother
-    short-term average), and a red "EMA 26" line (smoothest long-term average). The
-    chart shows a clear downtrend from ~$101 in early January to a low of ~$88 in
-    late February, followed by a sideways/recovery pattern through May. The X-axis
-    shows dates (Jan 02 through late May), the Y-axis shows "Price (USD)" ranging
-    from 87-108. A legend on the right side identifies the three series. The title
-    correctly displays "indicator-ema · letsplot · pyplots.ai". Grid lines are dashed
-    and subtle. The layout uses the full canvas effectively.'
+  - 'DE-01 (5/8): Not yet publication-ready — could improve typography hierarchy (e.g.,
+    bolder title weight, subtitle in lighter muted tone), and add a focal annotation
+    at the most notable crossover event'
+  - 'DE-02 (4/6): Legend border could use a thinner/subtler rule; consider removing
+    the axis spine lines for a cleaner minimal look while keeping the axis labels'
+  - 'DE-03 (4/6): Storytelling is good but could be elevated — highlighting the longest
+    trend segment or annotating the most significant crossover with a text label would
+    create a stronger focal point'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "indicator-ema · python · letsplot · anyplot.ai" in dark ink (#1A1A17), subtitle in secondary ink (#4A4A44), axis labels and ticks in secondary ink — all readable
+      Data: Three lines — Close Price #009E73 (size 2.5), EMA 12 #D55E00 (size 1.5), EMA 26 #0072B2 (size 1.5). Vertical dashed crossover lines in green (bullish) and orange (bearish). Y-only subtle grid.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0), axis labels and ticks in secondary light ink — all readable, no dark-on-dark failures detected
+      Data: Identical colors to light render — Close Price #009E73, EMA 12 #D55E00, EMA 26 #0072B2. Crossover dashed lines same colors. Legend box uses elevated dark fill (#242420).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at appropriate
-          sizes
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements, X-axis date labels well spaced
+        comment: 'All font sizes explicitly set: title=24, axis_title=20, axis_text=16,
+          legend_text=16, legend_title=18. Both renders fully readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Date ticks spaced every 20 periods, no overlap; legend on right does
+          not crowd data area.
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Lines are visible and distinguishable, though price line could use
-          slight alpha for clarity where it overlaps EMAs
+        comment: Price line (size=2.5) dominant; EMA lines (size=1.5) distinctly thinner
+          and fully visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, and red are colorblind-distinguishable (not red-green
-          only)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Price (USD) with units, X-axis has Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1-3; CVD-safe; adequate luminance contrast on
+          both backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 4800x2700 canvas. Plot fills canvas well, balanced margins, legend
+          integrated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is nicely dashed and subtle, but legend duplicates Series label
-          for both color and size mappings
+        passed: true
+        comment: Y-axis 'Price (USD)' with units; X-axis 'Date' descriptive.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, EMA 12 #D55E00, EMA 26 #0072B2 (canonical
+          Okabe-Ito). Light bg #FAF8F1, dark bg #1A1A17. Data colors identical across
+          themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional line weight hierarchy, semantic crossover colors, alpha
+          transparency, informative subtitle. Above defaults but not FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only grid with RULE token, panel backgrounds set, legend box styled,
+          theme_minimal() removes spines. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy guides the eye; dashed crossover vlines highlight
+          signal events; subtitle tells the viewer what to look for.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct line chart with price and EMA overlays
+        comment: 'Correct EMA overlay chart: price line + two EMA lines with crossover
+          annotations.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, price values on Y-axis correctly assigned
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Price line prominent with thicker width, two EMA lines (12 and 26
-          periods) overlaid with thinner widths, distinct colors per spec
-      - id: SC-04
-        name: Data Range
+        comment: Price prominent, two EMA periods (12, 26), EMA lines thinner, distinct
+          colors, crossover highlights, legend with periods.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes show full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X, Price (USD) on Y, all three series mapped correctly over
+          120 trading days.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Close Price, EMA 12, and EMA 26
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format indicator-ema · letsplot · pyplots.ai
+        comment: Title 'indicator-ema · python · letsplot · anyplot.ai' correct. Legend
+          'Series' with 'Close Price', 'EMA 12', 'EMA 26'.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows trend (downtrend then recovery), EMA smoothing effect, and
-          EMA crossovers. Could show golden cross/death cross more explicitly
+        comment: Both EMAs shown, multiple bullish and bearish crossovers, realistic
+          trending then ranging price action.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price data is plausible with realistic volatility and price
-          movements
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Prices around $87-108 are realistic for a stock, 120 trading days
-          is appropriate
+        comment: Stock price starting at $100 over 120 trading days (~6 months), proper
+          EMA formula via pandas ewm.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Returns N(0.001, 0.015) give realistic ~1.5% daily vol; price range
+          ~87-108 (~20%) over 6 months is plausible.
     code_quality:
       score: 10
       max: 10
@@ -157,56 +191,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data generation → reshaping → plot
-          → save'
+        comment: 'Clean linear flow: imports → tokens → data → EMA calc → crossover
+          detection → long-format prep → theme → plot → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: os, numpy, pandas, lets_plot (wildcard with noqa), ggsave alias —
+          all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Pythonic, appropriate complexity. Crossover loop is necessary and
+          minimal.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; correct letsplot API
+          with scale=3.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ggplot-style grammar (aes, geom_line, scale_*, theme), scale_size_manual
-          for differentiated line widths, theme customization. Could leverage more
-          lets-plot specific features like tooltips for interactivity
+        comment: 'Expert ggplot grammar: layered geom_line() calls, scale_color_manual()
+          with named dict, theme_minimal() + custom theme override, ggsize(), ggsave()
+          with scale.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: layer_tooltips().title(...).line(...) for custom interactive tooltips
+          is letsplot-exclusive; HTML output alongside PNG leverages letsplot's interactive
+          HTML render.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
-  - manual-ticks
+  - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - wide-to-long
   dataprep:
   - time-series
-  - rolling-window
   styling:
-  - grid-styling
+  - alpha-blending
