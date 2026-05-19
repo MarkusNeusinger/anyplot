@@ -1,7 +1,7 @@
 """ anyplot.ai
 heatmap-geographic: Geographic Heatmap for Spatial Density
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-18
+Quality: 87/100 | Updated: 2026-05-19
 """
 
 import os

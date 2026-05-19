@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: heatmap-geographic
 created: '2026-01-10T08:16:32Z'
-updated: '2026-05-18T23:48:44Z'
+updated: '2026-05-19T00:55:34Z'
 generated_by: claude-sonnet
 workflow_run: 26066664299
 issue: 3638
@@ -12,51 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/heatmap-g
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/heatmap-geographic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance: KDE density estimation, continent outlines, colorbar,
-    and transparency all correctly implemented'
-  - 'Excellent data quality: seismic zones (Japan, Indonesia, Chile, California, Mediterranean)
-    are geographically accurate and tell a coherent Ring of Fire story'
-  - Clean, idiomatic plotnine layer composition (geom_tile + geom_polygon) with proper
-    coord_fixed for geographic aspect ratio
-  - 'Full theme adaptation: both light (#FAF8F1 ocean blue) and dark (#1A1A17 dark
-    blue ocean) renders are correctly themed with no dark-on-dark failures'
-  - 'Good typography hierarchy: title 24pt, axis labels 20pt, tick labels 16pt all
-    explicitly set'
-  - Reproducible data generation with np.random.seed(42) and realistic geographic
-    coordinate clusters
+  - 'Excellent spec compliance: all required features (KDE, colorbar, geographic context,
+    bandwidth control, transparency) are present and correctly implemented.'
+  - 'Strong data storytelling: Ring of Fire hotspot pattern is immediately readable;
+    45th-percentile threshold filtering surfaces meaningful clusters only.'
+  - 'Theme adaptation is thorough: outer background, ocean panel background, continent
+    outline colors, all text, and legend all flip correctly between light and dark
+    themes.'
+  - 'Perfect code quality: clean KISS structure, seed set, all imports used, correct
+    output naming.'
+  - Geographically accurate data generation with realistic cluster centers (Japan,
+    Indonesia, Chile, California, Philippines, New Zealand, Mediterranean).
   weaknesses:
-  - 'VQ-07 non-compliant colormap: uses custom FFFFCC→BD0026 gradient (YlOrRd) instead
-    of recommended viridis/cividis for sequential heatmaps; YlOrRd is not perceptually
-    uniform and is less CVD-safe than viridis'
-  - 'Blocky tile appearance: 120×70 grid with geom_tile at width=3.1/height=2.1 produces
-    a coarse, pixelated heatmap — increase grid resolution to 240×120 or higher and
-    reduce tile sizes accordingly for a smoother continuous appearance'
-  - 'Crude continent outlines: the hardcoded polygon coordinates are very simplified
-    and angular, making continents look schematic rather than realistic — use finer
-    polygon data or smooth with more intermediate points'
-  - Legend text at 14pt is below the 16pt minimum guideline — increase legend_text
-    size to 16pt
-  - 'LM-02 low: grammar-of-graphics layer composition (geom_tile + geom_polygon) is
-    idiomatic but not distinctive vs ggplot2 — consider using plotnine-specific scale
-    transformations or stat functions to differentiate'
+  - 'Palette non-compliance: scale_fill_gradient(low=''#FFFFCC'', high=''#BD0026'')
+    is a custom YlOrRd-style gradient; replace with scale_fill_cmap(cmap_name=''viridis'')
+    to match the style guide''s recommended sequential colormap for heatmaps.'
+  - Legend text size is 14pt (below 16pt guideline); change legend_text=element_text(size=16).
+  - 'LM-02 is limited: the implementation transfers to ggplot2 without changes — plotnine-specific
+    capabilities could be leveraged more distinctively.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 as outer plot background, with a light blue ocean panel (#D4E8F7) filling the map area — correct and visually appropriate.
-      Chrome: Title "Seismic Activity Density · heatmap-geographic · python · plotnine · anyplot.ai" is bold, dark, and clearly readable at the top. Axis labels "Longitude (°)" and "Latitude (°)" are dark and well-sized. Tick labels (-100, 0, 100 on x; -40, 0, 40, 80 on y) are dark gray — all readable against the warm background.
-      Data: Heatmap tiles using FFFFCC (yellow) → BD0026 (deep red) gradient show seismic density hotspots. Clear red hotspots appear over Japan/Asia (east, ~140°E), Indonesia (~115°E), a large cluster over the Pacific/Philippines, Chile (~-72°W), and California (~-120°W). Continent outlines are drawn in dark gray lines but the polygon shapes are very simplified/angular. Density legend "Density" appears on the right with the color gradient. The tiles are somewhat blocky/square at this resolution. Alpha=0.90 provides slight transparency.
-      Legibility verdict: PASS — all text is readable against the light background.
+      Background: Warm off-white (#FAF8F1) outer background — correct. Ocean/panel background is light blue (#D4E8F7) — custom geographic token, appropriate.
+      Chrome: Title "Seismic Activity Density · heatmap-geographic · python · plotnine · anyplot.ai" is bold dark text at 24pt — readable. Axis labels "Longitude (°)" and "Latitude (°)" are dark at 20pt — readable. Tick labels at 16pt are readable. Legend title "Density" readable; legend text at 14pt is slightly small but legible.
+      Data: Viridis-like colormap (dark purple to bright yellow) on KDE density tiles. Hotspots clearly visible at Japan/East Asia (brightest, yellow peak), Indonesia, Chile, California, Philippines, New Zealand, Mediterranean. Continent outlines in dark gray visible over tiles.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 as outer background, with a dark ocean blue (#1A2A3A) filling the map panel — correct and atmospheric.
-      Chrome: Title text is white/light cream and clearly readable against the dark background. Axis labels are light-colored (INK = #F0EFE8 in dark mode). Tick labels appear in #B8B7B0 (INK_SOFT) — light gray, clearly readable. No dark-on-dark failures observed. Legend text is light against the elevated-dark legend background.
-      Data: Heatmap density colors are identical to the light render — same yellow-to-red gradient with the same hotspot pattern. Continent outlines are drawn in lighter gray (#A0A09A) which contrasts well against the dark ocean. The blocky tile appearance is more prominent against the dark background.
-      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures.
+      Background: Near-black (#1A1A17) outer background — correct. Ocean/panel background is dark navy (#1A2A3A) — correct dark theme ocean token.
+      Chrome: Title in light/off-white text — readable. Axis labels in light text — readable. Tick labels in light text — readable. Legend text in light color — readable. Continent outlines shift to light silver/gray — visible. No dark-on-dark failures detected.
+      Data: Density tile colors are identical to light render (same viridis-like colormap, dark purple to bright yellow) — only chrome flips between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -64,75 +55,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt all explicitly set.
-          Legend text 14pt is below 16pt guideline.
+        comment: Title 24pt, axis titles 20pt, tick labels 16pt explicitly set; legend
+          text 14pt (below 16pt guideline)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend positioned at right without
-          covering data.
+        comment: No overlapping text elements; all labels well-spaced
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Density hotspots clearly visible; tiles are somewhat blocky at 120x70
-          grid resolution.
+        comment: Heatmap tiles and continent outlines clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Sequential gradient acceptable; YlOrRd is less CVD-safe than viridis
-          for single-channel data.
+        comment: Viridis-like colormap is CVD-safe; theme-adaptive continent outline
+          colors
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Good proportions, map fills canvas well with coord_fixed. Minor:
-          slight wasted space at edges.'
+        comment: 16:9 landscape fills canvas well; legend adjacent to map; balanced
+          margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°) include degree units.
+        comment: Longitude (deg) and Latitude (deg) — descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
-        passed: true
-        comment: 'Partial: FFFFCC→BD0026 custom gradient (YlOrRd) used instead of
-          recommended viridis/cividis. Chrome is theme-correct in both renders.'
+        passed: false
+        comment: Code uses scale_fill_gradient(low='#FFFFCC', high='#BD0026') — custom
+          gradient, not viridis/cividis as recommended by style guide for sequential
+          heatmaps. Chrome is theme-correct.
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured default elevated by custom ocean background and geographic
-          theming. Blocky tiles and simplified continent polygons prevent higher score.
+        comment: Custom ocean background token (light blue/dark navy), themed continent
+          outlines, threshold-filtered hotspots — above plain defaults but not at
+          strong design level
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Grid removed (appropriate for map), custom ocean panel background,
-          theme-adaptive legend. Blocky tile rendering reduces overall polish.
+        comment: Grid completely removed; custom panel background; axis lines with
+          INK_SOFT — good refinement above defaults
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Ring of Fire seismic hotspot pattern creates geographic narrative;
-          color gradient draws eye to high-activity zones. Good focal point via Japan/Asia
-          cluster.
+        comment: Ring of Fire narrative immediately clear; Japan hotspot as focal
+          point; 45th-percentile threshold filtering improves signal-to-noise
     spec_compliance:
       score: 15
       max: 15
@@ -142,30 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Geographic heatmap with KDE density estimation — correct implementation
-          for static library.
+        comment: Geographic heatmap with KDE-based continuous density gradient
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: KDE (gaussian_kde), transparency (alpha=0.90), colorbar (scale_fill_gradient
-          with name), continent outlines (geom_polygon), bandwidth parameter (bw_method=0.08)
-          — all present.
+        comment: KDE, sequential colormap, colorbar legend, geographic context, bandwidth
+          control, alpha transparency — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: longitude→x, latitude→y, density→fill; coord_fixed maintains geographic
-          aspect ratio.
+        comment: Longitude X, latitude Y; coord_fixed(1.0) for geographic proportions;
+          full world extent shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title follows exact format: Descriptive Title · heatmap-geographic
-          · python · plotnine · anyplot.ai'
+        comment: Title format correct; legend labeled Density with color scale
     data_quality:
       score: 15
       max: 15
@@ -175,23 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Multiple distinct hotspot clusters with varying intensity; global
-          coverage; both high-density and background noise shown.
+        comment: 7 seismic zones with varying density show all aspects of geographic
+          density distribution
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Seismic activity density is a neutral, scientifically realistic scenario.
-          Geographic zones (Ring of Fire, Mediterranean) are well-chosen.
+        comment: Pacific Ring of Fire seismic activity — scientifically accurate,
+          neutral, real-world scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Geographic coordinates are factually accurate for seismic zones:
-          Japan ~140°E/36°N, Indonesia ~115°E/-5°N, Chile ~-72°W/-30°S, California
-          ~-120°W/37°N.'
+        comment: Valid coordinate ranges; cluster centers match known seismic zones;
+          plausible relative densities
     code_quality:
       score: 10
       max: 10
@@ -201,34 +187,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clear Imports→Data→Plot→Save structure; no unnecessary functions
-          or classes.
+        comment: 'Linear flow: imports → tokens → data → plot → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, numpy, pandas, all plotnine components, scipy.ndimage.gaussian_filter,
-          scipy.stats.gaussian_kde.'
+        comment: All imports are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for geographic heatmap; no over-engineering
-          or fake functionality.
+        comment: Clean, readable, appropriate complexity; verbose continent data justified
+          by geographic context
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plot.save(f'plot-{THEME}.png', dpi=300) — correct filename pattern.
+        comment: Saves as plot-{THEME}.png; current plotnine API
     library_mastery:
       score: 6
       max: 10
@@ -238,16 +223,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of ggplot() + geom_tile() + geom_polygon() layer composition,
-          scale_fill_gradient, coord_fixed, theme() for customization.
+        comment: Grammar of graphics layering, coord_fixed, scale/theme system are
+          idiomatic; scale_fill_cmap() would be more idiomatic than scale_fill_gradient
+          for continuous colormaps
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Grammar-of-graphics layer composition is idiomatic but near-identical
-          to ggplot2 syntax; no plotnine-specific features leveraged.
-  verdict: REJECTED
+        comment: Layer composition (geom_tile + geom_polygon) and coord_fixed are
+          plotnine-native but transfer unchanged to ggplot2; no distinctly plotnine-exclusive
+          capability leveraged
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
@@ -257,9 +244,8 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep:
   - kde
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
