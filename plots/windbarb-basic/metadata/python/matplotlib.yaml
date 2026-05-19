@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: windbarb-basic
 created: '2026-01-11T09:29:32Z'
-updated: '2026-05-19T06:35:00Z'
+updated: '2026-05-19T06:44:59Z'
 generated_by: claude-sonnet
 workflow_run: 26080229821
 issue: 3694
@@ -15,38 +15,33 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Full spec compliance: calm winds (open circles), half barbs, full barbs, and
-    pennants (50 kt) all correctly rendered using matplotlib barbs()'
-  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) backgrounds
-    with properly adaptive chrome (title, axis labels, ticks, grid, legend box)'
-  - 'Realistic meteorologically coherent data: mid-latitude westerly wind pattern
-    over western Pacific with 60 stations in a 10x6 grid'
-  - 'Clean code structure: linear KISS implementation with seed for reproducibility
-    and all required font sizes'
-  - Helpful wind barb notation legend in monospace font with rounded annotation box,
-    correctly positioned to avoid barb overlap
+  - Brand-green wind barbs with correct half barb / full barb / pennant notation
+  - Calm winds shown as open circles at correct positions
+  - Monospace legend in rounded box is meteorologically appropriate and readable in
+    both themes
+  - Realistic mid-latitude westerly spatial pattern with genuine coherence
+  - Perfect spec compliance including barb_increments dict for standard meteorological
+    notation
   weaknesses:
-  - Legend annotation text at 14pt is below the 16pt recommended minimum for tick-label-equivalent
-    text at 4K resolution; raise to fontsize=16
-  - 'Design Excellence is functional but not exceptional: all barbs share the flat
-    brand green with no wind-speed-based color encoding or emphasis; consider coloring
-    barbs by wind speed using a sequential colormap (viridis/cividis) to add a data
-    storytelling dimension'
-  - DE-03 storytelling is minimal — the coherent westerly pattern exists in the data
-    but the visualization provides no visual focal point or annotation drawing the
-    viewer's eye to a key feature (e.g., the pennant stations)
+  - Legend text at fontsize=14 is slightly below the recommended 16pt minimum
+  - Design lacks visual hierarchy — no color-coding by wind speed or spatial zone
+    emphasis
+  - Grid covers both axes; y-axis-only grid would be cleaner for a spatial map
+  - No data storytelling — the viewer must interpret the wind pattern without guidance
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, matches the spec requirement exactly.
-      Chrome: Title "windbarb-basic · python · matplotlib · anyplot.ai" in dark ink at 24pt is fully readable. Axis labels "Longitude (°E)" and "Latitude (°N)" at 20pt clear. Tick labels (120–128 longitude, 25–30 latitude) at 16pt in dark secondary ink are crisp. Bottom-right annotation legend box has monospace text at 14pt (slightly below 16pt recommendation but readable).
-      Data: 60 wind barbs rendered in brand green (#009E73) on a 10×6 grid spanning 120–129°E, 25–30°N. Half barbs (5 kt), full barbs (10 kt), and pennant triangles (50 kt) are clearly distinguishable. Calm wind open circles visible at three stations. Subtle horizontal grid lines at alpha=0.10.
-      Legibility verdict: PASS — all text readable against the warm off-white surface; no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "windbarb-basic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. X-axis "Longitude (°E)" and Y-axis "Latitude (°N)" with units, readable. Tick labels at 120/122/124/126/128 (lon) and 25-30 (lat) in dark ink, clearly visible.
+      Data: All wind barbs rendered in brand green #009E73. Half barbs (5 kt), full barbs (10 kt), and pennant flags (50+ kt) visible at appropriate positions. Calm circles visible at (120,25), (125,27), and (126,29) approximately. Grid lines very subtle at 10% opacity.
+      Legend: Bottom-right monospace legend box with rounded corners explaining barb notation. Text readable.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, matches the spec requirement.
-      Chrome: Title, axis labels, and tick labels all flip to light-colored text (off-white / light grey) and remain fully readable against the dark surface. The annotation legend box uses the ELEVATED_BG (#242420) fill with light-grey text — readable. No dark-on-dark failures observed; tick labels and spine colors are correctly set from INK_SOFT token.
-      Data: Wind barb color is identical brand green (#009E73) matching the light render exactly — only chrome elements flipped. All barb types (calm circles, half/full barbs, pennants) remain clearly visible against the dark background.
-      Legibility verdict: PASS — all text readable against the near-black surface; no dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and axis labels rendered in light (#F0EFE8) text, clearly visible against dark background. Tick labels in muted light gray (#B8B7B0), readable. No dark-on-dark failures detected.
+      Data: Wind barb colors are identical to light render — same brand green #009E73. Pennants, full barbs, half barbs, and calm circles appear in the same positions with same styling. Grid lines remain subtle at 10% opacity, barely visible but present.
+      Legend: Bottom-right monospace legend box with darker elevated background (#242420). Text in muted light gray, readable.
+      Legibility verdict: PASS — all text readable against dark background. Data colors identical between renders. Chrome correctly adapts.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -57,75 +52,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt all correct; legend annotation
-          text 14pt is below 16pt recommendation
+        comment: Title=24pt, axes=20pt, ticks=16pt all explicit. Legend text at 14pt
+          is slightly below the 16pt minimum but readable at full resolution.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: 1-degree grid spacing prevents barb overlap; no text collisions
+        comment: Barbs well-spaced at 1-degree grid intervals, no text collisions,
+          legend in clear corner space.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All barb types clearly visible in both themes; calm circles, pennants,
-          half/full barbs all distinct
+        comment: length=8 barbs with linewidth=1.5 are clearly visible. Calm circles
+          and pennants distinctly rendered.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Single Okabe-Ito brand green; CVD-safe, no red-green pairing
+        comment: Single series in brand green with strong contrast on both light and
+          dark backgrounds. No CVD issues.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 landscape, good margins, nothing cut off
+        comment: 16:9 canvas well-utilized. Barbs fill the geographic domain. Legend
+          placed without obscuring data.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°E) and Latitude (°N) with units; title matches required
-          format
+        comment: Longitude (°E) and Latitude (°N) with units. Title matches required
+          format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Single series = #009E73; backgrounds #FAF8F1 / #1A1A17; both renders
-          theme-correct'
+        comment: 'Single series in #009E73 (Okabe-Ito position 1). Background #FAF8F1
+          light / #1A1A17 dark. All chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: true
-        comment: 'Above default (4): monospace font for legend adds intentional typographic
-          hierarchy; consistent brand green creates clean minimalist aesthetic; flat
-          single-color approach foregoes speed-based coloring'
+        passed: false
+        comment: Well-configured style guide adherence. Monospace legend is a nice
+          touch but overall the implementation is a clean default configuration without
+          exceptional design thought.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): top/right spines removed; grid at alpha=0.10
-          (very subtle); annotation box with ELEVATED_BG and rounded corners is a
-          refined design choice'
+        comment: Top/right spines removed, grid at 10% opacity is very subtle. Clean
+          rounded legend box. Grid on both axes is slightly heavier than ideal for
+          a spatial map.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: 'Above default (2): geographically coherent westerly wind pattern
-          tells a meteorological story; legend aids barb interpretation; but no focal
-          point or emphasis on key features'
+        passed: false
+        comment: Data is well-chosen with spatial coherence, but no visual hierarchy
+          guides the viewer. No emphasis on the pennant locations or the calm regions.
+          Viewer must interpret unaided.
     spec_compliance:
       score: 15
       max: 15
@@ -135,28 +133,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Wind barb plot using matplotlib barbs() — correct chart type
+        comment: Correct wind barb plot via ax.barbs(). Pennants, full barbs, half
+          barbs, and calm circles all rendered.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Half barbs (5 kt), full barbs (10 kt), pennants (50 kt), calm circles
-          all present; barb_increments explicitly set
+        comment: Standard meteorological barb_increments dict (half=5, full=10, flag=50).
+          Calm winds as empty barbs. Grid spacing prevents overlap. 60 barbs in spec's
+          20-200 range.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: x=longitude, y=latitude; u/v components correctly mapped; 60 stations
-          in 20-200 range
+        comment: x=longitude, y=latitude, u=east-west, v=north-south. All data points
+          visible in the geographic domain.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''windbarb-basic · python · matplotlib · anyplot.ai''; wind
-          barb notation legend provided'
+        comment: Title 'windbarb-basic · python · matplotlib · anyplot.ai' is correct.
+          Barb notation legend box explains symbol meanings.
     data_quality:
       score: 15
       max: 15
@@ -166,22 +166,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All barb types shown: calm, half, full, pennant; realistic 60-station
-          grid coverage'
+        comment: Calm winds, half barbs, full barbs, pennants all demonstrated. Varied
+          wind directions and speeds across the grid.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Western Pacific weather station network; meteorologically realistic
-          mid-latitude westerly pattern; neutral geographic context
+        comment: Western Pacific weather station network (120-130°E, 25-30°N). Realistic
+          mid-latitude westerly pattern with spatial coherence.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Wind speeds 15-55 kt realistic for surface observations; calm < 2.5
-          kt; strong 50+ kt; geographic coordinates valid
+        comment: Wind speeds 15-55 kt are realistic for mid-latitude westerlies in
+          the East China Sea / Taiwan Strait region. Calm winds included.
     code_quality:
       score: 10
       max: 10
@@ -191,49 +191,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script, no functions or classes
+        comment: Imports → Data → Plot → Style → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before all random calls.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all used
+        comment: Only os, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity; no fake UI
+        comment: Clean, Pythonic. Meshgrid + flatten pattern is appropriate for grid
+          data. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; current matplotlib API
+        comment: Saves as plot-{THEME}.png with dpi=300, bbox_inches=tight, facecolor=PAGE_BG.
+          Current API.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses ax.barbs() (axes method, not pyplot). barb_increments dict,
+          sizes dict for barb geometry. Fully idiomatic.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ax.barbs() correctly used with Axes method pattern; barb_increments
-          dict set explicitly; sizes dict for barb geometry
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: barbs() is a matplotlib-distinctive meteorological function; barb_increments={'half':5,'full':10,'flag':50}
-          and sizes dict demonstrate library-specific API knowledge
+        comment: ax.barbs() is a matplotlib-specific meteorological feature absent
+          from most other libraries. barb_increments and sizes dicts demonstrate advanced
+          parameterization. Loses 1pt for not using flip_barb or other advanced barb
+          controls.
   verdict: APPROVED
 impl_tags:
   dependencies: []
