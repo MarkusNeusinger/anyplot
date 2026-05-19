@@ -187,10 +187,10 @@ Three library families with different sizing controls:
 | Axis labels | 14pt | 16px | '16pt' |
 | Tick labels | 12pt | 14px | '14pt' |
 | Legend | 12pt | 14px | '14pt' |
-| Marker size | `s=100` | 10 | 10 |
-| Line width | 2.5 | 2.5 | 2.5 |
 
-All three families produce the same 3200×1800 (or 2400×2400) output, so the resulting text/marker pixel sizes are comparable across libraries.
+All three families produce the same 3200×1800 (or 2400×2400) output, so text pixel sizes are comparable across libraries.
+
+**Marker and line sizes** vary by library API and aren't directly comparable as a single number — matplotlib's `s=` is in points², plotly's `marker.size` is a pixel diameter, altair's `mark_point(size=...)` is an area, plotnine / lets-plot / ggplot2's `geom_point(size=...)` uses a smaller ggplot scale. See each library's own prompt (`prompts/library/<lib>.md` → "Sizing" section) for the canonical starting values, and adapt to data density per the heuristic below.
 
 ### Data-density Heuristic
 

@@ -496,7 +496,25 @@ def main() -> int:
         if xvfb_display:
             os.environ["DISPLAY"] = xvfb_display
             print(f"[style-experiment] shared Xvfb on {xvfb_display} (pid {xvfb_proc.pid})")
-            atexit.register(lambda: (xvfb_proc.terminate(), xvfb_proc.wait(timeout=3)) if xvfb_proc else None)
+
+            def _stop_xvfb(proc: subprocess.Popen = xvfb_proc) -> None:
+                # Be quiet + tolerant at interpreter shutdown: process may have
+                # already exited, terminate may race, wait may time out — none
+                # of which warrants a noisy atexit traceback.
+                if proc.poll() is not None:
+                    return
+                try:
+                    proc.terminate()
+                    proc.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    try:
+                        proc.kill()
+                    except Exception:
+                        pass
+                except Exception:
+                    pass
+
+            atexit.register(_stop_xvfb)
 
     # Auto-detect a real chromedriver for bokeh's export_png (Ubuntu's /usr/bin/chromedriver is a snap stub).
     # Selenium-manager downloads one to ~/.cache/selenium on first selenium.webdriver.Chrome() call.
