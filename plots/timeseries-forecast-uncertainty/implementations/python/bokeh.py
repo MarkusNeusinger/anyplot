@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 timeseries-forecast-uncertainty: Time Series Forecast with Uncertainty Band
-Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 92/100 | Updated: 2026-05-16
+Library: bokeh | Python 3.13
+Quality: pending | Updated: 2026-05-19
 """
 
 import os
@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, Legend, Span
+from bokeh.models import ColumnDataSource, HoverTool, Legend, Span
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -26,7 +26,6 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 OKABE_ITO_1 = "#009E73"  # Bluish green (brand)
 OKABE_ITO_2 = "#D55E00"  # Vermillion
-OKABE_ITO_3 = "#0072B2"  # Blue
 OKABE_ITO_4 = "#CC79A7"  # Reddish purple
 
 # Data - Monthly product sales with forecast
@@ -58,9 +57,9 @@ upper_95 = forecast + uncertainty_95
 
 # Create figure
 p = figure(
-    width=4800,
-    height=2700,
-    title="timeseries-forecast-uncertainty · bokeh · anyplot.ai",
+    width=3200,
+    height=1800,
+    title="timeseries-forecast-uncertainty · python · bokeh · anyplot.ai",
     x_axis_label="Date",
     y_axis_label="Sales (thousands)",
     x_axis_type="datetime",
@@ -68,23 +67,23 @@ p = figure(
 )
 
 # Style title and axes
-p.title.text_font_size = "28pt"
+p.title.text_font_size = "18pt"
 p.title.text_color = INK
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
+p.xaxis.axis_label_text_font_size = "14pt"
+p.yaxis.axis_label_text_font_size = "14pt"
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+p.xaxis.major_label_text_font_size = "12pt"
+p.yaxis.major_label_text_font_size = "12pt"
 p.xaxis.major_label_text_color = INK_SOFT
 p.yaxis.major_label_text_color = INK_SOFT
 
-# Background and outline
+# Background — outline=None removes the enclosing box (top/right spines equivalent)
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
-# Axis styling
+# Axis styling — keep left and bottom lines (L-shaped frame)
 p.xaxis.axis_line_color = INK_SOFT
 p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.axis_line_width = 2
@@ -108,23 +107,55 @@ source_80 = ColumnDataSource(
 )
 band_80 = p.patch(x="x", y="y", source=source_80, fill_color=OKABE_ITO_4, fill_alpha=0.30, line_color=None)
 
-# Historical data line (solid)
+# Historical data line (solid) with hover data
 source_hist = ColumnDataSource(data={"x": dates_hist, "y": actual})
-hist_line = p.line(x="x", y="y", source=source_hist, line_color=OKABE_ITO_1, line_width=4)
+hist_line = p.line(x="x", y="y", source=source_hist, line_color=OKABE_ITO_1, line_width=3)
 
-# Forecast line (dashed)
-source_forecast = ColumnDataSource(data={"x": dates_forecast, "y": forecast})
-forecast_line = p.line(x="x", y="y", source=source_forecast, line_color=OKABE_ITO_2, line_width=4, line_dash="dashed")
+# Forecast line (dashed) with CI data for hover tooltip
+source_forecast = ColumnDataSource(
+    data={
+        "x": dates_forecast,
+        "y": forecast,
+        "lower_80": lower_80,
+        "upper_80": upper_80,
+        "lower_95": lower_95,
+        "upper_95": upper_95,
+    }
+)
+forecast_line = p.line(x="x", y="y", source=source_forecast, line_color=OKABE_ITO_2, line_width=3, line_dash="dashed")
 
-# Connection line from last historical to first forecast
+# Connection line from last historical point to first forecast point
 source_connect = ColumnDataSource(data={"x": [dates_hist[-1], dates_forecast[0]], "y": [actual[-1], forecast[0]]})
-p.line(x="x", y="y", source=source_connect, line_color=OKABE_ITO_2, line_width=4, line_dash="dashed")
+p.line(x="x", y="y", source=source_connect, line_color=OKABE_ITO_2, line_width=3, line_dash="dashed")
 
 # Vertical line at forecast start
 forecast_start = Span(
     location=dates_hist[-1], dimension="height", line_color=INK_SOFT, line_width=2, line_dash="dashed"
 )
 p.add_layout(forecast_start)
+
+# HoverTool for historical data
+hover_hist = HoverTool(
+    renderers=[hist_line],
+    tooltips=[("Date", "@x{%b %Y}"), ("Sales", "@y{0.0}k")],
+    formatters={"@x": "datetime"},
+    mode="vline",
+)
+p.add_tools(hover_hist)
+
+# HoverTool for forecast with confidence intervals
+hover_forecast = HoverTool(
+    renderers=[forecast_line],
+    tooltips=[
+        ("Date", "@x{%b %Y}"),
+        ("Forecast", "@y{0.0}k"),
+        ("80% CI", "[@lower_80{0.0}, @upper_80{0.0}]k"),
+        ("95% CI", "[@lower_95{0.0}, @upper_95{0.0}]k"),
+    ],
+    formatters={"@x": "datetime"},
+    mode="vline",
+)
+p.add_tools(hover_forecast)
 
 # Legend
 legend = Legend(
@@ -137,7 +168,7 @@ legend = Legend(
     location="top_left",
 )
 
-legend.label_text_font_size = "18pt"
+legend.label_text_font_size = "12pt"
 legend.label_text_color = INK_SOFT
 legend.background_fill_color = ELEVATED_BG
 legend.background_fill_alpha = 0.95
@@ -149,7 +180,7 @@ legend.glyph_width = 30
 legend.glyph_height = 20
 p.add_layout(legend)
 
-# Set y-axis range
+# Set y-axis range with room for confidence bands
 p.y_range.start = 55
 p.y_range.end = 175
 
@@ -158,7 +189,7 @@ output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Chrome
-W, H = 4800, 2700
+W, H = 3200, 1800
 opts = Options()
 for arg in (
     "--headless=new",
