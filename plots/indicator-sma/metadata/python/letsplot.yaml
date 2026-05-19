@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: indicator-sma
 created: '2026-01-11T00:19:40Z'
-updated: '2026-05-19T00:51:55Z'
+updated: '2026-05-19T01:05:32Z'
 generated_by: claude-sonnet
 workflow_run: 26069024724
 issue: 3651
@@ -12,36 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/indicator
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/indicator-sma/python/letsplot/plot-dark.html
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: all four series with correct Okabe-Ito colors, legend
-    labels, y-axis grid, and correct SMA windowing behavior'
-  - 'Excellent code quality: reproducible seed, idiomatic melt-based long-format,
-    clean imports, correct output filenames'
-  - Full theme-adaptive chrome with all required tokens properly threaded through
-    every element
-  - Both light and dark renders pass legibility checks with no dark-on-dark or light-on-light
-    failures
+  - 'Correct Okabe-Ito palette order with Close as #009E73 first series'
+  - Line weight hierarchy (Close at size=2.0, SMAs at size=1.3) creates clear visual
+    prominence for the price series
+  - Full theme-adaptive chrome — all text, backgrounds, and grid colors correctly
+    use light/dark tokens
+  - Informative subtitle referencing golden/death cross signals adds domain context
+  - Clean use of pd.melt + data subsetting to apply different line weights per series
+    in letsplot
+  - Both PNG and HTML outputs saved; proper ggsave with scale=3 for 4800x2700 canvas
+  - Y-axis-only grid with X-axis blank keeps the chart clean for time-series readability
+  - 300 business-day periods with rolling() calculations correctly produce initial
+    NaN gaps for SMA 50 and SMA 200
   weaknesses:
-  - 'Design excellence at baseline defaults: no crossover annotations, no focal-point
-    emphasis, no refined line weight hierarchy'
-  - 'Library mastery limited: scale_x_datetime not leveraged for custom date formatting,
-    no distinctive lets-plot features beyond HTML export'
-  - 'SMA 200 (pink #CC79A7) has lightest visual weight; size differentiation between
-    close and SMA lines could improve hierarchy'
+  - Design Excellence is functional but not exceptional — DE-01 uses default theme_minimal
+    with modest customisation beyond palette and subtitle; no annotation markers for
+    crossover events or notable price levels that would elevate the storytelling
+  - 'DE-02 visual refinement is solid but light: spines managed by theme_minimal rather
+    than explicit removal; legend frame present but otherwise no additional polish
+    (e.g. tick mark removal, axis line weight tuning)'
+  - LM-02 under-uses letsplot-distinctive capabilities — the HTML export is there
+    but interactive tooltips or hover features native to letsplot could make the SMA
+    chart significantly more useful
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "indicator-sma · python · letsplot · anyplot.ai" in dark INK (#1A1A17) top-left; y-axis label "Price (USD)" and x-axis label "Date" in INK (size 20); tick labels in INK_SOFT (#4A4A44) at size 16 — all clearly readable
-      Data: Close line in brand green #009E73 (most prominent, high volatility); SMA 20 in vermillion #D55E00; SMA 50 in blue #0072B2; SMA 200 in pink #CC79A7 (starts ~period 200 as expected). Y-axis grid lines subtle and horizontal only.
-      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues
+      Background: Warm off-white #FAF8F1 — correct surface colour, no pure white
+      Chrome: Title "indicator-sma · python · letsplot · anyplot.ai" in dark ink, clearly readable. Subtitle in softer dark ink, readable. Axis labels "Date" and "Price (USD)" in dark ink with correct sizing. Tick labels (Jan '24 … Mar '25 on x; 86–114 on y) rendered in INK_SOFT — all legible.
+      Data: Four lines — Close (#009E73, bold green, thicker), SMA 20 (#D55E00, orange), SMA 50 (#0072B2, blue), SMA 200 (#CC79A7, pink). SMA 200 starts mid-chart as expected due to 200-day window. All lines clearly distinguishable from the off-white background. Legend box with slightly elevated fill, positioned at right, readable.
+      Grid: Subtle horizontal y-axis grid lines only; no x-axis grid. Grid does not compete with data.
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light INK (#F0EFE8) top-left; axis labels in light INK; tick labels in INK_SOFT (#B8B7B0) — all clearly readable against dark background. No dark-on-dark failures detected.
-      Data: All four line colors identical to light render (Okabe-Ito positions 1-4 unchanged as required). Grid lines visible and subtle on dark surface.
-      Legibility verdict: PASS — all text light against dark background, no dark-on-dark issues
+      Background: Near-black #1A1A17 — correct dark surface, not pure black.
+      Chrome: Title and subtitle rendered in light ink (#F0EFE8 / #B8B7B0 tokens) against the dark background — clearly readable. Axis labels and tick labels similarly light, no dark-on-dark failures. Legend box uses elevated dark fill #242420 with light text — readable.
+      Data: All four line colours are identical to the light render — Close #009E73, SMA 20 #D55E00, SMA 50 #0072B2, SMA 200 #CC79A7. Line weights and positions unchanged. No data-colour shift between themes.
+      Grid: Subtle horizontal y-axis grid in GRID_COLOR token (#484844 dark) — visible but not dominant.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -52,70 +61,75 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Font sizes set per style guide (title 24, axis 20, tick 16, legend
-          16/18). Readable in both themes.
+        comment: All text readable in both themes; correct DPI-based sizes (title=24,
+          axis=20, ticks=16, legend=16)
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or label collisions detected.
+        comment: No text or element collisions; legend placed cleanly at right
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All lines visible; SMA 200 pink (#CC79A7) is slightly lighter weight
-          and starts late (correct windowing).
+        comment: All four lines visible; SMA 200 pink line is slightly thin relative
+          to canvas but remains readable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; no red-green sole signal.
+        comment: Okabe-Ito CVD-safe palette; adequate contrast across all themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 16:9 proportions, nothing cut off, legend well-positioned.
+        comment: 1600x900 base at scale=3 yields 4800x2700; good proportions, nothing
+          clipped
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Date (x) and Price (USD) (y) with units.
+        comment: Title matches spec format; axes labelled 'Date' and 'Price (USD)'
+          with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Close=#009E73, Okabe-Ito order, backgrounds #FAF8F1/#1A1A17.'
+        comment: 'First series Close=#009E73; full Okabe-Ito order; backgrounds #FAF8F1
+          light / #1A1A17 dark'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Default level — correct palette and chrome but no focal-point emphasis
-          or crossover annotations.
+        passed: true
+        comment: 'Above default: intentional line weight hierarchy and informative
+          subtitle; not exceptional — no crossover annotations or additional focal-point
+          design'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Y-axis-only grid is intentional refinement. theme_minimal provides
-          L-spines. Legend has border.
+        passed: true
+        comment: 'Above default: y-axis-only grid, x-axis grid blanked, legend styled;
+          spines handled via theme_minimal rather than explicitly; minimal further
+          polish'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Natural hierarchy from close volatility vs. smooth SMAs. No crossover
-          annotations or emphasis.
+        passed: true
+        comment: 'Above default: line hierarchy directs eye to Close; subtitle mentions
+          golden/death cross; no annotation markers for actual crossover events'
     spec_compliance:
       score: 15
       max: 15
@@ -125,25 +139,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Line chart with SMA overlays — correct.
+        comment: Correct multi-line time-series with SMA overlays
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Close, SMA 20, SMA 50, SMA 200, legend, y-axis grid all present.
+        comment: Close + SMA 20, SMA 50, SMA 200 all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date/x, Price(USD)/y, 300 periods in range, SMA 200 null values correct.
+        comment: Date on X, price on Y; 300 business-day periods within 250-500 spec
+          range; initial NaN gaps visible for longer SMAs
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels Close/SMA 20/SMA 50/SMA 200.
+        comment: Title 'indicator-sma · python · letsplot · anyplot.ai' matches required
+          format; legend labels Close/SMA 20/SMA 50/SMA 200
     data_quality:
       score: 15
       max: 15
@@ -153,20 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: All 4 series shown; SMA windowing behavior demonstrated correctly.
+        comment: All four series shown; rolling windows correctly produce initial
+          gaps; visual hierarchy between Close and SMAs
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Geometric Brownian motion, realistic mean/volatility, neutral stock
-          simulation.
+        comment: Synthetic stock price with realistic drift+volatility parameters;
+          neutral (no real company); Jan 2024–Mar 2025
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 300 business days, price $86-$115, realistic for mid-cap equity.
+        comment: Price range ~86–115; business-day frequency; normal(0.0005, 0.015)
+          returns are realistic
     code_quality:
       score: 10
       max: 10
@@ -176,53 +194,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat linear script.
+        comment: No functions or classes; clean procedural flow
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42).
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extras.
+        comment: All imports used; no unused symbols
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: pd.melt for long-format is idiomatic; well-structured.
+        comment: Data subsetting for per-series line weights is a clean pattern; no
+          fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: ggsave to plot-{THEME}.png (scale=3) and plot-{THEME}.html.
+        comment: ggsave to plot-{THEME}.png (scale=3) and plot-{THEME}.html; no bare
+          plot.png
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar, scale_color_manual with dict, scale_x_datetime.
-          Standard idiomatic without advanced patterns.
+        comment: Proper grammar-of-graphics layering; scale_color_manual; scale_x_datetime
+          with format; theme composition
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: HTML export generated. No advanced lets-plot capabilities used (date_labels,
-          geom_smooth, tooltips).
+        comment: HTML export present; data-subsetting trick for variable line weights
+          is letsplot-friendly; interactive hover features native to letsplot not
+          leveraged
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - html-export
   patterns:
   - data-generation
