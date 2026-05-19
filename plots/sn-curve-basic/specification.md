@@ -13,7 +13,7 @@ An S-N curve (also known as a Wöhler curve) visualizes the relationship between
 
 ## Data
 
-- `cycles` (numeric, logarithmic) - Number of cycles to failure (N), typically ranging from 1 to 10^7 or more
+- `cycles` (numeric) - Number of cycles to failure (N), typically ranging from 1 to 10^7 or more
 - `stress` (numeric) - Alternating stress amplitude or range in MPa or ksi
 - Size: 10-100 data points from fatigue tests, often with multiple samples at each stress level
 - Example: Fatigue test results showing stress levels vs. cycles to failure for steel specimens
