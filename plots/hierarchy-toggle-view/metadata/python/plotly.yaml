@@ -1,198 +1,265 @@
 library: plotly
+language: python
 specification_id: hierarchy-toggle-view
 created: '2026-01-11T10:08:45Z'
-updated: '2026-01-11T10:11:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20893328461
+updated: '2026-05-19T08:40:46Z'
+generated_by: claude-sonnet
+workflow_run: 26084957040
 issue: 3697
-python_version: 3.13.11
-library_version: 6.5.1
-preview_url: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/hierarchy-toggle-view/python/plotly/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent dual-view design showing both treemap and sunburst side-by-side in PNG,
-    with toggle buttons in interactive HTML
-  - Consistent color mapping across both views makes it easy to identify the same
-    nodes
-  - Rich hover information with budget values and percentages
-  - Clean visual hierarchy with white borders separating segments
-  - Appropriate data scenario (company budget) that naturally fits hierarchical visualization
+  - 'Creative dual-output strategy: side-by-side PNG for static comparison, interactive
+    HTML with toggle buttons for dynamic switching — exactly the right approach for
+    a plotly implementation'
+  - 'Perfect Okabe-Ito palette compliance with thoughtful color inheritance: departments
+    use positions 1-4, teams inherit their parent''s color creating clear visual hierarchy'
+  - 'Excellent library mastery: uses go.Treemap + go.Sunburst, make_subplots with
+    type-specific specs, updatemenus toggle, insidetextorientation=''radial'', hovertemplate
+    with percentParent formatting'
+  - All font sizes explicitly set (title 28px, view labels 22px, treemap text 20px,
+    sunburst text 16px, footer 18px) — fully readable at 4800×2700px
+  - 'Perfect theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all applied
+    correctly — both renders pass readability checks'
+  - 'Realistic and internally consistent data: Engineering budget subdivisions sum
+    exactly to department total (1800+1200+900+600=4500), same for all other departments'
+  - Explanatory footer annotation articulates the purpose of each view type, enhancing
+    data storytelling
   weaknesses:
-  - PNG shows side-by-side comparison rather than an actual toggle; toggle functionality
-    is only in HTML (this is acceptable since PNG cannot be interactive)
-  - Title includes Company Budget prefix before spec-id format; ideally should just
-    use the standard format
-  image_description: 'The plot displays a side-by-side comparison of treemap (left)
-    and sunburst (right) views showing company budget allocation data. The treemap
-    shows nested rectangles with Engineering (blue, largest), Marketing (yellow),
-    Sales (green), and Operations (purple) departments, each containing team subdivisions.
-    Rectangle areas are proportional to budget values displayed as "$XXK" labels.
-    The sunburst on the right shows the same hierarchy radially with "Company" at
-    the center, departments in the middle ring, and teams in the outer ring. Colors
-    are consistent between both views. The title reads "Company Budget · hierarchy-toggle-view
-    · plotly · pyplots.ai" at the top. Subtitle annotations label each view ("Treemap
-    View" and "Sunburst View") and a footer explains "Two perspectives: rectangles
-    for size comparison, radial for hierarchy depth".'
+  - Some repetition between PNG figure and HTML figure trace definitions — the Treemap
+    and Sunburst traces are defined twice with nearly identical parameters; a shared
+    data structure could reduce duplication
+  - Sunburst outer ring has some small segments (Partners, Finance, HR) where labels
+    are slightly cramped and hard to read at normal viewing size
+  - No explicit animation/transition parameters for the HTML toggle (spec mentions
+    smooth animated transitions) — Plotly has default transitions but they aren't
+    configured
+  - DE-01 could be pushed higher with more distinctive styling choices — the current
+    design is solid but follows standard treemap/sunburst defaults beyond the color
+    scheme
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct theme surface
+      Chrome: title "hierarchy-toggle-view · python · plotly · anyplot.ai" in dark ink (#1A1A17) clearly visible; "Treemap View" and "Sunburst View" section labels in INK_SOFT (#4A4A44) readable; footer annotation visible; "Company" root label in light ELEVATED_BG
+      Data: Engineering segments in #009E73 (brand green) — dominant and immediately visible in both views; Marketing in #D55E00 (orange); Sales in #0072B2 (blue); Operations in #CC79A7 (purple); team-level segments inherit parent department color for clear hierarchy
+      Legibility verdict: PASS — all text readable; minor crowding on smallest sunburst outer-ring segments (Partners, Finance, HR) but not severe
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct dark theme surface
+      Chrome: title in light #F0EFE8 clearly readable on dark background; "Treemap View" / "Sunburst View" labels in #B8B7B0 visible; footer annotation legible; no dark-on-dark failures detected
+      Data: colors identical to light render — Engineering #009E73, Marketing #D55E00, Sales #0072B2, Operations #CC79A7 — all vivid and distinguishable against dark background
+      Legibility verdict: PASS — all chrome correctly flipped to light text on dark surface; data colors unchanged between themes
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, labels, and values are readable. Sunburst outer labels slightly
-          smaller but still clear
+        comment: 'All font sizes explicitly set: title 28px, view labels 22px, treemap
+          text 20px, sunburst text 16px, footer 18px — fully readable at 4800x2700px
+          in both themes'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text in either view
+        comment: No significant overlap; minor crowding on smallest sunburst outer-ring
+          segments (Partners, Finance, HR) but main content fully readable
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All rectangles and segments appropriately sized for data
+        comment: Both treemap and sunburst segments clearly visible with good contrast;
+          color separation between departments is excellent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, green, purple palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Both views fill canvas well, balanced margins, good spacing
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for hierarchical charts; labels on segments serve this purpose
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: White line separators create clear visual hierarchy
+        comment: Okabe-Ito palette is CVD-safe; good luminance contrast between all
+          four department colors; no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Side-by-side layout fills canvas well; balanced margins (t=130, l=20,
+          r=20, b=90); both charts proportionally sized
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format; 'Treemap View' / 'Sunburst View' labels;
+          footer explains purpose of each view; texttemplate shows label+value within
+          segments
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Engineering=#009E73 (first position), Marketing=#D55E00, Sales=#0072B2,
+          Operations=#CC79A7 — canonical Okabe-Ito order; backgrounds #FAF8F1 light
+          / #1A1A17 dark; data colors identical in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured defaults: intentional color inheritance (dept →
+          team), ELEVATED_BG root node, branded toggle button styling in HTML, clean
+          segment borders using PAGE_BG — but not publication-ready polish'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean segment borders via PAGE_BG line color, explicit margins, appropriate
+          font hierarchy; treemap/sunburst have no spines to remove but available
+          refinements are applied
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Footer annotation explicitly explains complementary value of each
+          view; Engineering's dominance is visually evident; color hierarchy guides
+          viewer through dept → team structure; no annotation highlighting any specific
+          insight
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct treemap and sunburst chart types
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Hierarchy parent-child relationships correctly mapped
-      - id: SC-03
+        comment: Both treemap and sunburst implemented correctly; side-by-side PNG
+          + toggle HTML is a well-designed two-output approach
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Both views present, consistent colors. PNG shows side-by-side; toggle
-          in HTML version
-      - id: SC-04
-        name: Data Range
+        comment: Toggle control in HTML ✓, consistent colors ✓, hover state in HTML
+          ✓; smooth animated transitions not explicitly configured (uses Plotly defaults)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, no truncation
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: labels/parents/values correctly mapped; branchvalues='total' ensures
+          proportional areas; all 18 nodes visible in both views
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Labels match data, values shown
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses descriptive prefix before spec-id format
+        comment: Title exactly 'hierarchy-toggle-view · python · plotly · anyplot.ai';
+          no separate legend needed as segment labels identify all nodes
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 3-level hierarchy (Company → Departments → Teams), varying
-          sizes
+        comment: 3 hierarchy levels (Company > Department > Team); 18 nodes within
+          15-60 range; meaningful value variation across all levels; both views demonstrate
+          their respective strengths
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Company budget allocation is a neutral, realistic business scenario
+        comment: Company budget allocation — professional, neutral, immediately comprehensible
+          business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Budget values ($300K-$9600K) are realistic; teams sum correctly to
-          departments
+        comment: 'All department budgets sum exactly to their total (Engineering:
+          1800+1200+900+600=4500 ✓, Marketing: 900+600+600=2100 ✓, etc.); realistic
+          relative proportions for a tech company'
     code_quality:
       score: 8
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: No functions/classes; clear linear structure; but Treemap+Sunburst
+          traces defined twice (once for PNG make_subplots, once for HTML toggle figure)
+          — slight verbosity from dual-output approach
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: Deterministic data (no random), but no explicit seed comment
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic data with no randomness needed; comment confirms
+          this explicitly
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly imports used
+        comment: Only os, plotly.graph_objects, and plotly.subplots — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: No fake UI elements; real Plotly updatemenus used; but trace parameter
+          duplication between PNG and HTML paths is verbose
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API;
+          include_plotlyjs='cdn'
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Idiomatic go.Treemap and go.Sunburst; make_subplots with type-specific
+          specs; updatemenus for toggle; branchvalues='total'; hovertemplate with
+          percentParent formatting; include_plotlyjs='cdn'
+      - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: make_subplots for multi-chart layout, updatemenus for toggle buttons
-          in HTML, branchvalues=total, hover templates, insidetextorientation
+        comment: 'Uses features uniquely Plotly: go.Treemap + go.Sunburst in combined
+          subplots, make_subplots with type annotations for mixed chart types, updatemenus
+          toggle, insidetextorientation=''radial'', dual write_image + write_html
+          output strategy'
   verdict: APPROVED
 impl_tags:
   dependencies: []
