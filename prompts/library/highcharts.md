@@ -196,8 +196,8 @@ chart.options.chart = {
     'style': {'color': INK},
 }
 # Native-pixel sizing: highcharts fonts go through CSS px in the rendered
-# HTML; CSS px maps 1:1 to source pixels. To match matplotlib 14pt @ dpi=400
-# (= 78 source-px), the px values here are the same as the target source-px
+# HTML; CSS px maps 1:1 to source pixels. To match matplotlib 12pt @ dpi=400
+# (= 67 source-px), the px values here are the same as the target source-px
 # (NOT multiplied by anything). See default-style-guide.md "Why the
 # Native-pixel numbers look so much bigger".
 chart.options.title = {'text': title, 'style': {'fontSize': '66px', 'color': INK}}

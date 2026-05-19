@@ -80,8 +80,8 @@ custom_style = Style(
     foreground_subtle=INK_MUTED,    # tick labels, grid tone
     colors=OKABE_ITO,               # first series = brand green
     # pygal font sizes are unitless integers, rendered into the SVG at the
-    # source-pixel grid (no DPI/scale multiplier). To match matplotlib 14pt
-    # @ dpi=400 (= 78 source-px), set unitless values directly to the target
+    # source-pixel grid (no DPI/scale multiplier). To match matplotlib 12pt
+    # @ dpi=400 (= 67 source-px), set unitless values directly to the target
     # source-pixel size — see default-style-guide.md "Why the Native-pixel
     # numbers look so much bigger".
     title_font_size=66,             # kept compact for the long mandated title

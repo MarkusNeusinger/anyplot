@@ -202,7 +202,7 @@ The three families use completely different unit conventions for the same visual
 
 So **the same target visual size requires a different nominal number per library** because each library's unit constant differs. bokeh '50pt' ≈ highcharts '66px' ≈ pygal 66 ≈ matplotlib 12pt @ dpi=400 ≈ plotly 16px @ scale=4. Don't try to make them all look the same number.
 
-Bokeh also needs `min_border_bottom=180`, `min_border_left=200`, `min_border_top=120`, `min_border_right=60` on the `figure(...)` constructor so the new larger fonts have room and aren't clipped from the PNG.
+Bokeh also needs `min_border_*` reservations on the `figure(...)` constructor so the larger axis labels have room and aren't clipped from the PNG. See `prompts/library/bokeh.md` for the canonical numbers — keep that file as the single source of truth so the bottom/left/top/right values don't drift between here and the library prompt.
 
 **Marker and line sizes** vary by library API and aren't directly comparable as a single number — matplotlib's `s=` is in points², plotly's `marker.size` is a pixel diameter, altair's `mark_point(size=...)` is an area, plotnine / lets-plot / ggplot2's `geom_point(size=...)` uses a smaller ggplot scale. See each library's own prompt (`prompts/library/<lib>.md` → "Sizing" section) for the canonical starting values, and adapt to data density per the heuristic below.
 
