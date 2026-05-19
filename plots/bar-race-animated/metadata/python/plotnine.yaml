@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bar-race-animated
 created: '2026-01-11T00:19:37Z'
-updated: '2026-05-19T02:01:34Z'
+updated: '2026-05-19T02:12:27Z'
 generated_by: claude-sonnet
 workflow_run: 26071252542
 issue: 3653
@@ -12,52 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-race-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-race-animated/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 82
 review:
   strengths:
-  - 'Correct static alternative for animated spec: 4-panel small-multiples facet grid
-    clearly shows the bar race across 4 time snapshots'
-  - 'Full Okabe-Ito palette compliance: TechCorp correctly uses #009E73 as first series,
-    all 8 colors follow canonical order with adaptive neutral for DigiCore'
-  - 'Both themes pass readability: light (#FAF8F1) and dark (#1A1A17) backgrounds
-    correctly applied, all chrome (title, labels, strip headers) uses theme-adaptive
-    tokens'
-  - 'Perfect spec and data quality: title format correct, bars sorted per-facet, entity
-    labels attached to bars, time indicator in strip headers, realistic neutral business
-    data'
-  - 'Excellent code quality: flat KISS structure, seed=42, clean imports, idiomatic
-    plotnine grammar-of-graphics usage (ggplot + geom_col + geom_text + coord_flip
-    + facet_wrap)'
+  - 'Perfect spec compliance: correctly uses small multiples as the static alternative
+    to animation, with all required features (sorted bars, entity labels, time indicators,
+    consistent colors)'
+  - Both themes fully adapted with correct token usage — no dark-on-dark or light-on-light
+    failures
+  - Rank-change annotations in the 2024 panel (↑3, ↓3, ↓5) add genuine storytelling
+    value beyond the basic spec
+  - 'Okabe-Ito palette applied correctly with TechCorp as brand green #009E73 first'
   weaknesses:
-  - 'VQ-01: Font sizes below required minimums — axis_title_x=18pt (should be ≥20pt),
-    axis_text_x=14pt (should be ≥16pt), geom_text bar labels size=9 are small at 4800×3000px
-    canvas'
-  - 'DE-01: Design is above generic defaults but lacks publication-quality polish
-    — no visual emphasis on leading or fastest-growing entity, typography hierarchy
-    does not fully leverage the large canvas'
-  - 'DE-02: Strip backgrounds have visible hard borders that add visual weight; panel_spacing=0.05
-    is tight; spines not explicitly removed (relying solely on theme_minimal defaults)'
-  - 'DE-03: The story of fast risers (CodeLab: #8→#7, DigiCore: #7→#4) is present
-    in the data but not visually emphasized — no highlight color, annotation, or size
-    differentiation to direct the viewer''s eye'
-  - 'LM-02: Facet_wrap + coord_flip is distinctly ggplot2-grammar but the implementation
-    doesn''t push plotnine-specific features further (e.g., no geom_label for styled
-    callout labels, no scale_x_reordered-style trick)'
+  - Bar labels use size=12; should be at least size=14–16 to meet the secondary-text
+    size guideline at full resolution
+  - Excessive vertical whitespace between the top and bottom facet rows reduces canvas
+    efficiency — tighter panel_spacing or explicit figure_size adjustment needed
+  - make_bar_label helper function violates KISS; could be an inline lambda
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white.
-      Chrome: Bold title "Tech Company Revenue Race · bar-race-animated · python · plotnine · anyplot.ai" in dark ink (#1A1A17), clearly readable. Strip headers ("Year 2018", "Year 2020", "Year 2022", "Year 2024") in bold dark text on slightly elevated off-white background (#FFFDF6), readable. X-axis label "Revenue (Billions USD)" in dark text, readable. X-axis ticks (0, 100, 200) in dark-gray (#4A4A44), readable but small (14pt). Bar labels ("TechCorp $154B", etc.) in dark-gray, small but visible.
-      Data: TechCorp bar = #009E73 (brand green) at top in all panels. Colors follow Okabe-Ito: DataFlow=#D55E00 (vermillion), CloudBase=#0072B2 (blue), NetSys=#CC79A7 (reddish purple), CodeLab=#E69F00 (orange), AppStream=#56B4E9 (sky blue), ByteWorks=#F0E442 (yellow), DigiCore=black #1A1A1A (adaptive neutral on light). Bars sorted descending by revenue in each panel. Rankings clearly change across panels (CodeLab rises from last to near-top by 2024).
-      Legibility verdict: PASS — all text readable, though axis title (18pt) and tick labels (14pt) are below recommended minimums.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Tech Company Revenue Race · bar-race-animated · python · plotnine · anyplot.ai" bold and readable. Strip labels ("Year 2018", etc.) bold. X-axis label "Revenue (Billions USD)" visible. Bar labels in dark #4A4A44 ink beside each bar.
+      Data: 8 horizontal bars per panel, colored with Okabe-Ito palette. TechCorp = brand green #009E73 (first). DataFlow = vermillion, CloudBase = blue, NetSys = reddish purple, CodeLab = orange, AppStream = sky blue, ByteWorks = yellow, DigiCore = adaptive dark neutral. Colors consistent across all 4 panels.
+      Legibility verdict: PASS — all text is readable; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black.
-      Chrome: Title in light cream (#F0EFE8), clearly readable. Strip headers in bold white text on dark elevated background (#242420), readable. X-axis label in light text, readable. Tick labels in medium gray (#B8B7B0), readable against dark background. Bar labels in gray (#B8B7B0), visible against dark background — no dark-on-dark failures.
-      Data: Data colors identical to light render — TechCorp=#009E73, DataFlow=#D55E00, CloudBase=#0072B2, NetSys=#CC79A7, CodeLab=#E69F00, AppStream=#56B4E9, ByteWorks=#F0E442. DigiCore changes correctly to #E8E8E0 (adaptive neutral on dark), appearing as a light near-white bar. Only chrome flips between themes; all Okabe-Ito positions 1–7 are identical.
-      Legibility verdict: PASS — no dark-on-dark issues found; all text readable against the near-black background.
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title and all labels render in light cream/gray tones (#F0EFE8 / #B8B7B0). Strip backgrounds use elevated dark #242420. Bar labels in #B8B7B0 secondary ink — clearly readable against dark surface. No dark-on-dark failures observed.
+      Data: Bar colors are identical to light render — brand green, vermillion, blue, etc. are all unchanged as expected (only chrome flips). Brand green #009E73 clearly visible on dark surface.
+      Legibility verdict: PASS — all text readable; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -65,79 +51,74 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Title 24pt OK, strip 20pt OK; but axis_title_x=18pt (below 20pt min)
-          and axis_text_x=14pt (below 16pt min); geom_text bar labels size=9 small
-          at 4800px canvas
+        comment: Font sizes explicitly set (24pt title, 20pt axis/strip, 16pt ticks).
+          Bar label size=12 is below 16pt recommendation for secondary text at full
+          resolution.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bar labels positioned with nudge_y=5 and 25% right expand; no overlap
-          visible in any panel
+        comment: Mostly clean; 2024 panel rank indicators add horizontal width but
+          no actual collision.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Bars clearly visible at width=0.8; colors well-differentiated; bars
-          fill panels appropriately
+        comment: All bars and labels clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe; good luminance contrast between all
-          bar colors and background
+        comment: Okabe-Ito palette, CVD-safe. No red-green sole-signal issues.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 2x2 facet grid fills canvas well; figure_size=(16,10) gives 4800x3000px;
-          balanced whitespace around panels
+        comment: 2x2 grid works but has excessive vertical dead zone between facet
+          rows.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title includes descriptive prefix and full anyplot.ai format; x-axis
-          'Revenue (Billions USD)' with units
+        comment: Title includes spec metadata. X-axis labeled with units. Y-axis ticks
+          suppressed appropriately.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: First series TechCorp=#009E73; 7 Okabe-Ito colors + adaptive neutral;
-          PAGE_BG correct in both themes; chrome fully theme-adaptive
+        comment: 'First series TechCorp = #009E73. Okabe-Ito order followed. Backgrounds
+          #FAF8F1 / #1A1A17. Both themes correct.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: styled strip headers, bar labels replace
-          legend, custom palette, anyplot tokens. Not publication-quality: no emphasis
-          on leaders or movers, bar-label typography modest'
+        comment: Above default (4). Rank-change indicators add storytelling. Theme-adaptive
+          chrome throughout. Elevated strip backgrounds add hierarchy.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: theme_minimal removes borders; subtle alpha=0.10 x-grid; no y-axis
-          text. Strip borders still visible with hard lines; panel_spacing=0.05 is
-          tight; spines not explicitly configured
+        comment: Above default (2). No panel borders, Y-axis ticks removed, minimal
+          grid. Deduction for excessive inter-row whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Consistent colors enable entity tracking across panels; ranking
-          shifts visible (CodeLab #8→#7, DigiCore rises). No visual emphasis on biggest
-          movers — color, size, or annotation could highlight story'
+        comment: Above default (2). Sorted bars communicate ranking clearly. 2024
+          rank-change annotations highlight movers effectively.
     spec_compliance:
       score: 15
       max: 15
@@ -147,116 +128,113 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct static alternative per plotnine.md: small multiples facet
-          grid showing 4 time snapshots; spec explicitly allows this for static libraries'
+        comment: Small multiples grid is the correct static alternative for animation
+          spec.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bars sorted per-facet (bar_order rank), entity labels on bars (geom_text
-          bar_label), time indicator in strip headers, consistent color per entity
+        comment: Sorted bars, entity labels, time indicators, consistent colors —
+          all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: bar_order→x, revenue→y, coord_flip makes horizontal; all 8 companies
-          shown across all 4 time points
+        comment: Revenue to bar length, rank to vertical position, year to facet panel
+          — all correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Tech Company Revenue Race · bar-race-animated · python
-          · plotnine · anyplot.ai'' — correct format with descriptive prefix. No legend
-          (show_legend=False), replaced by bar labels — appropriate'
+        comment: 'Title follows required format: descriptive · spec-id · language
+          · library · anyplot.ai.'
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all bar race aspects: 8 entities, 4 time steps, ranking changes,
-          value labels, consistent entity colors'
+        comment: '8 entities across 4 time snapshots. Shows ranking evolution. Minor
+          deduction: 4 time points is at the low end of spec recommendation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Fictional tech companies with plausible revenue in billions USD;
-          neutral business scenario; no controversial content
+        comment: Tech company revenue in billions USD — realistic, neutral, relatable
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $40-222B revenue range with 8-50% growth rates over 6 years is plausible
-          for large tech companies; internally consistent
+        comment: Values ~40B-222B over 6 years with varied growth trajectories. Sensible
+          domain.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Flat structure: imports → tokens → data → plot → save. No functions
-          or classes'
+        comment: make_bar_label standalone function violates KISS; could be inline
+          lambda.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names are used in the code
+        comment: All imported symbols are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; lambda expressions appropriate; no over-engineering;
-          no fake UI elements
+        comment: Clean structure, no fake UI, no workarounds.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using plot.save(); current plotnine API
+        comment: Saves as plot-{THEME}.png.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent: ggplot grammar used correctly throughout; geom_col+geom_text+coord_flip+facet_wrap+scale_fill_manual+scale_y_continuous+theme
-          — all idiomatic plotnine patterns'
+        comment: Above default (3). Idiomatic use of facet_wrap, coord_flip, geom_col,
+          geom_text, scale_fill_manual, scale_y_continuous.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: facet_wrap for small multiples and coord_flip are distinctly ggplot2-grammar
-          features; bar_order rank as categorical axis position is a plotnine-specific
-          trick. Could push further with geom_label or reorder()
-  verdict: REJECTED
+        comment: Above default (1). Multi-layer grammar-of-graphics composition (bars
+          + text + facets) effectively simulates animated race in static form.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - layer-composition
+  - annotations
   patterns:
   - data-generation
   - groupby-aggregation
