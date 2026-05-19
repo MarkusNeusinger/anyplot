@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: mosaic-categorical
 created: '2026-01-11T00:53:56Z'
-updated: '2026-05-19T03:24:44Z'
+updated: '2026-05-19T03:37:20Z'
 generated_by: claude-sonnet
 workflow_run: 26073797708
 issue: 3650
@@ -12,40 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-ca
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/mosaic-categorical/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 90
 review:
   strengths:
-  - Perfect spec compliance and data quality — historically accurate Titanic data
-    maps perfectly to the mosaic structure
-  - All font sizes explicitly set and generously sized for the 4800×2700 canvas; both
-    renders fully legible
-  - 'Correct Okabe-Ito palette assignment (#009E73 for Survived, #D55E00 for Did Not
-    Survive) with fully theme-adaptive chrome in both renders'
-  - 'Clean code: flat structure, deterministic data, all imports used'
-  - HoverTool with count and proportion tooltips is a meaningful use of Bokeh interactivity
+  - Both themes render perfectly with correct backgrounds (#FAF8F1/#1A1A17), fully
+    theme-adaptive chrome, and identical data colors across renders
+  - Titanic dataset is factually accurate and tells a compelling story about class
+    and survival inequality
+  - HoverTool with Class/Status/Count/Proportion tooltip is a genuine Bokeh-distinctive
+    interactive feature
+  - Clean minimalist design with no grid, axes, or border — appropriate and elegant
+    for mosaic plots
+  - Percentage + count dual labels inside each cell give viewers both relative and
+    absolute context at a glance
   weaknesses:
-  - 'DE-01/DE-03: No percentage labels or visual emphasis to highlight the key insight
-    (Third-class survival disparity) — add percentage labels inside each cell and
-    consider a brief annotation on the Third-class column'
-  - 'VQ-05: x-axis description at y=0.02 may be clipped by browser viewport (PNG 2561px
-    vs 2700px canvas height) — raise to y=0.04–0.05'
-  - 'DE-02: subtitle, legend, and title compressed into top 13% of canvas (y=0.87–1.0)
-    — redistribute vertical space by expanding mosaic area slightly'
+  - 'Minor code duplication: class-label x_pos loop recomputes class widths separately
+    from the main rectangle-building pass — could be unified into one iteration'
+  - Custom legend construction is slightly verbose; Bokeh native legend could simplify
+    the code
+  - Typographic hierarchy between percentage label and count label inside cells could
+    be stronger (larger size delta or weight contrast)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "mosaic-categorical · python · bokeh · anyplot.ai" bold dark ink, clearly readable. Italic subtitle "Titanic Survival by Passenger Class" in INK_SOFT, readable. Custom horizontal legend with two colored swatches and labels readable. Class labels "First", "Second", "Third" in dark ink at bottom of each column, readable. X-axis description near y=0.02 potentially clipped (PNG height 2561px vs 2700px canvas).
-      Data: Three mosaic columns; teal #009E73 (Survived) at bottom, orange-vermillion #D55E00 (Did Not Survive) at top of each column. Column widths proportional to class totals (Third widest). White bold count labels (203, 122, 118, 167, 178, 528) centered in each rectangle. First series correctly assigned #009E73.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "mosaic-categorical · python · bokeh · anyplot.ai" in bold dark ink — clearly readable. Subtitle "Titanic Survival by Passenger Class" in dark italic — readable. Class labels "First", "Second", "Third" in dark bold below columns — readable. Legend labels "Survived" / "Did Not Survive" in muted dark grey — readable. X-axis description in muted grey — readable.
+      Data: Three columns (First narrowest ~25%, Second ~22%, Third widest ~54%). Green (#009E73) for Survived at bottom of each column, orange (#D55E00) for Did Not Survive at top. Percentage labels (38%/62%, 59%/41%, 75%/25%) in bold off-white inside each cell, with secondary n= count labels.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light ink (#F0EFE8), clearly readable. Subtitle and legend labels in INK_SOFT (#B8B7B0), readable. Class labels in light ink, no dark-on-dark failures detected. Gaps between rectangles show dark background cleanly.
-      Data: Identical data colors to light render — teal #009E73 and orange #D55E00, unchanged between themes. White count labels remain readable against colored backgrounds.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, subtitle, class labels, legend labels, and x-axis description all flipped to light tones (near-white/soft grey). No dark-on-dark failures detected. Class labels "First", "Second", "Third" at bottom clearly visible against dark background. Legend labels in muted light grey — readable.
+      Data: Identical colors to light render — green (#009E73) and orange (#D55E00) unchanged. Gap lines between rectangles use dark background color for clean separation. Percentage and count labels in off-white remain readable on both green and orange fills.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -53,50 +54,52 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set: title 40pt, count labels 36pt, class
-          labels 32pt, subtitle 32pt, legend 26pt, x-axis desc 24pt; both renders
-          fully readable'
+        comment: 'All font sizes explicitly set: title 40pt bold, subtitle 32pt italic,
+          class labels 32pt bold, percentage labels 36pt bold, legend 26pt, x-axis
+          description 24pt. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No text collisions in either render. Labels well-centered within
+          rectangles.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Mosaic rectangles and all labels clearly visible at full resolution
+        comment: All six mosaic rectangles clearly visible. Off-white text on colored
+          fills readable at full resolution.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito teal/orange pair is CVD-safe with high luminance contrast
+        comment: Okabe-Ito green/orange CVD-safe, distinguishable by luminance as
+          well as hue.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Overall layout well-proportioned; minor concern: x-axis description
-          at y=0.02 may be clipped (canvas 2700px, screenshot 2561px)'
+        comment: Mosaic fills ~65% of canvas, balanced margins. No cut-off elements.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Contextual x-axis description includes proportional encoding explanation;
-          title correct
+        comment: X-axis description explains column width encoding. Title and subtitle
+          fully descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
-          chrome fully theme-adaptive'
+        comment: 'First series #009E73, second #D55E00. Backgrounds #FAF8F1/#1A1A17.
+          Data colors identical across both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -104,23 +107,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: custom mosaic layout, Okabe-Ito colors,
-          white count labels, italic subtitle, minimal chrome. Not publication-ready
-          — no typographic hierarchy variation or visual accent on key insight'
+        comment: 'Strong design: custom Okabe-Ito colors, fully custom legend, off-white
+          text on colored fills. Clearly above defaults but not FiveThirtyEight polish
+          level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes hidden, grids removed, no outline border, gap spacing between
-          tiles, theme-correct fills. Good; upper area feels slightly crowded
+        comment: No axes, no grid, no outline border, white gap separators. Generous
+          whitespace. Clean but functional rather than deeply refined.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Mosaic proportions naturally reveal Third-class survival gap but
-          no explicit visual emphasis guides viewer to that insight
+        comment: Survival gradient (First best, Third worst) is visually immediate
+          from color area. Column widths contextualize class sizes. Good visual hierarchy.
     spec_compliance:
       score: 15
       max: 15
@@ -130,28 +133,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct mosaic plot: column widths = marginal class proportions,
-          heights = conditional survival proportions, area proportional to cell frequency'
+        comment: 'Correct mosaic plot: widths proportional to marginal class distribution,
+          heights to conditional survival distribution.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Width-proportional columns, height-proportional cells, color coding,
-          gap spacing, labels for both variables, HoverTool with count/proportion
+        comment: Proportional widths, proportional heights, color coding, gap spacing,
+          categorical labels all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=passenger class, Y=survival status, all six cells correctly rendered
+        comment: Columns = passenger class, stacked height = survival proportion.
+          All 6 cells visible with correct proportions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: mosaic-categorical · python · bokeh · anyplot.ai; legend
-          labels match data categories'
+        comment: 'Title: ''mosaic-categorical · python · bokeh · anyplot.ai''. Legend
+          labels match data.'
     data_quality:
       score: 15
       max: 15
@@ -161,24 +165,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Both categorical variables shown; variation in both marginal (column
-          widths) and conditional (cell heights) distributions clearly visible
+        comment: Varying column widths (unequal class sizes) and varying conditional
+          proportions (survival rates differ markedly across classes).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Titanic survival data: real, historically documented, non-controversial
-          neutral dataset'
+        comment: Titanic survival by passenger class — real historical dataset, neutral
+          topic, no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Cell counts (203,122,118,167,178,528) total 1316 passengers, consistent
-          with known Titanic figures; proportions historically accurate
+        comment: 'Historically accurate: First ~62% survival (203/325), Second ~41%
+          (118/285), Third ~25% (178/706).'
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -186,53 +190,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential script: imports → data → calculations → plot → save'
+        comment: Linear Imports -> Data -> Calculations -> Plot -> Save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic (hardcoded historical data, no random elements)
+        comment: 'Fully deterministic: hardcoded real-world dataset, no random generation.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, time, pathlib, pandas, bokeh (io/models/plotting),
-          selenium'
+        comment: All imports used. No unused dependencies.
       - id: CQ-04
         name: Code Elegance
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Clean iteration over class_order/survival_order; loop-based label
-          placement; no over-engineering
+        passed: false
+        comment: Class-label x_pos loop duplicates iteration/width-computation from
+          the main rectangle-building loop.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html + plot-{THEME}.png via Selenium; current
-          Bokeh API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium. Current
+          API.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, p.quad(), HoverTool, Label, output_file+save,
-          Selenium export as required by bokeh.md
+        comment: Expertly uses ColumnDataSource, HoverTool, Label annotations, figure.quad(),
+          proper theme-adaptive token pattern, Selenium screenshot idiom.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool with structured tooltips (class, status, count, proportion)
-          and dual HTML+PNG output are Bokeh-distinctive
-  verdict: REJECTED
+        comment: HoverTool with multi-field tooltip (Class, Status, Count, Proportion)
+          and HTML export are Bokeh-distinctive. Core mosaic manually constructed
+          limits the 'only Bokeh' factor.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -240,12 +245,11 @@ impl_tags:
   - hover-tooltips
   - html-export
   - annotations
-  - custom-legend
   patterns:
+  - data-generation
   - columndatasource
-  - groupby-aggregation
   - iteration-over-groups
   dataprep: []
   styling:
-  - minimal-chrome
   - alpha-blending
+  - edge-highlighting

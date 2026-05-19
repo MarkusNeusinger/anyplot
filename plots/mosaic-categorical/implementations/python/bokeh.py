@@ -1,7 +1,7 @@
 """ anyplot.ai
 mosaic-categorical: Mosaic Plot for Categorical Association Analysis
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-19
+Quality: 90/100 | Updated: 2026-05-19
 """
 
 import os
