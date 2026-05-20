@@ -1,161 +1,193 @@
 library: matplotlib
+language: python
 specification_id: smith-chart-basic
 created: '2026-01-15T21:52:42Z'
-updated: '2026-01-15T21:55:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047488873
+updated: '2026-05-20T01:23:47Z'
+generated_by: claude-sonnet
+workflow_run: 26134831506
 issue: 3792
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of a complex specialized chart type from scratch
-  - All Smith chart grid elements (resistance circles, reactance arcs) are mathematically
-    correct with proper clipping to unit circle
-  - Comprehensive labeling including Open/Short/Inductive/Capacitive annotations at
-    chart boundaries
-  - Optional VSWR circles add engineering value beyond the basic spec requirements
-  - Clean, well-organized code with clear comments explaining each section
-  - Realistic antenna impedance data that creates a visually interesting spiral pattern
+  - LineCollection with cividis colormap creates an elegant gradient impedance locus
+    that encodes frequency progression without requiring a separate legend entry
+  - 'Smith chart grid rendered from scratch with correct mathematical formulas (resistance
+    circles: center=r/(r+1), radius=1/(r+1); reactance arcs: center=1/x, radius=1/x)
+    and proper unit-disk clipping via np.where/mask'
+  - 'Complete theme adaptation: all chrome tokens (INK, INK_SOFT, INK_MUTED, ELEVATED_BG,
+    PAGE_BG) correctly applied to every text element, colorbar, legend, and spines
+    in both renders'
+  - Realistic RF engineering scenario (antenna impedance 1-6 GHz) with physically
+    correct normalization and gamma calculation
+  - 'Perfect spec compliance: all required and optional features implemented (resistance
+    circles, reactance arcs, impedance locus, frequency labels, VSWR circles, matched
+    condition marker)'
   weaknesses:
-  - Grid alpha at 0.6 is slightly too prominent; 0.3-0.4 would provide subtler background
-  - Does not leverage distinctive matplotlib features (uses only basic plot, scatter,
-    text, annotate)
-  image_description: The plot displays a Smith chart for RF/impedance visualization.
-    The outer boundary is a solid blue circle representing |Γ|=1 (total reflection).
-    Inside, gray constant resistance circles (labeled 0.2, 0.5, 1, 2, 5) are drawn
-    centered along the horizontal axis, and constant reactance arcs curve from the
-    right edge. The chart shows inductive (+jX) on the upper half and capacitive (-jX)
-    on the lower half, with labels at the cardinal positions. A yellow impedance locus
-    curve traces the antenna impedance sweep from 1.0 GHz to 6.0 GHz with circular
-    markers at each frequency point. Key frequencies (1.0, 2.2, 3.4, 4.7, 6.0 GHz)
-    are labeled with black arrows. Three red dashed VSWR circles (1.5, 2, 3) are drawn
-    concentrically from the center. The matched condition (Z=Z₀) is marked at the
-    center with a blue dot. Corner labels indicate "Open (Γ=1)", "Short (Γ=-1)", "+jX
-    (Inductive)", and "-jX (Capacitive)". The legend in the upper left shows "Matched
-    (Z=Z₀)", "Impedance Locus", and "VSWR=1.5".
+  - 'Brand green #009E73 (Okabe-Ito position 1) is absent — VSWR circles start at
+    OI_2 (#D55E00) and matched condition uses OI_3 (#0072B2). Fix: swap matched condition
+    to use #009E73 as OI_1, keep VSWR circles at #D55E00 as OI_2.'
+  - All four matplotlib spines are kept; style guide default is to remove top/right
+    spines. For a Smith chart the unit circle boundary makes top/right spines redundant.
+  - Small grid labels (resistance and reactance labels) at fontsize=6 are at the minimum
+    legibility threshold; increase to 7pt for a small legibility margin.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "smith-chart-basic · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels "Real(Γ)" and "Imag(Γ)" in dark ink. No tick labels (removed, appropriate for Smith chart). Cardinal direction labels (Short/Open/+jX/-jX) in INK_MUTED, readable. Resistance circle and reactance arc labels at 6pt in INK_MUTED — at minimum threshold but readable. Frequency annotation labels at 7pt in INK, readable. Colorbar label "Frequency (GHz)" and tick labels readable.
+      Data: Impedance locus via cividis colormap dark blue (1 GHz) → yellow (6 GHz). VSWR dashed circles in #D55E00 orange-vermillion. Matched condition dot in #0072B2 blue. Smith chart grid in INK_MUTED at alpha=0.35, subtle and appropriate.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and axis labels in off-white #F0EFE8, clearly readable against dark background. Cardinal direction labels and secondary text in #B8B7B0, readable. Resistance/reactance labels in #A8A79F, visible. Frequency annotations in #F0EFE8 (INK), readable. Colorbar label and ticks adapted correctly. Legend frame uses #242420 elevated background. No dark-on-dark failures detected.
+      Data: Cividis locus colors IDENTICAL to light render — dark blue through olive to bright yellow. VSWR circles same orange-vermillion. Matched condition same blue. Only chrome flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, frequency labels at 14pt bold,
-          all perfectly readable at full size
-      - id: VQ-02
-        name: No Overlap
         score: 7
         max: 8
         passed: true
-        comment: Minor overlap of some reactance arc labels with other elements, but
-          main content readable
+        comment: Title, axis labels, annotations readable in both themes. Grid labels
+          at 6pt are at minimum threshold.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor proximity between r=0.5 resistance label and cardinal label
+          near right boundary; not a hard collision.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Yellow locus with s=60 markers and linewidth=3 is clearly visible
-          against gray grid
+        comment: Impedance locus prominent at linewidth=2.5. Frequency markers visible
+          with edge highlights. Grid appropriately subtle at alpha=0.35.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/yellow/red/gray palette is colorblind-safe with good contrast
+        comment: Cividis is perceptually uniform and colorblind-safe. No red-green
+          sole-signal.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square 12x12 figure fills canvas well with balanced margins
+        comment: Square 2400x2400 correct for Smith chart. Cardinal labels fit within
+          xlim/ylim without clipping.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Real(Γ) and Imag(Γ) are descriptive but dimensionless quantities
+        comment: Real(Γ) and Imag(Γ) descriptive. Colorbar labeled Frequency (GHz).
+          Title follows mandatory format.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 1
         max: 2
+        passed: false
+        comment: 'Continuous data correctly uses cividis. Backgrounds correct. But
+          brand green #009E73 absent — VSWR uses OI_2, matched condition uses OI_3,
+          skipping OI_1.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
         passed: true
-        comment: Grid at alpha=0.6 is slightly prominent; legend is well-placed
+        comment: Well above default. LineCollection gradient, custom Smith chart grid
+          with math clipping, VSWR reference circles, polished colorbar and legend.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All four spines kept (defensible for circular chart). Chrome tokens
+          correctly applied throughout both themes. Tick marks removed (appropriate).
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: Frequency sweep story clear via color encoding. VSWR circles provide
+          engineering context. Cardinal labels explain quadrant meaning. Strong visual
+          hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Smith chart with constant resistance circles and constant
-          reactance arcs
+        comment: Correct Smith chart with resistance circles, reactance arcs, unit
+          circle boundary.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Complex impedance correctly converted to reflection coefficient Γ
-          and plotted
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: resistance circles, reactance arcs, impedance
-          locus, frequency labels, VSWR circles'
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: resistance circles, reactance arcs,
+          normalization, impedance locus, frequency labels, VSWR circles, matched
+          condition.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data points visible within the unit circle boundary
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Correct normalization z_norm = z/Z0, correct gamma = (z_norm-1)/(z_norm+1).
+          50-point 1-6 GHz sweep.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies matched condition, impedance locus, and
-          VSWR reference
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: smith-chart-basic · matplotlib · pyplots.ai'
+        comment: Title exactly matches mandatory format. Legend shows Matched (Z=Z0)
+          and Impedance Locus with subscript.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows spiral impedance locus typical of antenna measurements, both
-          inductive and capacitive regions traversed
+        comment: 'Comprehensive: r-circles for 6 values, reactance arcs for 5 positive/negative
+          values, unit circle, real axis, VSWR circles for 3 values, matched condition,
+          frequency locus, colorbar.'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Antenna impedance sweep from 1-6 GHz is a plausible RF engineering
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Impedance values around 50Ω with ±30Ω variation is realistic for
-          antenna measurements
+        comment: Antenna impedance sweep 1-6 GHz is a standard VNA measurement scenario.
+          Neutral engineering context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Z0=50 ohm standard RF reference. z_real 10-90 ohm and z_imag +/-35
+          ohm produce physically correct Gamma values within unit circle.
     code_quality:
       score: 10
       max: 10
@@ -165,53 +197,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure without functions/classes
+        comment: No functions or classes. Linear procedural structure.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible results
+        comment: np.random.seed(42) ensures deterministic data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy are imported, both are used
+        comment: All imports used. sys path manipulation necessary and documented.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated matplotlib API used
+        comment: np.where(mask, ..., np.nan) for circle clipping is elegant. LineCollection
+          is the right tool. No fake interactivity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300 and bbox_inches=tight
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png. Current matplotlib API throughout.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Manually draws all Smith chart elements; does not showcase distinctive
-          matplotlib features beyond basic plotting
+        passed: true
+        comment: All ax methods used. plt.colorbar() receives LineCollection. ax.set_aspect('equal')
+          for circular geometry. tight_layout() before savefig.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: LineCollection with Normalize for gradient locus, mpatches.Circle
+          with add_patch() for VSWR circles, np.where(mask, ..., np.nan) for unit-disk
+          clipping — all distinctively matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   - patches
-  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
+  - custom-colormap
   - alpha-blending
   - edge-highlighting
