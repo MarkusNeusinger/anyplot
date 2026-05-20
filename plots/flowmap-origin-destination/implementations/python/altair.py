@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-20
+Quality: 89/100 | Updated: 2026-05-20
 """
 
 import os
