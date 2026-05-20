@@ -1,156 +1,182 @@
 library: matplotlib
+language: python
 specification_id: histogram-returns-distribution
 created: '2026-01-16T22:12:35Z'
-updated: '2026-01-18T22:18:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21082372851
+updated: '2026-05-20T18:20:42Z'
+generated_by: claude-sonnet
+workflow_run: 26180148247
 issue: 3751
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/matplotlib/plot.png
-preview_html: null
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
 quality_score: 90
 review:
   strengths:
-  - 'All specification requirements fully implemented: histogram, normal overlay,
-    statistics box, tail highlighting'
-  - Excellent text legibility with proper font sizes throughout
-  - Clean, well-organized code following KISS principles
-  - Colorblind-safe color palette (blue/yellow/red)
-  - Statistics box properly displays all required metrics with monospace font
-  - Custom legend correctly identifies histogram regions and overlays
-  - Data demonstrates clear departure from normality with fat tails
+  - 'Correct Okabe-Ito palette assignment: #009E73 for histogram bars, #D55E00 for
+    tail regions, #0072B2 for normal curve — proper canonical order'
+  - Multi-layer tail visualization combining axvspan background tinting, fill_between
+    probability shading, and recolored histogram bins — sophisticated risk communication
+  - Stats box with monospace font and elevated background token is professional and
+    informative, including fat-tail% vs expected-normal-% comparison
+  - 'Full theme-adaptive chrome: all tokens correctly applied in both light (#FAF8F1)
+    and dark (#1A1A17) renders with no dark-on-dark failures'
+  - 'KISS code structure: flat script, np.random.seed(42), no classes, clean imports
+    — reproducible and easy to follow'
   weaknesses:
-  - Legend incorrectly shows Actual Returns label as yellow when most histogram bars
-    are blue (the Returns Distribution patch should be blue)
-  - The extreme outlier at +20% compresses the main distribution visualization horizontally
-  image_description: 'The plot displays a histogram of daily returns distribution
-    with blue bars representing the frequency density of returns. Yellow/gold colored
-    bars highlight the tail regions beyond ±2 standard deviations. A red dashed normal
-    distribution curve is overlaid for comparison, fitted to the data. A solid blue
-    vertical line marks the mean at approximately 0.07%. Gray dotted vertical lines
-    mark the ±2σ boundaries at approximately -4.4% and +4.5%. The x-axis shows "Daily
-    Returns (%)" ranging from about -5% to over 20%, and the y-axis shows "Density"
-    from 0 to 0.30. The title correctly uses the format "histogram-returns-distribution
-    · matplotlib · pyplots.ai". A statistics text box in the upper right displays
-    Mean: 0.068%, Std Dev: 2.231%, Skewness: 3.895, Kurtosis: 35.850. The legend in
-    upper left identifies "Actual Returns" (yellow), "Normal Distribution" (red dashed),
-    and "Mean (0.07%)" (blue line). The data shows clear fat tails and extreme positive
-    skewness with outliers extending to +20%, demonstrating departure from normality.'
+  - Right tail annotation xy=(upper_tail+0.7, 0.02) overlaps with a histogram bar
+    in both renders — position the annotation further right or increase y-offset to
+    avoid sitting inside the bar body
+  - 'DE-01 could reach 7-8/8 with one more design decision: e.g. a subtle KDE curve
+    instead of the dashed normal fit, or per-bin gradient coloring using a sequential
+    palette for density emphasis'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct brand surface color
+      Chrome: Title "histogram-returns-distribution · python · matplotlib · anyplot.ai" at fontsize=12, dark ink (#1A1A17) — clearly readable. X-axis label "Daily Returns (%)" and Y-axis "Density" in dark ink at fontsize=10 — readable. Tick labels in INK_SOFT (#4A4A44) at fontsize=8 — legible. Left+bottom spines in INK_SOFT. Subtle y-axis grid at alpha=0.12.
+      Data: Green (#009E73) histogram bars for the main distribution, orange (#D55E00) for tail bins beyond ±2σ. Blue dashed curve (#0072B2) for normal fit overlay. Solid dark mean line. Dotted ±2σ reference lines. Stats box (monospace, elevated background) in upper right. Custom legend with Patch handles in upper left. Subtle orange axvspan and fill_between tail shading.
+      Legibility verdict: PASS — all text elements readable; minor overlap between right-tail annotation and a histogram bar at y=0.02
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface color
+      Chrome: Title in light ink (#F0EFE8) — clearly readable. Axis labels and tick labels in light INK/INK_SOFT tokens — visible. Left+bottom spines in INK_SOFT (#B8B7B0 in dark mode). Stats box with elevated dark background (#242420) — text legible. Legend frame with dark elevated background.
+      Data: Data colors IDENTICAL to light render — green (#009E73) histogram bars, orange (#D55E00) tail bars, blue (#0072B2) normal curve. Only chrome (background, text, spines, legend frame) flipped for dark theme.
+      Legibility verdict: PASS — no dark-on-dark failures; all text clearly visible against dark surface; brand green #009E73 well visible.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, ticks 16pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 8
-        passed: true
-        comment: Histogram bars well-sized, though the extreme outlier at +20% makes
-          the main distribution somewhat compressed horizontally
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/red color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas, but the extreme outlier extends the x-axis significantly,
-          creating some imbalance with empty space on the right
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Descriptive labels with units: Daily Returns (%) and Density'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Subtle grid (alpha 0.3), well-placed legend
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct histogram with density normalization
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Returns correctly mapped to x-axis, density on y-axis
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All spec features present: histogram, normal overlay, statistics
-          box, tail highlighting'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend accurately describes all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: histogram-returns-distribution · matplotlib · pyplots.ai'
-    data_quality:
-      score: 17
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
         score: 7
         max: 8
         passed: true
-        comment: Shows fat tails, skewness, and departure from normality well. The
-          extreme positive outlier demonstrates real financial tail risk
-      - id: DQ-02
-        name: Realistic Context
+        comment: 'All text readable in both themes; minor: right-tail annotation at
+          y=0.02 sits close to bar body'
+      - id: VQ-02
+        name: No Overlap
         score: 5
-        max: 7
+        max: 6
         passed: true
-        comment: Financial daily returns scenario is plausible; the high kurtosis
-          of 35.85 is realistic for heavy-tailed distributions
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Minor overlap between right tail annotation text and histogram bar
+          near x=upper_tail+0.7
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All histogram bars, normal curve, reference lines, and tail shading
+          clearly visible in both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe Okabe-Ito palette; no red-green sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800px confirmed (canvas gate passed); subplots_adjust with
+          no bbox_inches=tight; good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X: ''Daily Returns (%)'' with units; Y: ''Density''; title in correct
+          anyplot.ai format'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, third #0072B2 — canonical
+          Okabe-Ito order; backgrounds #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Multi-layer design: axvspan+fill_between+recolored bins for tail
+          risk; stats box with monospace+elevated-bg; intentional visual hierarchy
+          above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; grid alpha=0.12 (subtle); edgecolor=PAGE_BG
+          on bars; styled legend frame; subplots_adjust for generous margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point on fat-tail risk; stats box shows actual vs expected
+          tail %; tail annotations + shading guide viewer to key insight
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Scale is appropriate for daily returns
+        comment: Histogram with density normalization — correct chart type
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normal distribution overlay, stats text box (mean/std/skew/kurt+fat-tail%),
+          tail highlighting beyond 2sigma, density normalization, 252 obs
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: % returns; Y: density; all 252 observations shown'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title matches required format exactly; legend labels: Returns, Tail
+          Regions (>2sigma), Normal fit, Mean'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows distribution shape, fat-tail comparison, normal overlay, key
+          statistics, tail region counts
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: t-distribution(df=8) for fat tails, ~1.2% daily vol, 252 obs = 1
+          trading year — realistic and neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Return range ~-5% to +8% is appropriate for daily stock returns
     code_quality:
       score: 10
       max: 10
@@ -160,42 +186,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib, numpy, scipy, patches)
+        comment: os, matplotlib.pyplot, numpy, matplotlib.patches.Patch, scipy.stats
+          — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: No deprecated functions
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: No fake UI; appropriate complexity for the feature set
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct,
+          no bbox_inches=tight
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses matplotlib.patches for custom legend, basic histogram with overlays.
-          Good but not exceptional use of matplotlib features
+        passed: true
+        comment: Axes methods throughout; fig,ax pattern; custom legend with handles
+          list
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: axvspan background zones, fill_between PDF tail shading, Patch legend
+          items, per-patch facecolor iteration — genuinely distinctive matplotlib
+          capabilities
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -205,9 +241,7 @@ impl_tags:
   - custom-legend
   patterns:
   - data-generation
-  dataprep:
-  - binning
+  dataprep: []
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling
