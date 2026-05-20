@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -16,7 +16,7 @@ import time  # noqa: E402
 
 import numpy as np  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, HoverTool, Label  # noqa: E402
+from bokeh.models import ColumnDataSource, HoverTool, LabelSet  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -26,6 +26,8 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+# Warmer off-white for entry cells — avoids harsh pure-white against the warm page background
+CELL_BG = "#FFFDF6" if THEME == "light" else "#FFFFFF"
 
 # Data — 15x15 crossword grid with 180-degree rotational symmetry
 np.random.seed(42)
@@ -73,10 +75,11 @@ for r in range(grid_size):
             numbers[(r, c)] = clue_num
             clue_num += 1
 
-# Separate cell data for rendering and hover
+# Separate cell data for rendering, hover, and clue number labels
 white_x, white_y = [], []
 black_x, black_y = [], []
 numbered_x, numbered_y, numbered_label = [], [], []
+label_x, label_y, label_text = [], [], []
 
 for r in range(grid_size):
     for c in range(grid_size):
@@ -88,6 +91,9 @@ for r in range(grid_size):
                 numbered_x.append(c)
                 numbered_y.append(y)
                 numbered_label.append(f"Clue {numbers[(r, c)]}")
+                label_x.append(c - 0.43)
+                label_y.append(y + 0.18)
+                label_text.append(str(numbers[(r, c)]))
         else:
             black_x.append(c)
             black_y.append(y)
@@ -119,20 +125,13 @@ p.title.text_font_size = "50pt"
 p.title.align = "center"
 p.title.text_color = INK
 
-# White entry cells
+# White entry cells — warm off-white fill to complement the page surface
 white_source = ColumnDataSource(data={"x": white_x, "y": white_y})
 p.rect(
-    x="x",
-    y="y",
-    source=white_source,
-    width=0.96,
-    height=0.96,
-    fill_color="#FFFFFF",
-    line_color=INK_SOFT,
-    line_width=1.5,
+    x="x", y="y", source=white_source, width=0.96, height=0.96, fill_color=CELL_BG, line_color=INK_SOFT, line_width=1.5
 )
 
-# Transparent overlay on numbered cells — provides hover targets without double-drawing
+# Transparent overlay on numbered cells — hover targets without visual double-drawing
 numbered_source = ColumnDataSource(data={"x": numbered_x, "y": numbered_y, "label": numbered_label})
 numbered_renderer = p.rect(x="x", y="y", source=numbered_source, width=0.96, height=0.96, fill_alpha=0, line_alpha=0)
 hover = HoverTool(renderers=[numbered_renderer], tooltips=[("", "@label")])
@@ -151,12 +150,15 @@ p.rect(
     line_width=1.5,
 )
 
-# Clue numbers in top-left corner of numbered cells
-for (r, c), num in numbers.items():
-    y = grid_size - 1 - r
-    p.add_layout(
-        Label(x=c - 0.43, y=y + 0.18, text=str(num), text_font_size="20pt", text_font_style="bold", text_color=INK_SOFT)
-    )
+# Outer perimeter border — thicker frame gives the puzzle a polished, bounded appearance
+p.rect(x=7, y=7, width=15.0, height=15.0, fill_alpha=0, line_color=INK, line_width=5)
+
+# Clue numbers via LabelSet — idiomatic Bokeh, batched from ColumnDataSource
+label_source = ColumnDataSource(data={"lx": label_x, "ly": label_y, "lt": label_text})
+labels = LabelSet(
+    x="lx", y="ly", text="lt", source=label_source, text_font_size="20pt", text_font_style="bold", text_color=INK_SOFT
+)
+p.add_layout(labels)
 
 # Save HTML (interactive artifact)
 output_file(f"plot-{THEME}.html")
