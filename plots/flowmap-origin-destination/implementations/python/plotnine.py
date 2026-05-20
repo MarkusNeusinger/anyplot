@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-20
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -16,6 +18,7 @@ from plotnine import (
     geom_path,
     geom_point,
     geom_polygon,
+    geom_text,
     ggplot,
     labs,
     scale_color_gradient,
@@ -25,103 +28,88 @@ from plotnine import (
 )
 
 
-# Seed for reproducibility
-np.random.seed(42)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+OCEAN_BG = "#DDE9F2" if THEME == "light" else "#111A22"
+LAND_FILL = "#D0CCC4" if THEME == "light" else "#363632"
+LAND_COLOR = "#AEA9A1" if THEME == "light" else "#525248"
 
-# Major world cities for origin-destination flows (shipping/trade routes)
+# Major world cities (lat, lon)
 locations = {
-    "Shanghai": (31.23, 121.47),
-    "Singapore": (1.35, 103.82),
-    "Rotterdam": (51.92, 4.48),
-    "Los Angeles": (33.75, -118.24),
-    "Dubai": (25.20, 55.27),
-    "Hong Kong": (22.32, 114.17),
-    "Tokyo": (35.68, 139.69),
     "New York": (40.71, -74.01),
-    "Hamburg": (53.55, 9.99),
-    "Busan": (35.18, 129.08),
-    "Santos": (-23.96, -46.33),
-    "Mumbai": (19.08, 72.88),
+    "London": (51.51, -0.13),
+    "Paris": (48.85, 2.35),
+    "Dubai": (25.20, 55.27),
     "Sydney": (-33.87, 151.21),
-    "Cape Town": (-33.92, 18.42),
-    "Vancouver": (49.28, -123.12),
+    "Toronto": (43.65, -79.38),
+    "Singapore": (1.35, 103.82),
+    "Tokyo": (35.68, 139.69),
+    "São Paulo": (-23.55, -46.63),
+    "Mumbai": (19.08, 72.88),
+    "Lagos": (6.45, 3.40),
+    "Cairo": (30.04, 31.24),
+    "Berlin": (52.52, 13.40),
+    "Los Angeles": (34.05, -118.24),
 }
 
-# Define trade/shipping flows with volume (in arbitrary units representing container volume)
+# International migration flows (thousands of people per year)
 flows_data = [
-    ("Shanghai", "Rotterdam", 95),
-    ("Shanghai", "Los Angeles", 88),
-    ("Shanghai", "Singapore", 75),
-    ("Singapore", "Rotterdam", 65),
-    ("Hong Kong", "Los Angeles", 62),
-    ("Busan", "Los Angeles", 58),
-    ("Shanghai", "Hamburg", 55),
-    ("Dubai", "Rotterdam", 52),
-    ("Shanghai", "New York", 50),
-    ("Tokyo", "Los Angeles", 48),
-    ("Singapore", "Dubai", 45),
-    ("Mumbai", "Rotterdam", 42),
-    ("Hong Kong", "New York", 40),
-    ("Rotterdam", "New York", 38),
-    ("Santos", "Rotterdam", 35),
-    ("Shanghai", "Sydney", 33),
-    ("Cape Town", "Rotterdam", 30),
-    ("Singapore", "Sydney", 28),
-    ("Vancouver", "Tokyo", 25),
-    ("Dubai", "Mumbai", 22),
+    ("Mumbai", "Dubai", 142),
+    ("Lagos", "London", 98),
+    ("São Paulo", "New York", 85),
+    ("Cairo", "Dubai", 78),
+    ("Tokyo", "Los Angeles", 72),
+    ("London", "Sydney", 68),
+    ("Mumbai", "London", 65),
+    ("New York", "Toronto", 60),
+    ("Paris", "London", 55),
+    ("Singapore", "Sydney", 48),
+    ("Lagos", "Paris", 44),
+    ("Berlin", "London", 40),
+    ("Cairo", "London", 38),
+    ("Tokyo", "Sydney", 35),
+    ("Mumbai", "Singapore", 32),
+    ("São Paulo", "London", 30),
+    ("Lagos", "Dubai", 27),
+    ("Toronto", "London", 24),
 ]
 
-
-def bezier_curve(p0, p1, curvature=0.3, n_points=50):
-    """Generate points along a quadratic Bezier curve between two points."""
-    # Calculate midpoint and perpendicular offset for control point
-    mid_x = (p0[0] + p1[0]) / 2
-    mid_y = (p0[1] + p1[1]) / 2
-
-    # Calculate perpendicular direction
-    dx = p1[0] - p0[0]
-    dy = p1[1] - p0[1]
-    length = np.sqrt(dx**2 + dy**2)
-
-    # Perpendicular offset (positive for clockwise curve)
-    perp_x = -dy / length if length > 0 else 0
-    perp_y = dx / length if length > 0 else 0
-
-    # Control point with curvature
-    ctrl_x = mid_x + perp_x * length * curvature
-    ctrl_y = mid_y + perp_y * length * curvature
-
-    # Generate Bezier curve points
-    t = np.linspace(0, 1, n_points)
-    x = (1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * ctrl_x + t**2 * p1[0]
-    y = (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * ctrl_y + t**2 * p1[1]
-
-    return x, y
-
-
-# Build flow paths dataframe
+# Build flow path data with inline quadratic Bezier curve computation
 flow_paths = []
+flow_values = [f for _, _, f in flows_data]
+min_flow = float(min(flow_values))
+max_flow = float(max(flow_values))
+
 for i, (origin, dest, flow) in enumerate(flows_data):
     origin_lat, origin_lon = locations[origin]
     dest_lat, dest_lon = locations[dest]
 
-    # Generate curved path
-    curve_x, curve_y = bezier_curve((origin_lon, origin_lat), (dest_lon, dest_lat), curvature=0.25, n_points=40)
+    mid_x = (origin_lon + dest_lon) / 2
+    mid_y = (origin_lat + dest_lat) / 2
+    dx = dest_lon - origin_lon
+    dy = dest_lat - origin_lat
+    seg_len = np.sqrt(dx**2 + dy**2)
+    perp_x = -dy / seg_len if seg_len > 0 else 0.0
+    perp_y = dx / seg_len if seg_len > 0 else 0.0
+    ctrl_x = mid_x + perp_x * seg_len * 0.25
+    ctrl_y = mid_y + perp_y * seg_len * 0.25
 
-    # Normalize flow for line width (scale to reasonable range)
-    line_width = 0.3 + (flow / 95) * 2.0  # Range: 0.3 to 2.3
+    line_width = 0.3 + ((flow - min_flow) / (max_flow - min_flow)) * 2.2
+    t = np.linspace(0, 1, 40)
+    curve_x = (1 - t) ** 2 * origin_lon + 2 * (1 - t) * t * ctrl_x + t**2 * dest_lon
+    curve_y = (1 - t) ** 2 * origin_lat + 2 * (1 - t) * t * ctrl_y + t**2 * dest_lat
 
-    for j, (x, y) in enumerate(zip(curve_x, curve_y, strict=False)):
+    for j in range(len(t)):
         flow_paths.append(
-            {"flow_id": i, "order": j, "x": x, "y": y, "flow": flow, "size": line_width, "route": f"{origin} → {dest}"}
+            {"flow_id": i, "order": j, "x": curve_x[j], "y": curve_y[j], "flow": float(flow), "size": line_width}
         )
 
 df_flows = pd.DataFrame(flow_paths)
 
-# Build location points dataframe
-location_points = []
-for name, (lat, lon) in locations.items():
-    location_points.append({"name": name, "lat": lat, "lon": lon})
+location_points = [{"name": name, "lat": lat, "lon": lon} for name, (lat, lon) in locations.items()]
 df_locations = pd.DataFrame(location_points)
 
 # Simplified continent outlines for basemap
@@ -187,47 +175,44 @@ for i in range(len(au_lon)):
 
 df_continents = pd.DataFrame(continents)
 
-# Create the flow map visualization
+# Build the origin-destination flow map
 plot = (
     ggplot()
-    # Draw continent polygons as basemap
     + geom_polygon(
         aes(x="lon", y="lat", group="continent"),
         data=df_continents,
-        fill="#E8E8E8",
-        color="#B0B0B0",
-        size=0.4,
-        alpha=0.9,
+        fill=LAND_FILL,
+        color=LAND_COLOR,
+        size=0.3,
+        alpha=0.95,
     )
-    # Draw flow arcs with width proportional to flow volume
     + geom_path(
         aes(x="x", y="y", group="flow_id", color="flow", size="size"), data=df_flows, alpha=0.55, lineend="round"
     )
-    # Draw origin/destination points
-    + geom_point(aes(x="lon", y="lat"), data=df_locations, color="#306998", size=4, alpha=0.9)
-    # Scale settings
-    + scale_size_identity()
-    + scale_color_gradient(low="#FFD43B", high="#D62728", name="Flow Volume")
-    + coord_fixed(ratio=1.3, xlim=(-180, 180), ylim=(-60, 80))
-    + labs(
-        title="Global Shipping Routes · flowmap-origin-destination · plotnine · pyplots.ai",
-        x="Longitude (°)",
-        y="Latitude (°)",
+    + geom_point(aes(x="lon", y="lat"), data=df_locations, color="#009E73", size=3.0, alpha=0.9)
+    + geom_text(
+        aes(x="lon", y="lat", label="name"), data=df_locations, color=INK, size=7, nudge_x=4, nudge_y=0, ha="left"
     )
+    + scale_size_identity()
+    + scale_color_gradient(low="#56B4E9", high="#D55E00", name="Annual\nmigrants (k)", limits=(min_flow, max_flow))
+    + coord_fixed(ratio=1.3, xlim=(-180, 180), ylim=(-60, 80))
+    + labs(title="flowmap-origin-destination · python · plotnine · anyplot.ai", x="Longitude (°)", y="Latitude (°)")
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=22, weight="bold"),
-        axis_title=element_text(size=18),
-        axis_text=element_text(size=14),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=12),
-        legend_position="right",
-        panel_grid_major=element_line(color="#DDDDDD", size=0.3, alpha=0.4),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=OCEAN_BG),
+        panel_grid_major=element_line(color=INK, size=0.2, alpha=0.08),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="#D4E8F7", alpha=0.6),
+        axis_line=element_line(color=INK_SOFT),
+        plot_title=element_text(size=12, color=INK, weight="bold"),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        legend_title=element_text(size=8, color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_position="right",
     )
 )
 
-# Save at 300 DPI for 4800x2700 px output
-plot.save("plot.png", dpi=300, verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
