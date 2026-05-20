@@ -1,154 +1,203 @@
 library: seaborn
+language: python
 specification_id: histogram-returns-distribution
 created: '2026-01-16T22:12:15Z'
-updated: '2026-01-16T22:14:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21082372885
+updated: '2026-05-20T18:22:11Z'
+generated_by: claude-sonnet
+workflow_run: 26180254569
 issue: 3751
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/seaborn/plot.png
-preview_html: null
-quality_score: 93
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - 'Excellent implementation of all spec requirements: histogram with density, normal
-    overlay, statistics box, and tail highlighting'
-  - Clean separation of tail and non-tail data with visually distinct colors
-  - Statistics text box is well-formatted and positioned
-  - Title follows the exact required format
-  - Good use of seaborn histplot with density normalization
+  - 'Complete spec compliance - all required features implemented: histogram with
+    density normalization, normal distribution overlay, tail region highlighting (orange
+    bars beyond ±2σ), stats text box with mean/std/skewness/kurtosis, dashed ±2σ boundary
+    lines'
+  - Excellent tail highlighting using per-bar recoloring loop (single histplot call
+    preserves density normalization integrity — comment correctly explains why two-call
+    approach is avoided)
+  - Proper dual-overlay with seaborn-native kdeplot + scipy normal fit curve, clearly
+    distinguishable via dotted vs solid linestyle
+  - 'Perfect theme-adaptive chrome in both renders: correct PAGE_BG/INK/INK_SOFT tokens
+    threaded through all axes, legend, and stats box elements'
+  - 'Clean code: seed=42, no functions/classes, only used imports, consistent dpi=400
+    without bbox_inches=tight'
   weaknesses:
-  - Legend in upper left partially overlaps with the leftmost tail bar
-  - The random data generation produces some unusually tall single-bar spikes in the
-    tails that do not represent typical fat-tail behavior in financial returns
-  image_description: 'The plot displays a histogram of daily returns (in percentage)
-    with density on the y-axis. The main histogram bars are rendered in a muted blue
-    color (#306998) with 70% opacity, representing the "Returns" data within the ±2σ
-    range. Yellow/golden bars (#FFD43B) highlight the tail regions beyond 2 standard
-    deviations on both sides. Two vertical dashed gray lines mark the ±2σ boundaries
-    (approximately at -2.85% and +2.94%). A red normal distribution curve is overlaid,
-    showing the theoretical distribution fitted to the data. The x-axis ranges from
-    approximately -4% to +6%, and the y-axis (Density) ranges from 0 to about 1.05.
-    A statistics text box in the upper right corner displays: Mean: 0.044%, Std Dev:
-    1.448%, Skewness: 0.300, Kurtosis: 0.580. The legend in the upper left shows three
-    items: Normal distribution (red line), Returns (blue), and Tail regions (>2σ)
-    (yellow). The title follows the required format: "histogram-returns-distribution
-    · seaborn · pyplots.ai". A subtle dashed grid is visible in the background.'
+  - Stats annotation text at fontsize=7 is below the recommended minimum 8pt (tick
+    label baseline); at mobile display width (~400px) the stats box text becomes borderline
+    unreadable — raise to fontsize=8
+  - Legend handles list in code is [center_patch, tail_patch, kde_line, normal_line]
+    but the rendered legend shows KDE/Normal-fit lines first, then bar patches — the
+    displayed order does not match the specified handles order, likely a seaborn rc
+    interaction; reorder handles to put the primary data patches (Returns ±2σ, Tail
+    regions) first so the legend reads top-to-bottom in data-importance order
+  - Legend frameon=False is overridden by the sns.set_theme rc params (legend.facecolor
+    / legend.edgecolor), causing a visible frame to appear despite the explicit call
+    — either remove the legend.facecolor/edgecolor from rc or use ax.get_legend().get_frame().set_visible(False)
+    after the legend call to enforce the intent
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface.
+      Chrome: Title "histogram-returns-distribution · python · seaborn · anyplot.ai" in medium-weight dark text at fontsize=12, spans ~80% of plot width (expected for long mandated title). X-axis label "Daily Returns (%)" and Y-axis label "Density" in dark text at fontsize=10, both clearly readable. Tick labels in muted dark (#4A4A44) at fontsize=8, readable. Stats box in upper right with fontsize=7 showing Mean/Std Dev/Skewness/Kurtosis — readable at full resolution but small. Two dashed gray vertical lines at approximately x=-2.9 and x=3.0 (±2σ boundaries).
+      Data: Green (#009E73) histogram bars for central region (±2σ), orange (#D55E00) bars for tail regions beyond ±2σ. Dotted teal KDE curve overlaying bars (same green, dotted linestyle). Solid blue (#0072B2) normal fit curve. Legend in lower left with 4 entries (KDE line, Normal fit, Returns patch, Tail patch).
+      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface.
+      Chrome: Title in light text (#F0EFE8) — clearly readable. Axis labels and tick labels in light/muted tones — readable. Stats box with elevated dark background (#242420) and light text — readable. Legend with elevated dark background — readable. Grid lines subtle against dark background.
+      Data: Identical data colors to light render — green (#009E73) center bars, orange (#D55E00) tail bars, dotted teal KDE, solid blue normal fit. Okabe-Ito positions 1–3 unchanged between themes. Brand green #009E73 clearly visible against dark background.
+      Legibility verdict: PASS — all text elements readable against the near-black background. No dark-on-dark issues detected. Chrome correctly flips between themes while data colors remain constant.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, labels at 20pt, tick labels at 16pt - all perfectly
-          readable at full resolution
+        comment: Title, axis labels, tick labels all properly sized and readable in
+          both themes. Stats box at fontsize=7 is below 8pt minimum for annotation
+          text — borderline on mobile.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: Legend (lower left) and stats box (upper right) in separate quadrants.
+          Tall orange bar at x≈3 stays below stats box. No text overlaps data or other
+          text.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Histogram bars are well-sized, normal curve is visible with linewidth=3
+        comment: All histogram bars, KDE curve, normal fit, vertical reference lines
+          clearly visible. Color + linestyle differentiation (solid vs dotted) sufficient
+          for 3 overlaid curves.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/red color scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good proportions, though stats box slightly crowds upper right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Daily Returns (%) and Density are descriptive with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito positions 1-3 used. CVD-safe palette. No red-green as sole
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200×1800). No overflow. Title spans ~80% width
+          (expected for long mandated title). Axes labels balanced at 10pt. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend partially overlaps with data bars on the left side
+        passed: true
+        comment: 'X: ''Daily Returns (%)'' with units. Y: ''Density'' appropriate.
+          Title matches required format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (green). Tail regions #D55E00 (Okabe-Ito pos
+          2). Normal fit #0072B2 (pos 3). Backgrounds #FAF8F1/#1A1A17. Both renders
+          theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above baseline: intentional color coding (green=center, orange=tails)
+          creates visual hierarchy. Dual-overlay (KDE + normal fit) shows analytical
+          depth. Stats box with header separator adds polish. Not exceptional but
+          clearly thought through.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Top/right spines removed. Subtle Y-axis grid (alpha=0.12, linewidth=0.5)
+          with axisbelow=True. ELEVATED_BG for callout boxes. frameon=False intent
+          for legend (partially overridden by rc). Genuine refinement above default=2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Strong narrative: orange tail bars immediately flag risk regions,
+          normal fit overlay enables normality comparison, stats box provides instant
+          analytical insight. Viewer can immediately assess fat tails and skewness.
+          Clear focal point.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct histogram chart type
+        comment: Correct histogram with density normalization and normal distribution
+          overlay.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Returns correctly on x-axis, density on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: histogram, normal overlay, statistics
-          box, tail highlighting, density normalization'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: density-normalized histogram, normal distribution
+          overlay, stats text box (mean/std/skewness/kurtosis), tail highlighting
+          beyond 2σ, 504 observations.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, axes appropriately scaled
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: Daily Returns (%), Y: Density. All 504 data points in 31 bins.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly describe all elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: histogram-returns-distribution · seaborn ·
-          pyplots.ai'
+        comment: Title matches required format exactly. Legend labels appropriate
+          for all 4 elements.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows tail regions, normal overlay, statistics; however the generated
-          data produces unusually tall tail bar spikes
+        comment: Histogram, KDE, normal fit, tail highlighting, reference lines, stats
+          box — all aspects of returns distribution visualization covered.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Daily stock returns scenario is realistic and neutral
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Daily returns of ±4% range with ~1.5% std dev is realistic for equity
-          markets
+        comment: 'Daily returns: mean=0.05%, std=1.5% — realistic for stock/ETF daily
+          returns. 504 observations = 2 years daily data. Neutral financial domain.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Percentage units for returns, density axis for normalized histogram.
+          31 bins for 504 observations within recommended 20-50 range.
     code_quality:
       score: 10
       max: 10
@@ -158,52 +207,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: Linear script, no functions or classes, clear flow.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All 5 imports used: os, matplotlib.pyplot, numpy, seaborn, matplotlib.patches.Patch,
+          scipy.stats.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Tail-bar recoloring loop is idiomatic. Comment explains the normalization
+          invariant. No fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png at dpi=400 without bbox_inches=tight. Correct.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.histplot with stat=density, sns.kdeplot, sns.set_theme with
+          rc params — all idiomatic seaborn. Axes-level API preferred. Some matplotlib-only
+          elements (normal curve via ax.plot, stats box via ax.text).
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn histplot with stat=density and sns.set_context(), but
-          could leverage kdeplot or other seaborn-specific features more
+        comment: seaborn-native kdeplot for KDE overlay (vs manual scipy KDE) is a
+          genuine seaborn distinction. histplot density stat normalization. set_theme
+          for comprehensive theming. But normal curve, tail recoloring, reference
+          lines all use plain matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
   - annotations
+  - custom-legend
   patterns:
   - data-generation
   dataprep:
-  - binning
+  - kde
   styling:
   - alpha-blending
   - grid-styling
