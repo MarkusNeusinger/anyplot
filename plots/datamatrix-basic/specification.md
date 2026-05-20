@@ -14,10 +14,9 @@ A Data Matrix 2D barcode visualization that encodes data into a compact square o
 
 ## Data
 
-- `content` (string) - The text, alphanumeric, or binary data to encode in the Data Matrix
-- `size` (string) - Matrix dimensions: auto-sized based on content, or specified (e.g., "10x10", "12x12")
-- Size: Supports up to 2,335 alphanumeric characters or 3,116 numeric digits
-- Example: "SERIAL:12345678" or "https://example.com/product/ABC123"
+- `content` (string) - The text, alphanumeric, or binary data to encode in the Data Matrix (supports up to 2,335 alphanumeric or 3,116 numeric characters)
+- `size` (string, optional) - Matrix dimensions: auto-sized based on content, or manually specified (e.g., "10x10", "12x12")
+- Example: content="SERIAL:12345678" or content="https://example.com/product/ABC123"
 
 ## Notes
 
