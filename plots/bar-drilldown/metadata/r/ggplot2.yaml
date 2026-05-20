@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: bar-drilldown
 created: '2026-05-20T11:36:44Z'
-updated: '2026-05-20T11:43:00Z'
+updated: '2026-05-20T12:00:38Z'
 generated_by: claude-sonnet
 workflow_run: 26159622592
 issue: 3783
@@ -12,128 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Correct Okabe-Ito palette (Engineering=#009E73, Sales=#D55E00, Marketing=#0072B2,
-    Operations=#CC79A7) with perfect theme-adaptive chrome in both renders
-  - 'Idiomatic ggplot2: facet_wrap with free scales, coord_flip, expansion padding,
-    strip backgrounds — proper static alternative to interactive drilldown'
-  - 'Full data quality: realistic corporate budget scenario, all hierarchy levels
-    shown, plausible USD-million values'
-  - Clean KISS code with deterministic data and explicit font sizing throughout
-  - Clever unique_item factor trick to avoid category ambiguity across facets
+  - 'Perfect theme adaptability: both renders fully readable with correct backgrounds
+    (#FAF8F1/#1A1A17) and all chrome tokens correctly applied'
+  - Informative facet strip labels ('Engineering · $4.20M total') give immediate department-level
+    context without a separate plot element
+  - Alpha emphasis (1.0 vs 0.72) on top-budget item per department creates visual
+    hierarchy without extra annotations
+  - Data-insight subtitle explicitly names the story ('Engineering leads … 2.3×')
+  - unique_item factor pattern correctly solves independent bar ordering in free-scale
+    facets — a non-obvious ggplot2 technique
+  - Clean, linear code structure with no over-engineering
   weaknesses:
-  - 'Design excellence falls short of first-attempt approval threshold: panels retain
-    default boxed borders from strip backgrounds, no bold visual emphasis on the highest-spend
-    department (Engineering), lacks clear data story pointing viewer toward a specific
-    insight'
-  - Value labels (geom_text size=2.6) are on the small side and may be borderline
-    legible at mobile viewport (~400px width)
-  - Primary drilldown interaction feature is absent by necessity (static library)
-    — SC-01 deduction is unavoidable but still counts against spec compliance
-  - 'DE-03: Color coding and value labels display data but viewer must self-discover
-    that Engineering dominates budget; no focal-point emphasis or highlight to guide
-    the story'
+  - library(scales) imported but unused — remove it
+  - Only 2 of the spec's 2–3 hierarchy levels are represented; a third level would
+    improve DQ-01 feature coverage
+  - Design polish stops short of 'strong' tier — an explicit facet border line or
+    a horizontal rule below strip labels would elevate DE-02 to 5/6
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — matches spec exactly
-      Chrome: Title "Department Budget Breakdown · bar-drilldown · r · ggplot2 · anyplot.ai" in dark ink, clearly readable. Subtitle in muted #4A4A44. Axis label "Budget (USD millions)" in dark ink at bottom. Strip headers (Engineering, Sales, Marketing, Operations) bold, dark text on slightly elevated #FFFDF6 strip backgrounds. Tick labels in #4A4A44, readable. Value labels ($1.85M etc.) in muted gray, small but legible at full resolution.
-      Data: Horizontal bars per facet. Engineering=#009E73 (brand green), Sales=#D55E00 (orange), Marketing=#0072B2 (blue), Operations=#CC79A7 (reddish purple). Okabe-Ito order 1–4. Bars prominently sized with good contrast against the off-white background.
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Department Budget Breakdown · bar-drilldown · r · ggplot2 · anyplot.ai" in dark ink; subtitle in soft dark ink; facet strip labels bold dark; axis tick labels in secondary dark ink; x-axis label "Budget (USD millions)" in dark ink — all clearly readable
+      Data: Engineering bars in #009E73 (Okabe-Ito pos 1), Sales in #D55E00 (pos 2), Marketing in #0072B2 (pos 3), Operations in #CC79A7 (pos 4); top item per department at alpha 1.0, others at 0.72; dollar labels to right of bars
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — matches spec exactly
-      Chrome: Title and subtitle in light #F0EFE8/#B8B7B0 — clearly readable against dark surface. Strip headers bold with #242420 elevated strip backgrounds and light text — excellent contrast. Axis tick labels and axis title in light #B8B7B0, fully readable. Value labels visible. No dark-on-dark failures detected.
-      Data: Bar colors IDENTICAL to light render — Engineering=#009E73, Sales=#D55E00, Marketing=#0072B2, Operations=#CC79A7. Only chrome (backgrounds, text, strip fills) has flipped; data palette is unchanged.
-      Legibility verdict: PASS — no dark-on-dark issues, all text readable, theme adaptation is complete and correct.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title and strip labels in near-white (#F0EFE8); axis tick labels and data labels in warm gray (#B8B7B0); facet strip backgrounds in elevated near-black (#242420) — all clearly readable, no dark-on-dark failures detected
+      Data: Bar colors identical to light render — #009E73, #D55E00, #0072B2, #CC79A7 unchanged; alpha variation preserved
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=11, axis.title.x=10, axis.text=8,
-          strip.text=10). Value labels at geom_text size=2.6 are slightly small for
-          mobile readability.
+        comment: All font sizes explicitly set (base 8pt, axis title 10pt, strip 10pt,
+          title 11pt, subtitle 8.5pt); proportions well-balanced; readable in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or bar elements. Value labels placed with hjust=-0.1
-          and ample y-axis expansion (0.45) preventing collisions.
+        comment: Bar labels positioned with hjust=-0.1; generous panel spacing; no
+          text collision
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars are prominent and clearly visible in both themes. Good contrast
-          between bar fills and backgrounds.
+        comment: Bars clearly visible; alpha variation (1.0 vs 0.72) emphasises top
+          items without hiding others
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. 4 departments use distinct, high-contrast
-          colors.
+        comment: Okabe-Ito palette, CVD-safe; alpha adds luminance separation
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2x2 facet grid fills canvas well (50-80%). Generous panel spacing.
-          Balanced margins.
+        comment: 2x2 facet fills canvas well; generous panel spacing; nothing cut
+          off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis labeled 'Budget (USD millions)' with units. Y-axis NULL (appropriate
-          — category names serve as labels).
+        comment: '''Budget (USD millions)'' is descriptive with units; y-axis NULL
+          appropriate'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, then #D55E00, #0072B2, #CC79A7 in Okabe-Ito
-          order. Light bg=#FAF8F1, dark bg=#1A1A17. Full theme-adaptive chrome in
-          both renders.'
+        comment: 'Okabe-Ito positions 1-4 in order; backgrounds #FAF8F1/#1A1A17; chrome
+          fully adaptive'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured professional look with Okabe-Ito, bold strip labels,
-          clean facets. But still fundamentally default-adjacent — no standout typographic
-          hierarchy, emphasis technique, or bold design choice that elevates it beyond
-          a well-configured ggplot2.
+        passed: true
+        comment: Alpha emphasis on top items, informative strip labels with totals,
+          data-insight subtitle — clearly above default, not yet FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good refinement: no tick marks, subtle gridlines (linewidth=0.2),
-          panel spacing generous, strip backgrounds with elevated color. Minor: gridlines
-          visible as vertical lines behind bars are slightly prominent in panels with
-          shorter bars.'
+        passed: true
+        comment: Spines removed via theme_minimal; x-grid blanked; y-grid at linewidth
+          0.15; ELEVATED_BG on strips; axis ticks removed
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Color-department mapping creates clear visual identity per facet.
-          Value labels aid precise comparison. However, no emphasis on the primary
-          insight (Engineering dominates budget) — no highlight, size variation, or
-          focal point to guide the viewer.
+        passed: true
+        comment: Subtitle names the leader and gap; alpha accent highlights top items;
+          bars sorted ascending for natural comparison
     spec_compliance:
       score: 12
       max: 15
@@ -142,61 +130,57 @@ review:
         name: Plot Type
         score: 3
         max: 5
-        passed: false
-        comment: Correct base type (horizontal bar chart with categorical breakdown).
-          Hierarchical drilldown interaction — the defining spec feature — replaced
-          by static facets showing all levels simultaneously. Appropriate for ggplot2
-          but core feature absent.
+        passed: true
+        comment: Correct base type (horizontal bar); drilldown approximated via simultaneous
+          facets per ggplot2 static-library guidance
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: Value labels present. Hierarchical structure shown via facets. Consistent
-          color mapping across levels. Interactive features (click-drill, breadcrumbs,
-          back button, animations) appropriately omitted per ggplot2 static constraints.
+        passed: true
+        comment: Bar chart, value labels, hierarchical data (2 levels), alpha emphasis,
+          department totals present; breadcrumbs/click/animation absent (library limitation)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Correct: items on Y-axis, budget values on X-axis, department identity
-          via color fill, facets show department grouping.'
+        comment: Items on y-axis, budget on x-axis (after coord_flip); all 12 data
+          points visible; free scales per facet
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Department Budget Breakdown · bar-drilldown · r · ggplot2
-          · anyplot.ai' matches required format. No explicit legend (facet headers
-          + colors serve as legend — appropriate).
+        comment: Title matches {Descriptive} · bar-drilldown · r · ggplot2 · anyplot.ai;
+          no legend needed (color conveyed by facet headers)
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows both hierarchy levels: 4 departments (top) with 3 subcategories
-          each (second). Full coverage of hierarchical bar chart structure.'
+        comment: 4 departments x 3 items; 2 hierarchy levels; varied values; minor
+          deduction for only 2 of possible 3 hierarchy levels
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Corporate annual budget data with realistic department names and
-          expense categories. Neutral business context.
+        comment: Company annual budget — real neutral business scenario; all department
+          and expense category names are authentic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Budget values $0.40M–$1.85M per line item are plausible for a small-to-medium
-          tech company. Proportions between departments and within items are logical.
+        comment: Values $0.40M-$1.85M per line item; $1.80M-$4.20M per department
+          — realistic for mid-sized company team budgets
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -204,39 +188,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → tokens → data → plot → save. No functions
-          or classes.'
+        comment: 'Linear: imports -> tokens -> data -> summaries -> plot -> save;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded — inherently deterministic. No random number
-          generation used.
+        comment: Fully deterministic; all data hardcoded
       - id: CQ-03
         name: Clean Imports
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: 'library(scales) imported but not explicitly used (no scales:: calls).
-          Minor — scales is standard ggplot2 boilerplate and may be used implicitly.
-          All other imports used.'
+        passed: false
+        comment: library(scales) imported but unused — sprintf() used for labels,
+          expansion() is ggplot2-native
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic R. The unique_item factor trick to avoid cross-facet
-          ambiguity is elegant. No over-engineering.
+        comment: Clean dplyr pipes; unique_item factor trick solves independent facet
+          ordering elegantly; setNames() for labeller is idiomatic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf. Uses modern ggplot2 API (linewidth=
-          not size= for lines).
+        comment: Saves as plot-{THEME}.png via ragg::agg_png; modern ggplot2 3.5.1
+          API
     library_mastery:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: LM-01
@@ -244,25 +226,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of ggplot2 grammar: geom_col, facet_wrap with free scales,
-          coord_flip, scale_x_discrete with label function, scale_fill_manual, expansion().
-          Fully idiomatic.'
+        comment: 'Full grammar-of-graphics pipeline: geom_col + geom_text + facet_wrap(scales=free)
+          + coord_flip + scale_*_manual + scale_alpha_manual + custom labeller'
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: 'Uses ggplot2-specific features: facet_wrap with independent free
-          scales, coord_flip combined with facets, expansion() for asymmetric padding,
-          and the unique_item factor technique. Library-specific but not exceptional.'
-  verdict: REJECTED
+        passed: true
+        comment: as_labeller with setNames for rich strip headers; unique_item factor
+          workaround for independent facet ordering — both ggplot2-distinctive
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - annotations
+  - layer-composition
   patterns:
   - groupby-aggregation
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
