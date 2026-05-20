@@ -166,7 +166,7 @@ You evaluate implementations that passed all auto-reject checks. Focus purely on
 
 ## Evaluation Process
 
-### Step 0: Check for Fake Functionality (AR-08)
+### Step 0a: Check for Fake Functionality (AR-08)
 
 **For static libraries (matplotlib, seaborn, plotnine, ggplot2) only:**
 
@@ -176,6 +176,21 @@ Scan the code and image for:
 - Comments like "simulating hover/click/interactivity"
 
 If found: `auto_reject: "AR-08"`, score = 0, stop evaluation.
+
+### Step 0b: Check for Edge Clipping (AR-09)
+
+**For all libraries.** Inspect both `plot-light.png` and `plot-dark.png` along all four canvas borders. Trigger AR-09 only when visible pixels of an element are **actually missing** because the element was rendered partially outside the saved PNG. Proximity, touching, or tight margins are NOT AR-09 — only chopped pixels are.
+
+Concrete triggers (each is sufficient on its own):
+- Plot title cropped at the top edge (top of letters cut, descenders missing).
+- Y-axis tick labels missing leftmost digit/character because they overflow the left canvas edge (e.g. "500" rendered as "00").
+- X-axis label cut at the bottom edge.
+- Legend entries hidden behind / merged into the canvas edge with letters chopped off.
+- Any annotation or category label whose bounding box is partially outside the saved PNG.
+
+If found: `auto_reject: "AR-09"`, score = 0, stop evaluation. Identify which element on which edge (e.g. `"title clipped at top edge of light render"`) in the rejection note so the repair step knows where to shrink.
+
+Not AR-09 (handle via VQ-05 instead): text overflowing its axis but staying on the canvas, decorative borders aligned with the edge, tooltips, tight-but-readable margins where every pixel of the text is visible.
 
 ### Step 1: Visual Quality (30 pts)
 

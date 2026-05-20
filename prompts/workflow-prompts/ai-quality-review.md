@@ -118,23 +118,24 @@ If found: Score = 0, verdict = REJECTED, note AR-08 violation.
 
 **AR-09 — Edge clipping (all libraries):**
 
-Inspect both renders for any text, axis tick label, axis title, plot title, legend, or annotation that **touches or extends past the canvas border**. This is the single most embarrassing failure mode for the catalog — a chart that visibly chops off content publishes broken into the gallery.
+Inspect both renders for any title, axis tick label, axis title, legend, or annotation that has **visible pixels chopped off at the canvas border** — i.e. the element was rendered partially outside the saved PNG's bounding box and the missing pixels are gone for good. This is the single most embarrassing failure mode for the catalog: a chart with chopped-off text publishes broken into the gallery.
+
+**Strict definition:** AR-09 fires only when **pixels of the element are actually missing**. Proximity to the border, touching the border, or being rendered right up against the edge with all pixels visible is **not** AR-09 — that's at most a VQ-05 deduction. The bar is evidence of chopped content, not crowded margins.
 
 Trigger AR-09 if you see ANY of:
-- **Title cropped at the top edge** — top of letters cut, descenders missing, or title not fully visible above the plot area.
-- **Y-axis tick labels missing their leftmost digit/character** because they touch the left canvas edge (e.g. "500" rendered as "00", "1,000" as ",000").
-- **X-axis labels cut at the bottom edge** — "Number of Cycles to Failure" missing or partially below the visible area.
-- **Legend entries hidden behind / merged into the canvas edge.**
-- **Any annotation, label, or category text whose bounding box is partially outside the saved PNG.**
+- **Title cropped at the top edge** — top of letters cut off, descenders missing, or title not fully visible above the plot area.
+- **Y-axis tick labels missing their leftmost digit/character** because the label extends past the left canvas edge (e.g. "500" rendered as "00", "1,000" as ",000").
+- **X-axis label cut at the bottom edge** — axis title only partially visible, descender row chopped.
+- **Legend entries hidden behind / merged into the canvas edge** with letters chopped off.
+- **Any annotation, label, or category text whose bounding box is partially outside the saved PNG** so part of the text is gone.
 
-This is distinct from VQ-05's softer "no overflow" check: AR-09 is for clipping AT THE CANVAS EDGE (pixels chopped), not for elements that simply overflow their axis. The post-render canvas-size gate enforces dimensions, but it cannot see WHAT is at those edges — that's your job.
+If found: **Score = 0, verdict = REJECTED, note AR-09 violation** and identify which element(s) were clipped and on which edge (e.g. "title clipped at top edge of light render — top ~10 px of letters missing"). Repair will receive this and shrink the inner-chart dims so vl-convert / matplotlib / etc. don't push content off the canvas.
 
-If found: **Score = 0, verdict = REJECTED, note AR-09 violation** and identify which element(s) were clipped and on which edge (e.g. "title clipped at top edge of light render"). Repair will receive this and shrink the inner-chart dims so vl-convert / matplotlib / etc. don't push content off the canvas.
-
-**False-positive guard:** Do NOT trigger AR-09 for:
-- Text that extends past the plot/axis bounds but stays *within* the canvas (that's a VQ-05 deduction at most).
+**False-positive guard — do NOT trigger AR-09 for:**
+- Text that extends past the plot/axis bounds but stays *within* the canvas (VQ-05 deduction at most).
 - Tooltips, legend swatches, or grid lines aligned with the canvas border by design.
-- Visible-but-tight margins where text is fully readable; AR-09 is for *clipped* pixels, not for "close to the edge."
+- Tight-but-readable margins where every pixel of the text is visible — proximity ≠ clipping.
+- Touching the border without any missing pixels — touching ≠ chopped.
 
 ### 7. Evaluate Using 6-Category Criteria
 
