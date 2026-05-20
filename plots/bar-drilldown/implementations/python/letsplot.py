@@ -1,20 +1,47 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: letsplot 4.9.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-20
 """
 
 import json
+import os
 
 import pandas as pd
-from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_bar,
+    geom_hline,
+    geom_text,
+    ggplot,
+    ggsize,
+    labs,
+    scale_fill_manual,
+    scale_y_continuous,
+    theme,
+    theme_minimal,
+)
+from lets_plot.export import ggsave
 
 
-LetsPlot.setup_html()  # noqa: F405
+LetsPlot.setup_html()
 
-# Hierarchical data: Sales breakdown by region (following spec's data format)
-# Structure: id, name, value, parent (null for root level)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7"]
+
+# Hierarchical data: regional sales breakdown (region → quarterly)
 hierarchy_data = {
     "root": {"id": "root", "name": "Total Sales", "children": ["north", "south", "east", "west"]},
     "north": {
@@ -63,74 +90,70 @@ hierarchy_data = {
     "west_q4": {"id": "west_q4", "name": "Q4", "parent": "west", "value": 107000},
 }
 
-# Color palette - Python Blue primary, colorblind-safe for categories
-colors = {
-    "North Region": "#306998",
-    "South Region": "#FFD43B",
-    "East Region": "#4CAF50",
-    "West Region": "#E07A5F",
-    # Quarter colors (shades within each region)
-    "Q1": "#5A8BBF",
-    "Q2": "#7BA3D1",
-    "Q3": "#9CBBE3",
-    "Q4": "#BDD3F5",
+region_color_map = {
+    "North Region": OKABE_ITO[0],
+    "South Region": OKABE_ITO[1],
+    "East Region": OKABE_ITO[2],
+    "West Region": OKABE_ITO[3],
 }
 
-# Create data for root level (main regions)
+# Root-level dataframe for static PNG
 root_children = hierarchy_data["root"]["children"]
-categories = [hierarchy_data[child_id]["name"] for child_id in root_children]
-values = [hierarchy_data[child_id]["value"] for child_id in root_children]
-
-# Format value labels
+categories = [hierarchy_data[cid]["name"] for cid in root_children]
+values = [hierarchy_data[cid]["value"] for cid in root_children]
 value_labels = [f"${v // 1000}K" for v in values]
 
 df = pd.DataFrame({"category": categories, "value": values, "value_label": value_labels})
-
-# Preserve category order
 df["category"] = pd.Categorical(df["category"], categories=categories, ordered=True)
 
-# Define colors in order
-slice_colors = [colors[cat] for cat in categories]
+# Peak and mean references for storytelling
+mean_sales = int(df["value"].mean())
+df_peak = df[df["value"] == df["value"].max()].copy()
 
-# Create main bar chart for static PNG
+# Static PNG using letsplot ggplot grammar
 plot = (
-    ggplot(df, aes(x="category", y="value", fill="category"))  # noqa: F405
-    + geom_bar(  # noqa: F405
-        stat="identity", width=0.7, show_legend=False, color="white", size=1
-    )
-    + geom_text(  # noqa: F405
-        aes(label="value_label"),  # noqa: F405
-        vjust=-0.5,
-        size=16,
+    ggplot(df, aes(x="category", y="value", fill="category"))
+    + geom_bar(stat="identity", width=0.7, show_legend=False, color=PAGE_BG, size=0.5)
+    + geom_hline(yintercept=mean_sales, color=INK_MUTED, size=0.5, linetype="dashed")
+    + geom_text(aes(label="value_label"), vjust=-0.4, size=8, color=INK, fontface="bold")
+    + geom_text(
+        data=df_peak,
+        mapping=aes(x="category", y="value"),
+        label="★ highest",
+        vjust=-2.0,
+        size=7,
+        color=OKABE_ITO[2],
         fontface="bold",
     )
-    + scale_fill_manual(values=slice_colors)  # noqa: F405
-    + scale_y_continuous(format="${,.0f}", expand=[0.1, 0, 0.15, 0])  # noqa: F405
-    + labs(  # noqa: F405
-        title="bar-drilldown · letsplot · pyplots.ai",
-        subtitle="Regional Sales · Click column to drill down (HTML)",
-        x="",
+    + scale_fill_manual(values=OKABE_ITO)
+    + scale_y_continuous(format="${,.0f}", limits=[0, 730000], expand=[0, 0])
+    + labs(
+        title="bar-drilldown · python · letsplot · anyplot.ai",
+        subtitle="Regional Sales · East leads at $528K · Open HTML for interactive drilldown",
+        x="Region",
         y="Sales ($)",
     )
-    + ggsize(1600, 900)  # noqa: F405
-    + theme_minimal()  # noqa: F405
-    + theme(  # noqa: F405
-        plot_title=element_text(size=32, hjust=0.5, face="bold"),  # noqa: F405
-        plot_subtitle=element_text(size=18, hjust=0.5, color="#666666"),  # noqa: F405
-        axis_title_y=element_text(size=20),  # noqa: F405
-        axis_text_x=element_text(size=18),  # noqa: F405
-        axis_text_y=element_text(size=16),  # noqa: F405
-        panel_grid_major_x=element_blank(),  # noqa: F405
-        panel_grid_minor=element_blank(),  # noqa: F405
-        panel_grid_major_y=element_line(color="#E0E0E0", size=0.5),  # noqa: F405
-        plot_margin=[40, 40, 40, 40],
+    + ggsize(800, 450)
+    + theme_minimal()
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_grid_major_x=element_blank(),
+        panel_grid_minor=element_blank(),
+        panel_grid_major_y=element_line(color=RULE, size=0.3),
+        axis_title=element_text(color=INK, size=12),
+        axis_text=element_text(color=INK_SOFT, size=10),
+        axis_line_x=element_line(color=INK_SOFT),
+        axis_line_y=element_line(color=INK_SOFT),
+        plot_title=element_text(color=INK, size=16, face="bold", hjust=0.5),
+        plot_subtitle=element_text(color=INK_MUTED, size=10, hjust=0.5),
+        plot_margin=[30, 30, 30, 30],
     )
 )
 
-# Save static PNG (scale 3 for 4800x2700)
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
+ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
 
-# Prepare data for all levels as JSON
+# Prepare data for all hierarchy levels (used in HTML drilldown)
 levels_data = {}
 for level_id in ["root", "north", "south", "east", "west"]:
     level_data = hierarchy_data[level_id]
@@ -138,14 +161,10 @@ for level_id in ["root", "north", "south", "east", "west"]:
         children_ids = level_data["children"]
         cats = [hierarchy_data[cid]["name"] for cid in children_ids]
         vals = [hierarchy_data[cid]["value"] for cid in children_ids]
-        tot = sum(vals)
-        # Use parent's color for quarter breakdown, or individual colors for regions
         if level_id == "root":
-            level_colors = [colors.get(cat, "#306998") for cat in cats]
+            level_colors = [region_color_map.get(cat, OKABE_ITO[0]) for cat in cats]
         else:
-            # For quarterly breakdown, use gradient of parent color
-            parent_name = hierarchy_data[level_id]["name"]
-            base_color = colors.get(parent_name, "#306998")
+            base_color = region_color_map.get(hierarchy_data[level_id]["name"], OKABE_ITO[0])
             level_colors = [base_color] * len(cats)
         levels_data[level_id] = {
             "name": hierarchy_data[level_id]["name"],
@@ -156,12 +175,21 @@ for level_id in ["root", "north", "south", "east", "west"]:
             "parent": hierarchy_data[level_id].get("parent"),
         }
 
-# HTML template with embedded JavaScript for drilldown
+# HTML theme tokens for interactive output
+html_body_bg = PAGE_BG
+html_container_bg = ELEVATED_BG
+html_text = INK
+html_text_soft = INK_SOFT
+html_grid = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
+html_tooltip_bg = "rgba(0,0,0,0.88)" if THEME == "light" else "rgba(36,36,32,0.95)"
+html_back_btn_border = INK_SOFT
+html_brand = OKABE_ITO[0]
+
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>bar-drilldown · letsplot · pyplots.ai</title>
+    <title>bar-drilldown · python · letsplot · anyplot.ai</title>
     <style>
         * {{
             margin: 0;
@@ -169,8 +197,8 @@ html_content = f"""<!DOCTYPE html>
             box-sizing: border-box;
         }}
         body {{
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: {html_body_bg};
             min-height: 100vh;
             display: flex;
             justify-content: center;
@@ -178,55 +206,54 @@ html_content = f"""<!DOCTYPE html>
             padding: 20px;
         }}
         .container {{
-            background: white;
+            background: {html_container_bg};
             border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
             padding: 40px;
             max-width: 1000px;
             width: 100%;
         }}
         h1 {{
-            color: #333;
+            color: {html_text};
             text-align: center;
-            font-size: 28px;
+            font-size: 26px;
             margin-bottom: 8px;
         }}
         .subtitle {{
-            color: #666;
+            color: {html_text_soft};
             text-align: center;
-            font-size: 16px;
+            font-size: 15px;
             margin-bottom: 24px;
         }}
         .breadcrumb {{
-            background: #306998;
-            color: white;
-            padding: 14px 20px;
+            background: {html_brand};
+            color: #ffffff;
+            padding: 12px 18px;
             border-radius: 10px;
             margin-bottom: 24px;
-            font-size: 18px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             gap: 12px;
         }}
         .back-btn {{
-            background: #FFD43B;
-            color: #333;
-            border: none;
-            padding: 10px 20px;
+            background: transparent;
+            color: #ffffff;
+            border: 1.5px solid rgba(255,255,255,0.6);
+            padding: 8px 16px;
             border-radius: 6px;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s;
+            white-space: nowrap;
         }}
         .back-btn:hover {{
-            background: #E6BE35;
-            transform: translateX(-2px);
+            background: rgba(255,255,255,0.15);
         }}
         .back-btn:disabled {{
-            opacity: 0.4;
+            opacity: 0.35;
             cursor: not-allowed;
-            transform: none;
         }}
         .breadcrumb-path {{
             display: flex;
@@ -240,19 +267,19 @@ html_content = f"""<!DOCTYPE html>
         }}
         .breadcrumb-path span:hover:not(.current) {{
             text-decoration: underline;
-            opacity: 0.9;
+            opacity: 0.85;
         }}
         .breadcrumb-path .separator {{
-            opacity: 0.6;
+            opacity: 0.55;
         }}
         .breadcrumb-path .current {{
-            font-weight: 600;
+            font-weight: 700;
             cursor: default;
         }}
         #chart-container {{
             position: relative;
             width: 100%;
-            height: 450px;
+            height: 440px;
         }}
         #bar-canvas {{
             width: 100%;
@@ -260,49 +287,50 @@ html_content = f"""<!DOCTYPE html>
         }}
         .total-display {{
             text-align: center;
-            margin-top: 20px;
-            font-size: 20px;
-            color: #333;
+            margin-top: 18px;
+            font-size: 18px;
+            color: {html_text_soft};
         }}
         .total-display .amount {{
             font-weight: 700;
-            color: #306998;
-            font-size: 28px;
+            color: {html_brand};
+            font-size: 26px;
         }}
         .hint {{
             text-align: center;
-            color: #888;
-            margin-top: 16px;
-            font-size: 14px;
+            color: {html_text_soft};
+            margin-top: 14px;
+            font-size: 13px;
+            opacity: 0.75;
         }}
         .tooltip {{
             position: absolute;
-            background: rgba(0, 0, 0, 0.85);
-            color: white;
-            padding: 12px 16px;
+            background: {html_tooltip_bg};
+            color: #F0EFE8;
+            padding: 10px 14px;
             border-radius: 8px;
-            font-size: 14px;
+            font-size: 13px;
             pointer-events: none;
             opacity: 0;
-            transition: opacity 0.2s;
+            transition: opacity 0.15s;
             z-index: 100;
         }}
         .tooltip.visible {{
             opacity: 1;
         }}
-        .tooltip .title {{
+        .tooltip .tip-title {{
             font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 6px;
+            font-size: 15px;
+            margin-bottom: 4px;
         }}
-        .tooltip .value {{
-            color: #FFD43B;
+        .tooltip .tip-value {{
+            color: {html_brand};
         }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>bar-drilldown · letsplot · pyplots.ai</h1>
+        <h1>bar-drilldown · python · letsplot · anyplot.ai</h1>
         <p class="subtitle">Regional Sales Breakdown with Interactive Drilling</p>
 
         <div class="breadcrumb">
@@ -325,9 +353,11 @@ html_content = f"""<!DOCTYPE html>
     </div>
 
     <script>
-        // Hierarchy data from Python
         const hierarchyData = {json.dumps(hierarchy_data)};
         const levelsData = {json.dumps(levels_data)};
+        const textColor = '{html_text}';
+        const textSoft = '{html_text_soft}';
+        const gridColor = '{html_grid}';
 
         let currentLevel = 'root';
         let history = [];
@@ -339,10 +369,9 @@ html_content = f"""<!DOCTYPE html>
         const backBtn = document.getElementById('backBtn');
         const tooltipEl = document.getElementById('tooltip');
 
-        // Bar positions for click/hover detection
         let bars = [];
+        let animationFrame = null;
 
-        // High DPI canvas setup
         function setupCanvas() {{
             const rect = canvas.parentElement.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
@@ -354,134 +383,109 @@ html_content = f"""<!DOCTYPE html>
             return rect;
         }}
 
-        // Animation variables
-        let animationProgress = 0;
-        let animationFrame = null;
-
-        // Draw bar chart with animation
-        function drawBars(levelId, animate = true) {{
+        function drawBars(levelId, animate) {{
+            if (animate === undefined) animate = true;
             const data = levelsData[levelId];
             if (!data) return;
 
             const rect = setupCanvas();
-            const padding = {{ top: 60, right: 40, bottom: 60, left: 100 }};
-            const chartWidth = rect.width - padding.left - padding.right;
-            const chartHeight = rect.height - padding.top - padding.bottom;
+            const pad = {{ top: 50, right: 30, bottom: 55, left: 90 }};
+            const chartW = rect.width - pad.left - pad.right;
+            const chartH = rect.height - pad.top - pad.bottom;
 
-            const maxValue = Math.max(...data.values) * 1.15;
-            const barWidth = (chartWidth / data.categories.length) * 0.65;
-            const barGap = (chartWidth / data.categories.length) * 0.35;
-
-            bars = [];
+            const maxValue = Math.max(...data.values) * 1.18;
+            const slotW = chartW / data.categories.length;
+            const barW = slotW * 0.62;
+            const barGap = slotW * 0.38;
 
             function render(progress) {{
                 ctx.clearRect(0, 0, rect.width, rect.height);
 
-                // Draw gridlines
-                ctx.strokeStyle = '#E0E0E0';
-                ctx.lineWidth = 1;
-                const gridLines = 5;
-                for (let i = 0; i <= gridLines; i++) {{
-                    const y = padding.top + (chartHeight / gridLines) * i;
+                // Grid lines
+                const gridCount = 5;
+                for (let i = 0; i <= gridCount; i++) {{
+                    const gy = pad.top + (chartH / gridCount) * i;
+                    ctx.strokeStyle = gridColor;
+                    ctx.lineWidth = 1;
                     ctx.beginPath();
-                    ctx.moveTo(padding.left, y);
-                    ctx.lineTo(rect.width - padding.right, y);
+                    ctx.moveTo(pad.left, gy);
+                    ctx.lineTo(rect.width - pad.right, gy);
                     ctx.stroke();
 
-                    // Y-axis labels
-                    const value = maxValue * (1 - i / gridLines);
-                    ctx.fillStyle = '#666';
-                    ctx.font = '14px -apple-system, sans-serif';
+                    const gVal = maxValue * (1 - i / gridCount);
+                    ctx.fillStyle = textSoft;
+                    ctx.font = '13px -apple-system, sans-serif';
                     ctx.textAlign = 'right';
                     ctx.textBaseline = 'middle';
-                    ctx.fillText('$' + (value / 1000).toFixed(0) + 'K', padding.left - 12, y);
+                    ctx.fillText('$' + (gVal / 1000).toFixed(0) + 'K', pad.left - 10, gy);
                 }}
 
-                // Draw bars
-                bars = [];
-                data.values.forEach((value, i) => {{
-                    const barHeight = (value / maxValue) * chartHeight * progress;
-                    const x = padding.left + (i * (barWidth + barGap)) + barGap / 2;
-                    const y = padding.top + chartHeight - barHeight;
-
-                    bars.push({{
-                        x, y: padding.top + chartHeight - (value / maxValue) * chartHeight,
-                        width: barWidth,
-                        height: (value / maxValue) * chartHeight,
-                        category: data.categories[i],
-                        value: value,
-                        childId: data.children[i],
-                        color: data.colors[i]
-                    }});
-
-                    // Bar fill
-                    ctx.fillStyle = data.colors[i];
-                    ctx.beginPath();
-                    ctx.roundRect(x, y, barWidth, barHeight, [6, 6, 0, 0]);
-                    ctx.fill();
-
-                    // Bar border
-                    ctx.strokeStyle = 'white';
-                    ctx.lineWidth = 2;
-                    ctx.stroke();
-
-                    // Value label on top
-                    if (progress > 0.9) {{
-                        ctx.fillStyle = '#333';
-                        ctx.font = 'bold 16px -apple-system, sans-serif';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'bottom';
-                        ctx.fillText('$' + (value / 1000).toFixed(0) + 'K', x + barWidth / 2, y - 8);
-                    }}
-
-                    // X-axis labels
-                    ctx.fillStyle = '#333';
-                    ctx.font = '15px -apple-system, sans-serif';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'top';
-                    ctx.fillText(data.categories[i], x + barWidth / 2, padding.top + chartHeight + 12);
-                }});
-
-                // Y-axis title
+                // Y-axis label
                 ctx.save();
-                ctx.translate(25, padding.top + chartHeight / 2);
+                ctx.translate(18, pad.top + chartH / 2);
                 ctx.rotate(-Math.PI / 2);
-                ctx.fillStyle = '#333';
-                ctx.font = 'bold 16px -apple-system, sans-serif';
+                ctx.fillStyle = textColor;
+                ctx.font = 'bold 14px -apple-system, sans-serif';
                 ctx.textAlign = 'center';
                 ctx.fillText('Sales ($)', 0, 0);
                 ctx.restore();
+
+                // Bars
+                bars = [];
+                data.values.forEach((value, i) => {{
+                    const barH = (value / maxValue) * chartH * progress;
+                    const bx = pad.left + i * slotW + barGap / 2;
+                    const by = pad.top + chartH - barH;
+
+                    bars.push({{
+                        x: bx, y: pad.top + chartH - (value / maxValue) * chartH,
+                        width: barW, height: (value / maxValue) * chartH,
+                        category: data.categories[i],
+                        value: value,
+                        childId: data.children[i],
+                        color: data.colors[i],
+                    }});
+
+                    ctx.fillStyle = data.colors[i];
+                    ctx.beginPath();
+                    ctx.roundRect(bx, by, barW, barH, [5, 5, 0, 0]);
+                    ctx.fill();
+
+                    if (progress > 0.85) {{
+                        ctx.fillStyle = textColor;
+                        ctx.font = 'bold 14px -apple-system, sans-serif';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        ctx.fillText('$' + (value / 1000).toFixed(0) + 'K', bx + barW / 2, by - 6);
+                    }}
+
+                    ctx.fillStyle = textColor;
+                    ctx.font = '14px -apple-system, sans-serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(data.categories[i], bx + barW / 2, pad.top + chartH + 10);
+                }});
             }}
 
             if (animate) {{
                 if (animationFrame) cancelAnimationFrame(animationFrame);
-                animationProgress = 0;
                 const startTime = performance.now();
-                const duration = 500;
-
-                function animateStep(currentTime) {{
-                    const elapsed = currentTime - startTime;
-                    animationProgress = Math.min(elapsed / duration, 1);
-                    // Ease out cubic
-                    const easedProgress = 1 - Math.pow(1 - animationProgress, 3);
-                    render(easedProgress);
-
-                    if (animationProgress < 1) {{
-                        animationFrame = requestAnimationFrame(animateStep);
-                    }}
+                const duration = 480;
+                function step(now) {{
+                    const t = Math.min((now - startTime) / duration, 1);
+                    const eased = 1 - Math.pow(1 - t, 3);
+                    render(eased);
+                    if (t < 1) animationFrame = requestAnimationFrame(step);
                 }}
-                animationFrame = requestAnimationFrame(animateStep);
+                animationFrame = requestAnimationFrame(step);
             }} else {{
                 render(1);
             }}
 
-            // Update total display
             const total = data.values.reduce((a, b) => a + b, 0);
             totalEl.textContent = '$' + total.toLocaleString();
 
-            // Update hint
             const hasDrillable = data.children.some(cid => hierarchyData[cid]?.children);
-            hintEl.style.display = 'block';
             hintEl.textContent = hasDrillable
                 ? 'Click on a column to drill down into quarterly breakdown'
                 : 'Lowest level reached · Click breadcrumb to navigate back';
@@ -494,7 +498,7 @@ html_content = f"""<!DOCTYPE html>
 
             let html = '';
             fullPath.forEach((id, index) => {{
-                if (index > 0) html += '<span class="separator"> > </span>';
+                if (index > 0) html += '<span class="separator"> › </span>';
                 const name = hierarchyData[id]?.name || id;
                 if (id === currentLevel) {{
                     html += `<span class="current">${{name}}</span>`;
@@ -526,58 +530,44 @@ html_content = f"""<!DOCTYPE html>
 
         window.navigateTo = function(id) {{
             const idx = history.indexOf(id);
-            if (idx >= 0) {{
-                history = history.slice(0, idx);
-            }} else {{
-                history = [];
-            }}
+            history = idx >= 0 ? history.slice(0, idx) : [];
             currentLevel = id;
             updateBreadcrumb();
             drawBars(currentLevel);
         }};
 
-        // Click detection
         canvas.addEventListener('click', function(e) {{
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
             bars.forEach(bar => {{
-                if (x >= bar.x && x <= bar.x + bar.width &&
-                    y >= bar.y && y <= bar.y + bar.height) {{
-                    if (hierarchyData[bar.childId]?.children) {{
-                        drillDown(bar.childId);
-                    }}
+                if (mx >= bar.x && mx <= bar.x + bar.width &&
+                    my >= bar.y && my <= bar.y + bar.height) {{
+                    if (hierarchyData[bar.childId]?.children) drillDown(bar.childId);
                 }}
             }});
         }});
 
-        // Hover effects
         canvas.addEventListener('mousemove', function(e) {{
             const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top;
 
-            let hoveredBar = null;
+            let hovered = null;
             bars.forEach(bar => {{
-                if (x >= bar.x && x <= bar.x + bar.width &&
-                    y >= bar.y && y <= bar.y + bar.height) {{
-                    hoveredBar = bar;
-                }}
+                if (mx >= bar.x && mx <= bar.x + bar.width &&
+                    my >= bar.y && my <= bar.y + bar.height) hovered = bar;
             }});
 
-            if (hoveredBar) {{
-                const isClickable = hierarchyData[hoveredBar.childId]?.children;
-                canvas.style.cursor = isClickable ? 'pointer' : 'default';
-
-                // Show tooltip
-                tooltipEl.innerHTML = `
-                    <div class="title">${{hoveredBar.category}}</div>
-                    <div><span class="value">${{(hoveredBar.value).toLocaleString('en-US', {{style: 'currency', currency: 'USD', minimumFractionDigits: 0}})}}</span></div>
-                    ${{isClickable ? '<div style="margin-top:6px;font-size:12px;opacity:0.8">Click to drill down</div>' : ''}}
-                `;
-                tooltipEl.style.left = (e.clientX - rect.left + 15) + 'px';
-                tooltipEl.style.top = (e.clientY - rect.top - 10) + 'px';
+            if (hovered) {{
+                const drillable = hierarchyData[hovered.childId]?.children;
+                canvas.style.cursor = drillable ? 'pointer' : 'default';
+                tooltipEl.innerHTML =
+                    `<div class="tip-title">${{hovered.category}}</div>` +
+                    `<div><span class="tip-value">${{hovered.value.toLocaleString('en-US', {{style:'currency',currency:'USD',minimumFractionDigits:0}})}}</span></div>` +
+                    (drillable ? `<div style="margin-top:5px;font-size:11px;opacity:0.75">Click to drill down</div>` : '');
+                tooltipEl.style.left = (e.clientX - rect.left + 14) + 'px';
+                tooltipEl.style.top = (e.clientY - rect.top - 12) + 'px';
                 tooltipEl.classList.add('visible');
             }} else {{
                 canvas.style.cursor = 'default';
@@ -585,21 +575,15 @@ html_content = f"""<!DOCTYPE html>
             }}
         }});
 
-        canvas.addEventListener('mouseleave', function() {{
-            tooltipEl.classList.remove('visible');
-        }});
-
+        canvas.addEventListener('mouseleave', () => tooltipEl.classList.remove('visible'));
         backBtn.addEventListener('click', goBack);
-
-        // Handle window resize
         window.addEventListener('resize', () => drawBars(currentLevel, false));
 
-        // Initial render
         updateBreadcrumb();
         drawBars('root');
     </script>
 </body>
 </html>"""
 
-with open("plot.html", "w") as f:
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(html_content)
