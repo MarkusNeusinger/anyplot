@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-20
@@ -120,7 +120,7 @@ plot = (
         data=df_numbers,
         mapping=aes(x="x", y="y", label="label"),
         size=8,
-        color=INK,
+        color="#1A1A17",
         hjust=0,
         vjust=1,
         fontface="bold",
