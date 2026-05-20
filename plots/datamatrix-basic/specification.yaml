@@ -6,7 +6,7 @@ title: Basic Data Matrix 2D Barcode
 
 # Specification tracking
 created: 2026-01-11T22:59:06Z
-updated: null
+updated: 2026-05-20T16:30:00Z
 issue: 3811
 suggested: MarkusNeusinger
 
@@ -15,10 +15,8 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - barcode
-    - matrix
   data_type:
     - text
-    - categorical
   domain:
     - general
     - technology
