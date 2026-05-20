@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -36,15 +36,20 @@ skewness = stats.skew(returns)
 kurtosis = stats.kurtosis(returns)
 returns_pct = returns * 100
 
+# Tail thresholds (±2σ) and observation counts
+lower_tail = mean_ret - 2 * std_ret
+upper_tail = mean_ret + 2 * std_ret
+n_left = int(np.sum(returns_pct < lower_tail))
+n_right = int(np.sum(returns_pct > upper_tail))
+n_tail = n_left + n_right
+tail_pct = n_tail / n_days * 100
+expected_tail_pct = (1 - stats.norm.cdf(2)) * 2 * 100  # ≈ 4.55% beyond ±2σ under normality
+
 # Normal distribution overlay range
 x_lo = returns_pct.min() - 0.5
 x_hi = returns_pct.max() + 0.5
 x_range = np.linspace(x_lo, x_hi, 300)
 normal_pdf = stats.norm.pdf(x_range, mean_ret, std_ret)
-
-# Tail thresholds (±2σ)
-lower_tail = mean_ret - 2 * std_ret
-upper_tail = mean_ret + 2 * std_ret
 
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -62,6 +67,10 @@ for i, patch in enumerate(patches):
         patch.set_facecolor(TAIL_COLOR)
         patch.set_alpha(0.90)
 
+# Subtle axvspan background tinting for tail risk zones (below histogram bars)
+ax.axvspan(x_lo, lower_tail, alpha=0.07, color=TAIL_COLOR, zorder=0)
+ax.axvspan(upper_tail, x_hi, alpha=0.07, color=TAIL_COLOR, zorder=0)
+
 # Shade theoretical tail areas under the normal curve (fill_between)
 x_left = np.linspace(x_lo, lower_tail, 150)
 x_right = np.linspace(upper_tail, x_hi, 150)
@@ -76,13 +85,29 @@ ax.axvline(mean_ret, color=INK, linewidth=1.8, linestyle="-", alpha=0.8, label=f
 ax.axvline(lower_tail, color=INK_MUTED, linewidth=1.5, linestyle=":", alpha=0.7)
 ax.axvline(upper_tail, color=INK_MUTED, linewidth=1.5, linestyle=":", alpha=0.7)
 
-# Tail annotations
-ax.annotate("Left tail\n(<-2σ)", xy=(lower_tail - 0.7, 0.02), fontsize=7, ha="center", color=INK_MUTED)
-ax.annotate("Right tail\n(>+2σ)", xy=(upper_tail + 0.7, 0.02), fontsize=7, ha="center", color=INK_MUTED)
+# Tail annotations with observation counts — fontsize=8 for mobile legibility
+ax.annotate(
+    f"Left tail\n{n_left} obs ({n_left / n_days * 100:.1f}%)",
+    xy=(lower_tail - 0.6, 0.02),
+    fontsize=8,
+    ha="center",
+    color=INK_MUTED,
+)
+ax.annotate(
+    f"Right tail\n{n_right} obs ({n_right / n_days * 100:.1f}%)",
+    xy=(upper_tail + 0.7, 0.02),
+    fontsize=8,
+    ha="center",
+    color=INK_MUTED,
+)
 
-# Statistics text box (theme-adaptive)
+# Statistics text box — includes actual vs expected tail % for fat-tail emphasis
 stats_text = (
-    f"Mean:      {mean_ret:.3f}%\nStd Dev:   {std_ret:.3f}%\nSkewness: {skewness:.3f}\nKurtosis:  {kurtosis:.3f}"
+    f"Mean:      {mean_ret:.3f}%\n"
+    f"Std Dev:   {std_ret:.3f}%\n"
+    f"Skewness: {skewness:.3f}\n"
+    f"Kurtosis:  {kurtosis:.3f}\n"
+    f"Fat tails: {tail_pct:.1f}% (norm: {expected_tail_pct:.1f}%)"
 )
 ax.text(
     0.97,
