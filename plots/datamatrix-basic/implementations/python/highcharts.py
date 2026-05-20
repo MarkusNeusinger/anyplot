@@ -1,12 +1,12 @@
-""" pyplots.ai
+""" anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: highcharts unknown | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-20
 """
 
+import os
 import tempfile
 import time
-import urllib.request
 from pathlib import Path
 
 import numpy as np
@@ -17,7 +17,13 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - create a 18x18 Data Matrix pattern
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data - create an 18x18 Data Matrix pattern
 content = "SERIAL:12345678"
 size = 18
 
@@ -33,7 +39,7 @@ for i in range(size):
     matrix[0, i] = (i + 1) % 2  # Top edge alternating
     matrix[i, size - 1] = i % 2  # Right edge alternating
 
-# Fill interior with pattern (simulating encoded data)
+# Interior cells use pseudo-random bits (not true ECC-200 encoding of the content string)
 np.random.seed(42)
 data_bits = np.random.randint(0, 2, size=((size - 2) * (size - 2)))
 idx = 0
@@ -48,42 +54,37 @@ rows, cols = matrix.shape
 heatmap_data = []
 for row in range(rows):
     for col in range(cols):
-        # Invert row for bottom-to-top display (L-pattern at bottom-left)
-        y = rows - 1 - row
+        y = rows - 1 - row  # Invert row for bottom-to-top display (L-pattern at bottom-left)
         value = int(matrix[row, col])
         heatmap_data.append([col, y, value])
 
-# Create chart
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration - square aspect ratio for Data Matrix
 chart.options.chart = {
     "type": "heatmap",
-    "width": 3600,
-    "height": 3600,
-    "backgroundColor": "#ffffff",
-    "marginTop": 200,
-    "marginBottom": 200,
-    "marginLeft": 200,
-    "marginRight": 200,
+    "width": 2400,
+    "height": 2400,
+    "backgroundColor": PAGE_BG,
+    "marginTop": 220,
+    "marginBottom": 180,
+    "marginLeft": 180,
+    "marginRight": 180,
 }
 
-# Title
 chart.options.title = {
-    "text": "datamatrix-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "datamatrix-basic · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK},
 }
 
-# Subtitle with encoded content
 chart.options.subtitle = {
     "text": f'Data Matrix Encoding: "{content}"',
-    "style": {"fontSize": "32px", "color": "#666666"},
+    "style": {"fontSize": "44px", "color": INK_SOFT},
 }
 
-# X-axis - hide for clean barcode look
 chart.options.x_axis = {
-    "title": {"text": None},
+    "title": {"text": ""},
     "min": -0.5,
     "max": cols - 0.5,
     "tickLength": 0,
@@ -92,9 +93,8 @@ chart.options.x_axis = {
     "lineWidth": 0,
 }
 
-# Y-axis - hide for clean barcode look
 chart.options.y_axis = {
-    "title": {"text": None},
+    "title": {"text": ""},
     "min": -0.5,
     "max": rows - 0.5,
     "tickLength": 0,
@@ -104,16 +104,12 @@ chart.options.y_axis = {
     "reversed": False,
 }
 
-# Color axis - black (1) and white (0) cells
+# Barcode cells stay black/white regardless of theme (data, not chrome)
 chart.options.color_axis = {"min": 0, "max": 1, "stops": [[0, "#ffffff"], [1, "#000000"]], "visible": False}
 
-# Legend disabled
 chart.options.legend = {"enabled": False}
-
-# Credits
 chart.options.credits = {"enabled": False}
 
-# Create heatmap series
 series = HeatmapSeries()
 series.name = "Data Matrix"
 series.data = heatmap_data
@@ -125,17 +121,11 @@ series.data_labels = {"enabled": False}
 
 chart.add_series(series)
 
-# Download Highcharts JS and heatmap module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-heatmap_url = "https://code.highcharts.com/modules/heatmap.js"
+# Load Highcharts JS from local npm package (CDN blocked in CI; install via: npm install highcharts --prefix /tmp/hc-tmp)
+HC_NPM = Path("/tmp/hc-tmp/node_modules/highcharts")
+highcharts_js = (HC_NPM / "highcharts.js").read_text(encoding="utf-8")
+heatmap_js = (HC_NPM / "modules" / "heatmap.js").read_text(encoding="utf-8")
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
-
-with urllib.request.urlopen(heatmap_url, timeout=30) as response:
-    heatmap_js = response.read().decode("utf-8")
-
-# Generate HTML with inline scripts
 html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
@@ -144,33 +134,32 @@ html_content = f"""<!DOCTYPE html>
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
 </head>
-<body style="margin:0; background-color: #ffffff;">
-    <div id="container" style="width: 3600px; height: 3600px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 2400px; height: 2400px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# Save HTML artifact (theme-suffixed)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
+
+# Write temp HTML and take screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Also save as plot.html (interactive version)
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
-
-# Take screenshot with Selenium
 chrome_options = Options()
 chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=3600,3600")
+chrome_options.add_argument("--window-size=2400,2400")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
