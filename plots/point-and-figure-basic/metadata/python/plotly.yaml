@@ -1,153 +1,176 @@
 library: plotly
+language: python
 specification_id: point-and-figure-basic
 created: '2026-01-15T21:40:15Z'
-updated: '2026-01-15T21:43:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047207210
+updated: '2026-05-20T03:38:53Z'
+generated_by: claude-sonnet
+workflow_run: 26139247453
 issue: 3755
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/plotly/plot-dark.html
+quality_score: 92
 review:
   strengths:
-  - Excellent Point and Figure algorithm implementation with proper 3-box reversal
-    logic
-  - Clean color scheme with green X's and red O's providing clear visual distinction
-  - Good use of Plotly's text mode to render X and O symbols
-  - Helpful parameter annotation showing box size and reversal settings
-  - Proper hover tooltips showing column, price, and direction
-  - Both PNG and HTML outputs generated
-  - Well-structured code following KISS principles
+  - Complete and correct P&F algorithm (box size, reversal, column building) with
+    proper X/O symbol rendering via Plotly text scatter mode
+  - Full theme-adaptive chrome across both renders — no dark-on-dark or light-on-light
+    failures; all tokens correctly threaded to every element
+  - 'All spec features implemented: 45° support and resistance lines, column-based
+    X-axis, Okabe-Ito color coding, box size annotation'
+  - 'Idiomatic use of Plotly patterns: text mode scatter, hovertemplate, dummy legend
+    traces, HTML export'
   weaknesses:
-  - Legend displays small red A characters instead of X/O symbols (legend uses text
-    mode which renders differently)
-  - Could add support/resistance trend lines as mentioned in specification
-  - Red-green color scheme, while traditional for P&F charts, is not colorblind-friendly
-  image_description: 'The plot displays a Point and Figure chart with columns of green
-    X''s (rising prices) and red O''s (falling prices) distributed across approximately
-    18 columns. The price range spans from about $80 to $148 on the Y-axis, with the
-    X-axis labeled "Column (Reversal)" ranging from 0 to about 17. The title correctly
-    shows "point-and-figure-basic · plotly · pyplots.ai" at the top center. A legend
-    in the upper right shows "X (Rising)" in green and "O (Falling)" in red. The chart
-    demonstrates clear trend patterns with alternating bullish and bearish columns.
-    An annotation at the bottom shows "Box Size: $2 | Reversal: 3 boxes". The background
-    is white with subtle gray gridlines.'
+  - 'DE-01/DE-02: No explicit spine removal; layout defaults to Plotly standard frame
+    — could be refined with showline=False on top/right axes and a more minimal frame'
+  - 'LM-02: Trend lines drawn as go.Scatter rather than Plotly native shapes API —
+    fig.add_shape(type=''line'') would be more idiomatic for static reference lines'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "point-and-figure-basic · python · plotly · anyplot.ai" in dark ink, centered, ~70% canvas width. Axis labels "Column (Reversal)" and "Price ($)" dark and legible. Tick labels in #4A4A44 (INK_SOFT). Bottom annotation "Box Size: $2 | Reversal: 3 boxes" in INK_SOFT. Legend box with elevated background (#FFFDF6) and border.
+      Data: X symbols in #009E73 (Okabe-Ito pos 1, brand green). O symbols in #D55E00 (Okabe-Ito pos 2, vermillion). Dashed support line and dotted resistance line in #4A4A44. All symbols rendered in Arial Black font, size 11px.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: All text flips correctly to light tokens. Title, axis labels in #F0EFE8 (INK dark). Tick labels in #B8B7B0 (INK_SOFT dark). Annotation in #B8B7B0. Legend box uses #242420 (ELEVATED_BG dark) with matching border. No dark-on-dark failures observed.
+      Data: X symbols remain #009E73, O symbols remain #D55E00 — identical to light render. Support/resistance lines in #B8B7B0 (INK_SOFT dark), visible and distinct. Grid lines at 10% opacity, subtle.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, ticks at 18pt, all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements, X's and O's are well-spaced within
-          columns
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, symbols=11
+          Arial Black). Readable in both themes at full and mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Each P&F column at distinct x-position; no text overlaps observed.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: X and O symbols are clearly visible at size 18, though could be slightly
-          larger
+        comment: X/O symbols clearly visible; support/resistance lines distinguishable
+          by dash pattern.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Green and red contrast well, though red-green is not ideal for colorblind
-          users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with good margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Price ($) and Column (Reversal)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito pos 1 & 2, CVD-safe, strong contrast on both surfaces.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 appropriate for P&F grid; balanced margins; legend
+          with adequate right margin.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend shows X/O icons incorrectly as small red A characters instead
-          of proper X/O symbols
+        passed: true
+        comment: Column (Reversal) and Price ($) — descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, backgrounds #FAF8F1/#1A1A17,
+          all chrome theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: Arial Black for symbols, distinct line styles for
+          trend lines, subtle annotation. Not publication-exceptional.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (10% opacity), zeroline removed, axis lines in INK_SOFT,
+          generous margins. No explicit spine removal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Support and resistance trend lines guide viewer; ascending bullish
+          trend from ~$80 to ~$145 tells clear story.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Point and Figure chart implementation
+        comment: 'Correct P&F chart: X for rising, O for falling, new column on reversal.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Columns correctly mapped to X-axis, prices to Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: X's for rising, O's for falling, 3-box reversal, proper column construction
-      - id: SC-04
-        name: Data Range
+        comment: X/O symbols, Okabe-Ito coloring, column-not-time X-axis, 3-box reversal,
+          45° trend lines, price scale, box size annotation — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Column index on X-axis, price on Y-axis, all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend labels correctly describe X (Rising) and O (Falling)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: point-and-figure-basic · plotly · pyplots.ai'
+        comment: Title exactly matches mandated format; legend labels X (Rising),
+          O (Falling), Support (45°), Resistance (45°) all correct.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both uptrends and downtrends, multiple reversals, good variation.
-          Missing explicit support/resistance trend lines mentioned in spec
+        comment: Multiple X/O columns, multiple reversals, bullish phases and pullbacks,
+          trend lines, distinct chart phases.
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Stock price simulation is plausible, trends are realistic
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Price values ($80-$148) are realistic for a stock
+        comment: Synthetic stock price ($100 start, 300 days, realistic volatility)
+          — natural neutral P&F context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $2 box size, 3-box reversal, $80-$145 range over ~1 year — standard
+          and plausible.
     code_quality:
       score: 10
       max: 10
@@ -157,54 +180,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data generation → P&F calculation
-          → plot → save'
+        comment: Imports → Data → P&F algorithm → Plot → Style → Save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: P&F loop is necessarily complex but clearly structured. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html using current Plotly
+          API.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Uses Plotly's text mode for scatter, hover tooltips with hovertemplate,
-          and HTML export. However, doesn't leverage more distinctive Plotly features
-          like interactive callbacks or animations
+        passed: true
+        comment: go.Scatter(mode='text') with textfont, hovertemplate, x=[None]/y=[None]
+          dummy traces — all idiomatic Plotly patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Vectorised text mode for P&F symbols (distinctively Plotly), functional
+          hovertemplate per column, dual HTML+PNG output. Trend lines could use shapes
+          API instead of scatter traces.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
   - hover-tooltips
   - html-export
+  - custom-legend
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
-  styling:
-  - grid-styling
+  dataprep:
+  - binning
+  styling: []

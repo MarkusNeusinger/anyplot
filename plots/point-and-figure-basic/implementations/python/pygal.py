@@ -1,18 +1,36 @@
-""" pyplots.ai
+""" anyplot.ai
 point-and-figure-basic: Point and Figure Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 72/100 | Created: 2026-01-15
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-20
 """
 
+import os as _os
+import sys as _sys
+
+
+# This file is named pygal.py — remove its directory from sys.path first so
+# Python resolves `pygal` to the installed package, not this file itself.
+_here = _os.path.abspath(_os.path.dirname(__file__))
+_sys.path = [p for p in _sys.path if _os.path.abspath(p or ".") != _here]
+
+import os
+import xml.etree.ElementTree as ET
+
+import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
-# Random seed for reproducibility
-np.random.seed(42)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Generate realistic stock price data (6 months of daily data)
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Data
+np.random.seed(42)
 n_days = 150
 base_price = 100.0
 returns = np.random.normal(0.001, 0.02, n_days)
@@ -22,7 +40,7 @@ prices = base_price * np.cumprod(1 + returns)
 box_size = 2.0
 reversal = 3
 
-# Calculate P&F chart data - inline rounding (KISS - no helper functions)
+# P&F algorithm
 columns = []
 current_direction = None
 current_column_start = np.floor(prices[0] / box_size) * box_size
@@ -58,62 +76,49 @@ for price in prices[1:]:
 if current_direction:
     columns.append((current_column_start, current_column_end, current_direction))
 
-# Colorblind-safe colors (blue for rising X, orange for falling O)
-x_color = "#0066CC"
-o_color = "#E56B00"
-support_color = "#228B22"
-resistance_color = "#8B0000"
-
-# Custom style with subtle grid
-custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#DDDDDD",  # Subtle grid lines
-    colors=(x_color, o_color, support_color, resistance_color),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=48,
-    value_font_size=42,
-    tooltip_font_size=36,
-    stroke_width=6,
-    guide_stroke_dasharray="4,4",  # Dashed grid for subtlety
-)
-
-# Collect price range
-all_prices = []
-for start, end, _ in columns:
-    all_prices.extend([start, end])
-
+# Price range for y-axis
+all_prices = [p for start, end, _ in columns for p in (start, end)]
 y_min = min(all_prices) - box_size
 y_max = max(all_prices) + box_size
 y_labels = list(np.arange(y_min, y_max + box_size, box_size))
 
-# Create XY chart with visible dots for X and O markers
-# Pygal uses circles as markers - distinguish X/O through color and legend
+# Style
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=3,
+)
+
+# Plot — no chart-level stroke setting so per-series stroke works correctly
 chart = pygal.XY(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="point-and-figure-basic · pygal · pyplots.ai",
+    title="point-and-figure-basic · python · pygal · anyplot.ai",
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=4,
     show_y_guides=True,
-    show_x_guides=False,  # Only horizontal guides for cleaner look
+    show_x_guides=False,
     x_title="Column (Reversal)",
     y_title="Price ($)",
-    margin=50,
+    margin=80,
     margin_bottom=200,
-    margin_left=200,
-    margin_top=150,
-    margin_right=120,  # Better balance
+    margin_left=220,
+    margin_top=120,
+    margin_right=100,
     y_labels=y_labels,
     range=(y_min, y_max),
-    dots_size=22,
-    stroke=False,
+    dots_size=18,
 )
 
 # Build X and O data points
@@ -123,50 +128,91 @@ o_points = []
 for col_idx, (start, end, direction) in enumerate(columns):
     low = min(start, end)
     high = max(start, end)
+    price_levels = np.arange(low, high + box_size * 0.5, box_size)
     if direction == "X":
-        for price_level in np.arange(low, high + box_size, box_size):
-            x_points.append((col_idx, price_level))
+        x_points.extend((col_idx, lv) for lv in price_levels)
     else:
-        for price_level in np.arange(low, high + box_size, box_size):
-            o_points.append((col_idx, price_level))
+        o_points.extend((col_idx, lv) for lv in price_levels)
 
-# Add series - X markers (rising) and O markers (falling)
-# Legend clearly shows X and O symbols to identify the markers
+# Per-series stroke=False keeps dots unconnected; overrides chart default
 chart.add("X (Rising)", x_points, stroke=False)
 chart.add("O (Falling)", o_points, stroke=False)
 
-# Calculate support and resistance trend lines
-support_lows = []
-resistance_highs = []
+# Trend lines — per-series stroke=True draws the line
+support_lows = [(ci, min(s, e)) for ci, (s, e, d) in enumerate(columns) if d == "O"]
+resistance_highs = [(ci, max(s, e)) for ci, (s, e, d) in enumerate(columns) if d == "X"]
 
-for col_idx, (start, end, direction) in enumerate(columns):
-    low = min(start, end)
-    high = max(start, end)
-    if direction == "O":
-        support_lows.append((col_idx, low))
-    else:
-        resistance_highs.append((col_idx, high))
-
-# Support line (45-degree uptrend from O column lows) - with visible endpoints
 if len(support_lows) >= 2:
-    support_start = support_lows[0]
-    support_end_col = min(support_start[0] + 5, len(columns) - 1)
-    support_line = [
-        (support_start[0], support_start[1]),
-        (support_end_col, support_start[1] + (support_end_col - support_start[0]) * box_size),
-    ]
-    chart.add("Support (45° up)", support_line, stroke=True, dots_size=10)
+    c0, p0 = support_lows[0]
+    c1 = min(c0 + 6, len(columns) - 1)
+    chart.add(
+        "Support (45°)",
+        [(c0, p0), (c1, p0 + (c1 - c0) * box_size)],
+        stroke=True,
+        dots_size=4,
+        stroke_style={"width": 4, "dasharray": "8, 6"},
+    )
 
-# Resistance line (45-degree downtrend from X column highs) - with visible endpoints
 if len(resistance_highs) >= 2:
-    resistance_start = resistance_highs[0]
-    resistance_end_col = min(resistance_start[0] + 5, len(columns) - 1)
-    resistance_line = [
-        (resistance_start[0], resistance_start[1]),
-        (resistance_end_col, resistance_start[1] - (resistance_end_col - resistance_start[0]) * box_size),
-    ]
-    chart.add("Resistance (45° down)", resistance_line, stroke=True, dots_size=10)
+    c0, p0 = resistance_highs[0]
+    c1 = min(c0 + 6, len(columns) - 1)
+    chart.add(
+        "Resistance (45°)",
+        [(c0, p0), (c1, p0 - (c1 - c0) * box_size)],
+        stroke=True,
+        dots_size=4,
+        stroke_style={"width": 4, "dasharray": "8, 6"},
+    )
 
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+
+def add_pnf_text_markers(svg_bytes):
+    """Post-process pygal SVG: hide circle markers for X/O series, add text characters."""
+    SVG_NS = "http://www.w3.org/2000/svg"
+    ET.register_namespace("", SVG_NS)
+    ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
+
+    root = ET.fromstring(svg_bytes)
+    parent_map = {child: parent for parent in root.iter() for child in parent}
+
+    # serie-0 = X (Rising), serie-1 = O (Falling)
+    series_symbols = {0: ("X", OKABE_ITO[0]), 1: ("O", OKABE_ITO[1])}
+
+    for serie_idx, (symbol, color) in series_symbols.items():
+        for g in root.iter(f"{{{SVG_NS}}}g"):
+            parts = g.get("class", "").split()
+            if "series" not in parts or f"serie-{serie_idx}" not in parts:
+                continue
+            for circle in g.iter(f"{{{SVG_NS}}}circle"):
+                cx = circle.get("cx")
+                cy = circle.get("cy")
+                if cx is None or cy is None:
+                    continue
+                # Hide circle; leave in DOM so hover tooltips still work in HTML
+                circle.set("opacity", "0")
+                # Add literal X or O text at the same position
+                text = ET.Element(f"{{{SVG_NS}}}text")
+                text.set("x", cx)
+                text.set("y", cy)
+                text.set("text-anchor", "middle")
+                text.set("dominant-baseline", "central")
+                text.set("font-size", "36")
+                text.set("font-weight", "bold")
+                text.set("fill", color)
+                text.set("font-family", "monospace, sans-serif")
+                text.text = symbol
+                parent_map[circle].append(text)
+
+    return ET.tostring(root, encoding="unicode").encode("utf-8")
+
+
+# Render SVG, post-process to replace circle markers with X/O text, then save
+svg_original = chart.render()
+svg_modified = add_pnf_text_markers(svg_original)
+
+# PNG — from modified SVG with X/O text characters
+with open(f"plot-{THEME}.png", "wb") as f:
+    cairosvg.svg2png(bytestring=svg_modified, write_to=f)
+
+# HTML — modified SVG (X/O text visible; hidden circles retain hover interaction)
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(svg_modified)
