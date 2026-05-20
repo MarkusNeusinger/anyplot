@@ -1,9 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 88/100 | Updated: 2026-05-20
 """
 
+import math
 import os
 import sys
 
@@ -62,14 +62,28 @@ ultimate_strength = 520
 yield_strength = 350
 endurance_limit = 190
 
+# pygal's logarithmic=True only applies to the x-axis in XY mode.
+# Log10-transform all stress (y) values for a true log-log plot,
+# then map explicit y_labels back to human-readable MPa values.
+_zone = lambda c: (  # noqa: E731
+    "Low-Cycle Fatigue" if c < 1e3 else ("High-Cycle Fatigue" if c < 1e6 else "Near Endurance Limit")
+)
+
 xy_points = [
-    {"value": (float(c), float(s)), "label": f"{float(c):.2e} cycles @ {float(s):.0f} MPa"}
+    {
+        "value": (float(c), math.log10(float(s))),
+        "label": f"{_zone(float(c))}: {float(c):.2e} cycles @ {float(s):.0f} MPa",
+    }
     for c, s in zip(cycles_data, stress_data, strict=True)
 ]
 fit_points = [
-    {"value": (float(c), float(s)), "label": f"Fit: {float(c):.2e} → {float(s):.0f} MPa"}
+    {"value": (float(c), math.log10(float(s))), "label": f"Fit: {float(c):.2e} → {float(s):.0f} MPa"}
     for c, s in zip(fit_cycles, fit_stress, strict=True)
 ]
+
+ult_log = math.log10(ultimate_strength)
+yld_log = math.log10(yield_strength)
+end_log = math.log10(endurance_limit)
 
 # Style
 custom_style = Style(
@@ -106,44 +120,48 @@ chart = pygal.XY(
     x_label_rotation=45,
     legend_at_bottom=True,
     legend_box_size=32,
-    margin=80,
-    range=(120, 580),
-    value_formatter=lambda xy: f"{xy[0]:.2e} cycles, {xy[1]:.0f} MPa" if isinstance(xy, tuple) else str(xy),
+    margin=100,
+    range=(math.log10(120), math.log10(640)),
+    value_formatter=lambda xy: f"{xy[0]:.2e} cycles, {10 ** xy[1]:.0f} MPa" if isinstance(xy, tuple) else str(xy),
 )
 
-# Show only major log decades on x-axis to reduce tick clutter
-chart.x_labels = [100, 1000, 10000, 100000, 1000000, 10000000]
+# X-axis: major log decades
+chart.x_labels = [100, 1_000, 10_000, 100_000, 1_000_000, 10_000_000]
 
-# Series: Test Data first (primary), then derived/reference
-chart.add("Test Data", xy_points, dots_size=16, stroke=False, show_dots=True)
+# Y-axis: explicit stress labels at log10-spaced positions
+y_tick_vals = [150, 200, 250, 300, 350, 400, 450, 500, 550]
+chart.y_labels = [{"value": math.log10(v), "label": str(v)} for v in y_tick_vals]
+
+# Series: Test Data first (most prominent), then derived/reference
+chart.add("Test Data", xy_points, dots_size=26, stroke=False, show_dots=True)
 chart.add(
-    "Basquin Fit (S-N Curve)",
+    "Basquin Fit (S = A·N^b)",
     fit_points,
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 6, "dasharray": "20, 10"},
+    stroke_style={"width": 9, "dasharray": "20, 10"},
 )
 # Distinct stroke styles per reference line: solid / long-dash / dotted
 chart.add(
-    f"Ultimate Strength ({ultimate_strength} MPa)",
-    [(100, ultimate_strength), (1e7, ultimate_strength)],
+    f"Ultimate Strength, Su = {ultimate_strength} MPa",
+    [(100, ult_log), (1e7, ult_log)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 5, "opacity": 0.80},
+    stroke_style={"width": 5, "opacity": 0.75},
 )
 chart.add(
-    f"Yield Strength ({yield_strength} MPa)",
-    [(100, yield_strength), (1e7, yield_strength)],
+    f"Yield Strength, Sy = {yield_strength} MPa",
+    [(100, yld_log), (1e7, yld_log)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 5, "dasharray": "30, 8", "opacity": 0.80},
+    stroke_style={"width": 5, "dasharray": "30, 8", "opacity": 0.75},
 )
 chart.add(
-    f"Endurance Limit ({endurance_limit} MPa)",
-    [(100, endurance_limit), (1e7, endurance_limit)],
+    f"Endurance Limit, Se = {endurance_limit} MPa",
+    [(100, end_log), (1e7, end_log)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 5, "dasharray": "6, 8", "opacity": 0.80},
+    stroke_style={"width": 5, "dasharray": "6, 8", "opacity": 0.75},
 )
 
 # Save
