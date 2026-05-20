@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -87,7 +87,7 @@ plot = (
         label=stats_label,
         ha="right",
         va="top",
-        size=8,
+        size=9,
         fill=ELEVATED_BG,
         color=INK,
         label_size=0.3,
