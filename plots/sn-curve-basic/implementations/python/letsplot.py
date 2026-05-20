@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: letsplot 4.10.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-20
@@ -127,27 +127,27 @@ plot = (
     + geom_hline(yintercept=ultimate_strength, color=OI_2, size=0.9, linetype="dashed")  # noqa: F405
     + geom_hline(yintercept=yield_strength, color=OI_3, size=0.9, linetype="dotted")  # noqa: F405
     + geom_hline(yintercept=endurance_limit, color=OI_4, size=0.9, linetype="dotdash")  # noqa: F405
-    # Inline labels shifted to x=500 to reduce crowding with fit line at the left edge
+    # Inline labels at right side of chart (x=2e6, hjust=1) — well clear of the fit line
     + geom_text(  # noqa: F405
-        data=pd.DataFrame({"cycles": [500], "stress": [ultimate_strength * 1.04], "label": ["Ultimate Strength"]}),
+        data=pd.DataFrame({"cycles": [2e6], "stress": [ultimate_strength * 0.97], "label": ["Ultimate Strength"]}),
         mapping=aes(x="cycles", y="stress", label="label"),  # noqa: F405
         color=OI_2,
         size=11,
-        hjust=0,
+        hjust=1,
     )
     + geom_text(  # noqa: F405
-        data=pd.DataFrame({"cycles": [500], "stress": [yield_strength * 1.04], "label": ["Yield Strength"]}),
+        data=pd.DataFrame({"cycles": [2e6], "stress": [yield_strength * 1.04], "label": ["Yield Strength"]}),
         mapping=aes(x="cycles", y="stress", label="label"),  # noqa: F405
         color=OI_3,
         size=11,
-        hjust=0,
+        hjust=1,
     )
     + geom_text(  # noqa: F405
-        data=pd.DataFrame({"cycles": [500], "stress": [endurance_limit * 1.04], "label": ["Endurance Limit"]}),
+        data=pd.DataFrame({"cycles": [2e6], "stress": [endurance_limit * 1.04], "label": ["Endurance Limit"]}),
         mapping=aes(x="cycles", y="stress", label="label"),  # noqa: F405
         color=OI_4,
         size=11,
-        hjust=0,
+        hjust=1,
     )
     + scale_x_log10()  # noqa: F405
     + scale_y_log10()  # noqa: F405
