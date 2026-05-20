@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 91/100 | Updated: 2026-05-20
@@ -30,7 +30,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito position 1 — data series
 ULT_COLOR = "#D55E00"  # Okabe-Ito position 2 — Ultimate Strength line
 ENDU_COLOR = "#0072B2"  # Okabe-Ito position 3 — Endurance Limit line
-YIELD_COLOR = "#E69F00"  # Okabe-Ito position 5 — Yield Strength line
+YIELD_COLOR = "#CC79A7"  # Okabe-Ito position 4 — Yield Strength line
 
 # Data — S-N fatigue test results for steel specimens (Basquin equation)
 np.random.seed(42)
@@ -83,13 +83,13 @@ p = figure(
 )
 
 # Infinite-life zone shaded below the endurance limit
-p.add_layout(BoxAnnotation(top=endurance_limit, bottom=0, fill_color=ENDU_COLOR, fill_alpha=0.08, line_color=None))
+p.add_layout(BoxAnnotation(top=endurance_limit, bottom=0, fill_color=ENDU_COLOR, fill_alpha=0.12, line_color=None))
 
 p.line(
     x="cycles_fit",
     y="stress_fit",
     source=source_fit,
-    line_width=5,
+    line_width=7,
     line_color=BRAND,
     line_alpha=0.9,
     legend_label="Basquin Fit (S = A·N^b)",
@@ -112,10 +112,10 @@ p.add_tools(hover)
 
 # Reference lines for material properties
 p.add_layout(
-    Span(location=ultimate_strength, dimension="width", line_color=ULT_COLOR, line_width=4, line_dash="dashed")
+    Span(location=ultimate_strength, dimension="width", line_color=ULT_COLOR, line_width=3, line_dash="dashed")
 )
-p.add_layout(Span(location=yield_strength, dimension="width", line_color=YIELD_COLOR, line_width=4, line_dash="dashed"))
-p.add_layout(Span(location=endurance_limit, dimension="width", line_color=ENDU_COLOR, line_width=4, line_dash="dashed"))
+p.add_layout(Span(location=yield_strength, dimension="width", line_color=YIELD_COLOR, line_width=3, line_dash="dashed"))
+p.add_layout(Span(location=endurance_limit, dimension="width", line_color=ENDU_COLOR, line_width=3, line_dash="dashed"))
 
 p.add_layout(
     Label(
