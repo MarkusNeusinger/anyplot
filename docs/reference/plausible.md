@@ -129,7 +129,7 @@ https://anyplot.ai/{spec_id}/{language}/{library}/{category}/{value}/...
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx | User opens interactive HTML view |
 | `suggest_spec` | - | SpecsListPage.tsx | User clicks the `spec.suggest()` link on the specs list page. The mirror link on the landing page emits `nav_click` with `source: suggest_spec_link` instead. |
 | `report_issue` | `spec`, `library`? | SpecPage.tsx | User clicks "report issue" link |
-| `tag_click` | `param`, `value`, `source` | SpecTabs.tsx | User clicks a tag chip to filter |
+| `tag_click` | `param`, `value`, `source` | SpecTabs.tsx, StatsPage.tsx | User clicks a tag chip to filter (`source` ∈ `spec_detail`, `stats`) |
 | `theme_toggle` | `to` | MastheadRule.tsx | User cycles tri-state theme mode (`to` ∈ `system`, `light`, `dark`). The cycle order is `system → light → dark → system`. |
 | `potd_dismiss` | `spec`, `library` | PlotOfTheDay.tsx | User dismisses the plot-of-the-day banner |
 | `view_mode_change` | `mode`, `library` | SpecDetailView.tsx | User toggles preview ↔ interactive view inside a spec detail. `mode` ∈ `preview`, `interactive`. Fires on every toggle in either direction (cf. `open_interactive`, which only fires when the interactive HTML is opened in a new tab). |
@@ -445,7 +445,7 @@ User lands on anyplot.ai
 | `filter_remove` | `category`, `value` | useFilterState.ts |
 | `grid_resize` | `size` | ToolbarActions.tsx |
 | `tab_toggle` | `action`, `tab`, `library` | SpecTabs.tsx |
-| `tag_click` | `param`, `value`, `source` | SpecTabs.tsx |
+| `tag_click` | `param`, `value`, `source` | SpecTabs.tsx, StatsPage.tsx |
 | `plot_rotate` | `spec` | SpecsListPage.tsx |
 | `open_interactive` | `spec`, `library` | SpecOverview.tsx, SpecDetailView.tsx |
 | `suggest_spec` | - | SpecsListPage.tsx (LandingPage mirror attributed via `nav_click` with `source: suggest_spec_link`) |
