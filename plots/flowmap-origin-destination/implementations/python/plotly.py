@@ -1,17 +1,41 @@
-""" pyplots.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
-Library: plotly 6.5.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: plotly | Python 3.13
+Quality: 91/100 | Updated: 2026-05-20
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
-# Data: Major international trade flows (synthetic example)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Basemap colors (theme-adaptive)
+if THEME == "light":
+    LAND_COLOR = "rgb(235, 232, 220)"
+    OCEAN_COLOR = "rgb(215, 230, 245)"
+    COAST_COLOR = "rgb(180, 175, 165)"
+    COUNTRY_COLOR = "rgb(200, 195, 185)"
+else:
+    LAND_COLOR = "rgb(55, 55, 50)"
+    OCEAN_COLOR = "rgb(28, 42, 60)"
+    COAST_COLOR = "rgb(90, 88, 80)"
+    COUNTRY_COLOR = "rgb(75, 73, 65)"
+
+# Okabe-Ito blue (position 3) for arcs; green (position 1) for city nodes
+ARC_RGB = "0, 114, 178"
+CITY_COLOR = "#009E73"
+
+# Data: Major international trade flows between world ports
 np.random.seed(42)
 
-# Define major cities with coordinates (origin-destination pairs)
 cities = {
     "Shanghai": (31.2, 121.5),
     "Los Angeles": (34.1, -118.2),
@@ -30,7 +54,25 @@ cities = {
     "Panama City": (9.0, -79.5),
 }
 
-# Define trade flows (origin, destination, volume in millions of tons)
+# Per-city label positions to reduce overlap in dense clusters
+label_positions = {
+    "Shanghai": "top right",
+    "Tokyo": "top right",
+    "Busan": "bottom right",
+    "Hong Kong": "bottom left",
+    "Singapore": "bottom right",
+    "Rotterdam": "top left",
+    "Hamburg": "top right",
+    "New York": "top left",
+    "Los Angeles": "bottom left",
+    "Dubai": "bottom right",
+    "Mumbai": "bottom left",
+    "Santos": "bottom left",
+    "Cape Town": "bottom left",
+    "Sydney": "bottom right",
+    "Panama City": "top left",
+}
+
 flows_data = [
     ("Shanghai", "Los Angeles", 85),
     ("Shanghai", "Rotterdam", 72),
@@ -59,137 +101,119 @@ flows_data = [
     ("Hong Kong", "Hamburg", 26),
 ]
 
-# Prepare data for plotting
-origin_names = [f[0] for f in flows_data]
-dest_names = [f[1] for f in flows_data]
-origin_lats = [cities[f[0]][0] for f in flows_data]
-origin_lons = [cities[f[0]][1] for f in flows_data]
-dest_lats = [cities[f[1]][0] for f in flows_data]
-dest_lons = [cities[f[1]][1] for f in flows_data]
 flow_values = [f[2] for f in flows_data]
-
-# Normalize flow values for line width (2-10 range)
 max_flow = max(flow_values)
 min_flow = min(flow_values)
-line_widths = [2 + 8 * (f - min_flow) / (max_flow - min_flow) for f in flow_values]
+line_widths = [2 + 8 * (v - min_flow) / (max_flow - min_flow) for v in flow_values]
 
-# Create figure
+# Plot
 fig = go.Figure()
 
-# Add flow arcs as curved lines
-for i in range(len(flows_data)):
-    o_lat, o_lon = origin_lats[i], origin_lons[i]
-    d_lat, d_lon = dest_lats[i], dest_lons[i]
+# Add flow arcs using quadratic Bezier curves
+for i, (origin, dest, volume) in enumerate(flows_data):
+    o_lat, o_lon = cities[origin]
+    d_lat, d_lon = cities[dest]
 
-    # Create Bezier curve points for arc
     t = np.linspace(0, 1, 50)
     mid_lat = (o_lat + d_lat) / 2
     mid_lon = (o_lon + d_lon) / 2
 
-    # Calculate arc height based on distance
     dist = np.sqrt((d_lat - o_lat) ** 2 + (d_lon - o_lon) ** 2)
     arc_height = dist * 0.2
-
-    # Perpendicular offset for control point
     dx = d_lon - o_lon
     dy = d_lat - o_lat
     perp_x = -dy / (dist + 0.001) * arc_height * 2
     perp_y = dx / (dist + 0.001) * arc_height * 2
-
     ctrl_lat = mid_lat + perp_y
     ctrl_lon = mid_lon + perp_x
 
-    # Quadratic Bezier curve
     arc_lats = (1 - t) ** 2 * o_lat + 2 * (1 - t) * t * ctrl_lat + t**2 * d_lat
     arc_lons = (1 - t) ** 2 * o_lon + 2 * (1 - t) * t * ctrl_lon + t**2 * d_lon
 
-    # Color based on flow magnitude (blue gradient)
-    intensity = (flow_values[i] - min_flow) / (max_flow - min_flow)
-    r = int(30 + 20 * (1 - intensity))
-    g = int(105 - 60 * intensity)
-    b = int(152 + 50 * intensity)
-    color = f"rgba({r}, {g}, {b}, 0.6)"
+    intensity = (volume - min_flow) / (max_flow - min_flow)
+    opacity = 0.35 + 0.40 * intensity
 
     fig.add_trace(
         go.Scattergeo(
             lon=arc_lons,
             lat=arc_lats,
             mode="lines",
-            line={"width": line_widths[i], "color": color},
+            line={"width": line_widths[i], "color": f"rgba({ARC_RGB}, {opacity:.2f})"},
             hoverinfo="text",
-            hovertext=f"{origin_names[i]} → {dest_names[i]}<br>Volume: {flow_values[i]}M tons",
+            hovertext=f"{origin} → {dest}<br>Volume: {volume}M tons",
             showlegend=False,
         )
     )
 
-# Add city markers (origins and destinations)
-all_cities_set = set(origin_names) | set(dest_names)
-city_lats = [cities[c][0] for c in all_cities_set]
-city_lons = [cities[c][1] for c in all_cities_set]
-city_labels = list(all_cities_set)
+# City markers and labels
+all_cities = {o for o, _, _ in flows_data} | {d for _, d, _ in flows_data}
+city_names = list(all_cities)
+city_lats = [cities[c][0] for c in city_names]
+city_lons = [cities[c][1] for c in city_names]
 
-# Calculate marker sizes based on total flow through each city
-city_flow_totals = {}
+city_totals = {}
 for o, d, v in flows_data:
-    city_flow_totals[o] = city_flow_totals.get(o, 0) + v
-    city_flow_totals[d] = city_flow_totals.get(d, 0) + v
+    city_totals[o] = city_totals.get(o, 0) + v
+    city_totals[d] = city_totals.get(d, 0) + v
 
-marker_sizes = [10 + 15 * city_flow_totals[c] / max(city_flow_totals.values()) for c in city_labels]
+max_total = max(city_totals.values())
+marker_sizes = [10 + 15 * city_totals[c] / max_total for c in city_names]
+text_pos = [label_positions.get(c, "top center") for c in city_names]
 
 fig.add_trace(
     go.Scattergeo(
         lon=city_lons,
         lat=city_lats,
         mode="markers+text",
-        marker={"size": marker_sizes, "color": "#306998", "line": {"width": 2, "color": "white"}},
-        text=city_labels,
-        textposition="top center",
-        textfont={"size": 14, "color": "#333333"},
+        marker={"size": marker_sizes, "color": CITY_COLOR, "line": {"width": 2, "color": PAGE_BG}},
+        text=city_names,
+        textposition=text_pos,
+        textfont={"size": 16, "color": INK_SOFT},
         hoverinfo="text",
-        hovertext=[f"{c}<br>Total flow: {city_flow_totals[c]}M tons" for c in city_labels],
+        hovertext=[f"{c}<br>Total: {city_totals[c]}M tons" for c in city_names],
         showlegend=False,
     )
 )
 
-# Update layout
+# Style
 fig.update_layout(
     title={
-        "text": "flowmap-origin-destination · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "#333333"},
+        "text": "flowmap-origin-destination · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     geo={
         "projection_type": "natural earth",
         "showland": True,
-        "landcolor": "rgb(243, 243, 243)",
+        "landcolor": LAND_COLOR,
         "showocean": True,
-        "oceancolor": "rgb(230, 240, 250)",
+        "oceancolor": OCEAN_COLOR,
         "showcoastlines": True,
-        "coastlinecolor": "rgb(180, 180, 180)",
+        "coastlinecolor": COAST_COLOR,
         "coastlinewidth": 1,
         "showlakes": True,
-        "lakecolor": "rgb(230, 240, 250)",
+        "lakecolor": OCEAN_COLOR,
         "showcountries": True,
-        "countrycolor": "rgb(200, 200, 200)",
+        "countrycolor": COUNTRY_COLOR,
         "countrywidth": 0.5,
         "bgcolor": "rgba(0,0,0,0)",
     },
-    paper_bgcolor="white",
-    margin={"l": 20, "r": 20, "t": 80, "b": 20},
+    paper_bgcolor=PAGE_BG,
+    margin={"l": 20, "r": 20, "t": 80, "b": 40},
     annotations=[
         {
             "text": "Line width proportional to trade volume (millions of tons)",
             "x": 0.5,
-            "y": -0.02,
+            "y": -0.04,
             "xref": "paper",
             "yref": "paper",
             "showarrow": False,
-            "font": {"size": 16, "color": "#666666"},
+            "font": {"size": 12, "color": INK_MUTED},
         }
     ],
 )
 
-# Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs=True, full_html=True)
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
