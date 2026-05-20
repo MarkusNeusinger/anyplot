@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-20
@@ -14,7 +14,9 @@ _here = _os.path.abspath(_os.path.dirname(__file__))
 _sys.path = [p for p in _sys.path if _os.path.abspath(p or ".") != _here]
 
 import os
+import xml.etree.ElementTree as ET
 
+import cairosvg
 import numpy as np
 import pygal
 from pygal.style import Style
@@ -162,7 +164,55 @@ if len(resistance_highs) >= 2:
         stroke_style={"width": 4, "dasharray": "8, 6"},
     )
 
-# Save
-chart.render_to_png(f"plot-{THEME}.png")
+
+def add_pnf_text_markers(svg_bytes):
+    """Post-process pygal SVG: hide circle markers for X/O series, add text characters."""
+    SVG_NS = "http://www.w3.org/2000/svg"
+    ET.register_namespace("", SVG_NS)
+    ET.register_namespace("xlink", "http://www.w3.org/1999/xlink")
+
+    root = ET.fromstring(svg_bytes)
+    parent_map = {child: parent for parent in root.iter() for child in parent}
+
+    # serie-0 = X (Rising), serie-1 = O (Falling)
+    series_symbols = {0: ("X", OKABE_ITO[0]), 1: ("O", OKABE_ITO[1])}
+
+    for serie_idx, (symbol, color) in series_symbols.items():
+        for g in root.iter(f"{{{SVG_NS}}}g"):
+            parts = g.get("class", "").split()
+            if "series" not in parts or f"serie-{serie_idx}" not in parts:
+                continue
+            for circle in g.iter(f"{{{SVG_NS}}}circle"):
+                cx = circle.get("cx")
+                cy = circle.get("cy")
+                if cx is None or cy is None:
+                    continue
+                # Hide circle; leave in DOM so hover tooltips still work in HTML
+                circle.set("opacity", "0")
+                # Add literal X or O text at the same position
+                text = ET.Element(f"{{{SVG_NS}}}text")
+                text.set("x", cx)
+                text.set("y", cy)
+                text.set("text-anchor", "middle")
+                text.set("dominant-baseline", "central")
+                text.set("font-size", "36")
+                text.set("font-weight", "bold")
+                text.set("fill", color)
+                text.set("font-family", "monospace, sans-serif")
+                text.text = symbol
+                parent_map[circle].append(text)
+
+    return ET.tostring(root, encoding="unicode").encode("utf-8")
+
+
+# Render SVG, post-process to replace circle markers with X/O text, then save
+svg_original = chart.render()
+svg_modified = add_pnf_text_markers(svg_original)
+
+# PNG — from modified SVG with X/O text characters
+with open(f"plot-{THEME}.png", "wb") as f:
+    cairosvg.svg2png(bytestring=svg_modified, write_to=f)
+
+# HTML — modified SVG (X/O text visible; hidden circles retain hover interaction)
 with open(f"plot-{THEME}.html", "wb") as f:
-    f.write(chart.render())
+    f.write(svg_modified)
