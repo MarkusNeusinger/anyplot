@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-20
@@ -12,6 +12,8 @@ from pathlib import Path
 sys.path = [p for p in sys.path if p != str(Path(__file__).parent)]
 
 import cairosvg  # noqa: E402
+import matplotlib.cm as mpl_cm  # noqa: E402
+import matplotlib.colors as mpl_colors  # noqa: E402
 import numpy as np  # noqa: E402
 import pygal as pygal_lib  # noqa: E402
 from pygal.style import Style  # noqa: E402
@@ -119,21 +121,10 @@ coastlines = [
     ],
 ]
 
-# Pressure colormap: blue (low) → green → yellow → orange → red (high)
-# Uses a perceptually graded scale for pressure field
-pressure_colors = [
-    "#313695",  # 996 hPa — deep low
-    "#4575b4",  # 1000
-    "#74add1",  # 1004
-    "#abd9e9",  # 1008
-    "#e0f3f8",  # 1012 — near normal
-    "#ffffbf",  # 1016
-    "#fee090",  # 1020
-    "#fdae61",  # 1024
-    "#f46d43",  # 1028 — high
-    "#d73027",  # 1032
-]
+# Pressure colormap: viridis sequential (perceptually uniform, style-guide compliant)
 p_min_cb, p_max_cb = 996, 1032
+n_colors = 10
+pressure_colors = [mpl_colors.to_hex(mpl_cm.viridis(i / (n_colors - 1))) for i in range(n_colors)]
 
 custom_style = Style(
     background=PAGE_BG,
@@ -144,7 +135,7 @@ custom_style = Style(
     guide_stroke_color="rgba(128,128,128,0.15)",
     guide_stroke_dasharray="",
     colors=(INK_MUTED,) * (len(coastlines) + 1),
-    title_font_size=66,
+    title_font_size=52,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
@@ -360,8 +351,10 @@ svg_parts.append(
     f'style="font-size:32px;font-weight:bold;font-family:sans-serif">hPa</text>'
 )
 
-# Pressure center labels (H/L)
-centers = [(200, 35, "H", "#d73027"), (185, 53, "L", "#313695"), (145, 45, "L", "#4575b4")]
+# Pressure center labels (H/L): data-encoding colors, domain-conventional
+HIGH_COLOR = "#D55E00"  # Okabe-Ito vermillion — high pressure
+LOW_COLOR = "#0072B2"  # Okabe-Ito blue — low pressure
+centers = [(200, 35, "H", HIGH_COLOR), (185, 53, "L", LOW_COLOR), (145, 45, "L", LOW_COLOR)]
 for lon_c, lat_c, label, color in centers:
     if lon_min <= lon_c <= lon_max and lat_min <= lat_c <= lat_max:
         px = plot_x + (lon_c - lon_min) / (lon_max - lon_min) * plot_width
