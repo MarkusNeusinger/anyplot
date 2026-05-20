@@ -1,11 +1,10 @@
 #' anyplot.ai
 #' flowmap-origin-destination: Origin-Destination Flow Map
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 79/100 | Created: 2026-05-20
 
 library(ggplot2)
 library(dplyr)
-library(scales)
+library(maps)
 library(ragg)
 
 set.seed(42)
@@ -18,6 +17,9 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
                  "#E69F00", "#56B4E9", "#F0E442")
+
+# World basemap polygons for geographic context
+world <- map_data("world")
 
 # Major global air hub coordinates and IATA codes
 airports <- data.frame(
@@ -68,6 +70,13 @@ airports$nudge_x <- c(-8, -11, -11,  4,  4,  4,  4,  4, -11,  3)
 airports$nudge_y <- c( 2,   4,  -3,  2,  2,  2, -3,  2,   1, -4)
 
 p <- ggplot() +
+  geom_polygon(
+    data = world,
+    aes(x = long, y = lat, group = group),
+    fill      = NA,
+    color     = INK_SOFT,
+    linewidth = 0.15
+  ) +
   geom_curve(
     data = flows,
     aes(
@@ -100,7 +109,8 @@ p <- ggplot() +
   scale_linewidth_continuous(range = c(0.4, 2.8), name = "Flow (M pax/yr)") +
   coord_cartesian(xlim = c(-100, 165), ylim = c(-40, 65)) +
   labs(
-    title = "Global Air Passenger Flows · flowmap-origin-destination · r · ggplot2 · anyplot.ai",
+    title    = "Global Air Passenger Flows · flowmap-origin-destination · r · ggplot2 · anyplot.ai",
+    subtitle = "LHR–DXB is the busiest corridor at 6.5M pax/yr",
     x = "Longitude", y = "Latitude"
   ) +
   theme_minimal(base_size = 8) +
@@ -112,7 +122,9 @@ p <- ggplot() +
     axis.text         = element_text(color = INK_SOFT, size = 7),
     axis.title        = element_text(color = INK_SOFT, size = 8),
     axis.ticks        = element_blank(),
-    plot.title        = element_text(color = INK, size = 9, face = "bold",
+    plot.title        = element_text(color = INK, size = 12, face = "bold",
+                                     margin = margin(b = 4)),
+    plot.subtitle     = element_text(color = INK_SOFT, size = 8,
                                      margin = margin(b = 6)),
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
                                      linewidth = 0.3),
