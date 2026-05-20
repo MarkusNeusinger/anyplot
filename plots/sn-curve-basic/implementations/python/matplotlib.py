@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import FixedFormatter, FixedLocator
 
 
 # Theme tokens
@@ -90,7 +91,7 @@ ax.axhline(
     y=endurance_limit,
     color=COLOR_END,
     linestyle="--",
-    linewidth=1.5,
+    linewidth=2.5,
     label=f"Endurance Limit ({endurance_limit} MPa)",
     zorder=3,
 )
@@ -110,11 +111,12 @@ for spine in ("left", "bottom"):
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
-# Plain integer formatting for MPa Y-axis (engineering convention over scientific notation)
-ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0f}"))
+# Explicit MPa tick positions — more reliable than FuncFormatter on log scale
+y_ticks = [150, 200, 250, 300, 350, 400, 500, 600]
+ax.yaxis.set_major_locator(FixedLocator(y_ticks))
+ax.yaxis.set_major_formatter(FixedFormatter([str(v) for v in y_ticks]))
 
-ax.grid(True, which="major", alpha=0.12, linewidth=0.6, color=INK)
-ax.grid(True, which="minor", alpha=0.06, linewidth=0.4, color=INK)
+ax.yaxis.grid(True, which="major", alpha=0.15, linewidth=0.7, color=INK)
 
 leg = ax.legend(fontsize=8, loc="upper right")
 if leg:
