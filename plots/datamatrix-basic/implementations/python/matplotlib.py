@@ -1,83 +1,90 @@
-""" pyplots.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: matplotlib | Python 3.13
+Quality: 91/100 | Updated: 2026-05-20
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
+import importlib
+import os
+import sys
 
 
-# Data - create a sample Data Matrix pattern
-# Data Matrix has: L-shaped finder (solid left/bottom), alternating pattern (top/right)
+# This file is named matplotlib.py, which shadows the installed matplotlib package.
+# Remove the script directory from sys.path so Python finds the real package.
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _here]
+del _here
+
+plt = importlib.import_module("matplotlib.pyplot")
+np = importlib.import_module("numpy")
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data - 20x20 Data Matrix for electronics component traceability
 np.random.seed(42)
-size = 16  # 16x16 Data Matrix
+size = 20
+content = "PCB:2026-A3F7"
 
 # Initialize matrix (0 = white, 1 = black)
 matrix = np.zeros((size, size), dtype=int)
 
-# L-shaped finder pattern: solid black on left column and bottom row
-matrix[:, 0] = 1  # Left column - solid black
-matrix[-1, :] = 1  # Bottom row - solid black
+# L-shaped finder pattern: solid black left column and bottom row
+matrix[:, 0] = 1
+matrix[-1, :] = 1
 
 # Alternating timing pattern on top row and right column
 for i in range(size):
-    matrix[0, i] = i % 2  # Top row - alternating starting white
-    matrix[i, -1] = (i + 1) % 2  # Right column - alternating starting black
+    matrix[0, i] = i % 2  # top row: alternating, starts white
+    matrix[i, -1] = (i + 1) % 2  # right col: alternating, starts black
 
-# Fill interior with data pattern (simulated ECC 200 encoded data)
-# Generate pseudo-random data pattern for the interior cells
-interior_data = np.random.randint(0, 2, size=(size - 2, size - 2))
-matrix[1:-1, 1:-1] = interior_data
+# Interior data: deterministic pattern seeded from content bytes
+content_seed = sum(ord(c) for c in content)
+interior = np.random.RandomState(content_seed).randint(0, 2, size=(size - 2, size - 2))
+matrix[1:-1, 1:-1] = interior
 
-# Create plot (square format for barcode)
-fig, ax = plt.subplots(figsize=(12, 12))
+# Plot (square canvas: 2400×2400 px)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor("white")  # barcode spec requires white cell background for scan contrast
 
-# Display the Data Matrix
-# Use pcolormesh for crisp cell boundaries
-x = np.arange(size + 1)
-y = np.arange(size + 1)
-ax.pcolormesh(x, y, matrix[::-1], cmap="binary", edgecolors="none", linewidth=0)
+# Render Data Matrix using pcolormesh for crisp cell boundaries
+x_coords = np.arange(size + 1)
+y_coords = np.arange(size + 1)
+ax.pcolormesh(x_coords, y_coords, matrix[::-1], cmap="binary", edgecolors="none", linewidth=0)
 
-# Set equal aspect ratio for square cells
 ax.set_aspect("equal")
-
-# Add quiet zone by adjusting axis limits
-quiet_zone = 2
+quiet_zone = 1.5
 ax.set_xlim(-quiet_zone, size + quiet_zone)
 ax.set_ylim(-quiet_zone, size + quiet_zone)
-
-# Remove axes for clean barcode appearance
 ax.axis("off")
 
-# Set white background
-ax.set_facecolor("white")
-fig.patch.set_facecolor("white")
+# Title
+ax.set_title("datamatrix-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
 
-# Add title
-ax.set_title("datamatrix-basic \u00b7 matplotlib \u00b7 pyplots.ai", fontsize=24, pad=30)
-
-# Add encoded content description
-content = "SERIAL:12345678"
+# Annotations below barcode
 fig.text(
     0.5,
-    0.08,
-    f"Data Matrix (16\u00d716) \u2022 Encoded: {content}",
+    0.055,
+    f"Data Matrix 20×20  ·  Encoded: {content}",
     ha="center",
-    fontsize=18,
+    va="bottom",
+    fontsize=9,
     fontfamily="monospace",
-    color="#306998",
+    color=INK_SOFT,
 )
-
-# Add structure annotations
 fig.text(
     0.5,
-    0.04,
-    "L-finder (left+bottom) \u2022 Timing pattern (top+right) \u2022 ECC 200",
+    0.02,
+    "L-finder (left+bottom)  ·  Timing (top+right)  ·  ECC 200",
     ha="center",
-    fontsize=14,
-    color="#666666",
+    va="bottom",
+    fontsize=8,
+    color=INK_MUTED,
 )
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.tight_layout(rect=[0, 0.09, 1, 1])
+plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
