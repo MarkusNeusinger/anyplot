@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:07:30Z'
-updated: '2026-05-20T09:40:04Z'
+updated: '2026-05-20T09:48:51Z'
 generated_by: claude-sonnet
 workflow_run: 26153377799
 issue: 3765
@@ -15,53 +15,45 @@ preview_html_dark: null
 quality_score: 83
 review:
   strengths:
-  - Custom geographic basemap with theme-adaptive ocean and land colors (OCEAN_COLOR/LAND_COLOR
-    tokens flip correctly between light and dark)
-  - Triple-encoding of flow magnitude (arc width + color intensity + opacity) makes
-    volume differences immediately legible
-  - Custom legend using mlines.Line2D handles accurately mirrors the arc visual encoding
-    rather than using placeholder symbols
-  - Quadratic Bezier curves implemented cleanly with perpendicular control-point offset,
-    producing natural-looking arc curvature
-  - Label offset dictionary prevents the most severe overlap, and explicit per-port
-    offsets show careful geographic awareness
-  - 'Perfect spec compliance: 15 realistic trade flows, all required features (arcs,
-    basemap, width-encoding, transparency, labels), correct title format'
-  - 'Perfect data quality: real-world port names, geographically accurate coordinates,
-    realistic TEU volumes (1.9–8.5 M TEUs)'
-  - Clean, idiomatic matplotlib code with no functions/classes — straight top-level
-    flow
+  - Excellent spec compliance — curved Bezier arcs, flow-proportional line widths,
+    alpha transparency, and basemap with simplified continent outlines all match the
+    spec requirements precisely
+  - 'Realistic, high-quality data: real major port cities with accurate geographic
+    coordinates and plausible TEU volumes (Shanghai–LA at 8.5M TEUs is realistic for
+    the world''s busiest route)'
+  - 'Theme adaptation is thorough: ocean, land, border, legend, and all chrome elements
+    respond correctly to ANYPLOT_THEME; data colors are identical across both renders'
+  - Custom legend with mlines.Line2D handles faithfully replicates the actual arc
+    appearance (color + linewidth), making the legend informative and visually consistent
+  - 'Blues colormap for continuous flow magnitude is the correct choice for a single-polarity
+    quantitative dimension; port markers correctly use brand green #009E73'
+  - 'Title format is correct: ''Global Port Trade Routes · flowmap-origin-destination
+    · python · matplotlib · anyplot.ai'''
   weaknesses:
-  - 'Font sizes are below style-guide recommendations: title fontsize=8 (guide: 12pt),
-    axis labels fontsize=8 (guide: 10pt), tick labels fontsize=6 (guide: 8pt) — increase
-    all to recommended sizes for better mobile readability'
-  - 'Port markers use #0072B2 (Okabe-Ito position 3) instead of the required first-position
-    brand green #009E73; for a single-category location series the brand color rule
-    applies'
-  - Label crowding in the Hamburg/Rotterdam cluster and the Busan/Shanghai/Hong Kong
-    right-side cluster — consider larger offset magnitudes or a different offset strategy
-    to give labels more breathing room
-  - 'DE-01 aesthetic sophistication is limited: all arcs share the same Blues colormap
-    direction and the basemap continents are rough polygons; adding directional arrowheads
-    or a more polished land fill would elevate the design'
-  - 'DE-02 visual refinement: the legend in the bottom-left overlaps slightly with
-    the empty southern-ocean region, wasting canvas space — consider moving legend
-    inside a less prominent area or using a colorbar-style size legend'
-  - 'DE-03 data storytelling: the dominant Shanghai→Los Angeles corridor is visually
-    prominent but no annotation or emphasis calls it out explicitly; a subtle annotation
-    for the top-2 flows would add narrative clarity'
+  - Port labels in the east Asian cluster (Busan, Shanghai, Hong Kong) are crowded
+    — geographic proximity causes labels to stack closely despite offset annotations;
+    consider increasing horizontal offsets or reducing label density for the cluster
+  - Hamburg and Rotterdam labels are tightly stacked in the same vertical column (~2°
+    longitude separation at this map scale) — slightly increase the horizontal offsets
+    to create breathing room
+  - Port label fontsize=7pt is at the lower edge of readability at mobile widths;
+    consider bumping to 7.5-8pt
+  - Design storytelling could be stronger — the dominant Shanghai–LA corridor (8.5M
+    TEUs) is visually prominent through line width, but no annotation or text callout
+    draws attention to it as the busiest route; a brief annotation or color highlight
+    for the top 3 corridors would elevate DE-03
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct page surface. Ocean area renders as pale blue (#C8DFF0), land masses as light sage green (#D4E5D4), borders as mid-grey (#888888).
-      Chrome: Title "Global Port Trade Routes · flowmap-origin-destination · python · matplotlib · anyplot.ai" in dark ink spans ~75% of canvas width — readable. Axis labels "Longitude" / "Latitude" in dark ink at fontsize=8 (slightly below 10pt guide). Tick labels at fontsize=6 (below 8pt guide) — legible at full resolution. Legend box has light elevated fill (#FFFDF6) with dark text.
-      Data: 15 curved Bezier arcs in Blues colormap ranging from pale blue (thin, low volume ~2 M TEUs) to deep navy-blue (thick, high volume ~8.5 M TEUs). Port markers are solid #0072B2 circles with white-edge highlights. Port city labels in bold dark ink at fontsize=6.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures. Slight crowding in Hamburg/Rotterdam cluster and right-side Busan/Shanghai/Hong Kong cluster but labels remain distinguishable.
+      Background: Warm off-white #FAF8F1 visible at figure edges; ocean rendered in light blue (#C8DFF0); simplified continent polygons in light sage green (#D4E5D4)
+      Chrome: Title "Global Port Trade Routes · flowmap-origin-destination · python · matplotlib · anyplot.ai" in dark ink at fontsize=10 — fully readable; "Longitude" and "Latitude" axis labels in dark ink at fontsize=10; tick labels at fontsize=8 in dark grey INK_SOFT; all readable against the light background
+      Data: 15 Bezier-curve arcs in the Blues colormap (range 0.4–0.9), widths 1.5–8.0 px proportional to flow magnitude; port dots in brand green #009E73; city labels in bold dark ink at fontsize=7 — small but readable at full resolution; east Asian cluster (Busan/Shanghai/Hong Kong) is somewhat crowded
+      Legibility verdict: PASS — all chrome is readable; minor crowding in east Asian label cluster does not cause full overlap
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark surface. Ocean area renders as dark navy (#1A2D3A), land masses as dark forest green (#2A3D2A), borders as dimmed grey (#555555).
-      Chrome: Title and axis labels render in light #F0EFE8 — clearly readable against near-black background. Tick labels use #B8B7B0 secondary ink — visible. Legend box has dark elevated fill (#242420) with light text. Grid lines are very subtle (alpha=0.10) in both themes.
-      Data: Arc colors (Blues colormap) are identical to the light render — only background and chrome flip. Port markers remain #0072B2 with now-dark edgecolors matching PAGE_BG (#1A1A17). Port labels are rendered in #F0EFE8 (INK token) — white-on-dark, clearly readable.
-      Legibility verdict: PASS — no dark-on-dark failures detected. All title, axis label, tick, legend, and port annotation text is light-colored on the near-black background. Data colors are consistent across both renders.
+      Background: Warm near-black #1A1A17 at figure edges; ocean in dark navy (#1A2D3A); continent polygons in dark forest green (#2A3D2A)
+      Chrome: Title and axis labels in light #F0EFE8; tick labels in #B8B7B0; legend on dark #242420 background with light text — all readable and correctly adapted; no dark-on-dark failure observed; grid lines are subtly visible
+      Data: Arc colors are identical to the light render (same Blues colormap values); port dots remain #009E73 brand green — consistent across themes; city labels now in INK token (#F0EFE8) which provides good contrast against the dark ocean
+      Legibility verdict: PASS — theme adaptation is complete and correct; all text is readable; data colors are identical to the light render
   criteria_checklist:
     visual_quality:
       score: 23
@@ -72,60 +64,56 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set but below style-guide recommendations
-          (title 8pt vs 12pt, axis labels 8pt vs 10pt, ticks 6pt vs 8pt). Readable
-          at full resolution in both themes, but smaller than mobile-optimal.
+        comment: All font sizes explicitly set; title 10pt, axis labels 10pt, ticks
+          8pt, port labels 7pt. All readable in both themes. Port labels at 7pt are
+          on the small side for mobile; minor crowding in east Asian cluster.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Minor label crowding in Hamburg/Rotterdam cluster (geographically
-          close ports, labels point in different directions but still tight) and right-side
-          Busan/Shanghai/Hong Kong cluster. Labels remain distinguishable but show
-          minimal overlap risk.
+        comment: Hamburg and Rotterdam labels are vertically stacked close together;
+          Busan/Shanghai/Hong Kong cluster is crowded. Offset annotation system helps
+          but doesn't fully resolve crowding at this map scale.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Flow arcs clearly visible with variable width (1.5–8pt) and opacity
-          (0.45–0.80). Port markers visible with white-edge definition. Blues colormap
-          effectively differentiates magnitude. Minor: very thin arcs for smallest
-          flows (~2 M TEUs) are light and could be slightly more prominent.'
+        comment: 'Arc widths (1.5–8.0) and alpha (0.45–0.80) well-adapted to 15 flows.
+          Port markers at s=60 are visible. Minor: thinner low-flow arcs can be hard
+          to distinguish from ocean in light theme.'
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blues colormap is CVD-safe. Width encoding provides a non-color-dependent
-          cue for magnitude. Port markers contrast against both land and ocean backgrounds.
+        comment: Blues colormap is CVD-safe; flow magnitude communicated through both
+          color AND line width, so colorblind viewers still get the signal. Brand
+          green port markers contrast well.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Map fills canvas well with good margins. Legend placed in lower-left
-          empty ocean region. Some unused southern-ocean canvas space but not severe.
-          Title fits without clipping.
+        comment: Good overall layout; right-side Pacific region slightly empty but
+          acceptable for a global flow map. Legend well-positioned lower left, clear
+          of arcs.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title uses correct format with descriptive prefix. 'Longitude' and
-          'Latitude' are appropriate geographic axis labels. Legend title 'Trade Volume'
-          with M TEUs units in labels.
+        comment: Longitude and Latitude are descriptive; degrees implied by tick values.
+          Correct title format with descriptive prefix.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Blues (sequential) colormap for continuous flow magnitude is correct
-          per style guide. Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Chrome
-          tokens correctly theme-adapted. However, port markers use #0072B2 (Okabe-Ito
-          position 3) instead of required first-position brand green #009E73 for the
-          single categorical series.'
+        passed: true
+        comment: 'Port markers use #009E73 brand green (single categorical series).
+          Flow arcs use Blues colormap (approved for single-polarity continuous data).
+          Page background #FAF8F1 light / #1A1A17 dark. Chrome fully theme-adaptive.'
     design_excellence:
       score: 13
       max: 20
@@ -135,28 +123,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above a configured default: custom map background colors (ocean/land/border)
-          that flip with theme, triple magnitude encoding (width+color+opacity), custom
-          legend with actual line handles. Not yet publication-ready — continents
-          are rough polygons, no directional cues on arcs, uniform Blues palette direction.'
+        comment: 'Thoughtful design: custom ocean/land color scheme adapts to theme,
+          Blues-on-ocean-blue creates visual harmony, green port markers provide clear
+          focal points, width-encoded arcs provide at-a-glance magnitude comparison.
+          Above defaults but not yet publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed. Grid at alpha=0.10 — very subtle. Per-port
-          label offsets demonstrate attention to label placement. Round cap style
-          on arcs adds polish. Legend somewhat clutters lower-left ocean region.
+        comment: Top/right spines removed; very subtle grid (alpha=0.10); custom land/ocean
+          backgrounds; legend with matching line samples. Good refinement overall.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy is clear: the Shanghai→Los Angeles corridor dominates
-          as the thickest, darkest arc. Width + color intensity combination creates
-          a natural focal point. Multiple crossing arcs in the North Atlantic hub
-          zone (Rotterdam/Hamburg) are visually interesting. No explicit annotation
-          of dominant flows but visual hierarchy is sufficient for basic storytelling.'
+        comment: Visual hierarchy is present — the thick Shanghai–LA corridor immediately
+          reads as dominant. Blues gradient reinforces magnitude. Story is implicit
+          through line width; an explicit annotation on the 1-2 busiest routes would
+          push this to 6.
     spec_compliance:
       score: 15
       max: 15
@@ -166,31 +152,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct origin-destination flow map with curved Bezier arcs, geographic
-          basemap, and flow-proportional line width.
+        comment: Correct origin-destination flow map with curved Bezier arcs overlaid
+          on a basemap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: curved arcs (Bezier), line width proportional
-          to flow, transparency (alpha 0.45-0.80), basemap with continent outlines,
-          color gradient encoding magnitude (Blues), origin/destination labels.'
+        comment: Curved arcs, flow-proportional line width, alpha transparency (0.45–0.80),
+          color gradient for magnitude, basemap with continent boundaries, port markers,
+          and location labels all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly mapped to Y/X axes. Flow magnitude correctly drives
-          arc width. All 15 flows visible across the geographic extent.
+        comment: Origin/destination lat-lon correctly mapped; flow magnitude correctly
+          encoded as line width.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: 'Title: ''Global Port Trade Routes · flowmap-origin-destination ·
-          python · matplotlib · anyplot.ai'' — correct prefixed format. Legend shows
-          ''Trade Volume'' with three representative size/color levels.'
+          python · matplotlib · anyplot.ai'' — correct format. Legend shows 3 line
+          weight levels with accurate visual samples.'
     data_quality:
       score: 15
       max: 15
@@ -200,26 +186,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 15 flows covering wide range of magnitudes (1.9–8.5 M TEUs), multiple
-          origin hubs (Shanghai dominant, Singapore, Busan, Hong Kong as secondary),
-          bidirectional representation, inter-continental routes across Pacific, Atlantic,
-          and Indian Ocean corridors.
+        comment: 15 flows covering Pacific, Atlantic, and Indian Ocean corridors;
+          hub ports (Shanghai, Rotterdam, Singapore) clearly emerge; full range of
+          magnitudes (1.8–8.5M TEUs).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world major container ports (Shanghai, Rotterdam, LA, Singapore,
-          Hamburg, etc.) with geographically accurate coordinates. Trade context is
-          business/logistics — neutral and appropriate.
+        comment: Real major port cities with accurate geographic coordinates. International
+          container shipping is a neutral, real-world business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: TEU volumes (1.9–8.5 million) are realistic for major world port
-          bilateral trade flows. Shanghai leading is factually correct. Santos (Brazil)
-          as a smaller South American origin is plausible.
+        comment: TEU volumes are plausible for the named ports; Shanghai–LA as the
+          busiest route at 8.5M TEUs is consistent with real trade data proportions.
     code_quality:
       score: 10
       max: 10
@@ -229,36 +212,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean top-level flow: tokens → data → plot → style → save. No functions
-          or classes.'
+        comment: 'Clean linear structure: tokens → data → plot → save. No classes
+          or functions.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Data is hardcoded so fully deterministic
-          regardless of seed.
+        comment: np.random.seed(42) set; data is fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.lines, matplotlib.pyplot, numpy — all actively
-          used.
+        comment: All four imports (os, matplotlib.lines, matplotlib.pyplot, numpy)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Pythonic, appropriate complexity. Bezier computation is clear and
-          commented. Label offset dict is a clean solution. No fake UI elements.
+        comment: Clean, Pythonic Bezier computation; no fake UI elements; appropriate
+          complexity for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, bbox_inches='tight', facecolor=PAGE_BG.
-          Current matplotlib API used throughout.
+        comment: Saves as plot-{THEME}.png; no deprecated matplotlib APIs.
     library_mastery:
       score: 7
       max: 10
@@ -268,27 +249,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Uses Axes methods throughout (ax.plot, ax.scatter, ax.annotate,
-          ax.legend). mlines.Line2D for custom legend handles is idiomatic. plt.setp
-          for batch text styling is idiomatic. Minor: ax.fill for continent polygons
-          is correct but patches.Polygon would be more explicit for geographic shapes.'
+        comment: Uses Axes methods throughout (ax.plot, ax.scatter, ax.fill, ax.annotate);
+          proper fig/ax pattern; setp() for batch styling. Correct and idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: matplotlib.lines.Line2D for custom legend with matching visual encoding
-          is a distinctive matplotlib pattern. solid_capstyle='round' on ax.plot arcs
-          for visual polish. Bezier curve pre-computation then ax.plot is a reasonable
-          use of matplotlib's low-level drawing. Does not use Path/PathPatch CURVE4
-          for true Bezier — that would be more distinctively matplotlib.
-  verdict: REJECTED
+        comment: Uses matplotlib.lines.Line2D for custom legend handles that match
+          arc appearance — a distinctive matplotlib pattern. Quadratic Bezier curves
+          computed via numpy and rendered through ax.plot is a classic matplotlib-specific
+          technique.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - bezier-curves
   - custom-legend
+  - annotations
   patterns:
+  - data-generation
   - iteration-over-groups
   - explicit-figure
   dataprep:
