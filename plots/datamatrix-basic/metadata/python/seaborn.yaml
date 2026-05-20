@@ -1,149 +1,180 @@
 library: seaborn
+language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:50:19Z'
-updated: '2026-01-16T06:52:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058219338
+updated: '2026-05-20T06:00:21Z'
+generated_by: claude-sonnet
+workflow_run: 26143715744
 issue: 3811
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Correctly implements the L-shaped finder pattern (solid black on left and bottom
-    edges)
-  - Proper alternating timing pattern on top and right edges
-  - Clean high-contrast black/white visualization ideal for barcode scanning
-  - Appropriate quiet zone (white border) around the barcode
-  - Good use of sns.heatmap with custom binary colormap
-  - Square aspect ratio is appropriate for Data Matrix codes
-  - Title follows the required format exactly
+  - 'Perfect spec compliance: all required Data Matrix structural elements (L-finder,
+    clock patterns, ECC 200 region, quiet zone) correctly implemented'
+  - 'Flawless code quality: clean KISS structure, explicit theme tokens, correct output
+    API'
+  - 'Contextually clever data: encoding ANYPLOT for anyplot.ai adds genuine meaning'
+  - Theme adaptation correct in both renders — chrome flips while barcode data stays
+    constant (required by spec)
+  - Appropriate square canvas format for a symmetric barcode
   weaknesses:
-  - The data pattern is manually hardcoded rather than using an actual Data Matrix
-    encoding library (spec suggests pylibdmtx, treepoem, or segno)
-  - Does not use any distinctive seaborn features beyond basic heatmap functionality
-  image_description: The plot displays a 10x10 Data Matrix 2D barcode rendered as
-    a heatmap with high-contrast black and white cells. The barcode correctly shows
-    the L-shaped finder pattern with a solid black left column and solid black bottom
-    row. The top row and right column display the alternating (clock) timing pattern
-    as required by the spec. The interior 8x8 region contains a simulated data pattern
-    representing encoded information. A white quiet zone surrounds the barcode on
-    all sides. The title "datamatrix-basic · seaborn · pyplots.ai" appears at the
-    top in black text. The overall layout uses a square format which is appropriate
-    for this barcode type.
+  - 'LM-02 limited: seaborn heatmap used as a generic matrix renderer without exercising
+    seaborns statistical visualization features'
+  - 'DQ-01 minor: ECC 200 payload is manually hardcoded rather than algorithmically
+    generated; segno (listed in spec notes) would produce an authentic decodable barcode'
+  - 'DE-01/DE-02 moderate: few design levers available beyond accurate structure;
+    warm elevated background is the only real design embellishment'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 figure background; axes area uses elevated #FFFDF6 — correct theme tokens
+      Chrome: Title "datamatrix-basic · python · seaborn · anyplot.ai" in dark #1A1A17 text clearly visible; x-axis label "Encoded: 'ANYPLOT' · ISO/IEC 16022 ECC 200 · 10×10" in muted #4A4A44 text readable; no tick labels (appropriate for barcode)
+      Data: 10×10 binary matrix with pure black (1-cells) and white (0-cells); L-shaped finder on left column + bottom row; alternating clock on top row + right column; ~1-module quiet zone on all sides
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 figure background; axes area uses elevated #242420 — correct dark theme tokens
+      Chrome: Title and x-axis label render in light cream text (#F0EFE8 / #B8B7B0) clearly legible against dark surface; no dark-on-dark issues observed
+      Data: Black/white barcode cells identical to light render — 0-cells remain bright white, 1-cells remain black (correct: barcode data must stay constant per spec requirements)
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is clearly readable at 24pt fontsize
+        comment: 'Title 12pt and x-label 9pt explicitly set; both themes readable.
+          Minor: x-label slightly below recommended 10pt.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: Only two text elements, well-spaced; no overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All cells are clearly visible with sharp edges
+        comment: High-contrast black/white cells at 2400x2400px; every cell clearly
+          distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Perfect black/white contrast, optimal for barcodes
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization with appropriate quiet zone
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for barcode (no axes needed)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid/legend needed, correctly omitted
+        comment: Black/white binary = 21:1 contrast ratio; zero CVD concern.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas correct for symmetric barcode; barcode fills ~65% of
+          canvas; balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in mandated format; x-label encodes content, standard, and
+          matrix dimensions.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct; binary black/white cmap mandated
+          by spec; chrome tokens adapt correctly.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean restrained presentation; warm elevated background creates subtle
+          card effect; spines removed. Limited by binary nature of barcode visualization.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Spines removed; no grid; no tick labels; quiet zone elegantly handled
+          via xlim/ylim expansion.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: X-axis label provides meaningful context; encoding ANYPLOT is contextually
+          clever. No additional visual hierarchy possible with binary barcode.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Data Matrix barcode visualization
+        comment: Correct ISO/IEC 16022 Data Matrix with L-shaped finder, clock patterns,
+          ECC 200 region.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: L-shaped finder and timing patterns correctly implemented
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: L-finder, timing pattern, data region,
-          quiet zone'
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features present: L-finder, clock patterns, data region,
+          quiet zone.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 10x10 standard size as specified
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 10x10 matrix correctly constructed; square cells; orientation correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for barcode, correctly omitted
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: {spec-id} · {library} · pyplots.ai'
+        comment: Title matches required format exactly; no legend appropriate for
+          binary single-series.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows main Data Matrix features but data pattern is simulated, not
-          actual encoded data
+        comment: 'All structural features present. Minor: data_pattern manually crafted
+          rather than algorithmically generated via segno/pylibdmtx.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Plausible barcode pattern representing PYPLOTS
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 10x10 is a valid standard Data Matrix size
+        comment: Encoding ANYPLOT for anyplot.ai is genuine and contextual; ISO/IEC
+          16022 ECC 200 is the current standard.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 10x10 valid matrix size for 7-char payload; quiet zone of 1 module
+          meets spec requirement.
     code_quality:
       score: 10
       max: 10
@@ -153,42 +184,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → plot → save'
+        comment: Clean linear flow; no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: np.random.seed(42) set; deterministic data pattern.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All four imports used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API
+        comment: Clean Pythonic code; hardcoded pattern reasonable to avoid external
+          deps.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with proper settings
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct parameters; current API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.heatmap() with square=True, cbar=False, linewidths=0 is idiomatic
+          for 2D matrix display; axes-level API correct.
+      - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 2
         max: 5
         passed: false
-        comment: sns.heatmap is used appropriately but this is basic usage; seaborn
-          does not have specialized barcode features
+        comment: Seaborn heatmap used as generic matrix renderer; same output achievable
+          with plt.imshow() — no seaborn-specific statistical capability exercised.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -196,7 +235,8 @@ impl_tags:
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
+  - custom-colormap

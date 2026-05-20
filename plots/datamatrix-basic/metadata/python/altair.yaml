@@ -1,154 +1,192 @@
 library: altair
+language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:51:29Z'
-updated: '2026-01-16T06:54:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058219362
+updated: '2026-05-20T06:15:41Z'
+generated_by: claude-sonnet
+workflow_run: 26143728377
 issue: 3811
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/altair/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Correctly implements the Data Matrix ECC 200 structure with L-shaped finder and
-    alternating timing patterns
-  - Clean, high-contrast black and white rendering appropriate for barcode scanning
-  - Proper quiet zone implementation (2 modules)
-  - Deterministic pattern generation from content hash ensures reproducibility
-  - Correct use of Altair declarative approach with mark_rect for grid visualization
-  - Both PNG and HTML outputs generated
+  - Deterministic barcode generation using zlib.crc32 instead of hash() — demonstrates
+    careful attention to reproducibility across Python sessions
+  - Interactive region selection (alt.selection_point with click/dblclick) is genuinely
+    educational and distinctly Altair-idiomatic
+  - Pixel-perfect grid alignment via paddingInner=0, paddingOuter=0 eliminates sub-pixel
+    gap artifacts
+  - 'Full spec compliance: all four Data Matrix structural regions (Finder, Timing,
+    Data, Quiet Zone) implemented correctly'
+  - 'Perfect code quality: clean KISS structure with well-documented sys.path workaround'
+  - Theme-adaptive chrome (title, subtitle, outer background) switches correctly between
+    light/dark renders
   weaknesses:
-  - Small visible gaps between cells (stroke=None may not fully eliminate gaps at
-    some zoom levels)
-  - Canvas utilization could be improved - barcode could be slightly larger relative
-    to the total canvas
-  - Does not demonstrate interactive features that Altair provides (tooltips showing
-    cell coordinates, etc.)
-  image_description: The plot displays a 16x16 Data Matrix 2D barcode rendered as
-    a grid of black and white rectangular cells using Altair's mark_rect. The title
-    "datamatrix-basic · altair · pyplots.ai" appears at the top in bold black text
-    (approximately 28pt). The barcode features the characteristic L-shaped finder
-    pattern with solid black borders on the left and bottom edges, while the top and
-    right edges show the alternating (clock) timing pattern. A white quiet zone of
-    2 modules surrounds the matrix. The data area contains a deterministic pseudo-random
-    pattern representing "SERIAL:12345678". The visualization uses pure black (#000000)
-    and white (#FFFFFF) for maximum contrast, with no axes, grid, or legend displayed.
-    The square format (approximately 3600x3600 px) is appropriate for this barcode
-    visualization.
+  - Inner view configure_view(fill='#FFFFFF') is hard-coded pure white — justified
+    for barcode scanning but not theme-adaptive; creates a stark floating white panel
+    on the dark render
+  - Subtitle font size (subtitleFontSize=10) is on the small side — borderline readable
+    when PNG is scaled to mobile widths (~400px)
+  - 'LM-02 could go further: Altair layer composition (e.g., text annotation overlays
+    marking region boundaries) would better showcase Altair''s unique grammar-of-graphics
+    compositing capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) outer background — correct.
+      Chrome: Title "datamatrix-basic · python · altair · anyplot.ai" in bold dark ink (~65% canvas width), subtitles in muted ink. All text clearly readable against light background.
+      Data: Pure white inner barcode area with pure black cells. Warm gray quiet zone border (#C8C5BE). L-shaped finder pattern (solid left column + bottom row), alternating timing pattern (top row + right column), data cells visible.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) outer background — correct.
+      Chrome: Title and subtitles rendered in light ink (theme-adaptive INK token for dark mode). All text clearly readable against dark background. No dark-on-dark failures observed.
+      Data: Data matrix pattern (black/white cells) identical to light render. Quiet zone still warm gray. Inner view fill is hard-coded #FFFFFF — domain-justified (barcode requires high-contrast black-on-white) but creates a stark bright white panel on the dark render.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is clearly readable at 28pt fontSize
+        comment: 'Font sizes explicitly set (fontSize=16, subtitleFontSize=10, color=INK/INK_SOFT).
+          All readable in both themes. Minor: subtitle at 10px is borderline at mobile
+          scale.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No axis labels (axis=None appropriate). Title, subtitles, and barcode
+          cells have no overlap.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Black and white cells are perfectly visible with high contrast
+        comment: Black cells on white background; maximum contrast. Quiet zone clearly
+          delineated in warm gray.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Pure black on white, maximum contrast and accessibility
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of canvas but slight excess whitespace around the barcode
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for barcode, correctly hidden with axis=None
+        comment: Black/white provides maximum contrast ratio. CVD-safe (no hue dependency
+          for data encoding).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square format 2880x2880px. Barcode fills ~85% of canvas with well-proportioned
+          quiet zone framing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct. No axis labels needed for grid barcode. Subtitle provides
+          domain context (content, size, quiet zone).
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 1
         max: 2
         passed: false
-        comment: Small visible gaps between cells
+        comment: 'Outer background correctly #FAF8F1/#1A1A17, text uses INK/INK_SOFT
+          tokens. Partial: inner view fill hard-coded #FFFFFF (domain exception for
+          barcode scanning). Data colors black/white are domain-mandated.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: warm gray quiet zone, interactive highlighting,
+          theme-adaptive chrome. Domain constraints (barcode = black/white) limit
+          further aesthetic expression.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, grid disabled, stroke removed from cells, view border
+          removed. Clean and deliberate. Inner white panel creates slight chrome discontinuity
+          on dark render.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Interactive click-to-highlight guides exploration of four Data Matrix
+          regions. Opacity-fading (0.35) creates clear focal point. Above default
+          data-display level.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correctly implements Data Matrix 2D barcode as a rectangular grid
+        comment: Correct Data Matrix 2D barcode with all required structural elements.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X/Y coordinates correctly map to matrix positions
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
         comment: L-shaped finder pattern, alternating timing pattern, quiet zone,
-          ECC 200 format, example content
-      - id: SC-04
-        name: Data Range
+          high-contrast black-on-white all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 16x16 matrix plus quiet zone displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Matrix data correctly mapped to x/y. Y-axis flipped so row=0 maps
+          to chart top.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A, correctly no legend for barcode
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: datamatrix-basic · altair · pyplots.ai'
+        comment: Title 'datamatrix-basic · python · altair · anyplot.ai' correct.
+          No legend (legend=None appropriate); region types explained in subtitle.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows L-pattern, timing pattern, quiet zone, data encoding; could
-          show size variation
+        comment: 'All four region types shown: Finder Pattern, Timing Pattern, Data
+          Cells, Quiet Zone. Full structural coverage of ECC 200.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: SERIAL:12345678 is a realistic industrial use case
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 16x16 is valid but spec mentions auto-sized based on content would
-          be better demonstrated
+        comment: '''SERIAL:12345678'' is a realistic industrial serial number encoding.
+          Neutral, non-controversial domain.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 16x16 is a valid ECC 200 symbol size. Quiet zone of 1 module matches
+          spec's 'at least 1 module' requirement.
     code_quality:
       score: 10
       max: 10
@@ -158,51 +196,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → plot → save'
+        comment: 'Linear flow: imports → theme tokens → matrix generation → DataFrame
+          → chart → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set. zlib.crc32 used instead of hash() for cross-session
+          determinism. Exemplary.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: 'All imports used: os, sys, zlib, altair, numpy, pandas.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean, Pythonic. sys.path guard is necessary and documented. color_key
+          collapsing is an elegant Altair pattern.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale_factor=4.0) and plot-{THEME}.html.
+          Current Altair 6.x API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses mark_rect for grid visualization, proper encoding types (O,
-          N), configure_view/axis for clean output; could use interactivity features
+        comment: 'Expert: mark_rect() for grid, ordinal encoding with paddingInner/Outer=0,
+          alt.condition() for opacity, add_params(), alt.Title with multi-line subtitle.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'alt.selection_point with click/dblclick + alt.condition() opacity
+          binding is distinctly Altair. Tooltips add interactive value. Minor deduction:
+          layer composition (text overlay) could showcase more Altair-exclusive grammar-of-graphics.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - matrix-construction
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome

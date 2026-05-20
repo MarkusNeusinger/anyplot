@@ -1,83 +1,127 @@
-""" pyplots.ai
+""" anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-20
 """
+
+import os
+import sys
+import zlib
+
+
+# Remove this file's directory from sys.path to avoid circular import with the altair package
+if sys.path and os.path.exists(os.path.join(sys.path[0] or ".", "altair.py")):
+    sys.path = sys.path[1:]
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
 
-# Data - Generate Data Matrix pattern (ECC 200 format)
-# Data Matrix uses an L-shaped finder pattern and alternating timing pattern
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+QUIET_FILL = "#C8C5BE"  # warm gray on white inner bg shows quiet zone in both themes
+
+# Data — 16×16 Data Matrix ECC 200 barcode encoding "SERIAL:12345678"
 np.random.seed(42)
-
-# Use 16x16 matrix (common size for moderate data)
 size = 16
-quiet_zone = 2  # Minimum 1 module, we use 2 for clarity
-total_size = size + 2 * quiet_zone
+quiet_zone = 1  # minimum 1 module per spec
+total_size = size + 2 * quiet_zone  # 18
 
-# Initialize matrix with white (0)
 matrix = np.zeros((total_size, total_size), dtype=int)
 
-# Add L-shaped finder pattern (solid black on left and bottom edges)
-# Left edge - solid black column
+# L-shaped finder pattern: solid black on left and bottom edges
 for row in range(size):
     matrix[quiet_zone + row, quiet_zone] = 1
-
-# Bottom edge - solid black row
 for col in range(size):
     matrix[quiet_zone + size - 1, quiet_zone + col] = 1
 
-# Add alternating (clock) timing pattern on top and right edges
-# Top edge - alternating pattern starting with black
+# Alternating timing pattern on top and right edges
 for col in range(size):
     matrix[quiet_zone, quiet_zone + col] = col % 2
-
-# Right edge - alternating pattern starting with black
 for row in range(size):
     matrix[quiet_zone + row, quiet_zone + size - 1] = row % 2
 
-# Fill data area with deterministic pattern representing "SERIAL:12345678"
+# Interior data area: deterministic bit pattern derived from content
 content = "SERIAL:12345678"
-hash_val = hash(content)
-
-# Data area is inside the finder/timing patterns (rows 1 to size-2, cols 1 to size-2)
+hash_val = zlib.crc32(content.encode())  # zlib.crc32 is deterministic unlike hash()
 for row in range(1, size - 1):
     for col in range(1, size - 1):
-        # Create deterministic pattern from position and content hash
         idx = row * size + col
         matrix[quiet_zone + row, quiet_zone + col] = ((hash_val >> (idx % 32)) ^ (idx * 13)) % 2
 
-# Convert matrix to DataFrame for Altair
-data = []
+# Convert to DataFrame; color_key collapses cell_type × value for Altair's color encoding
+rows = []
 for row in range(total_size):
     for col in range(total_size):
-        # Flip y-axis so bottom-left origin matches Data Matrix convention
-        data.append({"x": col, "y": total_size - 1 - row, "value": matrix[row, col]})
-df = pd.DataFrame(data)
+        r, c = row - quiet_zone, col - quiet_zone
+        if r < 0 or r >= size or c < 0 or c >= size:
+            cell_type = "Quiet Zone"
+        elif c == 0 or r == size - 1:
+            cell_type = "Finder Pattern"
+        elif r == 0 or c == size - 1:
+            cell_type = "Timing Pattern"
+        else:
+            cell_type = "Data Cell"
+        val = matrix[row, col]
+        color_key = "quiet" if cell_type == "Quiet Zone" else ("on" if val == 1 else "off")
+        rows.append(
+            {
+                "x": col,
+                "y": total_size - 1 - row,  # flip y so row=0 maps to chart top
+                "value": val,
+                "cell_type": cell_type,
+                "color_key": color_key,
+            }
+        )
+df = pd.DataFrame(rows)
 
-# Create Data Matrix visualization using mark_rect
+# Interactive selection — click a region type to highlight it; empty=True keeps all opaque when idle
+region_sel = alt.selection_point(fields=["cell_type"], on="click", empty=True, clear="dblclick")
+
+# 720×720 plot area: 18 cells × 40 px/cell = 720 px (integer — eliminates sub-pixel gap artifacts)
+no_pad = alt.Scale(paddingInner=0, paddingOuter=0)
+color_scale = alt.Scale(domain=["on", "off", "quiet"], range=["#000000", "#FFFFFF", QUIET_FILL])
+
 chart = (
     alt.Chart(df)
     .mark_rect(stroke=None)
     .encode(
-        x=alt.X("x:O", axis=None),
-        y=alt.Y("y:O", axis=None),
-        color=alt.Color("value:N", scale=alt.Scale(domain=[0, 1], range=["#FFFFFF", "#000000"]), legend=None),
+        x=alt.X("x:O", axis=None, scale=no_pad),
+        y=alt.Y("y:O", axis=None, scale=no_pad),
+        color=alt.Color("color_key:N", scale=color_scale, legend=None),
+        opacity=alt.condition(region_sel, alt.value(1.0), alt.value(0.35)),
+        tooltip=[
+            alt.Tooltip("cell_type:N", title="Region"),
+            alt.Tooltip("x:O", title="Column"),
+            alt.Tooltip("y:O", title="Row"),
+        ],
     )
+    .add_params(region_sel)
     .properties(
-        width=800,
-        height=800,
-        title=alt.Title("datamatrix-basic · altair · pyplots.ai", fontSize=28, anchor="middle", dy=-10),
+        width=720,
+        height=720,
+        background=PAGE_BG,
+        title=alt.Title(
+            "datamatrix-basic · python · altair · anyplot.ai",
+            subtitle=[
+                "Content: SERIAL:12345678  ·  16×16 ECC 200  ·  Quiet zone shown in gray",
+                "Click a region to highlight: Finder (L-shape) · Timing (alternating) · Data · Quiet Zone",
+            ],
+            fontSize=16,
+            subtitleFontSize=10,
+            color=INK,
+            subtitleColor=INK_SOFT,
+            anchor="middle",
+        ),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill="#FFFFFF", strokeWidth=0)
     .configure_axis(grid=False)
 )
 
-# Save as PNG (square format: 3600 x 3600 px with scale_factor)
-chart.save("plot.png", scale_factor=4.5)
-
-# Save interactive HTML version
-chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")

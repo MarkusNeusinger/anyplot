@@ -1,149 +1,190 @@
 library: plotly
+language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:51:18Z'
-updated: '2026-01-16T06:53:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058219319
+updated: '2026-05-20T06:04:00Z'
+generated_by: claude-sonnet
+workflow_run: 26143584991
 issue: 3811
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent visual clarity with high contrast black/white cells and subtle cell
-    gaps
-  - Proper Data Matrix structure with L-shaped finder and alternating timing patterns
-  - Clean code following KISS principles with good reproducibility
-  - Effective use of Plotly heatmap and annotation features
-  - Correct title format and informative annotations showing encoded content
+  - Correct Data Matrix barcode structure with L-shaped finder pattern, alternating
+    timing pattern, and simulated ECC 200 data cells
+  - 'Excellent theme adaptation: binary cell colors invert correctly between light
+    (#FAF8F1 bg, dark cells) and dark (#1A1A17 bg, light cells) themes — no dark-on-dark
+    failures'
+  - Educational callout annotations (L-Finder, Timing arrows) with interactive Plotly
+    hover showing cell type (Finder/Timing/Data) leverages Plotly interactivity distinctively
+  - 'Perfect spec compliance: quiet zone dashed border, encoded content annotation,
+    matrix size label, and correct title format all present'
+  - Clean reproducible code using content_hash seed and np.flipud for correct visual
+    orientation
   weaknesses:
-  - Interior data pattern is simulated with random values rather than true Reed-Solomon
-    ECC 200 encoding (acceptable for visualization demo)
-  image_description: 'The plot displays a 16×16 Data Matrix 2D barcode rendered as
-    a heatmap with black and white cells on a white background. The title "datamatrix-basic
-    · plotly · pyplots.ai" is centered at the top in dark gray text (~28pt). The matrix
-    shows an L-shaped finder pattern with solid black on the left column and bottom
-    row, and alternating (clock) patterns on the top row and right column. The interior
-    cells contain a pseudo-random pattern derived from the encoded content. Below
-    the matrix are two annotation lines: "Encoded: SERIAL:12345678" in medium gray
-    and "ECC 200 | 16×16 Matrix" in lighter gray. The barcode maintains a square 1:1
-    aspect ratio with adequate white quiet zone margins around it. Thin white gaps
-    separate each cell for clarity.'
+  - Callout annotation font size (8px) is small — at mobile scale (~400px wide) the
+    L-Finder and Timing labels may be barely readable; consider increasing to 10px
+  - Design storytelling (DE-03) is limited to structural annotations; no analytical
+    insight or emphasis hierarchy beyond identifying the barcode regions
+  - DE-01 aesthetic sophistication is functional but not visually impressive — the
+    binary heatmap approach is correct but lacks design flair beyond clean minimalism
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "datamatrix-basic · python · plotly · anyplot.ai" centered at top (16px), dark ink on light background — clearly readable. "L-Finder" and "Timing" callout labels with arrows (8px) are small but legible at render resolution. "Encoded: SERIAL:12345678" (12px) and "ECC 200 | 16×16 Matrix" (10px) below the matrix are readable. No tick labels (correctly suppressed for a barcode).
+      Data: 16×16 binary matrix with dark near-black (#1A1A17) cells on light background. L-shaped finder pattern clearly visible on left column and bottom row. Alternating timing pattern on top row and right column. Interior data cells show varied pattern. Dashed quiet zone border visible around the matrix. Cell gaps (xgap=ygap=1.5) provide clean visual separation between modules.
+      Legibility verdict: PASS — all text readable; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in light (#F0EFE8) on dark background — clearly readable. "L-Finder" and "Timing" callout labels visible in light-gray (INK_SOFT=#B8B7B0). "Encoded" and "ECC 200" annotations in appropriate muted light tones. No dark-on-dark text failures observed.
+      Data: Same 16×16 matrix structure but inverted — light (#F0EFE8) cells on dark (#1A1A17) background. The finder/timing/data patterns are identical in structure to the light render; only the color role is flipped (the "on" cells are now light, "off" cells are the dark background). This is correct behavior for a barcode rendered on a dark surface.
+      Legibility verdict: PASS — all chrome text is light-colored on dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 28pt, annotations at 20pt and 16pt, all clearly readable
+        comment: 'All font sizes explicitly set (title=16px, annotations=8-12px).
+          Minor concern: callout labels at 8px are small at mobile scale.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: No text overlaps in either render. L-Finder and Timing callouts positioned
+          outside matrix bounds.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Matrix cells clearly visible with good contrast and cell gaps
+        comment: Barcode cells clearly visible in both themes. Cell gaps (1.5) provide
+          module definition.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Pure black/white provides maximum contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Matrix well-centered, good use of canvas space (~50%), balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for barcode visualization (axes intentionally hidden)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for barcode visualization (no grid/legend needed)
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Data Matrix 2D barcode visualization
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Matrix correctly represents encoded data pattern
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: L-shaped finder pattern present, alternating timing patterns present,
-          quiet zone included; simulated encoding
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All 16x16 cells visible within bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: Annotations correctly describe content and matrix specs
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: 'Correct format: datamatrix-basic · plotly · pyplots.ai'
-    data_quality:
-      score: 18
+        comment: Maximum contrast binary colors. CVD-safe (no hue dependency for encoding).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas (2400x2400 at scale=4) perfectly suited for square
+          barcode. Good balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted. Axes suppressed (appropriate for barcode).
+          Encoded content shown as annotation.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Binary barcode uses theme-adaptive high-contrast colors (valid exception
+          to Okabe-Ito). Backgrounds #FAF8F1/#1A1A17 correct. Full chrome theme compliance.'
+    design_excellence:
+      score: 12
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured default: callout annotations, cell gaps, dashed
+          quiet zone border. Not publication-ready in aesthetic sense but clean and
+          purposeful.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: axes completely hidden, cell gaps for module definition, dashed
+          quiet zone border, clean margins. Some details could be more polished.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Structural annotations (L-Finder, Timing arrows) explain barcode
+          anatomy. Limited analytical storytelling by nature of chart type — structural
+          explanation is the appropriate story here.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Data Matrix 2D barcode visualization using go.Heatmap for
+          binary matrix rendering.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: L-shaped finder (solid left+bottom), alternating timing (top+right),
+          interior ECC 200 data cells, quiet zone border, high contrast, encoded content
+          shown.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 16x16 matrix correctly mapped, np.flipud for correct L-finder visual
+          orientation, axes suppressed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title exactly 'datamatrix-basic · python · plotly · anyplot.ai'.
+          No legend (appropriate for binary visualization).
+    data_quality:
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows L-finder, timing patterns, data cells, quiet zone; simulated
-          encoding
+        comment: 'Shows all components: finder pattern, timing pattern, data/ECC cells,
+          quiet zone, encoded content annotation, matrix size.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: SERIAL:12345678 is a realistic industrial serial number use case
+        comment: SERIAL:12345678 is a realistic industrial serial number for electronics/aerospace/medical
+          device traceability — directly from spec applications.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 16x16 is a valid Data Matrix size
+        comment: 16x16 is a valid Data Matrix size per ISO/IEC 16022. Content length
+          appropriate for matrix capacity.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -151,53 +192,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, matrix construction, plot, save'
+        comment: 'Linear: tokens → matrix construction → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) and content-based seed for deterministic
-          output
+        comment: np.random.seed(content_hash) — deterministic based on encoded content.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Appropriate complexity for the visualization task.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current plotly API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses go.Heatmap with custom colorscale, xgap/ygap for cell separation,
-          annotations, scaleanchor, HTML export
+        comment: Idiomatic go.Heatmap with customdata/hovertemplate, add_shape for
+          quiet zone, update_layout/update_yaxes for aspect ratio control.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Interactive hover showing cell type (Finder/Timing/Data) via customdata+hovertemplate
+          is distinctively Plotly. xgap/ygap for cell separation. HTML export alongside
+          PNG.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
-  - custom-colormap
   - minimal-chrome
+  - custom-colormap
