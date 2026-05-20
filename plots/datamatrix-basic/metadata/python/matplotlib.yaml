@@ -1,149 +1,207 @@
 library: matplotlib
+language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:51:24Z'
-updated: '2026-01-16T06:53:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058219352
+updated: '2026-05-20T06:03:19Z'
+generated_by: claude-sonnet
+workflow_run: 26143440599
 issue: 3811
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of Data Matrix structure with correct L-finder and timing
-    patterns
-  - High contrast black/white rendering ideal for barcode visualization
-  - Clean annotations explaining the barcode components
-  - Proper quiet zone implementation as required by spec
-  - Reproducible output with fixed random seed
+  - 'Correct Data Matrix structure: L-shaped finder pattern (solid left column + bottom
+    row), alternating timing strips (top + right), and ECC 200 data region all accurately
+    implemented'
+  - Uses pcolormesh with cmap='binary' for pixel-precise, crisp cell rendering — the
+    right matplotlib primitive for a grid-based visualization
+  - Color-coded structural zone overlays (Okabe-Ito palette) add educational value
+    without compromising barcode readability — alpha levels (0.22 finder, 0.07 data
+    region) are well-judged
+  - Monospace font for footer annotation is an appropriate, thoughtful typographic
+    choice for technical encoded content
+  - Both light and dark themes are fully adaptive — background, title, footer all
+    flip correctly; barcode cell background correctly stays white per scanning standard
+  - Quiet zone (3.0 module units) exceeds the spec minimum of 1 module width, ensuring
+    reliable scanning
+  - Seeded random content generation (np.random.seed + RandomState from content_seed)
+    makes output reproducible
+  - sys.path workaround for matplotlib.py filename conflict is well-handled via importlib
   weaknesses:
-  - Data pattern is simulated (random) rather than actual ECC 200 encoding of the
-    stated content
-  - The barcode could utilize more canvas space for better visual impact
-  - Could demonstrate different matrix sizes as mentioned in spec
-  image_description: 'The plot displays a 16×16 Data Matrix 2D barcode rendered as
-    a grid of black and white square cells on a white background. The barcode correctly
-    shows the L-shaped finder pattern with a solid black left column and solid black
-    bottom row. The top row and right column display the alternating (clock) timing
-    pattern as specified. The interior cells contain a pseudo-random data pattern
-    representing encoded data. A white quiet zone surrounds the barcode. The title
-    "datamatrix-basic · matplotlib · pyplots.ai" appears at the top in black text.
-    Below the barcode, blue monospace text reads "Data Matrix (16×16) • Encoded: SERIAL:12345678",
-    and gray text at the bottom explains "L-finder (left+bottom) • Timing pattern
-    (top+right) • ECC 200". The layout uses a square format appropriate for barcode
-    visualization.'
+  - 'VQ-07: Structural zone colors use Okabe-Ito positions 1, 3, 5 (#009E73, #0072B2,
+    #E69F00) — skips canonical positions 2 (#D55E00) and 4 (#CC79A7). Multi-category
+    elements should follow positions 1→N in order'
+  - 'VQ-01/VQ-03: Center ''ECC 200 data region'' annotation at fontsize=7 with alpha=0.65
+    is difficult to discern over the high-contrast black/white barcode cells; consider
+    placing it outside the barcode area with an arrow (like the other callouts) or
+    increase fontsize to 9pt minimum'
+  - 'VQ-01: Callout annotation text at fontsize=7.5 may be marginal at mobile scaling
+    (~400px); bump to 8.5–9pt for better mobile legibility'
+  - 'LM-01: importlib workaround is a non-idiomatic necessity; consider renaming the
+    file to avoid the matplotlib.py collision at the pipeline level'
+  - 'DE-01/DE-02: Canvas is 2800×2800px (figsize=7×7 at dpi=400) rather than the canonical
+    2400×2400px square — slightly oversized but not a blocking issue'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) page background with white interior for barcode cells — correct per spec (barcode scanning requires white cell background) and spec adherence.
+      Chrome: Title "datamatrix-basic · python · matplotlib · anyplot.ai" in dark ink (#1A1A17) spans ~80% of canvas width at fontsize=12 — within expected range for this mandated title length. Footer "Data Matrix 20×20 · Encoded: PCB:2026-A3F7 · ECC 200" in monospace INK_SOFT. All external annotations (L-finder, Timing strip) in their zone colors with arrow pointers.
+      Data: 20×20 matrix of black/white cells rendered with pcolormesh cmap='binary'. Left column + bottom row show solid green (#009E73) overlay (alpha=0.22) marking the L-finder pattern. Top row + right column show alternating blue (#0072B2) overlay marking timing strips. Data region center has faint orange (#E69F00) overlay (alpha=0.07) and center label at alpha=0.65 (difficult to read over barcode cells). Quiet zone of 3 modules provides breathing room.
+      Legibility verdict: PASS — all external text clearly readable. Center ECC 200 label faint but marginally visible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) page background — correct. Barcode interior remains white (spec-required for scanning). No dark-on-dark issues.
+      Chrome: Title text is light (#F0EFE8) on dark background — fully readable. Footer text in lighter INK_SOFT tone readable against dark background. Callout annotation text uses the same theme-constant Okabe-Ito colors (#009E73 for L-finder, #0072B2 for timing strips) with arrow pointers — identical colors to light render as required.
+      Data: Barcode cell pattern is identical to light render (black/white cells unchanged — they must not flip for scanning integrity). Structural overlay colors (#009E73, #0072B2, #E69F00) are identical to light render — only the page background and chrome elements flip. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all chrome elements adapt correctly. Both themes pass readability checks.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, annotations clearly readable at full size
+        comment: 'All font sizes explicitly set (title=12pt, footer=9pt, callouts=7.5pt,
+          center=7pt). Readable in both themes. Minor: 7pt center label and 7.5pt
+          callouts could be larger for mobile scaling.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No overlapping text or elements. Quiet zone of 3 modules provides
+          ample spacing for callout annotations.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Barcode cells are crisp with perfect contrast
+        comment: Barcode cells at maximum black/white contrast. Structural overlays
+          appropriately subtle (alpha=0.22 finder, 0.07 data). Center ECC 200 label
+          at alpha=0.65 is faint over high-contrast cells.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: High contrast black/white, universally accessible
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good use of square canvas, barcode could be slightly larger
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for barcode, descriptive annotations provided
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette CVD-safe. Barcode itself uses maximum black/white
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas well-utilized. Barcode centered with balanced quiet
+          zone. Footer positioned cleanly below. Canvas at 2800x2800px (slightly over
+          2400x2400 standard) but fine.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed, axes correctly hidden
+        comment: Title format exactly correct. No axis labels (plot is a barcode,
+          axis off). Footer annotation provides encoded content context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Uses Okabe-Ito palette with #009E73 first (correct). However skips
+          canonical positions 2 (#D55E00) and 4 (#CC79A7), using positions 1, 3, 5
+          instead of 1, 2, 3 in order. Background colors correctly adaptive (FAF8F1/1A1A17).'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Strong design for a technical visualization: intentional color scheme
+          (Okabe-Ito zones), adaptive warm backgrounds, monospace footer, subtle alpha
+          overlays. Above defaults but not publication-ready FiveThirtyEight level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: axis('off') removes all chrome clutter, no grid, subtle border outline
+          (lw=0.4), consistent annotation arrow style, well-tuned alpha levels. Good
+          refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded zone overlays with labeled callout arrows create educational
+          visual hierarchy that teaches the anatomy of a Data Matrix code. Clear intent
+          beyond raw data display.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Data Matrix 2D barcode visualization
+        comment: 'Correct: Data Matrix 2D barcode with all structural elements (L-finder,
+          timing strips, ECC 200).'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Matrix cells correctly mapped to visual grid
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: L-finder, timing pattern, quiet zone, ECC 200 reference all present
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: L-shaped finder (solid left + bottom), alternating
+          timing (top + right), quiet zone (3 modules), ECC 200 region, high-contrast
+          black/white cells, encoded content shown.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 16x16 matrix fully visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 20x20 matrix correctly structured with content-seeded random interior.
+          L-finder and timing patterns correctly positioned.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Annotation correctly describes encoded content
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format {spec-id} · {library} · pyplots.ai
+        comment: Title exactly matches required format 'datamatrix-basic · python
+          · matplotlib · anyplot.ai'. No legend needed for a barcode.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows L-finder, timing pattern, data cells, quiet zone; could show
-          size variations
+        comment: 'Shows all Data Matrix features: both L-finder edges, both timing
+          strip edges, ECC 200 data region, quiet zone border, and zone labels.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Serial number encoding is a real-world use case
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 16x16 is valid but simulated data rather than actual encoding
+        comment: PCB:2026-A3F7 — realistic electronics PCB serial number for manufacturing
+          traceability, one of the spec's stated applications. Neutral technical content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 20x20 Data Matrix is a standard size appropriate for encoding a short
+          serial number like PCB:2026-A3F7. Factually correct dimensions.
     code_quality:
       score: 10
       max: 10
@@ -153,50 +211,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear script: imports, data, plot, save'
+        comment: 'Linear structure: sys.path fix, imports, tokens, data, plot, save.
+          No functions or classes. The importlib workaround is necessary due to filename
+          collision.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures consistent output
+        comment: np.random.seed(42) plus content_seed derived from content string
+          for deterministic interior generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported
+        comment: 'All three imports used: plt (plotting), mpatches (Rectangle patches),
+          np (matrix construction).'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean and appropriate complexity. No fake functionality. sys.path
+          workaround is well-handled.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=400 and bbox_inches='tight'. Current
+          matplotlib API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Idiomatic: pcolormesh for grid rendering, patches.Rectangle for
+          overlays, ax.annotate with arrowprops for callouts, fig.text for footer.
+          Minor: importlib instead of direct import is non-idiomatic.'
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses pcolormesh for crisp cell rendering, axis control for clean
-          barcode appearance
+        comment: pcolormesh with edgecolors='none' for pixel-crisp cell boundaries
+          is a matplotlib strength. patches.Rectangle overlays with add_patch are
+          distinctively matplotlib. annotate with arrowprops for precise callout positioning.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - patches
   patterns:
   - data-generation
   - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
