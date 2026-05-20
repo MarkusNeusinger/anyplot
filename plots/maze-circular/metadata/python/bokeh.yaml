@@ -1,208 +1,276 @@
 library: bokeh
+language: python
 specification_id: maze-circular
 created: '2026-01-16T07:19:36Z'
-updated: '2026-01-16T07:22:07Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058785286
+updated: '2026-05-20T08:05:39Z'
+generated_by: claude-sonnet
+workflow_run: 26148261925
 issue: 3804
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/maze-circular/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/maze-circular/bokeh/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/bokeh/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of recursive backtracking maze generation algorithm
-  - Clean visual design with appropriate wall thickness and contrast
-  - Proper use of increasing sectors per ring for natural circular maze aesthetics
-  - Both PNG and HTML export demonstrating Bokeh versatility
-  - START and GOAL markers are clearly distinguishable with appropriate colors
-  - Square 3600x3600 format is ideal for circular maze presentation
+  - Correct circular maze with concentric rings and radial passages using recursive
+    backtracking for guaranteed single solution
+  - 'Proper theme-adaptive chrome: wall color, title, and annotations flip correctly
+    between light (#FAF8F1) and dark (#1A1A17) backgrounds'
+  - 'Correct Okabe-Ito palette use: brand green #009E73 for entry marker and Okabe-Ito
+    orange #E69F00 for goal — identical between themes'
+  - match_aspect=True ensures undistorted circular rendering in Bokeh
+  - 'Idiomatic Bokeh usage: ColumnDataSource + HoverTool on goal and entry markers,
+    HTML catalog artifact correctly generated'
+  - KISS code structure — linear flow with no functions or classes, np.random.seed(42)
+    ensures reproducibility
+  - Difficulty annotation in italic at bottom adds useful context; star glyph in goal
+    circle is a polished touch
+  - Selenium page-background fix prevents thin lighter border artifact in dark theme
+    screenshots
   weaknesses:
-  - Code uses helper functions (get_neighbors, draw_arc) instead of pure linear KISS
-    structure
-  - Difficulty parameter mentioned in spec is not implemented (currently generates
-    one fixed pattern)
-  image_description: The plot displays a circular maze puzzle with 7 concentric rings
-    on a white background. The maze features dark gray/black walls (#1a1a1a) forming
-    both circular arcs and radial passages between sectors. The number of sectors
-    increases from 8 in the innermost ring to 32 in the outermost ring. At the center
-    is a yellow/gold circular goal marker with a black star symbol (★). On the outer
-    right edge, there is a blue triangle marker pointing inward with "START" text
-    above it in blue, indicating the entry point. The title "maze-circular · bokeh
-    · pyplots.ai" appears at the top center. The walls have consistent thickness,
-    and there is a clear gap in the outer boundary at the start position. The maze
-    appears algorithmically generated with a single solution path guaranteed by the
-    recursive backtracking algorithm.
+  - 'DE-01 (5/8): Design is intentional and clean but not at publication-level polish
+    — a subtle background fill for the goal/entry legend area or a more sophisticated
+    title typographic treatment could elevate it'
+  - 'DE-02 (4/6): Visual refinement is good (axes/grid hidden, min_border tuned) but
+    the entry triangle marker placed outside the outer boundary could be polished
+    further — e.g., a small notch/arrow pointing inward from the boundary gap rather
+    than a floating triangle'
+  - 'DE-03 (4/6): Green-entry/orange-goal color contrast guides the eye well but the
+    puzzle lacks additional storytelling cues — e.g., a subtle solution-path highlight
+    or gradient ring shading for difficulty zones could add hierarchy'
+  - 'VQ-01 (7/8): The difficulty annotation at y=-1.12 (24pt) is small relative to
+    the 2400×2400 canvas and sits close to the bottom border; at mobile scale it may
+    barely register — increase to 28pt and/or move up slightly to y=-1.08'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white, no harsh brightness.
+      Chrome: Title "maze-circular · python · bokeh · anyplot.ai" rendered in dark ink at top, clearly readable. No axes or grid (correct for a maze). Bottom annotation "7 rings · medium" in italic is present but small at the bottom edge.
+      Data: Circular maze with dark (#1A1A17) walls on the warm background. 7 concentric rings with radial sector divisions clearly visible. Center goal circle filled in Okabe-Ito orange (#E69F00) with a white star (★). Entry gap on outer ring at ~3 o'clock with a green (#009E73) triangle marker and "START" label.
+      Legibility verdict: PASS — all text readable; difficulty annotation is small but visible at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black consistent with #1A1A17 — not pure black.
+      Chrome: Title in light cream text (#F0EFE8), clearly readable against dark background. No dark-on-dark issues detected anywhere.
+      Data: Maze walls are now rendered in light/cream (#F0EFE8) against the dark background — high contrast and clear. Goal circle color (orange #E69F00) is identical to light render. Entry marker (green #009E73) and "START" label are identical to light render. Theme adaptation is correct.
+      Legibility verdict: PASS — all chrome adapts correctly; no dark-on-dark failures; data colors identical between themes.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt is clearly readable, START label at 20pt is legible
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements, all text and walls clearly separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Walls are visible at appropriate thickness, though could be slightly
-          thicker for print use
+        comment: All font sizes explicitly set (50pt title, 28pt labels, 24pt annotation).
+          Readable in both themes. Difficulty annotation at 24pt near bottom border
+          is slightly small for mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or element overlaps. Entry label, goal star, title, and annotation
+          are all clearly separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Wall width=5 is appropriate for 2400px canvas. Goal circle and entry
+          triangle are prominent. All maze elements clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: High contrast black walls on white background, distinct blue and
-          yellow markers
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Maze fills canvas well, balanced margins, square 3600x3600 format
-          appropriate
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for maze puzzle (axes hidden as expected), markers clearly labeled
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Green/orange from Okabe-Ito are CVD-safe. High contrast against both
+          light and dark backgrounds.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Circular maze fills ~49% of square canvas area — expected for circular
+          shape in square frame. Margins used well for title and annotation.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: N/A for maze puzzle (no grid/legend needed)
+        comment: No axis labels (correct — maze has no axes). Title follows exact
+          required format. Difficulty annotation adds meaningful context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Entry: #009E73 (Okabe-Ito pos 1, brand green). Goal: #E69F00 (Okabe-Ito
+          pos 5). Backgrounds: #FAF8F1 light / #1A1A17 dark. Data colors identical
+          between themes. Chrome flips correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Intentional two-color system (green entry, orange goal) for CVD-safe
+          wayfinding. Clean, functional maze aesthetic with consistent wall thickness.
+          Clearly above defaults but not at FiveThirtyEight publication level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes, grid, and outline hidden correctly. min_border tuned. Italic
+          difficulty annotation. Selenium page-background fix avoids border artifacts.
+          Entry marker as floating triangle is functional but could be more elegant.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Green-to-orange visual narrative (start → goal) guides the viewer.
+          Color contrast creates clear focal points. No additional storytelling layering
+          (e.g., difficulty zone shading, solution path).
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct circular maze with concentric rings and radial passages
+        comment: Correct circular maze with concentric rings and radial passages.
+          Recursive backtracking guarantees exactly one solution.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 7 rings with increasing sectors (8 to 32), proper passage connections
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Entry on outer edge, goal at center, guaranteed single solution path
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: concentric rings, radial walls, radial passages,
+          entry on outer perimeter, goal at center, consistent wall thickness, single-solution
+          algorithm.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All maze elements visible within the canvas bounds
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 7 rings (medium), sectors increase ring-by-ring (8→32), ring radii
+          linearly spaced 0.12→0.95. Correct maze topology.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: START and goal star clearly marked
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format maze-circular · bokeh · pyplots.ai
+        comment: Title exactly 'maze-circular · python · bokeh · anyplot.ai'. No legend
+          (single-use puzzle visualization — correctly omitted).
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows concentric rings, radial passages, entry/goal markers; could
-          have more complex path for higher difficulty
+        comment: 'Shows all aspects: variable sector density per ring, outer boundary
+          with entry gap, central hub, both arc and radial walls, entry and goal markers.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Appropriate maze puzzle for educational/recreational use
+        comment: Clean puzzle/educational context. Neutral, printable maze puzzle
+          application. No controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 7 rings with medium complexity is reasonable, sectors scale appropriately
+        comment: 7 rings for medium difficulty is appropriate. Sector counts (8→32)
+          geometrically sensible. Recursive backtracking ensures valid maze topology.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses helper functions (get_neighbors, draw_arc) which deviate from
-          pure linear structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set for reproducible maze generation
+        comment: 'Linear flow: imports → theme tokens → maze generation → figure →
+          drawing → labels → save. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, time, pathlib.Path, numpy, bokeh.io, bokeh.models,
+          bokeh.plotting, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean Pythonic code. Maze algorithm is well-structured. Neighbor
+          computation inline is appropriate. No over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Bokeh 3.9 API
+          used correctly.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Bokeh figure, line, patch, scatter, Label, export_png, and HTML
-          export
+        comment: Correct use of figure(), ColumnDataSource, p.line(), p.scatter(),
+          p.patches(), Label, HoverTool, output_file(), save(), Selenium screenshot.
+          Matches bokeh.md canonical patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool on goal and entry for interactive HTML tooltips. HTML catalog
+          artifact via output_file(). match_aspect=True for undistorted circular rendering.
+          JS execute_script() to fix Selenium background. These are distinctly Bokeh
+          features.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
-  - patches
+  - hover-tooltips
   - html-export
+  - patches
+  - annotations
   patterns:
   - data-generation
+  - columndatasource
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
