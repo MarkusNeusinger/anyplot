@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: histogram-returns-distribution
 created: '2026-01-16T22:12:03Z'
-updated: '2026-05-20T18:17:14Z'
+updated: '2026-05-20T18:31:02Z'
 generated_by: claude-sonnet
 workflow_run: 26180782399
 issue: 3751
@@ -12,98 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/pygal/plot-dark.html
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - Correct Okabe-Ito palette with green body (#009E73), orange tails (#D55E00), blue
-    curve (#0072B2) in canonical order
-  - Tail highlighting beyond ±2σ clearly communicates extreme events risk
-  - Stats displayed in subtitle (mean, std, skewness, kurtosis) provide immediate
-    quantitative context
-  - Both themes fully readable — light and dark chrome adapts correctly
-  - Clean KISS code structure with proper random seed and font sizes explicitly set
-  - Dual output (HTML + PNG) leverages pygal interactive capability
+  - Correct use of pygal.Histogram native (value, xmin, xmax) tuple API for all three
+    series
+  - Two-tone histogram (green within 2σ, orange tails) creates immediate visual storytelling
+    about tail risk
+  - Normal distribution overlay cleverly approximated via 300 thin adjacent bins,
+    rendering as a smooth bell curve
+  - All style-guide font sizes explicitly set (title=66, label=56, major_label=44,
+    legend=44)
+  - Full theme-adaptive chrome — background, ink, and muted tokens all correctly derived
+    from ANYPLOT_THEME
+  - HTML + PNG dual output as required for pygal (interactive library)
+  - Seed set for reproducibility; clean KISS structure with no functions or classes
+  - Statistics (mean, std, skew, kurtosis) surfaced in subtitle for quick interpretation
   weaknesses:
-  - Use pygal.Histogram() chart type instead of pygal.XY() with box-polygon simulation
-    — pygal.Histogram(data=[(value, x_min, x_max)]) is the idiomatic API for histograms
-    and avoids stroke artifacts between adjacent bars
-  - 'Bar outlines (stroke=True on XY chart) create visible dark separator lines between
-    adjacent bars in the dark render — switch to pygal.Histogram() or set stroke=False
-    and stroke_style={"width": 0} on bar series'
-  - 'DE-01: Polish needed — remove top/right spine lines (pygal uses border options),
-    soften grid further, add more intentional whitespace; the current styling is well-configured
-    but still looks like a default'
-  - 'DE-02: Dashed grid lines are somewhat prominent; the y-guides could be more subtle;
-    consider show_y_guides=False or style opacity adjustments'
+  - Statistics displayed in title subtitle rather than a dedicated on-chart text box
+    as the spec requires — pygal limitation but spec compliance is partial
+  - Normal distribution curve rendered as 300 thin histogram bins may show faint stair-step
+    artifacts at high zoom; a true line overlay would be more precise, though the
+    visual result is acceptable
+  - Grid completely absent — a subtle y-axis-only grid would aid density readability
+    without competing with data
+  - Design Excellence ceiling limited by pygal built-in chrome (chart frame cannot
+    be removed); no distinctive typography hierarchy beyond the style-guide defaults
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Two-line title ("histogram-returns-distribution · python · pygal · anyplot.ai" + stats row) in dark ink, both lines fully readable. Y-axis label "Probability Density" in dark ink, readable. X-axis label "Returns (%)" in dark ink with percent unit, readable. Tick labels on both axes in INK_MUTED tone, all digits visible with no clipping. Bottom legend (3 columns) fully legible.
-      Data: Main histogram bars in #009E73 (brand green) for returns within 2σ. Tail bars in #D55E00 (orange/vermillion) at both extreme ends. Normal distribution overlay in #0072B2 (blue) as thin curve. Dashed horizontal y-guides visible but not dominant. Bar stroke separators visible between adjacent bars.
-      Legibility verdict: PASS — all text readable on warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white
+      Chrome: Two-line title — line 1 "histogram-returns-distribution · python · pygal · anyplot.ai" in dark ink, line 2 statistics subtitle "Mean: 0.044% | Std: 1.451% | Skew: 0.30 | Kurt: 0.62"; Y-axis label "Probability Density" and X-axis label "Returns (%)" both clearly visible in dark ink; tick labels (-3 through ~5.5 on X; 0 to 0.30 on Y) clearly readable in dark muted tone; legend at bottom with three columns readable
+      Data: First series "Returns (within 2σ)" = brand green #009E73 bars filling the central ±2σ region; second series "Tails (beyond ±2σ)" = orange #D55E00 bars at far left (~-3%) and far right (~4.5-5.5%); third series "Normal Distribution" = blue #0072B2 filled bell-curve area (300 thin adjacent bins creating smooth appearance)
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct dark theme surface.
-      Chrome: Same two-line title in light/near-white text, fully readable. Y-axis and X-axis labels in light text, readable. Tick labels in light tone on all axes, all digits visible. Bottom legend text in light color, readable. No dark-on-dark failures observed.
-      Data: Colors identical to light render — green body bars (#009E73), orange tail bars (#D55E00), blue normal curve (#0072B2). Bar stroke separators create slightly more visible dark lines between adjacent green bars in dark mode due to the XY box-polygon approach, but bars remain clearly distinguishable.
-      Legibility verdict: PASS — all text readable on near-black background; data colors unchanged from light render.
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels, and legend text all rendered in light/cream ink clearly visible against near-black background; no dark-on-dark failures observed
+      Data: Green, orange, and blue data colors are identical to the light render (only background and text chrome flipped) — first series still #009E73 green, tails still #D55E00 orange, normal distribution still #0072B2 blue
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark issues, brand green visible and legible
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set in Style object; title, axis labels,
-          tick labels, legend all readable in both themes. Minor: two-line title (mandated
-          + stats) slightly reduces hierarchy clarity but works well.'
+        comment: All font sizes explicitly set per style guide (title=66, label=56,
+          major_label=44, legend=44). Both themes fully readable. Two-line title takes
+          expected space without overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; legend at bottom cleanly separated
-          from plot area.
+        comment: No text overlaps with other text or data elements in either render.
+          Legend is cleanly separated at bottom.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Histogram bars and tail bars well-sized. Normal distribution curve
-          (stroke_style width=6) is visible but slightly less prominent against large
-          green bars in dark render.
+        comment: Histogram bars clearly visible. Normal distribution curve rendered
+          smoothly via 300 thin bins. Tail bars (orange) visible at extremes even
+          at small size.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito positions 1-3 used; CVD-safe palette; adequate contrast
-          in both themes.
+        comment: Okabe-Ito green/orange/blue combination — colorblind-safe; shapes
+          also distinguishable by position.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Plot fills canvas well with generous
-          margins. Legend at bottom does not crowd the chart.
+        comment: Plot fills ~70-75% of canvas. Generous margins (bottom=200, left=120).
+          Legend compact at bottom. Well-balanced layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: '''Returns (%)'' includes percent unit. ''Probability Density'' is
-          appropriately descriptive.'
+        comment: 'Y: ''Probability Density'' (appropriate, unitless for density),
+          X: ''Returns (%)'' with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
         comment: 'First series #009E73, second #D55E00, third #0072B2 — correct Okabe-Ito
-          order. Light background #FAF8F1, dark background #1A1A17. Data colors identical
-          across themes.'
+          order. Light bg #FAF8F1, dark bg #1A1A17. All chrome theme-adaptive.'
     design_excellence:
       score: 11
       max: 20
@@ -113,29 +115,25 @@ review:
         score: 4
         max: 8
         passed: false
-        comment: Well-configured styling with correct palette and explicit font sizes;
-          tail highlighting adds intentional hierarchy. Looks like a well-configured
-          library default, not publication-ready — no spine adjustments, stroke outlines
-          between bars create a busy look in dark mode.
+        comment: Well-configured but recognizable as a pygal default. Color choices
+          excellent; overall polish is functional rather than publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: false
-        comment: Bottom-only legend is clean; margin_bottom=200 adds breathing room;
-          only y-guides enabled. Bar stroke outlines create visible separator lines
-          between adjacent bars in dark mode. Dashed grid lines moderately prominent.
+        comment: Grid disabled, margins tuned, opacity=0.85 set — shows deliberate
+          refinement. Pygal chart frame cannot be removed, limiting ceiling.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
-        passed: false
-        comment: Tail highlighting (orange beyond ±2σ) is effective risk storytelling.
-          Stats in subtitle provide immediate quantitative context. Good visual hierarchy
-          between tail and body, but stops short of excellent — no emphasis on the
-          peak/mode or annotation callouts.
+        passed: true
+        comment: Green/orange color split immediately signals the key insight (tail
+          risk vs. normal range). Normal distribution overlay provides the reference
+          comparison. Stats in subtitle add quantitative context.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -143,31 +141,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Histogram with normal distribution overlay — correct type, both components
-          present.
+        comment: Correct histogram with normal distribution overlay.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
-        passed: true
-        comment: Normal distribution curve fitted to data, key statistics (mean, std,
-          skewness, kurtosis) in subtitle, tail regions highlighted beyond ±2σ, density
-          normalization applied.
+        passed: false
+        comment: All features present EXCEPT the spec requires 'key statistics in
+          a text box' — implementation shows stats in the title subtitle instead (pygal
+          workaround). Tail highlighting, normal overlay, density normalization all
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: Returns (%), Y-axis: Probability Density. 252 observations,
-          data spans reasonable range.'
+        comment: X=Returns (%), Y=Probability Density. 252 daily returns. Correct
+          density normalization.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''histogram-returns-distribution · python · pygal · anyplot.ai''
-          — correct format. Legend labels accurate: ''Returns (within 2σ)'', ''Tails
-          (beyond ±2σ)'', ''Normal Distribution''.'
+        comment: Title 'histogram-returns-distribution · python · pygal · anyplot.ai'
+          on line 1 is correct. Legend labels descriptive.
     data_quality:
       score: 15
       max: 15
@@ -177,22 +174,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all histogram aspects: main body, tail regions, overlay curve,
-          density normalization. Both left and right tails highlighted.'
+        comment: 'Shows all aspects: normal range bars, tail bars, distribution overlay,
+          density normalization, statistics.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Daily stock returns, 252 trading days (1 year). Financial domain,
-          neutral context.
+        comment: 252 daily stock returns with mean ~0.05%/day and std ~1.5% — realistic
+          parameters for equity returns. Neutral financial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mean 0.044%/day, Std 1.451%/day — realistic daily stock return parameters
-          (annualized ~11% return, ~23% vol).
+        comment: Return values (±3-4% daily range) and probability density values
+          align with real-world daily equity return distributions.
     code_quality:
       score: 10
       max: 10
@@ -202,8 +199,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → stats → style → plot → save. No functions
-          or classes.'
+        comment: Clean imports → data → style → chart → save structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -215,44 +211,42 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: sys, os, numpy, pygal, pygal.style — all used. sys.path.pop(0) needed
-          to prevent self-import shadow.
+        comment: sys, os, numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Box polygon construction is verbose but necessary for the XY approach.
-          No fake UI elements.
+        comment: Clean and Pythonic. The 300-thin-bin approach for the normal curve
+          is an elegant pygal adaptation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required for interactive
-          pygal library.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly.
     library_mastery:
-      score: 5
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses pygal.Histogram with correct native (value, xmin, xmax) tuple
+          format, Style object for complete theming, explicit_size=True, legend_at_bottom_columns
+          — all idiomatic pygal patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: false
-        comment: Uses Style object, explicit_size, legend_at_bottom, render_to_png
-          — idiomatic. However, uses pygal.XY() with box-polygon simulation instead
-          of pygal.Histogram() which is the native histogram type; reduces idiomatic
-          score.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export via chart.render() is a distinctive pygal feature. legend_at_bottom_columns
-          is pygal-specific. But not using the native Histogram chart type misses
-          the most distinctive feature for this use case.
-  verdict: REJECTED
+        comment: Uses native Histogram API (distinctive), HTML export (interactive
+          SVG output unique to pygal), and the creative 300-thin-bin technique to
+          simulate a smooth curve within the histogram API. Good but not exceptional
+          use of pygal's full feature set.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:

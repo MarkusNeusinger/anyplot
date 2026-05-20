@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-20
+Quality: 88/100 | Updated: 2026-05-20
 """
 
 import sys
