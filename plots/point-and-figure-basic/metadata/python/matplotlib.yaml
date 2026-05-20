@@ -1,156 +1,206 @@
 library: matplotlib
+language: python
 specification_id: point-and-figure-basic
 created: '2026-01-15T22:54:30Z'
-updated: '2026-01-15T22:57:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21049143205
+updated: '2026-05-20T03:53:05Z'
+generated_by: claude-sonnet
+workflow_run: 26139124459
 issue: 3755
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent P&F algorithm implementation correctly handling box sizes and 3-box
-    reversals
-  - Clean, readable code structure following KISS principles
-  - Proper use of X-axis representing columns/reversals rather than time (key P&F
-    feature)
-  - Good color choices with blue for bullish and red for bearish
-  - Grid lines aligned with box size intervals as recommended in spec
-  - Appropriate text sizing for high-resolution output
+  - Correct P&F chart type with X/O symbol columns, reversal logic, and column-based
+    X-axis
+  - 'Okabe-Ito palette applied correctly: green (#009E73) for X columns (Rising),
+    vermillion (#D55E00) for O columns (Falling)'
+  - matplotlib.patheffects.withStroke used for crisp symbol separation in dense columns
+    — distinctly matplotlib technique
+  - 'Theme-adaptive chrome fully wired: backgrounds, text, spines, legend frame, annotation
+    bbox all flip correctly between light and dark'
+  - Support (ascending 45°) and resistance (descending 45°) trend lines add analytical
+    context as specified
+  - Buy Signal annotation with styled bbox and arrow creates a clear focal point and
+    narrative hook
+  - Major/minor tick differentiation on Y-axis ($10 major with labels, $2 minor for
+    box-size grid) is appropriate for P&F charts
+  - Custom legend using mpatches.Patch avoids marker/text mismatch inherent to the
+    X/O symbol rendering approach
+  - Deterministic with np.random.seed(42); clean linear KISS structure
   weaknesses:
-  - Missing support/resistance trend lines mentioned in spec notes (45-degree lines
-    connecting ascending lows/descending highs)
-  - Legend marker style does not perfectly match the text characters displayed on
-    chart
-  image_description: The plot displays a Point and Figure (P&F) chart showing price
-    movements over 13 columns (0-12). The chart uses blue "X" characters for rising
-    price columns (bullish) and red "O" characters for falling price columns (bearish).
-    The Y-axis shows "Price ($)" ranging from approximately $80 to $132 with grid
-    lines at $2 intervals (matching the box size). The X-axis shows "Column (Reversal
-    Number)" from 0 to 12. The title correctly follows the format "point-and-figure-basic
-    · matplotlib · pyplots.ai". A legend in the upper left shows "Rising (X)" in blue
-    and "Falling (O)" in red. The chart demonstrates alternating X and O columns showing
-    price reversals, with an overall upward trend visible as prices rise from ~$100
-    to ~$127 by the end.
+  - X and O data symbols rendered at fontsize=8 are on the small side for the 3200×1800
+    canvas — borderline readable on mobile at 400px width; increasing to fontsize=9–10
+    would improve density while still fitting within column spacing
+  - Support trend line is pinned to overall canvas x=[0, n_cols-1] rather than anchored
+    at the lowest column index — the line extends outside the actual P&F data range,
+    making it appear to originate before the chart starts rather than from the lowest
+    low's actual column position
+  - 'DQ-02: data is purely synthetic with no name, sector, or date context — adding
+    a minimal stock label and approximate date range would improve real-world plausibility'
+  - 'Design Excellence: DE-03 could be strengthened — the buy signal annotation is
+    the main focal point but the trend line labels (''Support'', ''Resistance'') are
+    missing, leaving the dashed lines unexplained to a viewer unfamiliar with P&F
+    charts'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "point-and-figure-basic · python · matplotlib · anyplot.ai" in dark ink at fontsize=12, fitting ~75% of canvas width. X-axis label "Column (Reversal Number)" and Y-axis label "Price ($)" both in dark ink at fontsize=10, well-balanced. Tick labels in INK_SOFT gray at 8pt — readable. Grid: subtle horizontal lines at major $10 intervals (15% opacity). Left/bottom spines in INK_SOFT; top/right removed.
+      Data: Green (#009E73) X symbols and orange/vermillion (#D55E00) O symbols rendered as bold characters with white patheffects stroke. 13 columns visible; column heights span ~$80–$130. Green dashed ascending support line and orange dashed descending resistance line overlay the chart at alpha=0.5. "Buy Signal (Column Breakout)" annotation with green-bordered bbox and arrow pointing to column 8 breakout.
+      Legibility verdict: PASS — all text (title, axis labels, ticks, legend, annotation) clearly readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, tick labels rendered in light ink (#F0EFE8 / #B8B7B0) — all clearly visible against the dark background. Legend frame uses elevated dark (#242420). Annotation bbox uses elevated dark background with green border.
+      Data: X symbols remain green (#009E73) and O symbols remain vermillion (#D55E00) — identical to light render. Only chrome flips. Support and resistance trend lines maintain their color at 0.5 alpha.
+      Legibility verdict: PASS — no dark-on-dark issues observed. All text elements use light-colored tokens and are readable. The patheffects stroke adapts to the dark page background correctly.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, all perfectly
-          readable at full resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or elements; X and O symbols are well-spaced
-          within their columns
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: X and O symbols are clearly visible at fontsize=14 with bold weight;
-          could be slightly larger for optimal visibility
+        comment: All font sizes explicitly set (title=12, axes=10, ticks=8, legend=8,
+          annotation=7). Readable in both themes. Symbols at fontsize=8 are slightly
+          small for mobile but legible. Proportions balanced.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Patheffects.withStroke separates densely packed symbols. Dense columns
+          (col 8, ~11 X symbols) show symbols close but non-overlapping. Annotation
+          placed clear of data.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: X and O symbols clearly visible in both themes. Colors have adequate
+          contrast on both backgrounds. Slightly small at 8pt but appropriate given
+          symbol density.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue and red provide good contrast and are distinguishable for colorblind
-          users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas appropriately with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price ($) includes units, Column (Reversal Number) is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito green and vermillion are CVD-safe. X vs O distinguished
+          by both color and character shape — not reliant on hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Chart fills canvas well. Legend in upper-left. Annotation in upper-right
+          without overlap. tight_layout + bbox_inches=tight prevents clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend marker style doesn't perfectly match the text characters displayed
-          on chart
+        passed: true
+        comment: 'Y-axis: ''Price ($)'' with unit. X-axis: ''Column (Reversal Number)''
+          descriptive. Title correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Rising X), second #D55E00 (Falling O) — Okabe-Ito
+          positions 1 and 2. Light bg #FAF8F1, dark bg #1A1A17. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above configured-default level. Custom patheffects, Okabe-Ito palette,
+          styled annotation bbox, colored patch legend. Not publication-ready but
+          clearly intentional design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, subtle grid at 15% alpha, major/minor tick
+          differentiation, themed legend frame. Good refinement above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Buy Signal annotation with arrow provides clear focal point. Support/resistance
+          trend lines add analytical context. Trend lines lack labels — viewer must
+          infer meaning of dashed lines.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Point and Figure chart with X for rising and O for falling
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Y-axis correctly shows price, X-axis shows column/reversal number
-      - id: SC-03
+        comment: 'Correct P&F chart: X columns for rising, O columns for falling,
+          each column pure type, new column on 3-box reversal.'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has X/O symbols, box size intervals, grid lines. Missing trend lines
-          from spec notes
-      - id: SC-04
-        name: Data Range
+        comment: X/O symbols, green/vermillion distinction, column-based X-axis (not
+          time), support/resistance trend lines, price scale with box-size grid intervals,
+          box_size and reversal parameters — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes limits with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Y-axis price, X-axis column index. 300 price observations within
+          spec range (200-500). All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels Rising (X) and Falling (O)
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format with middle dot separator
+        comment: 'Title exactly ''point-and-figure-basic · python · matplotlib · anyplot.ai''.
+          Legend: ''Rising (X)'' and ''Falling (O)'' with correct colors.'
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both bullish and bearish columns, multiple reversals, overall
-          trend
+        comment: Shows both X and O columns, multiple reversals, upward trend with
+          drift, breakout pattern, support/resistance interaction.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price simulation starting at $100 with realistic daily returns
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Price range $80-132 is reasonable; box size of $2 is sensible
+        comment: Plausible stock price starting at $100 with realistic volatility
+          (2% daily std). Box size $2 and 3-box reversal are industry-standard parameters.
+          No stock name or date range — slightly abstract.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range $80-$130 over 300 days is realistic. Box size $2 (2%)
+          and 3-box reversal are standard P&F parameters for mid-priced stocks.
     code_quality:
       score: 10
       max: 10
@@ -160,43 +210,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data generation, P&F algorithm, plot,
-          save'
+        comment: 'Linear: imports → theme tokens → data → P&F algorithm → plot → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: matplotlib.patches, matplotlib.patheffects, matplotlib.pyplot, numpy,
+          os, sys — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: P&F state machine is appropriately complex for the algorithm. No
+          fake functionality. No over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png at dpi=400 with bbox_inches=tight and facecolor=PAGE_BG.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses ax.* methods, ax.annotate, ax.legend(handles=[...]), major/minor
+          tick configuration. Idiomatic and correct. ax.text for symbol rendering
+          is a reasonable choice.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ax.text() for character placement and Line2D for custom legend
-          markers
+        comment: matplotlib.patheffects.withStroke is a distinctly matplotlib feature
+          for crisp overlapping text. mpatches.Patch for custom legend handles. Major/minor
+          tick differentiation with separate styling.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -204,9 +265,11 @@ impl_tags:
   - annotations
   - custom-legend
   - manual-ticks
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
