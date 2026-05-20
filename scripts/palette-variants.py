@@ -112,7 +112,6 @@ PER_VARIANT_C_RANGE: dict[str, tuple[float, float]] = {
     "split-comp":     (26.0, 42.0),
     "balanced":       (22.0, 36.0),
     "okabe-tuned":    (30.0, 50.0),
-    "okabe-shifted":  (28.0, 48.0),  # cap applied per-colour as a hue-preserving projection
 }
 
 
@@ -243,24 +242,32 @@ def score_candidates(
     return best
 
 
+def hue_diversity_penalty(
+    pool: CandidatePool, sel_hues: list[float], target_spread_deg: float
+) -> np.ndarray:
+    """Penalty subtracted from the ΔE score: grows as the candidate hue gets
+    closer than ``target_spread_deg`` to any already-selected hue. Without
+    this, greedy max-min lands on three nearly-identical purples for the
+    balanced strategy because the warm/purple corner of CAM02-UCS is where
+    "farthest from green" lives for several conditions at once.
+    """
+    if not sel_hues:
+        return np.zeros(pool.rgb1.shape[0])
+    sel = np.array(sel_hues)
+    diff = pool.hues_deg[:, None] - sel[None, :]
+    circ = np.abs(((diff + 180) % 360) - 180)
+    min_hue_dist = circ.min(axis=1)
+    return np.maximum(0.0, target_spread_deg - min_hue_dist) * 0.30
+
+
 def select_palette(
     strategy: str, pool: CandidatePool, n_hues: int = 7
 ) -> list[str]:
-    """Pick 7 hues for a variant.
-
-    ``okabe-shifted`` is special: instead of a greedy search it does a
-    hue-preserving projection of each Okabe-Ito colour onto the paper-ink
-    corridor. The result is the minimally-perturbed Okabe-Ito palette — the
-    most conservative option, useful when the goal is "same vocabulary, just
-    less hot".
-
-    All other strategies do greedy max-min ΔE selection under all 4 CVD
-    conditions, with per-position hue bands and the per-variant chroma
+    """Pick 7 hues for a variant. Greedy max-min ΔE selection under all 4
+    CVD conditions, with per-position hue bands and the per-variant chroma
     corridor as candidate masks. If no candidate matches the strictest band,
     the band half-width is widened in 10° steps until something fits.
     """
-    if strategy == "okabe-shifted":
-        return _select_okabe_shifted(strategy, n_hues)
 
     brand_rgb = hex_to_rgb1(OK_GREEN)
     _, _, brand_H = jab_to_lch(to_jab(brand_rgb.reshape(1, 3))[0])
@@ -269,10 +276,19 @@ def select_palette(
     c_min, c_max = PER_VARIANT_C_RANGE[strategy]
     chroma_mask = (pool.chromas >= c_min) & (pool.chromas <= c_max)
 
+    # Only the balanced strategy needs the diversity penalty — every other
+    # strategy already enforces hue spread via per-position bands. 50° is
+    # roughly 360°/7, the ideal even spacing for 7 colours.
+    use_diversity_penalty = strategy == "balanced"
+    diversity_target_deg = 50.0
+
     selected_rgb: list[np.ndarray] = [brand_rgb]
+    selected_hues: list[float] = [brand_H]
     for i in range(1, n_hues):
         sel_jabs = selected_jabs(selected_rgb)
         scores = score_candidates(pool, sel_jabs)
+        if use_diversity_penalty:
+            scores = scores - hue_diversity_penalty(pool, selected_hues, diversity_target_deg)
 
         bands = bands_per_pos[i]
         mask = _bands_mask(pool.hues_deg, bands) & chroma_mask
@@ -280,7 +296,7 @@ def select_palette(
         widen = 0
         while not mask.any() and widen < 60:
             widen += 10
-            widened = [(c, w + widen) for (c, w) in bands]
+            widened = [(c, w + widen) for (c, w) in bands] if bands else None
             mask = _bands_mask(pool.hues_deg, widened) & chroma_mask
         if not mask.any():
             mask = chroma_mask  # last-resort: drop hue rule
@@ -288,28 +304,9 @@ def select_palette(
         masked_scores = np.where(mask, scores, -np.inf)
         best_idx = int(np.argmax(masked_scores))
         selected_rgb.append(pool.rgb1[best_idx])
+        selected_hues.append(float(pool.hues_deg[best_idx]))
 
     return [rgb1_to_hex(rgb) for rgb in selected_rgb]
-
-
-def _select_okabe_shifted(strategy: str, n_hues: int) -> list[str]:
-    """Hue-preserving projection of each Okabe-Ito colour onto the paper-ink
-    corridor (clamp J' to [J_MIN, J_MAX] and C to the variant's range; hue
-    stays exact). Brand green is in-corridor already, so it survives untouched.
-    Anything previously above C-max gets gently pulled toward grey while
-    keeping its hue identity.
-    """
-    c_min, c_max = PER_VARIANT_C_RANGE[strategy]
-    out: list[str] = []
-    for hx in OKABE_PALETTE[:n_hues]:
-        jab = to_jab(hex_to_rgb1(hx).reshape(1, 3))[0]
-        L, C, H = jab_to_lch(jab)
-        L_proj = float(np.clip(L, J_MIN, J_MAX))
-        C_proj = float(np.clip(C, c_min, c_max))
-        rgb = jab_to_rgb1(lch_to_jab(L_proj, C_proj, H))
-        rgb = np.clip(rgb, 0.0, 1.0)
-        out.append(rgb1_to_hex(rgb))
-    return out
 
 
 def _bands_mask(hues: np.ndarray, bands: list[tuple[float, float]] | None) -> np.ndarray:
@@ -328,38 +325,63 @@ def _strategy_bands(
 ) -> list[list[tuple[float, float]] | None]:
     """Return a list of length n_hues; entry i is the acceptable hue bands
     for position i. Each entry is a list of (center_deg, half_width_deg)
-    tuples, or None to mean "no hue constraint"."""
+    tuples, or None to mean "no hue constraint".
+
+    For strategies with a fixed hue identity (triadic / split-comp / analogous),
+    every position has a unique hue target so the palette can't accidentally
+    end up with three purples; positions 0-2 carry the scheme's primary
+    anchors and 3-6 fill the gaps between them.
+    """
+    bw = 22  # half-width of each per-position band, in degrees
+
     if strategy == "analogous":
-        return [[(brand_hue, 90)] for _ in range(n_hues)]
+        # ±90° around brand, spread the 7 picks across the band rather than
+        # letting greedy max-min cluster them at the band edges.
+        targets = [
+            brand_hue,
+            (brand_hue + 30) % 360,
+            (brand_hue - 30) % 360,
+            (brand_hue + 60) % 360,
+            (brand_hue - 60) % 360,
+            (brand_hue + 90) % 360,
+            (brand_hue - 90) % 360,
+        ]
+        return [[(t, bw)] for t in targets][:n_hues]
 
     if strategy == "triadic":
-        anchors = [
-            (brand_hue, 24),
-            ((brand_hue + 120) % 360, 24),
-            ((brand_hue + 240) % 360, 24),
+        # 3 primary anchors at positions 0-2 + 3 midpoints at 3-5 (filling the
+        # gaps between primaries) + one extra fill at +30°. Reads as triadic
+        # because the first three are the bones; the rest are harmonic infill.
+        targets = [
+            brand_hue,
+            (brand_hue + 120) % 360,
+            (brand_hue + 240) % 360,
+            (brand_hue + 60) % 360,
+            (brand_hue + 180) % 360,
+            (brand_hue + 300) % 360,
+            (brand_hue + 30) % 360,
         ]
-        # Cycle through anchors so each anchor is hit at positions 0, 3 / 1, 4 / 2, 5; pos 6 free among the three
-        return [
-            [anchors[0]], [anchors[1]], [anchors[2]],
-            [anchors[0]], [anchors[1]], [anchors[2]],
-            anchors,
-        ][:n_hues]
+        return [[(t, bw)] for t in targets][:n_hues]
 
     if strategy == "split-comp":
-        anchors = [
-            (brand_hue, 22),
-            ((brand_hue + 150) % 360, 22),
-            ((brand_hue + 210) % 360, 22),
+        # brand + two split anchors (±150°/210°) at positions 0-2; positions
+        # 3-6 fill the four non-anchor quadrants so each hue is unique.
+        targets = [
+            brand_hue,
+            (brand_hue + 150) % 360,
+            (brand_hue + 210) % 360,
+            (brand_hue + 90) % 360,
+            (brand_hue + 270) % 360,
+            (brand_hue + 60) % 360,
+            (brand_hue + 300) % 360,
         ]
-        return [
-            [anchors[0]], [anchors[1]], [anchors[2]],
-            [anchors[1]], [anchors[2]], [anchors[1]],
-            anchors,
-        ][:n_hues]
+        return [[(t, bw)] for t in targets][:n_hues]
 
     if strategy == "balanced":
         # No hue rule at any position; differentiation comes from the tighter
-        # chroma corridor (C ∈ [25, 40]) which forces every pick to be muted.
+        # chroma corridor and a hue-diversity penalty applied at score time
+        # (see ``score_candidates_with_spread``). Without the penalty greedy
+        # max-min lands on three purples in a row.
         return [None for _ in range(n_hues)]
 
     if strategy == "okabe-tuned":
@@ -367,7 +389,7 @@ def _strategy_bands(
             jab_to_lch(to_jab(hex_to_rgb1(hx).reshape(1, 3))[0])[2]
             for hx in OKABE_PALETTE
         ]
-        return [[(okabe_hues[i], 22)] if i < len(okabe_hues) else None for i in range(n_hues)]
+        return [[(okabe_hues[i], bw)] if i < len(okabe_hues) else None for i in range(n_hues)]
 
     raise ValueError(f"unknown strategy: {strategy}")
 
@@ -497,11 +519,6 @@ def build_continuous(strategy: str, palette: list[str], n: int = 256) -> np.ndar
     if strategy == "okabe-tuned":
         # green → light yellow (Okabe pos-7-flavoured sequential)
         return _interp_two(brand_jab, lch_to_jab(92, 60, 95), n)
-    if strategy == "okabe-shifted":
-        # cividis-style: green → desaturated mid → muted yellow
-        mid = lch_to_jab(60, 18, 90)
-        end = lch_to_jab(88, 48, 95)
-        return _interp_three(brand_jab, mid, end, n)
     raise ValueError(strategy)
 
 
@@ -550,12 +567,6 @@ VARIANTS = [
         "okabe-tuned",
         "keep Okabe-Ito's hue family but nudge each into the paper-ink corridor",
         "green→yellow sequential",
-    ),
-    Variant(
-        "F", "okabe-shifted", "okabe-shifted",
-        "okabe-shifted",
-        "hue-preserving projection of Okabe-Ito onto the paper-ink corridor — the most conservative change possible",
-        "green→cividis-style sequential",
     ),
 ]
 
@@ -939,7 +950,7 @@ def main() -> int:
     # canonical green/vermillion/blue/purple/orange/sky/yellow order. Other
     # strategies use the max-min-distance reorder so their first 4 are the
     # subset that produces the strongest min worst-CVD ΔE.
-    PRESERVE_OKABE_ORDER = {"okabe-tuned", "okabe-shifted"}
+    PRESERVE_OKABE_ORDER = {"okabe-tuned"}
 
     for variant in VARIANTS:
         log.info("generating variant %s. %s …", variant.key, variant.title)
