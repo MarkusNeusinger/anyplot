@@ -1,207 +1,247 @@
-""" pyplots.ai
+""" anyplot.ai
 maze-circular: Circular Maze Puzzle
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-16
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-20
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
-from bokeh.models import Label
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Parameters
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Maze parameters — difficulty controls ring count
 np.random.seed(42)
-rings = 7
-sectors_per_ring = [8, 12, 16, 20, 24, 28, 32]  # Increasing sectors for outer rings
-wall_color = "#1a1a1a"
-background_color = "#ffffff"
-wall_width = 4
-entry_color = "#306998"
-goal_color = "#FFD43B"
+difficulty = "medium"  # easy=5 rings, medium=7 rings, hard=9 rings
+rings_map = {"easy": 5, "medium": 7, "hard": 9}
+rings = rings_map[difficulty]
+base_sectors = [8, 12, 16, 20, 24, 28, 32, 36, 40]
+sectors_per_ring = base_sectors[:rings]
 
-# Build maze structure using recursive backtracking
-# Each cell is (ring, sector), walls track connections between cells
+wall_color = INK
+wall_width = 5
+entry_color = "#009E73"  # Okabe-Ito position 1 (brand green)
+goal_color = "#E69F00"  # Okabe-Ito position 5 (orange)
+
+# Build maze cells: (ring, sector) -> {visited, walls}
 cells = {}
 for r in range(rings):
-    n_sectors = sectors_per_ring[r]
-    for s in range(n_sectors):
+    n_sec = sectors_per_ring[r]
+    for s in range(n_sec):
         cells[(r, s)] = {"visited": False, "walls": {"inner": True, "outer": True, "cw": True, "ccw": True}}
 
-
-# Get neighbors for a cell
-def get_neighbors(ring, sector):
-    neighbors = []
-    n_sectors = sectors_per_ring[ring]
-
-    # Same ring neighbors (clockwise and counter-clockwise)
-    ccw_sector = (sector - 1) % n_sectors
-    cw_sector = (sector + 1) % n_sectors
-    neighbors.append(((ring, ccw_sector), "ccw", "cw"))
-    neighbors.append(((ring, cw_sector), "cw", "ccw"))
-
-    # Inner ring neighbor
-    if ring > 0:
-        inner_sectors = sectors_per_ring[ring - 1]
-        inner_sector = int(sector * inner_sectors / n_sectors)
-        neighbors.append(((ring - 1, inner_sector), "inner", "outer"))
-
-    # Outer ring neighbor
-    if ring < rings - 1:
-        outer_sectors = sectors_per_ring[ring + 1]
-        ratio = outer_sectors / n_sectors
-        outer_sector = int(sector * ratio)
-        neighbors.append(((ring + 1, outer_sector), "outer", "inner"))
-
-    return neighbors
-
-
-# Recursive backtracking maze generation
-stack = [(0, 0)]  # Start from center
+# Iterative recursive backtracking — neighbors computed inline, no helper functions
+stack = [(0, 0)]
 cells[(0, 0)]["visited"] = True
 
 while stack:
-    current = stack[-1]
-    ring, sector = current
+    ring, sector = stack[-1]
+    n_sec = sectors_per_ring[ring]
 
-    # Get unvisited neighbors
-    neighbors = get_neighbors(ring, sector)
-    unvisited = [(n, wall, opp_wall) for n, wall, opp_wall in neighbors if n in cells and not cells[n]["visited"]]
+    # Same-ring neighbors (clockwise and counter-clockwise)
+    neighbors = [((ring, (sector - 1) % n_sec), "ccw", "cw"), ((ring, (sector + 1) % n_sec), "cw", "ccw")]
+    # Inner ring neighbor
+    if ring > 0:
+        inner_n = sectors_per_ring[ring - 1]
+        neighbors.append(((ring - 1, int(sector * inner_n / n_sec)), "inner", "outer"))
+    # Outer ring neighbor
+    if ring < rings - 1:
+        outer_n = sectors_per_ring[ring + 1]
+        neighbors.append(((ring + 1, int(sector * outer_n / n_sec)), "outer", "inner"))
+
+    unvisited = [(n, w, ow) for n, w, ow in neighbors if n in cells and not cells[n]["visited"]]
 
     if unvisited:
-        # Choose random neighbor
         next_cell, wall_to_remove, opp_wall = unvisited[np.random.randint(len(unvisited))]
-
-        # Remove walls between current and next
-        cells[current]["walls"][wall_to_remove] = False
+        cells[(ring, sector)]["walls"][wall_to_remove] = False
         cells[next_cell]["walls"][opp_wall] = False
-
-        # Mark visited and add to stack
         cells[next_cell]["visited"] = True
         stack.append(next_cell)
     else:
         stack.pop()
 
-# Create entry point on outer ring
-outer_ring = rings - 1
+# Open entry gap on outermost ring
 entry_sector = 0
-cells[(outer_ring, entry_sector)]["walls"]["outer"] = False
+cells[(rings - 1, entry_sector)]["walls"]["outer"] = False
 
-# Create figure (square for circular maze)
+# Figure — 2400×2400 square canvas for circular maze
 p = figure(
-    width=3600,
-    height=3600,
-    title="maze-circular · bokeh · pyplots.ai",
-    x_range=(-1.2, 1.2),
-    y_range=(-1.2, 1.2),
-    background_fill_color=background_color,
+    width=2400,
+    height=2400,
+    title="maze-circular · python · bokeh · anyplot.ai",
+    x_range=(-1.20, 1.20),
+    y_range=(-1.20, 1.20),
+    background_fill_color=PAGE_BG,
+    border_fill_color=PAGE_BG,
     toolbar_location=None,
     match_aspect=True,
+    min_border_bottom=60,
+    min_border_left=60,
+    min_border_top=130,
+    min_border_right=60,
 )
 
-# Remove axes and grid
+# Hide axes, grid, and figure outline
 p.axis.visible = False
 p.grid.visible = False
 p.outline_line_color = None
 
-# Title styling
-p.title.text_font_size = "36pt"
+# Title
+p.title.text_font_size = "50pt"
+p.title.text_font_style = "bold"
 p.title.align = "center"
+p.title.text_color = INK
 
+# Ring radii from center hub to outer boundary
+ring_radii = np.linspace(0.12, 0.95, rings + 1)
 
-# Helper function to draw arc
-def draw_arc(radius, start_angle, end_angle, n_points=50):
-    angles = np.linspace(start_angle, end_angle, n_points)
-    xs = radius * np.cos(angles)
-    ys = radius * np.sin(angles)
-    return xs, ys
-
-
-# Draw maze walls
-ring_radii = np.linspace(0.12, 0.95, rings + 1)  # Inner to outer
-
-# Draw circular walls (arcs) and radial walls
+# Draw maze walls: outer arc and radial (cw side only avoids double-drawing)
 for r in range(rings):
-    n_sectors = sectors_per_ring[r]
-    sector_angle = 2 * np.pi / n_sectors
+    n_sec = sectors_per_ring[r]
+    sector_angle = 2 * np.pi / n_sec
     inner_radius = ring_radii[r]
     outer_radius = ring_radii[r + 1]
 
-    for s in range(n_sectors):
+    for s in range(n_sec):
         start_angle = s * sector_angle
         end_angle = (s + 1) * sector_angle
 
-        # Draw outer arc wall if present
         if cells[(r, s)]["walls"]["outer"]:
-            xs, ys = draw_arc(outer_radius, start_angle, end_angle)
-            p.line(xs, ys, line_width=wall_width, line_color=wall_color)
+            arc_pts = np.linspace(start_angle, end_angle, 50)
+            p.line(
+                outer_radius * np.cos(arc_pts),
+                outer_radius * np.sin(arc_pts),
+                line_width=wall_width,
+                line_color=wall_color,
+            )
 
-        # Draw radial wall (clockwise side) if present
         if cells[(r, s)]["walls"]["cw"]:
-            x1 = inner_radius * np.cos(end_angle)
-            y1 = inner_radius * np.sin(end_angle)
-            x2 = outer_radius * np.cos(end_angle)
-            y2 = outer_radius * np.sin(end_angle)
-            p.line([x1, x2], [y1, y2], line_width=wall_width, line_color=wall_color)
+            p.line(
+                [inner_radius * np.cos(end_angle), outer_radius * np.cos(end_angle)],
+                [inner_radius * np.sin(end_angle), outer_radius * np.sin(end_angle)],
+                line_width=wall_width,
+                line_color=wall_color,
+            )
 
-# Draw outer boundary (with gap for entry)
-outer_boundary_radius = ring_radii[-1]
-entry_start = entry_sector * (2 * np.pi / sectors_per_ring[outer_ring])
-entry_end = (entry_sector + 1) * (2 * np.pi / sectors_per_ring[outer_ring])
+# Outer boundary circle with entry gap
+outer_r = ring_radii[-1]
+outer_n = sectors_per_ring[-1]
+entry_start_angle = entry_sector * (2 * np.pi / outer_n)
+entry_end_angle = (entry_sector + 1) * (2 * np.pi / outer_n)
 
-# Draw outer boundary in two arcs (leaving gap for entry)
-xs1, ys1 = draw_arc(outer_boundary_radius, entry_end, entry_start + 2 * np.pi, n_points=180)
-p.line(xs1, ys1, line_width=wall_width + 2, line_color=wall_color)
+boundary_pts = np.linspace(entry_end_angle, entry_start_angle + 2 * np.pi, 360)
+p.line(outer_r * np.cos(boundary_pts), outer_r * np.sin(boundary_pts), line_width=wall_width + 4, line_color=wall_color)
 
-# Draw inner boundary circle (around center)
-theta = np.linspace(0, 2 * np.pi, 100)
+# Inner boundary (central hub)
+theta = np.linspace(0, 2 * np.pi, 120)
 p.line(ring_radii[0] * np.cos(theta), ring_radii[0] * np.sin(theta), line_width=wall_width, line_color=wall_color)
 
-# Draw center goal
-center_radius = ring_radii[0] * 0.65
-p.patch(
-    center_radius * np.cos(theta),
-    center_radius * np.sin(theta),
-    fill_color=goal_color,
-    line_color=wall_color,
-    line_width=3,
+# Center goal circle — ColumnDataSource enables HoverTool tooltip
+goal_r = ring_radii[0] * 0.65
+goal_source = ColumnDataSource(
+    data={
+        "xs": [list(goal_r * np.cos(theta))],
+        "ys": [list(goal_r * np.sin(theta))],
+        "label": ["GOAL — navigate here to win!"],
+    }
+)
+goal_renderer = p.patches(
+    xs="xs", ys="ys", fill_color=goal_color, line_color=wall_color, line_width=3, source=goal_source
+)
+goal_hover = HoverTool(renderers=[goal_renderer], tooltips=[("", "@label")])
+p.add_tools(goal_hover)
+
+p.add_layout(
+    Label(x=0, y=-0.01, text="★", text_font_size="28pt", text_align="center", text_baseline="middle", text_color=INK)
 )
 
-# Add GOAL star
-goal_label = Label(
-    x=0, y=-0.01, text="★", text_font_size="28pt", text_align="center", text_baseline="middle", text_color=wall_color
+# Entry triangle marker — ColumnDataSource enables HoverTool tooltip
+entry_angle = (entry_start_angle + entry_end_angle) / 2
+entry_x = 1.04 * np.cos(entry_angle)
+entry_y = 1.04 * np.sin(entry_angle)
+entry_source = ColumnDataSource(
+    data={
+        "x": [entry_x],
+        "y": [entry_y],
+        "angle": [entry_angle - np.pi / 2],
+        "label": ["START — begin your journey here!"],
+    }
 )
-p.add_layout(goal_label)
-
-# Draw entry marker (triangle pointing inward)
-entry_angle = (entry_start + entry_end) / 2
-entry_x = 1.03 * np.cos(entry_angle)
-entry_y = 1.03 * np.sin(entry_angle)
-p.scatter(
-    [entry_x],
-    [entry_y],
+entry_renderer = p.scatter(
+    x="x",
+    y="y",
     marker="triangle",
-    size=35,
+    size=30,
     fill_color=entry_color,
     line_color=wall_color,
-    angle=entry_angle - np.pi / 2,
+    angle="angle",
+    source=entry_source,
+)
+entry_hover = HoverTool(renderers=[entry_renderer], tooltips=[("", "@label")])
+p.add_tools(entry_hover)
+
+p.add_layout(
+    Label(
+        x=entry_x * 1.09,
+        y=entry_y * 1.09,
+        text="START",
+        text_font_size="28pt",
+        text_align="center",
+        text_baseline="middle",
+        text_color=entry_color,
+        text_font_style="bold",
+    )
 )
 
-# Add START label
-start_label = Label(
-    x=entry_x * 1.12,
-    y=entry_y * 1.12,
-    text="START",
-    text_font_size="20pt",
-    text_align="center",
-    text_baseline="middle",
-    text_color=entry_color,
-    text_font_style="bold",
+# Difficulty annotation below the maze
+p.add_layout(
+    Label(
+        x=0,
+        y=-1.12,
+        text=f"{rings} rings · {difficulty}",
+        text_font_size="24pt",
+        text_align="center",
+        text_baseline="middle",
+        text_color=INK_SOFT,
+        text_font_style="italic",
+    )
 )
-p.add_layout(start_label)
 
-# Save outputs
-export_png(p, filename="plot.png")
-
-output_file("plot.html", title="Circular Maze Puzzle")
+# Save HTML catalog artifact
+output_file(f"plot-{THEME}.html", title="Circular Maze Puzzle")
 save(p)
+
+# Screenshot via headless Chrome (Selenium — export_png not available in CI)
+W, H = 2400, 2400
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Force page background to match PAGE_BG — prevents thin lighter border in dark theme screenshots
+driver.execute_script(
+    f"document.documentElement.style.background='{PAGE_BG}';document.body.style.background='{PAGE_BG}';"
+)
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()

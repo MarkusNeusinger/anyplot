@@ -1,153 +1,190 @@
 library: plotly
+language: python
 specification_id: maze-circular
 created: '2026-01-16T07:19:16Z'
-updated: '2026-01-16T07:22:11Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058785375
+updated: '2026-05-20T08:05:01Z'
+generated_by: claude-sonnet
+workflow_run: 26148168437
 issue: 3804
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/maze-circular/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/maze-circular/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of depth-first search maze generation algorithm ensuring
-    exactly one solution
-  - Clean visual design with black walls on white background suitable for printing
-  - Proper use of increasing sector count per ring for natural-looking circular maze
-  - Good use of Plotly annotations for START arrow and labels
-  - Appropriate square aspect ratio (1:1) for circular content
-  - Entry gap and goal marker clearly marked
+  - 'Both light and dark theme renders are flawless: correct background tokens, theme-adaptive
+    walls, all data colors identical across themes, no readability failures.'
+  - DFS maze generation with BFS solution finding is algorithmically correct and guarantees
+    exactly one solvable path.
+  - The 'Show Solution' interactive toggle (visible='legendonly') is a clever use
+    of Plotly's interactive capabilities unavailable in static libraries.
+  - 'Perfect spec compliance: all required features implemented (concentric rings,
+    radial walls, entry marker, goal, solution guarantee).'
+  - Clean, reproducible code with seed set and no unnecessary abstractions.
+  - Outer boundary slightly thicker than internal walls (WALL_W+1) is a polished detail
+    adding visual weight.
   weaknesses:
-  - GOAL label appears slightly faded/light compared to START label
-  - Some inner radial walls near the center appear thin relative to outer walls
-  - Could add hover interactivity to show maze path or highlight solution (plotly
-    strength)
-  image_description: The plot shows a circular maze puzzle with 7 concentric rings
-    and increasing sectors per ring (6 to 42). The maze uses black walls on a white
-    background, creating a clean print-friendly appearance. The outer boundary forms
-    a complete circle with a gap in the upper-right quadrant serving as the entry
-    point. A blue "START" label with an arrow points to this entry. At the center
-    is a blue filled circle with a yellow star marker, and a "GOAL" label appears
-    below it (though it appears partially faded/light). The maze has a variety of
-    radial and arc walls creating passages, generated using a depth-first search algorithm
-    ensuring one solution path exists. The title "maze-circular · plotly · pyplots.ai"
-    appears centered at the top.
+  - Legend box (top-left, with border) is slightly clunky — consider removing the
+    border or repositioning outside the maze area (e.g., bottom-left or bottom-center)
+    to better integrate it with the layout.
+  - Legend font size at 10px (40 source pixels) may be marginally small for mobile
+    viewport; could increase to 11-12px.
+  - 'DE-01/DE-02 could be pushed higher with minor polish: softening the legend border,
+    or adding a subtle text label inside the outer ring arc at the entry point.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme background
+      Chrome: Title "maze-circular · python · plotly · anyplot.ai" in dark INK color — clearly readable. "START" and "GOAL" annotations in #009E73 green at 22px Arial Black — bold and prominent. Legend "Show Solution" at 10px — small but readable. No axis labels or ticks (appropriate for maze).
+      Data: Dark/near-black walls on warm off-white background — high contrast. Outer boundary slightly thicker than inner walls. Center goal circle in #009E73 with yellow star. Entry arrow in #009E73 pointing into maze gap.
+      Legibility verdict: PASS — all text elements readable; no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme background
+      Chrome: Title text renders in light color (#F0EFE8) — clearly readable against dark background. START/GOAL labels remain in #009E73 (identical to light render — data color unchanged). Legend text in INK_SOFT (#B8B7B0) — readable. No dark-on-dark failures detected.
+      Data: Walls flip to white/light on dark background — identical contrast ratio to light render. Data colors (green accent, yellow star, orange solution path) are identical to light render — only chrome flips.
+      Legibility verdict: PASS — all text elements readable; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and START label clearly readable. GOAL label slightly faded
-          but legible.
+        comment: 'All font sizes explicitly set: title 16px, START/GOAL 22px Arial
+          Black, legend 10px. All readable. Minor: legend 40 source px is slightly
+          small for mobile.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text overlaps in either render. START, GOAL, title, legend all
+          comfortably separated.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wall lines well-sized, markers visible, maze structure clear
+        comment: Maze walls at 12 source px clearly defined; outer boundary at 16
+          source px. Center goal star and entry arrow prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Black walls on white, blue accents - excellent contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Maze fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for maze puzzle - no axes needed
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid/legend needed, axes properly hidden
+        comment: 'Theme-adaptive INK walls, #009E73 entry/goal markers are CVD-safe.
+          No red-green-only signals.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Maze with annotations occupies ~60% of axis range. Minor: legend
+          box in top-left competes with empty whitespace.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format. No axis labels needed (correctly hidden) for
+          maze plot.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Background #FAF8F1/#1A1A17. ACCENT #009E73. Solution path #D55E00
+          (Okabe-Ito pos 2). INK tokens theme-adaptive. Both renders correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive wall rendering is striking. Green accent for entry/goal,
+          yellow star center are thoughtful. Interactive 'Show Solution' toggle is
+          design-forward. Above defaults but not FiveThirtyEight level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid fully removed, all axis chrome hidden, very clean. Outer boundary
+          thicker than inner walls is polished. Legend box with border slightly clunky.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Entry arrow guides eye in; star focal point draws eye to goal. Solution
+          hidden by default respects puzzle experience. Clear visual hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct circular maze with concentric rings
+        comment: Correct circular maze with concentric rings and radial passages.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Ring and sector structure properly implemented
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Concentric rings, radial walls, entry point, goal marker, single
-          solution path
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: concentric ring walls, radial sector walls, radial
+          passages, entry marked, goal at center, DFS guarantees one solution, consistent
+          wall thickness.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All maze elements visible within canvas
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 7 rings (within spec 5-10), algorithmically correct maze structure.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: START and GOAL labels correctly placed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: maze-circular · plotly · pyplots.ai'
+        comment: 'Title: ''maze-circular · python · plotly · anyplot.ai''. Legend:
+          ''Show Solution'' with dotted styling.'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied wall patterns, increasing complexity toward center
+        comment: 'Full coverage: concentric rings with variable sectors, radial passages,
+          entry gap, center goal, solvable path, interactive solution reveal.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Appropriate maze puzzle context, neutral content
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 7 rings within recommended range, some inner walls appear slightly
-          thin
+        comment: Solvable circular maze puzzle is realistic and neutral; applicable
+          for printable puzzles, educational activities, game design.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 7 rings with sector counts [42,36,30,24,18,12,6] creates appropriate
+          complexity; genuinely solvable.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,43 +192,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → parameters → generation → drawing →
-          save'
+        comment: 'Flat: theme setup → DFS generation → BFS solution → drawing → layout
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) before maze generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly used
+        comment: 'All imports used: os/sys (path/env), collections.deque (BFS), numpy
+          (math), plotly.graph_objects (plotting).'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses dict format instead of keyword args in some places
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: DFS and BFS are algorithmically clean. sys.path manipulation with
+          noqa is technically justified (avoids local plotly.py shadowing).
       - id: CQ-05
-        name: Output Correct
-        score: 0
+        name: Output & API
+        score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html correctly for plotly
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Plotly API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Scatter, annotations for arrows/labels. Could leverage
-          hover tooltips.
+        comment: Idiomatic go.Figure, add_trace (Scatter), add_annotation with arrowhead,
+          update_layout, write_image, write_html. Scatter for custom drawing is valid
+          but somewhat lower-level than Shapes API.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: visible='legendonly' for interactive solution toggle is genuinely
+          Plotly-distinctive. Arrow annotations, write_html for interactive export
+          are Plotly-specific features.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -201,6 +249,8 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending

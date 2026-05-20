@@ -1,209 +1,246 @@
 library: seaborn
+language: python
 specification_id: maze-circular
 created: '2026-01-16T07:17:55Z'
-updated: '2026-01-16T07:39:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058785218
+updated: '2026-05-20T08:20:57Z'
+generated_by: claude-sonnet
+workflow_run: 26148071508
 issue: 3804
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/maze-circular/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Creative use of seaborn heatmap to render circular maze as a 2D grid
-  - Algorithmically sound maze generation using Kruskal's algorithm (guarantees exactly
-    one solution)
-  - Clear visual markers for entry point and goal with intuitive labeling
-  - High resolution figure (36x36 inches) with appropriate wall thickness
-  - Clean implementation following KISS principles
+  - Correct Kruskal's spanning tree maze generation guaranteeing exactly one solution
+  - BFS solution path accurately traced and cleanly visualized
+  - 'Full theme-adaptive chrome: backgrounds, INK/INK_SOFT tokens, legend fill, annotation
+    box'
+  - 'Perfect spec compliance: all required features present and working'
+  - 'Perfect data quality: realistic, reproducible, appropriate complexity'
   weaknesses:
-  - Wall edges appear slightly pixelated due to grid-based rendering (inherent limitation
-    of heatmap approach)
-  - Output DPI is 100 instead of 300 (minor)
-  image_description: The plot displays a circular maze puzzle rendered using a seaborn
-    heatmap. The maze consists of 7 concentric rings divided into 12 sectors, with
-    dark gray/black walls on a light gray background. At the center is a gray circular
-    goal area marked with a yellow star (★). On the right side of the outer perimeter,
-    there is a clear entry opening with a blue circular marker and a "START" label
-    in a white box with blue border. A legend in the bottom-left corner explains the
-    Entry Point (blue circle) and Goal (Center) markers. The title "maze-circular
-    · seaborn · pyplots.ai" appears at the top in bold text.
+  - Solution path traces cell center-to-center via straight lines, visually crossing
+    maze walls rather than following corridor midlines
+  - Helper functions break KISS flat-script pattern (necessary but still a code style
+    concern)
+  - Seaborn contribution is minimal — core maze uses matplotlib patches; no distinctive
+    seaborn statistical features leveraged
+  - 'Canvas margins slightly unbalanced: more empty space on left/bottom vs. right
+    where annotation sits'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "maze-circular · python · seaborn · anyplot.ai" in dark text (#1A1A17), clearly readable. No axis labels (appropriate for maze). Legend labels in dark INK color, readable. START annotation in green (#009E73) with green border box, readable.
+      Data: Maze walls in black (#1A1A17). Solution path in sky blue #56B4E9 (Okabe-Ito pos 6), alpha=0.65. Entry dot in green #009E73 (Okabe-Ito pos 1). Goal star in gold #E69F00 (Okabe-Ito pos 5). Center circle with elevated background #FFFDF6.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in light text (#F0EFE8), clearly readable against dark background. Legend text in light color, readable. START annotation box with green border on elevated dark fill (#242420), readable. No dark-on-dark failures observed.
+      Data: Maze walls flip to off-white (#F0EFE8). Solution path remains sky blue #56B4E9 — identical to light render. Entry dot remains #009E73 — identical. Goal star remains #E69F00 — identical. Only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 36pt and START label at 24pt are clearly readable. Legend
-          text at 20pt is also legible.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements. START label positioned outside maze
-          boundary.
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Maze walls are clearly visible with consistent thickness. Wall definition
-          could be slightly sharper.
+        comment: All font sizes explicitly set; readable in both themes. START annotation
+          8pt on small side but legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text collisions; legend clear of maze; annotation outside frame.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Maze walls crisp; solution path visible. Minor: cell-center path
+          creates slightly blocky appearance crossing walls.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Black walls on white background with yellow star and blue start marker
-          provide excellent contrast.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Maze is well-centered with balanced margins. Legend positioned in
-          bottom-left is acceptable but creates slight asymmetry.
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for maze visualization (no axes shown, which is correct)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is clear and well-placed without covering the maze.
+        comment: Okabe-Ito positions 1, 5, 6 used; good contrast both themes; CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 2400x2400 square canvas; maze fills ~65-70% of area. Slight margin
+          imbalance (more space left/bottom vs right where annotation sits).
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels appropriate for puzzle visualization; title format
+          correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Entry #009E73 (pos 1 brand); goal #E69F00 (pos 5); path #56B4E9
+          (pos 6). Backgrounds #FAF8F1/#1A1A17 correct. Data colors identical across
+          themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: thoughtful Okabe-Ito palette, theme-adaptive chrome,
+          elevated center circle, styled annotation with arrowhead, custom combined
+          legend.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines removed, no grid (appropriate), legend frame styled, center
+          elevated-background circle adds polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual story: maze structure + BFS solution path communicates
+          both challenge and answer. Entry/goal markers create narrative arc.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct circular maze with concentric rings and radial passages
+        comment: Correct circular maze with concentric rings and radial passages.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Walls and passages correctly mapped to grid cells
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: concentric rings, radial walls, entry
-          point, goal at center, exactly one solution'
-      - id: SC-04
-        name: Data Range
+        comment: Concentric walls, radial sectors, passages, outer entry gap, center
+          goal, Kruskal spanning tree, consistent wall thickness.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 7 rings as specified, full maze visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 7 rings (within recommended 5-10), 12 sectors, correct geometry.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Entry Point and Goal
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format maze-circular · seaborn · pyplots.ai
+        comment: 'Title matches required format; legend labels: Solution Path, Entry
+          Point, Goal (Center).'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all maze features including walls, passages, entry, goal. Maze
-          complexity is appropriate.
+        comment: 'All spec aspects shown: rings, passages, entry/goal markers, solution
+          path, seed-reproducible generation.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Valid puzzle game/educational context with solvable maze
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 7 rings with 12 sectors is reasonable, though difficulty parameter
-          not explicitly shown in output
+        comment: Maze puzzle is universally understood, neutral, non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 7 rings x 12 sectors produces well-balanced complexity; seed 42 reproducible.
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: Flat script with imports → data → plot → save structure (no functions/classes)
+        comment: Four helper functions (cell_id, find, union, cell_center) present;
+          necessary for maze algorithm but departs from pure KISS flat-script.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.pyplot, numpy, pandas, seaborn)
+        comment: 'All imports used: collections, os, mpatches, plt, np, pd, sns.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; Union-Find and BFS are appropriate algorithmic
+          choices; no fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn 0.13.2 API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but dpi=100 instead of dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly.
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.heatmap which is seaborn's strength for grid visualization,
-          but this is a creative workaround rather than seaborn's statistical visualization
-          strengths
+        comment: Uses sns.lineplot for solution path, sns.scatterplot for entry marker,
+          sns.set_theme for chrome. Core maze uses matplotlib patches — seaborn serves
+          as thin layer.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Seaborn used only for lineplot and scatterplot, which are basic matplotlib-equivalent
+          operations. No seaborn-distinctive statistical or aesthetic features leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
-  - manual-ticks
+  - patches
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - custom-colormap
+  - alpha-blending
   - minimal-chrome
