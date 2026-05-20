@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 74/100 | Updated: 2026-05-20
@@ -18,7 +18,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-LAND_COLOR = "#E2DED6" if THEME == "light" else "#2E2E2A"
+LAND_COLOR = "#C8C2B8" if THEME == "light" else "#3A3A35"  # higher contrast than prior values
 
 sns.set_theme(
     style="ticks",
@@ -185,8 +185,7 @@ cities = {
     "Sao Paulo": (-23.55, -46.63),
 }
 
-# Label offsets to prevent overlap — LA moved right to clear y-axis tick;
-# HK/Tokyo staggered vertically to avoid right-cluster overlap
+# Label offsets — LA moved right + below to clear y-axis tick '40' at lat=40
 label_offsets = {
     "New York": (5, 8),
     "London": (-60, 10),
@@ -195,7 +194,7 @@ label_offsets = {
     "Dubai": (8, 5),
     "Singapore": (8, -15),
     "Paris": (-45, -18),
-    "Los Angeles": (8, 8),
+    "Los Angeles": (12, -10),
     "Hong Kong": (8, -15),
     "Frankfurt": (8, 8),
     "Mumbai": (8, -15),
@@ -233,12 +232,16 @@ flow_min, flow_max = df_flows["flow"].min(), df_flows["flow"].max()
 # Linewidth proportional to flow magnitude: 1.0 (min) to 5.0 (max)
 df_flows["lw"] = 1.0 + 4.0 * (df_flows["flow"] - flow_min) / (flow_max - flow_min)
 
-# Arc colors from viridis (perceptually uniform, approved palette)
+# Arc colors from cividis: CVD-safe, dark navy at low end avoids viridis yellow-on-light issue
 n_colors = 256
-arc_palette = sns.color_palette("viridis", n_colors=n_colors)
+arc_palette = sns.color_palette("cividis", n_colors=n_colors)
 df_flows["color_idx"] = ((df_flows["flow"] - flow_min) / (flow_max - flow_min) * (n_colors - 1)).astype(int)
 
+# Per-city total incoming flow for seaborn size= aesthetic
+city_incoming = df_flows.groupby("destination")["flow"].sum().reset_index()
+city_incoming.columns = ["city", "incoming_flow"]
 df_cities = pd.DataFrame([{"city": name, "lat": coords[0], "lon": coords[1]} for name, coords in cities.items()])
+df_cities = df_cities.merge(city_incoming, on="city", how="left").fillna(0)
 
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
@@ -246,11 +249,11 @@ ax.set_facecolor(PAGE_BG)
 ax.set_xlim(-180, 180)
 ax.set_ylim(-60, 80)
 
-# Draw simplified world coastlines for geographic context
+# Draw simplified world coastlines — linewidth=0.8 for visible land/sea boundary
 for coastline in WORLD_COASTLINES:
     lons = [p[0] for p in coastline]
     lats = [p[1] for p in coastline]
-    ax.fill(lons, lats, color=LAND_COLOR, edgecolor=INK_SOFT, linewidth=0.4, alpha=0.9, zorder=0)
+    ax.fill(lons, lats, color=LAND_COLOR, edgecolor=INK_SOFT, linewidth=0.8, alpha=0.9, zorder=0)
 
 # Draw curved arcs: quadratic Bezier with linewidth proportional to flow
 n_points = 50
@@ -270,10 +273,38 @@ for _, row in df_flows.iterrows():
     color = arc_palette[int(row["color_idx"])]
     ax.plot(x, y, color=color, linewidth=row["lw"], alpha=0.65, solid_capstyle="round", zorder=1)
 
-# City nodes using seaborn scatterplot — Okabe-Ito position 1 as first (only) series
+# City nodes: seaborn scatterplot with size= encoding per-city total incoming flow
 sns.scatterplot(
-    data=df_cities, x="lon", y="lat", s=200, color="#009E73", edgecolor=PAGE_BG, linewidth=1.5, ax=ax, zorder=3
+    data=df_cities,
+    x="lon",
+    y="lat",
+    size="incoming_flow",
+    sizes=(60, 350),
+    color="#009E73",
+    edgecolor=PAGE_BG,
+    linewidth=1.5,
+    ax=ax,
+    zorder=3,
+    legend="brief",
 )
+
+# Style the size legend
+leg = ax.get_legend()
+if leg is not None:
+    leg.set_title("Incoming\nFlow", prop={"size": 6})
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_title(), color=INK)
+    for text in leg.get_texts():
+        text.set_color(INK)
+        text.set_fontsize(5)
+    for handle in leg.legend_handles:
+        try:
+            handle.set_facecolor("#009E73")
+            handle.set_edgecolor(PAGE_BG)
+        except AttributeError:
+            pass
+    leg.set_loc("lower left")
 
 # City labels with custom offsets to prevent overlap
 for _, row in df_cities.iterrows():
@@ -300,9 +331,9 @@ ax.set_title("flowmap-origin-destination · python · seaborn · anyplot.ai", fo
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 sns.despine(ax=ax, left=False, bottom=False)
 
-# Colorbar for flow magnitude
+# Colorbar for flow magnitude using cividis to match arc colors
 norm = plt.Normalize(vmin=flow_min, vmax=flow_max)
-sm = plt.cm.ScalarMappable(cmap="viridis", norm=norm)
+sm = plt.cm.ScalarMappable(cmap="cividis", norm=norm)
 sm.set_array([])
 cbar = plt.colorbar(sm, ax=ax, shrink=0.6, aspect=20, pad=0.02)
 cbar.set_label("Flow Volume", fontsize=8, color=INK)
