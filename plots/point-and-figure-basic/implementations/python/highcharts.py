@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-20
@@ -150,10 +150,11 @@ chart.options.chart = {
     "width": 3200,
     "height": 1800,
     "backgroundColor": PAGE_BG,
-    "marginBottom": 160,
+    "marginBottom": 240,
     "marginLeft": 200,
-    "marginRight": 80,
+    "marginRight": 160,
     "marginTop": 160,
+    "plotBorderWidth": 0,
     "style": {"color": INK},
 }
 
