@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -54,6 +54,7 @@ endurance_limit = 230  # MPa
 # Basquin fit line
 fit_cycles = np.logspace(2, 7, 100)
 fit_stress = A * fit_cycles**b
+n_knee = (endurance_limit / A) ** (1 / b)  # transition point to infinite life
 
 # Plot
 fig = go.Figure()
@@ -129,16 +130,48 @@ for y_val, label, color, anchor in [
     (endurance_limit, f"End. Limit<br>{endurance_limit} MPa", C5, "top"),
 ]:
     fig.add_annotation(
-        x=1e7,
+        x=8e6,
         y=y_val,
         text=label,
         xanchor="right",
         yanchor=anchor,
         showarrow=False,
-        font={"color": color, "size": 10},
-        bgcolor="rgba(0,0,0,0)",
-        borderwidth=0,
+        font={"color": color, "size": 12},
+        bgcolor=ELEVATED_BG,
+        bordercolor=color,
+        borderwidth=1,
+        borderpad=3,
     )
+
+# Fatigue knee annotation — where Basquin fit intersects endurance limit
+fig.add_annotation(
+    x=n_knee,
+    y=endurance_limit,
+    text="Fatigue Knee<br>(~10⁶ cycles)",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=INK_SOFT,
+    arrowsize=1.2,
+    ax=-70,
+    ay=-70,
+    font={"size": 10, "color": INK_SOFT},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=3,
+    xanchor="center",
+)
+
+# Infinite-life zone label inside the green fill region
+fig.add_annotation(
+    x=5e5,
+    y=218,
+    text="Infinite Life Zone",
+    showarrow=False,
+    font={"size": 10, "color": BRAND},
+    xanchor="center",
+    yanchor="middle",
+)
 
 # Style
 fig.update_layout(
@@ -190,7 +223,7 @@ fig.update_layout(
         "bordercolor": INK_SOFT,
         "borderwidth": 1,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    margin={"l": 80, "r": 60, "t": 80, "b": 60},
 )
 
 # Save
