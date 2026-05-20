@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -44,8 +44,19 @@ for i in range(1, matrix_size - 1):
     for j in range(1, matrix_size - 1):
         matrix[i, j] = np.random.randint(0, 2)
 
-# Flip for correct visual orientation (row 0 at top)
+# Flip for correct visual orientation (L-finder at left+bottom in display)
 matrix = np.flipud(matrix)
+
+# Cell type labels for interactive hover (post-flipud: row 0=bottom=finder, row 15=top=timing)
+cell_type = np.empty((matrix_size, matrix_size), dtype=object)
+for i in range(matrix_size):
+    for j in range(matrix_size):
+        if j == 0 or i == 0:
+            cell_type[i, j] = "Finder"
+        elif j == matrix_size - 1 or i == matrix_size - 1:
+            cell_type[i, j] = "Timing"
+        else:
+            cell_type[i, j] = "Data"
 
 # Plot
 fig = go.Figure()
@@ -55,6 +66,8 @@ fig.add_trace(
         z=matrix,
         x=np.arange(matrix_size),
         y=np.arange(matrix_size),
+        customdata=cell_type,
+        hovertemplate="<b>%{customdata}</b><extra></extra>",
         colorscale=[[0, CELL_OFF], [1, CELL_ON]],
         showscale=False,
         xgap=1.5,
@@ -62,22 +75,45 @@ fig.add_trace(
     )
 )
 
+# Quiet zone border — ISO/IEC 16022 requires at least 1 module of clear space
+fig.add_shape(
+    type="rect",
+    x0=-0.5,
+    y0=-0.5,
+    x1=matrix_size - 0.5,
+    y1=matrix_size - 0.5,
+    xref="x",
+    yref="y",
+    line={"color": INK_MUTED, "width": 1, "dash": "dot"},
+    fillcolor="rgba(0,0,0,0)",
+)
+
 fig.update_layout(
     title={
-        "text": "datamatrix-basic · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"
+        "text": "datamatrix-basic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
     },
-    xaxis={"showticklabels": False, "showgrid": False, "zeroline": False, "scaleanchor": "y", "scaleratio": 1, "constrain": "domain"},
+    xaxis={
+        "showticklabels": False,
+        "showgrid": False,
+        "zeroline": False,
+        "scaleanchor": "y",
+        "scaleratio": 1,
+        "constrain": "domain",
+    },
     yaxis={"showticklabels": False, "showgrid": False, "zeroline": False, "constrain": "domain"},
     plot_bgcolor=PAGE_BG,
     paper_bgcolor=PAGE_BG,
-    margin={"l": 80, "r": 80, "t": 100, "b": 130},
+    margin={"l": 80, "r": 80, "t": 100, "b": 100},
     annotations=[
         {
             "text": f"Encoded: {content}",
             "xref": "paper",
             "yref": "paper",
             "x": 0.5,
-            "y": -0.10,
+            "y": -0.08,
             "showarrow": False,
             "font": {"size": 12, "color": INK_SOFT},
             "xanchor": "center",
@@ -87,9 +123,41 @@ fig.update_layout(
             "xref": "paper",
             "yref": "paper",
             "x": 0.5,
-            "y": -0.17,
+            "y": -0.13,
             "showarrow": False,
             "font": {"size": 10, "color": INK_MUTED},
+            "xanchor": "center",
+        },
+        # L-Finder callout — arrow from margin into finder corner
+        {
+            "text": "L-Finder",
+            "x": 0.5,
+            "y": 0.5,
+            "xref": "x",
+            "yref": "y",
+            "showarrow": True,
+            "arrowhead": 2,
+            "arrowwidth": 1.2,
+            "arrowcolor": INK_SOFT,
+            "ax": -50,
+            "ay": 40,
+            "font": {"size": 8, "color": INK_SOFT},
+            "xanchor": "center",
+        },
+        # Timing callout — arrow from margin into timing corner
+        {
+            "text": "Timing",
+            "x": 14.5,
+            "y": 14.5,
+            "xref": "x",
+            "yref": "y",
+            "showarrow": True,
+            "arrowhead": 2,
+            "arrowwidth": 1.2,
+            "arrowcolor": INK_SOFT,
+            "ax": 50,
+            "ay": -40,
+            "font": {"size": 8, "color": INK_SOFT},
             "xanchor": "center",
         },
     ],
