@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: bar-drilldown
 created: '2026-05-20T11:16:18Z'
-updated: '2026-05-20T11:23:03Z'
+updated: '2026-05-20T11:33:14Z'
 generated_by: claude-sonnet
 workflow_run: 26158739442
 issue: 3783
@@ -12,42 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 86
 review:
   strengths:
-  - 'Perfect internal data consistency: Electronics subcategories sum exactly to the
-    parent total ($4,820K)'
-  - 'Elegant color strategy: brand green for the active/drilled category, muted gray
-    for others — creates an immediate visual link between the two panels'
-  - 'Full theme adaptation: all chrome tokens (INK, INK_SOFT, PAGE_BG) correctly applied
-    in both renders; no dark-on-dark or light-on-light failures'
-  - Breadcrumb navigation pattern via panel subtitle ('All Categories › Electronics')
-    is the best static approximation possible for matplotlib
-  - 'Code quality perfect: KISS structure, deterministic data, clean imports, zip(strict=True)
-    for Python 3.10+ safety'
+  - 'Compelling single-color spotlight technique: one green bar against muted peers
+    instantly communicates the active drill level without any legend.'
+  - ConnectionPatch used idiomatically to bridge panels — a genuinely distinctive
+    matplotlib feature that makes the drill relationship tangible.
+  - 'Perfect data integrity: subcategory values sum exactly to parent total ($1,820K
+    + $1,640K + $890K + $470K = $4,820K).'
+  - 'Full theme adaptation: both light and dark renders are clean, readable, and correct
+    with no dark-on-dark or wrong-background issues.'
+  - KISS code structure with zero unnecessary abstraction; linear flow and deterministic
+    hardcoded data.
   weaknesses:
-  - 'DE-01: No explicit visual connector between the highlighted Electronics bar and
-    the drilldown panel — a ConnectionPatch line from bar top to panel edge would
-    make the hierarchy immediately obvious and showcase a matplotlib-distinctive technique'
-  - 'SC-02: Three spec-required interactive features absent (back button, animated
-    transitions, cursor-change indicator) — add a static ''◄ Back to All Categories''
-    text annotation in the bottom panel to approximate back-navigation affordance'
-  - 'DE-02: Panel subtitle fontsize=10 is slightly below style-guide recommendation;
-    increase to 11pt for better typographic hierarchy'
-  - 'LM-02: ConnectionPatch between panels is a matplotlib-exclusive technique that
-    would raise Library Mastery score significantly'
+  - Only one hierarchy level shown statically; spec calls for 2-3 levels — a third
+    panel or small-multiple row showing a second category's breakdown would better
+    demonstrate the drilldown concept.
+  - Typography hierarchy between the three title levels (suptitle / subplot-title-1
+    / subplot-title-2) is flat; suptitle could be bolder/larger to create a clearer
+    visual tier.
+  - ConnectionPatch lines are very faint (alpha=0.35, lw=0.9) — increasing their presence
+    would reinforce the drill relationship and better showcase this distinctive matplotlib
+    feature.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct, not pure white
-      Chrome: Suptitle "bar-drilldown · python · matplotlib · anyplot.ai" in dark ink at 12pt; panel subtitles "All Categories · 2024" and "All Categories › Electronics" in dark ink at 10pt; Y-axis labels "Revenue ($K)" in dark ink at 9pt; tick labels at 8.5pt in muted dark ink — all clearly readable
-      Data: Top panel shows 4 bars — Electronics in brand green #009E73, Apparel/Home & Garden/Sports in light muted gray (#C0BEB8); bottom panel shows 4 bars all in #009E73; value labels ($4,820K etc.) above each bar
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: suptitle "bar-drilldown · python · matplotlib · anyplot.ai" in dark INK; subplot titles "All Categories · 2024" and "All Categories › Electronics" in dark INK; Y-axis labels "Revenue ($K)" in dark INK; tick labels and value labels in INK_SOFT (#4A4A44). All text is clearly readable against the light background.
+      Data: Electronics bar in #009E73 (brand green); Apparel/Home & Garden/Sports bars in muted gray #C0BEB8. All four drilldown bars (Phones, Laptops, Tablets, Accessories) in #009E73. Dollar value labels above each bar. Dashed green ConnectionPatch lines (alpha=0.35) connect the Electronics bar top to the drilldown panel. Small italic "◄ Back to All Categories" text in INK_SOFT.
+      Legibility verdict: PASS — all text elements readable; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct, not pure black
-      Chrome: Suptitle and panel titles in light off-white text; axis labels and tick labels in muted light text (#B8B7B0 equivalent) — all clearly readable against dark background; no dark-on-dark failures observed
-      Data: Bar colors identical to light render — Electronics and drilldown bars in #009E73 (brand green), inactive bars shift to darker muted gray (#4E4E48) visible against the near-black background
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: suptitle, subplot titles, axis labels, tick labels, and value labels all rendered in light-colored text (#F0EFE8 / #B8B7B0). Grid lines are subtle against the dark surface.
+      Data: Data colors are identical to light render — Electronics and drilldown bars remain #009E73; inactive bars use dark muted neutral #4E4E48. ConnectionPatch lines retain the same dashed green style.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures observed; brand green #009E73 clearly visible.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,49 +57,48 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; minor deduction
-          for panel subtitle at 10pt being slightly below style-guide 12pt for titles
+        comment: All font sizes explicitly set; both themes readable; three-level
+          header stack adds minor complexity but does not impede legibility
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements — value labels, tick labels, and bar bodies
-          are cleanly separated
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars are prominent and well-sized for 4-item panels; green/gray contrast
-          is strong
+        comment: Bars well-proportioned; value labels clearly positioned; connection
+          lines appropriately subtle
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/muted-gray distinction is CVD-safe; no red-green sole signal
+        comment: Brand green vs muted neutral provides strong contrast; CVD-safe Okabe-Ito
+          palette
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two-panel square layout (GridSpec height_ratios=[1,1.05]) is well-balanced;
-          good whitespace
+        comment: Two panels fill 2400x2400 canvas well; generous hspace=0.48 spacing;
+          nothing cut off
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Revenue ($K)'' with units; suptitle in correct bar-drilldown
-          · python · matplotlib · anyplot.ai format'
+        comment: Revenue ($K) on both Y-axes includes units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Active series #009E73; inactive bars use theme-adaptive neutral;
-          backgrounds #FAF8F1/#1A1A17; all chrome tokens adapt correctly'
+        comment: 'Primary series #009E73; backgrounds #FAF8F1/#1A1A17; all chrome
+          theme-correct in both renders'
     design_excellence:
       score: 13
       max: 20
@@ -110,26 +108,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional green/muted color strategy for active category; two-panel
-          overview+detail is a deliberate design choice; above generic default but
-          not publication-ready
+        comment: Intentional color spotlight and two-panel narrative above generic
+          defaults; not yet FiveThirtyEight-level
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; Y-axis-only grid at alpha=0.10; bar edges
-          match background; set_axisbelow — solid refinement above defaults
+        comment: Top/right spines removed; y-grid at alpha=0.10; bar edges use PAGE_BG;
+          connection lines styled
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Green/muted contrast connects the active Electronics bar to the drilldown;
-          breadcrumb title reinforces navigation story; viewer immediately understands
-          the hierarchy
+        comment: Green spotlight bar draws eye; connection lines make drill path tangible;
+          breadcrumb contextualises view
     spec_compliance:
-      score: 12
+      score: 13
       max: 15
       items:
       - id: SC-01
@@ -137,29 +133,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Column charts in two hierarchical levels correctly convey the drilldown
-          concept; active clicking absent due to static limitation
+        comment: Correct bar chart type; static two-panel is best achievable matplotlib
+          approximation of interactive drilldown
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Breadcrumb trail ✓, value labels ✓, consistent color mapping ✓; back-button
-          ✗, animated transitions ✗, clickable cursor indicator ✗ — three interactive
-          features impossible in matplotlib
+        passed: true
+        comment: Breadcrumb, back affordance, value labels, color mapping all present;
+          animation N/A; only one drill path shown
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Categories on X, revenue on Y, all data visible in both panels
+        comment: Categories/subcategories on X; revenue on Y; all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Suptitle 'bar-drilldown · python · matplotlib · anyplot.ai' ✓; no
-          legend needed for single-series panels
+        comment: suptitle is 'bar-drilldown · python · matplotlib · anyplot.ai'; no
+          legend needed
     data_quality:
       score: 14
       max: 15
@@ -169,23 +164,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Overview level and one drilldown level shown; hierarchical structure
-          clear; minor deduction for showing only one fixed drilldown path
+        comment: Shows overview highlighting, drilldown breakdown, breadcrumb, back
+          affordance; one drill path only
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''2024 global retail revenue by product category'' is a real, neutral
-          business scenario; Electronics/Apparel/Home & Garden/Sports are plausible
-          retail categories'
+        comment: 2024 global retail revenue; Electronics/Apparel/Home/Sports and subcategories
+          are realistic neutral domain
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Subcategory values ($1,820K + $1,640K + $890K + $470K = $4,820K)
-          exactly sum to Electronics parent total — excellent internal consistency
+        comment: Subcategory values sum exactly to parent ($1820K+$1640K+$890K+$470K=$4820K);
+          proportions realistic
     code_quality:
       score: 10
       max: 10
@@ -195,33 +189,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → GridSpec → panels → styling → save; no functions
-          or classes
+        comment: 'Linear: imports -> data -> layout -> plots -> styling -> save; no
+          functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is hardcoded constants; fully deterministic
+        comment: All data deterministic (hardcoded); no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, matplotlib.pyplot, numpy, GridSpec — all used
+        comment: os, sys, matplotlib.pyplot, numpy, GridSpec, ConnectionPatch — all
+          actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Uses zip(..., strict=True) for Python 3.10+ safety; no fake UI elements
-          or simulated interactivity code
+        comment: Clean Pythonic code; no fake UI elements; static approximation comment
+          is a design note not AR-08 trigger
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400, bbox_inches='tight', facecolor=PAGE_BG
+        comment: Saves as plot-{THEME}.png; uses current matplotlib 3.10 API
     library_mastery:
       score: 7
       max: 10
@@ -231,26 +226,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes methods (ax.bar, ax.text, ax.set_xticks); GridSpec for multi-panel;
-          fig.suptitle for global title — idiomatic matplotlib patterns
+        comment: Axes methods throughout; GridSpec for multi-panel; fig.add_artist
+          for cross-figure elements
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: GridSpec with custom height_ratios and hspace is matplotlib-specific;
-          theme-adaptive chrome correctly threaded; could leverage ConnectionPatch
-          for panel linking (a uniquely matplotlib technique)
-  verdict: REJECTED
+        comment: ConnectionPatch for inter-axes connectors is genuinely matplotlib-specific;
+          combined with GridSpec and fig.add_artist
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
+  - patches
   - manual-ticks
   patterns:
   - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
   - grid-styling
