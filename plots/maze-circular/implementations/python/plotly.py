@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 maze-circular: Circular Maze Puzzle
-Library: plotly | Python 3.13
-Quality: 91/100 | Updated: 2026-05-20
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-20
 """
 
 import os
