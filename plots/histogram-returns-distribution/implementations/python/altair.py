@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -55,15 +55,25 @@ hist_df = pd.DataFrame(
 lower_tail = mean_ret - 2 * std_ret
 upper_tail = mean_ret + 2 * std_ret
 hist_df["is_tail"] = (hist_df["bin_center"] < lower_tail) | (hist_df["bin_center"] > upper_tail)
+hist_df["category"] = np.where(hist_df["is_tail"], "Tail (±2σ)", "Returns")
 
 x_range = np.linspace(df_ret["returns"].min() - 0.5, df_ret["returns"].max() + 0.5, 300)
 normal_pdf = stats.norm.pdf(x_range, mean_ret, std_ret)
-normal_df = pd.DataFrame({"x": x_range, "density": normal_pdf})
+normal_df = pd.DataFrame({"x": x_range, "density": normal_pdf, "category": "Normal dist."})
+
+# ±2σ reference lines
+sigma_df = pd.DataFrame({"x": [lower_tail, upper_tail]})
 
 stats_text = f"Mean: {mean_ret:.2f}%\nStd Dev: {std_ret:.2f}%\nSkewness: {skewness:.2f}\nKurtosis: {kurtosis:.2f}"
 stats_df = pd.DataFrame({"x": [df_ret["returns"].max() - 0.1], "y": [max(hist_values) * 0.95], "text": [stats_text]})
 
 title = "histogram-returns-distribution · python · altair · anyplot.ai"
+
+# Shared color scale — explicit domain shows all 3 entries in the legend even
+# though the histogram data only contains "Returns" and "Tail (±2σ)"
+COLOR_DOMAIN = ["Returns", "Tail (±2σ)", "Normal dist."]
+COLOR_RANGE = [BRAND, TAIL_COLOR, CURVE_COLOR]
+color_scale = alt.Scale(domain=COLOR_DOMAIN, range=COLOR_RANGE)
 
 # Plot
 histogram = (
@@ -73,7 +83,11 @@ histogram = (
         x=alt.X("bin_start:Q", bin="binned", title="Returns (%)"),
         x2="bin_end:Q",
         y=alt.Y("density:Q", title="Density"),
-        color=alt.condition(alt.datum.is_tail, alt.value(TAIL_COLOR), alt.value(BRAND)),
+        color=alt.Color(
+            "category:N",
+            scale=color_scale,
+            legend=alt.Legend(title=None, orient="right", labelFontSize=10, symbolSize=80),
+        ),
         tooltip=[
             alt.Tooltip("bin_center:Q", title="Return (%)", format=".2f"),
             alt.Tooltip("density:Q", title="Density", format=".4f"),
@@ -83,26 +97,33 @@ histogram = (
 
 normal_curve = (
     alt.Chart(normal_df)
-    .mark_line(color=CURVE_COLOR, strokeWidth=3, strokeDash=[6, 3])
-    .encode(x=alt.X("x:Q"), y=alt.Y("density:Q"))
+    .mark_line(strokeWidth=3, strokeDash=[6, 3])
+    .encode(x=alt.X("x:Q"), y=alt.Y("density:Q"), color=alt.Color("category:N", scale=color_scale, legend=None))
+)
+
+# Subtle ±2σ reference lines to mark tail cutoffs
+sigma_lines = (
+    alt.Chart(sigma_df)
+    .mark_rule(strokeDash=[4, 4], opacity=0.4, strokeWidth=1.5, color=INK_SOFT)
+    .encode(x=alt.X("x:Q"))
 )
 
 stats_annotation = (
     alt.Chart(stats_df)
-    .mark_text(align="right", baseline="top", fontSize=11, color=INK_SOFT, lineBreak="\n")
+    .mark_text(align="right", baseline="top", fontSize=13, color=INK_SOFT, lineBreak="\n")
     .encode(x=alt.X("x:Q"), y=alt.Y("y:Q"), text="text:N")
 )
 
 chart = (
-    alt.layer(histogram, normal_curve, stats_annotation)
+    alt.layer(histogram, sigma_lines, normal_curve, stats_annotation)
     .properties(
-        width=620,
+        width=560,
         height=320,
         background=PAGE_BG,
         padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
         title=alt.Title(title, fontSize=16, anchor="middle"),
     )
-    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=620, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, strokeWidth=0, continuousWidth=560, continuousHeight=320)
     .configure_axis(
         labelFontSize=10,
         titleFontSize=12,
