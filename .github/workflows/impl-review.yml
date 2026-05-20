@@ -264,7 +264,7 @@ jobs:
               "letsplot":   "Check `ggsize(W, H)` and `ggsave(..., scale=4)` pair — only the two canonical pairs land on target.",
               "ggplot2":    "Check `ggsave(width=…, height=…, units='in', dpi=400)` with `ragg::agg_png`.",
           }
-          cause = causes.get(LIBRARY, "Review `prompts/library/${LIBRARY}.md` 'Canvas — hard rule' section.")
+          cause = causes.get(LIBRARY, f"Review `prompts/library/{LIBRARY}.md` 'Canvas — hard rule' section.")
 
           weakness = (
               f"Canvas dimensions drifted from required target. "

@@ -21,33 +21,28 @@ Altair's **view dimensions are NOT the saved PNG dimensions.** `vl-convert` pads
 
 1. **Constrain the view** with `configure_view(continuousWidth=…, continuousHeight=…)` and **zero out chart padding** with `.properties(padding={"left":0, "right":0, "top":0, "bottom":0})`. This stops most of the inflation but does not guarantee exact dims when titles or legends are present.
 
-2. **Normalize the saved PNG to exact target dims as the final step** of the implementation. Even with (1), vl-convert can over- or under-shoot by tens of pixels. After `chart.save(...)`, open the PNG with PIL and crop (centered) or pad (with `PAGE_BG`) so the saved file lands on the canonical target:
+2. **Normalize the saved PNG to exact target dims as the final step** of the implementation. Even with (1), vl-convert can over- or under-shoot by tens of pixels. After `chart.save(...)`, crop (centered) or pad (with `PAGE_BG`) so the saved file lands on the canonical target. Keep this as **inline code** — no helper function (CQ-01 KISS forbids functions/classes in plot impls):
 
 ```python
+# Right after chart.save(f'plot-{THEME}.png', scale_factor=4.0):
 from PIL import Image
 
-TARGET = (3200, 1800)  # or (2400, 2400) for square
-
-def normalize_to_target(path: str, target: tuple[int, int], page_bg: str) -> None:
-    """Crop or pad the PNG so its dimensions exactly equal `target`."""
-    img = Image.open(path).convert("RGB")
-    tw, th = target
-    w, h = img.size
-    # Crop if larger
-    if w > tw or h > th:
-        left = max((w - tw) // 2, 0)
-        top  = max((h - th) // 2, 0)
-        img  = img.crop((left, top, left + min(w, tw), top + min(h, th)))
-        w, h = img.size
-    # Pad if smaller
-    if w < tw or h < th:
-        bg = Image.new("RGB", (tw, th), page_bg)
-        bg.paste(img, ((tw - w) // 2, (th - h) // 2))
-        img = bg
-    img.save(path)
+TW, TH = 3200, 1800   # or (2400, 2400) for square
+_img = Image.open(f'plot-{THEME}.png').convert('RGB')
+_w, _h = _img.size
+if _w > TW or _h > TH:                            # crop excess centred
+    _l = max((_w - TW) // 2, 0)
+    _t = max((_h - TH) // 2, 0)
+    _img = _img.crop((_l, _t, _l + min(_w, TW), _t + min(_h, TH)))
+    _w, _h = _img.size
+if _w < TW or _h < TH:                            # pad shortfall with PAGE_BG
+    _canvas = Image.new('RGB', (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _img = _canvas
+_img.save(f'plot-{THEME}.png')
 ```
 
-Call `normalize_to_target(f'plot-{THEME}.png', (3200, 1800), PAGE_BG)` (or `(2400, 2400)`) right after each `chart.save(...)`. The HTML save is left untouched — only PNGs are gated.
+The HTML save is left untouched — only PNGs are gated.
 
 ```python
 chart = alt.Chart(df).mark_point(size=60).encode(  # size ~2-3x default, density-aware
@@ -104,7 +99,8 @@ x='date:T'
 ```python
 # Hard target: 3200 × 1800 (landscape) or 2400 × 2400 (square). See "Canvas" above.
 chart.save(f'plot-{THEME}.png', scale_factor=4.0)
-normalize_to_target(f'plot-{THEME}.png', (3200, 1800), PAGE_BG)   # MANDATORY post-step
+# Follow with the inline crop/pad-to-target block from the "Canvas" section above
+# (no helper function — KISS).
 ```
 
 **Note**: Requires `vl-convert-python` for PNG export.
@@ -170,7 +166,8 @@ chart = (
 )
 
 chart.save(f'plot-{THEME}.png', scale_factor=4.0)
-normalize_to_target(f'plot-{THEME}.png', (3200, 1800), PAGE_BG)   # MANDATORY — see "Canvas" above
+# Apply the inline crop/pad-to-(3200,1800)-or-(2400,2400) block from the
+# "Canvas" section above — MANDATORY, no helper function (KISS / CQ-01).
 chart.save(f'plot-{THEME}.html')
 ```
 

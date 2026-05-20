@@ -64,14 +64,23 @@ class LibStats:
 
 
 def parse_since(value: str) -> datetime:
-    """Parse "14d" / "48h" / ISO date into a UTC cutoff."""
+    """Parse "14d" / "48h" / ISO date into a UTC cutoff.
+
+    Accepts ISO strings with trailing ``Z`` (normalized to ``+00:00``) and
+    treats naive ISO timestamps (``2026-05-20`` or ``2026-05-20T00:00:00``) as
+    UTC, so ``--since 2026-05-20`` is unambiguous regardless of the host
+    timezone.
+    """
     now = datetime.now(timezone.utc)
     m = re.match(r"^(\d+)([dh])$", value)
     if m:
         n, unit = int(m.group(1)), m.group(2)
         delta = timedelta(days=n) if unit == "d" else timedelta(hours=n)
         return now - delta
-    return datetime.fromisoformat(value).astimezone(timezone.utc)
+    parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
 
 
 def list_runs(limit: int, since: datetime) -> list[dict]:
