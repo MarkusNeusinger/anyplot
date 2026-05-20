@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -101,12 +101,12 @@ chart = (
             text=TITLE,
             subtitle="Sales by Region — open the HTML version to drill down interactively",
             fontSize=16,
-            subtitleFontSize=10,
+            subtitleFontSize=12,
             subtitleColor=INK_SOFT,
             anchor="middle",
         ),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
+    .configure_view(fill=PAGE_BG, stroke=None)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -291,7 +291,8 @@ html_content = f"""<!DOCTYPE html>
                     }}
                 ],
                 "config": {{
-                    "view": {{ "strokeWidth": 0, "fill": PAGE_BG }}
+                    "view": {{ "strokeWidth": 0, "fill": PAGE_BG }},
+                    "transition": {{ "duration": 300 }}
                 }}
             }};
 
