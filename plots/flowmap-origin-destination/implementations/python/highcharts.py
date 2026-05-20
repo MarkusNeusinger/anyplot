@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -77,18 +77,21 @@ for flow in flows:
         {"from": flow["from"], "to": flow["to"], "weight": flow["volume"], "curveFactor": 0.25, "growTowards": True}
     )
 
+label_offsets = {"Busan": {"y": -30}, "Hong Kong": {"y": 10}}
+
 point_data = []
 for name, coords in ports.items():
     total_flow = sum(f["volume"] for f in flows if f["from"] == name or f["to"] == name)
-    point_data.append(
-        {
-            "id": name,
-            "name": name,
-            "lat": coords["lat"],
-            "lon": coords["lon"],
-            "marker": {"radius": max(8, min(22, total_flow / 60))},
-        }
-    )
+    point = {
+        "id": name,
+        "name": name,
+        "lat": coords["lat"],
+        "lon": coords["lon"],
+        "marker": {"radius": max(8, min(22, total_flow / 60))},
+    }
+    if name in label_offsets:
+        point["dataLabels"] = {"y": label_offsets[name]["y"]}
+    point_data.append(point)
 
 chart_config = {
     "chart": {"map": None, "width": 3200, "height": 1800, "backgroundColor": PAGE_BG, "spacing": [80, 60, 80, 60]},
@@ -108,7 +111,7 @@ chart_config = {
         "layout": "vertical",
         "align": "right",
         "verticalAlign": "middle",
-        "itemStyle": {"color": INK_SOFT, "fontSize": "36px"},
+        "itemStyle": {"color": INK_SOFT, "fontSize": "44px"},
         "backgroundColor": ELEVATED_BG,
         "borderColor": INK_SOFT,
         "borderWidth": 1,
@@ -135,7 +138,7 @@ chart_config = {
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.name}",
-                "style": {"fontSize": "34px", "fontWeight": "bold", "textOutline": f"3px {PAGE_BG}", "color": INK},
+                "style": {"fontSize": "44px", "fontWeight": "bold", "textOutline": f"3px {PAGE_BG}", "color": INK},
                 "y": -18,
             }
         },
