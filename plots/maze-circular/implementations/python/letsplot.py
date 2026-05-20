@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
-Library: letsplot 4.8.2 | Python 3.13.11
+Library: letsplot | Python 3.13
 Quality: 92/100 | Created: 2026-01-16
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,6 +12,14 @@ from lets_plot import *
 
 
 LetsPlot.setup_html()
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+
+BRAND = "#009E73"  # Okabe-Ito position 1 — START marker
+ACCENT = "#D55E00"  # Okabe-Ito position 2 — GOAL marker
 
 # Maze parameters
 np.random.seed(42)
@@ -99,7 +109,7 @@ for ring in range(1, num_rings + 1):
                     has_passage = True
                     break
             if has_passage:
-                continue  # Don't draw outer wall - there's a passage
+                continue  # Don't draw outer wall — there's a passage
 
         # Skip entrance opening on outer wall
         if ring == num_rings and sector == entrance_sector:
@@ -123,7 +133,7 @@ for ring in range(1, num_rings + 1):
     for sector in range(n_sectors):
         next_sector = (sector + 1) % n_sectors
         if ((ring, sector), (ring, next_sector)) in passages:
-            continue  # Don't draw wall - there's a passage
+            continue  # Don't draw wall — there's a passage
 
         theta = 2 * np.pi * (sector + 1) / n_sectors - np.pi / 2
         x1, y1 = inner_r * np.cos(theta), inner_r * np.sin(theta)
@@ -154,26 +164,28 @@ entrance_theta = (
 start_x = (outer_r + 0.8) * np.cos(entrance_theta)
 start_y = (outer_r + 0.8) * np.sin(entrance_theta)
 
-df_markers = pd.DataFrame(
-    {"x": [start_x, 0], "y": [start_y, 0], "label": ["START", "GOAL"], "color": ["#306998", "#DC2626"]}
-)
+df_markers = pd.DataFrame({"x": [start_x, 0], "y": [start_y, 0], "label": ["START", "GOAL"], "color": [BRAND, ACCENT]})
 
-# Create plot
+# Plot
 plot_radius = outer_r + 1.5
 plot = (
     ggplot()
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_walls, color="black", size=1.5)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_walls, color=INK, size=1.5)
     + geom_text(
         aes(x="x", y="y", label="label", color="color"), data=df_markers, size=8, fontface="bold", show_legend=False
     )
     + scale_color_identity()
     + coord_fixed(ratio=1, xlim=(-plot_radius, plot_radius), ylim=(-plot_radius, plot_radius))
     + theme_void()
-    + theme(plot_title=element_text(size=24, hjust=0.5), plot_margin=[40, 40, 40, 40])
-    + labs(title="maze-circular \u00b7 letsplot \u00b7 pyplots.ai")
-    + ggsize(1200, 1200)
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_title=element_text(size=16, color=INK, hjust=0.5),
+        plot_margin=[40, 40, 40, 40],
+    )
+    + labs(title="maze-circular · python · letsplot · anyplot.ai")
+    + ggsize(600, 600)
 )
 
-# Save as PNG and HTML
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
