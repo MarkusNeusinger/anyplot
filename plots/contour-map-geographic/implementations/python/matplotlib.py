@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-20
 """
 
 import os
@@ -13,6 +12,7 @@ import numpy as np
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
@@ -31,13 +31,13 @@ lon_grid, lat_grid = np.meshgrid(lons, lats)
 # Base undulating terrain
 elevation = 400 + 200 * np.sin(np.radians(lon_grid) * 15) * np.cos(np.radians(lat_grid) * 12)
 
-# Western Alps: Mont Blanc massif (~4800 m peak)
+# Western Alps: Mont Blanc massif (~4808 m peak)
 elevation += 4400 * np.exp(-((lon_grid - 7.0) ** 2) / 3) * np.exp(-((lat_grid - 45.8) ** 2) / 1.5)
 
 # Central Swiss Alps
 elevation += 3600 * np.exp(-((lon_grid - 9.5) ** 2) / 5) * np.exp(-((lat_grid - 46.5) ** 2) / 1.2)
 
-# Austrian Tyrol / Hohe Tauern
+# Austrian Tyrol / Hohe Tauern (Großglockner ~3798 m)
 elevation += 3000 * np.exp(-((lon_grid - 13.0) ** 2) / 4) * np.exp(-((lat_grid - 47.0) ** 2) / 1.5)
 
 # Po Valley lowlands (Italian side — low elevation)
@@ -55,6 +55,13 @@ borders = [
     {"lons": [13.5, 14.5, 15.5, 16.5], "lats": [46.5, 46.3, 46.0, 45.8]},
 ]
 
+# Notable peaks to annotate
+peaks = [
+    {"name": "Mont Blanc\n4808 m", "lon": 6.86, "lat": 45.83},
+    {"name": "Matterhorn\n4478 m", "lon": 7.66, "lat": 45.98},
+    {"name": "Großglockner\n3798 m", "lon": 12.69, "lat": 47.07},
+]
+
 # Plot
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
@@ -66,14 +73,34 @@ filled = ax.contourf(lon_grid, lat_grid, elevation, levels=levels, cmap="terrain
 # Contour lines every 500 m — heavier weight for high-res visibility
 line_levels = np.arange(500, 5000, 500)
 contour_lines = ax.contour(lon_grid, lat_grid, elevation, levels=line_levels, colors=INK, linewidths=2.0, alpha=0.45)
-ax.clabel(contour_lines, inline=True, fontsize=7, fmt="%d m", colors=INK_MUTED)
+ax.clabel(contour_lines, inline=True, fontsize=9, fmt="%d m", colors=INK_MUTED)
 
 # Country border lines
 for border in borders:
     ax.plot(border["lons"], border["lats"], color=INK_SOFT, linewidth=1.0, linestyle="--", zorder=4)
 
-# Colorbar
-cbar = plt.colorbar(filled, ax=ax, orientation="vertical", pad=0.02, shrink=0.88)
+# Peak markers and annotations — focal point emphasis
+for peak in peaks:
+    ax.plot(peak["lon"], peak["lat"], marker="^", markersize=6, color=INK, zorder=6, markeredgewidth=0)
+    ax.annotate(
+        peak["name"],
+        xy=(peak["lon"], peak["lat"]),
+        xytext=(peak["lon"] + 0.25, peak["lat"] - 0.35),
+        fontsize=7,
+        color=INK,
+        fontweight="bold",
+        bbox={
+            "facecolor": ELEVATED_BG,
+            "edgecolor": INK_SOFT,
+            "alpha": 0.85,
+            "boxstyle": "round,pad=0.2",
+            "linewidth": 0.5,
+        },
+        zorder=7,
+    )
+
+# Colorbar — idiomatic fig.colorbar
+cbar = fig.colorbar(filled, ax=ax, orientation="vertical", pad=0.02, shrink=0.88)
 cbar.set_label("Elevation (m)", fontsize=10, color=INK)
 cbar.ax.tick_params(labelsize=8, labelcolor=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
