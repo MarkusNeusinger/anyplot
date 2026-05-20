@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 92/100 | Updated: 2026-05-20
@@ -128,12 +128,14 @@ ax.set_yscale("log")
 ax.set_xlim(1e3, 5e7)
 ax.set_ylim(150, 600)
 
-ax.set_xlabel("Number of Cycles to Failure (N)", fontsize=10, color=INK)
-ax.set_ylabel("Stress Amplitude (MPa)", fontsize=10, color=INK)
+ax.set_xlabel("Number of Cycles to Failure (N)", fontsize=10, fontweight="medium", color=INK)
+ax.set_ylabel("Stress Amplitude (MPa)", fontsize=10, fontweight="medium", color=INK)
 ax.set_title("sn-curve-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-ax.grid(True, alpha=0.10, linewidth=0.8, color=INK, which="both")
+# Major gridlines only — which='both' on log scale generates ~18 lines per axis (too dense)
+ax.grid(True, alpha=0.10, linewidth=0.8, color=INK, which="major")
+ax.grid(True, alpha=0.04, linewidth=0.4, color=INK, which="minor")
 
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
@@ -142,7 +144,8 @@ ax.spines["bottom"].set_color(INK_SOFT)
 
 ax.legend(loc="lower left", fontsize=8, framealpha=0.95, facecolor=ELEVATED_BG, edgecolor=INK_SOFT)
 
-plt.tight_layout()
+# Controlled margins for polished spacing — avoids bbox_inches='tight' canvas drift
+fig.subplots_adjust(left=0.12, right=0.97, top=0.93, bottom=0.13)
 
 # Save — bbox_inches must stay default (None) to preserve 3200×1800 canvas
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
