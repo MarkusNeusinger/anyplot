@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
-Library: altair | Python 3.13
-Quality: 91/100 | Updated: 2026-05-20
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 92/100 | Updated: 2026-05-20
 """
 
 import importlib
