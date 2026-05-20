@@ -1,0 +1,257 @@
+library: ggplot2
+language: r
+specification_id: maze-circular
+created: '2026-05-20T08:04:03Z'
+updated: '2026-05-20T08:23:50Z'
+generated_by: claude-sonnet
+workflow_run: 26148822565
+issue: 3804
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - Algorithmically correct DFS maze generation guarantees exactly one solution with
+    set.seed(42) for reproducibility
+  - Perfect theme-adaptive chrome — all colors (walls, bands, text, background) flip
+    correctly between light and dark
+  - Correct square canvas (6x6 in at 400 dpi = 2400x2400 px) ideal for a symmetric
+    circular plot
+  - Alternating ring band shading adds subtle visual depth without overwhelming the
+    wall structure
+  - 'Clear visual narrative: START label at entry gap → navigate concentric rings
+    → green goal disc at center'
+  - Differentiated wall stroke weights (1.3 outer, 0.9 inner) create a natural visual
+    frame hierarchy
+  - Full spec compliance — concentric rings, radial walls, radial passages, entry
+    point, goal marker all present
+  - Clean code using only ggplot2 and ragg with no unnecessary complexity
+  weaknesses:
+  - Caption font at 7pt renders ~39 source-px which is on the smaller side for mobile
+    viewports — consider 8pt
+  - 'DE-01: Design is above defaults (alternating bands, stroke weights) but not publication-exceptional
+    — could add subtle shadow on goal disc or bolder entry arrow for more polish'
+  - 'DE-03: Story is clear but the solution path itself is not highlighted — a faint
+    colored path from START to goal would elevate storytelling significantly'
+  - 'LM-02: Implementation uses ggplot2 primarily as a drawing tool via Cartesian
+    trigonometry — could leverage coord_polar() or additional ggplot2-native features
+    for more library distinctiveness'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "maze-circular · r · ggplot2 · anyplot.ai" in dark ink, centered, clearly readable. Caption "rings: 7 · sectors: 12 · medium difficulty" in muted dark ink at bottom, small but legible. "START" label in bold muted ink placed just outside the outer wall at the entry gap, clearly readable.
+      Data: 7 concentric rings with alternating band shading (light beige tint on even rings). Walls rendered in dark ink (#1A1A17) with 12 radial sectors. Outer wall at heavier linewidth (1.3) vs inner walls (0.9). Goal disc at center in brand green (#009E73) with a small white star. Entry gap in outer wall at top-right sector is clearly visible.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light off-white (#F0EFE8), clearly visible. Caption and "START" label in secondary muted light (#B8B7B0), readable against the dark background. No dark-on-dark failures observed.
+      Data: Maze walls now render in light (#F0EFE8) against dark background — wall structure remains fully visible and legible. Alternating bands use #242420 (elevated dark) for subtle depth. Goal disc is identical brand green (#009E73) — data color matches light render exactly as required. White star on green disc visible.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All sizes explicitly set; caption at 7pt is slightly small for mobile
+          (~39 source-px) but readable
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps; START label, title, and caption are well-separated
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Maze walls, band shading, and goal disc all clearly visible in both
+          themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Two-color scheme (ink vs background + brand green) is high contrast
+          and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas well-utilized; maze fills ~65-70% of canvas
+          with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format; caption provides rings/sectors/difficulty
+          context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Goal disc in #009E73; backgrounds correct (#FAF8F1 / #1A1A17); all
+          chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Alternating bands and stroke-weight hierarchy lift this above defaults;
+          not quite publication-exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void perfect for maze; lineend='round' shows attention to detail;
+          subtle band shading adds depth
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear START-to-center narrative with entry gap and green goal disc;
+          solution path not highlighted
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Circular maze with concentric rings and radial sectors — exactly
+          as specified
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features: concentric walls, radial walls, passages, entry point,
+          center goal, DFS single-solution'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 7 rings, 12 sectors, coord_equal ensures circular shape
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''maze-circular · r · ggplot2 · anyplot.ai'' — exact required
+          format; no legend needed'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all maze features: ring corridors, radial passages, entry,
+          goal, alternating depth cues'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Circular maze puzzle is a real, neutral, printable puzzle concept;
+          no controversial content
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 7 rings and 12 sectors are appropriate for medium difficulty; parameters
+          documented in caption
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: imports → tokens → generation → geometry → plot → save;
+          helper functions are minimal and necessary'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg; both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean R idioms; DFS in iterative stack is correct; append_seg with
+          <<- is standard R accumulation pattern
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png; uses linewidth= (not deprecated size=); ragg::agg_png
+          device
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Proper grammar-of-graphics layers; coord_equal; theme_void; factor(seg)
+          group for geom_path; annotate
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_equal for circular form, geom_path with grouped segments for
+          walls, theme_void for clean maze — but underlying approach uses ggplot2
+          as a Cartesian drawing tool rather than leveraging statistical features
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
