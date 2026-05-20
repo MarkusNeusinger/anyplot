@@ -1,6 +1,7 @@
-"""pyplots.ai
+""" anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
-Library: bokeh | Python
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-20
 """
 
 import os
