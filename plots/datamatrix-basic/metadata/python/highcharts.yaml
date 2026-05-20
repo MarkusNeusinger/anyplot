@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:53:23Z'
-updated: '2026-05-20T05:59:53Z'
+updated: '2026-05-20T06:09:51Z'
 generated_by: claude-sonnet
 workflow_run: 26143949307
 issue: 3811
@@ -12,56 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 82
 review:
   strengths:
-  - 'Correct Data Matrix structure: L-shaped finder pattern (solid left/bottom edges)
-    and alternating timing patterns (top/right edges) are properly implemented'
-  - 'Theme-adaptive chrome: background, title, and subtitle colors correctly flip
-    between light (#FAF8F1) and dark (#1A1A17) while barcode cell colors (black/white)
-    stay constant as data'
-  - Square 2400x2400 format is the right choice for a symmetric matrix barcode
-  - All font sizes explicitly set (title 66px, subtitle 44px) with theme-adaptive
-    INK/INK_SOFT tokens
-  - 'Clean minimal layout: axis labels, ticks, legend, credits, and grid lines all
-    correctly suppressed for a barcode visualization'
-  - np.random.seed(42) ensures reproducibility
-  - 'Idiomatic highcharts-core usage: HeatmapSeries, color_axis with stops, and correct
-    HTML/PNG export via Selenium'
-  - 'Subtitle ''Data Matrix Encoding: SERIAL:12345678'' adds meaningful context about
-    the encoded content'
+  - Correct Data Matrix structure with L-shaped finder pattern and alternating timing
+    patterns, properly placed via row inversion
+  - 'Both theme renders fully correct: backgrounds flip, text colors adapt, barcode
+    cells stay identical'
+  - Clean KISS code structure, fully reproducible with seed=42
+  - All unnecessary chart chrome stripped (axes, ticks, grid, legend, credits — appropriate
+    for barcode)
+  - HTML artifacts saved correctly for both themes
   weaknesses:
-  - 'Highcharts default Y-axis label ''Values'' is visible as tiny vertical text on
-    the left margin in both renders — suppress it by adding ''title'': {''text'':
-    None} is insufficient; also set ''visible'': False on the y_axis or explicitly
-    remove it via ''labels'': {''enabled'': False} already set, but the y_axis title
-    still appears — try chart.options.y_axis = {''title'': {''text'': ''''}, ''labels'':
-    {''enabled'': False}, ...} instead of None'
-  - 'Design Excellence is moderate (12/20): the barcode visualization is functionally
-    correct but lacks visual polish beyond the mandatory structure — consider adding
-    a subtle outer quiet zone rectangle/border to visually delimit the barcode area,
-    or a thin labeled annotation indicating the finder pattern and timing pattern
-    locations to guide the viewer'
-  - 'DE-03 (Data Storytelling, 3/6): the subtitle provides encoding context but there
-    is no visual hierarchy guiding the viewer''s eye — consider adding color-coded
-    annotations or a subtle legend strip identifying the finder pattern vs timing
-    pattern vs data region to differentiate structural elements visually'
-  - 'DQ-01 (5/6): the interior data bits are random (not actual ECC-200 encoded content)
-    — while true ECC-200 is complex, a comment clarifying that the interior is simulated
-    is missing; the ''SERIAL:12345678'' subtitle implies the displayed bits actually
-    encode that string, which they do not'
+  - Interior bits use pseudo-random generation (seed=42) instead of true ECC 200 encoding
+    — barcode is structurally correct but not scannable/decodable
+  - Minor scrollbar artifact on right canvas edge from Selenium capture (body overflow
+    not hidden)
+  - No visual differentiation between structural zones (finder pattern, timing pattern,
+    data region) — missed storytelling opportunity
+  - 'LM-02 limited: highcharts-specific features not deeply exploited beyond basic
+    heatmap/color-axis usage'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — the characteristic anyplot.ai light surface, confirmed
-      Chrome: Title "datamatrix-basic · python · highcharts · anyplot.ai" is bold, dark (#1A1A17), clearly readable at top. Subtitle "Data Matrix Encoding: 'SERIAL:12345678'" in softer gray (#4A4A44), clearly readable below the title. A tiny "Values" Highcharts default Y-axis label is visible as vertical text on the left margin — very small but present (minor artifact).
-      Data: 18x18 Data Matrix barcode rendered as black/white cells. Left column is solid black (finder pattern), bottom row is solid black (finder pattern), top row shows alternating black/white cells (timing pattern), right column shows alternating pattern (timing pattern). Interior cells are pseudo-random black/white (simulated data bits). Pure white (#ffffff) cells contrast clearly against warm off-white background. All structural patterns are visually correct.
-      Legibility verdict: PASS — all chrome text is clearly readable; minor "Values" label artifact is cosmetically distracting but does not impair readability
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "datamatrix-basic · python · highcharts · anyplot.ai" in bold dark ink (#1A1A17), clearly readable. Subtitle "Data Matrix Encoding: SERIAL:12345678" in muted gray (#4A4A44), readable. No axis labels, ticks, or grid (appropriate for barcode). Thin browser scrollbar artifact faintly visible on right edge.
+      Data: 18×18 binary heatmap with black (#000000) and white (#ffffff) cells. L-shaped finder pattern (solid black left column + solid black bottom row) clearly visible. Alternating timing pattern on top and right edges. Interior cells filled with pseudo-random pattern (seed=42).
+      Legibility verdict: PASS — all text readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — the characteristic anyplot.ai dark surface, confirmed
-      Chrome: Title and subtitle text are rendered in light colors (#F0EFE8 / #B8B7B0), clearly readable against the dark background. The tiny "Values" label also appears as very light text on the left — consistent with dark-theme adaptation. No dark-on-dark failures for any chrome element.
-      Data: Same 18x18 Data Matrix pattern. The barcode cell colors are identical to the light render (black=#000000, white=#ffffff) — data colors unchanged as expected. Black cells (#000000) blend partially into the dark background (#1A1A17), making the solid finder pattern edges less visually prominent in dark mode; however, the white cells (#ffffff) stand out strongly and preserve the overall barcode structure. The matrix pattern remains recognizable in dark mode.
-      Legibility verdict: PASS — chrome text is fully readable; the reduced finder pattern contrast in dark mode is an inherent tradeoff of displaying a black/white barcode on a dark surface, not a chrome adaptation failure
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title in cream/light text (#F0EFE8), fully readable. Subtitle in muted light gray (#B8B7B0), readable. No dark-on-dark failures detected.
+      Data: Barcode cell colors are identical to light render — same black/white pattern, same structural elements. Only the background and text chrome flip between themes.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -72,79 +54,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (66px) and subtitle (44px) explicitly set and readable in both
-          themes. Minor 'Values' Y-axis label artifact on left margin slightly detracts.
+        comment: Font sizes explicitly set (title 66px, subtitle 44px). Both themes
+          readable. Subtitle could be slightly larger for optimal mobile readability.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps with barcode or other elements.
+        comment: No text collisions. Only two text elements, well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Black/white cells provide maximum contrast; matrix clearly visible
-          in both themes.
+        comment: Barcode cells clearly visible; black/white provides maximum contrast.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Black and white are the gold standard for contrast and CVD safety.
+        comment: Binary black/white with no hue dependency; fully CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: 'Square 2400x2400 format appropriate. Matrix fills good portion of
-          canvas with margins. Slight concern: right edge of matrix is close to chart
-          boundary.'
+        comment: Good use of square canvas. Minor faint browser-scrollbar artifact
+          on right edge from Selenium capture.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in correct format; no axis labels appropriate for barcode.
-          Subtitle provides encoding context.
+        comment: Mandated title format correct; subtitle provides encoding context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Barcode cells correctly use black/white as data (constant across
-          themes). Page/chart chrome correctly flips (FAF8F1/1A1A17 backgrounds, INK/INK_SOFT
-          text). Continuous binary scale is appropriate.
+        comment: 'Binary black/white is spec-mandated. Backgrounds correct (#FAF8F1
+          light / #1A1A17 dark). Data colors identical across themes.'
     design_excellence:
-      score: 12
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Clean, intentional design appropriate for a barcode visualization.
-          Warm background, bold title, minimal chrome. Above default but not publication-level
-          sophistication.
+        comment: Clean and appropriate for barcode type. Design options constrained
+          by binary data nature.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: all unnecessary elements disabled. Minor ''Values''
-          label artifact. Generous margins.'
+        comment: All unnecessary chrome deliberately removed (axes, ticks, grid, legend,
+          credits).
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
-        passed: true
-        comment: Subtitle adds encoding context. No visual hierarchy beyond correct
-          structural elements. Viewer sees barcode + subtitle but no guided story
-          about its structure.
+        passed: false
+        comment: Subtitle provides encoding context but no visual hierarchy to distinguish
+          structural zones.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -152,29 +128,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Data Matrix 2D barcode visualization using heatmap.
+        comment: Correct Data Matrix barcode visualization using heatmap.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: L-shaped finder pattern, alternating timing patterns, interior data
-          bits, quiet zone (via chart margins + 0.5-cell data padding). All required
-          structural elements present.
+        comment: L-shaped finder, timing patterns, quiet zone, high contrast all present.
+          Interior bits pseudo-random not true ECC 200.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Row inversion correctly implemented for bottom-to-top display with
-          L-pattern at bottom-left.
+        comment: Row inversion correctly places L-pattern at bottom-left.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'datamatrix-basic · python · highcharts · anyplot.ai'.
-          No legend needed; correctly disabled.
+        comment: Title matches mandated format. No legend appropriate.
     data_quality:
       score: 14
       max: 15
@@ -184,22 +157,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows finder pattern, timing pattern, and interior data bits. Interior
-          bits are pseudo-random (not true ECC-200 encoding of the subtitle content).
+        comment: Shows finder, timing, and data region. Missing true ECC 200 content
+          encoding.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''SERIAL:12345678'' is realistic for industrial/manufacturing use
-          case, matching spec applications.'
+        comment: SERIAL:12345678 is a realistic industrial serial number format.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 18x18 is a valid Data Matrix size. Binary 0/1 values are correct
-          for a matrix barcode.
+        comment: 18x18 is a valid Data Matrix size for the content length.
     code_quality:
       score: 10
       max: 10
@@ -209,56 +180,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save. No functions or
-          classes.'
+        comment: Clean imports -> data -> plot -> save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set. Finder/timing patterns are deterministic.
+        comment: np.random.seed(42) ensures deterministic interior bits.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, tempfile, time, Path, numpy, Chart, HighchartsOptions,
-          HeatmapSeries, webdriver, Options.'
+        comment: All imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Matrix construction logic is clear. No over-engineering
-          or fake functionality.
+        comment: Clean, readable, appropriately structured. Helpful comment about
+          ECC 200 limitation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current highcharts-core
-          API used.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 8
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct Chart(container='container'), HighchartsOptions, HeatmapSeries,
-          color_axis, to_js_literal(). Loads heatmap module separately. Proper Selenium
-          export.
+        comment: HeatmapSeries with color_axis and binary stops is the right highcharts
+          approach. Correct use of border_width=0, colsize=1, rowsize=1.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses Highcharts heatmap module with color_axis stops for precise
-          binary color mapping. Clever use of heatmap for barcode visualization, though
-          the approach is fairly straightforward.
-  verdict: REJECTED
+        passed: false
+        comment: Binary color-axis stops for barcode rendering is somewhat distinctive.
+          Otherwise generic heatmap approach.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -270,3 +236,4 @@ impl_tags:
   dataprep: []
   styling:
   - minimal-chrome
+  - custom-colormap
