@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -17,7 +17,7 @@ sys.path = [p for p in sys.path if Path(p).resolve() != Path(__file__).resolve()
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, WMTSTileSource
+from bokeh.models import ColorBar, ColumnDataSource, HoverTool, LinearColorMapper, WMTSTileSource
 from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
 from selenium import webdriver
@@ -94,6 +94,7 @@ df["dest_y"] = np.log(np.tan((90 + df["dest_lat"]) * np.pi / 360.0)) * k
 min_flow = df["flow"].min()
 max_flow = df["flow"].max()
 df["line_width"] = 3 + (df["flow"] - min_flow) / (max_flow - min_flow) * 14
+color_mapper = LinearColorMapper(palette=Viridis256, low=min_flow, high=max_flow)
 color_idx = ((df["flow"] - min_flow) / (max_flow - min_flow) * 255).astype(int).clip(0, 255)
 df["line_color"] = [Viridis256[i] for i in color_idx]
 
@@ -213,12 +214,30 @@ p.legend.background_fill_color = ELEVATED_BG
 p.legend.border_line_color = INK_SOFT
 p.legend.label_text_color = INK_SOFT
 
+# ColorBar — lets viewers quantify arc colors in TEU
+color_bar = ColorBar(
+    color_mapper=color_mapper,
+    title="Volume (TEU)",
+    title_text_font_size="34pt",
+    title_text_color=INK,
+    major_label_text_font_size="30pt",
+    major_label_text_color=INK_SOFT,
+    label_standoff=20,
+    width=40,
+    padding=20,
+    background_fill_color=PAGE_BG,
+    bar_line_color=INK_SOFT,
+    border_line_color=INK_SOFT,
+)
+p.add_layout(color_bar, "right")
+
 # Save HTML
 output_file(f"plot-{THEME}.html")
 save(p)
 
 # Screenshot with headless Selenium (export_png uses snap chromedriver — broken)
-W, H = 3200, 1800
+# W is wider than figure width=3200 to accommodate the ColorBar right panel
+W, H = 3600, 1800
 opts = Options()
 for arg in (
     "--headless=new",
