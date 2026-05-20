@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 77/100 | Updated: 2026-05-20
@@ -15,10 +15,12 @@ from lets_plot import (
     element_line,
     element_rect,
     element_text,
+    geom_abline,
     geom_text,
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_color_manual,
     scale_x_continuous,
     scale_y_continuous,
@@ -98,10 +100,30 @@ for price in prices:
 df_pnf = pd.DataFrame(pnf_rows, columns=["column", "price", "symbol", "direction"])
 df_pnf = df_pnf.drop_duplicates(subset=["column", "price"])
 
+# 45-degree trend lines: 1 box per column in chart coordinates
+min_idx = df_pnf["price"].idxmin()
+min_price_val = df_pnf.loc[min_idx, "price"]
+min_col_val = df_pnf.loc[min_idx, "column"]
+
+max_idx = df_pnf["price"].idxmax()
+max_price_val = df_pnf.loc[max_idx, "price"]
+max_col_val = df_pnf.loc[max_idx, "column"]
+
+# Ascending support: anchored at chart minimum, slope = +box_size
+support_intercept = min_price_val - box_size * min_col_val
+# Descending resistance: anchored at chart maximum, slope = -box_size
+resistance_intercept = max_price_val + box_size * max_col_val
+
 # Plot
 plot = (
     ggplot(df_pnf, aes(x="column", y="price", label="symbol", color="direction"))
-    + geom_text(size=18, fontface="bold")
+    + geom_abline(slope=box_size, intercept=support_intercept, color=INK_SOFT, linetype="dashed", size=0.8)
+    + geom_abline(slope=-box_size, intercept=resistance_intercept, color=INK_SOFT, linetype="dashed", size=0.8)
+    + geom_text(
+        size=12,
+        fontface="bold",
+        tooltips=layer_tooltips().line("Column: @column").line("Price: $@price").line("Signal: @symbol"),
+    )
     + scale_color_manual(values={"up": "#009E73", "down": "#D55E00"})
     + scale_x_continuous(name="Column (Reversal Number)")
     + scale_y_continuous(name="Price ($)")
