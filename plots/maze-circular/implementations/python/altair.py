@@ -1,21 +1,42 @@
-""" pyplots.ai
+""" anyplot.ai
 maze-circular: Circular Maze Puzzle
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 80/100 | Created: 2026-01-16
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-20
 """
+
+import os
+import sys
+
+
+# Remove this file's directory from sys.path to avoid circular import with the altair package
+if sys.path and os.path.exists(os.path.join(sys.path[0] or ".", "altair.py")):
+    sys.path = sys.path[1:]
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+WALL_COLOR = "#1A1A17" if THEME == "light" else "#E0DFD8"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+ENTRY_COLOR = "#0072B2"  # Okabe-Ito position 3, theme-independent (same in light and dark)
+GOAL_COLOR = "#E69F00"  # Okabe-Ito position 5, theme-independent
+
+# Difficulty: "easy" / "medium" / "hard" — scales sector density (more sectors = harder maze)
+DIFFICULTY = os.getenv("ANYPLOT_DIFFICULTY", "medium")
+density_map = {"easy": 0.70, "medium": 1.0, "hard": 1.40}
+density = density_map.get(DIFFICULTY, 1.0)
+
 # Maze parameters
 np.random.seed(42)
 num_rings = 7
-sectors_per_ring = [1] + [12 + i * 4 for i in range(num_rings)]
+sectors_per_ring = [1] + [max(4, round((12 + i * 4) * density)) for i in range(num_rings)]
 ring_width = 1.0
 
-# Data structures for maze
+# Data structures for maze walls
 walls = []
 for ring in range(num_rings):
     ring_walls = []
@@ -23,13 +44,12 @@ for ring in range(num_rings):
         ring_walls.append({"outer": True, "cw": True})
     walls.append(ring_walls)
 
-# Union-Find using dictionaries (inlined - no helper functions)
+# Union-Find for Kruskal's maze generation (inlined, no helper functions)
 parent = {}
 for ring in range(num_rings):
     for sector in range(sectors_per_ring[ring + 1]):
         parent[(ring, sector)] = (ring, sector)
 
-# Generate maze using randomized Kruskal's algorithm
 possible_walls = []
 for ring in range(num_rings):
     num_sectors = sectors_per_ring[ring + 1]
@@ -45,7 +65,6 @@ for ring in range(num_rings):
 np.random.shuffle(possible_walls)
 
 for wall_type, r1, s1, r2, s2 in possible_walls:
-    # Inline find with path compression
     cell1, cell2 = (r1, s1), (r2, s2)
     root1 = cell1
     while parent[root1] != root1:
@@ -61,7 +80,6 @@ for wall_type, r1, s1, r2, s2 in possible_walls:
     while parent[c] != root2:
         parent[c], c = root2, parent[c]
 
-    # Inline union
     if root1 != root2:
         parent[root1] = root2
         if wall_type == "cw":
@@ -69,37 +87,35 @@ for wall_type, r1, s1, r2, s2 in possible_walls:
         else:
             walls[r1][s1]["outer"] = False
 
-# Entry point
-entry_sector = np.random.randint(0, sectors_per_ring[num_rings])
+# Entry fixed at top (θ ≈ π/2) so START label is always clearly readable
+entry_sector = sectors_per_ring[num_rings] // 4
 
-# Generate wall segments for plotting
-wall_data = []
+# Generate wall segment coordinates
+outer_boundary_data = []  # Outer boundary — rendered thicker for visual emphasis
+wall_data = []  # Interior walls
 wall_count = 0
 
-# Draw outer boundary (except entry)
 theta_vals = np.linspace(0, 2 * np.pi, sectors_per_ring[num_rings] + 1)
 entry_theta_start = theta_vals[entry_sector]
 entry_theta_end = theta_vals[entry_sector + 1]
 outer_r = num_rings * ring_width
 
-# Outer boundary arc segments (inline add_arc)
+# Outer boundary arcs with gap at entry — tracked separately for thicker strokeWidth
 if entry_sector > 0:
-    theta = np.linspace(0, entry_theta_start, 30)
-    x = outer_r * np.cos(theta)
-    y = outer_r * np.sin(theta)
-    for i in range(len(x)):
-        wall_data.append({"x": x[i], "y": y[i], "wall_id": f"outer_bound_{wall_count}", "order": i})
+    theta = np.linspace(0, entry_theta_start, 60)
+    x_arr, y_arr = outer_r * np.cos(theta), outer_r * np.sin(theta)
+    for i in range(len(x_arr)):
+        outer_boundary_data.append({"x": x_arr[i], "y": y_arr[i], "wall_id": f"ob_{wall_count}", "order": i})
     wall_count += 1
 
 if entry_sector < sectors_per_ring[num_rings] - 1:
-    theta = np.linspace(entry_theta_end, 2 * np.pi, 30)
-    x = outer_r * np.cos(theta)
-    y = outer_r * np.sin(theta)
-    for i in range(len(x)):
-        wall_data.append({"x": x[i], "y": y[i], "wall_id": f"outer_bound_{wall_count}", "order": i})
+    theta = np.linspace(entry_theta_end, 2 * np.pi, 60)
+    x_arr, y_arr = outer_r * np.cos(theta), outer_r * np.sin(theta)
+    for i in range(len(x_arr)):
+        outer_boundary_data.append({"x": x_arr[i], "y": y_arr[i], "wall_id": f"ob_{wall_count}", "order": i})
     wall_count += 1
 
-# Draw ring walls (concentric circles with gaps)
+# Concentric ring walls (arcs with gaps at passages)
 for ring in range(num_rings - 1):
     r = (ring + 1) * ring_width
     num_sectors = sectors_per_ring[ring + 1]
@@ -112,24 +128,21 @@ for ring in range(num_rings - 1):
                 arc_start = ring_theta[sector]
         else:
             if arc_start is not None:
-                # Inline add_arc
                 theta = np.linspace(arc_start, ring_theta[sector], 30)
-                x = r * np.cos(theta)
-                y = r * np.sin(theta)
-                for i in range(len(x)):
-                    wall_data.append({"x": x[i], "y": y[i], "wall_id": f"ring_{ring}_{wall_count}", "order": i})
+                x_arr, y_arr = r * np.cos(theta), r * np.sin(theta)
+                for i in range(len(x_arr)):
+                    wall_data.append({"x": x_arr[i], "y": y_arr[i], "wall_id": f"r_{ring}_{wall_count}", "order": i})
                 wall_count += 1
                 arc_start = None
 
     if arc_start is not None:
         theta = np.linspace(arc_start, 2 * np.pi, 30)
-        x = r * np.cos(theta)
-        y = r * np.sin(theta)
-        for i in range(len(x)):
-            wall_data.append({"x": x[i], "y": y[i], "wall_id": f"ring_{ring}_{wall_count}", "order": i})
+        x_arr, y_arr = r * np.cos(theta), r * np.sin(theta)
+        for i in range(len(x_arr)):
+            wall_data.append({"x": x_arr[i], "y": y_arr[i], "wall_id": f"r_{ring}_{wall_count}", "order": i})
         wall_count += 1
 
-# Draw radial walls (sector dividers with gaps)
+# Radial walls (sector dividers with gaps at passages)
 for ring in range(num_rings):
     num_sectors = sectors_per_ring[ring + 1]
     r_inner = ring * ring_width if ring > 0 else 0.3
@@ -138,75 +151,99 @@ for ring in range(num_rings):
 
     for sector in range(num_sectors):
         if walls[ring][sector]["cw"]:
-            theta_val = radial_theta[(sector + 1) % num_sectors] if sector < num_sectors - 1 else 2 * np.pi
-            # Inline add_radial
+            theta_val = radial_theta[sector + 1] if sector < num_sectors - 1 else 2 * np.pi
             x1, y1 = r_inner * np.cos(theta_val), r_inner * np.sin(theta_val)
             x2, y2 = r_outer * np.cos(theta_val), r_outer * np.sin(theta_val)
-            wall_data.append({"x": x1, "y": y1, "wall_id": f"radial_{ring}_{sector}_{wall_count}", "order": 0})
-            wall_data.append({"x": x2, "y": y2, "wall_id": f"radial_{ring}_{sector}_{wall_count}", "order": 1})
+            wid = f"rad_{ring}_{sector}_{wall_count}"
+            wall_data.append({"x": x1, "y": y1, "wall_id": wid, "order": 0})
+            wall_data.append({"x": x2, "y": y2, "wall_id": wid, "order": 1})
             wall_count += 1
 
-# Create center goal marker - use mark_point with star shape (Altair's native star support)
-goal_df = pd.DataFrame({"x": [0], "y": [0]})
-
-# Entry marker - position and compute angle for text rotation
-entry_angle = (entry_theta_start + entry_theta_end) / 2
-entry_r = num_rings * ring_width + 0.8
-entry_x = entry_r * np.cos(entry_angle)
-entry_y = entry_r * np.sin(entry_angle)
-
-# Keep START text horizontal for universal readability regardless of entry position
-
-entry_data = pd.DataFrame({"x": [entry_x], "y": [entry_y], "label": ["START"]})
-
-# Convert wall data to DataFrame
+# DataFrames
+df_outer = pd.DataFrame(outer_boundary_data)
 df_walls = pd.DataFrame(wall_data)
 
-# Calculate domain bounds to ensure perfect circle (equal x/y scales)
-max_extent = num_rings * ring_width + 1.5  # Extra padding for START label
+# Goal at center: filled halo + star symbol
+goal_halo_df = pd.DataFrame({"x": [0.0], "y": [0.0]})
+goal_star_df = pd.DataFrame({"x": [0.0], "y": [0.0], "label": ["★"]})
 
-# Create wall lines chart with fixed scale domains for circular appearance
-base = (
-    alt.Chart(df_walls)
-    .mark_line(color="black", strokeWidth=3)
+# Entry label and inward-pointing arrow indicator
+entry_angle = (entry_theta_start + entry_theta_end) / 2
+entry_label_r = outer_r + 0.90
+entry_arrow_r = outer_r + 0.30
+
+entry_df = pd.DataFrame(
+    {"x": [entry_label_r * np.cos(entry_angle)], "y": [entry_label_r * np.sin(entry_angle)], "label": ["START"]}
+)
+arrow_df = pd.DataFrame(
+    {"x": [entry_arrow_r * np.cos(entry_angle)], "y": [entry_arrow_r * np.sin(entry_angle)], "label": ["▼"]}
+)
+
+max_extent = outer_r + 1.6
+
+# Shared scale domains to guarantee equal-aspect circle
+x_scale = alt.Scale(domain=[-max_extent, max_extent])
+y_scale = alt.Scale(domain=[-max_extent, max_extent])
+
+# Outer boundary wall lines — thicker for visual boundary emphasis
+outer_chart = (
+    alt.Chart(df_outer)
+    .mark_line(color=WALL_COLOR, strokeWidth=4.0)
     .encode(
-        x=alt.X("x:Q", axis=None, scale=alt.Scale(domain=[-max_extent, max_extent])),
-        y=alt.Y("y:Q", axis=None, scale=alt.Scale(domain=[-max_extent, max_extent])),
+        x=alt.X("x:Q", axis=None, scale=x_scale),
+        y=alt.Y("y:Q", axis=None, scale=y_scale),
         detail="wall_id:N",
         order="order:O",
     )
 )
 
-# Center goal - use Vega-Lite's built-in star shape via mark_point
-# Increased size to 40000 for better visibility relative to maze size
-goal = (
-    alt.Chart(goal_df)
-    .mark_point(
-        shape="M0,0.5L0.191,0.181L0.5,0.181L0.236,-0.045L0.309,-0.405L0,-0.191L-0.309,-0.405L-0.236,-0.045L-0.5,0.181L-0.191,0.181Z",
-        size=40000,
-        fill="#FFD43B",
-        stroke="#333333",
-        strokeWidth=3,
-        filled=True,
+# Interior wall lines
+walls_chart = (
+    alt.Chart(df_walls)
+    .mark_line(color=WALL_COLOR, strokeWidth=2.5)
+    .encode(
+        x=alt.X("x:Q", axis=None, scale=x_scale),
+        y=alt.Y("y:Q", axis=None, scale=y_scale),
+        detail="wall_id:N",
+        order="order:O",
     )
-    .encode(x=alt.X("x:Q", axis=None), y=alt.Y("y:Q", axis=None))
 )
 
-# Entry marker - horizontal text for best readability
-entry = (
-    alt.Chart(entry_data)
-    .mark_text(fontSize=22, fontWeight="bold", color="#306998")
-    .encode(x="x:Q", y="y:Q", text="label:N")
+# Goal halo — subtle filled circle marking the center zone
+goal_halo_chart = (
+    alt.Chart(goal_halo_df)
+    .mark_point(color=GOAL_COLOR, size=350, filled=True, opacity=0.30)
+    .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale))
 )
 
-# Combine layers with square aspect ratio for perfect circle
+# Goal star at center — Unicode ★ for reliable rendering
+goal_chart = (
+    alt.Chart(goal_star_df)
+    .mark_text(fontSize=24, fontWeight="bold", color=GOAL_COLOR)
+    .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale), text="label:N")
+)
+
+# Inward-pointing arrow at entry gap (▼ points toward center when entry is at top)
+arrow_chart = (
+    alt.Chart(arrow_df)
+    .mark_text(fontSize=14, color=ENTRY_COLOR)
+    .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale), text="label:N")
+)
+
+# Entry label above the maze
+entry_chart = (
+    alt.Chart(entry_df)
+    .mark_text(fontSize=18, fontWeight="bold", color=ENTRY_COLOR)
+    .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale), text="label:N")
+)
+
 chart = (
-    alt.layer(base, goal, entry)
-    .properties(width=900, height=900, title=alt.Title("maze-circular · altair · pyplots.ai", fontSize=28))
-    .configure_view(strokeWidth=0)
+    alt.layer(outer_chart, walls_chart, goal_halo_chart, goal_chart, arrow_chart, entry_chart)
+    .properties(width=600, height=600, background=PAGE_BG, title="maze-circular · python · altair · anyplot.ai")
+    .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_axis(grid=False)
+    .configure_title(fontSize=16, color=INK)
 )
 
-# Save outputs
-chart.save("plot.png", scale_factor=4.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
