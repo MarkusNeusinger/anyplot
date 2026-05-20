@@ -1,5 +1,7 @@
-"""histogram-returns-distribution: Returns Distribution Histogram
-Library: seaborn | Python
+""" anyplot.ai
+histogram-returns-distribution: Returns Distribution Histogram
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-20
 """
 
 import os
