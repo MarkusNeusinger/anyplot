@@ -1,15 +1,17 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '../test-utils';
+import { render, screen, userEvent, waitFor } from '../test-utils';
 import { StatsPage } from './StatsPage';
 
 vi.mock('react-helmet-async', () => ({
   Helmet: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
+const mockTrackEvent = vi.fn();
+
 vi.mock('../hooks', () => ({
   useAnalytics: () => ({
     trackPageview: vi.fn(),
-    trackEvent: vi.fn(),
+    trackEvent: mockTrackEvent,
   }),
 }));
 
@@ -118,6 +120,7 @@ function mockFetchError() {
 describe('StatsPage', () => {
   beforeEach(() => {
     vi.restoreAllMocks();
+    mockTrackEvent.mockClear();
   });
 
   // vi.restoreAllMocks() doesn't undo vi.stubGlobal — without this hook the
@@ -245,6 +248,30 @@ describe('StatsPage', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/visitor data unavailable/)).toBeInTheDocument();
+    });
+  });
+
+  it('routes tag links to /plots and fires tag_click on click', async () => {
+    // Regression: pre-fix the href pointed at /?plot=scatter, which landed
+    // on LandingPage and silently dropped the filter intent. Filter routing
+    // lives on /plots after the page split, so the link must target that.
+    mockFetchSuccess();
+    const user = userEvent.setup();
+
+    render(<StatsPage />);
+
+    await waitFor(() => {
+      expect(screen.getByText('scatter')).toBeInTheDocument();
+    });
+
+    const scatterLink = screen.getByText('scatter').closest('a');
+    expect(scatterLink).toHaveAttribute('href', '/plots?plot=scatter');
+
+    await user.click(scatterLink!);
+    expect(mockTrackEvent).toHaveBeenCalledWith('tag_click', {
+      param: 'plot',
+      value: 'scatter',
+      source: 'stats',
     });
   });
 });
