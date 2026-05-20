@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: smith-chart-basic
 created: '2026-01-15T21:55:08Z'
-updated: '2026-05-20T01:39:25Z'
+updated: '2026-05-20T01:57:59Z'
 generated_by: claude-sonnet
 workflow_run: 26135219921
 issue: 3792
@@ -12,98 +12,95 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-cha
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/pygal/plot-dark.html
-quality_score: 79
+quality_score: 83
 review:
   strengths:
-  - 'Excellent Smith chart grid implementation: unit circle, constant-R circles, constant-X
-    arcs, and real axis correctly computed via bilinear gamma-transform'
-  - Full theme adaptation — both renders use correct backgrounds (#FAF8F1/#1A1A17)
-    and all chrome tokens adapt (INK, INK_SOFT, INK_MUTED)
-  - Brand green (#009E73) correctly used for the first data series (Antenna Z(f));
-    Okabe-Ito order respected for the 3 frequency markers
-  - 'Good code quality: seed, clean imports, no functions/classes, informative palette
-    comments'
-  - HTML interactive output alongside PNG (pygal differentiator honored)
+  - Correct Smith chart with all required grid elements (resistance circles, reactance
+    arcs, unit circle, real axis, impedance locus with dots) — a technically challenging
+    plot for a general-purpose charting library
+  - 'Deliberate palette design: Okabe-Ito data series (green locus + vermillion/blue/pink
+    frequency markers) added before structural elements (amber unit circle, sky blue
+    resistance grid, muted gray reactance arcs) — correct palette ordering'
+  - Clean code with the elegant (None, None) segment-break technique for multi-segment
+    resistance circles and reactance arcs; seed set for reproducibility
+  - Theme-adaptive styling correctly implemented — both light and dark renders pass
+    readability checks with no dark-on-dark failures
   weaknesses:
-  - 'X-axis tick labels truncated to ''-0...'' for negative values between -1 and
-    0 — pygal clips the label text. Fix: use shorter tick label format or explicitly
-    format labels to fewer decimal places (e.g. ''-0.8'' not ''-0.80000'').'
-  - 'CHART_COLORS tuple starts with #E69F00 (amber), not #009E73 — structural series
-    take palette positions 1-4, pushing brand green to position 5. Fix: reorder so
-    #009E73 is position 1 and structural elements use later palette slots.'
-  - 'Frequency labels exist only in the legend, not as in-chart text annotations beside
-    the marker dots. Fix: add brief text near each frequency marker dot on the chart
-    itself.'
-  - Empty-label structural series (4 entries) appear as unlabeled colored squares
-    at the top of the legend, creating visual confusion.
+  - Frequency labels ("1 GHz", "3.5 GHz", "6 GHz") appear only as legend entries with
+    colored dots — the spec calls for "frequency labels at key points along the impedance
+    curve"; adding short text labels near the marker dots would fulfill this more
+    directly
+  - Eight legend entries (including structural grid series) clutter the left side;
+    structural elements like Resistance Grid, Reactance Grid, Real Axis could be omitted
+    from the legend or merged into a single "Grid" entry to reduce visual noise
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "smith-chart-basic · python · pygal · anyplot.ai" is dark, readable. Axis labels "Reflection Coefficient Real Part" and "Reflection Coefficient Imaginary Part" readable. Legend on left side with 4 unlabeled structural squares then 4 labeled data series.
-      Data: Brand green (#009E73) impedance locus as connected scatter. Amber (#E69F00) unit circle boundary. Sky blue (#56B4E9) resistance circles. Gray reactance arcs. Pink, orange, blue frequency marker dots.
-      Tick issue: X-axis negative values between -1 and 0 are truncated to "-0..." by pygal label clipping.
-      Legibility verdict: PARTIAL FAIL (x-axis tick truncation; all other elements readable)
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "smith-chart-basic · python · pygal · anyplot.ai" in dark text at top — readable. Axis labels "Reflection Coefficient Real Part" (X) and "Reflection Coefficient Imaginary Part" (Y, rotated) — readable. Tick labels (-1, -0.5, 0, 0.5, 1) on both axes — readable. Legend with 8 entries on left side — all readable.
+      Data: Impedance locus in brand green (#009E73) with dot markers. Three large frequency marker dots in vermillion (#D55E00), blue (#0072B2), and pink (#CC79A7). Unit circle boundary in amber (#E69F00). Resistance circles in sky blue (#56B4E9). Reactance arcs in muted gray (INK_MUTED). Real axis as a subtle horizontal line.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct
-      Chrome: Title and axis labels render in light text, clearly readable against the dark surface. No dark-on-dark failures observed.
-      Data: Identical data colors to light render — same green locus, same pink/orange/blue frequency markers, same amber unit circle, same sky-blue resistance circles. Reactance arcs adapt to lighter #A8A79F gray in dark mode.
-      Tick issue: Same x-axis truncation ("-0...") persists in dark render.
-      Legibility verdict: PARTIAL FAIL (same x-axis tick truncation; all other elements readable)
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, tick labels, and legend text all rendered in light tones — no dark-on-dark failures. All text elements readable against the dark background.
+      Data: Data colors are identical to light render — brand green locus, amber unit circle, sky blue resistance circles, same colored frequency marker dots. Reactance arcs appear slightly lighter (INK_MUTED = #A8A79F for dark theme) which is correct theme-adaptive behavior.
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 5
+        score: 7
         max: 8
-        passed: false
-        comment: Title and axis labels readable in both themes. X-axis tick labels
-          truncated to '-0...' for all negative values between -1 and 0 in both renders.
+        passed: true
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44). Readable in both themes. Minor deduction for 8-entry legend
+          being compact/dense.
       - id: VQ-02
         name: No Overlap
-        score: 5
-        max: 6
-        passed: true
-        comment: Minor legend clutter from 4 unlabeled structural-series squares.
-          No significant text/data collision.
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements clearly visible: green locus, colored frequency dots,
-          amber boundary, sky-blue resistance circles, gray reactance arcs.'
+        comment: No overlapping text or data elements. Legend to the left of chart
+          area, no collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Locus, unit circle, resistance circles, reactance arcs, frequency
+          markers all visible. Minor deduction for slightly angular resistance circles
+          at boundary.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette throughout; CVD-safe; no red-green sole signal.
+        comment: Okabe-Ito palette, CVD-safe, elements distinguishable by hue and
+          size.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Square 2400x2400 appropriate. Legend-on-left consumes horizontal
-          space. Truncated x-axis ticks are a layout failure.
+        passed: true
+        comment: Square 2400x2400 canvas correct for symmetric chart. Legend occupies
+          left ~25% of canvas. Unit circle approximately circular.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with clear meaning. Title matches required
-          format.
+        comment: Title in correct format. Both axis labels descriptive (reflection
+          coefficient is dimensionless, so no units needed).
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct. Chrome adapts correctly. But CHART_COLORS starts
-          with #E69F00 (amber) not #009E73 — 4 structural series consume positions
-          1-4, brand green is at position 5.'
+        passed: true
+        comment: 'First series #009E73 brand green. Okabe-Ito order respected. Backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark). Both renders theme-correct.'
     design_excellence:
       score: 11
       max: 20
@@ -113,26 +110,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Deliberate color assignments: amber unit circle, sky blue resistance
-          grid, adaptive gray arcs, brand green locus. Large marker dots create visual
-          hierarchy.'
+        comment: 'Above default (4): deliberate Okabe-Ito palette assignment with
+          data first then structural elements. Contrast between green locus and muted
+          grid shows design thought. Deducted: 8-entry legend cluttered, no direct
+          frequency text annotations.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Grid guides disabled (correct for Smith chart). Legend-left layout
-          creates imbalance. Unlabeled structural entries add clutter.
+        comment: Grid guides disabled, custom margins. But 8-entry legend (including
+          structural series) adds visual noise.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Frequency trajectory narrative present through 3 colored markers
-          and connected locus. Labels only in legend not as chart annotations weakens
-          storytelling.
+        comment: Frequency sweep trajectory visible via green locus. Three marker
+          dots provide reference. Without text annotations at markers, viewer must
+          cross-reference legend.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -140,29 +138,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Smith chart in Gamma-plane. Unit circle, constant-R circles,
-          constant-X arcs, real axis, impedance locus all present.
+        comment: 'Smith chart correctly implemented: unit circle, resistance circles,
+          reactance arcs, impedance locus on gamma plane.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Grid, normalization, connected locus all correct. Frequency labels
-          only in legend not as in-chart text annotations at marker points.
+        comment: Grid drawn, impedance normalization, connected locus all present.
+          Frequency labels exist only as legend entries; spec calls for labels at
+          key points on the curve itself.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Frequency sweep correctly normalized; gamma = (z_norm-1)/(z_norm+1)
-          transformation correct.
+        comment: Reflection coefficient real part on X, imaginary part on Y. Full
+          range (-1, 1) displayed. Gamma computed correctly.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Title format correct. 4 data series labeled correctly. 4 unlabeled
-          structural entries at top of legend are visually confusing.
+        comment: Title 'smith-chart-basic · python · pygal · anyplot.ai' in correct
+          format. Legend labels match series names.
     data_quality:
       score: 14
       max: 15
@@ -172,22 +171,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Unit circle, resistance circles, reactance arcs, real axis, locus,
-          frequency markers all shown. No in-chart frequency text annotations.
+        comment: 'Shows resistance circles (6 values), reactance arcs (5 values ±),
+          unit circle, real axis, impedance locus, frequency markers. Minor deduction:
+          no text frequency annotations on chart face.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Antenna impedance sweep 1-6 GHz at Z0=50 ohm is a standard RF engineering
-          scenario. Neutral domain.
+        comment: Antenna impedance sweep 1-6 GHz with Z0=50 ohm is realistic RF engineering
+          scenario. Neutral and technically accurate.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Reflection coefficient range (-1.15, 1.15) gives slight padding.
-          50 data points produces smooth trajectory.
+        comment: Z0=50 ohm (industry standard). Impedance trajectory physically plausible.
+          Gamma computation mathematically correct.
     code_quality:
       score: 10
       max: 10
@@ -197,26 +197,27 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Procedural flow.
+        comment: 'Linear: imports, theme tokens, data, chart, series, save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, pygal, pygal.style.Style imported — all used.
+        comment: os, numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: None-separator pattern for multi-segment series is clean. Palette-position
-          comment explains the structural-series workaround.
+        comment: Clean Pythonic code. (None, None) segment-break technique is idiomatic
+          and elegant. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
@@ -224,29 +225,31 @@ review:
         passed: true
         comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: pygal.XY() with Style-based theming, show_dots, stroke, stroke_width,
-          range/xrange, and None separators for disconnected segments are all idiomatic
-          pygal patterns.
+        comment: Uses pygal.XY correctly. Style object with full token set. Per-series
+          stroke=False and dots_size control. Uses truncate_label=-1 (pygal-specific).
+          Above default 3.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HTML interactive output produced (key pygal differentiator). None-separator
-          technique for multi-segment polylines is a notable pygal idiom.
+        comment: Interactive HTML output (pygal's core feature). Per-series stroke/dot
+          control for mixed line+marker visualization. Segment breaks with (None,
+          None) tuples. Creative use of multi-series XY for specialized Smith chart.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
