@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:06:03Z'
-updated: '2026-05-20T10:10:21Z'
+updated: '2026-05-20T10:21:25Z'
 generated_by: claude-sonnet
 workflow_run: 26154754469
 issue: 3765
@@ -12,119 +12,119 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/bokeh/plot-dark.html
-quality_score: 89
+quality_score: 88
 review:
   strengths:
-  - 'Dual encoding: both line width AND viridis color map to flow magnitude, creating
-    clear visual hierarchy where the thickest/brightest arcs (Shanghai → LA, Shanghai
-    → Rotterdam) dominate visually'
-  - Theme-adaptive CartoDB basemaps (light_all vs dark_all) are a polished detail
-    that makes both renders feel native to their respective surfaces
-  - All style-guide text sizing explicitly applied (50pt/42pt/34pt) and both themes
-    are fully readable with no dark-on-dark failures
-  - Multi-renderer HoverTool setup (separate tooltips for arcs vs. port markers) is
-    idiomatic Bokeh and delivers good interactivity
-  - Real-world maritime trade data with accurate port coordinates and geographically
-    plausible volume relationships
+  - Theme-adaptive basemap with CartoDB light/dark tiles is a professional and Bokeh-distinctive
+    design choice
+  - Dual HoverTool instances (arcs + port markers) with meaningful tooltip content
+  - Full chrome theming with all 12 color tokens correctly applied across both themes
+  - Proportional arc widths + Viridis gradient create layered, readable information
+    encoding
+  - Flat code structure with all Bezier and Mercator math inlined per style guide
   weaknesses:
-  - Missing ColorBar / LinearColorMapper for the viridis arc encoding — viewers can
-    see relative differences but cannot quantify what dark blue vs. yellow arcs mean
-    in TEU without hovering each one individually
-  - 'DE-03 limited by absent colorbar: the dual visual hierarchy is present but interpretation
-    is incomplete without a scale legend; the story (Shanghai is the dominant hub)
-    is implied but not fully communicated'
-  - Small canvas space issue at bottom of the map (southern hemisphere is mostly ocean
-    for these northern-hemisphere ports) — minor VQ-05 deduction
+  - Arc directionality not indicated — all arcs bow upward; adding arrowheads or small
+    triangular markers at destinations would improve clarity
+  - East Asian port cluster creates a dense bundle of overlapping arcs near the origin
+    region; varying control point offset per route would help
+  - Grid lines over the basemap add noise (basemap already provides structural reference);
+    remove xgrid/ygrid lines for cleaner geo presentation
+  - Port marker size=20 is on the small side for sparse geographic markers at 3200px;
+    increase to 24-28 for better mobile readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 on the border/chrome area; CartoDB Light basemap tiles inside the plot area
-      Chrome: Title "flowmap-origin-destination · python · bokeh · anyplot.ai" in dark ink — clearly readable; "Latitude" y-axis label and "Longitude" x-axis label visible at 42pt; tick labels at 34pt readable; small "Ports" legend in top-left of map area
-      Data: 18 Bezier-curved flow arcs in Viridis colormap (dark blue/teal for low-volume ~260 TEU through bright yellow for high-volume ~850 TEU); arc widths 3–17 px proportional to flow; port markers in brand green #009E73 at size=20
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) with CartoDB light_all basemap showing country borders and coastlines
+      Chrome: Title "flowmap-origin-destination · python · bokeh · anyplot.ai" in dark ink (#1A1A17) — readable. Axis labels "Longitude"/"Latitude" at 42pt in dark ink — readable. Tick labels (coordinate values) in INK_SOFT (#4A4A44) — readable. Colorbar labels in INK_SOFT — readable. Legend "Ports" box on elevated warm-white fill — readable.
+      Data: 18 curved Bezier arcs colored Viridis256 (dark blue-purple for low TEU ~260, yellow-green for high TEU ~850) with line widths 3–17px proportional to flow. Port markers in #009E73 (Okabe-Ito position 1). All arcs clearly visible with transparency 0.65.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 on the border/chrome area; CartoDB Dark basemap tiles inside the plot area
-      Chrome: Title in light near-white (#F0EFE8) — clearly readable against dark background; axis labels and tick labels in #B8B7B0 (INK_SOFT for dark theme) — readable; no dark-on-dark failures; all chrome correctly uses theme-adaptive INK/INK_SOFT tokens
-      Data: Viridis arc colors visually identical to light render (dark blue/teal through yellow) — data colors unchanged as expected; port markers remain #009E73
-      Legibility verdict: PASS — all text readable against dark background; theme inversion correctly implemented
+      Background: Warm near-black (#1A1A17) with CartoDB dark_all basemap tiles
+      Chrome: Title, axis labels, tick labels, legend text, and colorbar labels all rendered in light cream/gray (#F0EFE8/#B8B7B0) — all clearly readable against the near-black background. No dark-on-dark text failures detected.
+      Data: Viridis arc colors are identical to the light render — only chrome flips. Port markers remain #009E73. Data colors unchanged between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set per style guide (50pt title, 42pt axis
-          labels, 34pt ticks, 34pt legend); both renders clearly readable
+        comment: All sizes explicitly set (50pt title, 42pt axis labels, 34pt ticks).
+          Both renders legible. Longitude/Latitude at 42pt slightly generous for 9-char
+          labels.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Text doesn't overlap text; arc overlap at East Asian hub expected
-          for flow map, handled with alpha=0.65
+        comment: No text overlaps. Arc clustering near East Asia managed by transparency
+          but individual routes hard to distinguish in that region.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: All 18 arcs visible with 3–17px width range; port markers size=20;
-          viridis provides contrast on both basemaps
+        comment: Arcs clearly visible (3-17px widths). Port markers at size=20 slightly
+          small for sparse geographic visualization.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe; brand green
-          port markers add categorical contrast
+        comment: 'Viridis perceptually uniform and CVD-safe. Port markers #009E73
+          contrast well against both basemaps.'
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Map fills canvas well; slight empty space in southern hemisphere
-          due to northern-hemisphere port concentration
+        comment: Map fills canvas effectively. Colorbar integrates well. Minor underutilization
+          at canvas edges.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Latitude and Longitude labels appropriate for Mercator projection
+        comment: Longitude/Latitude descriptive for geographic projection. Title correctly
+          formatted.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Port markers #009E73 (brand green); arcs Viridis256 (correct continuous);
-          backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome'
+        comment: 'Viridis256 for continuous data. Port markers #009E73 (Okabe-Ito
+          position 1). Backgrounds #FAF8F1/#1A1A17 correct. Both renders theme-correct.'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Professional geo viz with theme-adaptive basemaps and dual encoding;
-          above default but not publication-level
+        comment: 'Strong design: theme-adaptive basemap, Viridis gradient with proportional
+          arc widths, brand-green port markers. Clearly above defaults. Arc directionality
+          absent and Asia-Pacific cluster is visual noise.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.10), toolbar removed, generous min_border padding;
-          absent colorbar leaves system incomplete
+        comment: Round line caps, theme-adaptive legend/colorbar styling. Grid lines
+          over basemap are redundant and add noise — basemap provides structural reference.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Dual width+color encoding creates hierarchy; dominant corridors visually
-          prominent; missing colorbar prevents full interpretation
+        passed: true
+        comment: Thick yellow-green arcs from Shanghai identify it as dominant hub.
+          Color+width reinforce magnitude. Main corridors (Asia-Americas, Asia-Europe)
+          visually clear.
     spec_compliance:
       score: 15
       max: 15
@@ -134,53 +134,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: flow map with Bezier arcs on geographic basemap'
+        comment: Correct origin-destination flow map with curved Bezier arcs on geographic
+          basemap.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bezier arcs, proportional width, alpha=0.65, viridis gradient, CartoDB
-          basemap, hover tooltips all present
+        comment: Curved arcs, proportional widths, transparency, color gradient, basemap,
+          hover tooltips — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Web Mercator correct; flow magnitude encoded in width and color;
-          all ports and flows visible
+        comment: Lat/lon correctly projected to Web Mercator. Flow mapped to line
+          width and color.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; legend correctly labels Ports
-          categorical element
+        comment: Title is exactly 'flowmap-origin-destination · python · bokeh · anyplot.ai'.
+          Legend labels match data.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 18 flows across 10 ports on 4 continents; wide magnitude range (260–850
-          TEU); hub-and-spoke and direct routes
+        comment: 18 flows between 10 ports demonstrates thickness variation, color
+          gradient, geographic spread across 4 continents. Could show more directional
+          variety.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real port names and coordinates; TEU industry-standard unit; neutral
-          logistics scenario
+        comment: Maritime trade flows between real major world ports. Neutral, clearly
+          real-world.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Shanghai/Singapore as dominant hubs matches real-world; Asia→Americas/Europe
-          corridors geographically accurate
+        comment: TEU values (260-850) plausible for inter-continental maritime routes.
+          Port coordinates geographically correct.
     code_quality:
       score: 10
       max: 10
@@ -190,33 +192,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear Imports→Data→Plot→Save; no functions or classes; mercator
-          and Bezier computations correctly inlined
+        comment: 'Flat linear structure: tokens → data → projection → arcs → figure
+          → chrome → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; data hardcoded and deterministic
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no extraneous packages
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean idiomatic Python; appropriate complexity; sys.path guard correct
+        comment: Clean and idiomatic. Bezier and Mercator math inlined as required.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png; WMTSTileSource not
-          deprecated; Selenium per bokeh.md guidance
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium. Current
+          API.
     library_mastery:
       score: 9
       max: 10
@@ -226,21 +228,22 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: ColumnDataSource with multi_line, WMTSTileSource, mercator axis types,
-          multiple HoverTool per renderer — all idiomatic
+        comment: ColumnDataSource, multi_line, WMTSTileSource, dual HoverTool, LinearColorMapper+ColorBar
+          — all idiomatic Bokeh.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: WMTSTileSource tile map and multi-renderer HoverTool are distinctly
-          Bokeh; missing LinearColorMapper+ColorBar which is the Bokeh-native color
-          scale pattern
-  verdict: REJECTED
+        comment: WMTSTileSource (Bokeh-native tile integration), multi_line with per-arc
+          hover, LinearColorMapper+ColorBar — multiple Bokeh-distinctive features.
+          Not 5 since no selection/filtering callbacks.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - colorbar
   - hover-tooltips
   - html-export
   - bezier-curves
@@ -248,8 +251,7 @@ impl_tags:
   - data-generation
   - columndatasource
   - iteration-over-groups
-  dataprep:
-  - normalization
+  dataprep: []
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
