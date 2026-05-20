@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-20
@@ -21,7 +21,7 @@ from plotnine import (
     geom_text,
     ggplot,
     labs,
-    scale_color_gradient,
+    scale_color_cmap,
     scale_size_identity,
     theme,
     theme_minimal,
@@ -109,7 +109,20 @@ for i, (origin, dest, flow) in enumerate(flows_data):
 
 df_flows = pd.DataFrame(flow_paths)
 
-location_points = [{"name": name, "lat": lat, "lon": lon} for name, (lat, lon) in locations.items()]
+# Per-city label nudge (degrees) to separate the dense Western Europe cluster
+LABEL_NUDGE = {
+    "London": (4, 3.0),  # nudge up to clear Paris
+    "Paris": (4, -3.0),  # nudge down to clear London/Berlin
+    "Berlin": (4, 2.5),  # nudge up, east of Paris so less conflict
+    "Toronto": (4, 2.0),  # nudge up (near New York)
+    "New York": (4, -2.0),  # nudge down (near Toronto)
+}
+DEFAULT_NUDGE = (4, 0)
+
+location_points = []
+for name, (lat, lon) in locations.items():
+    nx, ny = LABEL_NUDGE.get(name, DEFAULT_NUDGE)
+    location_points.append({"name": name, "lat": lat, "lon": lon, "lx": lon + nx, "ly": lat + ny})
 df_locations = pd.DataFrame(location_points)
 
 # Simplified continent outlines for basemap
@@ -184,17 +197,15 @@ plot = (
         fill=LAND_FILL,
         color=LAND_COLOR,
         size=0.3,
-        alpha=0.95,
+        alpha=0.7,
     )
     + geom_path(
         aes(x="x", y="y", group="flow_id", color="flow", size="size"), data=df_flows, alpha=0.55, lineend="round"
     )
     + geom_point(aes(x="lon", y="lat"), data=df_locations, color="#009E73", size=3.0, alpha=0.9)
-    + geom_text(
-        aes(x="lon", y="lat", label="name"), data=df_locations, color=INK, size=7, nudge_x=4, nudge_y=0, ha="left"
-    )
+    + geom_text(aes(x="lx", y="ly", label="name"), data=df_locations, color=INK, size=8, ha="left")
     + scale_size_identity()
-    + scale_color_gradient(low="#56B4E9", high="#D55E00", name="Annual\nmigrants (k)", limits=(min_flow, max_flow))
+    + scale_color_cmap(cmap_name="viridis", name="Annual\nmigrants (k)", limits=(min_flow, max_flow))
     + coord_fixed(ratio=1.3, xlim=(-180, 180), ylim=(-60, 80))
     + labs(title="flowmap-origin-destination · python · plotnine · anyplot.ai", x="Longitude (°)", y="Latitude (°)")
     + theme_minimal()
