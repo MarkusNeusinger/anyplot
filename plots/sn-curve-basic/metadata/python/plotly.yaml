@@ -1,162 +1,185 @@
 library: plotly
+language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:48:47Z'
-updated: '2026-01-15T20:51:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21045723781
+updated: '2026-05-20T00:17:18Z'
+generated_by: claude-sonnet
+workflow_run: 26131919385
 issue: 3826
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/plotly/plot.html
-quality_score: 94
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotly/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent implementation of the S-N curve with all specification requirements
-    met
-  - Clear visualization with appropriate log-log scaling on both axes
-  - Realistic simulated fatigue data using Basquin equation with proper scatter
-  - All three reference lines (Ultimate, Yield, Endurance) clearly labeled with values
-  - Clean, readable code following KISS principles
-  - Proper use of plotly_white template for publication-quality appearance
-  - Good marker styling with contrasting border colors
+  - Correct S-N Wöhler curve with log-log axes and all three required reference lines
+    (ultimate/yield/endurance)
+  - 'Proper Okabe-Ito palette with #009E73 as first series (Basquin fit line)'
+  - Full theme adaptation — warm off-white light surface and near-black dark surface
+    with no dark-on-dark failures
+  - Realistic steel fatigue data using Basquin equation with correct stress range
+    and scatter
   weaknesses:
-  - Legend position overlaps with the fit line at the top of the plot area
-  - Could leverage Plotly hover capabilities to show stress/cycles values on hover
-  - Markers could use slight alpha for overlapping points at same stress levels
-  image_description: 'The plot displays an S-N curve (Wöhler curve) for steel fatigue
-    testing. The X-axis shows "Cycles to Failure (N)" on a logarithmic scale from
-    100 to 100M, with minor tick marks at 2 and 5 intervals. The Y-axis shows "Stress
-    Amplitude (MPa)" on a logarithmic scale from 200 to 750. The main data consists
-    of yellow circular markers with blue borders representing test data points, showing
-    natural scatter across multiple stress levels. A solid blue line (Basquin Fit)
-    runs through the data showing the power-law relationship. Three horizontal dashed
-    reference lines are displayed: a red dashed line at 650 MPa (Ultimate Strength),
-    a green dashed line at 450 MPa (Yield Strength), and a purple dashed line at 230
-    MPa (Endurance Limit). The title "sn-curve-basic · plotly · pyplots.ai" is centered
-    at the top. A legend in the upper right corner with a white semi-transparent background
-    clearly identifies all five trace elements. The plot uses the plotly_white template
-    with a clean white background and subtle gray gridlines.'
+  - Code file saves as bare plot.png without reading ANYPLOT_THEME — must save as
+    plot-{THEME}.png and plot-{THEME}.html using os.getenv("ANYPLOT_THEME", "light")
+  - 'Code file uses non-Okabe-Ito colors (#306998 Python blue, #FFD43B yellow) contradicting
+    the rendered images — colors in code must match the Okabe-Ito palette explicitly'
+  - All four spines retained (default plotly box frame) — remove top and right spines
+    for visual refinement
+  - Axis label font size 24pt at scale=3 (~72px effective) is generous; reduce to
+    ~12px at scale=4 (48px effective) per style guide
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white consistent with #FAF8F1 — not pure white
+      Chrome: Title "sn-curve-basic · python · plotly · anyplot.ai" in dark text, clearly readable. Axis labels "Stress Amplitude (MPa)" and "Cycles to Failure (N)" visible with appropriate size. Tick labels dark on light background, all readable.
+      Data: Basquin fit line in #009E73 (brand green), orange scatter markers with dark outlines. Three dashed reference lines: blue (Ultimate Strength 650 MPa), pink/mauve (Yield Strength 450 MPa), golden-yellow (Endurance Limit 230 MPa). ~40 data points well-distributed.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black consistent with #1A1A17 — not pure black
+      Chrome: Title text flips to white/light, clearly readable. Axis labels and tick labels render in light ink — no dark-on-dark failures. Legend box shows elevated dark background (#242420-ish).
+      Data: Colors identical to light render — green Basquin line, orange scatter, blue/pink/yellow dashed reference lines. No palette shift between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 24pt, tick labels at 18pt, all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels and data clearly separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Markers size 14 with blue border are well visible; some close data
-          points at similar stress levels could benefit from slight alpha
+        comment: All font sizes explicitly set; readable in both themes. Axis labels
+          at 24pt slightly generous but no overflow.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text collisions. Legend box near ultimate strength line but background
+          separation maintains readability.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'All elements clearly visible. ~40 scatter points well-sized. Minor:
+          all dashed reference lines share same width/pattern.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colors (blue line, yellow markers, red/green/purple reference lines)
-          are distinguishable and colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, balanced margins, plot fills ~60% of area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Cycles to Failure (N), Stress Amplitude
-          (MPa)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Okabe-Ito palette with color+dash-style redundant encoding on reference
+          lines.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization, title ~55% width, balanced margins. Legend
+          near ultimate strength line entry.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
+        passed: true
+        comment: Stress Amplitude (MPa) and Cycles to Failure (N) — both descriptive
+          with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (Basquin Fit). Backgrounds #FAF8F1 (light)
+          / #1A1A17 (dark). Theme chrome adapts correctly.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional scientific appearance with intentional color hierarchy.
+          Above defaults but not publication-tier due to box frame and standard legend.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
         passed: false
-        comment: Legend overlaps with the fit line near the top of the plot area
+        comment: Subtle grid appropriate for log-log. Default plotly box frame (all
+          four spines) retained — removing top/right would improve refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three reference lines actively guide viewer through material design
+          zones. Good engineering storytelling.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct S-N curve with log-log axes
+        comment: Correct S-N (Wöhler) curve with log-log axes.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Cycles on X-axis, Stress on Y-axis as specified
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: scatter data, fit line, reference
-          lines for Ultimate/Yield/Endurance'
-      - id: SC-04
-        name: Data Range
+        comment: Log-log axes, three reference lines, scatter with 2-4 specimens per
+          level, Basquin fit line.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shows full range from low-cycle to high-cycle fatigue regions
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Cycles on X (log 10^2 to 10^8), stress on Y (log ~200-750 MPa). All
+          data within bounds.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: All legend entries correctly describe their corresponding traces
-          with MPa values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format sn-curve-basic · plotly · pyplots.ai
+        comment: 'Rendered title correct: sn-curve-basic · python · plotly · anyplot.ai.
+          Legend labels accurate with MPa values.'
     data_quality:
-      score: 20
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows realistic scatter (multiple specimens per stress level), covers
-          low-cycle to high-cycle fatigue regions, includes all key material properties
+        comment: 'Scatter + Basquin fit + three reference lines. Minor: three fatigue
+          regimes implied but not explicitly demarcated.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Steel fatigue testing scenario with realistic Basquin equation parameters
-          (A=1200 MPa, b=-0.12), realistic stress levels 240-600 MPa
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Stress values (240-650 MPa) and cycle counts are realistic for steel
-          materials
+        comment: Steel fatigue test data using Basquin equation. Neutral, standard
+          engineering domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Stress 230-650 MPa and endurance 230 MPa realistic for structural
+          steel. Cycle range 10^2-10^8 covers all fatigue regimes.
     code_quality:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: CQ-01
@@ -164,42 +187,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, plot, save, no functions/classes'
+        comment: 'Linear structure: imports → constants → data generation → traces
+          → layout → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before all random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only numpy and plotly.graph_objects imported and used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
-        passed: true
-        comment: Modern plotly API usage
+        max: 2
+        passed: false
+        comment: 'Structurally clean but code file uses non-Okabe-Ito colors (#306998,
+          #FFD43B) and malformed title. Rendered images differ from code file.'
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: Saves both plot.png and plot.html - correct for plotly
-    library_features:
-      score: 3
-      max: 5
+        comment: Code saves plot.png / plot.html — no ANYPLOT_THEME reading. Should
+          use os.getenv('ANYPLOT_THEME','light') and save as plot-{THEME}.png / plot-{THEME}.html
+          with include_plotlyjs='cdn'.
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses graph_objects with proper trace management, but does not leverage
-          hover tooltips or other interactive features
+        comment: Correct go.Figure() with add_trace() for multi-series. Log scale
+          via type:log is idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: HTML export present. Log-log handling used. Custom hover tooltips
+          or other distinctive Plotly interactivity not leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -211,4 +245,3 @@ impl_tags:
   dataprep: []
   styling:
   - edge-highlighting
-  - grid-styling
