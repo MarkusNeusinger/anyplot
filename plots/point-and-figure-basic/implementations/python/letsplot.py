@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 77/100 | Updated: 2026-05-20
+Quality: 80/100 | Updated: 2026-05-20
 """
 
 import os
