@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -80,9 +80,9 @@ for r in range(grid_size):
             clue_num += 1
 
 # Cell colors: open cells are warm white, blocked cells near-black (data encoding)
+# Dark mode: use pure black for blocked cells so they contrast with #1A1A17 background
 cell_open = "#FFFFFF" if THEME == "light" else "#FAF8F1"
-cell_blocked = "#1A1A17"
-# Numbers always dark — open cells are light in both themes
+cell_blocked = "#1A1A17" if THEME == "light" else "#000000"
 NUMBER_INK = "#1A1A17"
 
 # Plot
@@ -103,10 +103,10 @@ sns.heatmap(
 
 # Add clue numbers to top-left corner of numbered cells
 for (r, c), num in numbers.items():
-    ax.text(c + 0.12, r + 0.28, str(num), fontsize=7, fontweight="bold", color=NUMBER_INK, ha="left", va="top")
+    ax.text(c + 0.12, r + 0.28, str(num), fontsize=9, fontweight="bold", color=NUMBER_INK, ha="left", va="top")
 
 # Style
-ax.set_title("crossword-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
+ax.set_title("crossword-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=14)
 
 for spine in ax.spines.values():
     spine.set_visible(True)
