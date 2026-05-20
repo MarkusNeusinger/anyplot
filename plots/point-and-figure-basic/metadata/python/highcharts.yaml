@@ -1,216 +1,264 @@
 library: highcharts
+language: python
 specification_id: point-and-figure-basic
 created: '2026-01-15T21:42:44Z'
-updated: '2026-01-15T21:46:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047207473
+updated: '2026-05-20T03:59:23Z'
+generated_by: claude-sonnet
+workflow_run: 26139573187
 issue: 3755
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/highcharts/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of P&F chart logic with proper column-based structure
-  - Creative use of data labels to render X and O characters instead of traditional
-    markers
-  - Good separation of X and O series for proper coloring and legend
-  - Proper box size and 3-box reversal implementation
-  - Clean subtitle with chart parameters
-  - Generates both PNG and interactive HTML versions
+  - 'Correct P&F algorithm: X/O columns, 3-box reversal, and column boundary transitions
+    all implemented accurately'
+  - 'Full Okabe-Ito compliance: BULL=#009E73 (first series), BEAR=#D55E00 (second),
+    backgrounds and chrome fully theme-adaptive across light and dark'
+  - 'All spec features present: 45-degree support and resistance trend lines, Y-axis
+    price scale, correct X-axis as column/reversal index, subtitle with parameters'
+  - Realistic multi-phase simulated stock data covering uptrend, downtrend, consolidation,
+    and correction phases — the dominant column 6 creates natural visual hierarchy
+  - 'Clean code: KISS structure, np.random.seed(42) for reproducibility, inline Highcharts
+    JS embedding for headless Chrome correctly implemented'
   weaknesses:
-  - Missing support/resistance trend lines mentioned in the specification notes
-  - Legend shows square symbols instead of X/O characters (Highcharts limitation)
-  - Uses a helper function to_box() instead of inline code (minor KISS violation)
-  - Red color for Os could be changed to a more colorblind-friendly option like orange
-  image_description: 'The plot displays a Point and Figure (P&F) chart with 8 columns
-    (0-7) on the X-axis representing reversals, and price values ($76-$136) on the
-    Y-axis. Blue "X" characters mark rising price columns, while red "O" characters
-    mark falling price columns. The chart shows a clear pattern: column 0 starts with
-    X''s rising from ~$100 to ~$110, column 1 shows O''s falling from ~$108 to ~$96,
-    column 2 has X''s rising from ~$100 to ~$112, column 3 shows a deep O decline
-    from ~$110 to ~$80, column 4 has X''s rising from ~$82 to ~$90, column 5 shows
-    O''s at ~$84-88, column 6 has a strong X rally from ~$88 to ~$132, and column
-    7 shows O''s falling from ~$130 to ~$112. The title correctly shows "point-and-figure-basic
-    · highcharts · pyplots.ai" with a subtitle indicating "$2 Box Size | 3-Box Reversal
-    | Simulated Stock Data". A legend in the top-right shows "X (Rising)" in blue
-    and "O (Falling)" in red. Grid lines are subtle and the layout is clean with good
-    proportions.'
+  - 'DE-01/DE-02: Chart still reads as a well-configured default — consider removing
+    top/right axis line spines (set xAxis.lineWidth=0, yAxis.lineWidth=0 for top/right
+    frame) and using Y-axis-only grid lines (remove xAxis.gridLineWidth or set to
+    0)'
+  - 'LM-02: Missed Highcharts-distinctive opportunity — plotBands could highlight
+    key price zones (support/resistance ranges), and plotLines could replace the custom
+    LineSeries trend lines with native Highcharts plotLines for a more idiomatic approach'
+  - 'VQ-03: Data label symbols (X, O) at fontSize 40px are slightly small relative
+    to their role as the primary data encoding in a P&F chart — consider 52-56px for
+    the symbols to give them more visual weight as the key visual element'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "point-and-figure-basic · python · highcharts · anyplot.ai" in dark ink at top,
+              subtitle "Box Size: $2 | 3-Box Reversal | Simulated Stock" in secondary ink below.
+              X-axis label "Column (Reversal Number)" and Y-axis label "Price ($)" both visible in dark ink.
+              Tick labels on both axes rendered in secondary ink, clearly readable.
+              Legend in upper right with elevated background box, listing X (Rising), O (Falling),
+              Support (45°), and Resistance (45°).
+      Data: 8 P&F columns (0–7). Green (#009E73) "X" characters for bullish columns,
+            orange/vermillion (#D55E00) "O" characters for bearish columns.
+            Column 6 is the dominant feature — a very tall X column spanning ~$85 to ~$133 (24+ boxes).
+            Green dashed support line rising from lower-left to middle-right.
+            Orange dashed resistance line descending from column 6 peak toward right.
+      Legibility verdict: PASS — all text readable; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and subtitle in light-colored ink (F0EFE8 family) against dark background — fully readable.
+              Axis labels and tick labels in secondary light ink (B8B7B0 family) — clearly visible.
+              Legend box uses elevated dark background (#242420) with light-colored text.
+      Data: Data colors identical to light render — green X symbols and orange/vermillion O symbols
+            are unchanged between themes. The dominant column 6 tall X column equally visible.
+            Dashed support and resistance trend lines visible in their respective colors.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text readable against near-black background.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and X/O characters all clearly readable
-          at full resolution
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text or elements; X and O characters properly spaced
-          in their columns
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, ticks
+          44px, data labels 40px); proportions well-balanced in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No visible overlap between X/O symbols or with legend/labels across
+          all 8 columns
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: X and O symbols well-sized and clearly visible; minor deduction as
-          symbols could be slightly larger
+        comment: X/O data labels visible and distinguishable, but 40px slightly modest
+          for P&F where symbols are the primary data encoding
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue and red have good contrast; symbols X vs O provide redundant
-          encoding
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, chart properly centered with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Price ($) with unit formatting, X-axis has Column (Reversal
-          Number)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito positions 1 and 2 — colorblind-safe, no red-green sole
+          signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Generous margins (240px bottom, 200px left), plot fills good canvas
+          proportion, nothing cut off
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend well-placed; legend shows squares instead
-          of X/O markers
+        comment: Price ($) with units, Column (Reversal Number) descriptive
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1 light
+          / #1A1A17 dark; chrome fully theme-adaptive'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Professional, above generic defaults with correct palette and subtitle,
+          but reads as a well-configured Highcharts default rather than publication-level
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: plotBorderWidth=0 removes plot border, grid uses 10% opacity GRID
+          token, generous margins — but both-axis grid and full axis line frame still
+          present
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Column 6 naturally dominates as visual focal point showing the strong
+          bull run; 45-degree trend lines add technical analysis context
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Point and Figure chart implementation using X's and O's
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Columns on X-axis, price on Y-axis as specified
-      - id: SC-03
+        comment: Correct P&F chart with X/O columns, proper reversal algorithm
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has X/O columns, box size, reversal logic; missing trend lines from
-          spec notes
-      - id: SC-04
-        name: Data Range
+        comment: X=green, O=orange, column-based X-axis, 45-degree support/resistance
+          lines, Y-axis price scale all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full price range visible from $76 to $136
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis = column/reversal number, Y-axis = price ($), all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies X (Rising) and O (Falling)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses {spec-id} · {library} · pyplots.ai format
+        comment: Title matches required format; legend labels X (Rising), O (Falling),
+          Support (45°), Resistance (45°)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows uptrends, downtrends, reversals, and consolidation; demonstrates
-          multiple phases
+        comment: Shows uptrend, downtrend, consolidation, strong bull run, and correction
+          phases; both X and O columns; trend lines on both sides
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Simulated stock data with plausible price movements; good use of
-          different market phases
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Stock prices around $80-130 are realistic; box size of $2 is sensible
+        comment: Simulated stock labeled in subtitle, realistic $100 base price, realistic
+          volatility phases
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $2 box size (2% of base price), 3-box reversal, 300-day simulation,
+          $80–$136 price range all realistic
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses helper function to_box() instead of inline code; has some structural
-          complexity
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) for reproducible data
+        comment: 'Linear flow: imports → data → P&F algorithm → series → export; no
+          functions or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current APIs
+        comment: Clean, appropriate complexity for P&F algorithm
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Good use of Highcharts data labels for X/O rendering, scatter series,
-          interactive HTML export
+        comment: Correct Chart/HighchartsOptions/series pattern, ScatterSeries with
+          data labels for P&F symbols is idiomatic, inline JS embedding correct
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: 'Uses data labels and dashed LineSeries, but misses Highcharts-specific
+          opportunities: plotBands for price zones, plotLines for trend lines, or
+          Highcharts Stock features'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
-  styling:
-  - grid-styling
+  styling: []
