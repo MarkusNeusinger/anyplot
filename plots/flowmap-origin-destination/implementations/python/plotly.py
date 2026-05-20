@@ -1,9 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-20
 """
 
+import math
 import os
 
 import numpy as np
@@ -54,11 +55,11 @@ cities = {
     "Panama City": (9.0, -79.5),
 }
 
-# Per-city label positions to reduce overlap in dense clusters
+# Per-city label positions — East Asian cluster spread aggressively to avoid overlap
 label_positions = {
-    "Shanghai": "top right",
+    "Shanghai": "top left",
     "Tokyo": "top right",
-    "Busan": "bottom right",
+    "Busan": "top center",
     "Hong Kong": "bottom left",
     "Singapore": "bottom right",
     "Rotterdam": "top left",
@@ -145,6 +146,29 @@ for i, (origin, dest, volume) in enumerate(flows_data):
         )
     )
 
+    # Directional arrow at ~85% along arc, rotated to match the bezier tangent
+    t_a = 0.85
+    a_lat = (1 - t_a) ** 2 * o_lat + 2 * (1 - t_a) * t_a * ctrl_lat + t_a**2 * d_lat
+    a_lon = (1 - t_a) ** 2 * o_lon + 2 * (1 - t_a) * t_a * ctrl_lon + t_a**2 * d_lon
+    dir_lat = 2 * (1 - t_a) * (ctrl_lat - o_lat) + 2 * t_a * (d_lat - ctrl_lat)
+    dir_lon = 2 * (1 - t_a) * (ctrl_lon - o_lon) + 2 * t_a * (d_lon - ctrl_lon)
+    arrow_angle = 90 - math.degrees(math.atan2(dir_lat, dir_lon))
+    fig.add_trace(
+        go.Scattergeo(
+            lon=[a_lon],
+            lat=[a_lat],
+            mode="markers",
+            marker={
+                "symbol": "arrow",
+                "size": max(6, int(line_widths[i] * 1.5)),
+                "color": f"rgba({ARC_RGB}, {opacity:.2f})",
+                "angle": arrow_angle,
+            },
+            hoverinfo="skip",
+            showlegend=False,
+        )
+    )
+
 # City markers and labels
 all_cities = {o for o, _, _ in flows_data} | {d for _, d, _ in flows_data}
 city_names = list(all_cities)
@@ -168,7 +192,7 @@ fig.add_trace(
         marker={"size": marker_sizes, "color": CITY_COLOR, "line": {"width": 2, "color": PAGE_BG}},
         text=city_names,
         textposition=text_pos,
-        textfont={"size": 16, "color": INK_SOFT},
+        textfont={"size": 11, "color": INK_SOFT},
         hoverinfo="text",
         hovertext=[f"{c}<br>Total: {city_totals[c]}M tons" for c in city_names],
         showlegend=False,
