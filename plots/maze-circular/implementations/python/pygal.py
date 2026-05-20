@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -93,15 +93,15 @@ chart = pygal.XY(
     show_y_guides=False,
     show_x_labels=False,
     show_y_labels=False,
-    xrange=(-1.15, 1.15),
-    range=(-1.15, 1.15),
+    xrange=(-1.25, 1.25),
+    range=(-1.25, 1.25),
     explicit_size=True,
     fill=False,
-    margin=100,
+    margin=60,
 )
 
 PTS = 32  # arc sample points per sector — smooth curves at 2400 px canvas
-wall_stroke = {"width": 8, "linecap": "round", "linejoin": "round", "color": WALL_COLOR}
+wall_stroke = {"width": 10, "linecap": "round", "linejoin": "round", "color": WALL_COLOR}
 
 # Outer boundary with entry gap at sector 0
 entry_a1 = 2 * np.pi * entry_sector / num_sectors
@@ -138,28 +138,28 @@ for ring in range(num_rings):
             x2, y2 = r_out * np.cos(angle), r_out * np.sin(angle)
             chart.add("", [(x1, y1), (x2, y2)], stroke_style=wall_stroke)
 
-# Entry arrow (Okabe-Ito green #009E73) pointing inward
+# Entry arrow (Okabe-Ito green #009E73) pointing inward — named for pygal interactive HTML tooltips
 mid_angle = (entry_a1 + entry_a2) / 2
 tip_x = (outer_r + 0.03) * np.cos(mid_angle)
 tip_y = (outer_r + 0.03) * np.sin(mid_angle)
-base_x = (outer_r + 0.20) * np.cos(mid_angle)
-base_y = (outer_r + 0.20) * np.sin(mid_angle)
-entry_stroke = {"width": 14, "linecap": "round", "linejoin": "round", "color": "#009E73"}
-chart.add("", [(base_x, base_y), (tip_x, tip_y)], stroke_style=entry_stroke)
-wing1_x = tip_x + 0.08 * np.cos(mid_angle + np.pi - 0.45)
-wing1_y = tip_y + 0.08 * np.sin(mid_angle + np.pi - 0.45)
-wing2_x = tip_x + 0.08 * np.cos(mid_angle + np.pi + 0.45)
-wing2_y = tip_y + 0.08 * np.sin(mid_angle + np.pi + 0.45)
+base_x = (outer_r + 0.35) * np.cos(mid_angle)
+base_y = (outer_r + 0.35) * np.sin(mid_angle)
+entry_stroke = {"width": 20, "linecap": "round", "linejoin": "round", "color": "#009E73"}
+chart.add("Entry →", [(base_x, base_y), (tip_x, tip_y)], stroke_style=entry_stroke)
+wing1_x = tip_x + 0.13 * np.cos(mid_angle + np.pi - 0.45)
+wing1_y = tip_y + 0.13 * np.sin(mid_angle + np.pi - 0.45)
+wing2_x = tip_x + 0.13 * np.cos(mid_angle + np.pi + 0.45)
+wing2_y = tip_y + 0.13 * np.sin(mid_angle + np.pi + 0.45)
 chart.add("", [(wing1_x, wing1_y), (tip_x, tip_y), (wing2_x, wing2_y)], stroke_style=entry_stroke)
 
-# Goal star (Okabe-Ito vermillion #D55E00) at center
+# Goal star (Okabe-Ito vermillion #D55E00) at center — named for pygal interactive HTML tooltips
 star_pts = []
 for i in range(10):
     a_s = i * np.pi / 5 - np.pi / 2
-    r_s = 0.07 if i % 2 == 0 else 0.028
+    r_s = 0.12 if i % 2 == 0 else 0.048
     star_pts.append((r_s * np.cos(a_s), r_s * np.sin(a_s)))
 star_pts.append(star_pts[0])
-chart.add("", star_pts, stroke_style={"width": 8, "linecap": "round", "linejoin": "round", "color": "#D55E00"})
+chart.add("Goal ★", star_pts, stroke_style={"width": 10, "linecap": "round", "linejoin": "round", "color": "#D55E00"})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
