@@ -44,8 +44,9 @@ Quick checks **before** AI evaluation. On fail: Score=0, no retry.
 | AR-06 | NOT_FEASIBLE | Library cannot implement spec | AI decision |
 | AR-07 | WRONG_FORMAT | Wrong output type | Not .png for static libraries |
 | AR-08 | FAKE_FUNCTIONALITY | Static library simulates interactive features | AI decision |
+| AR-09 | EDGE_CLIPPING | Title / axis label / legend clipped at canvas border | AI decision (visual) |
 
-**Check order:** AR-01 → AR-02 → AR-03 → AR-04 → AR-05 → AR-06 → AR-07 → AR-08
+**Check order:** AR-01 → AR-02 → AR-03 → AR-04 → AR-05 → AR-06 → AR-07 → AR-08 → AR-09
 
 ### AR-05: Library Usage
 

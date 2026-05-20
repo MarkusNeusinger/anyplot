@@ -25,12 +25,17 @@ If any fail: Score = 0, no AI review needed.
 Before scoring, check for:
 - **AR-06: NOT_FEASIBLE** — Library cannot implement the spec
 - **AR-08: FAKE_FUNCTIONALITY** — Static library simulates interactive features
+- **AR-09: EDGE_CLIPPING** — Title, axis label, legend, or other text is clipped at the canvas border
 
 **AR-08 triggers:** Simulated tooltips, simulated selection/hover state, simulated UI controls, code comments containing "simulating hover/click/interactivity."
 
 **AR-08 exceptions (NOT auto-reject):** Small multiples for animation, cell annotations in heatmaps, color encoding of time direction, honest notes about interactive alternatives.
 
-If AR-06 or AR-08 triggers: Score = 0, recommendation = "reject", include `auto_reject` field in output.
+**AR-09 triggers:** Title cropped at top edge of canvas, axis tick labels missing their leftmost/rightmost character because they touch the canvas edge, x-axis label cut at bottom edge, legend hidden behind canvas border, or any text whose bounding box is partially outside the saved PNG. This is the catalog's most visible failure mode — a chart that publishes with chopped-off text is broken to every viewer. AR-09 is distinct from the soft VQ-05 "no overflow" check: VQ-05 deducts when text leaves its axis but stays on the canvas; AR-09 fires when pixels are actually clipped at the canvas border. The post-render canvas-size gate enforces dimensions but cannot see what is at those edges — that's the reviewer's job.
+
+**AR-09 exceptions (NOT auto-reject):** Tooltips or hover affordances, decorative gridlines or borders aligned with the canvas edge, text that overflows its axis but remains fully within the canvas, tight-but-readable margins.
+
+If AR-06, AR-08, or AR-09 triggers: Score = 0, recommendation = "reject", include `auto_reject` field in output identifying which AR fired and (for AR-09) which element on which edge.
 
 ### Stage 2: Quality (your task)
 
