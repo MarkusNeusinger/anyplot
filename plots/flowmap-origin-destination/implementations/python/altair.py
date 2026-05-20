@@ -1,13 +1,23 @@
-""" pyplots.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: altair | Python 3.13
+Quality: 91/100 | Updated: 2026-05-20
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MAP_FILL = "#D8D6CE" if THEME == "light" else "#2D2D2A"
 
 # Data: Migration flows between major European cities
 np.random.seed(42)
@@ -25,16 +35,13 @@ cities = {
     "Dublin": (53.3498, -6.2603),
 }
 
-# Create flow data between cities
 flows = []
 city_names = list(cities.keys())
-
-# Generate flows from major hubs
 hub_cities = ["London", "Paris", "Berlin"]
+
 for hub in hub_cities:
     for dest in city_names:
         if hub != dest:
-            flow_value = np.random.randint(5000, 50000)
             flows.append(
                 {
                     "origin": hub,
@@ -43,14 +50,12 @@ for hub in hub_cities:
                     "dest": dest,
                     "dest_lat": cities[dest][0],
                     "dest_lon": cities[dest][1],
-                    "flow": flow_value,
+                    "flow": np.random.randint(5000, 50000),
                 }
             )
 
-# Add some reverse flows
 for origin in ["Madrid", "Rome", "Amsterdam"]:
     for dest in hub_cities:
-        flow_value = np.random.randint(2000, 20000)
         flows.append(
             {
                 "origin": origin,
@@ -59,51 +64,40 @@ for origin in ["Madrid", "Rome", "Amsterdam"]:
                 "dest": dest,
                 "dest_lat": cities[dest][0],
                 "dest_lon": cities[dest][1],
-                "flow": flow_value,
+                "flow": np.random.randint(2000, 20000),
             }
         )
 
 df_flows = pd.DataFrame(flows)
+df_cities = pd.DataFrame([{"city": n, "lat": c[0], "lon": c[1]} for n, c in cities.items()])
 
-# Create city points data
-df_cities = pd.DataFrame([{"city": name, "lat": coords[0], "lon": coords[1]} for name, coords in cities.items()])
-
-# Generate arc paths with control points for curved lines
-# For each flow, create intermediate points for Bezier-like curves
+# Generate Bezier arc paths; forward/reverse pairs curve in opposite directions
+# to reduce overlap in dense corridors like London–Paris–Berlin
 arc_data = []
 for _, row in df_flows.iterrows():
-    # Create multiple points along a curved path
     n_points = 50
     t = np.linspace(0, 1, n_points)
-
-    # Origin and destination
     x0, y0 = row["origin_lon"], row["origin_lat"]
     x1, y1 = row["dest_lon"], row["dest_lat"]
+    mid_x, mid_y = (x0 + x1) / 2, (y0 + y1) / 2
+    dx, dy = x1 - x0, y1 - y0
 
-    # Control point offset (perpendicular to line, proportional to distance)
-    mid_x = (x0 + x1) / 2
-    mid_y = (y0 + y1) / 2
-    dx = x1 - x0
-    dy = y1 - y0
-    dist = np.sqrt(dx**2 + dy**2)
+    # Deterministic sign: alphabetically first city curves one way, reverse curves other
+    sign = 1 if sorted([row["origin"], row["dest"]])[0] == row["origin"] else -1
+    ctrl_x = mid_x - dy * 0.3 * sign
+    ctrl_y = mid_y + dx * 0.3 * sign
 
-    # Perpendicular offset for curve bulge
-    offset = dist * 0.3
-    ctrl_x = mid_x - dy / dist * offset
-    ctrl_y = mid_y + dx / dist * offset
+    x_c = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * ctrl_x + t**2 * x1
+    y_c = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * ctrl_y + t**2 * y1
 
-    # Quadratic Bezier curve
-    x_curve = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * ctrl_x + t**2 * x1
-    y_curve = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * ctrl_y + t**2 * y1
-
-    flow_id = f"{row['origin']}-{row['dest']}"
-    for i in range(n_points):
+    fid = f"{row['origin']}-{row['dest']}"
+    for j in range(n_points):
         arc_data.append(
             {
-                "flow_id": flow_id,
-                "order": i,
-                "lon": x_curve[i],
-                "lat": y_curve[i],
+                "flow_id": fid,
+                "order": j,
+                "lon": x_c[j],
+                "lat": y_c[j],
                 "flow": row["flow"],
                 "origin": row["origin"],
                 "dest": row["dest"],
@@ -111,28 +105,24 @@ for _, row in df_flows.iterrows():
         )
 
 df_arcs = pd.DataFrame(arc_data)
+max_flow, min_flow = df_flows["flow"].max(), df_flows["flow"].min()
+df_arcs["stroke_width"] = 0.5 + 3.5 * (df_arcs["flow"] - min_flow) / (max_flow - min_flow)
 
-# Normalize flow for stroke width
-max_flow = df_flows["flow"].max()
-min_flow = df_flows["flow"].min()
-df_arcs["stroke_width"] = 1 + 6 * (df_arcs["flow"] - min_flow) / (max_flow - min_flow)
-
-# Load world basemap from CDN
+# Plot — geographic projection centered on Europe
 world_url = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
 world = alt.topo_feature(world_url, "countries")
+proj = {"type": "mercator", "scale": 400, "center": [8, 50], "clipExtent": [[0, 0], [800, 450]]}
 
-# Create base map
 base = (
     alt.Chart(world)
-    .mark_geoshape(fill="#e8e8e8", stroke="white", strokeWidth=0.5)
-    .project(type="mercator", scale=800, center=[8, 50], clipExtent=[[0, 0], [1600, 900]])
-    .properties(width=1600, height=900)
+    .mark_geoshape(fill=MAP_FILL, stroke=PAGE_BG, strokeWidth=0.5)
+    .project(**proj)
+    .properties(width=800, height=450)
 )
 
-# Create flow arcs layer
 arcs = (
     alt.Chart(df_arcs)
-    .mark_line(opacity=0.5, strokeCap="round")
+    .mark_line(opacity=0.55, strokeCap="round")
     .encode(
         longitude="lon:Q",
         latitude="lat:Q",
@@ -142,41 +132,47 @@ arcs = (
         color=alt.Color(
             "flow:Q",
             scale=alt.Scale(scheme="blues", domain=[min_flow, max_flow]),
-            legend=alt.Legend(
-                title="Flow Volume", titleFontSize=18, labelFontSize=14, orient="bottom-right", offset=10
-            ),
+            legend=alt.Legend(title="Flow Volume", titleFontSize=14, labelFontSize=12, orient="bottom-left", offset=10),
         ),
         tooltip=["origin:N", "dest:N", "flow:Q"],
     )
-    .project(type="mercator", scale=800, center=[8, 50], clipExtent=[[0, 0], [1600, 900]])
+    .project(**proj)
 )
 
-# Create city points layer
 points = (
     alt.Chart(df_cities)
-    .mark_circle(size=200, color="#306998", stroke="white", strokeWidth=2)
+    .mark_circle(size=150, color="#009E73", stroke=PAGE_BG, strokeWidth=2)
     .encode(longitude="lon:Q", latitude="lat:Q", tooltip=["city:N"])
-    .project(type="mercator", scale=800, center=[8, 50], clipExtent=[[0, 0], [1600, 900]])
+    .project(**proj)
 )
 
-# Create city labels
 labels = (
     alt.Chart(df_cities)
-    .mark_text(dy=-15, fontSize=14, fontWeight="bold", color="#333333")
+    .mark_text(dy=-14, fontSize=11, fontWeight="bold", color=INK)
     .encode(longitude="lon:Q", latitude="lat:Q", text="city:N")
-    .project(type="mercator", scale=800, center=[8, 50], clipExtent=[[0, 0], [1600, 900]])
+    .project(**proj)
 )
 
-# Combine layers
 chart = (
     (base + arcs + points + labels)
     .properties(
-        title=alt.Title("flowmap-origin-destination · altair · pyplots.ai", fontSize=28, anchor="start", offset=20)
+        title=alt.Title(
+            "flowmap-origin-destination · python · altair · anyplot.ai", fontSize=16, anchor="start", offset=10
+        ),
+        background=PAGE_BG,
     )
-    .configure_view(strokeWidth=0)
-    .configure_legend(labelFontSize=14, titleFontSize=18)
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_title(color=INK)
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=12,
+        titleFontSize=14,
+    )
 )
 
-# Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
