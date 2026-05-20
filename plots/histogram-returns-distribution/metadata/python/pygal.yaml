@@ -1,155 +1,195 @@
 library: pygal
+language: python
 specification_id: histogram-returns-distribution
 created: '2026-01-16T22:12:03Z'
-updated: '2026-01-18T22:39:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21082372884
+updated: '2026-05-20T18:31:02Z'
+generated_by: claude-sonnet
+workflow_run: 26180782399
 issue: 3751
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/pygal/plot.html
-quality_score: 58
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/pygal/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Histogram bars render correctly with proper density normalization
-  - Tail highlighting beyond ±2σ works well with distinct coloring
-  - Statistics (mean, std, skewness, kurtosis) calculated and displayed correctly
-  - Good use of XY chart type to create step-polygon histogram effect
-  - Code is well-structured and reproducible with seed(42)
+  - Correct use of pygal.Histogram native (value, xmin, xmax) tuple API for all three
+    series
+  - Two-tone histogram (green within 2σ, orange tails) creates immediate visual storytelling
+    about tail risk
+  - Normal distribution overlay cleverly approximated via 300 thin adjacent bins,
+    rendering as a smooth bell curve
+  - All style-guide font sizes explicitly set (title=66, label=56, major_label=44,
+    legend=44)
+  - Full theme-adaptive chrome — background, ink, and muted tokens all correctly derived
+    from ANYPLOT_THEME
+  - HTML + PNG dual output as required for pygal (interactive library)
+  - Seed set for reproducibility; clean KISS structure with no functions or classes
+  - Statistics (mean, std, skew, kurtosis) surfaced in subtitle for quick interpretation
   weaknesses:
-  - Normal distribution curve overlay is not visible in the rendered output despite
-    being added to the chart
-  - Y-axis label is misleading (Frequency Density x 100 instead of Probability Density)
-  - Title format does not follow the standard spec-id library pyplots.ai pattern
-  - Legend entries do not match the full series descriptions and normal curve legend
-    is missing
-  - X-axis tick labels are rotated and somewhat difficult to read
-  image_description: 'The plot displays a histogram of daily returns distribution
-    with approximately 25 bins. The main histogram bars are rendered in steel blue
-    (#306998) for returns within 2 standard deviations, while tail regions (beyond
-    ±2σ) are shown in coral/salmon red. The title at the top reads "Daily Returns
-    Distribution (Mean: 0.044% | Std: 1.451% | Skew: 0.30 | Kurt: 0.62) · histogram-returns-distribution
-    · pygal · pyplots.ai". The x-axis is labeled "Returns (%)" with rotated tick labels
-    showing values from approximately -3.7% to 4.3%. The y-axis is labeled "Frequency
-    (Density × 100)" with values from 0 to 36. A legend appears at the bottom left
-    showing "Returns" and "Tails (>2σ)". Critical issue: The normal distribution curve
-    overlay specified in the requirements is NOT visible in the rendered plot - only
-    the histogram bars appear.'
+  - Statistics displayed in title subtitle rather than a dedicated on-chart text box
+    as the spec requires — pygal limitation but spec compliance is partial
+  - Normal distribution curve rendered as 300 thin histogram bins may show faint stair-step
+    artifacts at high zoom; a true line overlay would be more precise, though the
+    visual result is acceptable
+  - Grid completely absent — a subtle y-axis-only grid would aid density readability
+    without competing with data
+  - Design Excellence ceiling limited by pygal built-in chrome (chart frame cannot
+    be removed); no distinctive typography hierarchy beyond the style-guide defaults
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white
+      Chrome: Two-line title — line 1 "histogram-returns-distribution · python · pygal · anyplot.ai" in dark ink, line 2 statistics subtitle "Mean: 0.044% | Std: 1.451% | Skew: 0.30 | Kurt: 0.62"; Y-axis label "Probability Density" and X-axis label "Returns (%)" both clearly visible in dark ink; tick labels (-3 through ~5.5 on X; 0 to 0.30 on Y) clearly readable in dark muted tone; legend at bottom with three columns readable
+      Data: First series "Returns (within 2σ)" = brand green #009E73 bars filling the central ±2σ region; second series "Tails (beyond ±2σ)" = orange #D55E00 bars at far left (~-3%) and far right (~4.5-5.5%); third series "Normal Distribution" = blue #0072B2 filled bell-curve area (300 thin adjacent bins creating smooth appearance)
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
+      Chrome: Title, subtitle, axis labels, tick labels, and legend text all rendered in light/cream ink clearly visible against near-black background; no dark-on-dark failures observed
+      Data: Green, orange, and blue data colors are identical to the light render (only background and text chrome flipped) — first series still #009E73 green, tails still #D55E00 orange, normal distribution still #0072B2 blue
+      Legibility verdict: PASS — all text clearly readable against near-black background, no dark-on-dark issues, brand green visible and legible
   criteria_checklist:
     visual_quality:
-      score: 28
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and axis labels readable but x-axis tick labels are rotated
-          and somewhat cramped
+        comment: All font sizes explicitly set per style guide (title=66, label=56,
+          major_label=44, legend=44). Both themes fully readable. Two-line title takes
+          expected space without overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Minor overlap in x-axis tick labels due to rotation
+        comment: No text overlaps with other text or data elements in either render.
+          Legend is cleanly separated at bottom.
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Histogram bars clearly visible, but normal curve is missing
+        comment: Histogram bars clearly visible. Normal distribution curve rendered
+          smoothly via 300 thin bins. Tail bars (orange) visible at extremes even
+          at small size.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/red distinction is colorblind-accessible
+        comment: Okabe-Ito green/orange/blue combination — colorblind-safe; shapes
+          also distinguishable by position.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas but legend placement at bottom-left is awkward
+        comment: Plot fills ~70-75% of canvas. Generous margins (bottom=200, left=120).
+          Legend compact at bottom. Well-balanced layout.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis label says Frequency (Density x 100) which is misleading
+        passed: true
+        comment: 'Y: ''Probability Density'' (appropriate, unitless for density),
+          X: ''Returns (%)'' with units.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'First series #009E73, second #D55E00, third #0072B2 — correct Okabe-Ito
+          order. Light bg #FAF8F1, dark bg #1A1A17. All chrome theme-adaptive.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
         passed: false
-        comment: Horizontal grid lines present, legend incomplete (missing normal
-          curve entry)
+        comment: Well-configured but recognizable as a pygal default. Color choices
+          excellent; overall polish is functional rather than publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: false
+        comment: Grid disabled, margins tuned, opacity=0.85 set — shows deliberate
+          refinement. Pygal chart frame cannot be removed, limiting ceiling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Green/orange color split immediately signals the key insight (tail
+          risk vs. normal range). Normal distribution overlay provides the reference
+          comparison. Stats in subtitle add quantitative context.
     spec_compliance:
-      score: 15
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 6
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Histogram is correct, but missing the required normal distribution
-          overlay curve
+        comment: Correct histogram with normal distribution overlay.
       - id: SC-02
-        name: Data Mapping
-        score: 4
-        max: 5
-        passed: true
-        comment: Returns correctly mapped to x-axis, density to y-axis
-      - id: SC-03
         name: Required Features
-        score: 2
-        max: 5
+        score: 3
+        max: 4
         passed: false
-        comment: Missing normal distribution curve overlay - a key specification requirement
-      - id: SC-04
-        name: Data Range
+        comment: All features present EXCEPT the spec requires 'key statistics in
+          a text box' — implementation shows stats in the title subtitle instead (pygal
+          workaround). Tail highlighting, normal overlay, density normalization all
+          present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate bin width
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend shows Returns instead of Returns (within 2σ) and normal curve
-          legend entry missing
-      - id: SC-06
-        name: Title Format
-        score: 0
-        max: 2
-        passed: false
-        comment: Title format is non-standard (stats first, then spec-id)
+        comment: X=Returns (%), Y=Probability Density. 252 daily returns. Correct
+          density normalization.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'histogram-returns-distribution · python · pygal · anyplot.ai'
+          on line 1 is correct. Legend labels descriptive.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows distribution shape and tail highlighting, but missing curve
-          comparison
+        comment: 'Shows all aspects: normal range bars, tail bars, distribution overlay,
+          density normalization, statistics.'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Daily stock returns with realistic mean (~0.05%) and std (~1.5%)
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 252 observations, appropriate for 1 year of trading data
+        comment: 252 daily stock returns with mean ~0.05%/day and std ~1.5% — realistic
+          parameters for equity returns. Neutral financial context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Return values (±3-4% daily range) and probability density values
+          align with real-world daily equity return distributions.
     code_quality:
       score: 10
       max: 10
@@ -159,46 +199,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports, data, plot, save'
+        comment: Clean imports → data → style → chart → save structure.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) used
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and pygal imported
+        comment: sys, os, numpy, pygal, pygal.style.Style — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current pygal API
+        comment: Clean and Pythonic. The 300-thin-bin approach for the normal curve
+          is an elegant pygal adaptation.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses pygal.Histogram with correct native (value, xmin, xmax) tuple
+          format, Style object for complete theming, explicit_size=True, legend_at_bottom_columns
+          — all idiomatic pygal patterns.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses XY chart type creatively for histogram, custom Style, but approach
-          for normal curve rendering failed
+        passed: false
+        comment: Uses native Histogram API (distinctive), HTML export (interactive
+          SVG output unique to pygal), and the creative 300-thin-bin technique to
+          simulate a smooth curve within the histogram API. Good but not exceptional
+          use of pygal's full feature set.
   verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - html-export
   patterns:
   - data-generation
   dataprep:

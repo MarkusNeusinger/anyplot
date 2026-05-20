@@ -1,159 +1,187 @@
 library: altair
+language: python
 specification_id: histogram-returns-distribution
 created: '2026-01-16T22:11:57Z'
-updated: '2026-01-16T22:14:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21082372881
+updated: '2026-05-20T18:32:08Z'
+generated_by: claude-sonnet
+workflow_run: 26180578714
 issue: 3751
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of all spec requirements including normal distribution
-    overlay and tail highlighting
-  - Clean use of Altair declarative syntax with proper layering of histogram, curve,
-    and annotations
-  - Statistics text box is well-positioned and clearly displays all required metrics
-    (mean, std dev, skewness, kurtosis)
-  - Appropriate use of t-distribution (df=5) to generate realistic fat-tailed returns
-  - Proper density normalization allows meaningful comparison between histogram and
-    normal curve
+  - 'Full spec compliance: all required features (normal overlay, stats annotation,
+    tail highlighting, ±2σ reference lines, density normalization) correctly implemented'
+  - Expert Altair layering with shared color domain elegantly unifies histogram, curve,
+    and reference-line layers into a single legend
+  - 'Tail-risk storytelling is strong: orange vs. green color split at ±2σ boundaries
+    immediately communicates where extreme events occur'
+  - Both light and dark renders have fully correct theme-adaptive chrome with no dark-on-dark
+    or light-on-light failures
+  - Realistic t-distribution data gives plausible fat tails consistent with actual
+    equity return distributions
   weaknesses:
-  - The extreme right outlier (~21%) causes the x-axis to stretch significantly, compressing
-    the main distribution visually
-  - Left tail highlighting is less visible due to fewer extreme negative returns in
-    the generated data
-  - The normal curve dashed pattern could be more prominent for better visibility
-  image_description: 'The plot displays a histogram of financial returns with percentage
-    returns on the x-axis (ranging from -6% to 24%) and density on the y-axis (0 to
-    0.30). The main distribution bars are rendered in Python blue (#306998) with 80%
-    opacity. Tail regions beyond 2 standard deviations are highlighted in red/coral
-    (#E74C3C) - visible on the right side around 5-7% returns and one notable outlier
-    bar around 21%. A yellow dashed normal distribution curve (#FFD43B) overlays the
-    histogram for comparison, clearly showing how the actual distribution has fatter
-    tails than normal. A statistics text box in the upper right displays: Mean: 0.07%,
-    Std Dev: 2.23%, Skewness: 3.90, Kurtosis: 35.85. The title follows the required
-    format "histogram-returns-distribution · altair · pyplots.ai". The layout is clean
-    with subtle gridlines and properly sized axis labels.'
+  - 'DE-01 not at peak: the chart is clean and functional but lacks a distinctive
+    typographic or compositional flourish that would push it to publication-level
+    polish'
+  - Legend box frame (strokeColor + fillColor) adds slight visual weight — a frameless
+    or minimally-framed legend would be more refined
+  - 'DE-03 could be stronger: a faint shaded region (fill) between the ±2σ lines rather
+    than just vertical dashed lines would make the tail zones more visually impactful'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "histogram-returns-distribution · python · altair · anyplot.ai" bold, centered, ~75% width at fontSize=16 (expected for long mandated title). Axis labels "Returns (%)" and "Density" in dark INK color. Tick labels in INK_SOFT dark gray. Stats annotation (Mean/Std Dev/Skewness/Kurtosis) in medium-dark gray, readable. Legend box with frame, all 3 labels readable.
+      Data: Green (#009E73) bars for Returns (Okabe-Ito pos 1), orange (#D55E00) bars for Tail (±2σ) (pos 2), dashed blue (#0072B2) normal distribution curve (pos 3). Subtle dashed gray ±2σ reference lines. Bar opacity 0.8.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, and tick labels in light off-white (#F0EFE8), clearly readable against dark surface. Stats annotation in light gray (#B8B7B0), readable. Legend box with elevated dark fill (#242420), labels readable. No dark-on-dark failures.
+      Data: Colors are identical to light render — green/orange bars and blue dashed curve unchanged. Only chrome flipped between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, axis labels at 22pt, ticks at 18pt - all clearly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, stats=13,
+          legend=10); proportions well-balanced in both renders; no overflow or clipping
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements; stats annotation, legend, and
+          histogram bars occupy distinct regions
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Bars clearly visible with good opacity; some right-tail bars are
-          quite small due to data sparsity
+        comment: Histogram bars, tail bars, and normal distribution curve all clearly
+          visible; bar opacity 0.8 provides good layering
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue/red/yellow scheme is colorblind-safe with good contrast
+        comment: Okabe-Ito palette is CVD-safe; three distinct hues (green/orange/blue)
+          with high luminance contrast
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas but x-axis extends far right due to outlier at
-          ~21%, leaving some empty space
+        comment: Canvas exactly 3200x1800; chart fills canvas well with balanced margins;
+          legend adjacent to plot area
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Returns (%) and Density are descriptive with units
+        comment: Returns (%) includes units; Density is descriptive for the y-axis
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Grid at alpha 0.3 is subtle and non-distracting
+        comment: 'First series #009E73, second #D55E00, third #0072B2 (Okabe-Ito positions
+          1-3); backgrounds #FAF8F1 / #1A1A17; both renders theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Multi-layer composition with tail highlighting, normal overlay, and
+          stats annotation shows clear design intent; clearly above plain defaults
+          but not at publication-level polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle horizontal grid (opacity=0.10), view border removed (strokeWidth=0),
+          soft axis domain/tick colors; genuine refinement visible though legend box
+          frame adds slight visual weight
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Tail color contrast (green→orange) creates a clear focal point around
+          ±2σ boundaries; ±2σ reference lines guide the viewer to risk-relevant regions;
+          stats annotation provides quantitative context
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct histogram with density normalization
+        comment: Correct density-normalized histogram
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Returns correctly on x-axis, density on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: histogram, normal overlay, statistics
-          box, tail highlighting'
-      - id: SC-04
-        name: Data Range
+        comment: Normal distribution overlay, key statistics text box (mean/std/skewness/kurtosis),
+          tail region highlighting, density normalization, ±2σ reference lines, 30
+          bins all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible including outliers
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Returns (%) on X, density on Y; all data visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Color coding is self-explanatory (blue=main, red=tails, yellow=normal
-          curve)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses exact format {spec-id} · {library} · pyplots.ai
+        comment: Title matches {spec-id} · python · altair · anyplot.ai format; legend
+          labels Returns / Tail (±2σ) / Normal dist. are correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows fat tails, skewness, and comparison to normal; minor: left
-          tail highlighting less visible'
+        comment: Shows normal-region bars, tail events, fitted normal curve, skewness
+          and kurtosis stats; t-distribution generates realistic fat-tailed returns
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Daily stock returns with t-distribution (df=5) is realistic for financial
-          modeling
+        comment: 252 daily stock-return observations with student-t(df=5) is standard
+          financial engineering; percentage returns, realistic mean and std
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Return values are plausible; the extreme outlier at ~21% is possible
-          but rare
+        comment: Mean ~0.00%, std ~1.74%, range ~-5% to +6% — realistic for daily
+          equity returns; kurtosis 0.66 indicates mild fat tails
     code_quality:
       score: 10
       max: 10
@@ -163,46 +191,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure, no functions/classes
+        comment: 'Clean: imports → constants → data → chart layers → save; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (altair, numpy, pandas, scipy.stats)
+        comment: All imports used; sys path manipulation necessary to prevent module
+          shadowing
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Well-organized, Pythonic; shared color scale domain is an elegant
+          solution for consistent legend across layers
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6 API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of alt.layer() composition; bin='binned' with x2 encoding
+          for pre-computed histogram is the idiomatic Vega-Lite/Altair pattern; shared
+          alt.Scale with explicit domain across layers
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of layering, conditional coloring, tooltips; could leverage
-          more Altair-specific features like selections or interactive elements
+        comment: bin='binned' + x2 is distinctly Altair/Vega-Lite; shared color domain
+          forcing legend entries from multiple layers is Altair-specific; HTML export
+          provides built-in interactivity
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
+  - pillow
   techniques:
   - layer-composition
   - annotations
