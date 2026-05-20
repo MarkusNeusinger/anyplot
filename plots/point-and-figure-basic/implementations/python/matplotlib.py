@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-20
+Quality: 86/100 | Updated: 2026-05-20
 """
 
 import os
