@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: highcharts unknown | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-20
+Library: highcharts | Python 3.13.13
 """
 
 import os
@@ -15,6 +14,7 @@ from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.area import LineSeries
 from highcharts_core.options.series.scatter import ScatterSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -92,7 +92,7 @@ region_bands = [
         "color": "rgba(213,94,0,0.07)",
         "label": {
             "text": "Low-Cycle Fatigue",
-            "style": {"fontSize": "32px", "color": INK_SOFT},
+            "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
             "verticalAlign": "top",
             "y": 30,
@@ -104,7 +104,7 @@ region_bands = [
         "color": "rgba(0,114,178,0.05)",
         "label": {
             "text": "High-Cycle Fatigue",
-            "style": {"fontSize": "32px", "color": INK_SOFT},
+            "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
             "verticalAlign": "top",
             "y": 30,
@@ -116,7 +116,7 @@ region_bands = [
         "color": "rgba(0,158,115,0.06)",
         "label": {
             "text": "Infinite Life",
-            "style": {"fontSize": "32px", "color": INK_SOFT},
+            "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
             "verticalAlign": "top",
             "y": 30,
@@ -201,7 +201,7 @@ chart.options.legend = {
     "verticalAlign": "top",
     "layout": "vertical",
     "x": -60,
-    "y": 100,
+    "y": 140,
 }
 
 chart.options.plot_options = {
@@ -253,16 +253,28 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--hide-scrollbars")
 chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override makes the viewport authoritative; --window-size alone is eaten by Chrome chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# PIL safety net: pin to exact 3200×1800 in case of ±1-2 px rounding
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
