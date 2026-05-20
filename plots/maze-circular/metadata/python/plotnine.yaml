@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: maze-circular
 created: '2026-01-16T07:23:38Z'
-updated: '2026-05-20T07:55:02Z'
+updated: '2026-05-20T08:10:21Z'
 generated_by: claude-sonnet
 workflow_run: 26148447266
 issue: 3804
@@ -12,38 +12,37 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 91
 review:
   strengths:
-  - 'Excellent theme adaptation: both renders correct with all text readable in both
-    themes'
-  - Perfect spec compliance — all required features present including DFS single-solution
-    guarantee
-  - Clean minimal design using theme_void correctly for a maze context
-  - 'Intentional color hierarchy: brand green GOAL vs. soft-gray START vs. ink walls'
-  - coord_fixed() used correctly to maintain circular aspect ratio in plotnine
+  - Tapered stroke weights (outer=0.9, inner=0.45) create a genuine depth illusion
+    drawing the eye inward — a deliberate, effective design choice
+  - GOAL bullseye with translucent glow halo + solid dot is visually polished and
+    immediately identifies the objective
+  - Entry gate arc subtly marks the threshold without heavy-handed labeling
+  - DFS maze generation guarantees exactly one solution while remaining fully inline/flat
+    (KISS)
+  - 'Theme adaptation is flawless: wall color, background, text, and INK tokens all
+    flip correctly; GOAL green stays constant'
   weaknesses:
-  - 'DE-01 (5/8): Missing aesthetic polish — no variation in wall stroke weight (inner
-    rings could taper), no visual emphasis on entry gate gap, no subtle refinement
-    on GOAL marker'
-  - 'DE-02 (4/6): Entry gap has no visual marker; could add arrow or highlighted arc
-    at START; inner rings could have subtle fill/color treatment'
-  - 'DE-03 (4/6): No solution-path visualization or color hinting; difficulty and
-    ring count not annotated'
-  - 'CQ-01 (2/3): get_neighbors() helper function deviates from flat KISS Imports→Data→Plot→Save
-    structure'
+  - 'DE-03 could be elevated: consider adding a faint solve-path highlight or directional
+    arrow near START to guide the viewer''s eye immediately into the maze'
+  - START label could use a small visual accent (dot or arrow) matching the GOAL bullseye
+    treatment for visual symmetry at both ends of the puzzle
+  - Caption '7 rings · medium' at size=7 is at the lower boundary of mobile legibility
+    — bumping to size=8 would be safer
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "maze-circular · python · plotnine · anyplot.ai" bold and centered in dark near-black ink; no axis labels or ticks (theme_void); all chrome readable
-      Data: Maze walls in dark ink (#1A1A17); GOAL marker as green dot (#009E73) at center with bold "GOAL" label in same green above; "START" label in soft gray outside outer ring at 3 o'clock
-      Legibility verdict: PASS — all text and data elements clearly readable against warm off-white background
+      Background: Warm off-white (~#FAF8F1) — not pure white, correct anyplot surface
+      Chrome: Title "maze-circular · python · plotnine · anyplot.ai" in bold dark ink at top — clearly readable. Caption "7 rings · medium" at bottom in muted secondary ink — readable. START label in muted dark (#4A4A44) at right edge — readable.
+      Data: Maze walls in dark ink (#1A1A17) with tapered stroke weights (outer=0.9, inner=0.45). GOAL bullseye at center in #009E73 with glow halo (alpha=0.18) + solid dot. Entry gate arc in INK_SOFT at right edge. All elements clearly visible.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title rendered in light off-white text; clearly legible; no axis elements; no dark-on-dark failures observed
-      Data: Maze walls render as white/light lines on dark background (correct inversion); GOAL dot and label remain in #009E73 (identical to light render); START label in soft light gray (#B8B7B0)
-      Legibility verdict: PASS — all text readable against dark background; data colors identical to light render; only chrome flips
+      Background: Warm near-black (~#1A1A17) — not pure black, correct anyplot dark surface
+      Chrome: Title in light text (#F0EFE8) clearly readable against dark background. Caption in muted light gray (#B8B7B0) readable. START label in muted light text readable. No dark-on-dark failures detected.
+      Data: Maze walls flip to white/light strokes on dark background — identical structure, only chrome flips. GOAL bullseye remains #009E73 (identical to light render). All elements clearly visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -54,75 +53,73 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set (title=12, geom_text=9); all text readable in
-          both themes; proportional to square canvas
+        comment: All font sizes explicitly set; both themes readable. Caption at size=7
+          is borderline at mobile but acceptable as tertiary metadata.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements; START and GOAL labels placed
-          with adequate spacing
+        comment: No overlapping text or elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Maze walls clearly visible at size=0.7; GOAL marker prominent at
-          size=4
+        comment: Maze walls, entry gap, GOAL bullseye, START marker all clearly visible
+          in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High contrast walls; brand green distinguishable on both surfaces;
-          CVD-safe
+        comment: High contrast walls; GOAL green is CVD-safe and distinct from mono
+          wall color.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Maze fills ~65% of 6x6 canvas with balanced whitespace; title above
-          with appropriate padding
+        comment: 6x6 square canvas ideal for circular maze; fills ~70% with balanced
+          margins; no clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: theme_void correctly omits axes; title format correct
+        comment: No axis labels needed; title format correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Background #FAF8F1/#1A1A17; GOAL uses #009E73; text adapts to theme;
-          no pure white/black'
+        comment: 'GOAL uses #009E73; backgrounds are #FAF8F1/#1A1A17; chrome tokens
+          flip correctly; data colors identical between renders.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Intentional color hierarchy above configured default; theme_void
-          correct choice; lacks further sophistication (wall weight variation, goal
-          marker refinement)
+        comment: Tapered stroke weights, GOAL glow halo, entry gate arc — all intentional.
+          Clearly above defaults.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: theme_void removes all unnecessary chrome; consistent wall stroke;
-          correct backgrounds; no entry-gate visual emphasis or inner-ring treatment
+        comment: 'theme_void, tapered strokes, multi-layer GOAL marker are polished.
+          Minor: no entrance arrow or path hint.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Brand green creates focal point; soft-gray START guides eye; no solution-path
-          visualization or difficulty annotations
+        comment: 'Clear START→GOAL hierarchy with brand green focal point at center.
+          Missing: solve-path hint or directional cue from entry.'
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +129,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct circular maze with 7 concentric rings and radial passages
+        comment: Correct circular maze with concentric rings and radial passages.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: concentric walls, radial passages,
-          entry point, GOAL at center, DFS single-solution guarantee, consistent wall
-          thickness'
+        comment: 'All spec features present: concentric rings, radial walls, passages,
+          entry, goal, single-solution guarantee, consistent wall thickness, print-friendly
+          mono.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct polar-to-Cartesian transformation; radii and angles correctly
-          computed; entry gap correctly placed
+        comment: rings, difficulty, seed all wired correctly. Sector counts scale
+          outward.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is 'maze-circular · python · plotnine · anyplot.ai'; no legend
-          needed
+        comment: Title exactly 'maze-circular · python · plotnine · anyplot.ai'. No
+          legend needed.
     data_quality:
       score: 15
       max: 15
@@ -164,58 +161,55 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 7 rings medium difficulty with progressively denser sectors; full
-          DFS spanning tree; entry and goal clearly marked
+        comment: 'All aspects shown: concentric rings, radial passages, variable sector
+          density, entry gap, goal marker, difficulty caption.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Neutral maze puzzle; START/GOAL universally understood; difficulty=medium
-          is a real-world parameter
+        comment: Puzzle/game design is neutral, real-world context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 7 rings within recommended 5-10 range; seed=42 for reproducibility;
-          sector counts per ring well-chosen
+        comment: 7 rings at medium difficulty; sector counts scale correctly outward;
+          seed=42 for reproducibility.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Has get_neighbors() helper function deviating from flat Imports→Data→Plot→Save
-          pattern
+        passed: true
+        comment: Flat linear structure with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set at top level
+        comment: np.random.seed(42) set before maze generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used
+        comment: All imports used; no dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean DFS implementation; wall-segment building logical; no over-engineering;
-          no fake functionality
+        comment: Clean, Pythonic. DFS concise with inline neighbor computation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current plotnine API
+        comment: Saves as plot-{THEME}.png with correct dpi/dimensions.
     library_mastery:
       score: 7
       max: 10
@@ -225,17 +219,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct grammar of graphics: ggplot() + geom_segment + geom_point
-          + geom_text + coord_fixed + theme_void + labs; coord_fixed ensures square
-          aspect ratio'
+        comment: 'Correct additive grammar: geom layers, aes mappings, coord_fixed,
+          theme_void, labs. Slightly below expert as rendering is primarily hand-crafted
+          NumPy geometry.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Grammar of graphics layering and coord_fixed are distinctive to plotnine/ggplot2;
-          core wall drawing via geom_segment could be replicated in matplotlib
-  verdict: REJECTED
+        comment: coord_fixed ensures circular accuracy; layer composition of segment+point+text
+          is leveraged well. Maze rendering is mostly manual geometry rather than
+          plotnine-distinctive patterns.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -248,3 +243,4 @@ impl_tags:
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending
