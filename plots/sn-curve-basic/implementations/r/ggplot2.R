@@ -21,13 +21,16 @@ OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
 GRID        <- adjustcolor(INK_SOFT, alpha.f = 0.25)
 
 # AISI 1045 Steel material properties (MPa)
-sigma_u <- 750   # Ultimate strength
+sigma_u <- 750   # Ultimate tensile strength
 sigma_y <- 530   # Yield strength
 sigma_e <- 250   # Endurance limit
 
 # Basquin equation: log10(N) = C0 - k * log10(stress)
 k  <- 10
 C0 <- 30
+
+# N at endurance limit — left boundary of infinite-life zone
+N_endurance <- 10^(C0 - k * log10(sigma_e))
 
 # Fatigue test specimens: multiple replicates per stress level
 stress_levels <- c(620, 580, 540, 500, 460, 420, 390, 360, 330, 300, 275, 260)
@@ -36,13 +39,20 @@ reps          <- c(2, 3, 2, 3, 2, 3, 2, 3, 2, 3, 2, 3)
 df <- data.frame(stress = rep(stress_levels, reps)) |>
     mutate(cycles = 10^(C0 - k * log10(stress) + rnorm(n(), 0, 0.12)))
 
-# Basquin fit line (from high stress down to endurance limit)
-fit_df <- data.frame(stress = seq(sigma_e + 2, 640, by = 1)) |>
-    mutate(cycles = 10^(C0 - k * log10(stress)))
+# Basquin fit line — log-spaced in cycle direction for accurate log-scale rendering
+fit_df <- data.frame(
+    cycles = 10^seq(log10(12), log10(N_endurance * 0.998), length.out = 300)
+) |> mutate(stress = 10^((C0 - log10(cycles)) / k))
 
 # Plot
 p <- ggplot() +
-    # Reference lines
+    # Infinite-life zone: subtle fill below endurance limit
+    annotate("rect",
+        xmin = N_endurance, xmax = 10^8,
+        ymin = 180, ymax = sigma_e,
+        fill = OKABE_ITO[5], alpha = 0.08
+    ) +
+    # Reference lines for key material properties
     geom_hline(yintercept = sigma_u, linetype = "dashed",
                color = OKABE_ITO[2], linewidth = 0.65, alpha = 0.85) +
     geom_hline(yintercept = sigma_y, linetype = "dashed",
@@ -52,20 +62,24 @@ p <- ggplot() +
     # Basquin fit curve
     geom_line(data = fit_df, aes(x = cycles, y = stress),
               color = INK_MUTED, linewidth = 1.0) +
-    # Test data scatter
+    # Test data scatter (multiple replicates per stress level)
     geom_point(data = df, aes(x = cycles, y = stress),
                shape = 21, size = 3.0, stroke = 0.5,
                color = OKABE_ITO[1], fill = OKABE_ITO[1], alpha = 0.85) +
-    # Reference line labels (left-aligned, just inside the left margin)
-    annotate("text", x = 10^1.35, y = sigma_u * 1.055,
+    # Reference line labels — right-aligned at x = 10^7.5
+    annotate("text", x = 10^7.5, y = sigma_u * 1.05,
              label = "Ultimate Strength (750 MPa)",
-             color = OKABE_ITO[2], hjust = 0, vjust = 0, size = 3.0) +
-    annotate("text", x = 10^1.35, y = sigma_y * 1.055,
+             color = OKABE_ITO[2], hjust = 1, vjust = 0, size = 3.5) +
+    annotate("text", x = 10^7.5, y = sigma_y * 1.05,
              label = "Yield Strength (530 MPa)",
-             color = OKABE_ITO[3], hjust = 0, vjust = 0, size = 3.0) +
-    annotate("text", x = 10^1.35, y = sigma_e * 1.08,
+             color = OKABE_ITO[3], hjust = 1, vjust = 0, size = 3.5) +
+    annotate("text", x = 10^7.5, y = sigma_e * 1.08,
              label = "Endurance Limit (250 MPa)",
-             color = OKABE_ITO[5], hjust = 0, vjust = 0, size = 3.0) +
+             color = OKABE_ITO[5], hjust = 1, vjust = 0, size = 3.5) +
+    # Infinite-life region label inside shaded zone
+    annotate("text", x = 10^7.2, y = 210,
+             label = "Infinite Life\nRegion",
+             color = INK_MUTED, hjust = 0.5, size = 2.8, fontface = "italic") +
     # Log-log axes
     scale_x_log10(
         limits = c(10, 10^8),
@@ -78,9 +92,10 @@ p <- ggplot() +
         labels = scales::comma_format(accuracy = 1)
     ) +
     labs(
-        title = "sn-curve-basic · r · ggplot2 · anyplot.ai",
-        x     = "Cycles to Failure",
-        y     = "Stress Amplitude (MPa)"
+        title   = "sn-curve-basic · r · ggplot2 · anyplot.ai",
+        x       = "Cycles to Failure",
+        y       = "Stress Amplitude (MPa)",
+        caption = "Basquin model: log N = 30 − 10 · log σ  |  AISI 1045 steel"
     ) +
     theme_minimal(base_size = 8) +
     theme(
@@ -93,6 +108,7 @@ p <- ggplot() +
         axis.title       = element_text(color = INK, size = 10),
         axis.text        = element_text(color = INK_SOFT, size = 8),
         plot.title       = element_text(color = INK, size = 12),
+        plot.caption     = element_text(color = INK_MUTED, size = 7, hjust = 1),
         plot.margin      = margin(10, 20, 10, 10, "pt")
     )
 
