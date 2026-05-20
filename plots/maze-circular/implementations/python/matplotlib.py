@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -8,12 +8,14 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Arc
+from matplotlib.collections import LineCollection
+from matplotlib.patches import Arc, Wedge
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 GOAL_COLOR = "#009E73"  # Okabe-Ito position 1
@@ -22,9 +24,9 @@ ENTRY_COLOR = "#D55E00"  # Okabe-Ito position 2
 # Data — Fibonacci sector progression for naturally varied corridor widths
 np.random.seed(13)
 rings = 6
-sectors_per_ring = [5, 8, 13, 21, 34, 55]  # Fibonacci sequence
+sectors_per_ring = [5, 8, 13, 21, 34, 34]  # Cap outer ring at 34 for solvable corridor widths
 inner_radius = 0.5
-ring_width = 0.20  # Wider corridors for pen-solving comfort
+ring_width = 0.25  # Wider corridors for comfortable pen-solving
 
 # Initialize maze structure
 radial_walls = []
@@ -88,6 +90,18 @@ ax.axis("off")
 wall_color = INK
 wall_width = 2.5
 
+# Fill corridor area with ELEVATED_BG — distinguishes maze space from background canvas
+ax.add_patch(plt.Circle((0, 0), outer_r, fill=True, facecolor=ELEVATED_BG, edgecolor="none", zorder=1))
+
+# Alternating ring fills — subtle depth to distinguish inner rings from outer
+for r in range(rings):
+    if r % 2 == 0:
+        r_inner = inner_radius + r * ring_width
+        r_outer = r_inner + ring_width
+        ax.add_patch(
+            Wedge((0, 0), r_outer, 0, 360, width=ring_width, facecolor=INK, edgecolor="none", alpha=0.05, zorder=2)
+        )
+
 # Outer boundary with entry gap (two arcs bracketing the entry sector)
 entry_angle_start = entry_sector * 360 / sectors_per_ring[-1]
 entry_angle_end = (entry_sector + 1) * 360 / sectors_per_ring[-1]
@@ -95,15 +109,30 @@ entry_angle_end = (entry_sector + 1) * 360 / sectors_per_ring[-1]
 if entry_angle_start > 0:
     ax.add_patch(
         Arc(
-            (0, 0), 2 * outer_r, 2 * outer_r, theta1=0, theta2=entry_angle_start, color=wall_color, linewidth=wall_width
+            (0, 0),
+            2 * outer_r,
+            2 * outer_r,
+            theta1=0,
+            theta2=entry_angle_start,
+            color=wall_color,
+            linewidth=wall_width,
+            zorder=4,
         )
     )
 ax.add_patch(
-    Arc((0, 0), 2 * outer_r, 2 * outer_r, theta1=entry_angle_end, theta2=360, color=wall_color, linewidth=wall_width)
+    Arc(
+        (0, 0),
+        2 * outer_r,
+        2 * outer_r,
+        theta1=entry_angle_end,
+        theta2=360,
+        color=wall_color,
+        linewidth=wall_width,
+        zorder=4,
+    )
 )
 
-# Ring walls — outer arc of each ring with passage gaps
-# Outermost ring's outer wall is the outer boundary (handled above)
+# Ring walls — arc segments at ring boundaries with passage gaps
 for r in range(rings - 1):
     ring_r = inner_radius + r * ring_width
     num_sectors = sectors_per_ring[r]
@@ -120,10 +149,12 @@ for r in range(rings - 1):
                     theta2=(s + 1) * sector_angle,
                     color=wall_color,
                     linewidth=wall_width,
+                    zorder=4,
                 )
             )
 
-# Radial walls
+# Radial walls — batched as LineCollection for efficient compound-path rendering
+radial_segments = []
 for r in range(rings):
     num_sectors = sectors_per_ring[r]
     sector_angle = 360 / num_sectors
@@ -132,21 +163,32 @@ for r in range(rings):
     for s in range(num_sectors):
         if radial_walls[r][s]:
             angle = np.radians((s + 1) * sector_angle)
-            ax.plot(
-                [r_inner * np.cos(angle), r_outer * np.cos(angle)],
-                [r_inner * np.sin(angle), r_outer * np.sin(angle)],
-                color=wall_color,
-                linewidth=wall_width,
+            radial_segments.append(
+                [[r_inner * np.cos(angle), r_inner * np.sin(angle)], [r_outer * np.cos(angle), r_outer * np.sin(angle)]]
             )
+
+if radial_segments:
+    ax.add_collection(LineCollection(radial_segments, colors=wall_color, linewidths=wall_width, zorder=4))
 
 # Inner boundary and goal
 ax.add_patch(
-    Arc((0, 0), 2 * inner_radius, 2 * inner_radius, theta1=0, theta2=360, color=wall_color, linewidth=wall_width)
+    Arc(
+        (0, 0),
+        2 * inner_radius,
+        2 * inner_radius,
+        theta1=0,
+        theta2=360,
+        color=wall_color,
+        linewidth=wall_width,
+        zorder=5,
+    )
 )
 ax.add_patch(
-    plt.Circle((0, 0), inner_radius * 0.65, fill=True, facecolor=GOAL_COLOR, edgecolor=wall_color, linewidth=2)
+    plt.Circle(
+        (0, 0), inner_radius * 0.65, fill=True, facecolor=GOAL_COLOR, edgecolor=wall_color, linewidth=2, zorder=6
+    )
 )
-ax.text(0, 0, "GOAL", ha="center", va="center", fontsize=8, fontweight="bold", color="white")
+ax.text(0, 0, "GOAL", ha="center", va="center", fontsize=8, fontweight="bold", color="white", zorder=7)
 
 # Entry marker
 entry_mid_angle = np.radians((entry_sector + 0.5) * 360 / sectors_per_ring[-1])
@@ -159,6 +201,7 @@ ax.text(
     fontsize=7,
     fontweight="bold",
     color=ENTRY_COLOR,
+    zorder=7,
 )
 
 # Style
