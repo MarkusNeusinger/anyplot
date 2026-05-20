@@ -1,219 +1,285 @@
 library: bokeh
+language: python
 specification_id: contour-map-geographic
 created: '2026-01-17T11:54:34Z'
-updated: '2026-01-18T22:27:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21093797308
+updated: '2026-05-20T23:08:59Z'
+generated_by: claude-sonnet
+workflow_run: 26194087033
 issue: 3772
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Viridis colormap for colorblind-safe elevation visualization
-  - Good integration of filled contours (image) with overlaid contour lines
-  - Contour labels with white background provide good readability against varied backgrounds
-  - Realistic Pacific Northwest elevation data with simulated Cascade Range
-  - Proper use of Bokeh ColumnDataSource and LabelSet for contour labeling
-  - Interactive tools (pan, wheel_zoom, box_zoom, reset) enhance usability
-  - Colorbar with proper title and sizing
+  - Sophisticated multi-layer geographic visualization combining filled elevation
+    raster (Viridis) with contour lines, peak annotations, and geographic overlay
+    elements
+  - 'Correct bokeh idioms: contourpy for contour generation, p.image() for raster,
+    ColumnDataSource + LabelSet for efficient label rendering, LinearColorMapper +
+    ColorBar'
+  - Overlap-aware contour label placement with MIN_LABEL_DIST guard prevents crowded
+    annotations
+  - Full theme-adaptive chrome with all text colors (title, axis labels, tick labels,
+    legend, colorbar, annotation boxes) properly switching between light and dark
+  - Semantic use of Okabe-Ito palette for geographic overlays (blue coastline = water,
+    orange = border) — contextually justified
+  - 'Perfect code quality: flat KISS structure, deterministic seed, clean imports,
+    HTML + PNG dual output'
   weaknesses:
-  - Legend for coastline is positioned in upper-left but appears small relative to
-    canvas size
-  - Grid lines could be slightly more visible or use dashed style for better distinction
-    from contour lines
-  image_description: The plot displays a geographic contour map of simulated elevation
-    data for the Pacific Northwest region (Oregon to Washington). The visualization
-    uses a Viridis colormap ranging from dark purple (low elevation near coast, ~0m)
-    through green/cyan to bright yellow (high elevation in mountain ranges, ~3000m).
-    Two prominent yellow/green oval-shaped high-elevation areas are visible, representing
-    the Cascade Range with peaks around 3000m. Black contour lines are overlaid on
-    the filled color surface, with labels showing elevation values (500m, 1000m, 1500m,
-    2000m, 2500m, 3000m) at regular intervals. A blue line on the left edge represents
-    an approximate coastline. The X-axis shows Longitude (°W) from -125 to -117, Y-axis
-    shows Latitude (°N) from 42 to 49. A colorbar on the right displays "Elevation
-    (m)" ranging from 0 to 3000. The title correctly shows "contour-map-geographic
-    · bokeh · pyplots.ai". A legend in the upper-left indicates "Coastline (approx.)".
+  - No real geographic basemap library used — coastline and state border are manually
+    approximated polylines; a cartopy/geopandas tile or natural earth boundary would
+    better satisfy the spec requirement for an actual basemap
+  - Legend label_text_font_size (28pt) is slightly below the standard 34pt from the
+    style guide; at small thumbnail widths the legend text reads small
+  - The colorbar major_label_text_font_size (22pt) is below the 34pt tick-label standard
+    — these labels read small at scale
+  - Peak elevations in annotations (~4361m, ~4347m) are plausible for simulated data
+    but slightly above real Cascade peaks (Rainier 4392m is an outlier); minor realism
+    concern
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 fills the entire canvas including borders — correct.
+      Chrome: Title "contour-map-geographic · python · bokeh · anyplot.ai" is fully visible in dark ink at the top. X-axis label "Longitude (°W)" and Y-axis label "Latitude (°N)" are clearly readable in INK color. Tick labels (-125 to -117 on X, 42–49 on Y) appear in INK_SOFT. All chrome text is readable against the light surface.
+      Data: Viridis256 elevation raster covers the plot area — deep purple in low-elevation coastal/eastern areas, transitioning through green to bright yellow at the Cascade Range peaks (~3000m). Contour isolines in INK_SOFT run across the full extent at 250m intervals. Major contour labels (500m, 2000m, 3000m, 1000m, 1500m) appear in labeled boxes with ELEVATED_BG (#FFFDF6) fill and border. Pacific coastline is drawn in #0072B2 (Okabe-Ito blue). OR/WA state border is a dashed #D55E00 (Okabe-Ito orange) line at lat≈46.2. Two peak markers (inverted triangles) annotate the N. Cascades and S. Cascades with elevation labels. Colorbar on the right shows the elevation range 0–3000m.
+      Legibility verdict: PASS — all text is readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 surface — correct warm near-black, not pure black.
+      Chrome: Title, axis labels, and tick labels appear in light (F0EFE8 / B8B7B0) text against the dark surface — clearly readable. No dark-on-dark failures observed. The colorbar labels and legend text are also visible in light INK_SOFT color.
+      Data: Viridis256 raster colors are visually identical to the light render — the purple-to-yellow gradient is unchanged (only chrome colors shifted). Contour lines remain visible as lighter strokes on the dark surface. Elevation label boxes now use ELEVATED_BG (#242420) with light INK text — readable. Peak annotation boxes similarly use elevated dark background with light text. Coastline (blue) and border (orange dashed) remain distinguishable.
+      Legibility verdict: PASS — all text is readable against the near-black background with no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; contour labels have white backgrounds
-          for clarity
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Contour lines are visible with good line widths; filled background
-          shows elevation clearly; minor deduction as some contour labels are small
+        comment: Title (50pt), axis labels (42pt), tick labels (34pt) all per style
+          guide and readable in both themes. Colorbar major labels (22pt) and legend
+          text (28pt) are below the 34pt standard — they read slightly small at thumbnail
+          widths but acceptable at full resolution.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Overlap-aware MIN_LABEL_DIST=0.8 guard works well — contour labels
+          are well-spaced. Slight crowding possible in the high-elevation central
+          area but no actual pixel overlap observed.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Elevation raster clearly visible, contour lines at alpha=0.85 readable,
+          coastline and border distinctive, peak markers (size=28 inverted triangles)
+          clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Viridis colormap is colorblind-safe with excellent sequential contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Longitude (°W) and Latitude (°N)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Viridis is perceptually uniform and CVD-safe. Coastline (blue) and
+          border (orange) are distinguishable by deuteranopes. No red-green as sole
+          signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). min_border settings match style guide
+          (bottom=160, left=180, top=110). No overflow or clipping detected in either
+          render. Colorbar fits within right margin.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend positioned in upper-left corner but is quite small and hard
-          to read; grid is subtle but visible
+        passed: true
+        comment: Title matches required format exactly. X-axis 'Longitude (°W)' and
+          Y-axis 'Latitude (°N)' are descriptive with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous elevation data uses Viridis256 — correct per style guide.
+          Geographic overlay colors use Okabe-Ito positions 3 (blue, coastline/water)
+          and 2 (orange, border) — semantically justified for cartographic conventions.
+          Backgrounds are #FAF8F1 (light) and #1A1A17 (dark). Both renders theme-correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Multi-layer geographic composition with raster + isolines + geographic
+          overlays + peak annotations + colorbar. Intentional design hierarchy. Semi-transparent
+          annotation boxes with borders add professionalism. Raised from default 4
+          based on evidence.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid at 10% alpha, styled annotation boxes with ELEVATED_BG
+          fills, semi-transparent raster (alpha=0.72). Full plot frame retained (appropriate
+          for a geographic map). Raised from default 2 based on refinement details.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear narrative of the Cascade Range elevation profile — raster communicates
+          the big picture, isolines add precision, peak annotations identify key landmarks,
+          coastline and border provide geographic anchors. Raised from default 2 based
+          on narrative quality.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct contour map with isolines on geographic coordinates
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Latitude/Longitude correctly mapped to Y/X axes, elevation as contour
-          values
-      - id: SC-03
+        comment: 'Correct: contour lines on geographic coordinates, with optional
+          filled background (elevation raster) as specified.'
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has contour lines, labels, filled contours, colorbar, coastline representation;
-          missing explicit border representation
-      - id: SC-04
-        name: Data Range
+        comment: 'Contour lines with value labels ✓, filled contour background ✓,
+          colorbar ✓, meaningful intervals ✓. Missing: actual geographic basemap from
+          a cartographic library (cartopy/geopandas tiles); the coastline is a manually
+          approximated polyline rather than real coastline data.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: X=Longitude, Y=Latitude, Color=Elevation — all correctly mapped.
+          Geographic extent covers OR/WA correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Coastline legend present but small
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: contour-map-geographic · bokeh · pyplots.ai'
+        comment: Title 'contour-map-geographic · python · bokeh · anyplot.ai' matches
+          required format exactly. Legend labels Coastline and OR/WA Border. Colorbar
+          labeled 'Elevation (m)'.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows elevation gradients, mountain range (Cascade), coastal lowlands,
-          varied terrain; could show more feature diversity
+        comment: 'Full feature coverage: elevation raster, contour isolines at multiple
+          levels, labeled major contours, peak annotations, geographic overlays (coastline,
+          state border).'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Pacific Northwest elevation data is a realistic, neutral scenario
-          with plausible geography
+        comment: Simulated Pacific Northwest elevation data is geographically plausible
+          and neutral. Cascade Range morphology is realistic (two-peak structure,
+          east-rising base).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Elevation values 0-3000m are realistic for the region; grid spacing
-          appropriate
+        comment: Elevation range 0-3000m is appropriate for the Pacific Northwest
+          Cascades. Geographic extent (42-49°N, -125 to -117°W) correctly covers Oregon
+          and Washington.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally linear structure but includes smoothing loop and helper
-          matplotlib usage
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        comment: Flat script with no functions or classes. Linear, readable flow.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
         max: 2
         passed: true
-        comment: matplotlib.pyplot imported but only used for contour extraction,
-          not for plotting output
+        comment: np.random.seed(42) ensures deterministic terrain generation.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports are used. Standard library (os, sys, time, Path) used
+          appropriately.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Clean code with no fake UI. Overlap-aware label placement logic is
+          appropriately concise.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png using export_png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly. Uses current
+          Bokeh 3.9.0 API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Bokeh's image(), ColorBar, LabelSet, ColumnDataSource, LinearColorMapper,
-          interactive tools
+        comment: Correct use of figure(), p.image() for raster, ColumnDataSource +
+          LabelSet for batch label rendering, LinearColorMapper + ColorBar, add_layout().
+          contourpy is the appropriate external tool since Bokeh has no native contour
+          support.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive HTML export via output_file/save, headless Chrome via
+          Selenium (Bokeh-specific export pattern), LabelSet for efficient multi-point
+          label rendering. Raised from default 1.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
+  - contourpy
   techniques:
   - colorbar
   - annotations
+  - html-export
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
-  - matrix-construction
+  - columndatasource
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
   - grid-styling
