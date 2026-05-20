@@ -1,94 +1,103 @@
-""" pyplots.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
-Library: plotly 6.5.2 | Python 3.13.11
+Library: plotly | Python 3.13
 Quality: 91/100 | Created: 2026-01-17
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
 # Data - Simulated surface temperature over North Atlantic region
 np.random.seed(42)
 
-# Define grid over North Atlantic (30N to 60N, -60W to 0E)
 lat_range = np.linspace(30, 60, 50)
 lon_range = np.linspace(-60, 0, 50)
 lon_grid, lat_grid = np.meshgrid(lon_range, lat_range)
 
-# Create realistic temperature pattern:
-# - Cooler in the north, warmer in the south
-# - Gulf Stream effect (warmer on eastern side)
-# - Some natural variation
-base_temp = 20 - 0.5 * (lat_grid - 30)  # Latitude gradient
-gulf_stream = 3 * np.exp(-((lon_grid + 30) ** 2) / 400)  # Gulf Stream warming
-variation = 2 * np.sin(lat_grid / 5) * np.cos(lon_grid / 8)  # Natural variation
+base_temp = 20 - 0.5 * (lat_grid - 30)
+gulf_stream = 3 * np.exp(-((lon_grid + 30) ** 2) / 400)
+variation = 2 * np.sin(lat_grid / 5) * np.cos(lon_grid / 8)
 temperature = base_temp + gulf_stream + variation
 
-# Create figure with geographic projection
+# Plot
 fig = go.Figure()
 
-# Add filled contours on geographic map
 fig.add_trace(
     go.Contour(
         x=lon_range,
         y=lat_range,
         z=temperature,
-        contours={"start": 0, "end": 22, "size": 2, "showlabels": True, "labelfont": {"size": 14, "color": "white"}},
-        colorscale="RdYlBu_r",  # Red (warm) to Blue (cold), reversed
+        contours={"start": 0, "end": 22, "size": 2, "showlabels": True, "labelfont": {"size": 10, "color": "white"}},
+        colorscale="RdYlBu_r",
         colorbar={
-            "title": {"text": "Temperature (°C)", "font": {"size": 18}},
-            "tickfont": {"size": 14},
+            "title": {"text": "Temperature (°C)", "font": {"size": 12, "color": INK}},
+            "tickfont": {"size": 10, "color": INK_SOFT},
             "len": 0.75,
             "thickness": 20,
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 1,
         },
-        line={"width": 2, "color": "rgba(50,50,50,0.5)"},
-        hovertemplate="Lat: %{y:.1f}°N<br>Lon: %{x:.1f}°W<br>Temp: %{z:.1f}°C<extra></extra>",
+        line={"width": 1.5, "color": "rgba(50,50,50,0.4)"},
+        hovertemplate="Lat: %{y:.1f}°N<br>Lon: %{x:.1f}°<br>Temp: %{z:.1f}°C<extra></extra>",
     )
 )
 
-# Update layout with geographic styling
+# Style
 fig.update_layout(
+    autosize=False,
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
     title={
-        "text": "North Atlantic Sea Surface Temperature · contour-map-geographic · plotly · pyplots.ai",
-        "font": {"size": 28},
+        "text": "North Atlantic SST · contour-map-geographic · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
     },
     xaxis={
-        "title": {"text": "Longitude", "font": {"size": 22}},
-        "tickfont": {"size": 16},
+        "title": {"text": "Longitude", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "ticksuffix": "°",
         "dtick": 10,
         "showgrid": True,
-        "gridcolor": "rgba(128,128,128,0.3)",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
         "zeroline": False,
+        "zerolinecolor": INK_SOFT,
     },
     yaxis={
-        "title": {"text": "Latitude", "font": {"size": 22}},
-        "tickfont": {"size": 16},
+        "title": {"text": "Latitude", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
         "ticksuffix": "°N",
         "dtick": 5,
         "showgrid": True,
-        "gridcolor": "rgba(128,128,128,0.3)",
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
         "zeroline": False,
+        "zerolinecolor": INK_SOFT,
         "scaleanchor": "x",
         "scaleratio": 1,
     },
-    template="plotly_white",
-    margin={"l": 80, "r": 120, "t": 100, "b": 80},
+    font={"color": INK},
+    margin={"l": 80, "r": 120, "t": 80, "b": 60},
+    annotations=[
+        {"x": -50, "y": 47, "text": "Newfoundland", "showarrow": False, "font": {"size": 10, "color": INK_SOFT}},
+        {"x": -10, "y": 50, "text": "Ireland", "showarrow": False, "font": {"size": 10, "color": INK_SOFT}},
+        {"x": -20, "y": 37, "text": "Azores", "showarrow": False, "font": {"size": 10, "color": INK_SOFT}},
+    ],
 )
 
-# Add geographic reference annotations for key locations
-annotations = [
-    {"x": -50, "y": 47, "text": "Newfoundland", "showarrow": False, "font": {"size": 14, "color": "gray"}},
-    {"x": -10, "y": 50, "text": "Ireland", "showarrow": False, "font": {"size": 14, "color": "gray"}},
-    {"x": -20, "y": 37, "text": "Azores", "showarrow": False, "font": {"size": 14, "color": "gray"}},
-]
-fig.update_layout(annotations=annotations)
-
-# Save as PNG (4800x2700 via scale)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save interactive HTML
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
