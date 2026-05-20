@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-20
@@ -62,8 +62,14 @@ ultimate_strength = 520
 yield_strength = 350
 endurance_limit = 190
 
-xy_points = [(float(c), float(s)) for c, s in zip(cycles_data, stress_data, strict=True)]
-fit_points = [(float(c), float(s)) for c, s in zip(fit_cycles, fit_stress, strict=True)]
+xy_points = [
+    {"value": (float(c), float(s)), "label": f"{float(c):.2e} cycles @ {float(s):.0f} MPa"}
+    for c, s in zip(cycles_data, stress_data, strict=True)
+]
+fit_points = [
+    {"value": (float(c), float(s)), "label": f"Fit: {float(c):.2e} → {float(s):.0f} MPa"}
+    for c, s in zip(fit_cycles, fit_stress, strict=True)
+]
 
 # Style
 custom_style = Style(
@@ -95,14 +101,18 @@ chart = pygal.XY(
     show_dots=True,
     dots_size=12,
     stroke=True,
-    show_x_guides=True,
+    show_x_guides=False,
     show_y_guides=True,
     x_label_rotation=90,
     legend_at_bottom=True,
     legend_box_size=32,
     margin=80,
     range=(150, 550),
+    value_formatter=lambda xy: f"{xy[0]:.2e} cycles, {xy[1]:.0f} MPa" if isinstance(xy, tuple) else str(xy),
 )
+
+# Show only major log decades on x-axis to reduce tick clutter
+chart.x_labels = [100, 1000, 10000, 100000, 1000000, 10000000]
 
 # Series: Test Data first (primary), then derived/reference
 chart.add("Test Data", xy_points, dots_size=16, stroke=False, show_dots=True)
@@ -118,21 +128,21 @@ chart.add(
     [(100, ultimate_strength), (1e7, ultimate_strength)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 6},
+    stroke_style={"width": 6, "opacity": 0.65},
 )
 chart.add(
     f"Yield Strength ({yield_strength} MPa)",
     [(100, yield_strength), (1e7, yield_strength)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 6},
+    stroke_style={"width": 6, "opacity": 0.65},
 )
 chart.add(
     f"Endurance Limit ({endurance_limit} MPa)",
     [(100, endurance_limit), (1e7, endurance_limit)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 6},
+    stroke_style={"width": 6, "opacity": 0.65},
 )
 
 # Save
