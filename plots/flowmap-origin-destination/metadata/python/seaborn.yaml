@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:05:46Z'
-updated: '2026-05-20T09:51:21Z'
+updated: '2026-05-20T10:02:32Z'
 generated_by: claude-sonnet
 workflow_run: 26153480997
 issue: 3765
@@ -12,123 +12,117 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 74
+quality_score: 84
 review:
   strengths:
-  - Dual-encoding of flow magnitude via both linewidth and viridis color is conceptually
-    correct and intentional
-  - 'City nodes styled with brand green #009E73 and white edgecolor provide clear
-    visual definition'
-  - Manual label_offsets dictionary shows careful attention to per-city label placement
-    to reduce overlap
-  - Theme tokens correctly wired to all chrome elements — both renders pass legibility
-    check
-  - Colorbar with theme-adaptive label and tick colors is polished
-  - np.random.seed(42) ensures full reproducibility
-  - Correct mandated title format and descriptive axis labels
+  - 'Perfect spec compliance and data quality: all required features present, realistic
+    neutral data with correct geographic coordinates'
+  - Cohesive dual-encoding (arc width + cividis color for flow magnitude) makes the
+    story immediately clear
+  - 'Fully theme-adaptive: both renders pass legibility checks with correct background
+    tokens and chrome colors'
+  - Custom label offset system effectively prevents overlap across 12 globally-distributed
+    city labels
+  - CVD-safe cividis palette is the correct choice for continuous flow encoding
   weaknesses:
-  - 'Basemap nearly invisible in both themes: LAND_COLOR #E2DED6 on #FAF8F1 (light)
-    and #2E2E2A on #1A1A17 (dark) provides only ~22 and ~18 RGB unit contrast — use
-    #C8C2B8 (light) / #3A3A35 (dark) with edgecolor linewidth=0.8'
-  - Low-flow viridis arcs (yellow end, flows ~280-380) near-disappear against the
-    warm off-white light background — shift normalization vmin lower or switch to
-    cividis
-  - Los Angeles city label at offset (8,8) from lat=34 crowds the y-axis tick '40'
-    at lat=40 — change offset to (12, -10)
-  - No seaborn-distinctive features used beyond styling and scatter — use sns.scatterplot
-    with size= aesthetic to encode per-city total incoming flow in node size
+  - City labels at 6pt and legend text at 5pt will be very small at mobile (~400px)
+    scale — increase to 7-8pt for labels, 6-7pt for legend text
+  - 'Axis labels missing degree units: use ''Longitude (°)'' and ''Latitude (°)'''
+  - Seaborn's role is limited to city scatter and theme setup; the core arc/map rendering
+    is pure matplotlib — limited library mastery ceiling
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white matching #FAF8F1 — correctly themed, not pure white
-      Chrome: Title "flowmap-origin-destination · python · seaborn · anyplot.ai" in dark ink at fontsize=12, clearly readable. "Longitude" / "Latitude" axis labels at fontsize=10 visible. Tick labels at fontsize=8 readable. Colorbar "Flow Volume" label readable.
-      Data: 12 city nodes as teal-green circles (#009E73) at accurate geographic positions. 18 curved Bezier arcs colored via viridis from light yellow (flow~280) to deep red (flow~850), with linewidth 1.0–5.0 proportional to flow. Equator and prime meridian shown as subtle dashed lines. WORLD_COASTLINES polygons drawn but LAND_COLOR #E2DED6 on #FAF8F1 background is nearly invisible (~22 RGB delta). Low-flow arcs (viridis yellow end) have poor contrast against warm off-white background. "Los Angeles" city label appears at similar vertical position to y-axis tick "40" — crowded.
-      Legibility verdict: PASS (all chrome text readable; low-flow arc visibility is a data clarity concern)
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "flowmap-origin-destination · python · seaborn · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude"/"Latitude" at 10pt dark ink, readable. Tick labels at 8pt in INK_SOFT, readable. City labels at 6pt dark ink — legible at full resolution, small at mobile scale. Legend title at 6pt and legend text at 5pt — very small but visible. Colorbar label at 8pt readable.
+      Data: 18 Bezier arcs colored via cividis (dark navy ~280 flow, yellow ~850 flow). Arc linewidth 1.0–5.0 proportional to flow. City nodes in #009E73 with PAGE_BG edge, sized 60–350 by incoming flow. Land polygons in taupe #C8C2B8. Dashed equator and prime meridian reference lines.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black matching #1A1A17 — correctly themed, not pure black
-      Chrome: Title in light cream (#F0EFE8) clearly readable against dark background. Axis labels and tick labels in light-colored ink — no dark-on-dark failures detected. Colorbar tick labels light-colored. All chrome passes dark theme legibility.
-      Data: City nodes remain #009E73 (identical to light render). Viridis arcs shift to warm golden-brown (low flow) through orange-red (high flow) on dark background — mid-range arcs more visible here than low-flow arcs are in light mode. Basemap LAND_COLOR #2E2E2A on #1A1A17 background (~18 RGB delta) is even less visible than in light mode. Viridis data colors are identical across both themes.
-      Legibility verdict: PASS (all chrome text readable; basemap effectively invisible in both renders)
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light warm-white (#F0EFE8), clearly readable. Axis labels and tick labels in light tones, readable. Legend and colorbar text in light INK_SOFT tones. No dark-on-dark failure detected. All text visible against dark background.
+      Data: Arc colors are visually identical to light render (cividis dark navy to yellow — unchanged across themes). City nodes remain #009E73. Land polygons shift to darker charcoal #3A3A35. Overall composition reads clearly on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes; minor LA
-          label crowding near y-tick '40'
+        comment: All font sizes explicitly set. City labels at 6pt and legend text
+          at 5pt are small at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 5
         max: 6
-        passed: false
-        comment: Los Angeles label at offset (8,8) from lat=34 appears at similar
-          vertical level as y-tick '40' (lat=40); HK/Tokyo cluster tight
+        passed: true
+        comment: Custom label offsets prevent most overlap. Minor crowding in European
+          cluster (London/Paris/Frankfurt).
       - id: VQ-03
         name: Element Visibility
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: 'City nodes highly visible; high-flow arcs prominent; low-flow arcs
-          (viridis yellow, flows 280-380) near-invisible on #FAF8F1 background'
+        passed: true
+        comment: Arc linewidths 1.0-5.0 and alpha=0.65 well-adapted to 18 flows. Node
+          sizes 60-350 appropriate.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
-        max: 2
-        passed: false
-        comment: Viridis is CVD-safe; yellow end of viridis has low luminance contrast
-          on warm off-white light background
-      - id: VQ-05
-        name: Layout & Canvas
-        score: 3
-        max: 4
-        passed: true
-        comment: Good canvas use; colorbar well-placed; slight wasted vertical space
-          in Southern hemisphere
-      - id: VQ-06
-        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude/Latitude descriptive; Flow Volume colorbar label appropriate
+        comment: 'Cividis is CVD-safe. City nodes #009E73 with PAGE_BG edge for definition.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills canvas well. Colorbar and legend integrated without isolated
+          whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
+        max: 2
+        passed: true
+        comment: Descriptive labels 'Longitude'/'Latitude' but missing degree units
+          (°).
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'City nodes #009E73 (Okabe-Ito pos 1); flow uses viridis (correct
-          for continuous); backgrounds and chrome correctly themed'
+        comment: 'City nodes #009E73 (sole categorical series). Continuous arcs use
+          cividis. Backgrounds #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Dual-encoding (linewidth+color) shows intent; near-invisible basemap
-          reduces sophistication; overall well-configured output not publication-ready
+        passed: true
+        comment: 'Above defaults: cividis arc coloring with matching colorbar, theme-responsive
+          land color, node sizing by flow. Professional but not publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Equator/meridian reference lines subtle; colorbar theme-styled; city
-          node white edges polished; bottom/left spines kept (appropriate for map)
+        comment: Styled legends with theme tokens, arc alpha, node PAGE_BG edges,
+          subtle dashed reference lines. Good refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed but no deliberate narrative; invisible basemap undermines
-          geographic storytelling; NY-London prominence is accidental not designed
+        passed: true
+        comment: Redundant encoding (arc width + color) strengthens flow magnitude
+          signal. Node size encodes incoming flow. NY-London dominance immediately
+          apparent.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,51 +130,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct origin-destination flow map with quadratic Bezier arcs
+        comment: 'Correct: OD flow map with curved Bezier arcs on geographic basemap.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: Arcs, proportional linewidth, alpha, color gradient, labels, colorbar
-          all present. Basemap required by spec but LAND_COLOR contrast insufficient
-          — effectively invisible in both themes
+        passed: true
+        comment: 'All features present: Bezier arcs, proportional linewidth, alpha=0.65,
+          cividis colorbar, coastline basemap, city labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon→X, Lat→Y; flow→linewidth and color index; all 18 flows rendered
+        comment: X=longitude, Y=latitude, all 18 flows correctly plotted.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar labeled Flow Volume
+        comment: Title exactly 'flowmap-origin-destination · python · seaborn · anyplot.ai'.
+          Colorbar 'Flow Volume', size legend 'Incoming Flow'.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: '18 flows, 12 cities, 6 continents, magnitude variation 280-850;
-          minor: limited Southern Hemisphere coverage'
+        comment: Variable magnitudes 280-850, hub cities, long-haul intercontinental
+          and short European hops, bidirectional flows.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: International air travel/migration flows between real world hubs;
-          neutral and realistic
+        comment: Migration flows between real world cities with correct lat/lon. Neutral
+          topic, plausible magnitudes.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Geographically accurate city coordinates; flow magnitudes plausible
+        comment: Flow values 280-850 plausible for airline/migration data. NY-London
+          as highest flow geographically consistent.
     code_quality:
       score: 10
       max: 10
@@ -190,36 +185,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → draw → save; no functions
-          or classes'
+        comment: 'Clean linear structure: imports → theme tokens → coastline data
+          → city data → flows → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (os, matplotlib, numpy, pandas, seaborn) used
+        comment: os, matplotlib, numpy, pandas, seaborn — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: label_offsets dict is clean pattern; Bezier arc loop readable; no
-          fake functionality
+        comment: Bezier computation clean and compact. Label offset dict functional.
+          No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=400 with bbox_inches=tight; current
-          API
+        comment: Saves as plot-{THEME}.png. No deprecated API usage.
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
@@ -227,16 +221,16 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.set_theme(), sns.scatterplot(), sns.despine() idiomatically;
-          but arc drawing and land fills are pure matplotlib
+        comment: sns.scatterplot with size= aesthetic, sns.set_theme() with rc= dict,
+          sns.despine() are idiomatic. Core arc/map rendering is pure matplotlib.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No seaborn-distinctive features (size= aesthetic, statistical layers)
-          used; effectively matplotlib with seaborn styling wrapper
-  verdict: REJECTED
+        comment: size= continuous aesthetic with sizes= and legend='brief' is distinctive
+          seaborn. Predominance of matplotlib code limits distinctiveness score.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -245,8 +239,8 @@ impl_tags:
   - annotations
   patterns:
   - data-generation
+  - groupby-aggregation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
   - normalization
   styling:
