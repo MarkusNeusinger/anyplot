@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-20
@@ -55,21 +55,41 @@ y_norm = stats.norm.pdf(x_norm, mean_ret, std_ret)
 lower_tail = mean_ret - 2 * std_ret
 upper_tail = mean_ret + 2 * std_ret
 
-# Bar colors using Okabe-Ito palette
-bar_colors = [VERMILLION if (c < lower_tail or c > upper_tail) else BRAND for c in bin_centers]
+# Split bins into normal-range and tail for correct legend swatches
+normal_mask = (bin_centers >= lower_tail) & (bin_centers <= upper_tail)
+tail_mask = ~normal_mask
+
+normal_x = bin_centers[normal_mask]
+normal_y = hist_values[normal_mask]
+tail_x = bin_centers[tail_mask]
+tail_y = hist_values[tail_mask]
 
 # Figure
 fig = go.Figure()
 
+# Normal-range bars (green, primary legend entry)
 fig.add_trace(
     go.Bar(
-        x=bin_centers,
-        y=hist_values,
+        x=normal_x,
+        y=normal_y,
         width=bin_width * 0.9,
-        marker_color=bar_colors,
+        marker_color=BRAND,
         name="Returns Distribution",
         opacity=0.75,
-        hovertemplate="Return: %{x:.2f}%<br>Density: %{y:.4f}<extra></extra>",
+        hovertemplate="Return: %{x:.2f}%<br>Density: %{y:.4f}<br>Range: Normal<extra></extra>",
+    )
+)
+
+# Tail bins (vermillion, separate legend entry)
+fig.add_trace(
+    go.Bar(
+        x=tail_x,
+        y=tail_y,
+        width=bin_width * 0.9,
+        marker_color=VERMILLION,
+        name="Tail Region (>±2σ)",
+        opacity=0.75,
+        hovertemplate="Return: %{x:.2f}%<br>Density: %{y:.4f}<br>Range: Tail<extra></extra>",
     )
 )
 
@@ -82,7 +102,7 @@ fig.add_vline(
     line={"color": INK, "width": 2, "dash": "dash"},
     annotation_text="Mean",
     annotation_position="top",
-    annotation_font={"color": INK, "size": 10},
+    annotation_font={"color": INK, "size": 11},
 )
 fig.add_vline(x=lower_tail, line={"color": VERMILLION, "width": 1.5, "dash": "dot"})
 fig.add_vline(x=upper_tail, line={"color": VERMILLION, "width": 1.5, "dash": "dot"})
@@ -102,7 +122,7 @@ fig.add_annotation(
     yref="paper",
     text=stats_text,
     showarrow=False,
-    font={"size": 10, "family": "monospace", "color": INK},
+    font={"size": 12, "family": "monospace", "color": INK},
     align="left",
     bgcolor=ELEVATED_BG,
     bordercolor=INK_SOFT,
@@ -131,13 +151,17 @@ fig.update_layout(
         "zerolinewidth": 1,
         "zerolinecolor": INK_SOFT,
         "gridcolor": GRID,
+        "showline": True,
         "linecolor": INK_SOFT,
+        "mirror": False,
     },
     yaxis={
         "title": {"text": "Probability Density", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
+        "showline": True,
         "linecolor": INK_SOFT,
+        "mirror": False,
     },
     legend={
         "x": 0.02,
@@ -148,6 +172,7 @@ fig.update_layout(
         "font": {"size": 10, "color": INK_SOFT},
     },
     bargap=0.05,
+    barmode="overlay",
     showlegend=True,
 )
 
