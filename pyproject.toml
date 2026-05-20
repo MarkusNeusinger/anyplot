@@ -140,12 +140,13 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# pygal.py, altair.py, and plotnine.py share their names with installed packages;
+# pygal.py, altair.py, plotnine.py, and bokeh.py share their names with installed packages;
 # sys.path must be patched before importing them, which puts non-import code before
 # package imports (E402).
 "plots/*/implementations/python/pygal.py" = ["E402"]
 "plots/*/implementations/python/altair.py" = ["E402"]
 "plots/*/implementations/python/plotnine.py" = ["E402"]
+"plots/*/implementations/python/bokeh.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"
