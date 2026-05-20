@@ -1,114 +1,133 @@
-""" pyplots.ai
+""" anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 94/100 | Created: 2026-01-15
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-20
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 
 
-# Data: Simulated fatigue test results for steel specimens
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+BRAND = "#009E73"  # Okabe-Ito #1 — test data points
+COLOR_FIT = "#D55E00"  # Okabe-Ito #2 — Basquin fit line
+COLOR_ULT = "#0072B2"  # Okabe-Ito #3 — Ultimate Strength
+COLOR_YLD = "#CC79A7"  # Okabe-Ito #4 — Yield Strength
+COLOR_END = "#E69F00"  # Okabe-Ito #5 — Endurance Limit
+
+# Data: Simulated fatigue test results for structural steel specimens
 np.random.seed(42)
 
-# Generate realistic S-N curve data points with scatter
-# High stress -> low cycles, Low stress -> high cycles
 stress_levels = np.array([450, 400, 350, 320, 300, 280, 260, 250, 240, 230, 220, 210])
 
-# Generate multiple test points per stress level with realistic scatter
 cycles_data = []
 stress_data = []
 
-for stress in stress_levels:
-    # Basquin equation: N = (S/A)^(-1/b) where A and b are material constants
-    # Using typical steel values
-    A = 1200  # Material constant
-    b = 0.12  # Fatigue strength exponent
-    N_mean = (stress / A) ** (-1 / b)
-
-    # Add 2-4 test specimens per stress level with log-normal scatter
+for s_level in stress_levels:
+    # Basquin equation: N = (S/A)^(-1/b)
+    A, b = 1200, 0.12
+    N_mean = (s_level / A) ** (-1 / b)
     n_samples = np.random.randint(2, 5)
     for _ in range(n_samples):
-        scatter = np.exp(np.random.normal(0, 0.3))  # Log-normal scatter
-        cycles_data.append(N_mean * scatter)
-        stress_data.append(stress + np.random.normal(0, 5))  # Small stress measurement error
+        cycle_scatter = np.exp(np.random.normal(0, 0.3))
+        cycles_data.append(N_mean * cycle_scatter)
+        stress_data.append(s_level + np.random.normal(0, 5))
 
 cycles = np.array(cycles_data)
 stress = np.array(stress_data)
 
-# Fit line using Basquin equation (log-linear fit)
-log_cycles = np.log10(cycles)
-log_stress = np.log10(stress)
-coeffs = np.polyfit(log_cycles, log_stress, 1)
+# Basquin log-linear fit
+coeffs = np.polyfit(np.log10(cycles), np.log10(stress), 1)
 fit_cycles = np.logspace(2, 8, 100)
 fit_stress = 10 ** (coeffs[0] * np.log10(fit_cycles) + coeffs[1])
 
-# Material property reference values (typical for structural steel)
-ultimate_strength = 500  # MPa
-yield_strength = 350  # MPa
-endurance_limit = 200  # MPa
+# Material property reference values (typical structural steel, MPa)
+ultimate_strength = 500
+yield_strength = 350
+endurance_limit = 200
 
-# Create plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot data points
 ax.scatter(
-    cycles, stress, s=200, color="#306998", alpha=0.7, edgecolors="white", linewidths=1.5, label="Test Data", zorder=5
+    cycles, stress, s=100, color=BRAND, alpha=0.75, edgecolors=PAGE_BG, linewidths=0.5, label="Test Data", zorder=5
 )
 
-# Plot fitted S-N curve
-ax.plot(fit_cycles, fit_stress, color="#FFD43B", linewidth=3, label="Basquin Fit", zorder=4)
+ax.plot(fit_cycles, fit_stress, color=COLOR_FIT, linewidth=2.0, label="Basquin Fit", zorder=4)
 
-# Add horizontal reference lines for material properties
 ax.axhline(
     y=ultimate_strength,
-    color="#E53935",
+    color=COLOR_ULT,
     linestyle="--",
-    linewidth=2.5,
+    linewidth=1.5,
     label=f"Ultimate Strength ({ultimate_strength} MPa)",
     zorder=3,
 )
 ax.axhline(
     y=yield_strength,
-    color="#FB8C00",
+    color=COLOR_YLD,
     linestyle="--",
-    linewidth=2.5,
+    linewidth=1.5,
     label=f"Yield Strength ({yield_strength} MPa)",
     zorder=3,
 )
 ax.axhline(
     y=endurance_limit,
-    color="#43A047",
+    color=COLOR_END,
     linestyle="--",
-    linewidth=2.5,
+    linewidth=1.5,
     label=f"Endurance Limit ({endurance_limit} MPa)",
     zorder=3,
 )
 
-# Set logarithmic scales
 ax.set_xscale("log")
 ax.set_yscale("log")
-
-# Set axis limits
 ax.set_xlim(1e2, 1e8)
-ax.set_ylim(150, 600)
+ax.set_ylim(150, 650)
 
-# Labels and styling
-ax.set_xlabel("Number of Cycles to Failure (N)", fontsize=20)
-ax.set_ylabel("Stress Amplitude (MPa)", fontsize=20)
-ax.set_title("sn-curve-basic · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+# Style
+ax.set_xlabel("Number of Cycles to Failure (N)", fontsize=10, color=INK)
+ax.set_ylabel("Stress Amplitude (MPa)", fontsize=10, color=INK)
+ax.set_title("sn-curve-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+for spine in ("left", "bottom"):
+    ax.spines[spine].set_color(INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
 
-# Grid
-ax.grid(True, alpha=0.3, linestyle="--", which="both")
+ax.grid(True, which="major", alpha=0.12, linewidth=0.6, color=INK)
+ax.grid(True, which="minor", alpha=0.06, linewidth=0.4, color=INK)
 
-# Legend
-ax.legend(fontsize=14, loc="upper right", framealpha=0.95)
+leg = ax.legend(fontsize=8, loc="upper right")
+if leg:
+    leg.get_frame().set_facecolor(ELEVATED_BG)
+    leg.get_frame().set_edgecolor(INK_SOFT)
+    plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Annotations for fatigue regions
-ax.annotate("Low-Cycle\nFatigue", xy=(5e2, 420), fontsize=14, ha="center", color="#555555", style="italic")
-ax.annotate("High-Cycle\nFatigue", xy=(1e5, 280), fontsize=14, ha="center", color="#555555", style="italic")
-ax.annotate("Infinite Life", xy=(5e7, 180), fontsize=14, ha="center", color="#555555", style="italic")
+# Fatigue region labels
+ax.annotate("Low-Cycle\nFatigue", xy=(4e2, 420), fontsize=7, ha="center", color=INK_MUTED, style="italic")
+ax.annotate(
+    "High-Cycle\nFatigue",
+    xy=(1e5, 420),
+    fontsize=7,
+    ha="center",
+    color=INK_MUTED,
+    style="italic",
+    bbox={"boxstyle": "round,pad=0.2", "facecolor": PAGE_BG, "alpha": 0.75, "edgecolor": "none"},
+)
+ax.annotate("Infinite Life", xy=(5e7, 170), fontsize=7, ha="center", color=INK_MUTED, style="italic")
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
