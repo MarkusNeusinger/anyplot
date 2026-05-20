@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -19,8 +19,7 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Okabe-Ito data colors
-LOCUS_COLOR = "#009E73"  # Impedance locus — first series
+# Okabe-Ito data colors (categorical series)
 REACT_COLOR = "#D55E00"  # Reactance arcs — second series
 VSWR_COLOR = "#0072B2"  # VSWR reference circle — third series
 
@@ -43,7 +42,7 @@ sns.set_theme(
 # Data — antenna impedance sweep 1–6 GHz, Z₀ = 50 Ω
 np.random.seed(42)
 z0 = 50
-n_points = 50
+n_points = 100  # Dense for smooth frequency-gradient locus
 freq_ghz = np.linspace(1, 6, n_points)
 
 t = np.linspace(0, 1.8 * np.pi, n_points)
@@ -101,29 +100,46 @@ vswr_r = 0.5
 ax.plot(vswr_r * np.cos(theta), vswr_r * np.sin(theta), "--", color=VSWR_COLOR, linewidth=1.5, zorder=2)
 ax.text(0.36, 0.37, "VSWR 3:1", fontsize=8, color=VSWR_COLOR, fontweight="bold")
 
-# Impedance locus — seaborn lineplot
+# Impedance locus DataFrame
 df_locus = pd.DataFrame({"gamma_real": gamma_real, "gamma_imag": gamma_imag, "freq_ghz": freq_ghz})
-sns.lineplot(
+
+# Thin background line for trajectory continuity
+ax.plot(gamma_real, gamma_imag, color=INK_SOFT, linewidth=1.2, alpha=0.4, zorder=4)
+
+# Frequency-gradient scatter — seaborn continuous hue encoding with viridis colormap.
+# Coloring each point by freq_ghz reveals sweep direction (purple=1 GHz → yellow=6 GHz).
+sns.scatterplot(
     data=df_locus,
     x="gamma_real",
     y="gamma_imag",
-    color=LOCUS_COLOR,
-    linewidth=2.5,
+    hue="freq_ghz",
+    palette="viridis",
+    hue_norm=(1.0, 6.0),
+    s=40,
     ax=ax,
-    legend=False,
-    sort=False,
     zorder=5,
+    legend=False,
+    edgecolor="none",
 )
 
-# Key frequency markers — seaborn scatterplot
+# Colorbar to decode frequency gradient
+norm = plt.Normalize(1.0, 6.0)
+sm = plt.cm.ScalarMappable(cmap="viridis", norm=norm)
+sm.set_array([])
+cbar = fig.colorbar(sm, ax=ax, shrink=0.5, aspect=20, pad=0.05)
+cbar.set_label("Frequency (GHz)", fontsize=8, color=INK)
+cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
+
+# Key frequency markers — dark outline for contrast against viridis gradient
 key_indices = [0, n_points // 4, n_points // 2, 3 * n_points // 4, n_points - 1]
 df_markers = df_locus.iloc[key_indices].copy()
 sns.scatterplot(
     data=df_markers,
     x="gamma_real",
     y="gamma_imag",
-    s=80,
-    color=LOCUS_COLOR,
+    s=100,
+    color=INK,
     edgecolor=PAGE_BG,
     linewidth=1.5,
     ax=ax,
@@ -131,9 +147,9 @@ sns.scatterplot(
     legend=False,
 )
 
-# Frequency annotations with smart offsets to prevent overlap
+# Frequency annotations — 1.0 GHz placed below its point, clear of 2.3 GHz above
 label_offsets = {
-    0: (8, -14),
+    0: (8, -18),
     n_points // 4: (10, 8),
     n_points // 2: (8, -14),
     3 * n_points // 4: (-45, 8),
@@ -152,7 +168,7 @@ for idx in key_indices:
     )
 
 # Center marker — matched condition Z = Z₀
-ax.scatter([0], [0], s=80, color=LOCUS_COLOR, marker="+", linewidths=2, zorder=10)
+ax.scatter([0], [0], s=80, color=INK, marker="+", linewidths=2, zorder=10)
 ax.annotate("Z₀ (50 Ω)", (0, 0), textcoords="offset points", xytext=(-38, -14), fontsize=8, color=INK)
 
 # Style
@@ -170,10 +186,9 @@ ax.spines["right"].set_visible(False)
 ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 
-# Legend
+# Legend (locus entry replaced by colorbar above)
 ax.plot([], [], color=INK_SOFT, linewidth=0.8, alpha=0.6, label="Constant R circles")
 ax.plot([], [], color=REACT_COLOR, linewidth=0.8, alpha=0.6, label="Constant X arcs")
-ax.plot([], [], color=LOCUS_COLOR, linewidth=2.5, label="Impedance locus (1–6 GHz)")
 ax.plot([], [], color=VSWR_COLOR, linewidth=1.5, linestyle="--", label="VSWR 3:1 circle")
 legend = ax.legend(loc="upper left", fontsize=8, framealpha=0.9)
 legend.get_frame().set_facecolor(ELEVATED_BG)
