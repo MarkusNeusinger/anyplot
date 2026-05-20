@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: highcharts unknown | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-20
@@ -74,10 +74,11 @@ chart.options.chart = {
     "height": 1800,
     "backgroundColor": PAGE_BG,
     "style": {"fontFamily": "Arial, sans-serif", "color": INK},
-    "marginBottom": 120,
+    "marginBottom": 140,
     "marginLeft": 150,
     "marginRight": 80,
     "marginTop": 100,
+    "plotBorderWidth": 0,
 }
 
 chart.options.title = {
@@ -152,40 +153,40 @@ chart.options.y_axis = {
     "plotLines": [
         {
             "value": ultimate_strength,
-            "color": "#E53935",
+            "color": "#CC79A7",
             "width": 4,
             "dashStyle": "Dash",
             "label": {
                 "text": f"Ultimate Strength ({ultimate_strength} MPa)",
-                "align": "right",
-                "style": {"fontSize": "34px", "color": "#E53935", "fontWeight": "bold"},
-                "x": -10,
+                "align": "left",
+                "style": {"fontSize": "34px", "color": "#CC79A7", "fontWeight": "bold"},
+                "x": 10,
             },
             "zIndex": 3,
         },
         {
             "value": yield_strength,
-            "color": "#FB8C00",
+            "color": "#E69F00",
             "width": 4,
             "dashStyle": "Dash",
             "label": {
                 "text": f"Yield Strength ({yield_strength} MPa)",
-                "align": "right",
-                "style": {"fontSize": "34px", "color": "#FB8C00", "fontWeight": "bold"},
-                "x": -10,
+                "align": "left",
+                "style": {"fontSize": "34px", "color": "#E69F00", "fontWeight": "bold"},
+                "x": 10,
             },
             "zIndex": 3,
         },
         {
             "value": endurance_limit,
-            "color": "#43A047",
+            "color": "#56B4E9",
             "width": 4,
             "dashStyle": "Dash",
             "label": {
                 "text": f"Endurance Limit ({endurance_limit} MPa)",
-                "align": "right",
-                "style": {"fontSize": "34px", "color": "#43A047", "fontWeight": "bold"},
-                "x": -10,
+                "align": "left",
+                "style": {"fontSize": "34px", "color": "#56B4E9", "fontWeight": "bold"},
+                "x": 10,
             },
             "zIndex": 3,
         },
