@@ -1,14 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 90/100 | Updated: 2026-05-20
+Quality: pending | Updated: 2026-05-20
 """
 
 import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.ticker import FixedFormatter, FixedLocator
+from matplotlib.ticker import FixedLocator, FuncFormatter
 
 
 # Theme tokens
@@ -98,6 +98,7 @@ ax.axhline(
 
 ax.set_xscale("log")
 ax.set_yscale("log")
+ax.xaxis.grid(False)
 ax.set_xlim(1e2, 1e8)
 ax.set_ylim(120, 650)
 
@@ -114,7 +115,7 @@ ax.spines["right"].set_visible(False)
 # Explicit MPa tick positions — more reliable than FuncFormatter on log scale
 y_ticks = [150, 200, 250, 300, 350, 400, 500, 600]
 ax.yaxis.set_major_locator(FixedLocator(y_ticks))
-ax.yaxis.set_major_formatter(FixedFormatter([str(v) for v in y_ticks]))
+ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: str(int(x))))
 
 ax.yaxis.grid(True, which="major", alpha=0.15, linewidth=0.7, color=INK)
 
