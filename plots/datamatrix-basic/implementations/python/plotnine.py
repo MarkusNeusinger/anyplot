@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-20
@@ -15,7 +15,6 @@ import pandas as pd
 from plotnine import (
     aes,
     coord_fixed,
-    element_blank,
     element_rect,
     element_text,
     geom_tile,
@@ -23,6 +22,7 @@ from plotnine import (
     labs,
     scale_fill_manual,
     theme,
+    theme_void,
 )
 
 
@@ -30,6 +30,7 @@ from plotnine import (
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - Create a 16x16 Data Matrix barcode encoding "SERIAL:12345678"
 np.random.seed(42)
@@ -80,16 +81,18 @@ plot = (
     + geom_tile(color=None, size=0)
     + scale_fill_manual(values={"0": "#FFFFFF", "1": "#000000"})
     + coord_fixed()
-    + labs(title="datamatrix-basic · python · plotnine · anyplot.ai")
+    + labs(
+        title="datamatrix-basic · python · plotnine · anyplot.ai",
+        subtitle="16×16 ECC 200 symbol · 25% error correction",
+        caption="Encoded: SERIAL:12345678",
+    )
+    + theme_void()
     + theme(
         figure_size=(6, 6),
-        plot_title=element_text(size=10, ha="center", color=INK),
-        axis_title=element_blank(),
-        axis_text=element_blank(),
-        axis_ticks=element_blank(),
-        panel_grid_major=element_blank(),
-        panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="#FFFFFF"),
+        plot_title=element_text(size=12, weight="bold", ha="center", color=INK),
+        plot_subtitle=element_text(size=9, ha="center", color=INK_SOFT),
+        plot_caption=element_text(size=9, ha="right", color=INK_SOFT),
+        panel_background=element_rect(fill=PAGE_BG),
         plot_background=element_rect(fill=PAGE_BG),
         legend_position="none",
     )
