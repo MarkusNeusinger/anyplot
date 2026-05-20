@@ -1,24 +1,61 @@
-""" pyplots.ai
+""" anyplot.ai
 crossword-basic: Crossword Puzzle Grid
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-15
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-20
 """
+
+import os as _os
+import sys as _sys
+
+
+# This file is named pygal.py — remove its directory from sys.path first so
+# Python resolves `pygal` to the installed package, not this file itself.
+_here = _os.path.abspath(_os.path.dirname(__file__))
+_sys.path = [p for p in _sys.path if _os.path.abspath(p or ".") != _here]
+
+import os
 
 import cairosvg
 import numpy as np
-import pygal
+from pygal.graph.graph import Graph
 from pygal.style import Style
 
 
-# Data - create a 15x15 crossword grid with 180-degree rotational symmetry
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+CANVAS = 2400
+CELL = 140
+GRID_SIZE = 15
+GRID_W = CELL * GRID_SIZE  # 2100 px — fills the plot area exactly
+NUM_SZ = 28
+
+TITLE = "crossword-basic · python · pygal · anyplot.ai"
+
+# Pygal Style — applied to the chart for theme-consistent background, title, and chrome
+custom_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_SOFT,
+    colors=("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"),
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
+)
+
+# Crossword grid data — 15×15 with 180° rotational symmetry
 np.random.seed(42)
-grid_size = 15
+grid = np.zeros((GRID_SIZE, GRID_SIZE), dtype=int)
 
-# Start with empty grid (0 = white/entry cell)
-grid = np.zeros((grid_size, grid_size), dtype=int)
-
-# Define black cell positions (1 = blocked) with 180-degree rotational symmetry
-# Only define positions for top half + center; mirror for bottom
 black_positions_top = [
     (0, 4),
     (0, 10),
@@ -36,167 +73,87 @@ black_positions_top = [
     (6, 8),
     (6, 14),
 ]
-# Center row (7) - symmetric around center
 black_positions_center = [(7, 2), (7, 7), (7, 12)]
 
-# Build symmetric grid
 for r, c in black_positions_top:
     grid[r, c] = 1
-    # 180-degree rotation: (r, c) -> (14-r, 14-c)
-    grid[grid_size - 1 - r, grid_size - 1 - c] = 1
-
+    grid[GRID_SIZE - 1 - r, GRID_SIZE - 1 - c] = 1
 for r, c in black_positions_center:
     grid[r, c] = 1
 
-# Calculate clue numbers - cells that start words across or down
+# Clue numbering — cells that start an across or down word
 numbers = {}
 clue_num = 1
-for row in range(grid_size):
-    for col in range(grid_size):
-        if grid[row, col] == 0:  # White cell
-            starts_across = (col == 0 or grid[row, col - 1] == 1) and (col < grid_size - 1 and grid[row, col + 1] == 0)
-            starts_down = (row == 0 or grid[row - 1, col] == 1) and (row < grid_size - 1 and grid[row + 1, col] == 0)
+for row in range(GRID_SIZE):
+    for col in range(GRID_SIZE):
+        if grid[row, col] == 0:
+            starts_across = (col == 0 or grid[row, col - 1] == 1) and (col < GRID_SIZE - 1 and grid[row, col + 1] == 0)
+            starts_down = (row == 0 or grid[row - 1, col] == 1) and (row < GRID_SIZE - 1 and grid[row + 1, col] == 0)
             if starts_across or starts_down:
                 numbers[(row, col)] = clue_num
                 clue_num += 1
 
-# Custom style for pygal chart
-custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#000000",
-    foreground_subtle="#666666",
-    colors=("#000000", "#306998", "#FFD43B"),
-    title_font_size=72,
-    label_font_size=36,
-    major_label_font_size=32,
-    legend_font_size=32,
-    value_font_size=28,
-    font_family="Arial",
-)
 
-# Create stacked bar chart to represent crossword rows
-# Each row of the crossword becomes a stacked bar
-chart = pygal.StackedBar(
-    style=custom_style,
-    width=3600,
-    height=3600,
-    show_legend=False,
-    show_x_guides=False,
-    show_y_guides=False,
-    x_title="",
-    y_title="",
-    title="crossword-basic · pygal · pyplots.ai",
-    spacing=0,
-    margin=100,
-    x_label_rotation=0,
-    print_values=False,
-    print_zeroes=False,
-)
+class CrosswordGrid(Graph):
+    """Custom pygal chart type that renders a crossword puzzle grid.
 
-# Add row labels (1-15)
-chart.x_labels = [str(i + 1) for i in range(grid_size)]
+    Subclasses Graph to use pygal's SVG infrastructure (style, background,
+    title, render pipeline) while drawing grid cells via pygal's SVG node API.
+    """
 
-# For each column, create a series showing black (1) or white (0) for that column position
-# This creates a grid pattern when rendered
-for col in range(grid_size):
-    col_data = []
-    for row in range(grid_size):
-        col_data.append({"value": 1, "color": "#000000" if grid[row, col] == 1 else "#FFFFFF"})
-    chart.add(f"Col {col + 1}", col_data)
+    def _compute(self):
+        pass
 
-# Render chart to get base SVG
-base_svg = chart.render(is_unicode=True)
+    def _compute_x_labels(self):
+        pass
 
-# Create custom SVG with grid cells and numbers (pygal StackedBar doesn't support cell-level colors)
-cell_size = 220
-margin = 200
-title_height = 150
-svg_width = grid_size * cell_size + 2 * margin
-svg_height = grid_size * cell_size + 2 * margin + title_height
+    def _compute_y_labels(self):
+        pass
 
-svg_content = f'''<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg"
-     width="{svg_width}" height="{svg_height}"
-     viewBox="0 0 {svg_width} {svg_height}">
+    def _draw(self):
+        """Draw chart elements; always calls _plot since no series data is needed."""
+        self._compute()
+        self._compute_x_labels()
+        self._compute_x_labels_major()
+        self._compute_y_labels()
+        self._compute_y_labels_major()
+        self._compute_secondary()
+        self._post_compute()
+        self._compute_margin()
+        self._decorate()
+        self._plot()
 
-  <!-- Background -->
-  <rect width="100%" height="100%" fill="white"/>
+    def _plot(self):
+        """Render crossword cells using pygal's SVG node API.
 
-  <!-- Title -->
-  <text x="{svg_width // 2}" y="{margin - 30}"
-        font-family="Arial, sans-serif" font-size="72" font-weight="bold"
-        text-anchor="middle" fill="#333333">
-    crossword-basic · pygal · pyplots.ai
-  </text>
+        Coordinates are relative to the plot group (margin already applied),
+        so (0, 0) maps to the top-left corner of the grid area on the canvas.
+        """
+        plot = self.nodes["plot"]
+        for row in range(GRID_SIZE):
+            for col in range(GRID_SIZE):
+                x = col * CELL
+                y = row * CELL
+                fill = INK if grid[row, col] == 1 else ELEVATED_BG
 
-  <!-- Grid cells -->
-  <g transform="translate({margin}, {title_height + 50})">
-'''
+                rect = self.svg.node(plot, "rect", x=x, y=y, width=CELL, height=CELL, fill=fill)
+                rect.set("stroke", INK_SOFT)
+                rect.set("stroke-width", "2")
 
-# Draw cells
-for row in range(grid_size):
-    for col in range(grid_size):
-        x = col * cell_size
-        y = row * cell_size
+                if (row, col) in numbers:
+                    txt = self.svg.node(plot, "text", x=x + 6, y=y + NUM_SZ + 3, fill=INK)
+                    txt.set("font-family", "Arial, sans-serif")
+                    txt.set("font-size", str(NUM_SZ))
+                    txt.text = str(numbers[(row, col)])
 
-        # Cell background
-        fill_color = "#000000" if grid[row, col] == 1 else "#FFFFFF"
-        svg_content += f'''    <rect x="{x}" y="{y}" width="{cell_size}" height="{cell_size}"
-          fill="{fill_color}" stroke="#333333" stroke-width="3"/>
-'''
 
-        # Add clue number if this cell starts a word
-        if (row, col) in numbers:
-            num = numbers[(row, col)]
-            svg_content += f'''    <text x="{x + 12}" y="{y + 42}"
-          font-family="Arial, sans-serif" font-size="38" fill="#333333">
-      {num}
-    </text>
-'''
+# margin=150 → equal 150 px margins on all sides; plot area = 2100×2100 = grid size
+chart = CrosswordGrid(style=custom_style, width=CANVAS, height=CANVAS, title=TITLE, show_legend=False, margin=150)
 
-svg_content += """  </g>
-</svg>
-"""
+# Render via pygal's pipeline: render() produces the SVG, cairosvg converts to PNG
+svg_bytes = chart.render()
+cairosvg.svg2png(bytestring=svg_bytes, write_to=f"plot-{THEME}.png", output_width=CANVAS, output_height=CANVAS)
 
-# Render using pygal's native method (for library usage verification)
-_ = chart.render(is_unicode=True)
-
-# Convert custom SVG with grid cells and numbers to PNG
-cairosvg.svg2png(bytestring=svg_content.encode("utf-8"), write_to="plot.png", output_width=3600, output_height=3600)
-
-# Save HTML version with interactive SVG
-html_content = f"""<!DOCTYPE html>
-<html>
-<head>
-    <title>crossword-basic · pygal · pyplots.ai</title>
-    <style>
-        body {{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: #f5f5f5;
-            font-family: Arial, sans-serif;
-        }}
-        .container {{
-            text-align: center;
-        }}
-        svg {{
-            max-width: 95vw;
-            max-height: 90vh;
-        }}
-    </style>
-</head>
-<body>
-<div class="container">
-{svg_content}
-</div>
-</body>
-</html>
-"""
-
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
+# HTML: pygal's interactive SVG output (embedded in a minimal page)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(chart.render(is_unicode=True))
