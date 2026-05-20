@@ -6,7 +6,7 @@ title: Skew-T Log-P Atmospheric Diagram
 
 # Specification tracking
 created: 2026-01-11T22:56:20Z
-updated: null
+updated: 2026-05-20T14:30:00Z
 issue: 3802
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - thermodynamic
   data_type:
     - numeric
     - continuous
