@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-20
@@ -14,6 +14,7 @@ import seaborn as sns
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
@@ -21,7 +22,7 @@ sns.set_theme(
     style="ticks",
     rc={
         "figure.facecolor": PAGE_BG,
-        "axes.facecolor": "white",
+        "axes.facecolor": ELEVATED_BG,
         "axes.edgecolor": INK_SOFT,
         "text.color": INK,
         "xtick.color": INK_SOFT,
@@ -80,10 +81,11 @@ ax.set_ylim(size + 1, -1)
 
 # Style
 ax.set_title("datamatrix-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
+ax.set_xlabel("Encoded: 'ANYPLOT' · ISO/IEC 16022 ECC 200 · 10×10", fontsize=9, color=INK_SOFT)
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-ax.set_facecolor("white")
+ax.set_facecolor(ELEVATED_BG)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
