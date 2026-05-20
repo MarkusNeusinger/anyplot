@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: point-and-figure-basic
 created: '2026-01-15T21:39:34Z'
-updated: '2026-05-20T03:31:30Z'
+updated: '2026-05-20T03:46:18Z'
 generated_by: claude-sonnet
 workflow_run: 26139186514
 issue: 3755
@@ -12,116 +12,128 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 88
 review:
   strengths:
-  - 'Perfect theme adaptation: INK/INK_SOFT tokens applied consistently across title,
-    labels, ticks, spines, and grid in both light and dark renders'
-  - Excellent dual encoding (shape + color) for X vs O markers — CVD-safe and unambiguous
-  - 'Correct P&F calculation: 3-box reversal, $2 box size, alternating X/O columns,
-    no mixed-direction columns'
-  - Box-aligned Y-axis ticks using np.arange with box_size*2 interval is an appropriate
-    domain-specific detail
-  - Clean code structure with P&F algorithm clearly separated from plotting logic
+  - Correct P&F algorithm with 3-box reversal and $2 box size producing meaningful
+    chart structure
+  - Dual encoding (shape + color) for X/O markers is both idiomatic seaborn and CVD-safe
+  - Hollow-O convention matches financial charting tradition and is well-implemented
+    via custom legend
+  - 45° support and resistance trend lines with annotations add genuine storytelling
+    value
+  - Full theme-adaptive chrome correctly maps all chrome elements (background, text,
+    grid, legend) across light and dark renders
+  - 'Data colors (#009E73 for X/rising, #D55E00 for O/falling) are identical between
+    renders — only chrome flips'
+  - 'Perfect spec compliance: all required features including trend lines, price scale,
+    and column-based X-axis present'
+  - Perfectly reproducible with np.random.seed(42), realistic biotech stock price
+    path with engineered bull/bear phases
   weaknesses:
-  - 'Missing trend lines: spec explicitly requires support trend lines (45° ascending
-    lows) and resistance trend lines (45° descending highs) drawn with dashed lines
-    — these are absent'
-  - 'No seaborn distinctive features: implementation is effectively matplotlib with
-    seaborn scatterplot calls; should use hue+style dual-encoding via sns.scatterplot
-    for direction'
-  - 'No data storytelling or visual hierarchy: no emphasis on key reversal points,
-    trend breakouts, or notable price levels — viewer must interpret raw symbols with
-    no analytical guidance'
+  - Annotation text at fontsize=7 (Support, Resistance labels) is quite small and
+    may be hard to read when scaled to mobile (~400 px width)
+  - 'Design Excellence is held back: seaborn''s hue+style dual encoding is used well
+    but the overall aesthetic is still in ''well-configured default'' territory —
+    no additional typography hierarchy, visual emphasis, or data story beyond what
+    the trend lines provide'
+  - 'Library Mastery is limited: seaborn is used only for the scatter layer; all trend
+    lines, annotations, legend, and axis styling are pure matplotlib — seaborn''s
+    statistical or faceting strengths are unused'
+  - LM-02 could improve by leveraging more seaborn-specific features (e.g., using
+    FacetGrid or a seaborn theme variant)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct light theme surface
-      Chrome: Title "point-and-figure-basic · python · seaborn · anyplot.ai" in dark ink at ~12pt; x-axis label "Column (Reversals)" and y-axis label "Price ($)" at 10pt dark; tick labels at 8pt in INK_SOFT — all clearly readable against the light background
-      Data: X markers in #009E73 (Okabe-Ito pos 1, bullish) and hollow circle markers in #D55E00 (Okabe-Ito pos 2, bearish) stacked by column; first series correctly uses #009E73
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, no pure white
+      Chrome: Title "point-and-figure-basic · python · seaborn · anyplot.ai" in dark ink at fontsize=12, occupies ~75% of plot width (expected for long mandated title). X-axis label "Column (Reversals)" and Y-axis label "Price ($)" in dark ink at fontsize=10. Tick labels at fontsize=8 in soft dark (#4A4A44). Legend in upper-left with elevated background (#FFFDF6) and soft edge.
+      Data: X markers (×) in #009E73 (Okabe-Ito pos 1) for rising columns, hollow O markers in #D55E00 (Okabe-Ito pos 2) for falling columns. 45° dashed support line in green ascending from column ~2, 45° dashed resistance line in orange descending from upper-right. "Support" and "Resistance" annotations in fontsize=7. Price range ~$68–$128, ~14–15 columns.
+      Legibility verdict: PASS — all major text elements (title, axis labels, ticks, legend) are clearly readable. Annotations at fontsize=7 are small but still visible.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — correct dark theme surface
-      Chrome: Title and all axis labels/ticks render in light-colored text (INK_SOFT/INK dark-mode tokens); no dark-on-dark failures; legend box uses elevated dark background
-      Data: Colors identical to light render — #009E73 green X markers and #D55E00 orange-red hollow circles; brand green #009E73 remains clearly visible on dark surface
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, no pure black
+      Chrome: Title and axis labels rendered in light ink (#F0EFE8) — clearly readable against dark surface. Tick labels in soft light (#B8B7B0). Legend box uses elevated dark fill (#242420). Grid lines subtle and barely visible.
+      Data: X marker color (#009E73) and O marker color (#D55E00) are identical to light render — only chrome has flipped. Trend lines and annotations maintain their respective colors.
+      Legibility verdict: PASS — no dark-on-dark failures observed. All text elements are clearly visible against the near-black background. Brand green #009E73 remains visible.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axes=10, ticks=8); title
-          fits ~75% width; readable in both themes
+        comment: All major text explicitly sized and readable in both themes. Annotation
+          fontsize=7 is small for mobile scaling.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Each marker at distinct $2 price level; no text or data collisions
+        comment: No overlapping text or data elements. P&F markers at distinct price
+          levels ($2 box spacing) prevent overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: X markers s=220, O markers s=170, linewidth=2.5; well-adapted to
-          column density
+        comment: X and O markers at s=200 with linewidth=2.5 are well-sized and clearly
+          visible. Hollow O convention clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Dual encoding (shape + color); Okabe-Ito CVD-safe pair
+        comment: Okabe-Ito colors plus dual shape encoding (X vs O) ensures CVD safety
+          without relying on color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: tight_layout; balanced margins; nothing clipped
+        comment: 3200x1800 canvas, tight_layout applied, legend near data, balanced
+          margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Column (Reversals) and Price ($) — descriptive with units/context
+        comment: 'X: ''Column (Reversals)'', Y: ''Price ($)'' — descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
-          chrome adapts correctly'
+        comment: 'First series #009E73, second #D55E00 (Okabe-Ito order). Backgrounds
+          #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Correct palette and marker styles; top/right spines removed; looks
-          like well-configured default
+        passed: true
+        comment: Hollow-O convention, dual encoding, custom legend with correct symbols
+          — above default but not publication-ready.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Top/right spines removed, subtle y-axis-only grid, ytick alignment
-          to box boundaries; good but not fully polished
+        passed: true
+        comment: Top/right spines removed, y-axis-only grid at alpha=0.10, clean legend.
+          Good refinement but not every detail polished.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Data displayed correctly; no trend lines, no visual hierarchy, no
-          analytical overlay
+        passed: true
+        comment: 45° trend lines with Support/Resistance labels create visual hierarchy
+          and guide viewer to understand price trend direction.
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -129,52 +141,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P&F chart with X/O columns, 3-box reversal, $2 box size
+        comment: 'Correct P&F chart: X columns for rising, O columns for falling,
+          column-based X-axis, 3-box reversal mechanism.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'X/O symbols, coloring, column-based X-axis, box-aligned Y-grid present.
-          MISSING: 45-degree support/resistance trend lines'
+        passed: true
+        comment: 'All spec features: X/O symbols, green/orange colors, column structure,
+          reversal logic, 45° trend lines, price Y-axis with grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Column index on X-axis, price on Y-axis; 15 columns visible with
-          full $68-$128 range
+        comment: X-axis = columns (reversals), Y-axis = price ($). All data within
+          bounds.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend X — Rising / O — Falling matches data
+        comment: Title format correct. Legend labels 'X — Rising', 'O — Falling',
+          'Support (45°)', 'Resistance (45°)' match data.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: Multiple bullish/bearish columns with clear reversals; trend line
-          visualization absent reduces coverage
+        passed: true
+        comment: Shows bull phases, bear phases, multiple reversals, rising trend,
+          support and resistance lines — all P&F aspects covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Biotech stock simulation over 300 trading days; plausible price action
-          with trend phases
+        comment: Biotech stock over 300 trading days with realistic base price ($80)
+          and volatility. Neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: $2 box size, 3-box reversal, $68-$128 range; standard and internally
-          consistent
+        comment: Price range ~$68-$128 realistic for a stock. $2 box size with 3-box
+          reversal are classic P&F parameters. Daily vol ~1.8% is realistic.
     code_quality:
       score: 10
       max: 10
@@ -184,62 +198,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, theme tokens, data, P&F calc, plot, save'
+        comment: 'Linear flow: imports → theme → data gen → P&F algorithm → plot →
+          save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All five imports used
+        comment: All 6 imports (os, matplotlib.pyplot, numpy, pandas, seaborn, matplotlib.lines.Line2D)
+          are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: P&F loop appropriately complex; no over-engineering or fake functionality
+        comment: P&F algorithm complexity is inherent to the chart type. No over-engineering,
+          no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current API
+        comment: Saves as plot-{THEME}.png with dpi=400, bbox_inches='tight'. Current
+          API throughout.
     library_mastery:
-      score: 4
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: sns.set_theme and sns.scatterplot used correctly with axes-level
-          API; bulk of work is custom numpy/matplotlib
+        passed: true
+        comment: sns.set_theme() with rc dict, axes-level scatterplot with hue+style
+          dual encoding — correct seaborn patterns. Most styling is matplotlib though.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: Seaborn used only for scatter rendering; no hue mapping, statistical
-          features, or seaborn-specific API that differentiates from matplotlib
-  verdict: REJECTED
+        comment: hue+style dual encoding with marker dict is seaborn-distinctive.
+          But no statistical features, no FacetGrid, no seaborn-unique capabilities
+          beyond scatter styling.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
+  - annotations
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
-  - explicit-figure
   - iteration-over-groups
   dataprep:
-  - time-series
   - cumulative-sum
   styling:
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
