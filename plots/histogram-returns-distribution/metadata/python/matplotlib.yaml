@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: histogram-returns-distribution
 created: '2026-01-16T22:12:35Z'
-updated: '2026-05-20T18:10:38Z'
+updated: '2026-05-20T18:20:42Z'
 generated_by: claude-sonnet
 workflow_run: 26180148247
 issue: 3751
@@ -12,36 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: all required features (normal overlay, ±2σ tails, stats
-    box, density normalization) implemented correctly'
-  - Excellent use of t-distribution (df=8) to simulate realistic fat-tailed equity
-    returns — the right statistical model for the domain
-  - Per-bin patch coloring for tail bins is a clean, idiomatic matplotlib technique
-  - 'Theme-adaptive chrome correctly threaded through all elements: backgrounds, text,
-    legend frames, stats box, spine colors'
-  - fill_between for shaded tail areas under the normal curve adds visual depth without
-    clutter
-  - Flat code structure with fixed seed — fully reproducible and readable
+  - 'Correct Okabe-Ito palette assignment: #009E73 for histogram bars, #D55E00 for
+    tail regions, #0072B2 for normal curve — proper canonical order'
+  - Multi-layer tail visualization combining axvspan background tinting, fill_between
+    probability shading, and recolored histogram bins — sophisticated risk communication
+  - Stats box with monospace font and elevated background token is professional and
+    informative, including fat-tail% vs expected-normal-% comparison
+  - 'Full theme-adaptive chrome: all tokens correctly applied in both light (#FAF8F1)
+    and dark (#1A1A17) renders with no dark-on-dark failures'
+  - 'KISS code structure: flat script, np.random.seed(42), no classes, clean imports
+    — reproducible and easy to follow'
   weaknesses:
-  - Tail annotation text (fontsize=7) too small for mobile viewing at ~400px width
-    — increase to 8pt or remove
-  - Design Excellence is functional but not exceptional — could benefit from more
-    refined typography hierarchy or deliberate focal point emphasis
+  - Right tail annotation xy=(upper_tail+0.7, 0.02) overlaps with a histogram bar
+    in both renders — position the annotation further right or increase y-offset to
+    avoid sitting inside the bar body
+  - 'DE-01 could reach 7-8/8 with one more design decision: e.g. a subtle KDE curve
+    instead of the dashed normal fit, or per-bin gradient coloring using a sequential
+    palette for density emphasis'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct per style guide
-      Chrome: Title "histogram-returns-distribution · python · matplotlib · anyplot.ai" in dark #1A1A17 at 12pt — readable. Axis labels "Daily Returns (%)" and "Density" at 10pt in dark ink — readable. Tick labels at 8pt using INK_SOFT (#4A4A44) — readable. Stats box in upper-right uses monospace 8pt text — compact but legible. Tail annotations in 7pt — smallest text, borderline at mobile scale.
-      Data: First series (histogram bars) = #009E73 ✓. Tail bins = #D55E00 (Okabe-Ito pos 2) ✓. Normal curve = #0072B2 (Okabe-Ito pos 3) ✓. Mean line solid dark. ±2σ reference lines dotted gray. fill_between tail shading visible.
-      Legibility verdict: PASS — all primary text readable; 7pt tail annotations are the only minor concern at mobile scale.
+      Background: Warm off-white #FAF8F1 — correct brand surface color
+      Chrome: Title "histogram-returns-distribution · python · matplotlib · anyplot.ai" at fontsize=12, dark ink (#1A1A17) — clearly readable. X-axis label "Daily Returns (%)" and Y-axis "Density" in dark ink at fontsize=10 — readable. Tick labels in INK_SOFT (#4A4A44) at fontsize=8 — legible. Left+bottom spines in INK_SOFT. Subtle y-axis grid at alpha=0.12.
+      Data: Green (#009E73) histogram bars for the main distribution, orange (#D55E00) for tail bins beyond ±2σ. Blue dashed curve (#0072B2) for normal fit overlay. Solid dark mean line. Dotted ±2σ reference lines. Stats box (monospace, elevated background) in upper right. Custom legend with Patch handles in upper left. Subtle orange axvspan and fill_between tail shading.
+      Legibility verdict: PASS — all text elements readable; minor overlap between right-tail annotation and a histogram bar at y=0.02
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct per style guide
-      Chrome: Title in light #F0EFE8 — readable. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark) — readable against dark surface. Stats box text in #F0EFE8 on #242420 elevated dark background — readable. Tail annotations in #A8A79F (INK_MUTED dark) — readable against near-black. Legend text in INK_SOFT. No dark-on-dark failures observed.
-      Data: Okabe-Ito data colors identical to light render — green bars, orange tails, blue dashed curve — only chrome flipped. Mean line becomes near-white (INK dark = #F0EFE8) — correct and visible.
-      Legibility verdict: PASS — all text readable against dark background; theme tokens correctly threaded throughout.
+      Background: Warm near-black #1A1A17 — correct dark surface color
+      Chrome: Title in light ink (#F0EFE8) — clearly readable. Axis labels and tick labels in light INK/INK_SOFT tokens — visible. Left+bottom spines in INK_SOFT (#B8B7B0 in dark mode). Stats box with elevated dark background (#242420) — text legible. Legend frame with dark elevated background.
+      Data: Data colors IDENTICAL to light render — green (#009E73) histogram bars, orange (#D55E00) tail bars, blue (#0072B2) normal curve. Only chrome (background, text, spines, legend frame) flipped for dark theme.
+      Legibility verdict: PASS — no dark-on-dark failures; all text clearly visible against dark surface; brand green #009E73 well visible.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -49,75 +51,78 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Primary text readable in both themes; 7pt tail annotations borderline
-          small at mobile scale (~400px)
+        comment: 'All text readable in both themes; minor: right-tail annotation at
+          y=0.02 sits close to bar body'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Legend upper-left and stats box upper-right coexist without overlap
+        comment: Minor overlap between right tail annotation text and histogram bar
+          near x=upper_tail+0.7
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All elements — bars, curve, mean line, reference lines, tail shading
-          — clearly visible
+        comment: All histogram bars, normal curve, reference lines, and tail shading
+          clearly visible in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Okabe-Ito palette, CVD-safe, no red-green sole signal
+        comment: CVD-safe Okabe-Ito palette; no red-green sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800); balanced layout; title ~75% width
-          within expected range
+        comment: 3200x1800px confirmed (canvas gate passed); subplots_adjust with
+          no bbox_inches=tight; good proportions
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; title follows required format
+        comment: 'X: ''Daily Returns (%)'' with units; Y: ''Density''; title in correct
+          anyplot.ai format'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; pos 2 #D55E00 for tails; pos 3 #0072B2 for
-          curve; backgrounds #FAF8F1/#1A1A17'
+        comment: 'First series #009E73, second #D55E00, third #0072B2 — canonical
+          Okabe-Ito order; backgrounds #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default: custom Okabe-Ito assignment, fill_between shading,
-          themed stats box, intentional visual hierarchy'
+        comment: 'Multi-layer design: axvspan+fill_between+recolored bins for tail
+          risk; stats box with monospace+elevated-bg; intentional visual hierarchy
+          above defaults'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, subtle y-only grid (alpha=0.12), ELEVATED_BG
-          for legend/stats, theme-adaptive chrome
+        comment: Top/right spines removed; grid alpha=0.12 (subtle); edgecolor=PAGE_BG
+          on bars; styled legend frame; subplots_adjust for generous margins
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Orange tails create focal points; stats box provides quantitative
-          context; dashed curve enables comparison; annotations guide interpretation
+        comment: Clear focal point on fat-tail risk; stats box shows actual vs expected
+          tail %; tail annotations + shading guide viewer to key insight
     spec_compliance:
       score: 15
       max: 15
@@ -127,26 +132,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct density-normalized histogram with all required overlays
+        comment: Histogram with density normalization — correct chart type
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normal overlay, stats text box, tail highlighting beyond 2σ, density
-          normalization, fill_between shading
+        comment: Normal distribution overlay, stats text box (mean/std/skew/kurt+fat-tail%),
+          tail highlighting beyond 2sigma, density normalization, 252 obs
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Daily Returns (%), Y: Density; all data visible'
+        comment: 'X: % returns; Y: density; all 252 observations shown'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format; legend labels match data elements
+        comment: 'Title matches required format exactly; legend labels: Returns, Tail
+          Regions (>2sigma), Normal fit, Mean'
     data_quality:
       score: 15
       max: 15
@@ -156,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Fat tails, normal overlay comparison, tail identification, skewness/kurtosis
-          display
+        comment: Shows distribution shape, fat-tail comparison, normal overlay, key
+          statistics, tail region counts
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: t-distribution df=8 for fat tails; 252 trading days; ~1.2% daily
-          vol; neutral non-controversial data
+        comment: t-distribution(df=8) for fat tails, ~1.2% daily vol, 252 obs = 1
+          trading year — realistic and neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Returns -5% to +9%, skewness 0.788, excess kurtosis 3.919 — consistent
-          with realistic fat-tailed returns
+        comment: Return range ~-5% to +8% is appropriate for daily stock returns
     code_quality:
       score: 10
       max: 10
@@ -193,22 +198,23 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, matplotlib.pyplot, numpy, matplotlib.patches.Patch,
-          scipy.stats'
+        comment: os, matplotlib.pyplot, numpy, matplotlib.patches.Patch, scipy.stats
+          — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized, no fake UI or unnecessary complexity
+        comment: No fake UI; appropriate complexity for the feature set
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; no bbox_inches=tight; uses fig.subplots_adjust()
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct,
+          no bbox_inches=tight
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -216,15 +222,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes methods throughout; histogram patch iteration for per-bin coloring;
-          fill_between; custom Patch legend elements
+        comment: Axes methods throughout; fig,ax pattern; custom legend with handles
+          list
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Per-bin patch recoloring for tail bins (matplotlib-specific); fill_between
-          tail shading; custom legend with Patch objects
+        comment: axvspan background zones, fill_between PDF tail shading, Patch legend
+          items, per-patch facecolor iteration — genuinely distinctive matplotlib
+          capabilities
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -232,7 +239,6 @@ impl_tags:
   techniques:
   - annotations
   - custom-legend
-  - patches
   patterns:
   - data-generation
   dataprep: []
