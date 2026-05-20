@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-20
@@ -21,7 +21,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
-    scale_color_gradient,
+    scale_color_viridis,
     scale_size,
     theme,
     theme_void,
@@ -40,7 +40,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 CONTINENT_FILL = "#E0DDD6" if THEME == "light" else "#2E2E2B"
 CONTINENT_BORDER = "#C8C5BE" if THEME == "light" else "#4A4A47"
-HUB_COLOR = "#306998"
+HUB_COLOR = "#0072B2"
 
 # Data
 np.random.seed(42)
@@ -61,7 +61,7 @@ hubs = {
 label_offsets = {
     "Los Angeles": (-5, 4),
     "New York": (4, 2),
-    "London": (-14, 2),
+    "London": (-20, 4),
     "Rotterdam": (4, 2),
     "Dubai": (4, 2),
     "Singapore": (4, -5),
@@ -231,7 +231,7 @@ plot = (
     + geom_point(data=df_hubs, mapping=aes(x="lon", y="lat"), size=7, color=HUB_COLOR, fill=HUB_COLOR)
     + geom_text(data=df_hubs, mapping=aes(x="label_lon", y="label_lat", label="name"), size=8, color=INK_SOFT)
     + scale_size(range=[1, 6], name="Trade Volume")
-    + scale_color_gradient(low="#FFD43B", high="#306998", name="Trade Volume")
+    + scale_color_viridis(option="viridis", name="Trade Volume")
     + labs(title="flowmap-origin-destination · python · letsplot · anyplot.ai")
     + theme_void()
     + anyplot_theme
