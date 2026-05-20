@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: bar-drilldown
 created: '2026-05-20T11:29:52Z'
-updated: '2026-05-20T11:36:07Z'
+updated: '2026-05-20T11:44:58Z'
 generated_by: claude-sonnet
 workflow_run: 26159231617
 issue: 3783
@@ -12,36 +12,34 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 82
 review:
   strengths:
-  - 'Perfect visual quality: correct Okabe-Ito palette, theme-adaptive chrome, clean
-    layout in both light and dark renders'
-  - 'Idiomatic plotnine: grammar of graphics with facet_wrap(scales=free) and pd.Categorical
-    ordering is exactly right'
-  - Clean, reproducible code with no unnecessary complexity
-  - Value labels on bars aid precise comparisons across the faceted panels
+  - Both light and dark themes render correctly with proper chrome token usage — no
+    dark-on-dark or light-on-light legibility failures
+  - Enriched strip labels with computed category totals add meaningful context and
+    enable cross-panel comparison without annotation clutter
+  - Sorted bars within each panel and consistent Okabe-Ito colors make within-category
+    and cross-category comparisons natural
+  - Fully deterministic data with realistic retail domain context
   weaknesses:
-  - 'SC-01/SC-02: The drilldown concept is completely absent — everything shown at
-    once in facets rather than a navigable hierarchy; add a third-level view or summary
-    panel to better represent the spec'
-  - 'DE-01/DE-03: No cross-panel storytelling — add total revenue annotations per
-    category in strip headers for insight emphasis'
-  - 'DE-02: Strip headers have boxy border (color=INK_SOFT) that dominates — remove
-    border with color=none for cleaner look'
-  - 'VQ-01 minor: geom_text(size=7) value labels slightly small for mobile — bump
-    to size=9'
+  - Value label font size (9pt) is slightly small; at mobile viewport scale (~400px)
+    these may become hard to read — increase geom_text size from 9 to 10
+  - DE-03 lacks a focal point or narrative emphasis; consider using reduced alpha
+    on non-top bars (e.g., alpha=0.65 for bars 2–4) to highlight category leaders
+  - DE-01 stays at well-configured default level with no typographic weight variation
+    or subtle size differentiation to create visual hierarchy within panels
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "bar-drilldown · python · plotnine · anyplot.ai" in dark ink — readable. Y-axis label "Revenue ($ millions)" in dark ink — readable. X-axis tick labels (subcategory names) and Y-axis tick labels in INK_SOFT (#4A4A44) — readable. Facet strip headers ("Electronics", "Apparel", "Groceries", "Sports") in bold dark ink on elevated background — readable.
-      Data: Electronics bars in #009E73 (Okabe-Ito position 1, brand green) — correct. Apparel in #D55E00 (position 2), Groceries in #0072B2 (position 3), Sports in #CC79A7 (position 4). Value labels above bars readable. Subtle horizontal grid lines only.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "bar-drilldown · python · plotnine · anyplot.ai" in dark INK (#1A1A17) — readable; Y-axis label "Revenue ($ millions)" in INK; tick labels and value labels in INK_SOFT (#4A4A44) — all readable against light background; strip text in bold INK — readable
+      Data: Electronics = #009E73 (brand green), Apparel = #D55E00 (orange), Groceries = #0072B2 (blue), Sports = #CC79A7 (pink-purple); Okabe-Ito positions 1–4 in order; first series correctly #009E73
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in light off-white text — readable. Axis labels and tick labels in INK_SOFT (#B8B7B0) — readable. Facet strip headers on elevated #242420 background with light bold text — readable. No dark-on-dark failures observed.
-      Data: Bar colors identical to light render — Electronics #009E73, Apparel #D55E00, Groceries #0072B2, Sports #CC79A7. Only chrome flipped, data colors unchanged.
+      Background: Near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 — readable; axis labels in #F0EFE8 — readable; tick labels and value labels in #B8B7B0 — readable; strip backgrounds use #242420 (ELEVATED_BG) with INK text — readable; no dark-on-dark failures observed
+      Data: All four Okabe-Ito data colors identical to light render — Electronics = #009E73, Apparel = #D55E00, Groceries = #0072B2, Sports = #CC79A7; brand green clearly visible on dark surface
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -53,72 +51,72 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; well-proportioned. Value labels at
-          size=7 slightly small for mobile.
+        comment: All font sizes explicitly set; readable in both themes; minor deduction
+          for value labels at 9pt potentially small at mobile width
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text collisions in either render.
+        comment: No overlapping text or data elements across all four panels
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars prominent and clearly visible. Value labels readable.
+        comment: Bars well-sized; value labels readable above bars
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette, CVD-safe, adequate contrast in both themes.
+        comment: Okabe-Ito palette, CVD-safe, good luminance contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400px. Balanced 2x2 facet grid. No cut-off.
+        comment: Square 2400x2400px canvas well-utilized by 2x2 facet grid; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has units ($ millions). Title in correct mandated format.
+        comment: Y-axis Revenue ($ millions) with units; title in correct format
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73. Okabe-Ito order followed. Correct backgrounds
-          in both themes.'
+        comment: 'First series #009E73; Okabe-Ito positions 1-4 in order; correct
+          light/dark backgrounds; both themes pass'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Above default with Okabe-Ito colors, themed strip headers, value
-          labels. Not publication-ready — strip borders boxy.
+        comment: Well-configured above defaults; strip labels enriched with totals;
+          not publication-quality
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Y-axis-only subtle grid, X-grid removed, no legend. Strip header
-          border adds clutter.
+        comment: Y-only grid at alpha=0.10; minimal theme; custom strip background;
+          clean whitespace
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Descending bars within panels give local hierarchy. No cross-panel
-          comparison or total-revenue emphasis.
+        comment: Sorted bars; strip totals for cross-panel comparison; color identity;
+          no focal point or narrative emphasis
     spec_compliance:
-      score: 10
+      score: 11
       max: 15
       items:
       - id: SC-01
@@ -126,54 +124,54 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Correct chart type (bar/column). Drilldown mechanism absent — shows
-          all levels simultaneously via facets.
+        comment: Correct bar/column chart type with hierarchical data; faceted grid
+          is correct static alternative; drill mechanism absent
       - id: SC-02
         name: Required Features
-        score: 1
+        score: 2
         max: 4
-        passed: false
-        comment: Only value labels and consistent color mapping present. All 5 interactive
-          features (click drill, breadcrumb, back button, animation, cursor) impossible
-          in static PNG.
+        passed: true
+        comment: Value labels and color mapping present; interactive features (breadcrumbs,
+          back button, animations, click indicators) not implementable statically
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Revenue on Y, subcategories on X, category grouping via facets. Correct.
+        comment: Subcategories on X-axis, revenue on Y-axis, categories as facets
+          — all correctly mapped
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct. Legend omitted in favor of facet strip headers
-          — correct choice.
+        comment: Title matches required format; no legend correct as color identity
+          carried by panel labels
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 2-level hierarchy shown (4 categories x 4 subcategories). Missing
-          3rd level; drilldown feature-set not demonstrable.
+        comment: 4 categories x 4 subcategories with meaningful variation; minor deduction
+          for not illustrating parent-level aggregates alongside drill level
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Annual retail revenue by product category. Realistic, neutral business
-          scenario.
+        comment: Retail revenue by product category with realistic subcategories;
+          neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Revenue $9M-$45M plausible for retail subcategory. Category ordering
-          realistic.
+        comment: Revenue $9M-$45M per subcategory, totals $57M-$120M; plausible for
+          mid-size retailer
     code_quality:
       score: 10
       max: 10
@@ -183,31 +181,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports -> constants -> data -> plot -> save. No functions or classes.
+        comment: Clean imports → data → plot → save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data.
+        comment: Fully deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used.
+        comment: All imported names are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic plotnine grammar. No over-engineering.
+        comment: Efficient groupby for strip labels; categorical ordering via pd.Categorical;
+          no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with current plotnine API.
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=6, height=6, units='in')
+          correct
     library_mastery:
       score: 7
       max: 10
@@ -217,22 +217,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Grammar of graphics: layered geoms, facet_wrap with scales=free,
-          Categorical ordering, scale_fill_manual, theme composition.'
+        comment: Proper ggplot grammar with geom_col, geom_text, facet_wrap, scale_fill_manual;
+          categorical ordering with pd.Categorical
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: facet_wrap(scales=free) and pd.Categorical for custom ordering are
-          distinctive plotnine/ggplot2 patterns.
-  verdict: REJECTED
+        comment: facet_wrap with computed strip labels (totals embedded) is plotnine-distinctive;
+          scales='free' for per-panel Y-axis
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - layer-composition
-  patterns: []
+  - annotations
+  patterns:
+  - groupby-aggregation
   dataprep: []
   styling:
   - grid-styling
