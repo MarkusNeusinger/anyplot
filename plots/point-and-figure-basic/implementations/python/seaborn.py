@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 point-and-figure-basic: Point and Figure Chart
-Library: seaborn | Python 3.13
-Quality: pending | Updated: 2026-05-20
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-20
 """
 
 import os
