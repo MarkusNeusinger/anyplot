@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    coord_fixed,
     element_blank,
     element_line,
     element_rect,
@@ -142,6 +143,7 @@ plot = (
     )
     + geom_text(mapping=aes(color="direction", label="symbol"), size=8, fontweight="bold", show_legend=False)
     + geom_point(mapping=aes(color="direction"), size=0.01, alpha=0.01)
+    + coord_fixed(ratio=box_size)
     + scale_color_manual(values={"Rising (X)": X_COLOR, "Falling (O)": O_COLOR}, name="Direction")
     + guides(color=guide_legend(override_aes={"size": 3, "alpha": 1}))
     + scale_y_continuous(
@@ -161,7 +163,9 @@ plot = (
         legend_title=element_text(size=9, color=INK),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG, size=0),
+        panel_border=element_blank(),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
         panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         panel_grid_major_y=element_line(color=INK, size=0.3, alpha=0.10),
