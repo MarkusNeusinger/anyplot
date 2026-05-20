@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import Label
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -81,8 +81,8 @@ p = figure(
     width=2400,
     height=2400,
     title="maze-circular · python · bokeh · anyplot.ai",
-    x_range=(-1.25, 1.25),
-    y_range=(-1.25, 1.25),
+    x_range=(-1.20, 1.20),
+    y_range=(-1.20, 1.20),
     background_fill_color=PAGE_BG,
     border_fill_color=PAGE_BG,
     toolbar_location=None,
@@ -100,6 +100,7 @@ p.outline_line_color = None
 
 # Title
 p.title.text_font_size = "50pt"
+p.title.text_font_style = "bold"
 p.title.align = "center"
 p.title.text_color = INK
 
@@ -141,44 +142,80 @@ entry_start_angle = entry_sector * (2 * np.pi / outer_n)
 entry_end_angle = (entry_sector + 1) * (2 * np.pi / outer_n)
 
 boundary_pts = np.linspace(entry_end_angle, entry_start_angle + 2 * np.pi, 360)
-p.line(outer_r * np.cos(boundary_pts), outer_r * np.sin(boundary_pts), line_width=wall_width + 2, line_color=wall_color)
+p.line(outer_r * np.cos(boundary_pts), outer_r * np.sin(boundary_pts), line_width=wall_width + 4, line_color=wall_color)
 
 # Inner boundary (central hub)
 theta = np.linspace(0, 2 * np.pi, 120)
 p.line(ring_radii[0] * np.cos(theta), ring_radii[0] * np.sin(theta), line_width=wall_width, line_color=wall_color)
 
-# Center goal circle
+# Center goal circle — ColumnDataSource enables HoverTool tooltip
 goal_r = ring_radii[0] * 0.65
-p.patch(goal_r * np.cos(theta), goal_r * np.sin(theta), fill_color=goal_color, line_color=wall_color, line_width=3)
+goal_source = ColumnDataSource(
+    data={
+        "xs": [list(goal_r * np.cos(theta))],
+        "ys": [list(goal_r * np.sin(theta))],
+        "label": ["GOAL — navigate here to win!"],
+    }
+)
+goal_renderer = p.patches(
+    xs="xs", ys="ys", fill_color=goal_color, line_color=wall_color, line_width=3, source=goal_source
+)
+goal_hover = HoverTool(renderers=[goal_renderer], tooltips=[("", "@label")])
+p.add_tools(goal_hover)
 
 p.add_layout(
     Label(x=0, y=-0.01, text="★", text_font_size="28pt", text_align="center", text_baseline="middle", text_color=INK)
 )
 
-# Entry triangle marker
+# Entry triangle marker — ColumnDataSource enables HoverTool tooltip
 entry_angle = (entry_start_angle + entry_end_angle) / 2
 entry_x = 1.04 * np.cos(entry_angle)
 entry_y = 1.04 * np.sin(entry_angle)
-p.scatter(
-    [entry_x],
-    [entry_y],
+entry_source = ColumnDataSource(
+    data={
+        "x": [entry_x],
+        "y": [entry_y],
+        "angle": [entry_angle - np.pi / 2],
+        "label": ["START — begin your journey here!"],
+    }
+)
+entry_renderer = p.scatter(
+    x="x",
+    y="y",
     marker="triangle",
     size=30,
     fill_color=entry_color,
     line_color=wall_color,
-    angle=entry_angle - np.pi / 2,
+    angle="angle",
+    source=entry_source,
 )
+entry_hover = HoverTool(renderers=[entry_renderer], tooltips=[("", "@label")])
+p.add_tools(entry_hover)
 
 p.add_layout(
     Label(
-        x=entry_x * 1.14,
-        y=entry_y * 1.14,
+        x=entry_x * 1.09,
+        y=entry_y * 1.09,
         text="START",
-        text_font_size="22pt",
+        text_font_size="28pt",
         text_align="center",
         text_baseline="middle",
         text_color=entry_color,
         text_font_style="bold",
+    )
+)
+
+# Difficulty annotation below the maze
+p.add_layout(
+    Label(
+        x=0,
+        y=-1.12,
+        text=f"{rings} rings · {difficulty}",
+        text_font_size="24pt",
+        text_align="center",
+        text_baseline="middle",
+        text_color=INK_SOFT,
+        text_font_style="italic",
     )
 )
 
@@ -201,6 +238,10 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+# Force page background to match PAGE_BG — prevents thin lighter border in dark theme screenshots
+driver.execute_script(
+    f"document.documentElement.style.background='{PAGE_BG}';document.body.style.background='{PAGE_BG}';"
+)
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
