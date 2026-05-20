@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: crossword-basic
 created: '2026-01-15T21:41:02Z'
-updated: '2026-05-20T02:15:02Z'
+updated: '2026-05-20T02:25:19Z'
 generated_by: claude-sonnet
 workflow_run: 26136751583
 issue: 3805
@@ -12,40 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance: all crossword features implemented correctly (white/black
-    cells, numbered positions, 15x15, 180-degree symmetry, 1:1 ratio)'
-  - 'Full code quality: clean KISS structure, deterministic grid, no wasted imports'
-  - 'Correct theme-adaptive chrome: page background and title color flip correctly
-    between light and dark renders'
-  - 'Appropriate crossword convention: cell fills frozen at black/white regardless
-    of theme (correct design decision, well-commented)'
-  - Correct square canvas format (2400x2400 px) chosen for this symmetric grid plot
+  - 'Perfect spec compliance: white/black cells, numbered positions, 180° rotational
+    symmetry, and square cell aspect ratio all correctly implemented'
+  - Clean monochrome crossword aesthetic that matches newspaper-style convention specified
+    in the spec
+  - 'Excellent theme adaptation: warm off-white (#FAF8F1) background in light mode,
+    near-black (#1A1A17) in dark mode — both renders fully readable'
+  - 'Idiomatic plotnine grammar of graphics usage: geom_tile + geom_text layers with
+    inherit_aes=False, coord_fixed(ratio=1) for square cells'
+  - Deterministic, realistic 15×15 grid data with correct 180° symmetry and 79 numbered
+    word-start positions
+  - All font sizes explicitly set; axis chrome correctly suppressed (blank axis text/title/ticks)
+    for a clean grid display
+  - Subtitle 'Rotational symmetry · 79 numbered positions' adds informative context
+    without cluttering the plot
   weaknesses:
-  - 'DE-01 LOW: No typography refinement or visual weight hierarchy beyond spec minimums
-    — title font is set but unremarkable; consider bold weight or slightly larger
-    title for a publication-ready masthead feel'
-  - 'DE-02 PARTIAL: Missing an explicit panel border/frame to give the grid a crisp
-    bounded puzzle-box appearance; add panel_border=element_rect(color=INK_SOFT, fill=None,
-    size=0.8)'
-  - 'DE-03 LOW: No visual storytelling — the symmetric black cell structure is the
-    natural focal point but is not visually emphasized; default rating applies'
-  - 'LM-02 LOW: No use of plotnine-distinctive features beyond coord_fixed and basic
-    layer composition'
+  - 'DE-01/DE-02: Design could be elevated — the warm entry-cell tint in light mode
+    is a nice touch, but dark mode uses pure #FFFFFF for entry cells which looks harsh;
+    consider #F0EEE7 or similar warm near-white to preserve the warm palette feel
+    across both themes'
+  - 'DE-03: No visual hierarchy or storytelling emphasis — the subtitle is informative
+    but the plot is purely structural with no focal point or viewer guidance (inherent
+    to a crossword display, but could be improved with a shaded region highlighting
+    a thematic word zone or subtle color coding across word lengths)'
+  - 'LM-02: The layer composition (geom_tile + geom_text) is good plotnine usage but
+    relatively generic; could further leverage plotnine''s grammar by encoding an
+    additional dimension (e.g., word-length coloring via aes fill on entry cells)
+    to demonstrate more distinctive library capability'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "crossword-basic · python · plotnine · anyplot.ai" centered in dark #1A1A17 ink, clearly readable. No axis labels or tick labels (appropriate). No legend.
-      Data: Entry cells are pure white (#FFFFFF); blocked cells are near-black (#1A1A1A). Cell borders are subtle gray (INK_SOFT #4A4A44). Clue numbers 1-79 appear in dark #333333 text in top-left corners of word-starting cells. 15x15 grid fills the square canvas with 1:1 cell aspect ratio.
-      Legibility verdict: PASS — all text readable against light background
+      Background: Warm off-white (#FAF8F1) fills the full canvas — correct light theme surface.
+      Chrome: Title "crossword-basic · python · plotnine · anyplot.ai" is bold, dark, clearly readable (~75% canvas width). Subtitle in soft gray below title is present and legible. No axis labels or tick labels (correctly suppressed for a grid display).
+      Data: 15×15 crossword grid with near-white warm-tinted entry cells (#F5F3EC) and solid black blocked cells (#1A1A1A). Grid lines in INK_SOFT (#4A4A44) are subtle and uniform. Clue numbers (1–79) appear in dark gray (#333333) in the top-left corners of word-start cells. All numbered positions are visible and non-overlapping.
+      Legibility verdict: PASS — all text and numbers are clearly readable against the light background.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title renders in light #F0EFE8 ink, clearly readable against dark background. No axis labels or tick labels.
-      Data: Entry cells remain pure white (#FFFFFF) and blocked cells remain near-black (#1A1A1A) — identical to light render. Cell numbers (#333333) appear on white cell backgrounds, providing good dark-on-white contrast. Cell borders are light gray (INK_SOFT #B8B7B0) providing visible but subtle separation.
-      Legibility verdict: PASS — no dark-on-dark text failures; all text readable against dark background
+      Background: Near-black (#1A1A17) fills the canvas — correct dark theme surface.
+      Chrome: Title in light off-white (#F0EFE8) is clearly readable against the dark background. Subtitle in muted light gray (#B8B7B0) is visible below the title. No axis labels or ticks (suppressed correctly).
+      Data: Entry cells are pure white (#FFFFFF) — high contrast against the dark background, very clear. Blocked cells (#1A1A1A) nearly blend with the dark page background (#1A1A17), but the panel border in INK_SOFT frames the full grid clearly. Clue numbers in dark gray (#333333) appear on white entry cells — dark text on white cell is fully readable. Data colors are structurally identical to light render (same monochrome black/white palette); only chrome flips. No dark-on-dark text issues detected.
+      Legibility verdict: PASS — title and numbers all readable. Minor note: pure white entry cells in dark mode (#FFFFFF) could use a warm near-white to match the anyplot palette philosophy, but legibility is unaffected.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -56,77 +64,80 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Sizes explicitly set (title=12, numbers=6); all readable at canvas
-          resolution; minor concern for cell numbers at mobile scale (~400px) inherent
-          to plot type
+        comment: All sizes explicitly set (title=13, subtitle=8, numbers=6). Numbers
+          are appropriately small for crossword cell corners but may be marginally
+          hard to read at mobile scaling (400px width with 15 cols = ~27px/cell).
+          Title and subtitle fully legible in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Numbers cleanly nudged into top-left corners with nudge_x/nudge_y;
-          no collisions
+        comment: No overlapping elements — cell numbers positioned in top-left corners
+          with nudge_x/nudge_y, no collisions detected.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Black and white cells maximally distinct; numbers clearly visible
-          in white cells
+        comment: Grid tiles clearly visible in both themes; blocked cells have strong
+          contrast against entry cells.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Effectively monochrome; maximum luminance contrast; fully CVD-safe
+        comment: Monochrome design — maximum contrast, fully CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square format 2400x2400px; coord_fixed ensures square cells; expand=(0,0)
-          removes wasted margin
+        comment: Square canvas (6×6in, 2400×2400px equivalent) with coord_fixed(ratio=1).
+          Grid fills the panel well with minimal wasted space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for crossword (correct); title format is correct
+        comment: Title follows mandated format. No axis labels needed for a crossword
+          grid — correctly suppressed.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Plot backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct; chrome
-          theme-adaptive; fixed black/white cell fills are crossword convention not
-          Okabe-Ito but semantically correct for binary grid'
+        comment: 'Monochrome design appropriate per spec (''monochrome design optimized
+          for printing''). Backgrounds correct: #FAF8F1 light, #1A1A17 dark. Theme
+          chrome fully adaptive.'
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean and appropriate but visually minimal; no refined typography
-          or design hierarchy beyond spec; well-configured default appearance
+        passed: true
+        comment: Professional crossword aesthetic with warm entry-cell tinting in
+          light mode (#F5F3EC). Clean newspaper-style layout. Above generic defaults
+          but inherently limited by monochrome spec.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Good: axis and grid chrome removed, legend hidden, subtle cell borders
-          (size=0.4); missing explicit panel_border for clean puzzle-box frame; whitespace
-          could be more generous'
+        passed: true
+        comment: No legend, no grid lines, coord_fixed for square cells, appropriate
+          panel border framing. Pure white (#FFFFFF) entry cells in dark mode slightly
+          undercut the warm palette philosophy — a warm near-white would be more refined.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
         passed: false
-        comment: Data displayed correctly; 180-degree symmetry implicit not highlighted;
-          no visual hierarchy or emphasis within the grid; default rating for this
-          plot type
+        comment: Subtitle adds useful context (symmetry type, number count) but no
+          visual hierarchy or focal point guiding the viewer through the puzzle structure.
+          Inherent limitation of a grid display.
     spec_compliance:
       score: 15
       max: 15
@@ -136,30 +147,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct crossword puzzle grid with white entry cells and black blocking
-          cells
+        comment: 'Correct crossword grid: white entry cells, black blocked cells,
+          numbered positions.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: White entry cells, black blocking cells, numbered word-start positions,
-          15x15 size, 180-degree symmetry, clean grid lines, monochrome design, 1:1
-          aspect ratio — all present
+        comment: 'All required features present: white entry cells, black blocked
+          cells, numbers at word starts, 180° rotational symmetry, uniform grid lines,
+          square cell aspect ratio, monochrome design.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Grid array correctly mapped to tiles; word-start detection correctly
-          identifies across and down starts
+        comment: Grid correctly maps row/col to tile positions; numbers correctly
+          placed at word-start cells for across and down.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'crossword-basic · python · plotnine · anyplot.ai';
-          legend correctly hidden
+        comment: 'Title: ''crossword-basic · python · plotnine · anyplot.ai'' matches
+          mandated format. No legend needed (correctly hidden).'
     data_quality:
       score: 15
       max: 15
@@ -169,22 +180,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full 15x15 grid with black cell blocking pattern, 79 numbered across/down
-          starts, and 180-degree symmetry all demonstrated
+        comment: 'Shows all aspects: blocked cells, entry cells, 79 numbered across/down
+          starts, 180° rotational symmetry, standard 15×15 size.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard newspaper-style crossword format; 15x15 is canonical NYT
-          puzzle size; numbering convention is authentic
+        comment: Classic newspaper-style crossword puzzle — highly realistic and neutral
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15x15 grid, ~79 numbered positions within realistic range for a standard
-          crossword puzzle
+        comment: 15×15 is the standard American newspaper crossword size. 79 numbered
+          positions is factually plausible for this grid density.
     code_quality:
       score: 10
       max: 10
@@ -194,36 +205,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> theme tokens -> grid construction -> DataFrames
-          -> plot -> save; no functions or classes'
+        comment: Clean imports → data → plot → save flow with no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Grid is fully deterministic (hardcoded black positions + symmetry
-          loop); no random seed needed
+        comment: Fully deterministic data (hardcoded black cell positions, no randomness).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported plotnine symbols are used; os, numpy, pandas all necessary
+        comment: All imports used, no extraneous imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Correct complexity level; symmetry loop is clean; word-start detection
-          is appropriately concise; no fake UI elements
+        comment: Clean, Pythonic. Loop for symmetry generation is clear and appropriate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; uses current plotnine API
+        comment: Saves as plot-{THEME}.png using current plotnine API.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -231,22 +239,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct grammar-of-graphics approach: ggplot + geom_tile + geom_text
-          + scale_fill_manual + coord_fixed + theme; uses inherit_aes=False correctly
-          for numbers layer'
+        comment: 'Creative idiomatic use of plotnine grammar for a non-standard viz:
+          geom_tile + geom_text with inherit_aes=False, coord_fixed, scale_fill_manual.
+          Strong usage.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: coord_fixed for 1:1 aspect ratio is plotnine-specific; multi-layer
-          composition is correct but generic — same approach works in any grammar-of-graphics
-          library
-  verdict: REJECTED
+        passed: true
+        comment: Uses coord_fixed (ggplot-specific aspect-ratio control), inherit_aes=False
+          for independent geom_text layer, and grammar of graphics composition for
+          a non-chart visualization. Solid but not deeply distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
+  - annotations
   patterns:
   - matrix-construction
   - iteration-over-groups
