@@ -6,7 +6,7 @@ title: Crossword Puzzle Grid
 
 # Specification tracking
 created: 2026-01-11T22:56:29Z
-updated: null
+updated: 2026-05-20T01:50:59Z
 issue: 3805
 suggested: MarkusNeusinger
 
@@ -15,13 +15,13 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - grid
-    - puzzle
   data_type:
     - categorical
     - matrix
   domain:
     - general
     - education
+    - puzzle
   features:
     - basic
     - printable
