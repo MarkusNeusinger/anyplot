@@ -93,8 +93,39 @@ pf <- build_pf(prices, box_size, reversal)
 n_cols <- max(pf$col)
 y_lo   <- min(pf$price) - box_size
 y_hi   <- max(pf$price) + box_size
+x_end  <- n_cols + 0.5
+
+# --- 45-degree trend lines (1 box per column = slope of box_size) ---
+x_col_ids <- sort(unique(pf$col[pf$type == "X"]))
+o_col_ids <- sort(unique(pf$col[pf$type == "O"]))
+
+support_df <- data.frame(
+  x    = x_col_ids,
+  y    = sapply(x_col_ids, function(c) min(pf$price[pf$col == c])),
+  xend = x_end
+)
+support_df$yend <- support_df$y + (x_end - support_df$x) * box_size
+
+resist_df <- data.frame(
+  x    = o_col_ids,
+  y    = sapply(o_col_ids, function(c) max(pf$price[pf$col == c])),
+  xend = x_end
+)
+resist_df$yend <- resist_df$y - (x_end - resist_df$x) * box_size
 
 p <- ggplot(pf, aes(x = col, y = price, label = type, color = type)) +
+  geom_segment(
+    data        = support_df,
+    aes(x = x, y = y, xend = xend, yend = yend),
+    color       = BULL_COLOR, alpha = 0.45, linewidth = 0.55, linetype = "dashed",
+    inherit.aes = FALSE
+  ) +
+  geom_segment(
+    data        = resist_df,
+    aes(x = x, y = y, xend = xend, yend = yend),
+    color       = BEAR_COLOR, alpha = 0.45, linewidth = 0.55, linetype = "dashed",
+    inherit.aes = FALSE
+  ) +
   geom_text(size = 3.5, fontface = "bold", family = "mono") +
   scale_color_manual(
     values = c("X" = BULL_COLOR, "O" = BEAR_COLOR),
