@@ -6,7 +6,7 @@ title: Point and Figure Chart
 
 # Specification tracking
 created: 2026-01-11T22:46:47Z
-updated: 2026-01-11T22:46:47Z
+updated: 2026-05-20T03:16:53Z
 issue: 3755
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - point-and-figure
-    - financial
   data_type:
     - timeseries
     - numeric
