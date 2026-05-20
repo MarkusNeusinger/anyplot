@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: point-and-figure-basic
 created: '2026-05-20T03:46:50Z'
-updated: '2026-05-20T03:52:26Z'
+updated: '2026-05-20T04:03:49Z'
 generated_by: claude-sonnet
 workflow_run: 26139700905
 issue: 3755
@@ -12,42 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Correct P&F algorithm with X/O columns and reversal logic
-  - Excellent idiomatic ggplot2 using geom_text with label aesthetic for symbol rendering
-  - Perfect theme adaptation — both light and dark renders are fully readable
-  - 'Okabe-Ito palette correctly applied: green (#009E73) for X/bullish, orange (#D55E00)
-    for O/bearish'
-  - Monospace font family for X/O symbols adds authentic P&F visual feel
-  - guides() with override.aes elegantly customizes legend to show actual X/O glyphs
-  - Realistic fictional stock scenario with plausible price movements and multi-phase
-    trends
+  - Excellent two-theme implementation with all chrome tokens correctly applied (PAGE_BG,
+    INK, INK_SOFT, ELEVATED_BG)
+  - 'Correct Okabe-Ito palette: green (#009E73) for bullish, orange (#D55E00) for
+    bearish — CVD-safe with shape+color redundancy'
+  - Complete P&F algorithm with proper box_size, reversal, and column switching logic
+  - Monospace bold font for X/O symbols is thematically appropriate for a financial
+    chart
+  - Custom legend with override.aes correctly shows X/O symbols in the legend box
+  - Both 45-degree support (from X column lows) and resistance (from O column tops)
+    trend lines implemented
   weaknesses:
-  - Missing 45-degree trend lines (support and resistance) — spec Notes section explicitly
-    requires them; they would connect ascending lows (bullish) and descending highs
-    (bearish) at 45 degrees across the column grid
-  - 'SC-02 penalty: no trend lines means a key P&F feature is absent from the visualization'
-  - DE-03 storytelling limited without trend lines — they would highlight the key
-    insight of support/resistance levels
-  - Right portion of chart (columns 7-9) is sparse which creates visual imbalance,
-    though this is data-driven
+  - Helper functions (floor_box, build_pf) technically violate the KISS no-functions
+    criterion
+  - Drawing trend lines from EVERY X/O column creates many crisscrossing lines; the
+    spec suggests connecting ascending lows selectively for a cleaner chart
+  - Both major and minor grid lines active simultaneously adds subtle visual busyness;
+    minor grid could be removed or set near-invisible
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, no pure white.
-      Chrome: Title "point-and-figure-basic · r · ggplot2 · anyplot.ai" in bold dark ink (~60% width, appropriate). Y-axis label "Price (USD)" and X-axis label "Column (Reversal #)" in dark ink, clearly readable. Tick labels in INK_SOFT dark gray, legible at all price/column positions.
-      Data: X symbols in #009E73 (Okabe-Ito #1, bullish columns), O symbols in #D55E00 (Okabe-Ito #2, bearish columns). Monospace bold font. Major + minor grid lines at 2-unit and 4-unit price intervals. Legend box with elevated-bg border shows "O Bearish" and "X Bullish" with matching colored glyphs.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "point-and-figure-basic · r · ggplot2 · anyplot.ai" in bold dark text — readable. Axis labels "Column (Reversal #)" and "Price (USD)" in dark INK color — readable. Tick labels in INK_SOFT #4A4A44 — readable. Legend box with elevated background #FFFDF6 and bordered frame.
+      Data: X symbols in #009E73 (Okabe-Ito #1) for bullish columns; O symbols in #D55E00 (Okabe-Ito #2) for bearish columns. Dashed trend lines in matching colors at alpha=0.45. 9 columns visible across price range $42–$74.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, no pure black.
-      Chrome: Title and axis labels rendered in light ink (#F0EFE8), clearly visible. Tick labels in #B8B7B0 (INK_SOFT dark mode), legible. Legend box uses elevated dark fill (#242420) with INK_SOFT border. No dark-on-dark text failures detected.
-      Data: X symbols remain #009E73 and O symbols remain #D55E00 — identical to light render, only chrome flipped. Grid lines subtle against dark background.
-      Legibility verdict: PASS — all text clearly readable against the warm near-black background. No dark-on-dark issues observed.
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title in light #F0EFE8 text — readable. Axis labels in light INK color — readable. Tick labels in INK_SOFT #B8B7B0 — readable. Legend box with elevated dark background #242420 and bordered frame. No dark-on-dark failures observed — all chrome correctly flips to light variants.
+      Data: Colors are identical to light render — X symbols in #009E73, O symbols in #D55E00. Trend lines same colors with alpha=0.45. Data colors unchanged between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -55,52 +54,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=12, axis=10, tick=8, legend=9).
-          Both themes readable. Minor: symbols at size=3.5mm may be slightly small
-          at mobile scale.'
+        comment: 'All sizes explicitly set; readable in both themes; minor: X/O symbols
+          at size=3.5 ggplot units may be slightly small at mobile scale'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: X/O symbols placed on discrete column/price grid — no collisions.
-          Legend does not overlap data.
+        comment: No text overlaps; X/O symbols well-spaced in column grid positions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Symbols clearly visible at full resolution. At 400px mobile width
-          (~55px source → ~7px scaled) they may be marginally small.
+        comment: X/O symbols clearly visible in both themes; many overlapping trend
+          lines reduce visual clarity slightly
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe palette. X/O shapes provide secondary non-color
-          distinction.
+        comment: Okabe-Ito green/orange is CVD-safe; shape+color redundancy distinguishes
+          series
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good proportions and whitespace. Right portion (columns 7-9) is data-sparse,
-          creating slight visual imbalance.
+        comment: Good 16:9 proportions, legend well-placed, balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Column (Reversal #) and Price (USD) are descriptive with units.'
+        comment: 'X: Column (Reversal #); Y: Price (USD) — both descriptive with context'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'X=#009E73 (Okabe-Ito #1), O=#D55E00 (Okabe-Ito #2). Backgrounds
-          #FAF8F1/#1A1A17. Both renders theme-correct.'
+        comment: 'First series #009E73; second #D55E00; light bg #FAF8F1; dark bg
+          #1A1A17; both themes chrome-correct'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -108,26 +104,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: correct Okabe-Ito palette, monospace font for X/O
-          symbols is an elegant domain-appropriate choice, clean legend with border.
-          Not publication-ready due to missing trend lines and no focal point emphasis.'
+        comment: Above default (4); monospace bold font for symbols; custom legend
+          with override.aes; elevated legend box; not exceptional
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: L-shaped axis lines (no top/right spine), subtle major+minor grid,
-          styled legend, generous whitespace. Good refinement.
+        comment: Tick marks removed; spines removed; subtle major grid (0.15) and
+          minor grid (0.08); minor grid adds busyness
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Column height variation shows price phases (bullish surge at col
-          3, big bearish drop at col 4). Without trend lines, the key P&F insight
-          of support/resistance is not highlighted for the viewer.
+        comment: Trend lines communicate support/resistance narrative; color coding
+          reinforces bullish/bearish story; lines from every column create complexity
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -135,56 +129,52 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct P&F chart with X columns for rising and O columns for falling
-          prices.
+        comment: Correct P&F chart with X/O symbols in column-based layout
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Core P&F features implemented. Missing: 45-degree support/resistance
-          trend lines explicitly required in spec Notes (''Draw support trend lines
-          connecting ascending lows... and resistance trend lines connecting descending
-          highs'').'
+        passed: true
+        comment: 'All features present: X/O symbols, color coding, single-type columns,
+          trend lines, box-size grid'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis = price, X-axis = column number (not time). All reversals
-          visible.
+        comment: X-axis = columns (reversals); Y-axis = price in USD with box-size
+          grid intervals
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format. Legend shows O Bearish and X Bullish
-          with correct colored symbols.
+        comment: Correct title format; legend labels O Bearish / X Bullish
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows both X and O column types, multiple reversals, varying column
-          heights. Missing trend line visualization as a P&F feature.
+        comment: Multiple X/O columns; reversals present; both support and resistance
+          trend lines; realistic price progression
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: ACME Corp. fictional stock, neutral financial context, plausible
-          price range and movement.
+        comment: ACME Corp. stock simulation; 300 trading days; neutral financial
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Starting at $52, range ~$43-73, box_size=$2, reversal=3. All appropriate
-          for a stock P&F chart.
+        comment: $52 starting price; $2 box size; 3-box reversal (standard); realistic
+          $42-$74 range
     code_quality:
       score: 9
       max: 10
@@ -193,63 +183,65 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: true
-        comment: build_pf() helper function deviates from strict KISS (no functions),
-          but the P&F algorithm complexity justifies it.
+        passed: false
+        comment: Helper functions floor_box and build_pf defined; complexity justifies
+          build_pf but technically violates no-functions criterion
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top of script.
+        comment: set.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only ggplot2 and ragg imported, both used.
+        comment: Only ggplot2 and ragg, both used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean R idioms, no fake UI, appropriate complexity for the chart
-          type.
+        comment: Clean R code; no fake UI; appropriate complexity for chart type
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using ragg::agg_png. Correct.
+        comment: plot-{THEME}.png via ragg::agg_png; modern ggplot2 3.5.1 API with
+          linewidth=
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Expert ggplot2: geom_text with label aesthetic for symbol rendering,
-          scale_color_manual, guides() with override.aes, expansion(), proper theme_minimal
-          layering.'
+        comment: Proper grammar of graphics layering; guides(override.aes=); expansion(0);
+          correct theme layering pattern
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: override.aes for custom legend glyphs is distinctively ggplot2. Monospace
-          family in geom_text. Minor breaks for dense Y grid. Not maximally distinctive
-          but above generic.
-  verdict: REJECTED
+        comment: guides(override.aes=) is distinctively ggplot2; geom_text for P&F
+          symbols; expansion() for axis control
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - ragg
   techniques:
+  - layer-composition
   - custom-legend
   - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - binning
   styling:
-  - grid-styling
+  - alpha-blending
+  - publication-ready
