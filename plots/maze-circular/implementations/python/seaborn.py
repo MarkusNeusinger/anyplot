@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-20
+Quality: 84/100 | Updated: 2026-05-20
 """
 
 import collections
