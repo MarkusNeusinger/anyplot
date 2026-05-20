@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: bar-drilldown
 created: '2026-01-16T17:16:28Z'
-updated: '2026-05-20T11:46:11Z'
+updated: '2026-05-20T11:58:58Z'
 generated_by: claude-sonnet
 workflow_run: 26159524768
 issue: 3783
@@ -12,127 +12,116 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 90
 review:
   strengths:
-  - 'Perfect spec compliance: all drilldown features implemented (breadcrumbs, back
-    button, cursor change, animated transitions, tooltips, value labels, consistent
-    color mapping across drill levels)'
-  - 'Excellent data quality: realistic regional sales with quarterly breakdown, neutral
-    business context, plausible values throughout'
-  - 'Correct Okabe-Ito palette with #009E73 as first series; both light (#FAF8F1)
-    and dark (#1A1A17) backgrounds correct; full theme-adaptive chrome with INK/INK_SOFT/INK_MUTED
-    tokens applied throughout'
-  - All font sizes explicitly set (title=16, axis_title=12, axis_text=10, subtitle=10,
-    geom_text=8); both renders fully readable with no dark-on-dark issues
-  - Flat KISS code structure; deterministic hardcoded data; clean imports; correct
-    plot-{THEME}.png and plot-{THEME}.html outputs
-  - Informative subtitle 'Open HTML for interactive drilldown' clearly guides viewers
-    to the interactive component
+  - 'Perfect spec compliance: all drilldown features (click, breadcrumb, back button,
+    animation, tooltips, cursor change, value labels) implemented and working'
+  - Internally consistent hierarchical data where quarterly values sum exactly to
+    region totals
+  - 'Both themes fully correct: backgrounds, text, grid, and data colors all theme-adaptive
+    in both renders'
+  - 'Okabe-Ito palette applied in canonical order with first series correctly #009E73'
+  - Animated transitions with cubic easing (480ms) provide smooth UX as required by
+    spec
+  - Clean KISS code structure with no functions/classes; deterministic hardcoded data
+  - Mean reference line and star-highest annotation create clear visual hierarchy
+    and storytelling
   weaknesses:
-  - Full panel border retained (all 4 spines visible) — style guide mandates removing
-    top and right spines; add element_blank() for panel_border or axis_line_top/right
-    to get an L-shaped frame
-  - 'DE-01 lacks aesthetic polish beyond correct palette: no spine removal, no subtle
-    shadow or rounded-top bars, no typographic contrast beyond bold value labels —
-    needs a distinctive visual touch to move above ''well-configured default'''
-  - 'DE-03 no focal point or narrative emphasis: East Region ($528K highest) is not
-    visually emphasized; value labels help comparison but there is no hierarchy drawing
-    the eye to the key insight'
-  - 'LM-02: the main interactive drilldown is implemented in vanilla JS Canvas API
-    rather than leveraging letsplot''s built-in interactive capabilities — reduces
-    library distinctiveness score'
+  - 'VQ-01 MINOR: annotation size=7 is slightly smaller than value labels at size=8;
+    increase to size=8 for consistency and better mobile readability'
+  - 'LM-02 PARTIAL: interactive HTML uses raw Canvas/JavaScript rather than letsplot
+    native HTML export; a letsplot-generated HTML with injected interactivity would
+    be more library-native'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "bar-drilldown · python · letsplot · anyplot.ai" in bold dark (#1A1A17) at 16pt, centered — fills ~75% of plot width as expected for long mandated title. Subtitle "Regional Sales · Open HTML for interactive drilldown" in muted gray below. Y-axis label "Sales ($)" in dark ink, X-axis label "Region" below bars. Tick labels ($0, $100,000, ..., $600,000 and region names) in INK_SOFT (#4A4A44). All chrome text is dark and clearly readable against the warm off-white surface.
-      Data: Four bars — North Region (#009E73 green), South Region (#D55E00 vermillion), East Region (#0072B2 blue), West Region (#CC79A7 pink) — correct Okabe-Ito order. Bold dark value labels ($485K, $392K, $528K, $445K) displayed above each bar. Subtle horizontal y-grid only, no x-grid. Full panel border visible (all 4 spines present).
-      Legibility verdict: PASS — all text clearly readable against light background
+      Background: Warm off-white, matches #FAF8F1 — not pure white
+      Chrome: Title "bar-drilldown · python · letsplot · anyplot.ai" bold and centered in dark ink; subtitle in muted dark; axis labels "Region" and "Sales ($)" in dark ink; tick labels in INK_SOFT dark tone — all clearly readable
+      Data: Four bars in Okabe-Ito canonical order: North (#009E73), South (#D55E00), East (#0072B2), West (#CC79A7); value labels in bold dark text above bars; dashed mean line in muted tone; "★ highest" annotation in blue above East Region
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct warm dark surface
-      Chrome: Title in light (#F0EFE8) text, clearly readable. Subtitle in lighter muted tone. Y-axis label "Sales ($)" and X-axis label "Region" in light INK token. Tick labels in INK_SOFT (#B8B7B0) — visible against dark background. Value labels ($485K, $392K, $528K, $445K) rendered in light (#F0EFE8) bold text, readable above the bars. No dark-on-dark failures observed.
-      Data: Bar colors are identical to light render — #009E73 (North), #D55E00 (South), #0072B2 (East), #CC79A7 (West). Only chrome elements flipped between themes as required.
-      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark issues
+      Background: Warm near-black, matches #1A1A17 — not pure black
+      Chrome: Title and subtitle rendered in light cream (#F0EFE8); axis labels and tick labels in INK_SOFT light tone (#B8B7B0); all text clearly readable against dark surface; no dark-on-dark failures observed
+      Data: Identical Okabe-Ito colors as light render — North (#009E73), South (#D55E00), East (#0072B2), West (#CC79A7); value labels in light text above bars; "★ highest" annotation in Okabe-Ito blue still clearly visible
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set (title=16, axis_title=12, axis_text=10,
-          subtitle=10, geom_text=8). Both themes fully readable, well-proportioned.
+        comment: 'All font sizes explicitly set; all text readable in both themes.
+          Minor: annotation size=7 is slightly smaller than value labels at size=8.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Value labels positioned cleanly above bars
-          without collision.
+        comment: No overlapping text or elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible with appropriate width=0.7. Value labels bold
-          and prominent.
+        comment: Bars well-proportioned and clearly visible; dashed mean line appropriately
+          subtle.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe. Adequate contrast in both themes.
+        comment: Okabe-Ito palette is CVD-safe; good luminance contrast between all
+          bars and backgrounds.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions, balanced margins, nothing cut off. Canvas utilization
-          appropriate.
+        comment: Plot fills canvas well; generous margins; balanced whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Sales ($)'' with units. X-axis: ''Region''. Both descriptive.'
+        comment: Sales ($) includes currency unit; Region is descriptive; title follows
+          mandated format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order correct, backgrounds #FAF8F1
-          light / #1A1A17 dark, full chrome adaptation.'
+        comment: 'First series #009E73; Okabe-Ito canonical order; backgrounds #FAF8F1/#1A1A17;
+          all chrome theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured default. Correct palette, value labels, informative
-          subtitle. No exceptional design touches beyond correct palette and sizing.
+        passed: true
+        comment: 'Above configured defaults: Okabe-Ito explicitly applied, mean reference
+          line, peak annotation, bar edges blending into background. Not publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid customized to y-only with subtle RULE color (good). But full
-          panel border / all 4 spines retained. Style guide mandates removing top/right
-          spines.
+        passed: true
+        comment: 'Good refinement: X-axis major grid removed, minor grid removed,
+          Y-only grid subtle, generous margins, bar edges styled to match background.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Informative subtitle guides viewer to interactive HTML. Value labels
-          enable precise comparison. But no focal point emphasizing the highest bar
-          (East) or other narrative emphasis.
+        passed: true
+        comment: 'Clear story: mean line provides comparison context, star annotation
+          highlights East Region peak, subtitle states East leads at $528K.'
     spec_compliance:
       score: 15
       max: 15
@@ -142,28 +131,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct column chart. HTML delivers full interactive drilldown.
+        comment: Correct bar chart in static PNG; full interactive Canvas-based bar
+          chart with click-to-drill in HTML.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: breadcrumbs, back button, clickable breadcrumbs,
+        comment: 'All spec features present: click-to-drill, breadcrumb, back button,
           animated transitions, consistent color mapping, cursor change, value labels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'Regions on X-axis, Sales on Y-axis. Correct hierarchy: root > region
-          > quarterly.'
+        comment: 'X: category names; Y: sales values; hierarchical structure correctly
+          mapped.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'bar-drilldown · python · letsplot · anyplot.ai' correct. No
-          legend needed (colors ARE the category identity).
+        comment: Title exactly 'bar-drilldown · python · letsplot · anyplot.ai'; no
+          legend needed; show_legend=False appropriate.
     data_quality:
       score: 15
       max: 15
@@ -173,22 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full hierarchy: root level (4 regions) + drill level (4 quarters
-          per region). Values vary meaningfully across both levels.'
+        comment: Shows root level (4 regions) and drill-down level (quarterly breakdown
+          per region); variation in values across both levels.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Regional sales breakdown by quarter — realistic, neutral business
-          context.
+        comment: Regional sales quarterly breakdown is a standard, neutral business
+          scenario; no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Quarterly values $85K-$155K, annual regional totals $392K-$528K,
-          total $1.85M — plausible mid-size business figures.
+        comment: Quarterly values sum precisely to region totals (North 98+125+142+120=$485K
+          etc.); internally consistent and plausible.
     code_quality:
       score: 10
       max: 10
@@ -198,64 +188,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports > data > letsplot plot > HTML generation
-          > save. No unnecessary functions or classes.'
+        comment: 'Flat: imports → tokens → data → letsplot plot → ggsave → HTML generation.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic hardcoded data, no random elements.
+        comment: All data hardcoded; fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. json, os, pandas, and selective lets_plot components.
+        comment: All imports used; json and os used in HTML template; no dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for an interactive drilldown spec. HTML Canvas
-          implementation is genuine interactivity, not fake UI.
+        comment: HTML is verbose but necessarily so for full Canvas-based interactive
+          chart; no over-engineering; no fake UI in letsplot plot.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (ggsave scale=4) and plot-{THEME}.html. Correct
-          filenames.
+        comment: Saves plot-{THEME}.png via ggsave and plot-{THEME}.html via file
+          write; current API throughout.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Idiomatic ggplot grammar: ggplot()+geom_bar()+scale_fill_manual()+theme_minimal()+theme().
-          Uses ggsize() and ggsave(scale=4) correctly. scale_y_continuous(format=''...'')
-          is a nice letsplot-specific feature.'
+        comment: 'Expert use of letsplot grammar: ggplot + geom_bar + geom_hline +
+          geom_text, scale_fill_manual, theme with element_* functions, labs, ggsize,
+          ggsave scale=4.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: The main interactive drilldown is implemented via vanilla JS Canvas
-          API rather than letsplot's built-in interactive features. Format strings
-          in scale_y_continuous are somewhat distinctive.
-  verdict: REJECTED
+        passed: true
+        comment: Grammar-of-graphics composition used effectively for PNG, but interactive
+          HTML is custom Canvas rather than letsplot native HTML export.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - layer-composition
   - hover-tooltips
   - html-export
-  - annotations
-  patterns:
-  - data-generation
-  - iteration-over-groups
+  patterns: []
   dataprep: []
   styling:
   - edge-highlighting
