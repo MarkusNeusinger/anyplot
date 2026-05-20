@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: bar-drilldown
 created: '2026-05-20T11:18:01Z'
-updated: '2026-05-20T11:23:59Z'
+updated: '2026-05-20T11:37:36Z'
 generated_by: claude-sonnet
 workflow_run: 26158838659
 issue: 3783
@@ -12,42 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 89
 review:
   strengths:
-  - Perfect theme adaptation in both light and dark renders with all chrome tokens
-    correctly applied
-  - Quarterly values sum exactly to annual totals — internally consistent, realistic
-    data
-  - Value labels on overview panel; grouped bar colors follow Okabe-Ito positions
-    1-4 correctly
-  - Clean, deterministic KISS code structure with no fake interactivity
-  - Two-panel layout creates a natural overview-to-detail narrative
+  - Gold edge accent on East bar is an elegant focal-point technique that guides the
+    viewer to the top performer without simulating interactivity
+  - Quarterly values sum precisely to annual totals — internally consistent data with
+    real-world plausibility
+  - 'Both theme renders fully correct: warm backgrounds (#FAF8F1/#1A1A17), theme-adaptive
+    chrome, identical Okabe-Ito data colors across light and dark'
+  - Two-panel layout with breadcrumb text effectively narrates the hierarchical drilldown
+    concept in static form
+  - Clean code with all font sizes explicitly set and correct current seaborn API
+    usage (errorbar=None, sns.move_legend)
   weaknesses:
-  - No breadcrumb trail or hierarchy indicator between panels — add static text like
-    All Regions → Quarterly Breakdown in the gap to satisfy SC-02
-  - Value labels missing on bottom drill panel — add annotation loop mirroring the
-    top panel
-  - No visual focal point on highest-performing region (East) — add edgecolor highlight
-    or annotation accent on leading bar
-  - Bar edges not defined — add edgecolor=PAGE_BG linewidth=0.5 to both barplot calls
-    for visual separation
-  - Title placed on ax1 at 10pt rather than fig.suptitle at 12pt — minor hierarchy
-    issue
-  - No seaborn-distinctive features used — replace manual spine removal with sns.despine()
-    and use sns.move_legend() for idiomatic usage
+  - Bottom panel value labels at fontsize=6 are borderline small for mobile readability
+    — raise to 7pt
+  - Most detailed annotation work (patch iteration, ax.text labels) is done at matplotlib
+    level rather than seaborn level, limiting library distinctiveness score
+  - Breadcrumb text styling is functional but plain — a slightly bolder weight or
+    subtle background box would integrate it more visually with the panel design
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct theme surface
-      Chrome: title "Sales by Region · bar-drilldown · python · seaborn · anyplot.ai" in dark #1A1A17 text at top; axis labels "Annual Revenue ($M)", "Quarterly Revenue ($M)", "Region" in dark ink at 10pt; tick labels in soft #4A4A44 at 8pt; legend box with elevated-bg fill and INK_SOFT border; dollar value annotations above top panel bars
-      Data: top panel — 4 brand-green (#009E73) bars for regional totals; bottom panel — grouped bars in Okabe-Ito positions 1-4 (green Q1, orange Q2, blue Q3, pink Q4)
-      Legibility verdict: PASS — all text readable; no dark-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Sales by Region · bar-drilldown · python · seaborn · anyplot.ai" in dark ink, readable. Axis labels "Annual Revenue ($M)", "Quarterly Revenue ($M)", "Region" all in dark ink at 10pt. Tick labels at 8pt in INK_SOFT (#4A4A44). Breadcrumb "All Regions ▶ Quarterly Breakdown by Region" in muted dark tone between panels. All chrome elements readable.
+      Data: Top panel — 4 bars in brand green (#009E73), East bar has gold (#E69F00) border accent. Dollar value labels ($12.4M, $8.7M, $15.2M, $10.1M) above bars at 8pt. Bottom panel — 16 grouped bars using Okabe-Ito: Q1=#009E73, Q2=#D55E00, Q3=#0072B2, Q4=#CC79A7. Value labels above each bar at 6pt in INK_SOFT.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct dark surface, not pure black
-      Chrome: title in light cream text (~#F0EFE8); axis labels in light ink; tick labels in soft #B8B7B0; legend box uses #242420 elevated-dark fill; dollar annotations in muted light tone
-      Data: data colors identical to light render — brand green, orange, blue, pink bars unchanged across themes
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures observed; chrome adapts correctly throughout
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8), readable. Axis labels and tick labels in light chrome (#B8B7B0). Breadcrumb in muted light tone. Legend frame in elevated dark (#242420) with muted border. No dark-on-dark failures — all text elements clearly visible against the dark surface.
+      Data: Identical colors to light render — brand green (#009E73) bars in top panel, East gold border, same Okabe-Ito Q1-Q4 colors in bottom panel. Data series colors unchanged between themes as required.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,125 +54,125 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; readable both themes; title on ax1 at 10pt
-          rather than fig.suptitle at 12pt
+        comment: All font sizes explicitly set; 6pt bottom-panel labels borderline
+          small but visible in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping text in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible in both panels
+        comment: Bars clearly visible, colors well-contrasted on both backgrounds
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; adequate contrast
+        comment: Okabe-Ito is CVD-safe; gold accent supplementary only
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Two panels fill canvas well; balanced margins; nothing cut off
+        comment: Two-panel layout with height_ratios=[2,3] uses canvas well, no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with dollar units
+        comment: Descriptive labels with units ($M) on both axes
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito positions 1-4; correct backgrounds;
-          theme-adaptive chrome'
+        comment: 'First series #009E73, Okabe-Ito order for multi-series, correct
+          warm backgrounds, full theme-adaptive chrome'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
         passed: true
-        comment: Well-configured default; two-panel layout thoughtful; no bar edge
-          definition; no focal point
+        comment: 'Strong design: gold focal-point accent, warm theme backgrounds,
+          clear panel hierarchy — above generic defaults'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed, grid alpha=0.10, legend styled; missing bar edges
-          and bottom panel annotations
+        comment: 'Good: despined axes, very subtle grid (alpha=0.10), elevated legend
+          background, generous panel spacing'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Two-panel overview-to-detail guides reader; color consistency; no
-          focal point on leading region
+        comment: 'Good: two-panel hierarchy narrates overview→drill, gold East border
+          is a data-driven focal point, breadcrumb contextualizes relationship'
     spec_compliance:
-      score: 11
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct bar chart type; hierarchical structure shown statically;
-          interactive drilling not implementable in seaborn
+        comment: Correct bar chart type with hierarchical data; static two-panel is
+          correct seaborn alternative to click-drill interactivity
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Two levels shown and color consistency; breadcrumb trail absent;
-          value labels only on overview panel; interactive features not applicable
+        passed: true
+        comment: Breadcrumb, value labels, two-level display, color mapping present.
+          Back button and animations are not feasible for static seaborn.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=Region Y=Revenue correct; all regions shown at both levels
+        comment: X=Region, Y=Revenue correct. All 4 regions × 4 quarters visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct with descriptive prefix; legend labels Q1-Q4
-          correct
+        comment: Title follows required format with descriptive prefix. Quarter legend
+          labels match data.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Both hierarchy levels shown with variation; only two levels (region+quarter)
-          vs possible three
+        comment: Shows both hierarchy levels, regional variation, and quarterly seasonal
+          patterns
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Regional sales with quarterly breakdown — real neutral business scenario
+        comment: Real-world regional sales scenario, plausible revenue values, neutral
+          topic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Quarterly values sum exactly to annual totals; plausible revenue
-          range
+        comment: Quarterly values sum precisely to annual totals — internally consistent
     code_quality:
       score: 10
       max: 10
@@ -186,7 +182,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports-Data-Plot-Save; no functions/classes
+        comment: Linear imports→data→plot→save, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -198,47 +194,48 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All four imports used
+        comment: All 4 imports used, no extras
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; annotation loop idiomatic; no fake UI
+        comment: Clean Pythonic code, no over-engineering or fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; modern seaborn API
+        comment: Correct plot-{THEME}.png output, current seaborn API
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Axes-level barplot with hue; sns.set_theme for global theming; manual
-          spine removal instead of sns.despine()
+        comment: Correct axes-level barplot, errorbar=None, sns.set_theme with rc,
+          sns.despine, sns.move_legend — all idiomatic
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses hue parameter for grouped bars; otherwise generic — no sns.despine(),
-          sns.move_legend(), FacetGrid, or statistical features
-  verdict: REJECTED
+        passed: true
+        comment: Uses sns.move_legend() and sns.despine() distinctively; detailed
+          annotation work is at matplotlib level
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
+  - custom-legend
   patterns:
-  - data-generation
-  - iteration-over-groups
   - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
+  - edge-highlighting
   - grid-styling
