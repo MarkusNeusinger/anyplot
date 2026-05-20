@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-20
@@ -12,19 +12,20 @@ from lets_plot import (
     LetsPlot,
     aes,
     coord_fixed,
+    element_blank,
     element_line,
     element_rect,
     element_text,
     geom_contour,
     geom_contourf,
     geom_path,
+    geom_point,
     geom_text,
     ggplot,
     ggsize,
     labs,
     scale_fill_gradient2,
     theme,
-    theme_bw,
 )
 from lets_plot.export import ggsave
 
@@ -42,6 +43,8 @@ LABEL_COLOR = "#1A1A17" if THEME == "light" else "#F0EFE8"
 COAST_COLOR = "#0072B2"  # Okabe-Ito blue — works on both themes
 GRID_MAJOR = "#CCCAC3" if THEME == "light" else "#2E2E2B"
 GRID_MINOR = "#E0DDD7" if THEME == "light" else "#252522"
+CITY_COLOR = "#D55E00"  # Okabe-Ito vermillion — reference cities
+ANNO_BG = "#FFFDF6" if THEME == "light" else "#242420"
 
 # Data — synthetic elevation for Western US mountain region
 np.random.seed(42)
@@ -81,8 +84,8 @@ used_positions = []
 for level in contour_levels:
     candidates = df[
         (abs(df["elevation"] - level) < 80)
-        & (df["lon"] > lon_range[0] + 0.5)
-        & (df["lon"] < lon_range[-1] - 3.5)
+        & (df["lon"] > lon_range[0] + 2.0)  # 2° left buffer to prevent text clipping
+        & (df["lon"] < lon_range[-1] - 7.0)  # 7° right buffer to avoid panel clipping
         & (df["lat"] > lat_range[0] + 0.5)
         & (df["lat"] < lat_range[-1] - 0.5)
     ].copy()
@@ -108,12 +111,15 @@ for level in contour_levels:
 
 label_df = pd.DataFrame(label_data) if label_data else pd.DataFrame({"lon": [], "lat": [], "label": []})
 
-# Geographic features — simplified Pacific coastline
+# Geographic features — Pacific coastline (more detail for realism)
 coast_df = pd.DataFrame(
-    {"lon": [-120, -120, -120, -120, -119.5, -119, -118.5, -118], "lat": [35, 37, 39, 41, 42, 43, 44, 45]}
+    {
+        "lon": [-120, -120, -120, -120, -119.8, -119.5, -119.2, -118.8, -118.5, -118.2, -118],
+        "lat": [35, 36, 37.5, 39, 40, 41, 42, 43, 43.8, 44.5, 45],
+    }
 )
 
-# Simplified state border segments
+# State border segments (CA/NV, NV/UT, ID/UT, WY/MT/ID borders)
 border_segments = [
     {"lon": [-120, -120, -117, -114], "lat": [42, 39, 36, 35]},
     {"lon": [-114, -114], "lat": [35, 42]},
@@ -121,6 +127,24 @@ border_segments = [
     {"lon": [-117, -111], "lat": [45, 45]},
 ]
 border_dfs = [pd.DataFrame(seg) for seg in border_segments]
+
+# Mountain range name annotations — storytelling layer
+range_labels = pd.DataFrame(
+    {
+        "lon": [-118.8, -111.2, -110.8, -106.8],
+        "lat": [37.2, 40.3, 43.8, 41.3],
+        "label": ["Sierra\nNevada", "Wasatch\nRange", "Teton\nRange", "Rocky\nMts."],
+    }
+)
+
+# Reference cities inside the plot bounds for geographic context
+cities = pd.DataFrame(
+    {
+        "lon": [-119.81, -115.14, -111.89, -116.20],
+        "lat": [39.53, 36.18, 40.76, 43.62],
+        "label": ["Reno", "Las Vegas", "SLC", "Boise"],
+    }
+)
 
 # Build plot
 plot = (
@@ -135,7 +159,7 @@ plot = (
         limits=[elev_min, elev_max],
         name="Elevation (m)",
     )
-    + geom_path(data=coast_df, mapping=aes(x="lon", y="lat"), color=COAST_COLOR, size=1.5, alpha=0.9, inherit_aes=False)
+    + geom_path(data=coast_df, mapping=aes(x="lon", y="lat"), color=COAST_COLOR, size=2.0, alpha=0.9, inherit_aes=False)
 )
 
 for border_df in border_dfs:
@@ -148,21 +172,52 @@ if len(label_df) > 0:
         data=label_df,
         mapping=aes(x="lon", y="lat", label="label"),
         color=LABEL_COLOR,
-        size=9,
+        size=10,  # increased from 9 for mobile legibility
         fontface="bold",
         inherit_aes=False,
     )
 
-# Theme-adaptive chrome
+# Mountain range annotations — italic, slightly smaller for hierarchy
+plot = plot + geom_text(
+    data=range_labels,
+    mapping=aes(x="lon", y="lat", label="label"),
+    color=INK_SOFT,
+    size=8,
+    fontface="italic",
+    inherit_aes=False,
+)
+
+# City reference markers + labels
+plot = plot + geom_point(
+    data=cities,
+    mapping=aes(x="lon", y="lat"),
+    color=CITY_COLOR,
+    size=4,
+    shape=21,
+    fill=ANNO_BG,
+    stroke=1.5,
+    inherit_aes=False,
+)
+plot = plot + geom_text(
+    data=cities,
+    mapping=aes(x="lon", y="lat", label="label"),
+    color=CITY_COLOR,
+    size=8,
+    nudge_y=0.4,
+    fontface="bold",
+    inherit_aes=False,
+)
+
+# Theme-adaptive chrome — no heavy base theme; fully custom for map-style clarity
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_border=element_rect(color=INK_SOFT, fill=None),
+    panel_border=element_blank(),  # geographic maps conventionally use no heavy frame
     panel_grid_major=element_line(color=GRID_MAJOR, size=0.3),
     panel_grid_minor=element_line(color=GRID_MINOR, size=0.2),
     axis_title=element_text(color=INK, size=12),
     axis_text=element_text(color=INK_SOFT, size=10),
-    axis_line=element_line(color=INK_SOFT),
+    axis_line=element_line(color=INK_SOFT, size=0.5),
     plot_title=element_text(color=INK, size=16),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=10),
@@ -176,7 +231,6 @@ geo_ratio = 1.0 / np.cos(np.radians(40.0))
 plot = (
     plot
     + labs(title="contour-map-geographic · python · letsplot · anyplot.ai", x="Longitude (°W)", y="Latitude (°N)")
-    + theme_bw()
     + anyplot_theme
     + ggsize(800, 450)
     + coord_fixed(ratio=geo_ratio)
