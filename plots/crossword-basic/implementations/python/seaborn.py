@@ -1,25 +1,44 @@
-""" pyplots.ai
+""" anyplot.ai
 crossword-basic: Crossword Puzzle Grid
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-15
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-20
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 
 
-# Set style
-sns.set_style("white")
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Data: 15x15 crossword grid with 180-degree rotational symmetry
-np.random.seed(42)
 grid_size = 15
-
-# Create symmetric black cell pattern (1 = blocked, 0 = entry)
 grid = np.zeros((grid_size, grid_size), dtype=int)
 
-# Define blocked cells for top half (will be mirrored for symmetry)
 blocked_positions = [
     (0, 4),
     (0, 10),
@@ -43,7 +62,6 @@ blocked_positions = [
     (7, 7),
 ]
 
-# Apply blocked cells with 180-degree rotational symmetry
 for r, c in blocked_positions:
     grid[r, c] = 1
     grid[grid_size - 1 - r, grid_size - 1 - c] = 1
@@ -55,47 +73,45 @@ for r in range(grid_size):
     for c in range(grid_size):
         if grid[r, c] == 1:
             continue
-        # Check if starts across word (left edge or blocked cell to left, and has room)
         starts_across = (c == 0 or grid[r, c - 1] == 1) and (c < grid_size - 1 and grid[r, c + 1] == 0)
-        # Check if starts down word (top edge or blocked cell above, and has room)
         starts_down = (r == 0 or grid[r - 1, c] == 1) and (r < grid_size - 1 and grid[r + 1, c] == 0)
-
         if starts_across or starts_down:
             numbers[(r, c)] = clue_num
             clue_num += 1
 
-# Plot using seaborn heatmap
-fig, ax = plt.subplots(figsize=(12, 12))
+# Cell colors: open cells are warm white, blocked cells near-black (data encoding)
+# Dark mode: use pure black for blocked cells so they contrast with #1A1A17 background
+cell_open = "#FFFFFF" if THEME == "light" else "#FAF8F1"
+cell_blocked = "#1A1A17" if THEME == "light" else "#000000"
+NUMBER_INK = "#1A1A17"
 
-# Create color map: 0 (white cells) = white, 1 (blocked) = black
-cmap = sns.color_palette(["white", "#1a1a1a"])
+# Plot
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400, facecolor=PAGE_BG)
 
-# Plot heatmap without annotations
+cmap = sns.color_palette([cell_open, cell_blocked])
 sns.heatmap(
     grid,
     ax=ax,
     cmap=cmap,
     cbar=False,
     square=True,
-    linewidths=2,
-    linecolor="#306998",
+    linewidths=1.0,
+    linecolor=INK_SOFT,
     xticklabels=False,
     yticklabels=False,
 )
 
-# Add clue numbers to appropriate cells
+# Add clue numbers to top-left corner of numbered cells
 for (r, c), num in numbers.items():
-    # Position numbers in top-left corner of cell
-    ax.text(c + 0.15, r + 0.25, str(num), fontsize=11, fontweight="bold", color="#306998", ha="left", va="top")
+    ax.text(c + 0.12, r + 0.28, str(num), fontsize=9, fontweight="bold", color=NUMBER_INK, ha="left", va="top")
 
 # Style
-ax.set_title("crossword-basic · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=20)
+ax.set_title("crossword-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=14)
 
-# Remove axis spines and add outer border
 for spine in ax.spines.values():
     spine.set_visible(True)
-    spine.set_color("#306998")
-    spine.set_linewidth(3)
+    spine.set_color(INK_SOFT)
+    spine.set_linewidth(1.5)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)

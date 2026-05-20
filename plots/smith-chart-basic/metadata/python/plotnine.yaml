@@ -1,161 +1,193 @@
 library: plotnine
+language: python
 specification_id: smith-chart-basic
 created: '2026-01-15T21:51:40Z'
-updated: '2026-01-15T21:54:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047489075
+updated: '2026-05-20T01:40:11Z'
+generated_by: claude-sonnet
+workflow_run: 26135153218
 issue: 3792
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of Smith chart using plotnine grammar of graphics approach
-  - Mathematically correct calculation of constant resistance circles and reactance
-    arcs
-  - Proper conversion from complex impedance to reflection coefficient coordinates
-  - Clean layered composition with grid, boundary, axis, data locus, and annotations
-  - Realistic RF engineering data scenario with antenna S11 measurements
-  - Good use of coord_fixed for maintaining circular aspect ratio
+  - Perfect spec compliance — all required Smith chart elements (resistance circles,
+    reactance arcs, impedance locus, frequency labels, matched-load reference) correctly
+    implemented with accurate gamma formula
+  - Excellent data quality — realistic patch antenna S11 scenario (1–6 GHz, Z0=50Ω)
+    with physically correct impedance behavior
+  - Strong theme adaptation — all chrome tokens (INK, INK_SOFT, INK_MUTED) correctly
+    vary between light/dark; data colors fixed at Okabe-Ito positions
+  - Thoughtful visual hierarchy — alpha gradient from reactance arcs (0.4) to resistance
+    circles (0.6) to boundary (1.0) creates natural depth
+  - Directional arrow mid-locus is a domain-appropriate storytelling device that guides
+    RF engineers through the frequency sweep
   weaknesses:
-  - Frequency labels in yellow may have lower contrast against white background than
-    ideal
-  - Grid line labels (r=0, r=0.2, x=0.5, etc.) not shown - would enhance educational
-    value
-  - Data point markers could be slightly larger for better visibility at full resolution
-  image_description: The plot displays a Smith chart with the correct circular layout.
-    The outer boundary is a black circle representing |gamma|=1 (total reflection).
-    Inside, light gray constant resistance circles are drawn (centered along the horizontal
-    axis) and constant reactance arcs curve from the right edge. A horizontal real
-    axis line passes through the center. The impedance locus is drawn as a connected
-    blue (#306998) path with small markers showing an antenna S11 measurement sweep
-    from 1-6 GHz. Five frequency labels (1.0 GHz, 2.2 GHz, 3.4 GHz, 4.7 GHz, 6.0 GHz)
-    appear in yellow/gold text positioned above their corresponding data points. A
-    red dot marks the center point (Z=Z₀) with a red label. The chart uses a clean
-    white background with no axis labels or tick marks (appropriate for a Smith chart).
-    The title "smith-chart-basic · plotnine · pyplots.ai" appears centered at the
-    top in bold black text.
+  - Resistance circle labels at size=8pt are at the lower bound of mobile readability
+    — increase to 9pt
+  - Minor crowding risk near '0.5' resistance label and the 4.5 GHz/2.5 GHz frequency
+    annotation cluster; nudges help but could use slightly more aggressive offsets
+  - Square canvas leaves noticeable empty corners outside the unit circle — add panel_border=element_blank()
+    and tighten xlim/ylim to (-1.25, 1.25) for cleaner canvas utilization
+  - 'LM-02 capped at 3/5: core Smith chart geometry is computed in numpy before plotting;
+    plotnine used primarily as a rendering layer rather than for grammar-of-graphics
+    statistical capabilities'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — confirmed, not pure white
+      Chrome: Title "smith-chart-basic · python · plotnine · anyplot.ai" in bold dark INK (#1A1A17), centered — readable. Resistance circle labels in INK_MUTED (gray, muted) along real axis — readable at full size. Frequency labels (1.0, 2.5, 4.5, 6.0 GHz) in bold INK — clearly readable. No axis tick labels (appropriately blanked for Smith chart). "Z=Z₀" annotation in orange (#D55E00) — readable.
+      Data: Impedance locus in #009E73 (brand green), thick path (size=1.5) with semi-transparent dot markers (alpha=0.65). Directional arrow in same green. Smith chart grid: resistance circles in INK_SOFT alpha=0.6 (medium gray), reactance arcs in INK_SOFT alpha=0.4 (lighter gray). Boundary circle in solid INK. Orange dot at center.
+      Legibility verdict: PASS — all text readable, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — confirmed, not pure black
+      Chrome: Title in near-white (#F0EFE8) — clearly readable against dark surface. Frequency labels in INK (#F0EFE8 for dark theme) — readable. Resistance circle labels in INK_MUTED (#A8A79F) — readable. Boundary circle and grid lines in lighter gray tones (INK_SOFT = #B8B7B0, INK = #F0EFE8) — appropriately adapted. No dark-on-dark failures observed.
+      Data: Impedance locus in identical #009E73 green — confirmed matching light render. Orange Z=Z₀ dot and annotation still visible and distinguishable.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title is large and bold, frequency labels are readable though could
-          be slightly larger
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Grid lines visible with appropriate alpha, data points could be slightly
-          larger
+        comment: All font sizes explicitly set. Readable in both themes. Resistance
+          labels at 8pt are borderline for mobile; bump to 9pt recommended.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Per-label nudges prevent overlap. Minor crowding risk near 0.5 resistance
+          label and 4.5/2.5 GHz cluster but no actual overlap visible.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Impedance locus prominent (size=1.5 path, 2.5 points). Grid appropriately
+          subtle at lower alpha. Directional arrow clear.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/yellow/red color scheme is colorblind-safe with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Chart is well-centered with balanced margins, uses square 1:1 aspect
-          ratio appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for Smith chart (no conventional axes), but spec-appropriate
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid lines are subtle with appropriate alpha, no legend needed
+        comment: Okabe-Ito palette, CVD-safe. Strong contrast between green locus
+          and gray grid.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400px. Chart fills ~75% of canvas with balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct. Empty axis labels appropriate for Smith chart; resistance
+          and frequency labels provide all needed context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Reference marker #D55E00 (Okabe-Ito pos 2).
+          Backgrounds #FAF8F1/#1A1A17. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above configured default. Intentional alpha hierarchy for grid layers,
+          INK_MUTED vs INK for label types, orange center marker for focal contrast.
+          Not yet publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Standard grid replaced with custom geometry. Axis ticks removed.
+          No legend box. Clean whitespace. Minor: empty corners outside unit circle.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Directional arrow shows frequency sweep direction. Frequency labels
+          guide reader along locus. Z=Z0 annotation marks matched condition. Clear
+          focal point.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Smith chart with resistance circles and reactance arcs
+        comment: 'Full Smith chart: resistance circles, reactance arcs (both ±), unit
+          circle boundary, normalized impedance.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Complex impedance correctly converted to reflection coefficient (gamma)
-          coordinates
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: grid, normalized impedance, connected
-          locus curve, frequency labels, center marker'
-      - id: SC-04
-        name: Data Range
+        comment: Z/Z0 normalization, impedance locus, frequency labels, |gamma|=1
+          boundary, matched-load center all present. VSWR circles optional and omitted.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within unit circle boundary
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Correct gamma formula. X=Re(gamma), Y=Im(gamma). All 50 frequency
+          points plotted.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, but labels could better explain the grid values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: smith-chart-basic · plotnine · pyplots.ai'
+        comment: Title 'smith-chart-basic · python · plotnine · anyplot.ai' correct.
+          No legend needed (single series with inline annotations).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows impedance variation with frequency creating realistic spiral
-          pattern, visits different regions of Smith chart
+        comment: r circles for 0,0.2,0.5,1,2,5. Reactance arcs for |x|=0.2,0.5,1,2,5
+          both signs. Full locus with directional arrow and reference marker.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Antenna S11 measurement from 1-6 GHz is a realistic RF engineering
-          scenario
+        comment: Patch antenna S11 from 1-6 GHz is a highly realistic RF engineering
+          scenario. Z0=50Ω is standard.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Impedance values around 50 ohms reference are realistic, frequency
-          range is typical for antenna design
+        comment: z_real ~20-80Ω, z_imag ~-40 to +50Ω. Physically realistic for patch
+          antenna near resonance. All values within unit circle (passive device constraint
+          satisfied).
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,55 +195,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports, data generation, plot construction, save'
+        comment: 'Clean linear: imports → tokens → data → plot → save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All 14 plotnine symbols used. No unused imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized. Per-label nudge arrays documented necessity. No fake
+          UI elements.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: could use higher dpi for 4800x2700 target'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png at dpi=400. Current API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expert use of ggplot() + layered geom_*, coord_fixed(), scale breaks=[],
+          annotate(), geom_segment(arrow=arrow(...)). Fully idiomatic plotnine.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine grammar of graphics with layered geom_path and geom_point,
-          coord_fixed for aspect ratio, proper theming
+        comment: Layer composition and coord_fixed leverage plotnine strengths. geom_segment
+          arrow is plotnine-specific. Core geometry is numpy-computed; plotnine used
+          as rendering layer rather than for statistical grammar capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - layer-composition
-  - patches
   patterns:
   - data-generation
   - iteration-over-groups
-  - matrix-construction
   dataprep:
   - normalization
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome
