@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: letsplot 4.10.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-20
+Quality: 89/100 | Updated: 2026-05-20
 """
 
 import os

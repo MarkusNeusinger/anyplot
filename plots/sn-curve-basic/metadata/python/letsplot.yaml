@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:48:18Z'
-updated: '2026-05-20T17:49:25Z'
+updated: '2026-05-20T18:00:10Z'
 generated_by: claude-sonnet
 workflow_run: 26178879486
 issue: 3826
@@ -12,115 +12,106 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - 'Full spec compliance: logarithmic axes, Basquin fit line, scatter from multiple
-    specimens, and all three reference lines (Ultimate Strength, Yield Strength, Endurance
-    Limit) are present and correctly positioned.'
-  - Three-zone fatigue regime shading (low-cycle / high-cycle / infinite life) with
-    complementary Okabe-Ito fills and very subtle alpha (0.07) adds visual depth and
-    engineering context without overwhelming the data.
-  - Dual CVD encoding on reference lines — each uses a distinct color AND linetype
-    (dashed / dotted / dot-dash), making them distinguishable without relying on hue
-    alone.
-  - Interactive layer_tooltips() for scatter points (cycles + stress) leverages lets_plot's
-    distinctive feature, and the HTML output is correctly saved alongside the PNG.
-  - Theme-adaptive chrome is correctly wired through all elements (background, text,
-    grid, legend) — both renders are fully readable with no dark-on-dark failures.
+  - 'Full spec compliance: all required features present — log-log axes, Basquin fit
+    line, scatter from multiple specimens, three horizontal reference lines (Ultimate
+    Strength / Yield Strength / Endurance Limit), and three fatigue regime zones via
+    subtle geom_rect shading'
+  - 'Complete theme-adaptive chrome: all six tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
+    GRID) correctly applied to every chrome element in both light and dark renders
+    — no dark-on-dark or light-on-light failures'
+  - 'CVD-accessible design: distinct linetypes (dashed, dotted, dot-dash) are used
+    alongside distinct Okabe-Ito colors for the three reference lines, providing two
+    independent encodings for colorblind viewers'
+  - 'Native letsplot interactivity: layer_tooltips().line() provides rich hover tooltips
+    in the HTML exports showing formatted cycle count and stress amplitude per specimen'
+  - 'Realistic structural steel data: UTS=500 MPa, yield=350 MPa, endurance limit=200
+    MPa are physically correct for medium-carbon steel; lognormal scatter (sigma=0.15)
+    represents typical fatigue test variability'
   weaknesses:
-  - 'VQ-02 OVERLAP: The ''Yield Strength'' inline text label (x=500, y=364 MPa) overlaps
-    with the Basquin fit line in the N≈1000-5000 cycle range, where the descending
-    fit line crosses y≈374-341 MPa — the same vertical band as the text. Fix: move
-    all three inline labels to the right side of the plot (e.g. x=2e6 with hjust=1)
-    where the fit line has moved well below 200 MPa and label-line crowding is eliminated.'
-  - 'DE-01 DESIGN: Label placement at x=500 crowds the left margin where data points
-    and the fit line converge. Moving the labels rightward (e.g., x=5e5 to x=5e6)
-    would separate them from the dense data region and improve overall polish.'
-  - 'VQ-01 MINOR: The ''Ultimate Strength'' label is rendered at y=520 MPa (above
-    the visible y-axis range of ~100-500), placing it in the top margin above the
-    data area. While visible, it sits very close to the top of the panel — nudging
-    it down slightly (e.g., y=ultimate_strength * 1.01 or position it just below the
-    dashed line) would be cleaner.'
+  - 'Inline text labels for reference lines slightly overlap the reference lines themselves:
+    ''Ultimate Strength'' at y=485 (500×0.97) sits just below the dashed line at y=500;
+    ''Endurance Limit'' at y=208 (200×1.04) sits just above the dot-dash line at y=200
+    — in log space these gaps are tiny and the labels visually cross the lines. Consider
+    offsetting labels further (e.g., y*0.93 / y*1.08) or nudging horizontally to a
+    data-free region where the lines and labels don''t intersect.'
+  - Zone shading at alpha=0.07 is extremely subtle — the fatigue regime zones (low-cycle,
+    high-cycle, infinite life) are barely perceptible in both renders, especially
+    where different zones meet. Consider raising to alpha=0.10–0.12 so the zones read
+    as distinct regions without overwhelming the data.
+  - 'Design Excellence could be elevated: panel_background is set to the same PAGE_BG
+    as the plot background (no elevation), all four spines are visible through axis_line
+    (L-shape would need removing top/right explicitly in letsplot), and the overall
+    composition, while functional, stops short of publication-level polish.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — not pure white, correct anyplot surface.
-      Chrome: Title "sn-curve-basic · python · letsplot · anyplot.ai" in dark ink at top-left, ~65% of plot width. Y-axis label "Stress Amplitude (MPa)" and X-axis label "Number of Cycles to Failure (N)" in dark ink, clearly readable. Tick labels in INK_SOFT (medium gray), all readable. Subtle warm-gray grid lines visible but non-dominant.
-      Data: Basquin fit line in #009E73 (brand green), size=1.5. ~35 scatter points in #009E73, size=3.5, alpha=0.85. Three horizontal reference lines: orange dashed (Ultimate Strength @ 500 MPa), blue dotted (Yield Strength @ 350 MPa), pink dot-dash (Endurance Limit @ 200 MPa). Three zone-shaded backgrounds: orange-tinted (low-cycle above yield), blue-tinted (high-cycle), pink-tinted (infinite life below endurance). Inline text labels for each reference line in matching colors at x=500. Y-axis log scale shows ticks 79, 100, 126, 158, 200, 251, 316, 398, 501. X-axis log scale 100 to 10^8.
-      Issue: "Yield Strength" label (x=500, y≈364) visually overlaps with the descending Basquin fit line in the N≈1000-5000 cycle range. The "Ultimate Strength" label is placed slightly above y=500 (the axis upper bound), rendering it in the top margin above the 501 MPa tick.
-      Legibility verdict: PASS overall — all text is readable against the warm off-white background; dark-on-dark is not an issue. The overlap with the fit line reduces clarity for "Yield Strength" label.
+      Background: warm off-white #FAF8F1 — correct, not pure white
+      Chrome: title "sn-curve-basic · python · letsplot · anyplot.ai" in dark #1A1A17 at top-left, spans ~65% of width; Y-axis label "Stress Amplitude (MPa)" and X-axis label "Number of Cycles to Failure (N)" in dark ink, both clearly readable; tick labels in medium-gray INK_SOFT, readable including the scientific notation labels (10^6, 10^7, 10^8) at the right of the X-axis
+      Data: green (#009E73) scatter points clustered at x~200–20,000 (10 stress levels, 3–5 specimens each), green Basquin fit line extending from x~300 to x~10^7; three very subtle zone-shaded regions (orange for low-cycle, blue for high-cycle, pink for infinite life at alpha=0.07); three horizontal reference lines — dashed orange at y=500 (Ultimate Strength), dotted blue at y=350 (Yield Strength), dot-dash pink at y=200 (Endurance Limit); inline text labels for each reference line positioned at x=2e6 and colored to match their respective lines
+      Legibility verdict: PASS — all text readable against light background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (~#1A1A17) — not pure black, correct anyplot dark surface.
-      Chrome: Title, axis labels, and tick labels all rendered in light colors (INK = #F0EFE8 / INK_SOFT = #B8B7B0). All are clearly readable against the dark background. No dark-on-dark failures detected. Grid lines are very dark (near-black, subtle) and non-intrusive.
-      Data: Basquin fit line and scatter points remain #009E73 — identical to light render. Reference lines and zone shading use the same Okabe-Ito colors (orange, blue, pink) with the same linetype coding. Zone shading is visible as subtle tints on the dark background.
-      Legibility verdict: PASS — all text is light-colored and readable against the dark background. Data colors are identical to the light render (only chrome flipped). Same "Yield Strength" label-over-fit-line overlap exists in this render.
+      Background: warm near-black #1A1A17 — correct, not pure black
+      Chrome: title, axis labels, and tick labels all render in light #F0EFE8 / #B8B7B0 tones — clearly readable against the dark surface; no dark-on-dark failures observed; grid lines subtle and visible
+      Data: green (#009E73) data points and fit line are IDENTICAL to the light render; zone shading colors unchanged; reference lines and inline labels all visible in their respective Okabe-Ito colors; legend background elevated to #242420 per token
+      Legibility verdict: PASS — all text readable against dark background; chrome correctly flips while all data colors remain identical
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, axis=12, ticks=10, inline=11).
-          Readable in both themes. Minor issue: ''Ultimate Strength'' label at y=520
-          renders above the visible axis range (max tick ~501), placing it in the
-          top margin. Slight crowding on the left edge from inline labels.'
+        comment: All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
+          legend_text=10); readable in both themes at full and mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 6
-        passed: false
-        comment: '''Yield Strength'' inline text label (x=500, y=364 MPa) overlaps
-          with the Basquin fit line in the N≈1000-5000 cycle range, where the descending
-          line crosses y≈374-341 MPa. Both elements are still distinguishable by color
-          (blue vs green) so text is readable but visual quality is reduced.'
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Fit line (size=1.5) and scatter points (size=3.5, alpha=0.85) are
-          clearly visible. For ~35 sparse data points, markers could be slightly larger
-          for optimal prominence, but visibility is good. Reference lines with distinct
-          linetypes are easily distinguishable.
+        comment: Inline reference-line labels slightly overlap their corresponding
+          reference lines in log space (offsets of 0.97/1.04 are too small for log
+          scale); text remains readable
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Scatter points clearly visible (size=3.5, alpha=0.85), fit line prominent
+          (size=1.5), reference lines distinguishable by both color and linetype
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette throughout. Dual encoding (color + linetype) for
-          reference lines provides CVD-safe redundancy. Zone shading alpha=0.07 is
-          subtle enough to not interfere. Good luminance contrast for all elements.
+        comment: Okabe-Ito palette CVD-safe; distinct linetypes (dashed/dotted/dot-dash)
+          add secondary encoding beyond color
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas is exactly 3200x1800 (gate passed). Plot fills the canvas
-          well with appropriate margins. The empty lower region (below endurance limit,
-          no data) is scientifically meaningful for the S-N curve context. Balanced
-          layout.
+        comment: Canvas 3200×1800 (gate passed); good proportions, no overflow, plot
+          fills canvas well
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Number of Cycles to Failure (N)'' — descriptive with unit.
-          Y: ''Stress Amplitude (MPa)'' — descriptive with unit. Title: ''sn-curve-basic
-          · python · letsplot · anyplot.ai'' — correct format.'
+        comment: 'X: ''Number of Cycles to Failure (N)'', Y: ''Stress Amplitude (MPa)''
+          — descriptive with units'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First (and only) data series uses #009E73 (brand green). Reference
-          lines use Okabe-Ito positions 2 (#D55E00), 3 (#0072B2), 4 (#CC79A7) in canonical
-          order. Light background ~#FAF8F1, dark ~#1A1A17 — both correct. Theme-adaptive
-          chrome properly implemented.'
+        comment: 'First series #009E73; OI_2/OI_3/OI_4 in canonical order for reference
+          lines; backgrounds #FAF8F1/#1A1A17; data colors identical across themes'
     design_excellence:
       score: 13
       max: 20
@@ -130,28 +121,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): three-zone shading with complementary Okabe-Ito
-          tints tells the engineering story visually. Dual encoding (color+linetype)
-          shows design intent. Warm background and custom theme demonstrate polish.
-          But inline label crowding at x=500 prevents reaching 6+.'
+        comment: 'Above-default: zone shading for fatigue regimes, inline labels replacing
+          legend, dual-encoding (color+linetype) for CVD accessibility; not yet publication-ready'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_minimal() removes top/right spines. Grid is subtle (size=0.3,
-          warm gray). Panel minor grid blanked. Zone shading at alpha=0.07 is well-calibrated.
-          Not perfectly polished — the inline label clustering near the left edge
-          adds visual noise.
+        comment: theme_minimal removes panel box; minor grid blanked; grid color from
+          GRID token; axis_line keeps L-shaped frame; adequate whitespace
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'The three fatigue regime zones (low-cycle/high-cycle/infinite life)
-          guide the viewer through the engineering narrative. The zones + reference
-          lines create a clear focal story: ''here is where failure modes change.''
-          Above default display of data.'
+        comment: Zone shading clearly demarcates three fatigue regimes; inline labels
+          guide viewer to key material properties; Basquin line shows material trend
+          — effective engineering story
     spec_compliance:
       score: 15
       max: 15
@@ -161,31 +147,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct S-N curve: scatter points + power-law fit line on log-log
-          axes. All three fatigue regions represented.'
+        comment: 'S-N curve: scatter + power-law fit on log-log axes — correct'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: log-log axes, reference lines for Ultimate/Yield/Endurance,
-          scatter from multiple specimens, Basquin fit line, three distinct fatigue
-          regions as zone shading.'
+        comment: Log-log scales, three reference lines (UTS/yield/endurance), three
+          fatigue regime zones, multiple specimens per stress level, Basquin fit —
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: Number of Cycles to Failure (N), Y: Stress Amplitude (MPa). All
-          data visible. Log scales correctly applied.'
+        comment: X=cycles (log), Y=stress amplitude MPa (log); all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'sn-curve-basic · python · letsplot · anyplot.ai'.
-          Reference lines identified by inline text labels in matching colors — no
-          separate legend needed for this design.
+        comment: Title 'sn-curve-basic · python · letsplot · anyplot.ai' correct;
+          inline labels replace legend and identify all reference lines
     data_quality:
       score: 15
       max: 15
@@ -195,26 +178,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter from multiple specimens, Basquin fit, all three material
-          property references, and three fatigue zones. Comprehensive coverage of
-          all S-N curve aspects.
+        comment: 'Shows all aspects: scatter from multiple specimens, Basquin fit,
+          three fatigue regime zones, three reference lines for key material properties'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Structural steel with realistic properties (ultimate=500, yield=350,
-          endurance=200 MPa). Basquin exponent b=-0.10 is appropriate for steel. Lognormal
-          scatter in fatigue data is physically realistic. Neutral engineering context.
+        comment: Structural steel fatigue — neutral engineering domain; realistic
+          material property values
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Ultimate > Yield > Endurance limit maintained correctly. Cycle range
-          100-10^8 appropriate for high-cycle fatigue. Test stresses (210-450 MPa)
-          span low- and high-cycle regimes realistically. Basquin parameters are physically
-          plausible for structural steel.
+        comment: UTS=500 MPa, yield=350 MPa, endurance=200 MPa physically correct
+          for medium-carbon steel; cycles from ~200 to 10^7 appropriate for fatigue
+          testing; lognormal scatter sigma=0.15 realistic
     code_quality:
       score: 10
       max: 10
@@ -224,35 +204,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data generation → theme definition
-          → plot composition → save. No functions or classes.'
+        comment: 'Flat script: imports → tokens → data generation → plot layers →
+          save'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot (wildcard with noqa), ggsave — all used.
-          No unused imports.
+        comment: All imports used; wildcard from lets_plot required by library
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic code. Zone DataFrames are slightly verbose but appropriate
-          for the data-driven approach. No over-engineering or fake functionality.
+        comment: Clean, Pythonic; no fake UI; layer_tooltips() is native letsplot
+          functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Current lets_plot
-          API used throughout.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave
     library_mastery:
       score: 7
       max: 10
@@ -262,27 +240,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'ggplot grammar correctly used: geom layer composition, aes() mappings,
-          scale_x_log10()/scale_y_log10(), theme()+element_* customization, ggsize()
-          for canvas, ggsave() with scale. Solid idiomatic usage throughout.'
+        comment: Grammar of graphics used fluently; scale_x_log10/scale_y_log10; proper
+          aes() mappings; ggsave with scale parameter; above-default idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with custom .line() formatting is genuinely lets_plot-specific
-          and enables interactive hover in HTML output. HTML export alongside PNG
-          leverages lets_plot's dual-output capability.
-  verdict: REJECTED
+        comment: layer_tooltips().line() — letsplot-specific tooltip API; HTML export
+          via ggsave; ggsize() canvas control — distinctly letsplot features used
+          meaningfully
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   - layer-composition
   patterns:
   - data-generation
+  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
