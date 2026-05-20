@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -18,7 +18,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 CELL_WHITE = "#FFFFFF" if THEME == "light" else "#D0CEC8"
 CELL_BLACK = "#1A1A17" if THEME == "light" else "#050503"
-NUM_COLOR = "#0072B2"  # Okabe-Ito blue — readable on both CELL_WHITE variants
+NUM_COLOR = "#009E73"  # Okabe-Ito position 1 (brand green) — sole colored element
 
 # Data: 15x15 crossword grid with 180-degree rotational symmetry
 # 0 = white (entry cell), 1 = black (blocked cell)
@@ -96,12 +96,18 @@ for row in range(grid_size):
                 va="top",
             )
 
+# Outer border frame around the full grid
+border = Rectangle(
+    (0, 0), grid_size * cell_size, grid_size * cell_size, fill=False, edgecolor=INK, linewidth=2.5, zorder=10
+)
+ax.add_patch(border)
+
 # Style
 ax.set_xlim(0, grid_size * cell_size)
 ax.set_ylim(0, grid_size * cell_size)
 ax.set_aspect("equal")
 ax.axis("off")
-ax.set_title("crossword-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=15)
+ax.set_title("crossword-basic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=20)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
