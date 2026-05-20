@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -103,8 +103,8 @@ p.line(x="x", y="y", source=norm_source, line_color="#0072B2", line_width=5, leg
 
 stats_text = f"Mean: {mean_return:.3f}%\nStd Dev: {std_return:.3f}%\nSkewness: {skewness:.3f}\nKurtosis: {kurtosis:.3f}"
 stats_label = Label(
-    x=90,
-    y=90,
+    x=210,
+    y=1180,
     x_units="screen",
     y_units="screen",
     text=stats_text,
@@ -120,7 +120,7 @@ p.add_layout(stats_label)
 # Style
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 p.title.text_font_size = "50pt"
 p.title.text_color = INK
@@ -140,15 +140,14 @@ p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 
-p.xgrid.grid_line_color = INK
+p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
 p.legend.location = "top_right"
 p.legend.label_text_font_size = "34pt"
 p.legend.background_fill_color = ELEVATED_BG
-p.legend.border_line_color = INK_SOFT
+p.legend.border_line_color = None
 p.legend.label_text_color = INK_SOFT
 
 # Save
