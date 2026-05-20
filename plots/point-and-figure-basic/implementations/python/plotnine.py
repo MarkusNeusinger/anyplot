@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-20
+Quality: 83/100 | Updated: 2026-05-20
 """
 
 import os
