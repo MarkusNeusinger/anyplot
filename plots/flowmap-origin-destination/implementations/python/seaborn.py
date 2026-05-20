@@ -1,14 +1,40 @@
-""" pyplots.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: seaborn | Python 3.13
+Quality: pending | Updated: 2026-05-20
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
 
 # Data: Migration flows between major world cities
 np.random.seed(42)
@@ -44,7 +70,6 @@ label_offsets = {
     "Sao Paulo": (8, 5),
 }
 
-# Create flow data between cities
 flows = [
     ("New York", "London", 850),
     ("New York", "Los Angeles", 720),
@@ -72,73 +97,47 @@ df_flows["origin_lon"] = df_flows["origin"].map(lambda x: cities[x][1])
 df_flows["dest_lat"] = df_flows["destination"].map(lambda x: cities[x][0])
 df_flows["dest_lon"] = df_flows["destination"].map(lambda x: cities[x][1])
 
-# Create arc points using quadratic Bezier curves for seaborn lineplot
-n_points = 50
-arc_data = []
+flow_min, flow_max = df_flows["flow"].min(), df_flows["flow"].max()
+# Linewidth proportional to flow magnitude: 1.0 (min) to 5.0 (max)
+df_flows["lw"] = 1.0 + 4.0 * (df_flows["flow"] - flow_min) / (flow_max - flow_min)
 
-for idx, row in df_flows.iterrows():
+# Arc colors from seaborn's YlOrRd palette mapped to flow magnitude
+n_colors = 256
+arc_palette = sns.color_palette("YlOrRd", n_colors=n_colors)
+df_flows["color_idx"] = ((df_flows["flow"] - flow_min) / (flow_max - flow_min) * (n_colors - 1)).astype(int)
+
+df_cities = pd.DataFrame([{"city": name, "lat": coords[0], "lon": coords[1]} for name, coords in cities.items()])
+
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+ax.set_xlim(-180, 180)
+ax.set_ylim(-60, 80)
+
+# Draw curved arcs: quadratic Bezier with linewidth proportional to flow
+n_points = 50
+for _, row in df_flows.iterrows():
     t = np.linspace(0, 1, n_points)
     x0, y0 = row["origin_lon"], row["origin_lat"]
     x2, y2 = row["dest_lon"], row["dest_lat"]
-    # Control point offset perpendicular to line for curve
     mid_x = (x0 + x2) / 2
     mid_y = (y0 + y2) / 2
-    dx = x2 - x0
-    dy = y2 - y0
+    dx, dy = x2 - x0, y2 - y0
     length = np.sqrt(dx**2 + dy**2)
     offset = length * 0.15
     ctrl_x = mid_x - dy / length * offset
     ctrl_y = mid_y + dx / length * offset
-    # Quadratic Bezier
     x = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * ctrl_x + t**2 * x2
     y = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * ctrl_y + t**2 * y2
-    for i in range(n_points):
-        arc_data.append(
-            {
-                "x": x[i],
-                "y": y[i],
-                "flow_id": idx,
-                "flow": row["flow"],
-                "route": f"{row['origin']} → {row['destination']}",
-            }
-        )
+    color = arc_palette[int(row["color_idx"])]
+    ax.plot(x, y, color=color, linewidth=row["lw"], alpha=0.65, solid_capstyle="round", zorder=1)
 
-df_arcs = pd.DataFrame(arc_data)
-
-# City dataframe for scatter plot
-df_cities = pd.DataFrame([{"city": name, "lat": coords[0], "lon": coords[1]} for name, coords in cities.items()])
-
-# Plot setup with seaborn styling
-sns.set_theme(style="whitegrid", context="talk", font_scale=1.2)
-fig, ax = plt.subplots(figsize=(16, 9))
-ax.set_facecolor("#f0f4f8")
-
-# Set map bounds
-ax.set_xlim(-180, 180)
-ax.set_ylim(-60, 80)
-
-# Draw curved arcs using seaborn lineplot with hue for flow magnitude
-sns.lineplot(
-    data=df_arcs,
-    x="x",
-    y="y",
-    hue="flow",
-    units="flow_id",
-    estimator=None,
-    palette="YlOrRd",
-    linewidth=2.5,
-    alpha=0.6,
-    legend=False,
-    ax=ax,
-    zorder=1,
-)
-
-# Plot cities using seaborn scatterplot
+# City nodes using seaborn scatterplot — Okabe-Ito position 1 as first (only) series
 sns.scatterplot(
-    data=df_cities, x="lon", y="lat", s=350, color="#306998", edgecolor="white", linewidth=2.5, ax=ax, zorder=3
+    data=df_cities, x="lon", y="lat", s=200, color="#009E73", edgecolor=PAGE_BG, linewidth=1.5, ax=ax, zorder=3
 )
 
-# Add city labels with custom offsets to avoid overlap
+# City labels with custom offsets to prevent overlap
 for _, row in df_cities.iterrows():
     offset = label_offsets.get(row["city"], (5, 5))
     ax.annotate(
@@ -146,30 +145,31 @@ for _, row in df_cities.iterrows():
         (row["lon"], row["lat"]),
         xytext=offset,
         textcoords="offset points",
-        fontsize=12,
+        fontsize=6,
         fontweight="bold",
-        color="#333333",
+        color=INK,
         zorder=4,
     )
 
-# Reference lines for equator and prime meridian
-ax.axhline(y=0, color="#888888", linestyle="--", linewidth=0.8, alpha=0.5, zorder=0)
-ax.axvline(x=0, color="#888888", linestyle="--", linewidth=0.8, alpha=0.5, zorder=0)
+# Geographic reference lines
+ax.axhline(y=0, color=INK_SOFT, linestyle="--", linewidth=0.5, alpha=0.4, zorder=0)
+ax.axvline(x=0, color=INK_SOFT, linestyle="--", linewidth=0.5, alpha=0.4, zorder=0)
 
-# Styling with seaborn
-ax.set_xlabel("Longitude", fontsize=20)
-ax.set_ylabel("Latitude", fontsize=20)
-ax.set_title("flowmap-origin-destination · seaborn · pyplots.ai", fontsize=24, fontweight="bold")
-ax.tick_params(axis="both", labelsize=16)
+# Style
+ax.set_xlabel("Longitude", fontsize=10, color=INK)
+ax.set_ylabel("Latitude", fontsize=10, color=INK)
+ax.set_title("flowmap-origin-destination · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 sns.despine(ax=ax, left=False, bottom=False)
 
-# Add colorbar for flow magnitude
-norm = plt.Normalize(vmin=df_flows["flow"].min(), vmax=df_flows["flow"].max())
+# Colorbar for flow magnitude
+norm = plt.Normalize(vmin=flow_min, vmax=flow_max)
 sm = plt.cm.ScalarMappable(cmap="YlOrRd", norm=norm)
 sm.set_array([])
 cbar = plt.colorbar(sm, ax=ax, shrink=0.6, aspect=20, pad=0.02)
-cbar.set_label("Flow Volume", fontsize=16)
-cbar.ax.tick_params(labelsize=14)
+cbar.set_label("Flow Volume", fontsize=8, color=INK)
+cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
