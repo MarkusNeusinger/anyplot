@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -39,7 +39,7 @@ for i in range(size):
     matrix[0, i] = (i + 1) % 2  # Top edge alternating
     matrix[i, size - 1] = i % 2  # Right edge alternating
 
-# Fill interior with pattern (simulating encoded data)
+# Interior cells use pseudo-random bits (not true ECC-200 encoding of the content string)
 np.random.seed(42)
 data_bits = np.random.randint(0, 2, size=((size - 2) * (size - 2)))
 idx = 0
@@ -84,7 +84,7 @@ chart.options.subtitle = {
 }
 
 chart.options.x_axis = {
-    "title": {"text": None},
+    "title": {"text": ""},
     "min": -0.5,
     "max": cols - 0.5,
     "tickLength": 0,
@@ -94,7 +94,7 @@ chart.options.x_axis = {
 }
 
 chart.options.y_axis = {
-    "title": {"text": None},
+    "title": {"text": ""},
     "min": -0.5,
     "max": rows - 0.5,
     "tickLength": 0,
