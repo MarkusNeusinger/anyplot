@@ -6,7 +6,7 @@ title: Origin-Destination Flow Map
 
 # Specification tracking
 created: 2026-01-11T22:50:00Z
-updated: 2026-01-11T22:50:00Z
+updated: 2026-05-20T09:17:42Z
 issue: 3765
 suggested: MarkusNeusinger
 
@@ -16,7 +16,6 @@ tags:
   plot_type:
     - map
     - arc
-    - flow
   data_type:
     - geospatial
     - numeric
