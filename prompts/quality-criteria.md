@@ -9,8 +9,9 @@ Implementation
      │
      ▼
 ┌─────────────────────┐
-│  Stage 1: Auto-Reject  │  ──► FAIL → Score = 0, regenerate
-│  (8 quick checks)      │
+│  Stage 1: Auto-Reject  │  ──► FAIL → Score = 0
+│  (9 checks)            │       AR-01..AR-05, AR-07: regenerate (workflow)
+│                        │       AR-06, AR-08, AR-09: repair via review cascade (AI)
 └─────────────────────┘
      │ PASS
      ▼
@@ -32,7 +33,7 @@ Implementation
 
 ## Stage 1: Auto-Reject
 
-Quick checks **before** AI evaluation. On fail: Score=0, no retry.
+Checks that gate quality scoring. On fail: Score=0. Workflow-handled checks (AR-01..AR-05, AR-07) reject without retry — regenerate the whole impl. AI-handled checks (AR-06, AR-08, AR-09) set score=0 inside the review and enter the existing 5-review / 4-repair cascade.
 
 | ID | Check | Description | Verification |
 |----|-------|-------------|--------------|
@@ -44,8 +45,9 @@ Quick checks **before** AI evaluation. On fail: Score=0, no retry.
 | AR-06 | NOT_FEASIBLE | Library cannot implement spec | AI decision |
 | AR-07 | WRONG_FORMAT | Wrong output type | Not .png for static libraries |
 | AR-08 | FAKE_FUNCTIONALITY | Static library simulates interactive features | AI decision |
+| AR-09 | EDGE_CLIPPING | Title / axis label / legend clipped at canvas border | AI decision (visual) |
 
-**Check order:** AR-01 → AR-02 → AR-03 → AR-04 → AR-05 → AR-06 → AR-07 → AR-08
+**Check order:** AR-01 → AR-02 → AR-03 → AR-04 → AR-05 → AR-06 → AR-07 → AR-08 → AR-09
 
 ### AR-05: Library Usage
 
@@ -83,6 +85,28 @@ A static library (matplotlib, seaborn, plotnine) simulates interactive features 
 - Cell annotations in heatmaps (these are native text, not fake tooltips)
 - Color encoding of time direction (arrows, gradients showing progression)
 - Honest notes like "See Plotly version for interactive features"
+
+### AR-09: Edge Clipping
+
+Any text element — title, axis title, axis tick labels, legend, annotations — is **clipped at the canvas border**, meaning visible pixels of the element are missing because they were rendered outside the saved PNG's bounding box and chopped off.
+
+This is distinct from VQ-05's soft "no overflow" check (deducts when text leaves its *axis* but stays on the canvas). AR-09 rejects outright when pixels are missing at the *canvas* edge. The post-render canvas-size gate enforces dimensions but cannot see what is at those edges — that's the reviewer's job.
+
+**Triggers (auto-reject, Score = 0):**
+- Title cropped at top edge (top of letters cut, descenders missing, title not fully visible above the plot area)
+- Y-axis tick labels missing leftmost digit because they touch the left canvas edge ("500" rendered as "00")
+- X-axis label cut at bottom edge (axis title only half-visible at the canvas bottom)
+- Legend entries hidden behind / merged into the canvas edge
+- Any annotation, label, or category text whose bounding box is partially outside the saved PNG
+
+**NOT auto-reject (legitimate / handled by VQ-05 instead):**
+- Tooltips or hover affordances drawn intentionally near the edge
+- Decorative gridlines or borders aligned with the canvas edge
+- Text that overflows its *axis bounds* but stays fully within the canvas — that's a VQ-05 deduction at most, not AR-09
+- Tight-but-readable margins: every pixel of the text is visible, just close to the edge
+- Touching the border without missing pixels (proximity ≠ clipping)
+
+The bar is strict: AR-09 requires evidence that pixels were *removed*, not merely that an element sits near the boundary.
 
 ---
 
