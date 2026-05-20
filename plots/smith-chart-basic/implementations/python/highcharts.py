@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: highcharts unknown | Python 3.13.13
 Quality: 79/100 | Updated: 2026-05-20
@@ -51,12 +51,12 @@ chart.options = HighchartsOptions()
 
 chart.options.chart = {
     "width": 2400,
-    "height": 2400,
+    "height": 2600,
     "backgroundColor": PAGE_BG,
-    "spacingTop": 80,
-    "spacingBottom": 120,
-    "spacingLeft": 80,
-    "spacingRight": 80,
+    "marginTop": 200,
+    "marginBottom": 330,
+    "marginLeft": 250,
+    "marginRight": 80,
 }
 
 chart.options.title = {
@@ -95,13 +95,18 @@ chart.options.y_axis = {
 
 chart.options.legend = {
     "enabled": True,
-    "itemStyle": {"color": INK_SOFT, "fontSize": "44px"},
+    "layout": "vertical",
+    "align": "left",
+    "verticalAlign": "top",
+    "floating": True,
+    "x": 270,
+    "y": 210,
+    "itemStyle": {"color": INK_SOFT, "fontSize": "36px"},
     "backgroundColor": ELEVATED_BG,
     "borderColor": INK_SOFT,
     "borderWidth": 1,
-    "verticalAlign": "bottom",
-    "layout": "horizontal",
-    "align": "center",
+    "padding": 12,
+    "itemMarginBottom": 6,
 }
 
 # Unit circle — |Γ| = 1 boundary
@@ -212,15 +217,18 @@ impedance_series.color = "#009E73"
 impedance_series.show_in_legend = True
 chart.add_series(impedance_series)
 
-# Frequency labels at key points along the locus
-freq_indices = [0, n_points // 4, n_points // 2, 3 * n_points // 4, n_points - 1]
+# Frequency labels at 3 well-spaced points: 1 GHz, ~3.5 GHz, 6 GHz
+freq_indices = [0, n_points // 2, n_points - 1]
+freq_offsets = [(30, -40), (40, -50), (30, 40)]
 freq_annotations = []
-for idx in freq_indices:
+for idx, (ox, oy) in zip(freq_indices, freq_offsets, strict=True):
     freq_ghz = frequencies[idx] / 1e9
     freq_annotations.append(
         {
             "point": {"x": float(gamma_x[idx]), "y": float(gamma_y[idx]), "xAxis": 0, "yAxis": 0},
             "text": f"{freq_ghz:.1f} GHz",
+            "x": ox,
+            "y": oy,
             "style": {"fontSize": "36px", "fontWeight": "bold", "color": INK},
             "backgroundColor": ANNOTATION_BG,
             "borderWidth": 1,
@@ -263,7 +271,7 @@ html_content = f"""<!DOCTYPE html>
     <script>{annotations_js}</script>
 </head>
 <body style="margin:0; background:{PAGE_BG};">
-    <div id="container" style="width: 2400px; height: 2400px;"></div>
+    <div id="container" style="width: 2400px; height: 2600px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
@@ -280,7 +288,7 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=2400,2400")
+chrome_options.add_argument("--window-size=2400,2600")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
