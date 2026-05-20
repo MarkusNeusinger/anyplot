@@ -140,9 +140,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# pygal.py shares its name with the installed pygal package; sys.path must be patched
-# before importing it, which puts non-import code before the package imports (E402).
+# pygal.py and altair.py share their names with installed packages; sys.path must be
+# patched before importing them, which puts non-import code before package imports (E402).
 "plots/*/implementations/python/pygal.py" = ["E402"]
+"plots/*/implementations/python/altair.py" = ["E402"]
 
 [tool.ruff.format]
 quote-style = "double"
