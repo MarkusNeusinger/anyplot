@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: crossword-basic
 created: '2026-01-15T21:39:20Z'
-updated: '2026-05-20T02:05:12Z'
+updated: '2026-05-20T02:16:45Z'
 generated_by: claude-sonnet
 workflow_run: 26136422760
 issue: 3805
@@ -15,40 +15,36 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - Perfect spec compliance — all crossword features present, symmetric layout correct,
-    numbers computed algorithmically
-  - 'Excellent theme adaptation: dark-mode gray cells (#D0CEC8) instead of pure white,
-    warm off-white background — thoughtful non-default choices'
-  - Fully deterministic and reproducible without a random seed (hardcoded symmetric
-    pattern)
-  - 'Clean code structure: symmetry expansion loop and number-calculation algorithm
-    are precise and readable'
-  - Canvas choice (2400x2400 square) is correct for a 1:1 grid-based visualization
+  - 'Perfect spec compliance: all crossword features implemented correctly including
+    180-degree rotational symmetry and proper clue-number algorithm'
+  - 'Excellent theme adaptation: cell fill colors (CELL_WHITE, CELL_BLACK) flip appropriately
+    for dark mode — not just chrome elements'
+  - Brand-green accent (#009E73) for numbers is a tasteful, spec-compliant choice
+    that adds readability without breaking the monochrome design
+  - Fully deterministic, clean code; correct output filenames
+  - Outer border weight (2.5) vs inner cell border (0.8) shows deliberate visual hierarchy
   weaknesses:
-  - 'Clue numbers use #0072B2 (Okabe-Ito position 3) instead of required #009E73 (position
-    1); as the sole colored element this violates the first-series palette rule —
-    fix: NUM_COLOR = "#009E73"'
-  - 'Design polish limited: no outer border frame around the full grid, minimal title
-    spacing — add Rectangle frame at linewidth=2.5 in INK token, increase title pad
-    from 15 to 20'
-  - 'LM-01: patch-by-patch rendering loop is functional but not the most idiomatic
-    matplotlib approach — consider PatchCollection for batch cell rendering to demonstrate
-    deeper library mastery'
+  - 'Design Excellence is the limiting factor: the visualization is clean and correct
+    but does not reach strong design territory — no distinctive typographic choices,
+    annotation overlays, or visual emphasis beyond the green numbers'
+  - 'Library Mastery is slightly constrained: the patch-based approach is appropriate
+    but does not showcase more advanced matplotlib capabilities such as PatchCollection
+    for performance or sophisticated layout features'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "crossword-basic · python · matplotlib · anyplot.ai" in dark INK (#1A1A17) at fontsize=12, clearly readable. No axis labels/ticks (axis off — appropriate for crossword).
-      Data: Entry cells are pure white (#FFFFFF); blocking cells are near-black (#1A1A17). Clue numbers 1–72 in Okabe-Ito blue (#0072B2, fontsize=9, bold) positioned at top-left of word-starting cells. Grid lines at INK_SOFT (#4A4A44) linewidth=0.8.
-      Legibility verdict: PASS — all text readable; warm background correct; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "crossword-basic · python · matplotlib · anyplot.ai" in dark ink (#1A1A17), clearly readable at fontsize=12. No axis labels or tick labels (axis off — appropriate). Title ~70-75% of canvas width.
+      Data: Pure-white (#FFFFFF) entry cells and near-black (#1A1A17) blocking cells. Brand green (#009E73) clue numbers in bold at fontsize=9 in top-left corners of 72 word-start cells. Subtle gray cell borders (INK_SOFT #4A4A44, 0.8 linewidth). Bold dark outer frame (2.5 linewidth).
+      Legibility verdict: PASS — all text readable against the light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct, not pure black
-      Chrome: Title flips to light-colored text (#F0EFE8), clearly readable against dark background. No dark-on-dark failures observed.
-      Data: Entry cells adapt to warm gray (#D0CEC8) — correct dark-mode adaptation. Blocking cells are near-black (#050503), distinguishable from entry cells via high-contrast border lines (INK_SOFT #B8B7B0). Clue numbers remain identical Okabe-Ito blue (#0072B2) — same as light render.
-      Legibility verdict: PASS — all text readable; no dark-on-dark failures; data colors identical to light render.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light text (#F0EFE8) on dark background — clearly readable. No dark-on-dark failures observed.
+      Data: Entry cells flip to warm light gray (#D0CEC8), blocking cells to near-pure-black (#050503) — clear contrast maintained. Clue numbers remain brand green (#009E73) — identical data colors to light render, only chrome flips. Cell borders use INK_SOFT #B8B7B0, visible against gray cells. Outer frame in INK #F0EFE8.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -56,74 +52,72 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title (12pt) and cell numbers (9pt bold) explicitly set; readable
-          in both themes at full and mobile resolution
+        comment: All font sizes explicitly set (title 12pt, numbers 9pt bold). Readable
+          in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Numbers placed at precise offsets (x+0.07, y+cell_size-0.07); no
-          text collisions
+        comment: Numbers placed with controlled offset; no collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Black/white cells and blue numbers clearly visible in both themes
+        comment: High contrast between black and white/gray cells; brand-green numbers
+          stand out clearly.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito blue on white/gray cells; maximum contrast between cell
-          types; CVD-safe
+        comment: Monochrome with single accent; green on white/gray has good contrast;
+          CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square format; grid fills canvas well; tight layout applied
+        comment: Square 2400x2400px format correctly chosen; grid fills canvas well.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title in required format; axis off appropriate for crossword grid
+        comment: Title in exact required format. Axis correctly hidden.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17); chrome theme-correct. Minor
-          violation: numbers use #0072B2 (position 3) instead of #009E73 (position
-          1)'
+        passed: true
+        comment: 'Numbers use #009E73. Light #FAF8F1 and dark #1A1A17 backgrounds
+          correct. Full theme-adaptive chrome.'
     design_excellence:
       score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured within monochrome constraints; deliberate theme-adaptive
-          cell colors and warm background show intent; limited design space prevents
-          higher score
+        passed: true
+        comment: 'Above baseline: brand-green accent in monochrome design, theme-adaptive
+          cell fill colors. Not quite strong design level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: All non-essential chrome removed; clean 0.8pt borders; square aspect
-          enforced. Good but no distinctive refinement beyond correct implementation
+        passed: true
+        comment: Differentiated border weights (inner 0.8 vs outer 2.5), axis chrome
+          removed, theme-correct INK_SOFT borders.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: Blue numbers create visual hierarchy against white/gray cells; symmetric
-          pattern reads immediately as newspaper crossword
+        passed: true
+        comment: Green numbers as focal points at word-start cells. 180-degree symmetry
+          preserved. Limited storytelling potential for this plot type.
     spec_compliance:
       score: 15
       max: 15
@@ -133,28 +127,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct crossword puzzle grid visualization
+        comment: 15x15 crossword grid within spec range.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: White entry cells, black blocking cells, numbered positions, 180-degree
-          rotational symmetry, uniform grid lines, 1:1 cell aspect ratio — all present
+        comment: White cells, black cells, numbers in corners, 180-degree symmetry,
+          grid lines, square cells all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Binary 2D grid correctly mapped; y-axis flipped so row 0 at top;
-          numbers computed algorithmically
+        comment: Grid data correctly mapped; clue-number algorithm correctly identifies
+          across and down word starts.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'crossword-basic · python · matplotlib · anyplot.ai';
-          no legend needed
+        comment: Title exactly matches required format. No legend needed.
     data_quality:
       score: 15
       max: 15
@@ -164,22 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All crossword features demonstrated: entry cells, blocked cells,
-          symmetric pattern, numbered across/down starts (72 clues for 15x15)'
+        comment: 'All crossword features shown: black cells, white cells, 72 numbered
+          positions, grid lines, outer border.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard newspaper-style 15x15 grid with realistic black-cell density
-          and symmetry; neutral
+        comment: Standard newspaper-style 15x15 crossword with realistic black cell
+          pattern. Neutral content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15x15 standard for newspaper crosswords; ~20% black-cell density
-          typical; 72 clue numbers realistic
+        comment: 15x15 is the canonical NYT-style crossword size; 72 numbered cells
+          is realistic.
     code_quality:
       score: 10
       max: 10
@@ -189,55 +182,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: tokens → data → grid computation → render → save; no functions
-          or classes'
+        comment: 'Flat sequential: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: hardcoded black_cells list, algorithmic symmetry
-          and numbering'
+        comment: Fully deterministic (hardcoded black cell list, no randomness).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, matplotlib.patches.Rectangle — all
-          used
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, matplotlib.patches.Rectangle.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic loops; symmetry via grid[grid_size-1-r, grid_size-1-c];
-          precise number algorithm; no dead code
+        comment: Clean Pythonic cell-iteration. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no deprecated API usage
+        comment: Saves as plot-{THEME}.png. Current matplotlib API.
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: Correct Axes-method pattern; proper Rectangle patches with ax.add_patch();
-          set_aspect and axis off applied idiomatically. Slightly below expert — imshow-based
-          approach would be simpler
+        comment: Correct fig/ax pattern, Axes methods, tight_layout. Patch-based approach
+          is the right matplotlib idiom for custom grids.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: false
-        comment: Patch-based cell rendering with per-cell color control is distinctly
-          matplotlib; manual text positioning within patches is library-specific technique
-  verdict: REJECTED
+        passed: true
+        comment: Rectangle patches with add_patch(), set_aspect('equal'), per-patch
+          edgecolor/facecolor/linewidth control — matplotlib-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
