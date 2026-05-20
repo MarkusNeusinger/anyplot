@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-20
+Quality: 86/100 | Updated: 2026-05-20
 """
 
 import os as _os
