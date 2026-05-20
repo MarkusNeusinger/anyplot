@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-20
@@ -11,17 +11,19 @@ import cairosvg
 import numpy as np
 
 
-# sys.path[0] = this script's directory; "pygal.py" is this file — remove it
-# before importing the installed pygal package to avoid a circular import.
-_cwd = sys.path[0] if sys.path[0] else "."
-if _cwd in sys.path:
-    sys.path.remove(_cwd)
+# This file is named pygal.py, which shadows the installed package.
+# Temporarily remove the script directory from sys.path so the real package loads.
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_removed = [p for p in list(sys.path) if p in ("", ".") or os.path.abspath(p) == _script_dir]
+for _p in _removed:
+    sys.path.remove(_p)
 
-from pygal.graph.graph import Graph
-from pygal.style import Style
-
-
-sys.path.insert(0, _cwd)
+try:
+    from pygal.graph.graph import Graph
+    from pygal.style import Style
+finally:
+    for _p in _removed:
+        sys.path.insert(0, _p)
 
 
 # Theme tokens
@@ -159,7 +161,8 @@ class DataMatrixChart(Graph):
         dm_width = total_cols * cell_size
         dm_height = total_rows * cell_size
         x_offset = self.view.x(0) + (plot_width - dm_width) / 2
-        y_offset = self.view.y(total_rows) + (plot_height - dm_height) / 2 + 80
+        # Center vertically within the plot area
+        y_offset = self.view.y(total_rows) + (plot_height - dm_height) / 2
 
         plot_node = self.nodes["plot"]
         dm_group = self.svg.node(plot_node, class_="datamatrix")
@@ -179,7 +182,7 @@ class DataMatrixChart(Graph):
                     rect = self.svg.node(dm_group, "rect", x=x, y=y, width=cell_size, height=cell_size)
                     rect.set("fill", self.module_color)
 
-        # Content label and matrix info below the barcode
+        # Labels below the barcode: encoded content, matrix spec, and context
         label_y = y_offset + dm_height + 70
         label_x = x_offset + dm_width / 2
 
@@ -189,11 +192,18 @@ class DataMatrixChart(Graph):
         content_node.set("style", "font-size:44px;font-weight:bold;font-family:sans-serif")
         content_node.text = f"Encoded: {self.dm_data}"
 
-        info_node = self.svg.node(dm_group, "text", x=label_x, y=label_y + 55)
+        info_node = self.svg.node(dm_group, "text", x=label_x, y=label_y + 58)
         info_node.set("text-anchor", "middle")
         info_node.set("fill", self.ink_soft_color)
         info_node.set("style", "font-size:36px;font-family:sans-serif")
-        info_node.text = f"Matrix: {matrix_rows} × {matrix_cols} | ECC 200"
+        info_node.text = f"Matrix: {matrix_rows} × {matrix_cols} | ECC 200 | 30% error recovery"
+
+        # Storytelling annotation: explains real-world significance
+        story_node = self.svg.node(dm_group, "text", x=label_x, y=label_y + 110)
+        story_node.set("text-anchor", "middle")
+        story_node.set("fill", self.ink_soft_color)
+        story_node.set("style", "font-size:30px;font-style:italic;font-family:sans-serif")
+        story_node.text = "NDC codes identify drugs in the US pharmaceutical supply chain (FDA 21 CFR § 207)"
 
     def _compute(self):
         if self._dm_matrix is None:
@@ -244,7 +254,7 @@ chart = DataMatrixChart(
     show_y_labels=False,
 )
 
-# Dummy series required to trigger pygal's render pipeline
+# Required: pygal's Graph._draw() only calls _plot() when series data is present
 chart.add("", [0])
 
 # Save
