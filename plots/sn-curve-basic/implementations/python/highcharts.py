@@ -1,6 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: highcharts unknown | Python 3.13.13
+Library: highcharts unknown | Python 3.13
 Quality: 89/100 | Updated: 2026-05-20
 """
 
@@ -75,9 +75,9 @@ chart.options.chart = {
     "backgroundColor": PAGE_BG,
     "style": {"fontFamily": "Arial, sans-serif", "color": INK},
     "marginBottom": 140,
-    "marginLeft": 150,
+    "marginLeft": 160,
     "marginRight": 80,
-    "marginTop": 100,
+    "marginTop": 110,
     "plotBorderWidth": 0,
 }
 
@@ -86,7 +86,13 @@ chart.options.title = {
     "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK},
 }
 
-# Region shading via plotBands (2 log-orders each for equal visual weight)
+chart.options.subtitle = {
+    "text": "Structural Steel — Power-law (Basquin) regression with fatigue regime boundaries",
+    "style": {"fontSize": "40px", "color": INK_SOFT},
+    "margin": 30,
+}
+
+# Region shading via plotBands — labels vertically centered to avoid top-crowding with reference lines
 region_bands = [
     {
         "from": 100,
@@ -96,8 +102,8 @@ region_bands = [
             "text": "Low-Cycle Fatigue",
             "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
-            "verticalAlign": "top",
-            "y": 30,
+            "verticalAlign": "middle",
+            "y": 0,
         },
     },
     {
@@ -108,8 +114,8 @@ region_bands = [
             "text": "High-Cycle Fatigue",
             "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
-            "verticalAlign": "top",
-            "y": 30,
+            "verticalAlign": "middle",
+            "y": 0,
         },
     },
     {
@@ -120,8 +126,8 @@ region_bands = [
             "text": "Infinite Life",
             "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
-            "verticalAlign": "top",
-            "y": 30,
+            "verticalAlign": "middle",
+            "y": 0,
         },
     },
 ]
@@ -134,8 +140,10 @@ chart.options.x_axis = {
     "max": 100000000,
     "gridLineWidth": 1,
     "gridLineColor": GRID,
+    "lineWidth": 1,
     "lineColor": INK_SOFT,
     "tickColor": INK_SOFT,
+    "tickWidth": 1,
     "tickInterval": 1,
     "plotBands": region_bands,
 }
@@ -148,8 +156,10 @@ chart.options.y_axis = {
     "max": 600,
     "gridLineWidth": 1,
     "gridLineColor": GRID,
+    "lineWidth": 1,
     "lineColor": INK_SOFT,
     "tickColor": INK_SOFT,
+    "tickWidth": 1,
     "plotLines": [
         {
             "value": ultimate_strength,
@@ -161,6 +171,7 @@ chart.options.y_axis = {
                 "align": "left",
                 "style": {"fontSize": "34px", "color": "#CC79A7", "fontWeight": "bold"},
                 "x": 10,
+                "y": -10,
             },
             "zIndex": 3,
         },
@@ -174,6 +185,7 @@ chart.options.y_axis = {
                 "align": "left",
                 "style": {"fontSize": "34px", "color": "#E69F00", "fontWeight": "bold"},
                 "x": 10,
+                "y": -10,
             },
             "zIndex": 3,
         },
@@ -187,6 +199,7 @@ chart.options.y_axis = {
                 "align": "left",
                 "style": {"fontSize": "34px", "color": "#56B4E9", "fontWeight": "bold"},
                 "x": 10,
+                "y": -10,
             },
             "zIndex": 3,
         },
@@ -203,7 +216,7 @@ chart.options.legend = {
     "verticalAlign": "top",
     "layout": "vertical",
     "x": -60,
-    "y": 140,
+    "y": 160,
 }
 
 chart.options.plot_options = {
