@@ -1,156 +1,190 @@
 library: highcharts
+language: python
 specification_id: bar-drilldown
 created: '2026-01-16T17:16:50Z'
-updated: '2026-01-16T17:19:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21074664870
-issue: 3773
-python_version: 3.13.11
+updated: '2026-05-20T11:42:33Z'
+generated_by: claude-sonnet
+workflow_run: 26159427915
+issue: 3783
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/highcharts/plot.html
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/highcharts/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of Highcharts drilldown functionality with full 3-level
+  - Full 3-level drilldown hierarchy (regions → countries → cities) implemented correctly
+    with Highcharts native drilldown module
+  - Perfect Okabe-Ito palette applied via colorByPoint with data colors identical
+    across light and dark themes
+  - 'Comprehensive theme-adaptive chrome: all text, grid, background, and label colors
+    adapt correctly to ANYPLOT_THEME'
+  - Realistic professional-grade business scenario with factually accurate geographic
     hierarchy
-  - Comprehensive data structure with 5 regions, 19 countries, and 52 cities
-  - Clean, professional visual appearance with appropriate font sizes for high-resolution
-    output
-  - Colorblind-safe color palette
-  - Proper breadcrumb navigation configuration for drill-up capability
-  - Subtitle provides clear user guidance (Click columns to drill down)
+  - Correct inline JS embedding pattern for headless Chrome following the library
+    guide precisely
+  - 'All spec requirements met: drilldown, breadcrumbs, cursor affordance, data labels,
+    animated transitions'
   weaknesses:
-  - Uses raw JavaScript configuration instead of highcharts-core Python API
-  - X-axis title is generic Category instead of more descriptive Region
-  - Minor height discrepancy in rendered output (2561 vs 2700 expected)
-  image_description: The plot displays a column chart showing "Sales Revenue by Region"
-    with 5 colorful vertical bars. The title "bar-drilldown · highcharts · pyplots.ai"
-    is prominently displayed at the top with a subtitle "Sales Revenue by Region —
-    Click columns to drill down". The five regions shown are North America ($245M,
-    blue), Europe ($198M, yellow), Asia Pacific ($176M, purple), Latin America ($87M,
-    cyan), and Middle East ($54M, brown). Each bar has a data label showing the exact
-    value. The Y-axis shows "Revenue ($M)" ranging from $0M to $260M. The X-axis displays
-    region names in blue text. The chart uses a clean white background with subtle
-    gray gridlines. Colors are distinct and colorblind-safe (no red-green conflicts).
+  - 'DE-03 low: Static PNG cannot show the drilldown narrative; no visual emphasis
+    or annotation to guide viewer to key insight (North America dominates at ~32%
+    of total)'
+  - DE-01 could be raised by removing outer plot border or adding more open chart
+    framing with top/right spines removed
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "bar-drilldown · python · highcharts · anyplot.ai" in bold dark ink — clearly readable. Subtitle in INK_SOFT. Y-axis label "Revenue ($M)" readable. X-axis "Region" present. All tick labels in dark soft ink readable against light background.
+      Data: Five bars in Okabe-Ito order — #009E73 (North America), #D55E00 (Europe), #0072B2 (Asia Pacific), #CC79A7 (Latin America), #E69F00 (Middle East). Data labels "245M", "198M", "176M", "87M", "54M" bold and readable above each bar.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title and axis labels render in light cream (#F0EFE8), tick labels in lighter secondary tone (#B8B7B0). All text clearly readable against dark background. No dark-on-dark failures detected. Data labels above bars appear in white/light (Highcharts auto-contrast selection).
+      Data: Bar colors are identical to light render — #009E73, #D55E00, #0072B2, #CC79A7, #E69F00. Only chrome (background, text, grid) flips between themes; data colors unchanged.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title at 48px, axis labels at 36px, tick labels at 28px, data labels
-          at 24px - all clearly readable
+        comment: All font sizes explicitly set (title 66px, axis labels 56px, tick
+          labels 44px, data labels 40px). Readable in both themes with correct proportions.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, well-spaced bars and labels
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are appropriately sized for the data, good visual weight
+        comment: Bars are prominent and clearly visible with appropriate sizing for
+          5 categories.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Colorblind-safe palette using blue, yellow, purple, cyan, brown -
-          no red-green conflicts
+        comment: Okabe-Ito palette is colorblind-safe. Good contrast in both themes.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space, balanced margins
+        comment: 'Chart fills canvas well with generous margins (marginBottom: 220).
+          Balanced whitespace.'
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis has units Revenue ($M), X-axis just says Category which is
-          generic
+        passed: true
+        comment: Y-axis 'Revenue ($M)' includes units. X-axis 'Region' is descriptive.
+          Title follows required format.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
+        passed: true
+        comment: 'First series #009E73 correct. Okabe-Ito positions 1-5 in order via
+          colorByPoint. Backgrounds #FAF8F1 / #1A1A17. Full theme-adaptive chrome.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured library default: correct Okabe-Ito with colorByPoint,
+          rounded corners (borderRadius:6), informative subtitle, clean theme-adaptive
+          colors. Not yet publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: RGBA-opacity grid lines, borderWidth:0 removes
+          bar outlines, borderRadius adds polish, generous margins. Above library
+          defaults.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
         passed: false
-        comment: Grid is subtle and appropriate, legend disabled (not needed for this
-          chart type)
+        comment: Data is displayed but not interpreted. Static PNG does not demonstrate
+          drilldown hierarchy. No visual emphasis on leading region or total revenue
+          annotation.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct column chart with drilldown capability
+        comment: Column chart with 3-level hierarchical drilldown using Highcharts
+          drilldown module.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Categories on X-axis, values on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Drilldown configured with 3 levels (Region→Country→City), breadcrumbs
-          enabled, cursor pointer on hover, data labels visible
-      - id: SC-04
-        name: Data Range
+        comment: Drilldown on click, breadcrumbs with showFullPath, back button, animated
+          transitions, data labels, cursor:pointer, colorByPoint all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis appropriately ranges from 0 to 260M to show all data
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis categories are regions, Y-axis is revenue. All 5 regions with
+          complete drilldown data.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend disabled appropriately for single-series drilldown chart
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as bar-drilldown · highcharts · pyplots.ai
+        comment: Title exactly 'bar-drilldown · python · highcharts · anyplot.ai'.
+          Legend correctly disabled for colorByPoint single series.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 5 top-level regions with full 3-level hierarchy (5 regions
-          → 19 countries → 52 cities)
+        comment: 'Full 3-level hierarchy: 5 regions, 3-5 countries each, 3-6 cities
+          each. Comprehensive coverage.'
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: false
-        comment: Sales revenue by geographic region is a realistic business scenario,
-          though values are round numbers
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Revenue values in millions are realistic for regional sales data
+        comment: Global sales revenue by region/country/city is a prototypical real-world
+          business scenario. All geographic entities are real and correctly placed.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NA dominating at $245M plausible. USA at $185M of $245M realistic.
+          City distributions reflect real-world business centers. Values internally
+          consistent.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -158,54 +192,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data config → HTML generation → screenshot'
+        comment: 'Linear flat structure: theme tokens → JS downloads → chart construction
+          → data → HTML → screenshot.'
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: No random seed needed (deterministic data), but network requests
-          to CDN could vary
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data. No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (tempfile, time, urllib, Path, selenium)
+        comment: All imports used. No dead imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriately verbose for the data hierarchy. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Using current Highcharts and Selenium APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Image dimension is 4800x2700 but actual rendered is 4800x2561 (height
-          discrepancy)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Inline JS embedding
+          for headless Chrome. Current API.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
-        passed: false
-        comment: Good use of Highcharts drilldown module with breadcrumbs, but uses
-          raw JS config instead of highcharts-core Python API
+        passed: true
+        comment: Correct chart.to_js_literal(), Chart(container='container'), ColumnSeries,
+          chart.add_series(). Follows library guide precisely.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Highcharts native drilldown module with 3-level hierarchy, breadcrumbs
+          navigation, animated transitions — features essentially unique to Highcharts.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - html-export
-  - annotations
-  patterns:
-  - data-generation
+  - hover-tooltips
+  patterns: []
   dataprep: []
-  styling:
-  - edge-highlighting
-  - grid-styling
+  styling: []
