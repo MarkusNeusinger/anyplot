@@ -1,24 +1,31 @@
-""" pyplots.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: highcharts | Python 3.13
+Quality: pending | Updated: 2026-05-20
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
-import numpy as np
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - International trade flows between major ports (synthetic but realistic)
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BRAND = "#009E73"  # Okabe-Ito position 1
+MAP_FILL = "#E0DDD4" if THEME == "light" else "#2E2E2A"
+MAP_BORDER = "#B8B5AA" if THEME == "light" else "#5A5A50"
 
-# Major trading ports with coordinates
+# Data - International maritime trade flows between major ports
 ports = {
     "Shanghai": {"lat": 31.2, "lon": 121.5},
     "Singapore": {"lat": 1.3, "lon": 103.8},
@@ -34,16 +41,17 @@ ports = {
     "Santos": {"lat": -23.9, "lon": -46.3},
 }
 
-# Trade flows with volumes (in arbitrary units for visualization)
 flows = [
-    # Asia to Americas
+    # Asia to Americas (trans-Pacific, bidirectional on top routes)
     {"from": "Shanghai", "to": "Los Angeles", "volume": 450},
+    {"from": "Los Angeles", "to": "Shanghai", "volume": 220},
     {"from": "Shanghai", "to": "New York", "volume": 280},
     {"from": "Hong Kong", "to": "Los Angeles", "volume": 320},
     {"from": "Busan", "to": "Los Angeles", "volume": 180},
     {"from": "Tokyo", "to": "Los Angeles", "volume": 150},
-    # Asia to Europe
+    # Asia to Europe (trans-Suez, bidirectional on top routes)
     {"from": "Shanghai", "to": "Rotterdam", "volume": 380},
+    {"from": "Rotterdam", "to": "Shanghai", "volume": 140},
     {"from": "Shanghai", "to": "Hamburg", "volume": 220},
     {"from": "Singapore", "to": "Rotterdam", "volume": 290},
     {"from": "Hong Kong", "to": "Rotterdam", "volume": 200},
@@ -63,25 +71,14 @@ flows = [
     {"from": "Sydney", "to": "Singapore", "volume": 120},
 ]
 
-# Prepare flow data for Highcharts flowmap
 flow_data = []
 for flow in flows:
-    origin = ports[flow["from"]]
-    dest = ports[flow["to"]]
     flow_data.append(
-        {
-            "from": flow["from"],
-            "to": flow["to"],
-            "weight": flow["volume"],
-            "curveFactor": 0.25,  # Bezier curve factor for arc shape
-            "growTowards": True,
-        }
+        {"from": flow["from"], "to": flow["to"], "weight": flow["volume"], "curveFactor": 0.25, "growTowards": True}
     )
 
-# Prepare point data for markers
 point_data = []
 for name, coords in ports.items():
-    # Calculate total flow for marker size
     total_flow = sum(f["volume"] for f in flows if f["from"] == name or f["to"] == name)
     point_data.append(
         {
@@ -89,57 +86,57 @@ for name, coords in ports.items():
             "name": name,
             "lat": coords["lat"],
             "lon": coords["lon"],
-            "marker": {
-                "radius": max(8, min(25, total_flow / 50))  # Size based on traffic
-            },
+            "marker": {"radius": max(8, min(22, total_flow / 60))},
         }
     )
 
-# Chart configuration
 chart_config = {
-    "chart": {
-        "map": None,  # Will be set by topology
-        "width": 4800,
-        "height": 2700,
-        "backgroundColor": "#ffffff",
-        "spacing": [120, 80, 80, 80],
-    },
+    "chart": {"map": None, "width": 3200, "height": 1800, "backgroundColor": PAGE_BG, "spacing": [80, 60, 80, 60]},
     "title": {
-        "text": "Global Maritime Trade Routes \u00b7 flowmap-origin-destination \u00b7 highcharts \u00b7 pyplots.ai",
-        "style": {"fontSize": "56px", "fontWeight": "bold"},
-        "y": 70,
+        "text": "flowmap-origin-destination · python · highcharts · anyplot.ai",
+        "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK},
+        "y": 50,
     },
     "subtitle": {
-        "text": "Arc thickness proportional to shipping volume between major ports",
-        "style": {"fontSize": "40px", "color": "#666666"},
-        "y": 120,
+        "text": "Global maritime trade routes — arc width ∝ shipping volume, arrows show flow direction",
+        "style": {"fontSize": "40px", "color": INK_SOFT},
+        "y": 110,
     },
     "mapNavigation": {"enabled": False},
     "legend": {
-        "enabled": False  # Flow maps don't need traditional legend
+        "enabled": True,
+        "layout": "vertical",
+        "align": "right",
+        "verticalAlign": "middle",
+        "itemStyle": {"color": INK_SOFT, "fontSize": "36px"},
+        "backgroundColor": ELEVATED_BG,
+        "borderColor": INK_SOFT,
+        "borderWidth": 1,
     },
     "tooltip": {
         "useHTML": True,
         "headerFormat": "",
-        "pointFormat": '<span style="font-size: 28px;">'
-        "<b>{point.from}</b> \u2192 <b>{point.to}</b><br/>"
-        "Volume: <b>{point.weight}</b> units"
-        "</span>",
+        "pointFormat": (
+            '<span style="font-size: 30px;">'
+            "<b>{point.from}</b> → <b>{point.to}</b><br/>"
+            "Volume: <b>{point.weight}</b> units"
+            "</span>"
+        ),
     },
     "plotOptions": {
         "flowmap": {
             "minWidth": 2,
-            "maxWidth": 25,
-            "opacity": 0.6,
-            "fillOpacity": 0.5,
-            "markerEnd": {"enabled": True, "width": 15, "height": 15},
+            "maxWidth": 22,
+            "opacity": 0.70,
+            "fillOpacity": 0.65,
+            "markerEnd": {"enabled": True, "width": 12, "height": 12},
         },
         "mappoint": {
             "dataLabels": {
                 "enabled": True,
                 "format": "{point.name}",
-                "style": {"fontSize": "24px", "fontWeight": "bold", "textOutline": "3px white"},
-                "y": -15,
+                "style": {"fontSize": "34px", "fontWeight": "bold", "textOutline": f"3px {PAGE_BG}", "color": INK},
+                "y": -18,
             }
         },
     },
@@ -148,42 +145,40 @@ chart_config = {
             "type": "map",
             "name": "World",
             "showInLegend": False,
-            "nullColor": "#e8e8e8",
-            "borderColor": "#aaaaaa",
-            "borderWidth": 1,
+            "nullColor": MAP_FILL,
+            "borderColor": MAP_BORDER,
+            "borderWidth": 0.5,
             "states": {"inactive": {"opacity": 1}},
         },
         {
             "type": "mappoint",
             "name": "Ports",
             "data": point_data,
-            "color": "#306998",
-            "marker": {"symbol": "circle", "fillColor": "#306998", "lineWidth": 3, "lineColor": "#ffffff"},
+            "showInLegend": True,
+            "color": BRAND,
+            "marker": {"symbol": "circle", "fillColor": BRAND, "lineWidth": 2, "lineColor": PAGE_BG},
         },
         {
             "type": "flowmap",
             "name": "Trade Routes",
             "linkedTo": ":previous",
             "data": flow_data,
-            "color": "#FFD43B",
+            "showInLegend": True,
+            "color": BRAND,
             "fillColor": {
                 "linearGradient": {"x1": 0, "y1": 0, "x2": 1, "y2": 0},
-                "stops": [
-                    [0, "rgba(48, 105, 152, 0.7)"],  # Python Blue
-                    [1, "rgba(255, 212, 59, 0.7)"],  # Python Yellow
-                ],
+                "stops": [[0, "rgba(0, 158, 115, 0.60)"], [1, "rgba(0, 114, 178, 0.60)"]],
             },
         },
     ],
 }
 
-# Convert to JSON for JavaScript
 chart_json = json.dumps(chart_config)
 
-# Download required JavaScript files
-highmaps_url = "https://code.highcharts.com/maps/highmaps.js"
-flowmap_url = "https://code.highcharts.com/maps/modules/flowmap.js"
-world_url = "https://code.highcharts.com/mapdata/custom/world.topo.json"
+# Download required JavaScript and map topology
+highmaps_url = "https://unpkg.com/highcharts/highmaps.js"
+flowmap_url = "https://unpkg.com/highcharts/modules/flowmap.js"
+world_url = "https://unpkg.com/@highcharts/map-collection/custom/world.topo.json"
 
 with urllib.request.urlopen(highmaps_url, timeout=60) as response:
     highmaps_js = response.read().decode("utf-8")
@@ -194,7 +189,7 @@ with urllib.request.urlopen(flowmap_url, timeout=60) as response:
 with urllib.request.urlopen(world_url, timeout=60) as response:
     world_topo = response.read().decode("utf-8")
 
-# Generate HTML with inline scripts for headless rendering
+# HTML with inline scripts for headless Chrome screenshot
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -202,8 +197,8 @@ html_content = f"""<!DOCTYPE html>
     <script>{highmaps_js}</script>
     <script>{flowmap_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>
         var topology = {world_topo};
         var chartConfig = {chart_json};
@@ -213,32 +208,34 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save HTML for interactive version
+# Save interactive HTML artifact (CDN-based for portability)
 standalone_html = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <script src="https://code.highcharts.com/maps/highmaps.js"></script>
-    <script src="https://code.highcharts.com/maps/modules/flowmap.js"></script>
+    <script src="https://unpkg.com/highcharts/highmaps.js"></script>
+    <script src="https://unpkg.com/highcharts/modules/flowmap.js"></script>
 </head>
-<body style="margin:0;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 100%; height: 100vh;"></div>
     <script>
-        fetch('https://code.highcharts.com/mapdata/custom/world.topo.json')
+        fetch('https://unpkg.com/@highcharts/map-collection/custom/world.topo.json')
             .then(response => response.json())
             .then(topology => {{
                 var chartConfig = {chart_json};
                 chartConfig.chart.map = topology;
+                chartConfig.chart.width = null;
+                chartConfig.chart.height = null;
                 Highcharts.mapChart('container', chartConfig);
             }});
     </script>
 </body>
 </html>"""
 
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(standalone_html)
 
-# Write temp HTML and take screenshot
+# Screenshot via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -248,12 +245,12 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
-time.sleep(8)  # Wait longer for flowmap to render
-driver.save_screenshot("plot.png")
+time.sleep(8)  # Wait for flowmap module to fully render
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
