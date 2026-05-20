@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-20
@@ -95,8 +95,8 @@ for (r, c), clue_num in word_starts.items():
 
 numbers_df = pd.DataFrame(number_data)
 
-# Cell fills: crossword convention is always white/black regardless of page theme
-ENTRY_FILL = "#FFFFFF"
+# Cell fills: crossword convention — entry cells use a warm tint in light mode for visual depth
+ENTRY_FILL = "#F5F3EC" if THEME == "light" else "#FFFFFF"
 BLOCKED_FILL = "#1A1A1A"
 
 plot = (
@@ -117,18 +117,24 @@ plot = (
     + scale_x_continuous(breaks=[], expand=(0, 0))
     + scale_y_continuous(breaks=[], expand=(0, 0))
     + coord_fixed(ratio=1)
-    + labs(title="crossword-basic · python · plotnine · anyplot.ai")
+    + labs(
+        title="crossword-basic · python · plotnine · anyplot.ai",
+        subtitle="180° rotational symmetry · 79 numbered positions",
+    )
     + theme(
         figure_size=(6, 6),
-        plot_title=element_text(size=12, ha="center", color=INK),
+        plot_title=element_text(size=13, ha="center", color=INK, weight="bold"),
+        plot_subtitle=element_text(size=8, ha="center", color=INK_SOFT),
         axis_text=element_blank(),
         axis_title=element_blank(),
         axis_ticks=element_blank(),
         panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.8),
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
         legend_position="none",
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        plot_margin=0.02,
     )
 )
 
