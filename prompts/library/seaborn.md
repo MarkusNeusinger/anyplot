@@ -19,11 +19,30 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 ```
 
-## Create Figure
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
 
 ```python
-# Target: 3200 × 1800 px (8 × 400dpi). See default-style-guide.md "Visual Sizing Defaults".
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+# Landscape — default (16:9)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)   # → 3200 × 1800 px
+
+# Square — only for symmetric plots (heatmap, jointplot, pairplot, etc.)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400)     # → 2400 × 2400 px
+```
+
+**Do not use `bbox_inches="tight"` on `savefig`.** It silently trims the canvas (~30–50 px per axis → 3200×1800 becomes ~3160×1760) and was the documented cause of every seaborn drift in the May 2026 fan-out. Use `bbox_inches=None` (the explicit default) and let `figsize × dpi` produce the exact target. If you need to control padding, use `fig.subplots_adjust(...)` inside the figure or `sns.despine(...)` for spine layout.
+
+For figure-level seaborn plots (`relplot`, `catplot`, `displot`), pass the **same** canvas size via `height=` / `aspect=`:
+
+```python
+# Landscape: aspect=16/9 ≈ 1.778, height controls the figure's height in inches; pick height=4.5 → width=8
+g = sns.relplot(..., height=4.5, aspect=16/9)
+g.figure.set_dpi(400)
+
+# Square: aspect=1, height=6 → 2400×2400
+g = sns.relplot(..., height=6, aspect=1)
+g.figure.set_dpi(400)
 ```
 
 ## Plot Methods
@@ -40,7 +59,7 @@ fig = g.figure
 ## Save
 
 ```python
-plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
+plt.savefig(f'plot-{THEME}.png', dpi=400)  # bbox_inches MUST stay default (None) — see "Canvas" above
 ```
 
 ## Sizing for 3200×1800 px (starting values — adjust per plot, review-loop tunes)
@@ -149,7 +168,7 @@ sns.set_theme(
 )
 
 # After plotting
-plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
+plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG)  # do NOT add bbox_inches='tight'
 ```
 
 ## Output Files

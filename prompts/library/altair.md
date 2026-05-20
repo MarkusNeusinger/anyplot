@@ -6,7 +6,48 @@
 import altair as alt
 ```
 
-## Create Chart
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+| Orientation | View dims      | scale_factor | Final PNG     |
+|-------------|----------------|--------------|---------------|
+| Landscape   | width=800, height=450 | 4.0 | 3200 × 1800 |
+| Square      | width=600, height=600 | 4.0 | 2400 × 2400 |
+
+Altair's **view dimensions are NOT the saved PNG dimensions.** `vl-convert` pads the view with title, axis-title, axis-tick-label, and legend extents *outside* `width`/`height`, so a chart with `width=800, height=450` and a long title easily saves at 3404×2120 or 4036×2052. This is the documented cause of every altair drift in the May 2026 fan-out.
+
+**Two-part fix, both required:**
+
+1. **Constrain the view** with `configure_view(continuousWidth=…, continuousHeight=…)` and **zero out chart padding** with `.properties(padding={"left":0, "right":0, "top":0, "bottom":0})`. This stops most of the inflation but does not guarantee exact dims when titles or legends are present.
+
+2. **Normalize the saved PNG to exact target dims as the final step** of the implementation. Even with (1), vl-convert can over- or under-shoot by tens of pixels. After `chart.save(...)`, open the PNG with PIL and crop (centered) or pad (with `PAGE_BG`) so the saved file lands on the canonical target:
+
+```python
+from PIL import Image
+
+TARGET = (3200, 1800)  # or (2400, 2400) for square
+
+def normalize_to_target(path: str, target: tuple[int, int], page_bg: str) -> None:
+    """Crop or pad the PNG so its dimensions exactly equal `target`."""
+    img = Image.open(path).convert("RGB")
+    tw, th = target
+    w, h = img.size
+    # Crop if larger
+    if w > tw or h > th:
+        left = max((w - tw) // 2, 0)
+        top  = max((h - th) // 2, 0)
+        img  = img.crop((left, top, left + min(w, tw), top + min(h, th)))
+        w, h = img.size
+    # Pad if smaller
+    if w < tw or h < th:
+        bg = Image.new("RGB", (tw, th), page_bg)
+        bg.paste(img, ((tw - w) // 2, (th - h) // 2))
+        img = bg
+    img.save(path)
+```
+
+Call `normalize_to_target(f'plot-{THEME}.png', (3200, 1800), PAGE_BG)` (or `(2400, 2400)`) right after each `chart.save(...)`. The HTML save is left untouched — only PNGs are gated.
 
 ```python
 chart = alt.Chart(df).mark_point(size=60).encode(  # size ~2-3x default, density-aware
@@ -15,7 +56,11 @@ chart = alt.Chart(df).mark_point(size=60).encode(  # size ~2-3x default, density
 ).properties(
     width=800,
     height=450,
+    padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
     title=alt.Title(title, fontSize=16)  # kept compact for the long mandated title
+).configure_view(
+    continuousWidth=800,
+    continuousHeight=450,
 ).configure_axis(
     labelFontSize=10,
     titleFontSize=12
@@ -57,9 +102,9 @@ x='date:T'
 ## Save (PNG)
 
 ```python
-# Target: 3200 × 1800 px (see default-style-guide.md)
-# 800 × scale_factor=4 = 3200, 450 × 4 = 1800
+# Hard target: 3200 × 1800 (landscape) or 2400 × 2400 (square). See "Canvas" above.
 chart.save(f'plot-{THEME}.png', scale_factor=4.0)
+normalize_to_target(f'plot-{THEME}.png', (3200, 1800), PAGE_BG)   # MANDATORY post-step
 ```
 
 **Note**: Requires `vl-convert-python` for PNG export.
@@ -125,6 +170,7 @@ chart = (
 )
 
 chart.save(f'plot-{THEME}.png', scale_factor=4.0)
+normalize_to_target(f'plot-{THEME}.png', (3200, 1800), PAGE_BG)   # MANDATORY — see "Canvas" above
 chart.save(f'plot-{THEME}.html')
 ```
 

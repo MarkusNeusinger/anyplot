@@ -21,6 +21,21 @@ The `{EXT}` value depends on `{LANGUAGE}`:
 - SPEC_ID: {SPEC_ID}
 - Regeneration: {IS_REGENERATION}
 
+## Step 0: Canvas dimensions (HARD CONTRACT — applies before anything else)
+
+The saved `plot-light.png` / `plot-dark.png` **must** end up at exactly one of these two pixel sizes:
+
+| Orientation | Pixels      | Use case |
+|-------------|-------------|----------|
+| Landscape   | 3200 × 1800 | Default — most plots (16:9) |
+| Square      | 2400 × 2400 | Symmetric plots: pie, radar, heatmaps, maze, crossword, anything with no preferred horizontal axis (1:1) |
+
+Pick the orientation that suits the spec's content; do **not** average between them, do **not** invent a third aspect ratio. The exact knobs to set for your library are in `prompts/library/{LIBRARY}.md` ("Canvas — hard rule, no deviation"). Use those numbers verbatim.
+
+**If regenerating: the previous implementation's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are HISTORICAL. Do NOT carry them forward, even if every other line in the previous code is fine.** Your very first edit to the previous file is to overwrite those values to the canonical pair from the library prompt. Everything else (fonts, colours, layout, data scenario) comes after that one edit is in place.
+
+A post-render gate in `impl-review.yml` measures the saved PNG dimensions and rejects anything off-target by more than 16 px on either axis, then routes the PR into `impl-repair.yml`. Repair attempts are capped — drift past 4 attempts deletes the implementation from `main`. The cheapest path is to land on target on the first render. Step 3 below includes a PIL self-check you must run before committing.
+
 ## Step 1: Read the rules (quickly)
 
 Read these files to understand the requirements:
@@ -41,7 +56,8 @@ When regenerating an existing implementation, you MUST read these BEFORE writing
 
 - Preserve the bits listed under "Strengths" unchanged.
 - Address every bullet under "Weaknesses" and each ❌ item in the criteria checklist.
-- **Base style ALWAYS wins.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This explicitly includes — but is not limited to — **canvas size** (`figsize`/`dpi` for matplotlib/seaborn/plotnine/ggplot2, `width`/`height`/`scale_factor` for plotly/altair/letsplot, `width`/`height` for bokeh/highcharts/pygal), **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (Okabe-Ito positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align.
+- **Canvas size: the Step 0 contract is non-negotiable on regen.** The previous file's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are **historical**, never current — overwrite them to the canonical pair from `prompts/library/{LIBRARY}.md` as your *first* edit, before touching anything else. The post-render gate checks this and re-triggers repair on drift; do not let that fire.
+- **Base style wins on everything else.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This includes **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (Okabe-Ito positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align.
 - Do NOT discard working structure / data generation / layout choices that the previous review did not flag.
 - Your deliverable is a refined version of the previous file, not a fresh rewrite from the spec.
 
@@ -141,6 +157,26 @@ ANYPLOT_THEME=dark  Rscript {LIBRARY}.R
 ```
 
 Both runs must succeed and produce `plot-light.png` / `plot-dark.png` (plus `plot-light.html` / `plot-dark.html` for interactive libs). If either fails, fix and try again (max 3 attempts).
+
+### Step 3b: Canvas dimension self-check (Step 0 contract verification)
+
+After both renders succeed, run this check against the light PNG. It catches Step 0 violations *before* the PR goes to review:
+
+```bash
+source .venv/bin/activate
+python -c "
+from PIL import Image
+import sys
+p = 'plots/{SPEC_ID}/implementations/{LANGUAGE}/plot-light.png'
+w, h = Image.open(p).size
+targets = [(3200, 1800), (2400, 2400)]
+ok = any(abs(w-tw) <= 16 and abs(h-th) <= 16 for tw, th in targets)
+print(f'canvas {w}x{h} ' + ('OK' if ok else 'DRIFTED — adjust library-specific canvas knobs and re-render'))
+sys.exit(0 if ok else 1)
+"
+```
+
+If this exits non-zero, you have **not** satisfied the Step 0 contract. Re-read `prompts/library/{LIBRARY}.md` "Canvas — hard rule" and apply the exact code there; common causes are listed in that file (e.g. matplotlib/seaborn `bbox_inches="tight"` shaves ~40 px; bokeh's default toolbar leaves ~140 px; altair's vl-convert pads outside `width`/`height`). Re-render and re-check until OK. Do not skip this and rely on the post-render gate to catch it — repair cycles cost compute.
 
 ## Step 4: Visual self-check (BOTH renders)
 

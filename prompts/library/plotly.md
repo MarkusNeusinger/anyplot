@@ -19,10 +19,32 @@ fig.add_trace(go.Scatter(x=x, y=y))
 fig = px.scatter(df, x='col_x', y='col_y')
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+| Orientation | write_image kwargs                         | Final PNG     |
+|-------------|--------------------------------------------|---------------|
+| Landscape   | `width=800, height=450, scale=4`           | 3200 × 1800   |
+| Square      | `width=600, height=600, scale=4`           | 2400 × 2400   |
+
+`fig.update_layout(autosize=True)` is **forbidden** — it overrides `width`/`height` and produces variable output. Always pass `autosize=False` together with explicit `width`, `height`. Pin the layout margins explicitly so titles/legends don't push the inner plot off-center and the long mandated title never gets clipped:
+
+```python
+fig.update_layout(
+    autosize=False,
+    margin=dict(l=80, r=40, t=80, b=60),   # tweak ±20 if needed; never remove
+)
+```
+
+Pick landscape or square based on the spec's content — same decision rule as every other library in the catalog.
+
 ## Layout & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python
 fig.update_layout(
+    autosize=False,
+    margin=dict(l=80, r=40, t=80, b=60),
     # Title kept compact — the long mandated "{spec-id} · python · plotly · anyplot.ai"
     # title would overflow at 22+px on this canvas.
     title=dict(text=title, font=dict(size=16)),
@@ -41,8 +63,9 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 ## Save (PNG)
 
 ```python
-# Target: 3200 × 1800 px (800 × scale=4). See default-style-guide.md.
-fig.write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
+# Hard target: 3200 × 1800 (landscape) or 2400 × 2400 (square). See "Canvas" above.
+fig.write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)         # landscape
+# fig.write_image(f'plot-{THEME}.png', width=600, height=600, scale=4)       # square
 ```
 
 **Note**: Requires `kaleido` for PNG export.

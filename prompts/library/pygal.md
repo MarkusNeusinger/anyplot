@@ -7,10 +7,16 @@ import pygal
 from pygal.style import Style
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+- **Landscape**: `width=3200, height=1800`
+- **Square**: `width=2400, height=2400`
+
 ## Create Chart
 
 ```python
-# Target: 3200 × 1800 px (see default-style-guide.md)
 chart = pygal.Bar(
     width=3200,
     height=1800,

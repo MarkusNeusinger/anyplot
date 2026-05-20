@@ -18,12 +18,21 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 ```
 
-## Create Figure
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
 
 ```python
-# Target: 3200 × 1800 px (8 × 400dpi). See default-style-guide.md "Visual Sizing Defaults".
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+# Landscape — default for most plots (16:9)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)   # → 3200 × 1800 px
+
+# Square — only for symmetric plots (pie, radar, heatmap, maze, …)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400)     # → 2400 × 2400 px
 ```
+
+Pick one based on the spec; do not invent a third aspect. Multi-panel layouts must keep the figure dims constant (use `gridspec` / `subplot_mosaic` to subdivide internally).
+
+**Do not use `bbox_inches="tight"` on `savefig`.** It silently trims the canvas (typically ~30–50 px on each axis → e.g. 3200×1800 becomes 3160×1760) and was the documented cause of every matplotlib drift in the May 2026 fan-out. Use `bbox_inches=None` (the explicit default) instead, and let `figsize × dpi` produce the exact target. If you need to control padding, use `fig.subplots_adjust(left=…, right=…, top=…, bottom=…)` *inside* the figure.
 
 ## Plot Methods
 
@@ -42,7 +51,7 @@ plt.scatter(x, y)
 ## Save
 
 ```python
-plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
+plt.savefig(f'plot-{THEME}.png', dpi=400)  # bbox_inches MUST stay default (None) — see "Canvas" above
 ```
 
 ## Sizing for 3200×1800 px (starting values — adjust per plot, review-loop tunes)
@@ -147,7 +156,7 @@ if leg:
 ax.annotate(..., color=INK,
             bbox=dict(facecolor=ELEVATED_BG, edgecolor=INK_SOFT, alpha=0.9))
 
-plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
+plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG)  # do NOT add bbox_inches='tight'
 ```
 
 ## Output Files

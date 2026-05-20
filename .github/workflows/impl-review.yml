@@ -179,6 +179,105 @@ jobs:
           fi
           echo "::notice::Found both theme renders — proceeding to review"
 
+      # Canvas dimension gate — runs before the AI review.
+      # The saved PNG must be exactly 3200×1800 (landscape) or 2400×2400 (square)
+      # within ±16 px (≤0.5 %). On drift, write /tmp/anyplot-canvas-gate.txt with
+      # a synthetic weakness (named actual+target+signed delta + likely cause).
+      # ai-quality-review.md reads that file and treats canvas_gate=fail as a
+      # MUST-flag weakness that forces VQ-05 to 0, which drags the quality_score
+      # below the repair threshold — re-routing the PR into impl-repair through
+      # the existing 5-review/4-repair cascade. Never raw `exit 1` here:
+      # impl-repair.yml is dispatched by ai-rejected label only, so a hard step
+      # failure would leave a dead PR with no retry path.
+      - name: Canvas dimension gate
+        env:
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          ATTEMPT: ${{ steps.attempts.outputs.display }}
+        run: |
+          # Clean any stale file from a previous run on this runner.
+          rm -f /tmp/anyplot-canvas-gate.txt
+
+          pip install --quiet pillow
+
+          python3 <<'PY'
+          import os
+          import sys
+          from pathlib import Path
+
+          from PIL import Image
+
+          LIBRARY = os.environ["LIBRARY"]
+          ATTEMPT = os.environ["ATTEMPT"]
+          TOLERANCE = 16  # ≤0.5 % on the 3200-axis
+          TARGETS = [(3200, 1800), (2400, 2400)]
+
+          path = Path("plot_images/plot-light.png")
+          with Image.open(path) as img:
+              w, h = img.size
+
+          # Pick the closer target so the repair feedback names the right one.
+          tw, th = min(TARGETS, key=lambda t: abs(w - t[0]) + abs(h - t[1]))
+          dw, dh = w - tw, h - th
+          ok = abs(dw) <= TOLERANCE and abs(dh) <= TOLERANCE
+
+          status = "pass" if ok else "fail"
+          print(
+              f"::notice::canvas_gate library={LIBRARY} status={status} "
+              f"actual={w}x{h} target={tw}x{th} delta={dw:+d}x{dh:+d} attempt={ATTEMPT}"
+          )
+
+          if ok:
+              sys.exit(0)
+
+          # Build the synthetic weakness — include actual, target, signed delta,
+          # direction, possible aspect mismatch, and library-specific likely cause.
+          # This is what impl-repair sees in metadata.review.weaknesses.
+          direction_parts = []
+          if dw < 0:
+              direction_parts.append(f"width is {-dw} px short")
+          elif dw > 0:
+              direction_parts.append(f"width is {dw} px over")
+          if dh < 0:
+              direction_parts.append(f"height is {-dh} px short")
+          elif dh > 0:
+              direction_parts.append(f"height is {dh} px over")
+          direction = "; ".join(direction_parts) or "axes on target individually but combined off"
+
+          aspect_note = ""
+          # Aspect-mismatch hint: actual is landscape-ish but closest target is square (or vice versa)
+          actual_aspect = w / h if h else 1
+          if (tw, th) == (2400, 2400) and actual_aspect > 1.2:
+              aspect_note = " — the implementation rendered a landscape canvas but the closest target is square; reconsider orientation."
+          elif (tw, th) == (3200, 1800) and actual_aspect < 0.85:
+              aspect_note = " — the implementation rendered a portrait/square canvas but the closest target is landscape; reconsider orientation."
+
+          # Library-specific likely cause (concrete repair hints, not generic).
+          causes = {
+              "matplotlib": "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`).",
+              "seaborn":    "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`).",
+              "altair":     "Most likely cause: vl-convert padding title/legend outside `width`/`height`. Add `configure_view(continuousWidth=…, continuousHeight=…)` + zero `padding` and normalize the saved PNG with the PIL crop/pad snippet in `prompts/library/altair.md`.",
+              "plotly":     "Most likely cause: `autosize=True` or implicit margin growth. Set `autosize=False` and pin `margin=dict(...)` explicitly.",
+              "bokeh":      "Most likely cause: bokeh toolbar adding ~30-50 px above the figure. Set `toolbar_location=None`.",
+              "highcharts": "Most likely cause: Chrome chrome eating viewport space. Use `Emulation.setDeviceMetricsOverride` via CDP (see `prompts/library/highcharts.md` Save section) — `--window-size` alone is not authoritative in headless mode.",
+              "pygal":      "Check that `pygal.<Chart>(width=…, height=…)` and the SVG→PNG conversion don't override dims.",
+              "plotnine":   "Check `ggsave(width=…, height=…, units='in', dpi=400)` and `theme(figure_size=…)`; do not pass `bbox_inches='tight'`.",
+              "letsplot":   "Check `ggsize(W, H)` and `ggsave(..., scale=4)` pair — only the two canonical pairs land on target.",
+              "ggplot2":    "Check `ggsave(width=…, height=…, units='in', dpi=400)` with `ragg::agg_png`.",
+          }
+          cause = causes.get(LIBRARY, "Review `prompts/library/${LIBRARY}.md` 'Canvas — hard rule' section.")
+
+          weakness = (
+              f"Canvas dimensions drifted from required target. "
+              f"Actual: {w}×{h}. Closest valid target: {tw}×{th} (±{TOLERANCE} px tolerance). "
+              f"Signed delta: {dw:+d} × {dh:+d} — {direction}.{aspect_note} "
+              f"{cause} "
+              f"Re-render at exactly {tw}×{th}; the post-render gate enforces this."
+          )
+
+          Path("/tmp/anyplot-canvas-gate.txt").write_text(weakness, encoding="utf-8")
+          print(f"::warning::Canvas gate FAILED — wrote synthetic weakness to /tmp/anyplot-canvas-gate.txt: {weakness}")
+          PY
+
       - name: React with eyes emoji
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

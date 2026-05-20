@@ -65,6 +65,24 @@ For `plot-dark.png` (background should be `#1A1A17`):
 
 A plot that's perfect in one theme but unreadable in the other still **fails** — both renders must pass. Be strict: a plot that ships to the website broken on dark mode is worse than one that fails review and gets repaired.
 
+### 5c2. MANDATORY: Canvas dimension gate (if present)
+
+The workflow's pre-check step (`impl-review.yml` → "Canvas dimension gate") measures the saved `plot-light.png` against the two canonical canvas sizes (3200×1800 landscape, 2400×2400 square, ±16 px tolerance). When the gate fails, it writes the synthetic weakness to `/tmp/anyplot-canvas-gate.txt`.
+
+**Before scoring, check whether `/tmp/anyplot-canvas-gate.txt` exists:**
+
+```bash
+ls -la /tmp/anyplot-canvas-gate.txt 2>/dev/null && cat /tmp/anyplot-canvas-gate.txt
+```
+
+If it **does** exist:
+- The file contains a single paragraph: `Canvas dimensions drifted from required target. Actual: WxH. Closest valid target: TWxTH (±16 px tolerance). Signed delta: ±dx × ±dy — direction. Most likely cause: …`
+- **Copy that paragraph verbatim into your `weaknesses` array as the FIRST item.** Do not paraphrase; the repair model needs the literal "actual=WxH" and signed delta numbers to know which knob to turn and which direction.
+- **Set VQ-05 (Layout & Canvas) to 0/4 regardless of other observations.** Canvas drift is a hard rule; the quality_score must drop low enough to route the PR into impl-repair through the existing 5-review/4-repair cascade.
+- Keep scoring the other categories honestly — useful signal for repair is good signal — but do **not** lift VQ-05 just because the visual proportions look fine inside the wrong-sized canvas.
+
+If it does **not** exist: the gate passed; no canvas-specific action — score VQ-05 normally based on the visual proportional checks in 5d below.
+
 ### 5d. MANDATORY: Proportional Sizing Check (both renders)
 
 Visually estimate from each PNG — no pixel measurement needed. These are soft proportional checks **without hard thresholds**. Violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), and VQ-05 (Layout & Canvas) categories rather than triggering a separate pass/fail item. A single visual problem can reduce points in multiple categories simultaneously (holistic, not strict).
