@@ -1,158 +1,206 @@
 library: plotly
+language: python
 specification_id: histogram-returns-distribution
 created: '2026-01-16T22:11:33Z'
-updated: '2026-01-16T22:14:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21082372892
+updated: '2026-05-20T18:19:12Z'
+generated_by: claude-sonnet
+workflow_run: 26180361578
 issue: 3751
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/plotly/plot.html
-quality_score: 94
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/plotly/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of all specification requirements including histogram,
-    normal overlay, statistics box, and tail highlighting
-  - Clean, readable code structure following KISS principles
-  - Realistic financial data simulation with appropriate fat tails
-  - Good color scheme with distinct highlighting for tail regions
-  - Proper density normalization making histogram and normal curve comparable
-  - Clear statistics display with monospace font for alignment
+  - 'Full spec compliance: all required features implemented — normal distribution
+    overlay, tail-region coloring, statistics box (mean/std dev/skewness/kurtosis),
+    ±2σ threshold lines, and density normalization'
+  - 'Excellent theme adaptation: all chrome elements (title, axis labels, tick labels,
+    grid, legend, annotation box) use INK/INK_SOFT/ELEVATED_BG/PAGE_BG tokens that
+    correctly flip between light and dark'
+  - 'Realistic fat-tailed financial returns data: 504-day simulation with proper mean
+    (~0.05%/day) and std dev (~1.5%/day), plus explicit outlier injection to model
+    real-world tail behavior'
+  - 'Idiomatic Plotly usage: add_vline, add_annotation with paper-coordinate refs,
+    barmode=''overlay'' for bar-overlay pattern, and customized hovertemplate per
+    trace'
+  - 'Perfect code quality: flat script, np.random.seed(42) for reproducibility, no
+    unused imports, HTML output produced alongside PNG'
   weaknesses:
-  - Missing subtle grid lines that could improve readability (plotly_white template
-    removes them)
-  - Could leverage more Plotly-specific interactive features (e.g., range slider,
-    buttons for different time periods)
-  image_description: 'The plot displays a histogram of daily returns distribution
-    with approximately 40 bins. The main distribution bars are colored in a steel
-    blue (#306998), while tail regions beyond 2 standard deviations are highlighted
-    in red (#D62728). A yellow normal distribution curve is overlaid for comparison,
-    showing that the actual returns have fatter tails than a normal distribution (as
-    evidenced by the high kurtosis of 12.802). A blue dashed vertical line marks the
-    mean at approximately -0.065%, with red dotted vertical lines marking the ±2 standard
-    deviation boundaries at roughly -3.9% and +3.8%. The statistics box in the upper
-    right corner displays key metrics: Mean (-0.065%), Std Dev (1.914%), Skewness
-    (-1.367), and Kurtosis (12.802). The legend in the upper left clearly identifies
-    the blue bars as "Returns Distribution" and the yellow line as "Normal Distribution".
-    The x-axis shows "Daily Returns (%)" with percentage formatting, and the y-axis
-    shows "Probability Density". The title follows the correct format: "histogram-returns-distribution
-    · plotly · pyplots.ai".'
+  - 'DE-02 limited visual refinement: legend box frame and stats annotation box both
+    sit inside the plot area at opposite corners, creating visual clutter in the upper
+    portion; moving the legend outside the plot axes (or using a frameless legend)
+    would give more breathing room'
+  - 'DE-01 aesthetic is functional but conservative: bars use a flat opacity=0.75
+    with no edge definition — adding a subtle edge highlight (marker_line_color, marker_line_width=0.5)
+    would improve bar separation especially in the crowded central bins'
+  - The bargap=0.05 leaves small gaps between bins which slightly breaks the histogram's
+    visual continuity — for a histogram representing a continuous distribution, 0
+    or minimal gap (0.02) would be more appropriate
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, no pure-white artifacts.
+      Chrome: Title "histogram-returns-distribution · python · plotly · anyplot.ai" in dark #1A1A17 at size 16, centered — fully readable. X-axis label "Daily Returns (%)" and Y-axis label "Probability Density" in dark ink at size 12 — both readable. Tick labels at size 10 in #4A4A44 (INK_SOFT) — readable at all scales. "Mean" annotation above the dashed vertical line — readable. Statistics box (monospace, size 12) in upper-right with ELEVATED_BG (#FFFDF6) background — fully legible.
+      Data: Main histogram bars in Okabe-Ito #009E73 (bluish green), tail bars in #D55E00 (vermillion), normal distribution curve in #0072B2 (blue). Dashed black vertical line for mean, dotted orange lines for ±2σ. 40 bins clearly visible with a left-skewed distribution showing heavy negative tails.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title in #F0EFE8 (INK for dark theme) — clearly readable against near-black background. Axis labels and tick labels in adapted INK/INK_SOFT tokens — all legible with sufficient contrast. "Mean" annotation rendered in light ink — visible. Statistics box with ELEVATED_BG (#242420) background and light text — readable. Legend with dark elevated background and light text — legible.
+      Data: Data colors are identical to light render — #009E73 green bars, #D55E00 orange tail bars, #0072B2 blue curve. Theme adaptation is correct: only chrome flips, data colors stay constant.
+      Legibility verdict: PASS — no dark-on-dark failures. All text, labels, and annotations remain readable on the near-black surface. Brand green #009E73 retains strong visibility.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 28pt, axis labels 22pt, ticks 18pt - all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping elements, all text fully visible
+        comment: All font sizes explicitly set (title 16, axis 12, ticks 10). Readable
+          in both themes at full and scaled sizes. No light-on-light or dark-on-dark
+          failures.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Legend (top-left) and stats box (top-right) do not overlap with histogram
+          bars or each other. Mean annotation positioned above the mean line without
+          collision.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Histogram bars well-sized, normal curve clearly visible with width=4,
-          slight deduction for some bars in tail being small due to low density
+        comment: Histogram bins clearly visible; tail bars in orange are distinct;
+          normal distribution curve width=3 stands out prominently; ±2σ dotted lines
+          visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/red/yellow scheme is colorblind-friendly with good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, statistics box and legend well-positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Daily Returns (%) and Probability Density'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Okabe-Ito palette — CVD-safe by design. Three-color scheme (#009E73,
+          #D55E00, #0072B2) with no red-green sole-signal issue.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 (width=800 height=450 scale=4). Margins l=80 r=40
+          t=80 b=60. Title ~75% width — expected for mandated long title. No overflow
+          or clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No visible grid lines (plotly_white template removes gridlines by
-          default)
+        passed: true
+        comment: 'Title correct format. X: ''Daily Returns (%)'' with units. Y: ''Probability
+          Density'' — clear and descriptive.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 ✓. Tail series #D55E00 ✓. Normal curve #0072B2
+          ✓. Light bg #FAF8F1 ✓. Dark bg #1A1A17 ✓. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: intentional tail-coloring adds visual meaning, semi-transparent
+          bars (opacity=0.75), warm theme backgrounds. Functional and clean but not
+          visually striking.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: L-shaped frame via showline=True/mirror=False. Subtle 10% opacity
+          grid. Some refinement present but legend and annotation boxes create internal
+          visual clutter.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Tail coloring communicates risk regions. Stats box provides interpretive
+          context. Normal overlay enables direct visual comparison to theoretical
+          distribution. Clear narrative about fat tails.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct histogram with density normalization
+        comment: Correct histogram with normal distribution overlay — exactly as specified.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Returns on x-axis, density on y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: histogram, normal overlay, statistics
-          box, tail highlighting'
-      - id: SC-04
-        name: Data Range
+        comment: Normal distribution overlay ✓, statistics text box ✓, tail highlighting
+          ✓, density normalization ✓, ±2σ threshold lines ✓, mean reference line ✓,
+          40 bins for 504 obs ✓.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full range shown from -15% to +7%
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X-axis: daily returns in %; Y-axis: probability density. 504 observations
+          (2 years of daily data). Density-normalized histogram enables comparison
+          with normal PDF.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies both traces
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: {spec-id} · {library} · pyplots.ai'
+        comment: 'Title: ''histogram-returns-distribution · python · plotly · anyplot.ai''
+          ✓. Legend labels descriptive: ''Returns Distribution'', ''Tail Region (>±2σ)'',
+          ''Normal Distribution''.'
     data_quality:
-      score: 20
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows fat tails, skewness, kurtosis, all aspects of return distribution
+        comment: 'All aspects of returns distribution visualized: histogram shape,
+          normal overlay, tail emphasis, statistical summary, visual thresholds.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Simulated daily stock returns with realistic volatility and fat tails
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Daily returns centered near 0% with ~2% std dev is realistic for
-          equity markets
+        comment: Daily stock returns with realistic parameters (mean ~0.05%/day, std
+          ~1.5%). Fat-tail injection models real financial return behavior. Neutral
+          financial data.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Returns range -15% to +7% — realistic for individual stock with fat
+          tails over 2 years. Kurtosis 12.8 and skewness -1.37 are plausible for fat-tailed
+          financial data.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,43 +208,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: Flat script, no functions or classes, linear flow.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, plotly.graph_objects, scipy.stats)
+        comment: os, numpy, plotly.graph_objects, scipy.stats — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity. Proper Plotly idioms used throughout.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: All APIs are current
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also plot.html; minor issue as both are valid
-          for plotly
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Plotly API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Figure with add_trace, add_vline, add_annotation, update_layout.
+          barmode='overlay' and bargap used correctly. Paper-coordinate annotation
+          refs are idiomatic Plotly.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotly features like add_vline, add_annotation, hover templates,
-          but could leverage more interactive features
+        comment: add_vline() with annotation_text ✓, add_annotation() with paper refs
+          ✓, per-trace hovertemplate with extra='' cleanup ✓, write_html() for interactive
+          export ✓.
   verdict: APPROVED
 impl_tags:
   dependencies:
