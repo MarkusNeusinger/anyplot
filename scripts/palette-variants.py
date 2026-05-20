@@ -725,6 +725,38 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
 
 
 def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> str:
+    # Baseline card — current Okabe-Ito palette as the reference everyone
+    # compares against. Linked to the full diagnostic for drill-down.
+    baseline_first4 = measure_first_4(OKABE_PALETTE)
+    baseline_normal = measure_all_normal_min(OKABE_PALETTE)
+    baseline_chip_top = "".join(
+        f'<span class="big" style="background:{hx}" title="{hx}"></span>'
+        for hx in OKABE_PALETTE[:4]
+    )
+    baseline_chip_tail = "".join(
+        f'<span class="small" style="background:{hx}" title="{hx}"></span>'
+        for hx in OKABE_PALETTE[4:]
+    )
+    baseline_score_class = cell_class(baseline_first4)
+    baseline_card = f"""
+<a class="variant-card baseline-card" href="../palette-analysis.html">
+    <div class="card-head">
+        <span class="key">★</span>
+        <h3>baseline — okabe-ito <em>(current)</em></h3>
+    </div>
+    <p class="one-liner">today's plot palette. every variant below tries to clear this bar — the bar is the green×blue tritanopia collapse at ΔE 11.73.</p>
+    <div class="strip">
+        <div class="chips-big">{baseline_chip_top}</div>
+        <div class="chips-tail">{baseline_chip_tail}</div>
+    </div>
+    <div class="metrics">
+        <span class="metric {baseline_score_class}"><em>first-4 worst-CVD</em>{baseline_first4:.2f}</span>
+        <span class="metric"><em>all-pairs normal</em>{baseline_normal:.2f}</span>
+    </div>
+    <div class="open">open diagnostic →</div>
+</a>
+"""
+
     cards = []
     for variant, hues, first4, normal_min in rows:
         chip_top = "".join(
@@ -794,6 +826,22 @@ def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> st
     color: var(--ok-green);
     font-variant-numeric: tabular-nums;
 }}
+.baseline-card {{
+    background: var(--bg-elevated);
+    border-style: dashed;
+    border-color: var(--ink-muted);
+    grid-column: 1 / -1;
+}}
+.baseline-card .card-head h3 em {{
+    font-style: normal;
+    font-size: 11px;
+    color: var(--ink-muted);
+    font-weight: 400;
+    margin-left: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}}
+.baseline-card .card-head .key {{ color: var(--ink-muted); }}
 .card-head h3 {{ margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }}
 .one-liner {{ margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }}
 .strip {{ display: flex; gap: 6px; align-items: stretch; }}
@@ -845,6 +893,7 @@ def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> st
 </section>
 
 <div class="variants-grid">
+{baseline_card}
 {"".join(cards)}
 </div>
 

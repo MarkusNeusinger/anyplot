@@ -507,6 +507,22 @@ section.surface h3 {
     color: var(--ok-green);
     font-variant-numeric: tabular-nums;
 }
+.baseline-card {
+    background: var(--bg-elevated);
+    border-style: dashed;
+    border-color: var(--ink-muted);
+    grid-column: 1 / -1;
+}
+.baseline-card .card-head h3 em {
+    font-style: normal;
+    font-size: 11px;
+    color: var(--ink-muted);
+    font-weight: 400;
+    margin-left: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.baseline-card .card-head .key { color: var(--ink-muted); }
 .card-head h3 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
 .one-liner { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
 .strip { display: flex; gap: 6px; align-items: stretch; }
@@ -558,6 +574,24 @@ section.surface h3 {
 </section>
 
 <div class="variants-grid">
+
+<a class="variant-card baseline-card" href="../palette-analysis.html">
+    <div class="card-head">
+        <span class="key">★</span>
+        <h3>baseline — okabe-ito <em>(current)</em></h3>
+    </div>
+    <p class="one-liner">today's plot palette. every variant below tries to clear this bar — the bar is the green×blue tritanopia collapse at ΔE 11.73.</p>
+    <div class="strip">
+        <div class="chips-big"><span class="big" style="background:#009E73" title="#009E73"></span><span class="big" style="background:#D55E00" title="#D55E00"></span><span class="big" style="background:#0072B2" title="#0072B2"></span><span class="big" style="background:#CC79A7" title="#CC79A7"></span></div>
+        <div class="chips-tail"><span class="small" style="background:#E69F00" title="#E69F00"></span><span class="small" style="background:#56B4E9" title="#56B4E9"></span><span class="small" style="background:#F0E442" title="#F0E442"></span></div>
+    </div>
+    <div class="metrics">
+        <span class="metric cell-meh"><em>first-4 worst-CVD</em>11.73</span>
+        <span class="metric"><em>all-pairs normal</em>20.76</span>
+    </div>
+    <div class="open">open diagnostic →</div>
+</a>
+
 
 <a class="variant-card" href="A-analogous.html">
     <div class="card-head">
