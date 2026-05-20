@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:07:17Z'
-updated: '2026-05-20T09:48:22Z'
+updated: '2026-05-20T09:57:34Z'
 generated_by: claude-sonnet
 workflow_run: 26153892047
 issue: 3765
@@ -12,97 +12,88 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 81
+quality_score: 83
 review:
   strengths:
-  - 'Excellent spec compliance: all required flow map features implemented correctly
-    (Bezier curves, proportional width, transparency, geographic basemap, city markers,
-    labels)'
-  - 'Strong data quality: realistic international migration scenario with plausible
-    magnitudes and good feature coverage across continents'
-  - Dual-encoding of flow magnitude (line width + color gradient) creates effective
-    visual hierarchy — major corridors are immediately apparent
-  - 'Clean theme-adaptive implementation: both light and dark renders correct, all
-    chrome tokens properly applied, no dark-on-dark failures'
-  - Deterministic, reproducible data; clean KISS code structure
+  - Theme-adaptive geographic color scheme (ocean/land) works beautifully in both
+    light and dark renders
+  - Dual encoding of flow magnitude through both arc width and viridis color creates
+    strong visual hierarchy
+  - Perfect spec compliance — all required features (curved arcs, proportional width,
+    transparency, color gradient, basemap) present
+  - 'Excellent data quality: real-world migration flows between correctly positioned
+    world cities'
+  - Clean, idiomatic plotnine code with KISS structure; perfect code quality score
   weaknesses:
-  - 'Label overlap in Western Europe cluster: nudge_x=4 degrees is insufficient when
-    London, Paris, and Berlin share a small longitude window; increase nudge_x per
-    city or use ha alternation to spread labels'
-  - 'Continuous flow gradient uses custom #56B4E9 to #D55E00 instead of viridis/cividis
-    as mandated by style guide for sequential continuous data; replace with scale_color_cmap(cmap_name=viridis)'
-  - City labels at size=7 are slightly smaller than axis tick labels (size=8); raising
-    to size=8 or 9 would improve legibility especially when scaled down to mobile
-  - Continent polygon outlines have angular/blocky geometry from simplified coordinates;
-    lower their alpha to de-emphasize basemap relative to flow data
+  - 'London/Berlin label overlap in Western Europe cluster: increase vertical nudge
+    separation — London (4, 5.0), Berlin (8, 2.5) to prevent crowding at similar latitudes'
+  - City labels (geom_text size=8) are at the lower bound for mobile readability —
+    increase to size=9
+  - 'LM-02: approach is nearly identical to ggplot2; limited use of plotnine-distinctive
+    features beyond grammar layering'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Panel: Light blue ocean (#DDE9F2) with beige continent polygons (#D0CCC4)
-      Chrome: Title bold dark ink, axis labels "Longitude (°)"/"Latitude (°)" dark at 10pt, tick labels at 8pt — all readable
-      Data: City markers in #009E73 brand green; 18 flow arcs in blue-to-orange gradient (low→high magnitude); arc widths 0.3–2.5; alpha=0.55; 14 city name labels at size=7 nudged right
-      Issue: London/Paris/Berlin labels visually crowded; partial overlap in W. Europe cluster
-      Legibility verdict: PASS (minor overlap caveat)
+      Background: Warm off-white (#FAF8F1) page background — correct. Ocean panel uses light blue (#DDE9F2).
+      Chrome: Title "flowmap-origin-destination · python · plotnine · anyplot.ai" in bold dark ink — readable. Axis labels "Longitude (°)" and "Latitude (°)" in dark INK (#1A1A17). Tick labels in INK_SOFT (#4A4A44) — readable. Legend title/text in dark tones — readable.
+      Data: 18 curved Bezier arcs colored with viridis (blue ~25k to orange ~142k), width proportional to flow. City dots in #009E73 green. Continent outlines in brownish-gray (#D0CCC4). London/Berlin label area shows crowding.
+      Legibility verdict: PASS (all text readable; minor crowding near London/Berlin labels)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Panel: Dark navy ocean (#111A22) with dark olive continent polygons (#363632)
-      Chrome: Title and axis labels in light #F0EFE8, tick labels in #B8B7B0 — all readable against dark background; no dark-on-dark failures observed
-      Data: City markers remain #009E73 (identical to light render); arc gradient colors identical; legend box uses #242420 elevated bg with light text
-      Legibility verdict: PASS — chrome correctly inverts; all text readable on dark background
+      Background: Warm near-black (#1A1A17) page background — correct. Ocean panel uses dark navy (#111A22).
+      Chrome: Title, axis labels, tick labels all in light colors (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures. Legend background is elevated (#242420) with light text.
+      Data: Viridis arc colors are IDENTICAL to light render — orange Mumbai-Dubai arc and blue low-flow arcs unchanged. City dots remain #009E73 green. Continent polygons in dark gray (#363632).
+      Legibility verdict: PASS (all text readable in dark theme; chrome adaptation is complete)
   criteria_checklist:
     visual_quality:
-      score: 22
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; city labels at size=7 slightly small;
-          Western Europe cluster tight
+        comment: All font sizes explicitly set; city labels at size=8 slightly small
+          for mobile
       - id: VQ-02
         name: No Overlap
         score: 3
         max: 6
         passed: false
-        comment: London/Paris/Berlin city labels partially overlap due to uniform
-          nudge_x=4 degree offset
+        comment: London and Berlin labels crowd/overlap in Western Europe cluster
+          despite LABEL_NUDGE
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: City points and arcs clearly visible; thinnest arcs marginally visible
-          but not invisible
+        comment: Arc widths 0.3-2.5 with alpha=0.55; thinnest arcs marginally visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue-to-orange avoids red-green; brand green markers contrast well
-          on both themes
+        comment: Viridis CVD-safe; good contrast between green markers and ocean
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: coord_fixed fills canvas well; legend properly positioned; minor
-          wasted space in northern latitudes
+        comment: Good canvas utilization; minor imbalance from legend extending outside
+          map panel
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°) with units; title format correct
+        comment: Longitude (deg) and Latitude (deg) with units; title correct
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'City markers #009E73 correct; backgrounds correct; but continuous
-          gradient uses #56B4E9->#D55E00 instead of viridis/cividis'
+        passed: true
+        comment: 'City points #009E73; viridis for continuous flows; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct'
     design_excellence:
       score: 13
       max: 20
@@ -112,22 +103,21 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Ocean background and dual encoding show intentional design; rough
-          continent outlines detract from polish
+        comment: 'Above defaults: custom ocean/land color scheme, dual encoding, geographic
+          aesthetic'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid alpha=0.08 very subtle; ocean/land distinction adds depth; legend
-          styled; minor partial frame issue
+        comment: coord_fixed, minimal grid (alpha=0.08), ocean panel; some spines
+          from theme_minimal
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Thick orange arcs create immediate focal point; London emerges as
-          hub through arc convergence; dual encoding reinforces hierarchy
+        comment: Width+color dual encoding creates hierarchy; London hub role apparent
     spec_compliance:
       score: 15
       max: 15
@@ -137,29 +127,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Origin-destination flow map with Bezier arcs on geographic basemap
-          — fully correct
+        comment: Correct OD flow map with curved Bezier arcs
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Bezier curves, proportional width, transparency, color gradient,
-          basemap, city labels all present
+        comment: Curved arcs, proportional width, transparency, color gradient, basemap
+          all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon correctly mapped; flow drives width and color; all cities
-          visible
+        comment: Longitude/Latitude correct; flow mapped to width and color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labeled Annual migrants (k) with correct
-          scale
+        comment: Title format correct; legend Annual migrants (k) correct
     data_quality:
       score: 15
       max: 15
@@ -169,24 +156,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 18 flows across 14 cities on 5+ continents; magnitude variation 27k-142k;
-          hub-and-spoke and point-to-point patterns
+        comment: 18 flows, 14 cities, 6 continents; wide magnitude range 27k-142k
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: International migration flows between real world cities; neutral
-          topic; plausible directional patterns
+        comment: Real-world migration with actual city names and correct coordinates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Mumbai-Dubai 142k and Lagos-London 98k migrants/year are consistent
-          with known diaspora patterns
+        comment: Migration volumes plausible; Mumbai-Dubai highest reflects real Gulf
+          patterns
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -194,35 +179,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: constants -> data -> Bezier -> basemap ->
-          plot -> save; no functions or classes'
+        comment: Imports -> data -> plot -> save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; Bezier computation deterministic; no RNG needed
+        comment: Fully deterministic; no random state
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported plotnine components used; os/numpy/pandas all used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Inline continent polygon coordinate lists (~50 lines) are verbose;
-          Bezier loop acceptable
+        passed: true
+        comment: Clean Bezier computation, well-organized LABEL_NUDGE dict
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current plotnine API throughout
+        comment: Saves as plot-{THEME}.png; current API
     library_mastery:
-      score: 7
+      score: 6
       max: 10
       items:
       - id: LM-01
@@ -230,16 +213,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar-of-graphics layering idiomatic; scale_size_identity() correct;
-          coord_fixed() appropriate for geographic aspect
+        comment: Good grammar layering; scale_size_identity and coord_fixed used idiomatically
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: geom_polygon+geom_path+group aesthetic for flow arcs is distinctively
-          grammar-of-graphics; not easily replicable in imperative libraries
-  verdict: REJECTED
+        passed: false
+        comment: scale_size_identity is plotnine-idiomatic but overall approach mirrors
+          ggplot2
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -250,5 +232,5 @@ impl_tags:
   dataprep:
   - normalization
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
