@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:52:05Z'
-updated: '2026-05-20T05:59:48Z'
+updated: '2026-05-20T06:12:07Z'
 generated_by: claude-sonnet
 workflow_run: 26144022942
 issue: 3811
@@ -12,97 +12,96 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/letsplot/plot-dark.html
-quality_score: 87
+quality_score: 92
 review:
   strengths:
-  - Correct L-shaped finder pattern and alternating timing pattern per ISO/IEC 16022
-  - 'Theme-adaptive chrome: warm off-white (#FAF8F1) light background, near-black
-    (#1A1A17) dark background with white title text'
-  - Deterministic seeding via content hash ensures reproducible output
-  - Clean KISS code structure with no functions/classes
-  - theme_void appropriately removes all axis chrome, coord_fixed maintains square
-    aspect
-  - Correct 2400×2400 (square) canvas via ggsize(600,600) + scale=4
-  - Quiet zone implemented per spec (1-module border)
-  - HTML export included alongside PNG
+  - 'Perfect spec compliance: all ISO/IEC 16022 structural elements (L-shaped finder,
+    alternating timing, quiet zone) correctly implemented'
+  - 'Deterministic encoding: np.random.seed(data_hash) ties the visual output to the
+    encoded content — reproducible and contextually meaningful'
+  - Excellent use of layer_tooltips() to expose structural annotation (Finder Pattern
+    vs. Timing Pattern vs. Data Region) — showcases a distinctive lets-plot feature
+    while adding educational value
+  - Medical serial number context directly references the spec's stated use case;
+    realistic and neutral
+  - theme_void + coord_fixed is the ideal approach for barcode visualization — removes
+    all non-data chrome while preserving cell proportions
+  - 'Perfect code quality: KISS structure, clean imports, deterministic, correct output
+    file naming'
   weaknesses:
-  - Design Excellence is constrained but not maximized — a subtle label or annotation
-    (e.g. content string below the barcode, or a thin border around the quiet zone)
-    would raise DE-01 and DE-03
-  - LM-02 (Distinctive Features) is weak — the implementation uses ggplot-generic
-    patterns achievable in plotnine/ggplot2; consider leveraging lets-plot-specific
-    features more
-  - No visual emphasis or storytelling element beyond displaying the raw barcode structure
+  - Subtitle size=11 is slightly below the style-guide secondary-text recommendation;
+    increase to 12 for better visual balance with the title
+  - In dark mode, the white quiet-zone tiles (#FFFFFF) create a stark bright-white
+    panel against the dark page background; could soften by using a near-white (#F8F8F5
+    or similar) for the quiet zone tiles while keeping the data matrix black/white,
+    maintaining scan contrast while reducing the jarring inset effect
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) page background visible as outer margin — correct.
-      Chrome: Title "datamatrix-basic · python · letsplot · anyplot.ai" in bold dark text (#1A1A17) centered at top, spans ~78% of canvas width — well-proportioned. No axes or tick labels (theme_void), which is appropriate for a barcode.
-      Data: 14×14 Data Matrix barcode with 1-module quiet zone. Cells are hard black (#000000) and white (#FFFFFF) as required by the ISO/IEC 16022 spec. L-shaped finder pattern clearly visible on left column and bottom row. Alternating clock pattern on top row and right column. Data region contains pseudo-random B&W cells seeded from content. The quiet-zone cells (white) form a white inner frame on the warm off-white outer background — slightly indistinct but visually clean.
-      Legibility verdict: PASS — title is clearly readable, barcode cells are high-contrast.
+      Background: Warm off-white (~#FAF8F1) — correct theme surface
+      Chrome: Bold title "datamatrix-basic · python · letsplot · anyplot.ai" in dark ink (#1A1A17), clearly readable; subtitle "Encoded: MED-SN:A7B2C9D1 · 14×14 ECC 200 · ISO/IEC 16022" in lighter dark ink (#4A4A44), readable; no axis labels or ticks (theme_void, appropriate for barcode)
+      Data: 14×14 Data Matrix barcode with 1-module white quiet zone border; L-shaped finder pattern (solid black left column and bottom row); alternating timing pattern (top row and right column); pseudo-random data region cells seeded from content; black (#000000) and white (#FFFFFF) cells
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) outer background — correct dark theme.
-      Chrome: Title in white (#F0EFE8 via INK token) clearly readable against dark background — no dark-on-dark issues.
-      Data: Barcode data colors are identical to light render (hard black #000000 / white #FFFFFF cells), as required. The white cells create a white inner area visible against the dark outer background — this is correct and visually reads as a "barcode label on dark surface." The L-shaped finder and timing patterns are identical to the light render.
-      Legibility verdict: PASS — title text is white on dark, clearly readable. No dark-on-dark text failures.
+      Background: Near-black (~#1A1A17) outer page background — correct dark theme surface
+      Chrome: Title and subtitle switch to light ink (#F0EFE8 / #B8B7B0) — both clearly readable against dark background; no dark-on-dark failures observed
+      Data: Colors identical to light render (black/white cells, same barcode pattern); the inner quiet zone area appears as a white panel on the dark background — this is ISO/IEC 16022 mandated (barcodes must use high-contrast black-on-white for scan reliability), not a theme adaptation failure
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: Title explicitly sized (size=16, bold), readable in both themes.
-          No other text elements needed (theme_void appropriate for barcode). Title
-          spans ~78% of width — within acceptable range for mandated title format.
+        comment: Title (size=16, bold) and subtitle (size=11) explicitly set; readable
+          in both themes; -1 for subtitle slightly below style-guide 12px recommendation
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap possible — theme_void removes all axis elements, clean
-          barcode grid.
+        comment: No axis labels or ticks; title/subtitle cleanly separated; zero overlap
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'Barcode cells are maximally visible: pure black/white with high
-          contrast. coord_fixed ensures proper square cells.'
+        comment: Matrix cells crisp and well-sized; all structural patterns clearly
+          distinguishable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Binary B&W is maximally accessible. Not hue-dependent at all — CVD-safe
-          by definition.
+        comment: Black/white provides 21:1 contrast; inherently CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400×2400 canvas. Barcode fills ~65% of canvas with balanced
-          margins. Well-proportioned.
+        comment: Square format correct for symmetric matrix; good canvas utilization;
+          balanced quiet zone framing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed for a barcode. Title correctly identifies spec.
-          N/A for units — full marks.
+        comment: Mandated title format correct; subtitle provides ISO standard, size,
+          and encoded content
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Theme backgrounds correct (#FAF8F1 light / #1A1A17 dark). Barcode
-          cells are hard B&W per spec requirement (overrides Okabe-Ito which does
-          not apply to binary barcode data). INK token used for title color.'
+        comment: Outer chrome uses correct backgrounds (#FAF8F1/#1A1A17); black/white
+          data colors are ISO-mandated for barcode readability; text tokens correctly
+          theme-adaptive
     design_excellence:
-      score: 11
+      score: 14
       max: 20
       items:
       - id: DE-01
@@ -110,25 +109,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean and minimal — appropriate for barcode. theme_void, bold centered
-          title, dark-mode aware. Above defaults but no extra design elements (annotation,
-          border accent, or contextual label) that would elevate it.
+        comment: Clean intentional design; theme_void + square format are thoughtful
+          choices; constrained to black/white by spec, limiting aesthetic range but
+          handled well
       - id: DE-02
         name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: theme_void removes all unnecessary chrome; coord_fixed ensures square
+          cells; -1 for pure white (#FFFFFF) quiet zone being jarring in dark mode
+      - id: DE-03
+        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: theme_void removes all unnecessary chrome. Quiet zone respected.
-          Generous whitespace. Legend correctly removed. Some refinement visible but
-          not exceptional.
-      - id: DE-03
-        name: Data Storytelling
-        score: 2
-        max: 6
-        passed: false
-        comment: Barcode is displayed correctly but no visual storytelling — no annotation
-          of the encoded content, no callout of the spec structure (finder vs timing
-          vs data regions). Data is displayed but not interpreted for the viewer.
+        comment: Medical serial number matches spec use case; subtitle communicates
+          encoded content and ISO standard; structural cell classification for tooltips
+          shows intentional educational framing
     spec_compliance:
       score: 15
       max: 15
@@ -138,29 +136,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Data Matrix 2D barcode using geom_tile grid.
+        comment: Correct Data Matrix 2D barcode visualization
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: L-shaped finder pattern (solid left column
-          + bottom row), alternating timing pattern (top row + right column), quiet
-          zone (1-module border), ECC 200-style data region.'
+        comment: L-shaped finder pattern, alternating timing pattern, quiet zone (1
+          module), high-contrast black/white, ECC 200 pseudo-encoding all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X/Y grid correctly mapped with flipped Y-axis (rows from top). All
-          16×16 cells (14×14 + quiet zone) visible.
+        comment: Matrix correctly constructed; y-axis inverted for proper top-down
+          orientation; all regions correctly placed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'datamatrix-basic · python · letsplot · anyplot.ai'.
-          Legend correctly hidden (legend_position='none').
+        comment: Title is exactly 'datamatrix-basic · python · letsplot · anyplot.ai';
+          legend hidden (correct for binary data)
     data_quality:
       score: 15
       max: 15
@@ -170,22 +167,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all four structural elements of Data Matrix: finder pattern,
-          timing pattern, quiet zone, and data region.'
+        comment: 'All four structural regions present: quiet zone, finder pattern
+          (L-shape), timing pattern (alternating), data region (ECC 200 pseudo-encoded)'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Content 'MED-SN:A7B2C9D1' is a realistic medical device serial number
-          — aligns with the spec's pharmaceutical/medical device use case.
+        comment: Medical device serial number (MED-SN:A7B2C9D1) is realistic, neutral,
+          and directly references the spec's stated pharmaceutical/medical use case
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 14×14 is a standard ECC 200 Data Matrix symbol size. Values and proportions
-          are correct.
+        comment: 14×14 is a valid ECC 200 symbol size per ISO/IEC 16022; content length
+          appropriate for this matrix size
     code_quality:
       score: 10
       max: 10
@@ -195,59 +192,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure. No functions or classes.
+        comment: Imports → theme tokens → matrix construction → DataFrame → plot →
+          save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(data_hash) where data_hash is deterministically computed
-          from content — fully reproducible.
+        comment: np.random.seed(data_hash) ties randomness to content; fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used. Only necessary lets_plot components imported
-          explicitly.
+        comment: Only used imports; selective lets_plot import avoids wildcard
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. Matrix construction loop is appropriate. Content-derived
-          seeding is a clever touch.
+        comment: Clean Pythonic loops; cell region classification for tooltip is elegant;
+          no over-engineering
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct ggsave API
-          with scale=4.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; current letsplot
+          API
     library_mastery:
-      score: 6
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Grammar of graphics (ggplot + geom_tile + coord_fixed + theme_void
+          + labs + ggsize + ggsave) is fully idiomatic lets-plot
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Idiomatic ggplot grammar: ggplot + geom_tile + aes, coord_fixed,
-          theme_void + theme(), labs, ggsize, ggsave with scale. Good use of lets-plot
-          conventions.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export is a lets-plot-specific feature. ggsize() is lets-plot-specific.
-          But the core visualization is achievable with nearly identical code in plotnine
-          or ggplot2. Minimal use of lets-plot-specific capabilities.
-  verdict: REJECTED
+        comment: layer_tooltips() revealing structural region and encoded content
+          on hover is distinctive to lets-plot; HTML output enables interactive exploration;
+          -1 for simple two-line tooltip content
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
