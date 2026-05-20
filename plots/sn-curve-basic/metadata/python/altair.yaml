@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:46:05Z'
-updated: '2026-05-20T17:35:05Z'
+updated: '2026-05-20T17:45:42Z'
 generated_by: claude-sonnet
 workflow_run: 26178460854
 issue: 3826
@@ -12,42 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 87
 review:
   strengths:
-  - 'Complete spec compliance: all required S-N curve features (scatter, fit line,
-    three reference lines, three zone labels, infinite-life band) present and correctly
-    implemented'
-  - 'Excellent theme adaptation: both light and dark renders fully readable with no
-    dark-on-dark failures; INK/INK_SOFT tokens correctly threaded through all chrome
-    elements'
-  - 'Proper Okabe-Ito palette: first series uses brand green, reference lines follow
-    positions 2–4 in order'
-  - Clean Altair layer composition demonstrating idiomatic multi-mark usage
-  - Realistic engineering data with correct Basquin parameters for medium-carbon steel
-  - PAD-only canvas strategy correctly implemented with explicit overshoot guard
+  - 'Full spec coverage: log-log S-N axes, scatter data with Basquin power-law fit,
+    three fatigue-region text annotations, and dashed reference rules for UTS/YS/EL
+    all present and correctly rendered'
+  - 'Okabe-Ito palette applied correctly: #009E73 for data/fit, positions 2-3-4 for
+    the three reference lines — CVD-safe throughout'
+  - 'Theme-adaptive chrome is thorough: PAGE_BG, ELEVATED_BG, INK, and INK_SOFT tokens
+    drive every non-data element; both renders pass the legibility check'
+  - 'PAD-only sizing logic correctly implemented: raises SystemExit on overshoot rather
+    than silently cropping (which would trigger AR-09)'
+  - Infinite-life zone (mark_rect band below EL) adds excellent visual context with
+    minimal opacity (0.10) that doesn't overpower the data
+  - 'Altair layer composition idiomatic: five mark types composed cleanly with shared
+    scales propagated through encoding rather than repeated per layer'
   weaknesses:
-  - 'Log-log grid is visually dense: both x and y axes generate 6–7 gridlines per
-    decade; even at gridOpacity=0.10 the grid competes with the data in both renders
-    — consider reducing gridOpacity to 0.06 or switching to y-axis-only grid for clarity'
-  - 'No explicit spine management: Altair keeps domain lines on all four sides by
-    default; configure_axis overrides would improve visual refinement'
-  - Legend position (bottom-left, inside the plot area) places it close to the EL
-    dashed line — a small offset or orient=bottom-right would prevent visual crowding
-  - Scatter markers lack white edge strokes; adding stroke=white strokeWidth=0.5 would
-    improve definition against both background themes
+  - Legend box (bottom-right) sits flush against the EL reference line (150 MPa) and
+    slightly crowds the bottom-right data area — consider orient='bottom-left' or
+    bump legend inside-left to give the EL line visual breathing room
+  - X-axis grid is fully suppressed (gridOpacity=0) while the style guide recommends
+    y-grid-only for line/bar but both-axes for scatter; in a scatter context the missing
+    x-grid slightly reduces cycle-count readability
+  - 'DE-01 ceiling: the visual hierarchy (scatter → fit → ref lines → zone band) is
+    well-designed but DE polish could go further — e.g. a bolder fit line (strokeWidth=3
+    vs current 2.5) to signal it as the primary trend element vs raw data'
+  - Font weight on region annotations matches axis tick labels (INK_SOFT, fontSize=12)
+    — a weight=lighter or fontSize=11 would create clearer tertiary hierarchy below
+    the axis labels
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "sn-curve-basic · python · altair · anyplot.ai" bold dark ink, ~65% width; X-axis label "Cycles to Failure (N)" and Y-axis label "Stress Amplitude (MPa)" in dark ink; tick labels in INK_SOFT dark gray — all readable
-      Data: ~40 filled green (#009E73) scatter points; green Basquin fit line; orange dashed UTS at 520 MPa; blue dashed YS at 380 MPa; pink/purple dashed EL at 150 MPa; subtle pink-tinted infinite-life band below EL; italic gray region labels for three fatigue zones
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct theme surface, no pure white.
+      Chrome: Title "sn-curve-basic · python · altair · anyplot.ai" in bold dark ink (#1A1A17), spans ~65% of canvas width — well-proportioned. Y-axis label "Stress Amplitude (MPa)" and X-axis label "Cycles to Failure (N)" in dark ink, clearly readable. Tick labels at 10pt in INK_SOFT (#4A4A44) — all readable including the log-scale values (100, 1,000, 10,000 … 100,000,000). Legend box "Material Properties" has warm off-white elevated fill (#FFFDF6) with INK_SOFT stroke — clearly legible.
+      Data: ~35 green scatter points (#009E73) with subtle page-bg stroke halos; Basquin power-law fit line in same #009E73 traces the trend cleanly. Three dashed reference rules: UTS at 520 MPa in #D55E00 (orange), YS at 380 MPa in #0072B2 (blue), EL at 150 MPa in #CC79A7 (pink). Infinite-life zone as a pale pink rectangular band below EL. Region labels "Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life" in italic INK_SOFT.
+      Legibility verdict: PASS — all text elements readable at full resolution. No overlap or overflow observed.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct theme surface
-      Chrome: Title, axis labels, tick labels all flip to light text (#F0EFE8 / #B8B7B0) — fully readable; no dark-on-dark failures detected; legend box uses elevated dark surface #242420 with light text
-      Data: Colors identical to light render — green scatter points, green fit line, orange/blue/pink dashed reference lines, pink-tinted band; all data elements clearly distinguishable against dark background
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title in light ink (#F0EFE8), clearly visible against the dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark token) — readable against the near-black surface with no dark-on-dark failure. Legend box fill is #242420 (ELEVATED_BG dark), slightly lighter than background — readable.
+      Data: Scatter points and fit line remain in identical #009E73 (brand green) — color identity preserved between themes, as required. All three reference rules (orange, blue, pink) are identically colored to the light render and all clearly visible against the dark background. Infinite-life band retains its EL-pink tint. Region annotations in INK_SOFT dark token readable.
+      Legibility verdict: PASS — no dark-on-dark failure detected. Chrome correctly flips while data colors stay identical to the light render.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,52 +63,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes explicitly set; region
-          annotation Infinite Life at 12px is on the smaller side but legible
+        comment: 'All font sizes explicitly set; title, axis labels, ticks, annotations
+          readable in both themes. Minor: region annotation fontsize matches axis
+          tick labels (no tertiary hierarchy).'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Mostly clean; legend box at bottom-left sits close to the EL dashed
-          reference line but no true overlap with data markers
+        comment: Legend box slightly crowds the EL reference line at bottom-right
+          but no true text-on-text or text-on-data overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Sparse scatter uses size=180 (prominent); fit line strokeWidth=2.5;
-          reference lines strokeWidth=3 with clear dashes
+        comment: ~35 scatter points at size=180 with 0.75 opacity well-visible; fit
+          line, reference rules, and zone band all clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Full Okabe-Ito palette; CVD-safe; reference lines labeled in legend
-          so color is not sole differentiator
+        comment: Okabe-Ito palette throughout; shape encoding (dashed lines) reinforces
+          reference line identity beyond color alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; title proportions appropriate; nothing overflows;
-          PAD-only approach correctly implemented
+        comment: Canvas gate passed; 3200x1800 confirmed via PAD-only logic. No overflow,
+          no clipping, good title proportion.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Cycles to Failure (N) and Stress Amplitude (MPa) are descriptive
-          with units; title matches required format
+        comment: Both axis labels include units (MPa, N). Title matches required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (scatter + fit line) uses #009E73; reference lines
-          use Okabe-Ito positions 2-4; backgrounds are #FAF8F1 light / #1A1A17 dark'
+        comment: 'First series #009E73; ref lines at Okabe-Ito positions 2/3/4; backgrounds
+          #FAF8F1 / #1A1A17 correct.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -111,25 +116,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above defaults: intentional multi-layer composition, carefully mapped
-          Okabe-Ito colors, subtle infinite-life band at opacity=0.10, italic zone
-          annotations'
+        comment: 'Above default: intentional visual hierarchy (scatter → fit → ref
+          lines → zone band), correct palette assignment, region annotations, infinite-life
+          zone band. Not exceptional — fit line could be bolder as primary focal element.'
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: View border removed (strokeOpacity=0), gridOpacity=0.10. However
-          log-log axes generate many gridlines making grid visually prominent despite
-          low opacity; no explicit spine direction management
+        passed: true
+        comment: 'Above default: chart border removed (strokeOpacity=0), x-axis grid
+          suppressed, y-axis grid at opacity=0.06. Could go further with top/right
+          spine suppression signal.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear narrative: scatter shows variability, Basquin fit shows trend,
-          three reference lines mark material limits, shaded zone highlights safe
-          operating region, italic labels guide viewer through three fatigue regimes'
+        comment: 'Above default: three fatigue-region labels + material property reference
+          lines tell the S-N story clearly. Visual hierarchy guides the eye through
+          trend identification.'
     spec_compliance:
       score: 15
       max: 15
@@ -139,27 +144,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-N (Wohler) curve with log-log scales on both axes
+        comment: Correct S-N (Wöhler) curve on log-log axes.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Reference lines for UTS/YS/EL, Basquin fit line, scatter with multiple
-          specimens per stress level, three fatigue region labels
+        comment: Log axes, scatter specimens, Basquin fit, UTS/YS/EL reference lines,
+          three-region annotations — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: cycles (log), Y: stress amplitude (log); all data mapped correctly'
+        comment: X=cycles (log), Y=stress (log); full domain [100, 1e8] x [100, 750]
+          shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is sn-curve-basic · python · altair · anyplot.ai; legend labels
-          match material property names
+        comment: 'Title: ''sn-curve-basic · python · altair · anyplot.ai''. Legend
+          labels: ''UTS: 520 MPa'', ''YS: 380 MPa'', ''EL: 150 MPa''.'
     data_quality:
       score: 15
       max: 15
@@ -169,23 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter variability, Basquin power-law fit, three material
-          property limits, three fatigue life zones, and infinite-life shaded band
+        comment: Scatter specimens, power-law fit, material property markers, three
+          regions, infinite-life band — complete coverage.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Medium-carbon steel with A=800 MPa b=-0.12 (engineering-realistic
-          Basquin parameters); stress range 150-520 MPa appropriate for steel; neutral
-          technical domain
+        comment: Medium-carbon steel fatigue data with Basquin parameters (A=800,
+          b=-0.12); realistic stress/cycle ranges; neutral engineering context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Log-log scale is the standard for fatigue data; cycle domain [100,
-          1e8] and stress domain [100, 750] cover full engineering range
+        comment: Stress 100-750 MPa and cycles 100-1e8 are realistic for structural
+          steel fatigue; 3-5 replicates per stress level matches real test programs.
     code_quality:
       score: 10
       max: 10
@@ -195,33 +200,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes; sections logically commented
+        comment: Flat script; no unnecessary functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) ensures deterministic scatter.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas, PIL.Image — all used
+        comment: os, altair, numpy, pandas, PIL — all imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; clean layered composition; no fake UI elements
+        comment: No fake UI; complexity proportional to the multi-layer spec.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; PAD-only approach correctly
-          raises on overshoot
-    library_features:
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
       score: 7
       max: 10
       items:
@@ -230,17 +234,15 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper encoding types (Q/N), alt.Scale for log axes, configure_axis/title/legend
-          for global theming, alt.Legend with orient parameter — idiomatic Altair
-          patterns throughout
+        comment: Proper layer composition, shared alt.Scale instances, correct encoding
+          types (Q/N), configure_* pattern, configure_axisX override.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Multi-layer composition (Altair signature strength), mark_rect with
-          y/y2 for band, interactive HTML export, tooltip encoding, alt.Color with
-          domain/range mapping
+        comment: mark_rect with y/y2 for zone band, mark_rule for reference lines,
+          configure_axisX for per-axis grid control, alt.Legend orient='bottom-right'.
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -252,7 +254,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
+  - edge-highlighting
