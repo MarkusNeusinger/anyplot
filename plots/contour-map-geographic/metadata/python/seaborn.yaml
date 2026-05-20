@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: contour-map-geographic
 created: '2026-01-17T11:53:15Z'
-updated: '2026-05-20T22:49:57Z'
+updated: '2026-05-20T23:05:04Z'
 generated_by: claude-sonnet
 workflow_run: 26193921794
 issue: 3772
@@ -12,94 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 83
 review:
   strengths:
-  - Perfect spec compliance — contourf + contour lines + clabels + colorbar + geographic
-    basemap all present
-  - 'High-quality realistic data: Arctic amplification modeled correctly with a physically
-    plausible anomaly pattern'
-  - 'Excellent theme adaptation: ocean/land/coast colors flip correctly between light
-    and dark themes; all chrome tokens properly threaded through'
-  - Canvas dimensions exactly 3200x1800 px; no bbox_inches drift
-  - Clean code structure with seed, no functions/classes, all imports used
+  - 'Excellent spec compliance — all required features implemented: filled contours
+    (BrBG_r colormap), contour lines with inline labels, colorbar with units, simplified
+    geographic basemap with coastlines, and meaningful contour intervals'
+  - Two-panel composition elegantly connects spatial distribution (main map) to global
+    pattern (zonal mean side panel), with Arctic Amplification annotation and 60°N
+    reference line delivering clear data storytelling
+  - Perfect theme adaptation — all chrome elements (axis labels, tick labels, colorbar
+    text, contour labels, zonal panel title) use theme-adaptive INK/INK_SOFT tokens;
+    both light and dark renders are fully readable with no dark-on-dark or light-on-light
+    failures
+  - Perfect code quality — reproducible with np.random.seed(42), clean imports (all
+    used), flat script structure (no classes/functions), correct output filename format
   weaknesses:
-  - 'Wrong diverging colormap: RdYlBu_r used instead of the mandated BrBG (style guide
-    requires BrBG for diverging data). Replace cmap=RdYlBu_r with cmap=BrBG_r'
-  - 'Seaborn barely used for plotting: all rendering is done via matplotlib (ax.contourf,
-    ax.contour, ax.clabel, ax.fill); no seaborn plot function is invoked — LM-01/LM-02
-    scores are low as a result'
-  - Contour line alpha (0.55) makes lines somewhat indistinct at smaller display sizes
-    — increase to 0.7-0.8
-  - 'No data-storytelling emphasis: no callout or annotation highlighting the Arctic
-    amplification signal visible in the data'
+  - Inline contour labels at fontsize=8pt and the 'Arctic Amplification' annotation
+    at fontsize=6pt are small; at ~400px mobile width these map to ~5px and ~4px respectively
+    — increase contour labels to 9pt and annotation to 7–8pt for better mobile readability
+  - Simplified coastline polygons (WORLD_COASTLINES list) produce blocky, geometrically
+    crude continent shapes; while functional, these reduce geographic authenticity
+    and visual polish compared to real coastline data
+  - Library Mastery is constrained — seaborn functions primarily as a theme wrapper
+    (sns.set_theme RC params) plus sns.lineplot for the zonal mean sidebar; the core
+    geographic contour visualization is entirely matplotlib (contourf, contour, clabel,
+    fill), leaving little room for seaborn-distinctive techniques
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "Global Temperature Anomaly · contour-map-geographic · python · seaborn · anyplot.ai" in bold dark ink (#1A1A17), fully readable. Axis labels "Longitude (°)" and "Latitude (°)" at 10pt dark ink, readable. Tick labels at 8pt in INK_SOFT (#4A4A44), readable. Colorbar label "Temperature Anomaly (°C)" at 10pt, readable.
-      Data: RdYlBu_r diverging colormap from -2°C (blue) to +4.5°C (red) over ocean areas. Land fill is sandy beige (#D8CEA8). Ocean background is light blue (#C4D8EC). Contour lines overlay in dark ink with inline %.1f°C labels at 8pt.
-      Legibility verdict: PASS — all text readable against light background
+      Background: Warm off-white #FAF8F1 — correct throughout figure and both axes.
+      Chrome: Title "Global Temperature Anomaly · contour-map-geographic · python · seaborn · anyplot.ai" is bold, dark (#1A1A17), fully visible. Axis labels "Longitude (°)" and "Latitude (°)" are dark and clearly readable at 10pt. Tick labels along both axes are dark gray (#4A4A44) at 8pt — readable. Colorbar label "Temperature Anomaly (°C)" is dark and legible. Zonal panel "Zonal Mean" title (8pt) and "Anomaly (°C)" x-label (8pt) are readable. Inline contour labels at 8pt and the "Arctic Amplification" annotation at 6pt are small but technically readable at full resolution; mobile readability may be marginal.
+      Data: Filled contours use BrBG_r — warm brown tones covering positive anomalies (Arctic/high-latitude), teal covering negative anomalies (tropical ocean). Contour lines overlay in dark ink with "%.1f°C" labels. Land masses in sandy tan (#D8CEA8), ocean in light blue (#C4D8EC). Colorbar ranges -2 to 4+°C. Zonal mean panel shows orange (#D55E00 / Okabe-Ito position 2) line and fill for positive anomalies, with dotted 60°N reference line.
+      Legibility verdict: PASS — all primary text clearly readable; annotation text marginally small.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title, axis labels, tick labels, and colorbar all rendered in light cream (#F0EFE8 / #B8B7B0). All clearly readable against the dark background. No dark-on-dark text failures observed. Contour labels rendered in light INK (#F0EFE8) and visible.
-      Data: RdYlBu_r contour fill colors are visually identical to the light render (only chrome flips). Land fill becomes dark warm olive (#5A5040), ocean becomes very dark navy (#182633) — both distinguishable from the near-black page background.
-      Legibility verdict: PASS — all text readable against dark background
+      Background: Warm near-black #1A1A17 — correct throughout figure.
+      Chrome: Title is light (#F0EFE8) and fully readable against dark background. Axis labels and tick labels flip to light (#F0EFE8 / #B8B7B0) — no dark-on-dark failures. Colorbar label and tick labels are light-colored and readable. Zonal panel text is light and readable. Contour labels use INK (#F0EFE8 in dark mode) — visible against the filled contour surface.
+      Data: Contour fills (BrBG_r) are identical to light render — same warm brown for positive, teal for negative anomalies. Data colors are unchanged between themes as required. Land becomes dark brown (#5A5040), ocean becomes dark blue-gray (#182633). Orange zonal mean line (#D55E00) remains the same Okabe-Ito color and is clearly visible on the dark background.
+      Legibility verdict: PASS — all text readable in dark theme; chrome correctly adapts; no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 11pt bold, axes 10pt, ticks/contour
-          labels 8pt). Balanced. Inline contour labels slightly small but appropriate.
+        comment: Title, axis labels, tick labels, colorbar all readable in both themes.
+          Inline contour labels at 8pt and 'Arctic Amplification' annotation at 6pt
+          are small — marginal mobile readability.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Title, axis labels, colorbar clean. Minor crowding among inline contour
-          labels in dense mid-latitude regions.
+        comment: Inline clabels are well-placed by matplotlib. Zonal panel has no
+          overlaps. Minor crowding near some contour labels near coastlines.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Filled contours, contour lines, and coastlines clearly visible. Contour
-          lines alpha=0.55 slightly muted.
+        comment: Filled contours, contour lines, coastlines, colorbar, and zonal profile
+          all clearly visible. Small contour labels slightly reduce element clarity.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: RdYlBu_r is perceptually uniform and CVD-safe for diverging data.
+        comment: 'BrBG_r is a CVD-safe diverging colormap. Highlight color D55E00
+          (Okabe-Ito #2) is accessible. No red-green reliance as sole signal.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800 confirmed. Equal aspect ratio geographically correct. Clean
-          margins with tight_layout().
+        comment: Canvas gate passed (3200x1800). Two-panel layout with 4:1 width ratio
+          is well-proportioned. tight_layout() used but no bbox_inches='tight' in
+          savefig. Slight margin tightness.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°), Latitude (°), Temperature Anomaly (°C) — all include
-          units.
+        comment: Descriptive title with required format and prefix. Axis labels include
+          units. Colorbar labeled with units. Zonal panel labeled.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Diverging data uses RdYlBu_r instead of mandated BrBG. Backgrounds
-          and chrome are theme-correct in both renders.
+        passed: true
+        comment: 'BrBG_r for diverging temperature data — correct continuous palette.
+          Highlight uses D55E00 (Okabe-Ito #2). Backgrounds #FAF8F1/#1A1A17 correct.
+          Chrome flips correctly.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -107,23 +116,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above-average: theme-adaptive ocean/land/coast fills, geographic
-          aspect lock, two-layer contour approach. Not exceptional enough for 6+ on
-          first attempt.'
+        comment: Two-panel layout with theme-adaptive geographic colors and meaningful
+          side panel adds sophistication above default. Simplified coastlines limit
+          geographic authenticity.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Spines removed top/right, subtle 10%-alpha grid, colorbar chrome
-          tokens matched. Land fill in dark theme slightly heavy.
+        comment: Top/right spines removed from map, top/right/left spines removed
+          from zonal panel. Grid at 10% alpha. Colorbar and contour styling refined.
+          Good use of alpha values throughout.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Arctic amplification embedded in data and visible. Diverging colormap
-          centers on zero. No annotation or callout guides viewer to key insight.
+        passed: true
+        comment: Arctic Amplification annotation with 60°N reference line delivers
+          a clear focal point. fill_betweenx highlights positive anomaly zone. BrBG_r
+          direction is intuitive (brown=warming). Two panels tell a coherent story.
     spec_compliance:
       score: 15
       max: 15
@@ -133,29 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: contourf + contour lines on geographic basemap with coastlines
-          and land fill.'
+        comment: 'Correct plot type: contour lines overlaid on geographic basemap
+          with lat/lon coordinates and coastlines.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Basemap, labeled contour lines, filled contours, appropriate colormap,
-          colorbar, meaningful intervals — all present.
+        comment: 'All spec features: smooth contour lines, inline contour labels,
+          filled contours, colorbar, appropriate colormap (BrBG for temperature),
+          meaningful intervals.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude X, latitude Y, temperature anomaly in color. 72x32 grid
-          covering global domain.
+        comment: Latitude on y-axis, longitude on x-axis. Full global range covered
+          (-70 to 85 lat, -180 to 180 lon). Temperature anomaly mapped to color fill.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title format correct: Descriptive · spec-id · python · seaborn ·
-          anyplot.ai. Colorbar serves as legend.'
+        comment: 'Title: ''Global Temperature Anomaly · contour-map-geographic · python
+          · seaborn · anyplot.ai'' — correct format with descriptive prefix. Colorbar
+          legend labeled with units.'
     data_quality:
       score: 15
       max: 15
@@ -165,22 +178,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Positive and negative anomalies, geographic variation, Arctic amplification,
-          spatial noise — full coverage.
+        comment: Shows filled contours, contour lines, coastlines, colorbar, and bonus
+          zonal mean panel. Demonstrates Arctic amplification spatial pattern.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global temperature anomaly is real, neutral, scientific. Arctic amplification
-          is an established phenomenon.
+        comment: Global temperature anomaly is a well-established scientific domain.
+          Data pattern (Arctic amplification, regional variability) is realistic and
+          plausible. Neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Range -2 to +4.5°C realistic for current observations. Pole-to-equator
-          gradient matches Arctic amplification.
+        comment: Latitude -70 to 85° and longitude -180 to 180° is appropriate global
+          coverage. Anomaly range -2 to 4.5°C matches modern observed climate anomaly
+          data. 72x32 grid is adequate resolution.
     code_quality:
       score: 10
       max: 10
@@ -190,62 +205,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
+        comment: Flat script, no functions or classes. Logical sections with comments.
+          Clean linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) ensures reproducible noise generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, seaborn — all imported and used.
+        comment: Only os, matplotlib.pyplot, numpy, and seaborn imported — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: WORLD_COASTLINES literal verbose but necessary. Clean, no fake UI
-          elements.
+        comment: Clean, readable code with appropriate complexity for a geographic
+          plot. No fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with dpi=400; no bbox_inches='tight'.
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) — correct
+          format, no bbox_inches='tight'.
     library_mastery:
-      score: 4
+      score: 5
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
         score: 3
         max: 5
-        passed: false
-        comment: sns.set_theme() with full rc-dict is correct. All actual plotting
-          via matplotlib (contourf, contour, clabel, fill). No seaborn plot functions
-          invoked.
+        passed: true
+        comment: sns.set_theme with custom RC params is the correct seaborn pattern
+          for theme-adaptive chrome. sns.lineplot with errorbar=None is idiomatic
+          for the zonal mean. Geographic contours use matplotlib directly, which is
+          appropriate given seaborn's scope.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 2
         max: 5
         passed: false
-        comment: No distinctive seaborn feature used in visualization. Entire rendering
-          is matplotlib. Could be pure matplotlib with minor changes.
-  verdict: REJECTED
+        comment: Seaborn's role is primarily theme management (sns.set_theme) plus
+          one sns.lineplot for the sidebar. The main geographic visualization is entirely
+          matplotlib. Limited seaborn-distinctive contribution.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - colorbar
   - annotations
+  - subplots
   patterns:
   - data-generation
   - iteration-over-groups
   - matrix-construction
-  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
