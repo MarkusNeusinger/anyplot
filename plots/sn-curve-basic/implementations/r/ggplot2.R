@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' sn-curve-basic: S-N Curve (Wöhler Curve)
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 94/100 | Created: 2026-05-20
+#' Quality: 94/100 | Updated: 2026-05-20
 
 library(ggplot2)
 library(dplyr)
@@ -46,19 +46,20 @@ fit_df <- data.frame(
 
 # Plot
 p <- ggplot() +
-    # Infinite-life zone: subtle fill below endurance limit
+    # Infinite-life zone: stronger fill to emphasize key engineering insight
     annotate("rect",
         xmin = N_endurance, xmax = 10^8,
         ymin = 180, ymax = sigma_e,
-        fill = OKABE_ITO[5], alpha = 0.08
+        fill = OKABE_ITO[5], alpha = 0.14
     ) +
     # Reference lines for key material properties
     geom_hline(yintercept = sigma_u, linetype = "dashed",
                color = OKABE_ITO[2], linewidth = 0.65, alpha = 0.85) +
     geom_hline(yintercept = sigma_y, linetype = "dashed",
                color = OKABE_ITO[3], linewidth = 0.65, alpha = 0.85) +
+    # Endurance limit thicker — the key design threshold for infinite life
     geom_hline(yintercept = sigma_e, linetype = "longdash",
-               color = OKABE_ITO[5], linewidth = 0.75, alpha = 0.90) +
+               color = OKABE_ITO[5], linewidth = 1.1, alpha = 0.95) +
     # Basquin fit curve
     geom_line(data = fit_df, aes(x = cycles, y = stress),
               color = INK_MUTED, linewidth = 1.0) +
@@ -69,17 +70,18 @@ p <- ggplot() +
     # Reference line labels — right-aligned at x = 10^7.5
     annotate("text", x = 10^7.5, y = sigma_u * 1.05,
              label = "Ultimate Strength (750 MPa)",
-             color = OKABE_ITO[2], hjust = 1, vjust = 0, size = 3.5) +
+             color = OKABE_ITO[2], hjust = 1, vjust = 0, size = 4.0) +
     annotate("text", x = 10^7.5, y = sigma_y * 1.05,
              label = "Yield Strength (530 MPa)",
-             color = OKABE_ITO[3], hjust = 1, vjust = 0, size = 3.5) +
+             color = OKABE_ITO[3], hjust = 1, vjust = 0, size = 4.0) +
     annotate("text", x = 10^7.5, y = sigma_e * 1.08,
              label = "Endurance Limit (250 MPa)",
-             color = OKABE_ITO[5], hjust = 1, vjust = 0, size = 3.5) +
+             color = OKABE_ITO[5], hjust = 1, vjust = 0, size = 4.0,
+             fontface = "bold") +
     # Infinite-life region label inside shaded zone
     annotate("text", x = 10^7.2, y = 210,
              label = "Infinite Life\nRegion",
-             color = INK_MUTED, hjust = 0.5, size = 2.8, fontface = "italic") +
+             color = INK_MUTED, hjust = 0.5, size = 3.2, fontface = "italic") +
     # Log-log axes
     scale_x_log10(
         limits = c(10, 10^8),
@@ -105,6 +107,7 @@ p <- ggplot() +
         panel.grid.minor = element_blank(),
         panel.border     = element_blank(),
         axis.line        = element_line(color = INK_SOFT, linewidth = 0.5),
+        axis.ticks       = element_blank(),
         axis.title       = element_text(color = INK, size = 10),
         axis.text        = element_text(color = INK_SOFT, size = 8),
         plot.title       = element_text(color = INK, size = 12),
