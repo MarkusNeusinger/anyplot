@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 82/100 | Created: 2026-05-20
@@ -13,8 +13,13 @@ _sd = os.path.abspath(os.path.dirname(__file__))
 sys.path = [p for p in sys.path if os.path.abspath(p) != _sd]
 
 import matplotlib
+
+
+matplotlib.use("Agg")
+
 import numpy as np
 import pandas as pd
+from contourpy import contour_generator
 from plotnine import (
     aes,
     coord_cartesian,
@@ -22,6 +27,7 @@ from plotnine import (
     element_line,
     element_rect,
     element_text,
+    geom_label,
     geom_path,
     geom_raster,
     ggplot,
@@ -32,10 +38,6 @@ from plotnine import (
     theme,
 )
 from scipy.ndimage import gaussian_filter
-
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402 — must come after matplotlib.use()
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -63,24 +65,33 @@ pressure = gaussian_filter(pressure, sigma=3)
 
 df_raster = pd.DataFrame({"lon": lon_grid.ravel(), "lat": lat_grid.ravel(), "pressure": pressure.ravel()})
 
-# Extract isobar paths at 4 hPa intervals using matplotlib's contour algorithm
+# Compute isobar paths using contourpy (pure path-computation library, no pyplot)
 p_lo = int(np.floor(pressure.min() / 4) * 4)
 p_hi = int(np.ceil(pressure.max() / 4) * 4)
 contour_levels = list(range(p_lo, p_hi + 4, 4))
 
-_fig, _ax = plt.subplots()
-_cs = _ax.contour(lon_grid, lat_grid, pressure, levels=contour_levels)
-isobar_rows = []
-for level_val, segs in zip(_cs.levels, _cs.allsegs, strict=True):
+gen = contour_generator(x=lon_vec, y=lat_vec, z=pressure)
+
+isobar_rows: list = []
+label_rows: list = []
+for i, level in enumerate(contour_levels):
+    segs = gen.lines(level)
+    if not segs:
+        continue
+    # Label every 2nd contour level using midpoint of the longest segment
+    if i % 2 == 0:
+        longest = max(segs, key=len)
+        mid = len(longest) // 2
+        label_rows.append({"lon": float(longest[mid, 0]), "lat": float(longest[mid, 1]), "label": str(int(level))})
     for seg_idx, seg in enumerate(segs):
         if len(seg) < 2:
             continue
-        group = f"iso_{level_val:.0f}_{seg_idx}"
+        group = f"iso_{level:.0f}_{seg_idx}"
         for lon_c, lat_c in seg:
             isobar_rows.append({"lon": lon_c, "lat": lat_c, "group": group})
-plt.close(_fig)
 
 df_isobars = pd.DataFrame(isobar_rows)
+df_labels = pd.DataFrame(label_rows)
 
 # Simplified European geographic outlines (hardcoded, no geopandas required)
 # Western European continental coast (south → north)
@@ -183,13 +194,23 @@ plot = (
     + geom_path(
         data=df_isobars,
         mapping=aes(x="lon", y="lat", group="group"),
-        color="white",
+        color=INK_SOFT,
         size=0.4,
         alpha=0.65,
         inherit_aes=False,
     )
     + geom_path(data=df_outlines, mapping=aes(x="lon", y="lat", group="group"), color=INK, size=0.6, inherit_aes=False)
-    + scale_fill_cmap(cmap_name="RdBu_r", name="Pressure\n(hPa)")
+    + geom_label(
+        data=df_labels,
+        mapping=aes(x="lon", y="lat", label="label"),
+        color=INK,
+        fill=PAGE_BG,
+        size=6,
+        label_padding=0.1,
+        label_size=0.2,
+        inherit_aes=False,
+    )
+    + scale_fill_cmap(cmap_name="BrBG", name="Pressure\n(hPa)")
     + scale_x_continuous(breaks=lon_breaks, labels=lon_labels)
     + scale_y_continuous(breaks=lat_breaks, labels=lat_labels)
     + coord_cartesian(xlim=(-30, 50), ylim=(35, 75))
