@@ -1,19 +1,22 @@
-""" pyplots.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: letsplot | Python 3.13
+Quality: 91/100 | Updated: 2026-05-20
 """
+
+import os
 
 import numpy as np
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
-    element_blank,
+    element_rect,
     element_text,
     geom_curve,
     geom_point,
     geom_polygon,
+    geom_text,
     ggplot,
     ggsave,
     ggsize,
@@ -29,10 +32,19 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
-# Data: Major trade flows between world regions (simplified)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+CONTINENT_FILL = "#E0DDD6" if THEME == "light" else "#2E2E2B"
+CONTINENT_BORDER = "#C8C5BE" if THEME == "light" else "#4A4A47"
+HUB_COLOR = "#306998"
+
+# Data
 np.random.seed(42)
 
-# Define major hub cities with coordinates
 hubs = {
     "Los Angeles": (-118.24, 34.05),
     "New York": (-74.01, 40.71),
@@ -46,7 +58,19 @@ hubs = {
     "Sao Paulo": (-46.63, -23.55),
 }
 
-# Create trade flow connections
+label_offsets = {
+    "Los Angeles": (-5, 4),
+    "New York": (4, 2),
+    "London": (-14, 2),
+    "Rotterdam": (4, 2),
+    "Dubai": (4, 2),
+    "Singapore": (4, -5),
+    "Shanghai": (4, 2),
+    "Tokyo": (4, 2),
+    "Sydney": (4, -5),
+    "Sao Paulo": (-14, -5),
+}
+
 flows = [
     ("Shanghai", "Los Angeles", 85),
     ("Shanghai", "Rotterdam", 72),
@@ -68,7 +92,6 @@ flows = [
     ("Los Angeles", "Shanghai", 15),
 ]
 
-# Build dataframe for flows
 flow_data = []
 for origin, dest, volume in flows:
     o_lon, o_lat = hubs[origin]
@@ -87,11 +110,13 @@ for origin, dest, volume in flows:
 
 df_flows = pd.DataFrame(flow_data)
 
-# Build dataframe for hub points
-hub_data = [{"name": name, "lon": lon, "lat": lat} for name, (lon, lat) in hubs.items()]
+hub_data = []
+for name, (lon, lat) in hubs.items():
+    lx, ly = label_offsets.get(name, (4, 2))
+    hub_data.append({"name": name, "lon": lon, "lat": lat, "label_lon": lon + lx, "label_lat": lat + ly})
 df_hubs = pd.DataFrame(hub_data)
 
-# Simple world boundary polygon (simplified coastline approximation)
+# Simplified world polygons
 world_coords = [
     # North America
     (-170, 70),
@@ -109,7 +134,6 @@ world_coords = [
     (-130, 50),
     (-170, 60),
     (-170, 70),
-    # Break
     (None, None),
     # South America
     (-80, 10),
@@ -164,7 +188,6 @@ world_coords = [
     (115, -20),
 ]
 
-# Split into separate polygons
 polygons = []
 current_poly = []
 for lon, lat in world_coords:
@@ -177,47 +200,46 @@ for lon, lat in world_coords:
 if current_poly:
     polygons.append(current_poly)
 
-# Create world polygon dataframe
 world_data = []
 for i, poly in enumerate(polygons):
     for lon, lat in poly:
         world_data.append({"x": lon, "y": lat, "group": i})
 df_world = pd.DataFrame(world_data)
 
-# Create the plot
+# Plot
+anyplot_theme = theme(
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    plot_title=element_text(size=16, hjust=0.5, color=INK),
+    legend_title=element_text(size=12, color=INK),
+    legend_text=element_text(size=10, color=INK_SOFT),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    legend_position="right",
+)
+
 plot = (
     ggplot()
-    # World background
-    + geom_polygon(data=df_world, mapping=aes(x="x", y="y", group="group"), fill="#E8E8E8", color="#CCCCCC", size=0.3)
-    # Flow arcs with curvature
+    + geom_polygon(
+        data=df_world, mapping=aes(x="x", y="y", group="group"), fill=CONTINENT_FILL, color=CONTINENT_BORDER, size=0.3
+    )
     + geom_curve(
         data=df_flows,
         mapping=aes(x="origin_lon", y="origin_lat", xend="dest_lon", yend="dest_lat", size="flow", color="flow"),
         curvature=-0.3,
         alpha=0.6,
     )
-    # Origin/destination hub points
-    + geom_point(data=df_hubs, mapping=aes(x="lon", y="lat"), size=6, color="#306998", fill="#306998")
-    # Scales
+    + geom_point(data=df_hubs, mapping=aes(x="lon", y="lat"), size=7, color=HUB_COLOR, fill=HUB_COLOR)
+    + geom_text(data=df_hubs, mapping=aes(x="label_lon", y="label_lat", label="name"), size=8, color=INK_SOFT)
     + scale_size(range=[1, 6], name="Trade Volume")
     + scale_color_gradient(low="#FFD43B", high="#306998", name="Trade Volume")
-    # Labels
-    + labs(title="flowmap-origin-destination · letsplot · pyplots.ai")
-    # Theme
+    + labs(title="flowmap-origin-destination · python · letsplot · anyplot.ai")
     + theme_void()
-    + theme(
-        plot_title=element_text(size=24, hjust=0.5),
-        legend_title=element_text(size=18),
-        legend_text=element_text(size=14),
-        legend_position="right",
-        plot_background=element_blank(),
-    )
-    # Size and limits
-    + ggsize(1600, 900)
+    + anyplot_theme
+    + ggsize(800, 450)
     + xlim(-180, 180)
     + ylim(-60, 85)
 )
 
-# Save outputs
-ggsave(plot, "plot.png", path=".", scale=3)
-ggsave(plot, "plot.html", path=".")
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
