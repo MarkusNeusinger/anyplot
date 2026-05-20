@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -16,6 +16,7 @@ from lets_plot import (
     element_rect,
     element_text,
     geom_bar,
+    geom_hline,
     geom_text,
     ggplot,
     ggsize,
@@ -105,16 +106,30 @@ value_labels = [f"${v // 1000}K" for v in values]
 df = pd.DataFrame({"category": categories, "value": values, "value_label": value_labels})
 df["category"] = pd.Categorical(df["category"], categories=categories, ordered=True)
 
+# Peak and mean references for storytelling
+mean_sales = int(df["value"].mean())
+df_peak = df[df["value"] == df["value"].max()].copy()
+
 # Static PNG using letsplot ggplot grammar
 plot = (
     ggplot(df, aes(x="category", y="value", fill="category"))
     + geom_bar(stat="identity", width=0.7, show_legend=False, color=PAGE_BG, size=0.5)
-    + geom_text(aes(label="value_label"), vjust=-0.3, size=8, color=INK, fontface="bold")
+    + geom_hline(yintercept=mean_sales, color=INK_MUTED, size=0.5, linetype="dashed")
+    + geom_text(aes(label="value_label"), vjust=-0.4, size=8, color=INK, fontface="bold")
+    + geom_text(
+        data=df_peak,
+        mapping=aes(x="category", y="value"),
+        label="★ highest",
+        vjust=-2.0,
+        size=7,
+        color=OKABE_ITO[2],
+        fontface="bold",
+    )
     + scale_fill_manual(values=OKABE_ITO)
-    + scale_y_continuous(format="${,.0f}", limits=[0, 680000], expand=[0, 0])
+    + scale_y_continuous(format="${,.0f}", limits=[0, 730000], expand=[0, 0])
     + labs(
         title="bar-drilldown · python · letsplot · anyplot.ai",
-        subtitle="Regional Sales · Open HTML for interactive drilldown",
+        subtitle="Regional Sales · East leads at $528K · Open HTML for interactive drilldown",
         x="Region",
         y="Sales ($)",
     )
@@ -128,7 +143,8 @@ plot = (
         panel_grid_major_y=element_line(color=RULE, size=0.3),
         axis_title=element_text(color=INK, size=12),
         axis_text=element_text(color=INK_SOFT, size=10),
-        axis_line=element_line(color=INK_SOFT),
+        axis_line_x=element_line(color=INK_SOFT),
+        axis_line_y=element_line(color=INK_SOFT),
         plot_title=element_text(color=INK, size=16, face="bold", hjust=0.5),
         plot_subtitle=element_text(color=INK_MUTED, size=10, hjust=0.5),
         plot_margin=[30, 30, 30, 30],
