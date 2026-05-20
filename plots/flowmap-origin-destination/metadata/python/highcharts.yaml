@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:05:34Z'
-updated: '2026-05-20T09:52:31Z'
+updated: '2026-05-20T10:00:28Z'
 generated_by: claude-sonnet
 workflow_run: 26154096295
 issue: 3765
@@ -15,42 +15,38 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-o
 quality_score: 89
 review:
   strengths:
-  - Uses actual Highcharts flowmap module with real topology data (Highmaps)
-  - Theme-adaptive chrome fully implemented in both light and dark renders
-  - 'Gradient arc fill from #009E73 to #0072B2 encodes flow direction visually'
-  - Port markers sized proportionally by total traffic volume (radius 8-22)
-  - Perfect spec compliance — curved arcs, width proportional to volume, tooltips,
-    arrows, basemap, transparency all present
-  - Realistic maritime trade data with 12 real world ports and 21 bidirectional routes
-  - Informative subtitle explicitly explains arc width and arrow encoding
-  - Clean, linear code structure with no functions or classes
-  - Saves both PNG and HTML artifacts correctly
-  - Idiomatic use of linkedTo, curveFactor, growTowards, markerEnd
+  - Linear gradient fill (green→blue) on arcs elevates the aesthetic and visually
+    encodes directionality
+  - Port marker radii scale with total flow volume — hubs are visually prominent
+  - growTowards + markerEnd arrows clearly communicate flow direction alongside arc
+    widths
+  - 'Perfect spec compliance: curved arcs, proportional widths, transparency, basemap,
+    tooltips, directional arrows all present'
+  - Both themes correctly implemented with theme-adaptive chrome; no dark-on-dark
+    or light-on-light issues
   weaknesses:
-  - Port label fontSize is 34px — below the style guide recommendation of 44px for
-    tick-equivalent labels; increase dataLabels style.fontSize to 44px
-  - Legend itemStyle fontSize is 36px — below the recommended 44px; increase to 44px
-  - 'Asia cluster (Busan, Shanghai, Hong Kong) labels are crowded due to geographic
-    proximity — adjust label offsets (e.g. y: -30 for Busan, y: 10 for Hong Kong)
-    to spread labels without overlap'
-  - Canvas has modest empty space at bottom (southern ocean) which slightly reduces
-    perceived layout efficiency — reduce bottom spacing or adjust map projection bounds
-    to focus on shipping lanes
+  - 'East Asia label cluster (Busan/Shanghai/Hong Kong) is congested — increase label_offsets
+    for Hong Kong (y: +25) and Busan (y: -45), or reduce dataLabels fontSize to 36px
+    for dense clusters'
+  - Legend floats in upper-right with notable empty whitespace between it and the
+    map body — pull closer with x offset or reduce right spacing from 60 to 40
+  - Lower-volume routes (120–160 units, e.g., Sydney→Singapore) render as thin lines
+    that may be hard to trace at reduced display sizes — bump minWidth from 2 to 3
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct per style guide.
-      Chrome: Title "flowmap-origin-destination · python · highcharts · anyplot.ai" is bold and dark at 66px, clearly readable. Subtitle "Global maritime trade routes — arc width ∝ shipping volume, arrows show flow direction" is visible in dark secondary ink. Port city labels (Rotterdam, New York, Los Angeles, Dubai, Shanghai, Busan, Hong Kong, Singapore, Santos, Sydney, Tokyo) render in dark ink above their markers, all readable. Legend on right shows "Ports" and "Trade Routes" with small dot/line icons, readable but slightly small (36px vs recommended 44px).
-      Data: World basemap in muted warm gray (#E0DDD4) with subtle borders. Flow arcs rendered as curved lines with gradient fill from #009E73 (green) at origin to #0072B2 (blue) at destination — both Okabe-Ito colors. Port markers are green circles (#009E73) with sizes proportional to total traffic. Arc widths vary from thin (minor routes) to thick (major trans-Pacific routes like Shanghai→LA). Directional arrows at arc ends visible.
-      Legibility verdict: PASS — all text clearly readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "flowmap-origin-destination · python · highcharts · anyplot.ai" in bold dark ink (#1A1A17); subtitle in secondary ink (#4A4A44); port labels in dark ink; legend items in secondary ink — all clearly readable
+      Data: Flow arcs in brand green (#009E73) gradient toward Okabe-Ito blue (#0072B2); port markers as solid brand-green circles; arc widths proportional to shipping volume; arrow markers at arc ends
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct per style guide.
-      Chrome: Title and subtitle render in light ink (#F0EFE8), clearly readable against the dark background. Port city labels render in light text — no dark-on-dark failure observed. Legend text is light-colored and readable.
-      Data: World basemap rendered in dark MAP_FILL (#2E2E2A) with subtle darker borders — appropriate theme adaptation. Flow arcs use identical green-to-blue gradient (#009E73 to #0072B2), matching the light render exactly. Port markers retain the same #009E73 green. The data colors are visually identical between light and dark renders — only the chrome (background, map fill, text) flips.
-      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures detected.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title and subtitle flip to light text (#F0EFE8 / #B8B7B0) — fully readable; port labels in light text — no dark-on-dark failure; legend items in light secondary text
+      Data: Flow arc colors identical to light render (brand green #009E73 gradient to blue) — only chrome flips as required
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -58,75 +54,74 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title 66px is correct; port labels
-          at 34px and legend at 36px are below the recommended 44px tick-label size
+        comment: All sizes explicitly set (66px title, 40px subtitle, 44px labels/legend);
+          slight East Asia label crowding prevents full score
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: Mostly non-overlapping; Asia cluster (Busan/Shanghai/Hong Kong) is
-          geographically crowded with labels in close proximity
+        comment: Busan/Shanghai/Hong Kong labels tightly packed in East Asia cluster;
+          label_offsets help but crowding is visible
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Arc widths vary correctly with flow magnitude; port markers visible;
-          opacity 0.70 handles overlap well
+        comment: Arcs clearly visible at 70% opacity; arrow markers present; port
+          marker radii scale with flow volume; thin low-volume arcs at reduced sizes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Uses Okabe-Ito #009E73 and #0072B2 — both CVD-safe; gradient well-applied'
+        comment: Brand green + blue gradient both CVD-safe; good contrast on both
+          surfaces
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: World map fills canvas well width-wise; some unused space at bottom
-          (southern ocean) reduces canvas efficiency slightly
+        comment: Canvas well-utilized; slight open space on right where legend floats
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axis labels (map chart); subtitle explicitly describes
-          arc encoding
+        comment: Subtitle explains arc-width encoding; title correct; no traditional
+          axes needed for map
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; gradient uses Okabe-Ito positions
-          1 and 3; backgrounds correct in both themes'
+        comment: 'First series #009E73; gradient to #0072B2; light bg #FAF8F1 / dark
+          bg #1A1A17; chrome adapts correctly'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: Gradient arc fill from green to blue is a thoughtful directional
-          cue above defaults; theme-adaptive map fills are deliberate; not quite publication-ready
+        comment: Linear gradient fill on arcs, custom map fill colors, size-scaled
+          port markers, arrow markers — clearly above defaults
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Clean map with explicit spacing, themed basemap colors, refined legend
-          with elevated background; map navigation disabled; no unnecessary decoration
+        comment: No grid lines, subtle borders, generous spacing; good refinement,
+          not quite perfect polish
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtitle directly explains arc encoding; port markers sized by total
-          traffic volume; gradient reveals directionality; viewer can identify Shanghai
-          as the dominant hub
+        comment: Subtitle explains encoding; arc widths convey asymmetry; bidirectional
+          flows show imbalance; Shanghai hub immediately identifiable
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Highcharts flowmap type with basemap and mappoint series
+        comment: Correct origin-destination flowmap with curved arcs on basemap
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Curved arcs, width proportional to flow, transparency, color gradient,
-          basemap, tooltips, directional arrows — all present
+        comment: Curved arcs, proportional line width, transparency, color gradient,
+          basemap, interactive tooltips, directional arrows — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Origin/destination lat/lon correctly mapped; flow volume maps to
-          arc weight
+        comment: lat/lon correctly mapped; flow volume drives arc width; all 12 ports
+          visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches required format; legend shows Ports and Trade
-          Routes
+        comment: Title exactly matches required format; legend labels Ports and Trade
+          Routes correctly
     data_quality:
       score: 15
       max: 15
@@ -167,22 +162,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 21 flows across 12 ports; bidirectional routes; multi-regional coverage
-          (Asia, Europe, Americas, Middle East, Oceania); varied volumes
+        comment: Bidirectional flows, multiple magnitudes, hub-and-spoke visible,
+          inter- and intra-regional flows all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real world-class ports (Shanghai, Rotterdam, Singapore, LA, Dubai,
-          etc.); international maritime trade is a neutral real-world topic
+        comment: Real-world major shipping ports; neutral business context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Relative volumes plausible (Shanghai→LA 450 > Sydney→Singapore 120);
-          major trans-Pacific/trans-Suez routes correctly have higher volumes
+        comment: Shanghai correctly dominates; Rotterdam as European gateway; flow
+          proportions plausible for container shipping
     code_quality:
       score: 10
       max: 10
@@ -192,33 +186,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → config → render; no functions or classes'
+        comment: 'Flat script: data → config → download JS → build HTML → screenshot'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic data — no random elements
+        comment: All data hardcoded, fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (json, os, tempfile, time, urllib.request, pathlib, selenium)
-          are actually used
+        comment: All imports actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; JSON config is idiomatic for Highcharts; list comprehension
-          loops are appropriate
+        comment: Clean dict-based config, list comprehension for flow_data, appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; current Highmaps
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Highcharts
           API
     library_mastery:
       score: 10
@@ -229,26 +222,25 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correctly uses Highcharts.mapChart() (not Chart()); downloads and
-          embeds topology JSON; uses mappoint/map/flowmap series combination correctly
+        comment: Correct linkedTo pattern, mapChart with topo JSON, growTowards for
+          directional rendering
       - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: 'Highcharts flowmap module is unique to this library; linkedTo: '':previous''
-          for series linkage; curveFactor, growTowards, markerEnd are flowmap-specific
-          API features'
-  verdict: REJECTED
+        comment: Highcharts flowmap module is a unique Highcharts Maps feature; curveFactor,
+          markerEnd, growTowards are Highcharts-specific
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
-  - gradient-fill
   - alpha-blending
+  - gradient-fill
