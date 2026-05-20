@@ -1,90 +1,91 @@
-""" pyplots.ai
+""" anyplot.ai
 maze-circular: Circular Maze Puzzle
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 52/100 | Created: 2026-01-16
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-20
 """
 
-import numpy as np
-import pygal
-from pygal.style import Style
+import os
+import sys
 
 
-# Set seed for reproducibility
+# Drop script dir so `import pygal` resolves to the installed library, not this file
+sys.path[:] = [p for p in sys.path if p not in ("", ".", os.path.dirname(os.path.abspath(__file__)))]
+
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+WALL_COLOR = "#1A1A17" if THEME == "light" else "#E8E8E0"
+
+# Data
 np.random.seed(42)
+num_rings = 7
+num_sectors = 14
+inner_r = 0.10
+outer_r = 0.88
+radii = np.linspace(inner_r, outer_r, num_rings + 1)[1:]
+entry_sector = 0
 
-# Maze parameters
-num_rings = 6
-num_sectors = 12
-
-# Calculate radii
-inner_radius = 0.15
-outer_radius = 0.85
-radii = np.linspace(inner_radius, outer_radius, num_rings + 1)[1:]
-
-# Build cells: each cell is (ring, sector)
+# Maze graph edges
 all_cells = [(r, s) for r in range(num_rings) for s in range(num_sectors)]
-
-# Build edges between adjacent cells
 edges = []
 for ring in range(num_rings):
     for sector in range(num_sectors):
-        next_s = (sector + 1) % num_sectors
-        edges.append(frozenset([(ring, sector), (ring, next_s)]))
+        edges.append(frozenset([(ring, sector), (ring, (sector + 1) % num_sectors)]))
         if ring < num_rings - 1:
             edges.append(frozenset([(ring, sector), (ring + 1, sector)]))
-
 edges = list(set(edges))
-
-# Kruskal's algorithm for maze generation
-parent = {cell: cell for cell in all_cells}
-
-
-def find(c):
-    while parent[c] != c:
-        parent[c] = parent[parent[c]]
-        c = parent[c]
-    return c
-
-
-def union(a, b):
-    ra, rb = find(a), find(b)
-    if ra != rb:
-        parent[ra] = rb
-        return True
-    return False
-
-
 np.random.shuffle(edges)
+
+# Kruskal's maze generation (inline union-find with path halving)
+parent = {cell: cell for cell in all_cells}
+uf_rank = dict.fromkeys(all_cells, 0)
 passages = set()
 for edge in edges:
     cells = list(edge)
-    if union(cells[0], cells[1]):
+    a = cells[0]
+    while parent[a] != a:
+        parent[a] = parent[parent[a]]
+        a = parent[a]
+    b = cells[1]
+    while parent[b] != b:
+        parent[b] = parent[parent[b]]
+        b = parent[b]
+    if a != b:
+        if uf_rank[a] < uf_rank[b]:
+            a, b = b, a
+        parent[b] = a
+        if uf_rank[a] == uf_rank[b]:
+            uf_rank[a] += 1
         passages.add(edge)
 
-# Entry at sector 0
-entry_sector = 0
-
-# Colors
-wall_color = "#222222"
-entry_color = "#1565C0"
-goal_color = "#D32F2F"
-
+# Plot
 custom_style = Style(
-    background="#FFFFFF",
-    plot_background="#FFFFFF",
-    foreground="#333333",
-    foreground_strong="#000000",
-    foreground_subtle="#666666",
-    colors=(wall_color,),
-    title_font_size=84,
-    stroke_width=6,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=(WALL_COLOR,),
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
 chart = pygal.XY(
-    width=3600,
-    height=3600,
+    width=2400,
+    height=2400,
     style=custom_style,
-    title="maze-circular · pygal · pyplots.ai",
+    title="maze-circular · python · pygal · anyplot.ai",
     show_legend=False,
     show_dots=False,
     stroke=True,
@@ -92,143 +93,75 @@ chart = pygal.XY(
     show_y_guides=False,
     show_x_labels=False,
     show_y_labels=False,
-    xrange=(-1.1, 1.1),
-    range=(-1.1, 1.1),
+    xrange=(-1.25, 1.25),
+    range=(-1.25, 1.25),
     explicit_size=True,
     fill=False,
-    margin=80,
+    margin=60,
 )
 
+PTS = 32  # arc sample points per sector — smooth curves at 2400 px canvas
+wall_stroke = {"width": 10, "linecap": "round", "linejoin": "round", "color": WALL_COLOR}
 
-def arc_pts(radius, a1, a2, n=30):
-    """Generate arc points."""
-    angles = np.linspace(a1, a2, n)
-    return [(radius * np.cos(a), radius * np.sin(a)) for a in angles]
-
-
-# Entry angles
+# Outer boundary with entry gap at sector 0
 entry_a1 = 2 * np.pi * entry_sector / num_sectors
 entry_a2 = 2 * np.pi * (entry_sector + 1) / num_sectors
-
-# Wall stroke config
-wall_stroke = {"width": 7, "linecap": "round", "linejoin": "round"}
-
-# 1. Outer boundary (with entry gap) - draw as single continuous arc
-outer_arc = arc_pts(radii[-1], entry_a2, entry_a1 + 2 * np.pi, 80)
+angles_outer = np.linspace(entry_a2, entry_a1 + 2 * np.pi, PTS * (num_sectors - 1) + 1)
+outer_arc = [(outer_r * np.cos(a), outer_r * np.sin(a)) for a in angles_outer]
 chart.add("", outer_arc, stroke_style=wall_stroke)
 
-# 2. Inner circle (goal area boundary) - complete circle
-inner_arc = arc_pts(inner_radius, 0, 2 * np.pi + 0.01, 60)
+# Inner circle (goal area boundary)
+angles_inner = np.linspace(0, 2 * np.pi, PTS * num_sectors + 1)
+inner_arc = [(inner_r * np.cos(a), inner_r * np.sin(a)) for a in angles_inner]
 chart.add("", inner_arc, stroke_style=wall_stroke)
 
-# 3. Ring walls - combine consecutive wall segments into continuous arcs
+# Ring walls (circular arc segments along ring boundaries)
 for ring in range(num_rings - 1):
     r = radii[ring]
-    # Find continuous wall segments
-    wall_sectors = []
     for sector in range(num_sectors):
         if frozenset([(ring, sector), (ring + 1, sector)]) not in passages:
-            wall_sectors.append(sector)
+            a1 = 2 * np.pi * sector / num_sectors
+            a2 = 2 * np.pi * (sector + 1) / num_sectors
+            angles = np.linspace(a1, a2, PTS + 1)
+            pts = [(r * np.cos(a), r * np.sin(a)) for a in angles]
+            chart.add("", pts, stroke_style=wall_stroke)
 
-    # Group consecutive sectors into continuous arcs
-    if wall_sectors:
-        groups = []
-        current_group = [wall_sectors[0]]
-        for i in range(1, len(wall_sectors)):
-            if wall_sectors[i] == wall_sectors[i - 1] + 1:
-                current_group.append(wall_sectors[i])
-            else:
-                groups.append(current_group)
-                current_group = [wall_sectors[i]]
-        groups.append(current_group)
-
-        # Check if first and last groups wrap around
-        if len(groups) > 1 and groups[0][0] == 0 and groups[-1][-1] == num_sectors - 1:
-            groups[-1].extend(groups[0])
-            groups = groups[1:]
-
-        # Draw each continuous arc
-        for group in groups:
-            start_sector = group[0]
-            end_sector = group[-1]
-            a1 = 2 * np.pi * start_sector / num_sectors
-            a2 = 2 * np.pi * (end_sector + 1) / num_sectors
-            pts_per_sector = 8
-            arc_points = arc_pts(r, a1, a2, len(group) * pts_per_sector + 1)
-            chart.add("", arc_points, stroke_style=wall_stroke)
-
-# 4. Radial walls - draw as single line segments
-radial_walls = []
+# Radial walls (straight lines between sector boundaries)
 for ring in range(num_rings):
-    r_in = radii[ring - 1] if ring > 0 else inner_radius
+    r_in = radii[ring - 1] if ring > 0 else inner_r
     r_out = radii[ring]
     for sector in range(num_sectors):
-        prev_s = (sector - 1) % num_sectors
-        if frozenset([(ring, sector), (ring, prev_s)]) not in passages:
-            angle = 2 * np.pi * sector / num_sectors
+        next_s = (sector + 1) % num_sectors
+        if frozenset([(ring, sector), (ring, next_s)]) not in passages:
+            angle = 2 * np.pi * next_s / num_sectors
             x1, y1 = r_in * np.cos(angle), r_in * np.sin(angle)
             x2, y2 = r_out * np.cos(angle), r_out * np.sin(angle)
-            radial_walls.append((angle, r_in, r_out))
+            chart.add("", [(x1, y1), (x2, y2)], stroke_style=wall_stroke)
 
-# Group consecutive radial walls at same angle into longer lines
-angle_groups = {}
-for angle, r_in, r_out in radial_walls:
-    key = round(angle, 6)
-    if key not in angle_groups:
-        angle_groups[key] = []
-    angle_groups[key].append((r_in, r_out))
-
-for angle_key, segments in angle_groups.items():
-    # Sort by inner radius
-    segments.sort(key=lambda x: x[0])
-    # Merge overlapping or adjacent segments
-    merged = []
-    for r_in, r_out in segments:
-        if merged and abs(merged[-1][1] - r_in) < 0.01:
-            merged[-1] = (merged[-1][0], r_out)
-        else:
-            merged.append((r_in, r_out))
-
-    # Draw merged segments
-    for r_in, r_out in merged:
-        angle = float(angle_key)
-        x1, y1 = r_in * np.cos(angle), r_in * np.sin(angle)
-        x2, y2 = r_out * np.cos(angle), r_out * np.sin(angle)
-        chart.add("", [(x1, y1), (x2, y2)], stroke_style=wall_stroke)
-
-# Entry arrow - blue, prominent
+# Entry arrow (Okabe-Ito green #009E73) pointing inward — named for pygal interactive HTML tooltips
 mid_angle = (entry_a1 + entry_a2) / 2
-arrow_start = radii[-1] + 0.18
-arrow_end = radii[-1] + 0.03
-tip_x = arrow_end * np.cos(mid_angle)
-tip_y = arrow_end * np.sin(mid_angle)
-base_x = arrow_start * np.cos(mid_angle)
-base_y = arrow_start * np.sin(mid_angle)
+tip_x = (outer_r + 0.03) * np.cos(mid_angle)
+tip_y = (outer_r + 0.03) * np.sin(mid_angle)
+base_x = (outer_r + 0.35) * np.cos(mid_angle)
+base_y = (outer_r + 0.35) * np.sin(mid_angle)
+entry_stroke = {"width": 20, "linecap": "round", "linejoin": "round", "color": "#009E73"}
+chart.add("Entry →", [(base_x, base_y), (tip_x, tip_y)], stroke_style=entry_stroke)
+wing1_x = tip_x + 0.13 * np.cos(mid_angle + np.pi - 0.45)
+wing1_y = tip_y + 0.13 * np.sin(mid_angle + np.pi - 0.45)
+wing2_x = tip_x + 0.13 * np.cos(mid_angle + np.pi + 0.45)
+wing2_y = tip_y + 0.13 * np.sin(mid_angle + np.pi + 0.45)
+chart.add("", [(wing1_x, wing1_y), (tip_x, tip_y), (wing2_x, wing2_y)], stroke_style=entry_stroke)
 
-arrow_stroke = {"width": 10, "linecap": "round", "linejoin": "round"}
-chart.add("", [(base_x, base_y), (tip_x, tip_y)], stroke_style={**arrow_stroke, "color": entry_color})
-
-# Arrow head
-wing_len = 0.07
-wing_angle = 0.5
-wing1_x = tip_x + wing_len * np.cos(mid_angle + np.pi - wing_angle)
-wing1_y = tip_y + wing_len * np.sin(mid_angle + np.pi - wing_angle)
-wing2_x = tip_x + wing_len * np.cos(mid_angle + np.pi + wing_angle)
-wing2_y = tip_y + wing_len * np.sin(mid_angle + np.pi + wing_angle)
-chart.add(
-    "", [(wing1_x, wing1_y), (tip_x, tip_y), (wing2_x, wing2_y)], stroke_style={**arrow_stroke, "color": entry_color}
-)
-
-# Goal star - red, at center (filled polygon via closed path)
-star_outer = 0.09
-star_inner = 0.035
+# Goal star (Okabe-Ito vermillion #D55E00) at center — named for pygal interactive HTML tooltips
 star_pts = []
 for i in range(10):
-    a = i * np.pi / 5 - np.pi / 2
-    r = star_outer if i % 2 == 0 else star_inner
-    star_pts.append((r * np.cos(a), r * np.sin(a)))
-star_pts.append(star_pts[0])  # Close the star
-chart.add("", star_pts, stroke_style={"width": 6, "color": goal_color})
+    a_s = i * np.pi / 5 - np.pi / 2
+    r_s = 0.12 if i % 2 == 0 else 0.048
+    star_pts.append((r_s * np.cos(a_s), r_s * np.sin(a_s)))
+star_pts.append(star_pts[0])
+chart.add("Goal ★", star_pts, stroke_style={"width": 10, "linecap": "round", "linejoin": "round", "color": "#D55E00"})
 
-# Render PNG output only
-chart.render_to_png("plot.png")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
