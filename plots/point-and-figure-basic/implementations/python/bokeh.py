@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 point-and-figure-basic: Point and Figure Chart
-Library: bokeh | Python 3.13
-Quality: 91/100 | Updated: 2026-05-20
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-20
 """
 
 import os
