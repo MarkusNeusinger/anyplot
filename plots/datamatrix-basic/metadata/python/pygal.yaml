@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:56:19Z'
-updated: '2026-05-20T05:59:32Z'
+updated: '2026-05-20T06:11:28Z'
 generated_by: claude-sonnet
 workflow_run: 26143874442
 issue: 3811
@@ -12,44 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatri
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-dark.html
-quality_score: 80
+quality_score: 82
 review:
   strengths:
-  - 'Perfect spec compliance: all Data Matrix structural elements (L-finder, timing,
-    quiet zone, ECC 200) correctly implemented and visible'
-  - 'Excellent data choice: pharmaceutical NDC code directly matches one of the spec''s
-    stated applications'
-  - 'Theme-adaptive chrome is correct in both renders; the barcode panel intentionally
-    held at #FFFDF6 for scan-reliability is a thoughtful design decision'
-  - 'Informative supplemental labels (''Encoded: NDC:0069-0069-20'' + ''Matrix: 18
-    × 18 | ECC 200'') add real value without cluttering'
-  - Fonts are explicitly sized throughout; both renders pass the readability check
+  - Complete and technically correct Data Matrix barcode with proper Reed-Solomon
+    ECC 200, L-shaped finder, and alternating timing patterns generated from scratch
+  - 'Excellent theme adaptation: both light and dark renders pass readability checks
+    with correct background tokens and theme-adaptive text colors'
+  - 'Strong real-world context: pharmaceutical NDC code with regulatory citation creates
+    genuine data storytelling'
+  - 'Perfect spec compliance: all required features (quiet zone, ECC 200, finder pattern,
+    timing patterns) are present'
+  - Three-tier typographic hierarchy (bold → regular → italic) adds visual refinement
+    below the barcode
   weaknesses:
-  - 'CQ-01/CQ-04: Custom GF(256) Reed-Solomon encoder (gf_mul, rs_encode, ~60 lines)
-    is unnecessary — use segno (already mentioned in the spec) to generate the Data
-    Matrix cell matrix in 2 lines, eliminating all the custom RS math and helper functions'
-  - 'VQ-05/DE-02: Barcode is vertically off-center (positioned slightly below midpoint);
-    reduce the top gap so the barcode sits more centrally in the canvas'
-  - 'DE-03: No explanatory context beyond ''Encoded'' label — add a brief annotation
-    (e.g., a small note about ECC 200 enabling 30% data recovery, or the pharmaceutical
-    traceability use case) to elevate storytelling'
-  - 'LM-01: chart.add('''', [0]) dummy series + sys.path manipulation are non-idiomatic
-    workarounds; if sticking with the custom Graph subclass, clean up the path hack'
+  - 'LM-01/LM-02: Pygal used only as an SVG canvas via low-level Graph extension;
+    no idiomatic chart API or library-distinctive features leveraged'
+  - 'CQ-01: Multiple helper functions (gf_mul, rs_encode, generate_datamatrix) and
+    a class (DataMatrixChart) deviate significantly from KISS structure'
+  - 'CQ-04: The chart.add empty dummy series hack signals mismatch between pygal chart
+    model and this visualization type'
+  - 'VQ-01 minor: The 30px italic story annotation is slightly small at mobile-scaled
+    widths'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white
-      Chrome: Title "datamatrix-basic · python · pygal · anyplot.ai" in dark text at top — clearly readable. No axis labels (appropriate). Bold "Encoded: NDC:0069-0069-20" and muted "Matrix: 18 × 18 | ECC 200" below barcode — both clearly readable.
-      Data: Data Matrix barcode with black (#1A1A17) modules on near-white (#FFFDF6) elevated panel. L-shaped finder pattern visible (solid left column + bottom row). Alternating timing patterns on top and right edges. Quiet zone of ~2 modules. High-contrast binary visualization.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "datamatrix-basic · python · pygal · anyplot.ai" in dark ink, clearly readable. Three annotation text lines below barcode in dark INK and INK_SOFT colors — all readable.
+      Data: 18×18 Data Matrix barcode with black (#1A1A17) modules on cream (#FFFDF6) elevated surface, inside a bordered box. L-shaped finder (solid left column + bottom row) and alternating timing (top row + right column) clearly identifiable.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black
-      Chrome: Title in light-colored text — clearly readable. "Encoded: NDC:0069-0069-20" in bold light text — clearly readable. "Matrix: 18 × 18 | ECC 200" in muted light text — readable. No dark-on-dark failures detected.
-      Data: Barcode panel retains #FFFDF6 background (intentionally theme-independent for scan reliability). Black modules are identical to light render — correct, data colors unchanged between themes.
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Annotation text below barcode in light INK and INK_SOFT dark-mode tokens (#F0EFE8 / #B8B7B0) — all readable. No dark-on-dark text failures detected.
+      Data: Barcode area maintains cream/light surface (intentional for scan contrast). Identical black module pattern to light render — only outer canvas chrome flips.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -57,52 +56,49 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=66, label=56, major=44, value=36).
-          Readable in both themes. Minor: large gap between title and barcode leaves
-          barcode slightly below center.'
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          inline annotations 44/36/30px). Readable in both themes. Minor deduction
+          for 30px italic story annotation at mobile widths.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap in either render.
+        comment: No overlapping elements in either render.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Black modules on near-white (#FFFDF6) panel provide maximum contrast.
-          Barcode is crisp and clearly legible.
+        comment: Barcode modules clearly visible with high-contrast black on cream.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Binary black-on-white barcode is inherently CVD-safe with maximum
-          contrast.
+        comment: Black/cream barcode gives maximum contrast; no CVD issues.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Barcode occupies ~55% of canvas. Excessive vertical whitespace between
-          title and barcode; barcode slightly below center.
+        comment: Barcode fills ~55% of 2400x2400 canvas, well-centered, balanced margins.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format exactly. No axes needed. Informative
-          supplemental labels below barcode.
+        comment: Title follows required format; no axes needed for barcode visualization.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Chrome adapts
-          correctly. Barcode panel intentionally held at #FFFDF6 for scan reliability.'
+        comment: 'Theme backgrounds correct (#FAF8F1 light / #1A1A17 dark); Okabe-Ito
+          in Style; module color uses INK tokens (appropriate for binary barcode).
+          Both renders theme-correct.'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,23 +106,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Technically impressive; clean typography hierarchy. Inherently constrained
-          by barcode's binary nature. Above defaults but not publication-ready.
+        comment: Above default. Deliberate three-tier typographic hierarchy, clean
+          theme adaptation. Barcode format limits design space.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: No axes or grid (appropriate). Clean whitespace. Thin border framing
-          the barcode panel is a nice touch. Excessive vertical gap above barcode
-          slightly mars layout.
+        comment: 'Clean minimalist: no grid, no spines, generous quiet zone, refined
+          bordered barcode area.'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Pharmaceutical NDC is thematically appropriate. Matrix info label
-          adds factual context. No broader narrative or callout explaining significance.
+        passed: true
+        comment: Real NDC pharmaceutical context plus FDA regulatory citation creates
+          meaningful story about Data Matrix's real-world importance.
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +131,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Data Matrix 2D barcode visualization with proper structure.
+        comment: 'Correct Data Matrix barcode: L-shaped finder, alternating timing,
+          quiet zone, binary modules.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: L-shaped finder (solid left+bottom), alternating timing (top+right),
-          quiet zone, ECC 200, content encoding — all present per ISO/IEC 16022.
+        comment: 'All features present: L-shaped finder, timing patterns, ECC 200
+          via Reed-Solomon, quiet zone, high-contrast modules.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: NDC pharmaceutical code is a direct real-world mapping to barcode
-          content.
+        comment: Matrix correctly encodes NDC content through ASCII codeword generation.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'datamatrix-basic · python · pygal · anyplot.ai'.
-          No legend needed for single-series binary visualization.
+        comment: Title exactly matches required format. Legend omitted (correct for
+          barcode).
     data_quality:
       score: 15
       max: 15
@@ -167,22 +162,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all key Data Matrix elements: L-finder, timing, interior data
-          modules, quiet zone, ECC 200 metadata.'
+        comment: 'Shows all Data Matrix aspects: finder, timing, ECC 200, quiet zone,
+          data modules, spec info.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''NDC:0069-0069-20'' is a pharmaceutical National Drug Code — directly
-          referenced in spec as core application. Neutral and real.'
+        comment: Real FDA National Drug Code format, neutral pharmaceutical supply
+          chain use case with regulatory grounding.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 18×18 matrix is the correct symbol size for 16-character ASCII content
-          under ECC 200. Factually consistent with Data Matrix standard.
+        comment: 18x18 correct for 16-char content; ECC 200 standard; 2-module quiet
+          zone meets spec minimum.
     code_quality:
       score: 7
       max: 10
@@ -192,57 +187,55 @@ review:
         score: 1
         max: 3
         passed: false
-        comment: 'Four callable units: gf_mul, rs_encode, generate_datamatrix, DataMatrixChart
-          class. Significant KISS violation. Could use segno library instead of custom
-          RS encoder.'
+        comment: Defines gf_mul(), rs_encode(), generate_datamatrix() functions and
+          DataMatrixChart(Graph) class. Significant structural complexity; departs
+          from Imports→Data→Plot→Save ideal.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; no random data.
+        comment: Fully deterministic; hardcoded dm_content.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only used imports: os, sys, cairosvg, numpy, pygal internals.'
+        comment: All imports used; sys.path manipulation necessary and documented.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: sys.path manipulation hack to avoid circular import is inelegant.
-          60-line RS encoder could be replaced by 2-line segno call. Not fake functionality
-          but over-engineered.
+        passed: true
+        comment: Well-implemented but dummy series hack and class complexity add overhead.
+          No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.svg, plot-{THEME}.png, and plot-{THEME}.html.
-          Correct.
+        comment: Saves plot-{THEME}.svg, converts to plot-{THEME}.png, creates plot-{THEME}.html.
+          Correct API.
     library_mastery:
-      score: 6
+      score: 3
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 2
         max: 5
-        passed: true
-        comment: Uses pygal's Graph extension mechanism but accesses internal APIs
-          (self.view.x(), self.svg.node(), self.nodes['plot']). The dummy series hack
-          is non-idiomatic.
+        passed: false
+        comment: Extends pygal.graph.graph.Graph at internal module level; manually
+          constructs SVG nodes; forces rendering via dummy series. Bypasses pygal
+          chart API — not idiomatic.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 1
         max: 5
-        passed: true
-        comment: SVG node API for raw rectangle drawing and HTML output are somewhat
-          distinctive to pygal. Score held back by heavy reliance on internal APIs
-          rather than library's chart vocabulary.
-  verdict: REJECTED
+        passed: false
+        comment: No pygal-distinctive features. Barcode rendered via manual SVG node
+          construction; could be done with any SVG library.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
@@ -251,6 +244,7 @@ impl_tags:
   - annotations
   patterns:
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
