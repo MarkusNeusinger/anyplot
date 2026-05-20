@@ -1,19 +1,34 @@
-""" pyplots.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-17
+Library: bokeh | Python 3.13
+Quality: pending | Updated: 2026-05-20
 """
 
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
-from bokeh.models import ColumnDataSource, Label
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Generate synthetic atmospheric sounding data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data
 np.random.seed(42)
 
-# Pressure levels (hPa) - from surface to upper troposphere
 pressure = np.array(
     [
         1000,
@@ -44,151 +59,183 @@ pressure = np.array(
     ]
 )
 
-# Temperature profile (°C) - typical mid-latitude sounding with inversion
-temperature = np.array(
-    [25, 23, 21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1, -3, -8, -14, -20, -28, -36, -44, -52, -58, -62, -66, -68]
+temperature = (
+    np.array([25, 23, 21, 19, 17, 15, 13, 11, 9, 7, 5, 3, 1, -3, -8, -14, -20, -28, -36, -44, -52, -58, -62, -66, -68])
+    + np.random.randn(25) * 0.5
 )
 
-# Add some realistic variation
-temperature = temperature + np.random.randn(len(temperature)) * 0.5
-
-# Dewpoint profile (°C) - always <= temperature
-dewpoint = np.array(
-    [20, 18, 16, 14, 12, 10, 7, 4, 1, -3, -7, -12, -17, -24, -32, -40, -45, -50, -54, -58, -62, -66, -70, -74, -78]
+dewpoint = (
+    np.array(
+        [20, 18, 16, 14, 12, 10, 7, 4, 1, -3, -7, -12, -17, -24, -32, -40, -45, -50, -54, -58, -62, -66, -70, -74, -78]
+    )
+    + np.random.randn(25) * 0.3
 )
-dewpoint = dewpoint + np.random.randn(len(temperature)) * 0.3
-
-# Ensure dewpoint is always less than or equal to temperature
 dewpoint = np.minimum(dewpoint, temperature - 0.5)
 
-# Skew factor for temperature transformation
 SKEW_FACTOR = 45
-
-# Pressure range for reference lines
 p_range = np.logspace(np.log10(1000), np.log10(100), 50)
 
-# Create figure with appropriate size and y-axis (pressure)
-p = figure(
-    width=4800,
-    height=2700,
-    title="skewt-logp-atmospheric · bokeh · pyplots.ai",
-    x_axis_label="Temperature (°C) - Skewed Coordinates",
+# Skew-transform sounding coordinates
+log_p_sounding = np.log10(pressure / 1000.0)
+x_temp = temperature - SKEW_FACTOR * log_p_sounding
+x_dewpoint = dewpoint - SKEW_FACTOR * log_p_sounding
+
+# Plot
+fig = figure(
+    width=3200,
+    height=1800,
+    title="skewt-logp-atmospheric · python · bokeh · anyplot.ai",
+    x_axis_label="Temperature (°C) — Skewed Coordinates",
     y_axis_label="Pressure (hPa)",
     y_axis_type="log",
-    y_range=(1050, 95),  # Inverted: surface at bottom
+    y_range=(1050, 95),
     x_range=(-50, 50),
-    tools="pan,wheel_zoom,box_zoom,reset,save",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Style the figure
-p.title.text_font_size = "32pt"
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.background_fill_color = "#f8f9fa"
-p.grid.grid_line_alpha = 0.3
+# Theme-adaptive chrome
+fig.background_fill_color = PAGE_BG
+fig.border_fill_color = PAGE_BG
+fig.outline_line_color = INK_SOFT
 
-# Draw isotherms (skewed temperature lines)
+fig.title.text_color = INK
+fig.title.text_font_size = "50pt"
+fig.xaxis.axis_label_text_color = INK
+fig.yaxis.axis_label_text_color = INK
+fig.xaxis.axis_label_text_font_size = "42pt"
+fig.yaxis.axis_label_text_font_size = "42pt"
+fig.xaxis.major_label_text_color = INK_SOFT
+fig.yaxis.major_label_text_color = INK_SOFT
+fig.xaxis.major_label_text_font_size = "34pt"
+fig.yaxis.major_label_text_font_size = "34pt"
+fig.xaxis.axis_line_color = INK_SOFT
+fig.yaxis.axis_line_color = INK_SOFT
+fig.xaxis.major_tick_line_color = INK_SOFT
+fig.yaxis.major_tick_line_color = INK_SOFT
+fig.xgrid.grid_line_color = INK
+fig.ygrid.grid_line_color = INK
+fig.xgrid.grid_line_alpha = 0.10
+fig.ygrid.grid_line_alpha = 0.10
+
+# Isotherms (45° skewed background reference lines)
 isotherm_temps = np.arange(-80, 50, 10)
 for t in isotherm_temps:
-    # Inline skew transformation: x = temp - skew_factor * log10(pres / 1000)
     log_p = np.log10(p_range / 1000.0)
     x_iso = np.full_like(p_range, t) - SKEW_FACTOR * log_p
-    source_iso = ColumnDataSource(data={"x": x_iso, "y": p_range})
-    p.line(x="x", y="y", source=source_iso, line_color="#cccccc", line_width=1.5, line_alpha=0.7)
+    src = ColumnDataSource(data={"x": x_iso, "y": p_range})
+    fig.line(x="x", y="y", source=src, line_color=INK_MUTED, line_width=1.2, line_alpha=0.35)
 
-# Draw dry adiabats (lines of constant potential temperature)
-# Dry adiabat: T = theta * (p / p0)^kappa - 273.15
-theta_values = np.arange(250, 400, 20)  # Potential temperatures in K
+# Dry adiabats (lines of constant potential temperature)
 p0 = 1000.0
 kappa = 0.286
-for theta in theta_values:
+for theta in np.arange(250, 400, 20):
     t_adiabat = theta * (p_range / p0) ** kappa - 273.15
     log_p = np.log10(p_range / 1000.0)
     x_adiabat = t_adiabat - SKEW_FACTOR * log_p
-    # Only plot within reasonable temperature range
     mask = (t_adiabat > -80) & (t_adiabat < 60)
     if np.any(mask):
-        source_ad = ColumnDataSource(data={"x": x_adiabat[mask], "y": p_range[mask]})
-        p.line(x="x", y="y", source=source_ad, line_color="#d4a574", line_width=1.5, line_alpha=0.6, line_dash="dashed")
+        src = ColumnDataSource(data={"x": x_adiabat[mask], "y": p_range[mask]})
+        fig.line(x="x", y="y", source=src, line_color=OKABE_ITO[4], line_width=1.5, line_alpha=0.45, line_dash="dashed")
 
-# Draw mixing ratio lines (simplified - vertical lines at specific humidities)
-mixing_ratios = [1, 2, 4, 8, 12, 16, 20]  # g/kg
-for mr in mixing_ratios:
-    # Approximate dewpoint from mixing ratio at different pressures
-    td_mr = -40 + 10 * np.log10(mr + 1)  # Simplified approximation
-    log_p = np.log10(p_range / 1000.0)
-    x_mr = np.full_like(p_range, td_mr) - SKEW_FACTOR * log_p
-    source_mr = ColumnDataSource(data={"x": x_mr, "y": p_range})
-    p.line(x="x", y="y", source=source_mr, line_color="#8fbf8f", line_width=1.2, line_alpha=0.5, line_dash="dotted")
-
-# Draw moist adiabats (pseudoadiabats) - simplified approximation
-moist_start_temps = np.arange(-10, 35, 10)
-for t_start in moist_start_temps:
-    # Build moist adiabat iteratively (simplified moist adiabatic lapse rate ~6°C/km)
+# Moist adiabats (pseudoadiabats — simplified iterative approximation)
+for t_start in np.arange(-10, 35, 10):
     t_moist = [t_start]
-    p_prev = 1000.0
-    t_prev = t_start
+    p_prev, t_prev = 1000.0, t_start
     for p_level in p_range[1:]:
-        dp = p_prev - p_level
-        dt = -0.006 * dp * 10 * 0.5  # Approximate moist lapse rate
+        dt = -0.006 * (p_prev - p_level) * 10 * 0.5
         t_new = t_prev + dt
         t_moist.append(t_new)
-        p_prev = p_level
-        t_prev = t_new
+        p_prev, t_prev = p_level, t_new
     t_moist = np.array(t_moist)
     log_p = np.log10(p_range / 1000.0)
     x_moist = t_moist - SKEW_FACTOR * log_p
     mask = (t_moist > -80) & (t_moist < 60)
     if np.any(mask):
-        source_moist = ColumnDataSource(data={"x": x_moist[mask], "y": p_range[mask]})
-        p.line(
-            x="x", y="y", source=source_moist, line_color="#7eb5d6", line_width=1.5, line_alpha=0.5, line_dash="dotdash"
+        src = ColumnDataSource(data={"x": x_moist[mask], "y": p_range[mask]})
+        fig.line(
+            x="x", y="y", source=src, line_color=OKABE_ITO[5], line_width=1.5, line_alpha=0.45, line_dash="dotdash"
         )
 
-# Plot temperature profile (solid red line)
-log_p_temp = np.log10(pressure / 1000.0)
-x_temp = temperature - SKEW_FACTOR * log_p_temp
-source_temp = ColumnDataSource(data={"x": x_temp, "y": pressure, "temp": temperature})
-p.line(x="x", y="y", source=source_temp, line_color="#e63946", line_width=5, legend_label="Temperature")
-p.scatter(x="x", y="y", source=source_temp, size=12, color="#e63946", alpha=0.8)
+# Mixing ratio lines
+for mr in [1, 2, 4, 8, 12, 16, 20]:
+    td_mr = -40 + 10 * np.log10(mr + 1)
+    log_p = np.log10(p_range / 1000.0)
+    x_mr = np.full_like(p_range, td_mr) - SKEW_FACTOR * log_p
+    src = ColumnDataSource(data={"x": x_mr, "y": p_range})
+    fig.line(x="x", y="y", source=src, line_color=OKABE_ITO[3], line_width=1.2, line_alpha=0.45, line_dash="dotted")
 
-# Plot dewpoint profile (dashed green line)
-x_dewpoint = dewpoint - SKEW_FACTOR * log_p_temp
-source_dew = ColumnDataSource(data={"x": x_dewpoint, "y": pressure, "dewpoint": dewpoint})
-p.line(x="x", y="y", source=source_dew, line_color="#2a9d8f", line_width=5, line_dash="dashed", legend_label="Dewpoint")
-p.scatter(x="x", y="y", source=source_dew, size=12, color="#2a9d8f", alpha=0.8, marker="diamond")
-
-# Add freezing line (0°C isotherm highlighted)
-log_p_freeze = np.log10(p_range / 1000.0)
-x_freeze = np.full_like(p_range, 0) - SKEW_FACTOR * log_p_freeze
-source_freeze = ColumnDataSource(data={"x": x_freeze, "y": p_range})
-p.line(
-    x="x", y="y", source=source_freeze, line_color="#457b9d", line_width=3, line_alpha=0.8, legend_label="0°C Isotherm"
+# Highlighted 0°C isotherm
+log_p_ref = np.log10(p_range / 1000.0)
+x_freeze = -SKEW_FACTOR * log_p_ref
+src_freeze = ColumnDataSource(data={"x": x_freeze, "y": p_range})
+fig.line(
+    x="x", y="y", source=src_freeze, line_color=OKABE_ITO[2], line_width=3, line_alpha=0.85, legend_label="0°C Isotherm"
 )
 
-# Configure legend with larger font size for better readability
-p.legend.location = "top_left"
-p.legend.label_text_font_size = "24pt"
-p.legend.background_fill_alpha = 0.8
-p.legend.border_line_width = 2
-p.legend.glyph_height = 30
-p.legend.glyph_width = 30
-p.legend.spacing = 10
-p.legend.padding = 15
+# Temperature profile
+src_temp = ColumnDataSource(data={"x": x_temp, "y": pressure, "temp_c": np.round(temperature, 1)})
+fig.line(x="x", y="y", source=src_temp, line_color=OKABE_ITO[0], line_width=5, legend_label="Temperature")
+temp_scatter = fig.scatter(x="x", y="y", source=src_temp, size=14, color=OKABE_ITO[0], alpha=0.85)
 
-# Add reference line labels using annotations with larger font size
-label_dry = Label(x=-35, y=350, text="Dry Adiabats", text_font_size="22pt", text_color="#d4a574", text_alpha=1.0)
-label_moist = Label(x=25, y=200, text="Moist Adiabats", text_font_size="22pt", text_color="#7eb5d6", text_alpha=1.0)
-label_mixing = Label(x=-48, y=600, text="Mixing Ratio", text_font_size="22pt", text_color="#8fbf8f", text_alpha=1.0)
-p.add_layout(label_dry)
-p.add_layout(label_moist)
-p.add_layout(label_mixing)
+# Dewpoint profile
+src_dew = ColumnDataSource(data={"x": x_dewpoint, "y": pressure, "dewpt_c": np.round(dewpoint, 1)})
+fig.line(
+    x="x", y="y", source=src_dew, line_color=OKABE_ITO[1], line_width=5, line_dash="dashed", legend_label="Dewpoint"
+)
+dew_scatter = fig.scatter(x="x", y="y", source=src_dew, size=14, color=OKABE_ITO[1], alpha=0.85, marker="diamond")
 
-# Save outputs
-export_png(p, filename="plot.png")
+# HoverTools for interactive temperature/pressure display
+fig.add_tools(HoverTool(renderers=[temp_scatter], tooltips=[("Pressure", "@y{0} hPa"), ("Temperature", "@temp_c °C")]))
+fig.add_tools(HoverTool(renderers=[dew_scatter], tooltips=[("Pressure", "@y{0} hPa"), ("Dewpoint", "@dewpt_c °C")]))
 
-# Save interactive HTML version
-output_file("plot.html")
-save(p)
+# Reference line labels
+fig.add_layout(
+    Label(x=-34, y=340, text="Dry Adiabats", text_font_size="28pt", text_color=OKABE_ITO[4], text_alpha=0.90)
+)
+fig.add_layout(
+    Label(x=24, y=195, text="Moist Adiabats", text_font_size="28pt", text_color=OKABE_ITO[5], text_alpha=0.90)
+)
+fig.add_layout(
+    Label(x=-48, y=590, text="Mixing Ratio", text_font_size="28pt", text_color=OKABE_ITO[3], text_alpha=0.90)
+)
+
+# Legend
+fig.legend.location = "top_left"
+fig.legend.label_text_font_size = "34pt"
+fig.legend.label_text_color = INK_SOFT
+fig.legend.background_fill_color = ELEVATED_BG
+fig.legend.border_line_color = INK_SOFT
+fig.legend.glyph_height = 50
+fig.legend.glyph_width = 50
+fig.legend.spacing = 12
+fig.legend.padding = 18
+
+# Save interactive HTML
+output_file(f"plot-{THEME}.html")
+save(fig)
+
+# Screenshot with headless Chrome (Selenium 4 / Selenium Manager)
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+# Override emulated viewport to exactly W×H regardless of browser chrome overhead
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
