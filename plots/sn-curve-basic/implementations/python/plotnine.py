@@ -91,12 +91,12 @@ anyplot_theme = theme(
     panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
     panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
     panel_border=element_blank(),
-    axis_line_x=element_blank(),
-    axis_line_y=element_line(color=INK_SOFT),
+    axis_line_x=element_line(color=INK_SOFT, size=0.8),
+    axis_line_y=element_line(color=INK_SOFT, size=0.8),
     axis_title=element_text(color=INK, size=10),
     axis_text=element_text(color=INK_SOFT, size=8),
-    plot_title=element_text(color=INK, size=12),
-    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+    plot_title=element_text(color=INK, size=12, weight="bold"),
+    legend_background=element_rect(fill=ELEVATED_BG, color=None),
     legend_text=element_text(color=INK_SOFT, size=8),
     legend_title=element_text(color=INK, size=9),
     plot_margin=0.05,
@@ -116,10 +116,9 @@ plot = (
     + geom_hline(yintercept=ultimate_strength, linetype="dashed", color=OKABE_ITO[1], size=0.9, alpha=0.85)
     + geom_hline(yintercept=yield_strength, linetype="dashed", color=OKABE_ITO[2], size=0.9, alpha=0.85)
     + geom_hline(yintercept=endurance_limit, linetype="dashed", color=OKABE_ITO[3], size=1.2, alpha=0.90)
-    # Reference line labels with matching colors; shifted right to reduce left-edge crowding
     + annotate(
         "text",
-        x=3e2,
+        x=1e3,
         y=ultimate_strength + 20,
         label="Ultimate Strength (550 MPa)",
         size=10,
@@ -127,10 +126,10 @@ plot = (
         ha="left",
     )
     + annotate(
-        "text", x=3e2, y=yield_strength + 20, label="Yield Strength (350 MPa)", size=10, color=OKABE_ITO[2], ha="left"
+        "text", x=2e5, y=yield_strength + 20, label="Yield Strength (350 MPa)", size=10, color=OKABE_ITO[2], ha="left"
     )
     + annotate(
-        "text", x=3e2, y=endurance_limit - 25, label="Endurance Limit (250 MPa)", size=10, color=OKABE_ITO[3], ha="left"
+        "text", x=1e3, y=endurance_limit - 25, label="Endurance Limit (250 MPa)", size=10, color=OKABE_ITO[3], ha="left"
     )
     # Logarithmic scales
     + scale_x_log10()
