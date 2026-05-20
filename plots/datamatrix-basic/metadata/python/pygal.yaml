@@ -1,208 +1,250 @@
 library: pygal
+language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:56:19Z'
-updated: '2026-01-16T06:58:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058289508
+updated: '2026-05-20T06:11:28Z'
+generated_by: claude-sonnet
+workflow_run: 26143874442
 issue: 3811
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/pygal/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent visual presentation with high-contrast black/white modules
-  - Correct implementation of Data Matrix ECC 200 standard features (L-shaped finder,
-    timing patterns)
-  - Proper quiet zone implementation around the barcode
-  - Good use of pygal SVG capabilities through custom Graph subclass
-  - Clear labeling showing encoded content and matrix dimensions
-  - Realistic use case with serial number encoding
+  - Complete and technically correct Data Matrix barcode with proper Reed-Solomon
+    ECC 200, L-shaped finder, and alternating timing patterns generated from scratch
+  - 'Excellent theme adaptation: both light and dark renders pass readability checks
+    with correct background tokens and theme-adaptive text colors'
+  - 'Strong real-world context: pharmaceutical NDC code with regulatory citation creates
+    genuine data storytelling'
+  - 'Perfect spec compliance: all required features (quiet zone, ECC 200, finder pattern,
+    timing patterns) are present'
+  - Three-tier typographic hierarchy (bold → regular → italic) adds visual refinement
+    below the barcode
   weaknesses:
-  - Code uses functions and a custom class instead of KISS structure (imports, data,
-    plot, save)
-  - Reed-Solomon and Galois field implementation is complex; could note this is a
-    simplified demonstration
-  image_description: 'The plot displays a Data Matrix 2D barcode on a white background
-    with a light gray border. The barcode is an 18x18 matrix of black and white squares/modules.
-    The characteristic L-shaped finder pattern is visible - solid black on the left
-    edge and bottom edge. The top and right edges show the alternating timing pattern
-    (black-white-black-white). The data matrix is well-centered on the square canvas
-    with adequate quiet zone (white border) around it. Below the barcode, there is
-    a blue text label reading "Content: SERIAL:12345678" and a smaller gray subtitle
-    "Matrix: 18 x 18 | ECC 200". The title at the top correctly reads "datamatrix-basic
-    · pygal · pyplots.ai".'
+  - 'LM-01/LM-02: Pygal used only as an SVG canvas via low-level Graph extension;
+    no idiomatic chart API or library-distinctive features leveraged'
+  - 'CQ-01: Multiple helper functions (gf_mul, rs_encode, generate_datamatrix) and
+    a class (DataMatrixChart) deviate significantly from KISS structure'
+  - 'CQ-04: The chart.add empty dummy series hack signals mismatch between pygal chart
+    model and this visualization type'
+  - 'VQ-01 minor: The 30px italic story annotation is slightly small at mobile-scaled
+    widths'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "datamatrix-basic · python · pygal · anyplot.ai" in dark ink, clearly readable. Three annotation text lines below barcode in dark INK and INK_SOFT colors — all readable.
+      Data: 18×18 Data Matrix barcode with black (#1A1A17) modules on cream (#FFFDF6) elevated surface, inside a bordered box. L-shaped finder (solid left column + bottom row) and alternating timing (top row + right column) clearly identifiable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background. Annotation text below barcode in light INK and INK_SOFT dark-mode tokens (#F0EFE8 / #B8B7B0) — all readable. No dark-on-dark text failures detected.
+      Data: Barcode area maintains cream/light surface (intentional for scan contrast). Identical black module pattern to light render — only outer canvas chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, content label, and matrix info are all clearly readable at
-          full size
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          inline annotations 44/36/30px). Readable in both themes. Minor deduction
+          for 30px italic story annotation at mobile widths.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean layout
+        comment: No overlapping elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Data matrix modules are perfectly sized and clearly visible with
-          high contrast
+        comment: Barcode modules clearly visible with high-contrast black on cream.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: High contrast black on white, excellent for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Data matrix is well-centered, good use of canvas space with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for barcode visualization (no axes needed)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed; quiet zone border is subtle and appropriate
+        comment: Black/cream barcode gives maximum contrast; no CVD issues.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Barcode fills ~55% of 2400x2400 canvas, well-centered, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows required format; no axes needed for barcode visualization.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Theme backgrounds correct (#FAF8F1 light / #1A1A17 dark); Okabe-Ito
+          in Style; module color uses INK tokens (appropriate for binary barcode).
+          Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default. Deliberate three-tier typographic hierarchy, clean
+          theme adaptation. Barcode format limits design space.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clean minimalist: no grid, no spines, generous quiet zone, refined
+          bordered barcode area.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Real NDC pharmaceutical context plus FDA regulatory citation creates
+          meaningful story about Data Matrix's real-world importance.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Data Matrix 2D barcode visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Content correctly encoded into matrix pattern
-      - id: SC-03
+        comment: 'Correct Data Matrix barcode: L-shaped finder, alternating timing,
+          quiet zone, binary modules.'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has L-shaped finder pattern, timing patterns, quiet zone, ECC 200
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: L-shaped finder, timing patterns, ECC 200
+          via Reed-Solomon, quiet zone, high-contrast modules.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 18x18 matrix appropriate for the content length
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Matrix correctly encodes NDC content through ASCII codeword generation.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Content and matrix size displayed, but no legend per se
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format datamatrix-basic · pygal · pyplots.ai
+        comment: Title exactly matches required format. Legend omitted (correct for
+          barcode).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows the barcode with finder pattern, timing pattern, encoded data,
-          quiet zone
+        comment: 'Shows all Data Matrix aspects: finder, timing, ECC 200, quiet zone,
+          data modules, spec info.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: SERIAL:12345678 is a realistic serial number use case matching spec
-          applications
+        comment: Real FDA National Drug Code format, neutral pharmaceutical supply
+          chain use case with regulatory grounding.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 18x18 matrix is appropriate for the content
+        comment: 18x18 correct for 16-char content; ECC 200 standard; 2-module quiet
+          zone meets spec minimum.
     code_quality:
       score: 7
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
+        score: 1
         max: 3
         passed: false
-        comment: Uses functions and a custom class (DataMatrixChart), violating KISS
-          principle
+        comment: Defines gf_mul(), rs_encode(), generate_datamatrix() functions and
+          DataMatrixChart(Graph) class. Significant structural complexity; departs
+          from Imports→Data→Plot→Save ideal.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data generation (no random seed needed)
+        comment: Fully deterministic; hardcoded dm_content.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; sys.path manipulation necessary and documented.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
         score: 1
-        max: 1
+        max: 2
         passed: true
-        comment: Current API usage
+        comment: Well-implemented but dummy series hack and class complexity add overhead.
+          No fake functionality.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.svg, converts to plot-{THEME}.png, creates plot-{THEME}.html.
+          Correct API.
+    library_mastery:
+      score: 3
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 2
         max: 5
-        passed: true
-        comment: Custom Graph subclass extending pygal, SVG native rendering, HTML
-          export with embedded SVG
+        passed: false
+        comment: Extends pygal.graph.graph.Graph at internal module level; manually
+          constructs SVG nodes; forces rendering via dummy series. Bypasses pygal
+          chart API — not idiomatic.
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: No pygal-distinctive features. Barcode rendered via manual SVG node
+          construction; could be done with any SVG library.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
   techniques:
   - html-export
-  - patches
   - annotations
   patterns:
   - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
