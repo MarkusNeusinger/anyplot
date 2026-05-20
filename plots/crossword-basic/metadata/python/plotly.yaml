@@ -1,149 +1,187 @@
 library: plotly
+language: python
 specification_id: crossword-basic
 created: '2026-01-15T21:38:22Z'
-updated: '2026-01-15T21:41:00Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047166068
+updated: '2026-05-20T02:23:31Z'
+generated_by: claude-sonnet
+workflow_run: 26136552709
 issue: 3805
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/plotly/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent implementation of 180-degree rotational symmetry for black cell placement
-  - Clean, professional appearance matching newspaper crossword standards
-  - Proper number placement algorithm identifying cells that start across/down words
-  - Good use of Plotly shapes API for grid construction
-  - Square aspect ratio correctly enforced with scaleanchor
-  - Generates both PNG and HTML outputs
+  - Perfect spec compliance — all required crossword features present (symmetry, numbering,
+    cell types, grid lines, monochrome)
+  - Elegant two-shade cell distinction (CELL_NUMBERED pure white vs CELL_ENTRY warm
+    off-white) adds subtle visual hierarchy without violating monochrome constraint
+  - Deterministic, algorithmically correct clue number generation
+  - Correct square 2400x2400 canvas format for grid visualization
+  - Thick outer border follows traditional newspaper crossword convention
   weaknesses:
-  - Clue numbers could be slightly larger for better visibility at a glance
-  image_description: The plot displays a 15x15 crossword puzzle grid with a traditional
-    newspaper-style layout. White cells for letter entry are clearly distinguished
-    from solid black blocking cells. The grid uses a blue color scheme (#306998) for
-    cell borders and clue numbers. Numbers 1-78 are positioned in the top-left corner
-    of cells that start across or down words. The black cells follow 180-degree rotational
-    symmetry as expected for traditional crosswords. The title "crossword-basic ·
-    plotly · pyplots.ai" appears at the top in blue text. The grid is square with
-    equal-sized cells, rendered on a clean white background with balanced margins.
+  - 'Dark-mode annotation legibility failure: clue numbers use font color=INK (#F0EFE8
+    in dark) on fixed-white cell backgrounds (#FFFFFF/#FAFAFA), creating near-1:1
+    contrast ratio — numbers become near-invisible in dark render. Fix: annotation
+    font color should always be #1A1A17 (dark) regardless of theme since cell backgrounds
+    are always white by design.'
+  - Design excellence ceiling limited by monochrome nature — no color storytelling
+    or emphasis techniques possible beyond cell shade distinction and border weight
+    variation.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "crossword-basic · python · plotly · anyplot.ai" centered in dark text (#1A1A17), clearly readable. No axis labels or tick marks (appropriate for crossword grid type). Thick outer border frame in grey (INK_SOFT = #4A4A44).
+      Data: 15x15 crossword grid. Black cells (#1A1A17) create symmetric pattern. Word-start cells (#FFFFFF pure white) and plain entry cells (#FAFAFA warm off-white) are cleanly separated by 1.5px grey grid lines. Clue numbers 1-78 appear as small dark text in top-left corner of word-start cells — clearly readable.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title "crossword-basic · python · plotly · anyplot.ai" centered in light text (#F0EFE8), clearly readable against dark background. Outer border frame visible in lighter grey (INK_SOFT = #B8B7B0).
+      Data: Same grid pattern as light render (cell colors are theme-invariant by design: CELL_BLOCK=#1A1A17, CELL_NUMBERED=#FFFFFF, CELL_ENTRY=#FAFAFA). CRITICAL ISSUE: Clue numbers use font color=INK=#F0EFE8 (near-white) on CELL_NUMBERED=#FFFFFF (pure white) backgrounds — contrast ratio approximately 1.05:1. Numbers appear faint/washed-out, significantly less readable than light render. This is a near-white-on-white annotation failure.
+      Legibility verdict: PARTIAL FAIL — clue numbers poorly legible due to near-white text (#F0EFE8) on white cell backgrounds (#FFFFFF). Title and overall layout pass. The annotation color should be fixed at #1A1A17 regardless of theme since cell backgrounds are always white.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title and clue numbers are clearly readable at full size
+        score: 5
+        max: 8
+        passed: false
+        comment: 'Title readable in both themes. Clue numbers clear in light mode
+          but annotation color INK=#F0EFE8 (dark theme) on fixed-white cells #FFFFFF
+          creates ~1:1 contrast — numbers near-invisible in dark render.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, numbers positioned cleanly in cell corners
+        comment: Numbers sit cleanly in top-left corners; no collisions between numbers
+          or with grid lines.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Grid cells and black/white contrast excellent, numbers slightly small
-          for optimal visibility
+        comment: Black/white cell contrast excellent. Slight deduction for diminished
+          clue number visibility in dark render.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue on white provides excellent contrast, monochrome design is fully
-          accessible
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Square grid fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for crossword - no axes required
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean grid lines, no legend needed
+        comment: Monochrome design is inherently CVD-safe with maximum contrast between
+          black and white cells.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 canvas correct for grid. Generous margins, grid
+          well-centered.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels appropriate for crossword; title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Backgrounds correct (#FAF8F1/#1A1A17). Deduction: annotation color
+          not adapted for fixed-white cell backgrounds in dark mode.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Two distinct cell shades (CELL_NUMBERED pure white vs CELL_ENTRY
+          warm off-white) subtly distinguish word-start cells. Traditional newspaper
+          crossword aesthetic.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes/spines correct for this type. Thick outer border traditional
+          and appropriate. Internal gridlines at proper weight (1.5px vs 3px outer).
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Visual hierarchy between black cells, numbered cells, and plain cells
+          is clear. Numbering draws eye to word-start positions.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct crossword puzzle grid visualization
+        comment: Correct crossword puzzle grid visualization.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Grid correctly maps blocked (black) and entry (white) cells
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: white entry cells, black blocking cells, numbered
-          starting positions, 180° rotational symmetry, clean grid lines, square cells'
-      - id: SC-04
-        name: Data Range
+        comment: White entry cells, black blocking cells, numbered word-start positions,
+          180-degree rotational symmetry, clean uniform grid lines, monochrome design,
+          1:1 cell aspect ratio — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 15x15 grid visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 15x15 grid within spec range, binary grid correctly mapped, clue
+          numbers algorithmically generated and correctly placed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, N/A
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as crossword-basic · plotly · pyplots.ai
+        comment: Title is exactly 'crossword-basic · python · plotly · anyplot.ai'.
+          No legend needed for monochrome design.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows symmetric black pattern with numbered cells, but pattern could
-          show more word-length variety
+        comment: 'Demonstrates all crossword grid elements: black cells, plain entry
+          cells, numbered word-start cells, outer frame, internal grid lines.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic newspaper-style crossword puzzle grid
+        comment: Standard newspaper-style 15x15 crossword with 78 numbered clues —
+          realistic and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 15x15 standard size, 78 clue numbers is reasonable but on the higher
-          end
+        comment: 15x15 with rotational symmetry and 78 clues is appropriate scale
+          for a standard crossword.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -151,53 +189,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple flat structure: imports → data → plot → save'
+        comment: Flat script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for deterministic output
+        comment: Fully deterministic; no random data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean iteration pattern for grid shape generation; clear algorithm
+          for clue number assignment.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png with 1200x1200 scale=3 = 3600x3600 (valid square
-          format but not standard dimensions)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses add_shape() for cell rectangles, add_annotation() for numbers,
+          scaleanchor='y' for square aspect ratio — idiomatic Plotly patterns.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotly.graph_objects shapes and annotations effectively, but
-          could leverage more interactive features
+        comment: Leverages Plotly's shape system for entire 225-cell grid, scaleanchor/scaleratio
+          for exact aspect ratio, HTML export for interactivity.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
+  - minimal-chrome
