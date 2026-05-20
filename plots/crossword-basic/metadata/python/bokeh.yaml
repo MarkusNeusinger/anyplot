@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: crossword-basic
 created: '2026-01-15T21:39:07Z'
-updated: '2026-05-20T02:16:27Z'
+updated: '2026-05-20T02:27:52Z'
 generated_by: claude-sonnet
 workflow_run: 26136618507
 issue: 3805
@@ -12,114 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/bokeh/plot-dark.html
-quality_score: 88
+quality_score: 84
 review:
   strengths:
-  - 'Perfect spec compliance: all required features implemented correctly (white/black
-    cells, clue numbers, rotational symmetry, 1:1 square cells)'
-  - 'Excellent theme adaptation: background, title, cell borders, and number labels
-    all adapt correctly to light/dark themes'
-  - 'Clever hover technique: transparent ColumnDataSource overlay allows HoverTool
-    on numbered cells without visual double-drawing'
-  - Clean, deterministic code with seed and hardcoded black cell positions
-  - 'Correct canvas format: 2400x2400 square, appropriate for a symmetric grid visualization'
+  - 'Perfect spec compliance: all required crossword features implemented (white entry
+    cells, black blocking cells, numbered word-start positions, 180° rotational symmetry,
+    1:1 cell aspect ratio, uniform grid lines)'
+  - 'Theme-adaptive chrome is correctly implemented: backgrounds #FAF8F1 (light) /
+    #1A1A17 (dark), title color uses INK token, clue numbers use INK_SOFT token in
+    both renders'
+  - Idiomatic Bokeh usage with ColumnDataSource for all cell types, LabelSet for batch
+    clue-number rendering, and HoverTool for interactive clue lookup in the HTML artifact
+  - 'Clean, well-structured code following KISS: separate ColumnDataSource objects
+    for white cells, numbered cells, and black cells enable efficient batch rendering'
+  - Thick perimeter border adds professional polish and clearly delineates the puzzle
+    boundary; warm entry-cell fill (#FFFDF6) complements the off-white page surface
   weaknesses:
-  - 'DE-01 (5/8): White entry cells use pure #FFFFFF rather than a warmer off-white
-    (#FEFCF5) that would complement the PAGE_BG surface; consider lighter weight numbers
-    and warmer cell tint for elevated design sophistication'
-  - 'DE-02 (4/6): Cell border style is uniform; adding a slightly thicker outer perimeter
-    border would give the puzzle a polished, bounded appearance'
-  - 'LM-01 (4/5): Clue number labels added individually via loop — replace with LabelSet
-    glyph from ColumnDataSource for more idiomatic Bokeh'
+  - Clue numbers are set at 20pt (~27 source-px at 2400×2400) which is small at mobile
+    widths (~400px → ~4px per number); consider increasing to 24-26pt to improve mobile
+    readability without overcrowding cells
+  - 'Dark-theme entry cells use pure #FFFFFF instead of the elevated-bg token #242420
+    or a warm white that matches the light theme''s #FFFDF6 — pure white creates a
+    starker contrast than the warm off-white used in light mode'
+  - Bottom and right canvas margins are tight (min_border_bottom=80, min_border_right=50)
+    causing the grid to sit very close to the canvas edge; increase to at least min_border_bottom=100,
+    min_border_right=80 for breathing room
+  - Design excellence is constrained by the monochrome spec but the hover-tooltip
+    label ('Clue N') could be enriched with across/down direction info to add more
+    storytelling value to the interactive artifact
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "crossword-basic · python · bokeh · anyplot.ai" at 50pt centered — clearly readable in dark ink; clue numbers 1-67 in 20pt bold INK_SOFT gray in cell top-left corners — readable; no axis labels (intentionally hidden)
-      Data: 15x15 grid with white entry cells (#FFFFFF with INK_SOFT borders) and near-black blocking cells (#111110); 180-degree rotational symmetry visible; clean uniform grid structure
-      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
+      Background: Warm off-white (#FAF8F1) fills the entire canvas — correct theme surface.
+      Chrome: Title "crossword-basic · python · bokeh · anyplot.ai" in bold dark ink (#1A1A17) is clearly readable against the light background. No axis labels (correct for this plot type). Thick dark perimeter border frames the puzzle neatly.
+      Data: 15×15 crossword grid with warm off-white entry cells (#FFFDF6) separated by subtle gray (#4A4A44) grid lines, and near-black (#111110) blocking cells distributed symmetrically. Clue numbers (1–67) appear in gray (#4A4A44) in the top-left corner of word-starting cells — visible at full resolution.
+      Legibility verdict: PASS — all text (title + clue numbers) is readable against the light background. Clue numbers are small (20pt) but appropriate for the crossword format.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light #F0EFE8 — clearly readable; clue numbers in INK_SOFT #B8B7B0 on white cells — visible gray text; no dark-on-dark failures; cell borders use theme-adaptive INK_SOFT
-      Data: White entry cells remain white (high contrast against dark frame); black blocking cells blend into dark border (intentional for crossword); data colors identical to light render
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected
+      Background: Warm near-black (#1A1A17) fills the canvas — correct dark-theme surface.
+      Chrome: Title "crossword-basic · python · bokeh · anyplot.ai" renders in light text (#F0EFE8) against the dark background — clearly readable, no dark-on-dark issues. No axis labels.
+      Data: Entry cells are pure white (#FFFFFF) — providing strong contrast against the dark border/background. Blocking cells (#111110) blend slightly with the dark canvas border but remain clearly delineated by the outer perimeter border and adjacent white cells. Clue numbers appear in medium gray (#B8B7B0 = INK_SOFT for dark mode) on the white cells — readable gray-on-white contrast.
+      Data colors: The monochrome crossword uses no Okabe-Ito palette colors (correct — spec calls for monochrome design). Data colors (black cells, white cells) are identical between light and dark renders as expected.
+      Legibility verdict: PASS — title and clue numbers are both readable in the dark render. No dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 6
         max: 8
         passed: true
-        comment: Title explicitly set at 50pt, clue numbers at 20pt bold; all text
-          readable in both themes
+        comment: Title 50pt and clue numbers 20pt explicitly set. Clue numbers are
+          appropriately small for crossword format but limit mobile readability at
+          ~400px viewport.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Each number in its own cell; no overlap possible by grid structure
+        comment: No text overlaps. Clue numbers positioned top-left corners of cells
+          without collision.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: White and black cells clearly distinguishable; cell sizing 0.96 units
-          fills grid slots appropriately
+        comment: Black and white cells clearly visible at desktop resolution. Clue
+          numbers visible but small at mobile scale.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design; high contrast black/white cells; inherently CVD-safe
+        comment: Monochrome design with high black/white contrast. CVD-safe by nature.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 2400x2400 square canvas appropriate for grid; min_border margins
-          adequate; no clipping
+        comment: Grid fills canvas well. Bottom (min_border_bottom=80) and right (min_border_right=50)
+          margins slightly tight, causing the grid to sit close to canvas edges.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axis labels intentionally hidden (correct for crossword); title in
-          mandated format
+        comment: Correct title format 'crossword-basic · python · bokeh · anyplot.ai'.
+          No axis labels needed for this plot type.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds correct: #FAF8F1 (light) / #1A1A17 (dark); monochrome
-          data design is spec-correct'
+        comment: 'Monochrome spec — Okabe-Ito not applicable. Plot backgrounds are
+          #FAF8F1 (light) and #1A1A17 (dark). Chrome colors are theme-adaptive.'
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
-        passed: false
-        comment: 'Warm background and theme-adaptive chrome are good; pure #FFFFFF
-          cells create slight harshness; design is professional but not exceptional'
+        passed: true
+        comment: 'Well-configured for a crossword grid: warm entry cells, thick perimeter
+          border, hover interactivity. Design is constrained by the monochrome spec.
+          Above defaults but not exceptional.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Axes and grid fully hidden; background/border_fill matched; solid
-          refinement but no polished frame or elevated cell styling
+        passed: true
+        comment: Axes and grid hidden (appropriate), thicker perimeter border vs cell
+          borders, warm cell fill distinct from page background — visible refinement
+          above defaults.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Standard crossword display; plot type does not afford visual hierarchy
-          beyond conventional format
+        passed: true
+        comment: The crossword structure and numbering system communicate the puzzle
+          layout clearly. No additional visual hierarchy possible in monochrome format,
+          but hover tool adds interactive dimension.
     spec_compliance:
       score: 15
       max: 15
@@ -129,28 +144,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct crossword puzzle grid with white/black cells and numbered
-          positions
+        comment: Correct crossword puzzle grid visualization.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: White entry cells, black blocking cells, top-left clue numbers, 180-degree
-          rotational symmetry, uniform grid lines, 1:1 square cells
+        comment: 'All features present: white entry cells, black blocking cells, numbered
+          word-start positions, 180° rotational symmetry, uniform grid lines, 1:1
+          cell aspect ratio.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 15x15 grid correctly rendered; y-flip applied so row 0 is at top
+        comment: 15×15 grid correctly rendered with all 67 clue numbers in correct
+          positions.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is crossword-basic · python · bokeh · anyplot.ai; no legend
-          needed
+        comment: Title 'crossword-basic · python · bokeh · anyplot.ai' — correct format.
+          No legend needed for monochrome design.
     data_quality:
       score: 15
       max: 15
@@ -160,20 +176,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Grid demonstrates white/black cells, numbered positions for across/down
-          starts, rotational symmetry
+        comment: 'Shows all crossword features: blocking cells, entry cells, numbered
+          positions, rotational symmetry, outer border.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard 15x15 newspaper-style crossword layout with correct conventions
+        comment: Standard 15×15 newspaper-style crossword grid with realistic clue
+          numbering pattern.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 15x15 within spec-specified 10x10 to 15x15 range; correct proportions
+        comment: 15×15 grid with 67 clue numbers matches realistic newspaper crossword
+          proportions.
     code_quality:
       score: 10
       max: 10
@@ -183,34 +201,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports -> constants -> data -> plot -> save; no functions
-          or classes'
+        comment: Clean imports → data → plot → save structure. No unnecessary functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set; black_positions hardcoded for full determinism
+        comment: np.random.seed(42) set; grid pattern is deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys/Path for path manipulation, os/time/numpy/bokeh/selenium
-          all referenced
+        comment: 'All imports used: numpy, bokeh, selenium, os, time, sys, pathlib.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; transparent overlay for hover targets is clever;
-          no fake UI elements
+        comment: Clean, Pythonic code. Multiple ColumnDataSource objects are justified
+          by the different cell types.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Current Bokeh
+          API used.
     library_mastery:
       score: 7
       max: 10
@@ -220,28 +238,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'ColumnDataSource for all cell types; HoverTool with targeted renderer;
-          rect glyphs for cells; minor: labels added one-by-one rather than via LabelSet'
+        comment: ColumnDataSource for all data, LabelSet for batch label rendering,
+          HoverTool for interactivity — idiomatic Bokeh patterns used correctly.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool with transparent overlay is Bokeh-distinctive; HTML interactive
-          export leverages Bokeh's core strength
-  verdict: REJECTED
+        comment: LabelSet for batch clue-number rendering and HoverTool for interactive
+          clue lookup are distinctly Bokeh features not easily replicated in static
+          libraries.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
   - data-generation
   - matrix-construction
   - columndatasource
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - edge-highlighting
