@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: maze-circular
 created: '2026-01-16T07:20:37Z'
-updated: '2026-05-20T08:02:31Z'
+updated: '2026-05-20T08:21:44Z'
 generated_by: claude-sonnet
 workflow_run: 26148635842
 issue: 3804
@@ -12,43 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - Algorithmically correct maze using Prim's spanning-tree guarantees exactly one
-    solution as required by spec
-  - 'Theme adaptation is complete and correct: walls, title, and background all flip;
-    Okabe-Ito data colors (goal green, entry orange) stay constant across themes'
-  - Dual-layer entry arrow (thick colored fill + dark/light outline) ensures visibility
-    in both light and dark modes
-  - Square 2400x2400 canvas appropriately chosen for a symmetric circular visualization
-  - 'Full spec compliance — all required features present and working: 7 concentric
-    rings, radial passages, entry opening, GOAL circle with label'
+  - Maze generation uses Prim's algorithm guaranteeing exactly one solvable path —
+    algorithmically correct
+  - 'Dual-theme chrome is fully adaptive: wall color, title, and START label flip
+    between INK tokens correctly'
+  - Clever use of Highcharts SVG renderer (chart.renderer.circle, chart.renderer.text,
+    toPixels) for post-render overlay elements
+  - 'Line-width hierarchy is intentional: walls 5px, outer boundary 7px, goal circle
+    12px, entry arrow 22px — creates clear visual hierarchy'
+  - Entry arrow uses yellow (#E69F00, Okabe-Ito position 5) with dark INK outline,
+    ensuring visibility in both light and dark themes
+  - 'Brand green #009E73 correctly assigned to the goal circle (primary data element),
+    with subtle inner-ring fill at 10% opacity adding depth'
+  - 'All five required spec features present: concentric rings, radial sectors, inter-ring
+    passages, entry marker, goal marker'
+  - Square 2400×2400 canvas is the correct format choice for a circular symmetric
+    plot
   weaknesses:
-  - START HTML label positioned off-screen (-2% top) due to coordinate-to-percentage
-    math error when entry angle is near pi/2 — only the arrow marks the entry; fix
-    by using a Highcharts subtitle or data-label instead of an absolute-positioned
-    HTML div
-  - Walrus operator on line 229 assigns entry_x but it is never referenced again —
-    remove and write the expression directly
-  - 'Design is functional but not elevated: maze walls are plain uniform-weight lines
-    with no visual depth; consider adding a subtle semi-transparent green fill to
-    the innermost ring and a thicker outer boundary circle to reinforce hierarchy'
-  - Library mastery is limited — Highcharts used purely as a line-chart renderer;
-    no Highcharts-specific features (SVG renderer, custom shapes, animation API) are
-    leveraged
+  - 'DE-01 moderate: visual sophistication is above defaults but not publication-grade
+    — the maze walls are uniform thin lines with no visual emphasis on the solution
+    path corridor'
+  - 'DE-02: could benefit from slightly more refined margins; the bottom of the canvas
+    has noticeably more empty space than the top'
+  - 'DE-03: no visual hierarchy to guide the solver eye — a subtle gradient on the
+    solution path or shading of dead-end corridors would elevate storytelling'
+  - 'LM-02: SVG renderer is used correctly but only for basic circle and text primitives;
+    more distinctive Highcharts features (e.g., chart.renderer.path for custom SVG
+    paths) could replace some of the manual line-series wall approach'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "maze-circular · python · highcharts · anyplot.ai" in dark (#1A1A17) text at top, clearly readable. No axis labels (axes hidden, appropriate for maze). GOAL label in #009E73 inside center circle, readable.
-      Data: 7-ring circular maze with concentric walls in dark (#1A1A17) lines; outer boundary slightly thicker; entry marked by bold orange/yellow (#E69F00) dual-chevron arrow pointing inward at top of maze; center goal circle in brand green (#009E73). Maze cells clearly separated by walls. No START text visible (off-screen due to positioning bug).
-      Legibility verdict: PASS — all visible text elements are readable against the light background.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "maze-circular · python · highcharts · anyplot.ai" in dark ink (#1A1A17), clearly readable at top. "START" label in dark text above the entry arrow, readable. "GOAL" label in brand green (#009E73) inside the center circle, readable though small.
+      Data: Maze walls rendered in dark (#1A1A17) on warm off-white background — high contrast, print-friendly. 7 concentric rings with increasing sector density outward. Entry arrow in yellow/orange (#E69F00) with dark outline at the top of the outer ring. Goal circle in #009E73 at center with subtle light-green inner ring highlight (rgba 10% fill).
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title text flips to light (#F0EFE8), clearly readable against dark background. Maze walls flip to light-colored lines. GOAL text remains #009E73, readable.
-      Data: Identical data colors to light render — entry arrow stays #E69F00 (Okabe-Ito position 5, theme-independent), GOAL circle stays #009E73 (Okabe-Ito position 1). Only chrome (background, wall color, title text) flips. No dark-on-dark failures detected.
-      Legibility verdict: PASS — all visible text elements are readable against the dark background. No dark-text-on-dark-background issues found.
+      Background: Near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light cream (#F0EFE8), clearly readable. "START" label in light text, readable. "GOAL" label in brand green (#009E73), readable against dark inner circle.
+      Data: Maze walls rendered in light cream (#F0EFE8) on near-black background — excellent contrast inversion. Data colors identical to light render: goal circle green (#009E73) unchanged, entry arrow yellow/orange (#E69F00) unchanged. Only chrome (wall color, text) flipped. Inner ring highlight appears as a dark green tint (10% opacity on dark background).
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark issues found.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -59,54 +64,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title 66px, GOAL 36px). All visible text
-          readable in both themes. START HTML label positioned off-screen (~-2% top)
-          due to coordinate math error — not visible in PNG, but entry arrow clearly
-          marks entry.
+        comment: All text explicitly sized and readable in both themes; GOAL label
+          inside center is slightly small but legible
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap in either render.
+        comment: No overlapping text or data elements
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Maze walls 5px internal / 7px boundary, entry arrow 22px orange +
-          6px dark outline, GOAL circle 12px brand green — all well-visible.
+        comment: Maze walls, entry arrow, goal circle all clearly visible with appropriate
+          line widths
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: High contrast in both themes, CVD-safe Okabe-Ito colors for entry
-          and goal.
+        comment: High contrast in both themes; CVD-safe green and orange used for
+          markers
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 well-suited for circular maze; maze fills ~80% of
-          canvas with balanced margins.
+        comment: Square 2400x2400 canvas correctly used; maze fills ~65-70% of canvas
+          with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. No axis labels needed for maze (axes
-          hidden).
+        comment: Title format correct; no axis labels needed for maze (axes hidden);
+          START/GOAL labels provide context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Light bg #FAF8F1, dark bg #1A1A17. GOAL = #009E73 (OI pos 1). Entry
-          = #E69F00 (OI pos 5). Wall colors theme-adaptive INK tokens. Both renders
-          theme-correct.'
+        comment: 'Background FAF8F1/1A1A17 correct; goal circle #009E73 correct; entry
+          arrow #E69F00 (Okabe-Ito #5); data colors identical in both themes'
     design_excellence:
-      score: 14
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -114,23 +116,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Deliberate design choices above defaults: brand green goal, Okabe-Ito
-          orange dual-layer entry arrow. Not exceptional — plain wall lines, no depth
-          or texture variation.'
+        comment: Intentional color choices, line-width hierarchy, dual-theme arrow
+          outline — above defaults but not publication-grade
       - id: DE-02
         name: Visual Refinement
-        score: 5
-        max: 6
-        passed: true
-        comment: Axes hidden, no grid, consistent wall thickness hierarchy (5px/7px/12px).
-          Good refinement. Slight imbalance in bottom whitespace.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual narrative: entry arrow → navigate → green GOAL focal
-          point. Brand-green center creates obvious endpoint.'
+        comment: No axes, no grid, no legend; appropriate line widths; subtle inner-ring
+          highlight; slight bottom margin imbalance
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Clear START-to-GOAL narrative; green center draws the eye; no dead-end
+          shading or solution path emphasis
     spec_compliance:
       score: 15
       max: 15
@@ -140,30 +141,26 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct 7-ring circular maze with concentric walls and radial passages,
-          algorithmically generated.
+        comment: Correct circular maze with concentric rings and radial sectors
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: concentric rings, radial walls, radial passages
-          (Prim''s), entry opening on outer perimeter, GOAL at center, exactly-one-solution
-          guarantee, print-friendly light mode, consistent wall thickness.'
+        comment: 'All features present: concentric rings, radial sectors, inter-ring
+          passages, entry marker, goal marker, one solvable path'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X and Y axes both 0-1 on square 2400x2400 canvas — circular maze
-          renders as true circle.
+        comment: 7 rings, varying sectors, seed 42, entry outer/goal center
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''maze-circular · python · highcharts · anyplot.ai'' — exact
-          required format. Legend correctly disabled.'
+        comment: 'Title format correct: maze-circular · python · highcharts · anyplot.ai'
     data_quality:
       score: 15
       max: 15
@@ -173,24 +170,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all maze structural features: 7 rings with increasing sector
-          counts (6→12→18→24→30→36→42), radial passages, outer entry, center goal.'
+        comment: 'All maze aspects shown: concentric rings, sectors, passages, entry,
+          goal, solvable structure'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Circular maze puzzle — neutral educational/recreational context,
-          no controversial content.
+        comment: Circular maze puzzle is a real-world artifact for printable puzzles
+          and decorative art
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 7 rings within spec-recommended 5-10 range. Prim's with seed 42 produces
-          well-formed reproducible maze.
+        comment: 7 rings, 1-42 sectors per ring outward, appropriate ring widths for
+          a solvable puzzle
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -198,56 +195,50 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: theme tokens → maze generation → wall paths → chart
-          → HTML/PNG export. No functions or classes.'
+        comment: No functions or classes; linear Imports→Data→Algorithm→Plot→Save
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) at start
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Line 229 uses walrus operator to assign entry_x which is never referenced
-          again — anti-pattern. START label positioning calculation produces ~-2%
-          top (off-screen) — untested code path.
+        passed: true
+        comment: Maze algorithm clean; no over-engineering; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct API usage.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct container, HighchartsOptions, to_js_literal, inline JS, SVG
+          renderer — above idiomatic baseline
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Chart(container='container'), HighchartsOptions, chart.to_js_literal(),
-          inline JS HTML, Selenium screenshot — follows library guide. Rendering maze
-          as hundreds of line series is the only practical path in the Python API.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export with inline JS is Highcharts-distinctive. However, no
-          chart renderer SVG API, no custom shapes, no animation, no drilldown. The
-          visualization is a collection of generic line series replicable in any line-chart
-          library.
-  verdict: REJECTED
+        comment: SVG renderer with toPixels coordinate conversion and DOMContentLoaded
+          post-render hook are distinctive Highcharts features
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
