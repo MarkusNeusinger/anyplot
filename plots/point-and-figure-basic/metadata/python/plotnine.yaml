@@ -1,155 +1,190 @@
 library: plotnine
+language: python
 specification_id: point-and-figure-basic
 created: '2026-01-15T21:40:48Z'
-updated: '2026-01-15T21:44:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047207386
+updated: '2026-05-20T04:08:21Z'
+generated_by: claude-sonnet
+workflow_run: 26139439654
 issue: 3755
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Correct implementation of Point and Figure algorithm with proper 3-box reversal
-    logic
-  - Good use of plotnine grammar of graphics with layered composition
-  - Excellent text sizing following the 16:9 canvas guidelines
-  - Clean code structure with well-commented P&F algorithm
-  - Proper color coding with green X's and red O's as specified
+  - Correct P&F implementation with proper X/O columns, 3-box reversal logic, and
+    price-level Y-axis
+  - 'Okabe-Ito palette correctly applied: #009E73 for rising X columns and #D55E00
+    for falling O columns'
+  - 'Fully theme-adaptive chrome: all background, text, grid, and legend tokens flip
+    correctly between light and dark'
+  - coord_fixed() ensures correct P&F aspect ratio; guide_legend override_aes cleanly
+    generates legend from invisible geom_point trick
+  - 'Perfectly clean code: KISS structure, reproducible seed, all imports used, correct
+    file naming'
   weaknesses:
-  - Legend displays prefix before labels (shows "a Falling (O)" instead of "Falling
-    (O)")
-  - Red-green color combination could be improved for better colorblind accessibility
-  - Box size of $2 on ~$100 price is relatively large (2%), typical P&F uses smaller
-    relative box sizes
-  image_description: 'The plot displays a Point and Figure chart with columns of X''s
-    (green, #2E8B57) representing rising prices and O''s (red, #DC143C) representing
-    falling prices. The X-axis shows "Column (Reversals)" ranging from 0 to 20, and
-    the Y-axis shows "Price Level ($)" ranging from approximately 82 to 158. The chart
-    effectively shows the characteristic pattern of P&F charts with columns of only
-    X''s or only O''s, demonstrating clear uptrends (columns of X''s extending upward)
-    and downtrends (columns of O''s extending downward). The title correctly uses
-    the format "point-and-figure-basic · plotnine · pyplots.ai". A legend on the right
-    indicates "Direction" with "Falling (O)" and "Rising (X)" labels. The grid has
-    horizontal lines at price levels which aid readability, and the minimal theme
-    provides a clean background.'
+  - Moderate symbol overlap in dense column zones (columns 0-7) where X and O characters
+    from adjacent columns land at the same price levels — consider adding a small
+    x-offset between adjacent columns or increasing coord_fixed ratio slightly to
+    spread columns more
+  - Resistance trend line is visually ambiguous — the downward-sloping line from the
+    price maximum is not clearly distinguishable from the data in the chart; consider
+    a different linetype or color to differentiate support vs. resistance
+  - 'DE-02 could be stronger: panel_border removal is good but the overall whitespace
+    around the plot is tight; slightly increasing figure margins would add polish'
+  - geom_text symbol size=8 is adequate but could be bumped to size=9-10 for better
+    readability at mobile viewport widths
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "point-and-figure-basic · python · plotnine · anyplot.ai" in dark INK at 12pt, spans ~70% of width — expected and fine. Y-axis label "Price Level ($)" and X-axis label "Column (Reversals)" both dark and clearly readable. Tick labels in INK_SOFT at 8pt — legible. Legend box with elevated background shows "Direction" heading and two entries: "Rising (X)" green dot, "Falling (O)" orange-red dot.
+      Data: Green (#009E73) X characters for rising price columns, orange-red (#D55E00) O characters for falling price columns. Symbols fill columns from price ~82 to ~158. One dashed diagonal trend line visible going from lower-left to upper-right. Moderate symbol overlap in dense column areas 0-7 where adjacent columns share price ranges.
+      Legibility verdict: PASS — all text readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, tick labels all rendered in light INK (#F0EFE8) / INK_SOFT (#B8B7B0) — clearly readable against dark background. Legend box uses elevated dark background (#242420). No dark-on-dark text failures detected.
+      Data: Data colors identical to light render — green X symbols and orange-red O symbols are unchanged as required. Dashed trend line remains visible with lighter chrome.
+      Legibility verdict: PASS — all text readable against warm near-black background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, X's and O's are well-spaced within
-          columns
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: X and O symbols clearly visible with good size, bold weight helps
-          readability
+        comment: All font sizes explicitly set; all text readable in both themes;
+          symbol size=8 slightly small at mobile width
+      - id: VQ-02
+        name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Moderate symbol overlap in dense column zones where adjacent columns
+          share price levels — inherent to P&F but impacts readability
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: X and O symbols clearly colored and visible; trend line visible but
+          resistance line hard to distinguish
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Green and red distinguishable but not ideal for colorblind; shape
-          provides secondary differentiation
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Price Level ($), Column (Reversals)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito positions 1+2 — CVD-safe green/orange pair, good contrast
+          in both themes
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square canvas appropriate for P&F; some dead space on right (columns
+          10-22 mostly empty); overall good layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle but legend shows 'a' prefix in legend items
+        passed: true
+        comment: Title correct format; Price Level ($) and Column (Reversals) — both
+          descriptive with context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Rising X = #009E73 (position 1), Falling O = #D55E00 (position 2);
+          backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom Okabe-Ito palette, theme-adaptive chrome, bold X/O symbols
+          give distinctive look — above configured default, not quite publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border removed, X-grid removed, Y-grid at 10% opacity, axis
+          lines maintained — solid refinement beyond defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Bullish trend visible through dominant X columns; color distinction
+          guides the eye; trend line adds directional context — clear visual hierarchy
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Point and Figure chart using X's for rising and O's for falling
+        comment: 'Correct P&F chart: columns of X/O symbols, reversal logic, column-based
+          X-axis'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X-axis represents columns (reversals), Y-axis represents price levels
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Uses X for rising, O for falling, 3-box reversal, green/red colors
-      - id: SC-04
-        name: Data Range
+        comment: X/O symbols, color distinction, 3-box reversal, price scale all present;
+          resistance trend line visually ambiguous
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis range encompasses full price movement
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis = columns (reversals), Y-axis = price level — correct P&F
+          mapping
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Rising (X) and Falling (O)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format point-and-figure-basic · plotnine · pyplots.ai
+        comment: Title 'point-and-figure-basic · python · plotnine · anyplot.ai' correct;
+          legend 'Rising (X)' / 'Falling (O)' clear
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple reversals, uptrends and downtrends with good variation
+        comment: Shows rising and falling columns, reversals, trend lines, price scale
+          — all major P&F features covered
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price simulation with realistic trend periods, plausible price
-          range
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Realistic values but box size of $2 on ~$100 price is relatively
-          large (2%)
+        comment: Synthetic stock price data with realistic trending behavior — neutral,
+          real-world scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price range 82-158, box size $2, 3-box reversal — all appropriate
+          for stock P&F charts
     code_quality:
       score: 10
       max: 10
@@ -159,50 +194,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data generation, P&F calculation, plot, save'
+        comment: Clean Imports→Data→Algorithm→Plot→Save flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; sys.path needed for filename workaround
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; P&F algorithm appropriate complexity; no fake
+          UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: plot.save(f'plot-{THEME}.png') — correct naming and current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses plotnine grammar of graphics but doesn't leverage more distinctive
-          features like faceting
+        passed: true
+        comment: 'Well-applied ggplot grammar: geom_text+geom_point layer combo, scale_color_manual,
+          coord_fixed, guide_legend override_aes'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_fixed() for P&F aspect ratio, guide_legend(override_aes=...)
+          for legend control, invisible geom_point for legend generation — plotnine-specific
+          patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
+  - custom-legend
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - grid-styling
