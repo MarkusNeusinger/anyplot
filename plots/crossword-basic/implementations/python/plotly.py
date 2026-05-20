@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -17,11 +17,11 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Crossword cell colors — fixed regardless of theme (contrast IS the data)
-CELL_ENTRY = "#FFFFFF"
 CELL_BLOCK = "#1A1A17"
+CELL_NUMBERED = "#FFFFFF"  # word-start cells: pure white for visual emphasis
+CELL_ENTRY = "#FAFAFA"  # plain entry cells: slightly warm off-white
 
 # Data - 15x15 crossword grid with 180-degree rotational symmetry
-np.random.seed(42)
 grid_size = 15
 
 grid = np.zeros((grid_size, grid_size), dtype=int)
@@ -75,18 +75,36 @@ for r in range(grid_size):
 fig = go.Figure()
 
 cell_size = 1
+numbered_set = set(numbers.keys())
+
 for r in range(grid_size):
     for c in range(grid_size):
         x0, y0 = c * cell_size, (grid_size - 1 - r) * cell_size
         x1, y1 = x0 + cell_size, y0 + cell_size
 
-        fill_color = CELL_BLOCK if grid[r, c] == 1 else CELL_ENTRY
+        if grid[r, c] == 1:
+            fill_color = CELL_BLOCK
+        elif (r, c) in numbered_set:
+            fill_color = CELL_NUMBERED  # word-start: pure white
+        else:
+            fill_color = CELL_ENTRY  # plain entry: warm off-white
 
         fig.add_shape(
-            type="rect", x0=x0, y0=y0, x1=x1, y1=y1, fillcolor=fill_color, line=dict(color=INK_SOFT, width=1.5)
+            type="rect", x0=x0, y0=y0, x1=x1, y1=y1, fillcolor=fill_color, line={"color": INK_SOFT, "width": 1.5}
         )
 
-# Clue numbers — slightly larger than previous for better visibility
+# Thick outer border — traditional crosswords use a heavier frame to contain the grid
+fig.add_shape(
+    type="rect",
+    x0=-0.05,
+    y0=-0.05,
+    x1=grid_size + 0.05,
+    y1=grid_size + 0.05,
+    fillcolor="rgba(0,0,0,0)",
+    line={"color": INK_SOFT, "width": 3},
+)
+
+# Clue numbers in word-start cells
 for (r, c), num in numbers.items():
     x = c * cell_size + 0.07
     y = (grid_size - 1 - r) * cell_size + cell_size - 0.07
@@ -96,29 +114,29 @@ for (r, c), num in numbers.items():
         y=y,
         text=str(num),
         showarrow=False,
-        font=dict(size=11, color="#1A1A17", family="Arial"),
+        font={"size": 11, "color": INK, "family": "Arial"},
         xanchor="left",
         yanchor="top",
     )
 
 # Style
 fig.update_layout(
-    title=dict(
-        text="crossword-basic · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
-    ),
-    xaxis=dict(
-        showgrid=False,
-        zeroline=False,
-        showticklabels=False,
-        scaleanchor="y",
-        scaleratio=1,
-        range=[-0.3, grid_size + 0.3],
-    ),
-    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-0.3, grid_size + 0.3]),
+    title={
+        "text": "crossword-basic · python · plotly · anyplot.ai", "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"
+    },
+    xaxis={
+        "showgrid": False,
+        "zeroline": False,
+        "showticklabels": False,
+        "scaleanchor": "y",
+        "scaleratio": 1,
+        "range": [-0.3, grid_size + 0.3],
+    },
+    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-0.3, grid_size + 0.3]},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    font=dict(color=INK),
-    margin=dict(l=50, r=50, t=90, b=50),
+    font={"color": INK},
+    margin={"l": 50, "r": 50, "t": 90, "b": 50},
 )
 
 # Save
