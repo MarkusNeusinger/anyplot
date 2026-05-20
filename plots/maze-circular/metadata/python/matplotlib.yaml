@@ -1,158 +1,184 @@
 library: matplotlib
+language: python
 specification_id: maze-circular
 created: '2026-01-16T07:18:38Z'
-updated: '2026-01-16T07:21:17Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058785227
+updated: '2026-05-20T07:57:57Z'
+generated_by: claude-sonnet
+workflow_run: 26147980305
 issue: 3804
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/maze-circular/matplotlib/plot.png
-preview_html: null
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 92
 review:
   strengths:
-  - Excellent implementation of modified Prim's algorithm for circular maze generation
-    ensuring exactly one solution
-  - Clean visual design with black walls on white background suitable for printing
-  - Proper use of Arc patches for curved concentric walls with gaps for passages
-  - Good scaling of sectors per ring (8→32) to maintain reasonable sector sizes
-  - Clear entry (START) and goal (GOAL) markers at appropriate locations
-  - Square figure format is ideal for circular maze visualization
+  - Fibonacci sector progression (5, 8, 13, 21, 34, 34) creates naturally varied corridor
+    widths — more visually interesting than uniform sectors
+  - 'Excellent dual-theme adaptation: walls flip correctly (dark-on-light / light-on-dark),
+    data accent colors unchanged between themes'
+  - Prim's algorithm guarantees exactly one solution as required by spec
+  - LineCollection for batching radial wall segments is an efficient, idiomatic matplotlib
+    pattern
+  - 'Elevated background fill for maze area (#FFFDF6 / #242420) cleanly distinguishes
+    puzzle space from canvas'
   weaknesses:
-  - Ring width of 0.15 creates somewhat narrow passages that may be challenging for
-    pen solving
-  - The figsize of (12, 12) at 300 dpi produces 3600x3600 which is valid but could
-    use the larger 16:9 format for more detail
-  - No visual differentiation between difficulty levels mentioned in spec (easy/medium/hard
-    passage density)
-  image_description: The plot displays a circular maze puzzle with 7 concentric rings
-    on a white background. The maze features black walls forming ring-shaped corridors
-    divided into sectors, with more sectors in outer rings (8 inner to 32 outer).
-    At the center is a bright yellow circle with "GOAL" text in black. The entry point
-    is marked "START" in blue text at the bottom outer edge of the maze. The title
-    "maze-circular · matplotlib · pyplots.ai" appears at the top in black text. The
-    maze uses Prim's algorithm for generation, ensuring connectivity with exactly
-    one solution path. The layout is square (12x12 inches) with balanced whitespace
-    margins. Walls are consistently thick (2.5 linewidth) and suitable for pen/pencil
-    solving. The overall aesthetic is clean and print-friendly.
+  - START label at fontsize=7 is slightly smaller than GOAL at fontsize=8 — increase
+    to 8pt for visual balance
+  - 'DE-03 storytelling could be enhanced: no narrative layer beyond basic maze structure
+    — consider subtle path hint or Fibonacci annotation if spec permits'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "maze-circular · python · matplotlib · anyplot.ai" in dark ink, readable. No axis labels (axis off for maze). START label in #D55E00 (vermillion) outside perimeter — readable.
+      Data: Six concentric ring maze with Fibonacci sector progression (5,8,13,21,34,34). Walls in near-black INK. Alternating even-ring fills at alpha=0.05 add subtle depth. GOAL circle in #009E73 with white "GOAL" text at center. Entry gap with "START" label at left perimeter.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 text — fully readable against dark background. No dark-on-dark failures detected.
+      Data: Maze walls flip to light/near-white (INK = #F0EFE8) against dark surface. GOAL circle remains #009E73 — identical to light render. START label remains #D55E00 — identical to light render. Alternating fills use elevated dark tone #242420.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt is perfectly readable, GOAL and START labels are clear
-          and appropriately sized
+        comment: Sizes explicitly set (title 12pt, GOAL 8pt, START 7pt). Readable
+          in both themes. START fontsize=7 slightly small but appropriate for maze
+          context.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text collisions. START outside boundary, GOAL inside central circle.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Wall thickness of 2.5 is appropriate, maze structure is clearly visible
-          with good contrast
+        comment: Walls clearly visible in both themes. GOAL circle prominent. Entry
+          gap obvious.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Black walls on white background with yellow goal marker - excellent
-          contrast and colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Maze fills canvas appropriately with balanced margins, square format
-          is ideal for circular maze
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for maze visualization - no axes shown, appropriately hidden
-          with axis('off')
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Axes appropriately turned off for clean maze aesthetic
+        comment: CVD-safe Okabe-Ito colors. GOAL (#009E73 on white) and START (#D55E00)
+          provide strong contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Maze fills ~65% of 6x6 square canvas with balanced whitespace. Square
+          format appropriate for circular visualization.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows correct format. No axis labels appropriate for maze
+          (axis off).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'GOAL #009E73 (Okabe-Ito pos 1), START #D55E00 (pos 2). Backgrounds
+          #FAF8F1/#1A1A17 correct. Chrome adapts correctly in both renders.'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Above defaults. Fibonacci sector progression creates varied corridor
+          widths. Restrained two-color accent scheme (green goal, vermillion entry)
+          intentional and effective.
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Axis completely off. Alternating fills provide subtle depth. Generous
+          margin. Consistent wall thickness. Elevated background fill distinguishes
+          maze from canvas.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: GOAL at center is focal point, START distinctly
+          colored. Navigate-inward story is immediate. No additional narrative layer
+          beyond basic maze.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct circular maze with concentric rings and radial passages
+        comment: Correct circular maze with concentric rings and radial passages.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Rings=7, variable sectors per ring (8-32), proper structure
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Entry point on outer edge, goal at center, algorithmically generated,
-          exactly one solution path
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: concentric walls, radial sectors, passages connecting
+          rings, entry marked, goal at center, Prim''s algorithm for unique solution.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 7 rings visible with appropriate spacing
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 6 rings (within spec 5-10), seed set, entry at outer edge, goal at
+          center.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: START and GOAL labels clearly and correctly placed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses exact format: maze-circular · matplotlib · pyplots.ai'
+        comment: Title is 'maze-circular · python · matplotlib · anyplot.ai'. Entry/goal
+          labeled directly on plot (no legend needed).
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows concentric rings, radial walls, passages, entry/goal markers;
-          could show more varied difficulty
+        comment: 'All aspects: concentric rings, radial sectors, entry/goal markers,
+          algorithmically generated passages, Fibonacci varying corridor widths.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Perfect maze puzzle context, suitable for printing or game design
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 7 rings is reasonable but ring_width=0.15 creates somewhat narrow
-          passages
+        comment: Neutral puzzle visualization matching spec use cases.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 6 rings in spec range. Fibonacci sector counts create plausible maze
+          complexity. Ring width 0.25 and inner radius 0.5 produce well-proportioned
+          corridors.
     code_quality:
       score: 10
       max: 10
@@ -162,53 +188,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → maze generation → plot → save'
+        comment: Imports -> Data (maze generation) -> Plot -> Save. No functions or
+          classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(13) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot, numpy, and Arc patch used
+        comment: 'All imports used: os, pyplot, numpy, LineCollection, Arc, Wedge.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern matplotlib API throughout
+        comment: Prim's algorithm complexity justified by spec. LineCollection efficient
+          batch pattern. No fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with dpi=300
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=400 and bbox_inches='tight'. Current
+          API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of matplotlib.patches.Arc for curved walls, plt.Circle for
-          goal marker, but could leverage PathPatch for more complex path rendering
+        comment: 'Good use of Axes methods, Arc/Wedge patches, LineCollection. Minor:
+          plt.Circle() could use patches.Circle() for strict OO style.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Distinctive combination of Arc patches for ring wall segments, Wedge
+          for ring fills, LineCollection for batch radial wall rendering. Complex
+          geometric composition distinctly matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - patches
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending

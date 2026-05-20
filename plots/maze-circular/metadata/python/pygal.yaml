@@ -1,204 +1,251 @@
 library: pygal
+language: python
 specification_id: maze-circular
 created: '2026-01-16T07:22:22Z'
-updated: '2026-01-16T07:48:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058785317
+updated: '2026-05-20T08:18:13Z'
+generated_by: claude-sonnet
+workflow_run: 26148540404
 issue: 3804
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/maze-circular/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/maze-circular/pygal/plot.html
-quality_score: 52
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/pygal/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Entry arrow (blue) and goal star (red) are clearly visible and properly positioned
-  - Title follows the correct format specification
-  - Kruskal algorithm generates a valid maze structure in the code
-  - White background is print-friendly as per spec
-  - Good use of pygal custom styling and XY chart for coordinate-based drawing
+  - Algorithmically correct Kruskal maze generation guarantees exactly one solution
+  - Clean minimalist aesthetic with theme-adaptive wall colors that reads beautifully
+    in both themes
+  - Named series (Entry arrow, Goal star) correctly exploit pygal HTML tooltip feature
+  - 'Perfect spec compliance: entry gap, goal star, 7 rings, reproducible seed'
+  - All font sizes explicitly set; title readable in both light and dark renders
   weaknesses:
-  - Maze walls render as jagged, broken lines instead of smooth circular arcs - this
-    appears to be a fundamental issue with how pygal XY chart renders curved paths
-  - Wall segments overlap chaotically rather than forming clean ring corridors
-  - The maze is not practically solvable as a puzzle due to visual confusion
-  - Code uses functions (find, union, arc_pts) which violates the KISS structure requirement
-  - Pygal may not be the ideal library for smooth curve rendering - its XY chart connects
-    points linearly
-  image_description: The plot displays what is intended to be a circular maze puzzle,
-    but the rendering has significant issues. The title "maze-circular · pygal · pyplots.ai"
-    is displayed at the top in gray text. The visualization shows a series of concentric
-    circular shapes with black lines, but the lines appear jagged and broken rather
-    than smooth arcs. Instead of clean curved walls forming ring-shaped corridors,
-    the maze shows angular, fragmented paths that create a chaotic pattern. A red
-    star is visible at the center (the goal marker), and a blue arrow is visible on
-    the right edge (the entry marker). The white background is clean, but the maze
-    structure itself looks corrupted - the curves are rendered as jagged line segments,
-    and the wall segments do not connect properly, making the maze appear more like
-    abstract geometric art than a solvable puzzle.
+  - Entry arrow and goal star are stroke-only (no fill) — at full canvas size they
+    are legible but could be more visually prominent, especially the goal star which
+    is small relative to the maze size
+  - Maze occupies roughly 55-60% of canvas width leaving perceptible but not excessive
+    dead space on left/right
+  - 'Library mastery is limited: pygal.XY is used as a raw drawing canvas rather than
+    exploiting any high-level chart-type feature; LM-02 is partially compensated by
+    named-series tooltips but not exceptional'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — correct for light theme.
+      Chrome: Title "maze-circular · python · pygal · anyplot.ai" is dark near-black text, clearly readable across the full top width. No axis labels or tick labels (correct for a maze).
+      Data: Seven concentric rings with radial dividers rendered as dark (#1A1A17) lines on the warm off-white surface. Wall strokes are 10px with rounded linecaps giving a clean, even look. At the ~1 o'clock position on the outer ring there is a visible gap (entry) with thin lines extending outward forming an arrow V-shape in Okabe-Ito green (#009E73); the green is discernible at full resolution. A small 5-pointed star outline in vermillion (#D55E00) marks the goal at the center.
+      Legibility verdict: PASS — all text readable; wall color has high contrast against background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 — correct for dark theme.
+      Chrome: Title "maze-circular · python · pygal · anyplot.ai" renders as light off-white text, clearly legible against the near-black surface. No dark-on-dark text failures observed.
+      Data: Maze walls are rendered in #E8E8E0 (near-white) on the dark background — high contrast and striking. Data colors (green entry arrow #009E73, vermillion goal star #D55E00) are identical to the light render, as required. The wall color correctly flips to light while data colors stay constant.
+      Legibility verdict: PASS — no dark-on-dark failures; title and maze walls fully readable.
   criteria_checklist:
     visual_quality:
-      score: 18
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title readable but small relative to canvas size
+        comment: All font sizes explicitly set (title 66, label 56, major-label 44,
+          legend 44, value 36). Title clearly readable in both themes. No axis labels
+          needed for maze.
       - id: VQ-02
         name: No Overlap
-        score: 3
-        max: 8
-        passed: false
-        comment: Many line segments overlap chaotically due to rendering issues
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements.
       - id: VQ-03
         name: Element Visibility
-        score: 2
-        max: 8
-        passed: false
-        comment: Walls visible but jagged/broken rendering makes structure unclear
+        score: 5
+        max: 6
+        passed: true
+        comment: Maze walls clearly visible at 10px stroke. Entry arrow (20px, green)
+          and goal star (10px, vermillion) are visible but stroke-only — no fill makes
+          them slightly less prominent than ideal.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Black walls, red goal, blue entry - high contrast, colorblind-safe
+        comment: Dark walls on light / light walls on dark both high-contrast. Okabe-Ito
+          green and vermillion are CVD-safe.
       - id: VQ-05
-        name: Layout Balance
-        score: 1
-        max: 5
-        passed: false
-        comment: Maze centered but significant issues with visual clarity
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Square 2400x2400 correct for circular plot. Maze centered; occupies
+          ~55-60% of canvas width — minor dead space on left/right but not severe.
       - id: VQ-06
-        name: Axis Labels
-        score: 0
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: N/A for maze visualization
+        comment: Title is correct mandated format. No axis labels needed for maze
+          (N/A).
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: No grid/legend needed for maze
+        comment: 'Background #FAF8F1 light / #1A1A17 dark correct. Entry arrow #009E73
+          (Okabe-Ito pos 1), goal star #D55E00 (pos 2). Wall color theme-adaptive.
+          Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Minimalist maze aesthetic is intentional and polished. Dark render
+          is particularly striking (white walls on near-black). Above typical configured
+          defaults but not FiveThirtyEight-level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No guides, no grid, no axis labels, no legend. Rounded linecap/linejoin
+          adds polish to wall strokes. Margins sensible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Entry arrow and goal star create visual hierarchy (entry → navigate
+          → goal). Story is clear conceptually, but entry/goal markers could be more
+          dominant visually.
     spec_compliance:
-      score: 16
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
         score: 5
-        max: 8
-        passed: false
-        comment: Circular maze attempted but rendering quality poor; structure recognizable
-          but not clean
-      - id: SC-02
-        name: Data Mapping
-        score: 4
         max: 5
         passed: true
-        comment: Rings and sectors mapped correctly in code
-      - id: SC-03
+        comment: Circular maze with concentric rings and radial passages — correct
+          type.
+      - id: SC-02
         name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 7 rings, 14 sectors, Kruskal's algorithm, entry gap on outer ring,
+          goal star at center, consistent wall thickness.
+      - id: SC-03
+        name: Data Mapping
         score: 3
-        max: 5
-        passed: false
-        comment: Entry and goal present; walls generated but poorly rendered
-      - id: SC-04
-        name: Data Range
-        score: 2
         max: 3
         passed: true
-        comment: All elements visible within canvas
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: XY coordinates correctly map ring/sector geometry. Passage absence
+          = wall presence logic correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; markers self-explanatory
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: maze-circular · pygal · pyplots.ai'
+        comment: Title is 'maze-circular · python · pygal · anyplot.ai'. No legend
+          needed (show_legend=False correct).
     data_quality:
-      score: 10
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
-        max: 8
-        passed: false
-        comment: Shows rings, sectors, entry, goal, but maze structure not clear
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all maze features: concentric rings, radial walls, open passages,
+          entry gap, goal marker, guaranteed unique solution.'
       - id: DQ-02
         name: Realistic Context
-        score: 3
-        max: 7
-        passed: false
-        comment: Maze puzzle context, but rendered output not usable as puzzle
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: 6 rings, 12 sectors reasonable for maze complexity
+        comment: Maze puzzle is a real-world, neutral, practical application. No controversial
+          content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 7 rings, 14 sectors with seed=42. inner_r=0.10, outer_r=0.88 sensible
+          proportions.
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses functions (find, union, arc_pts) - violates KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) present
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        comment: Imports → data → maze generation → plot → save. No functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os, sys, numpy, pygal, Style.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Inline union-find with path halving is clean and idiomatic for Kruskal's.
+          sys.path manipulation is necessary and correctly placed.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Outputs plot.png but rendering quality poor
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 2
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
-        passed: false
-        comment: Uses pygal XY chart and stroke styling, but not leveraging SVG strengths
-          effectively
+        passed: true
+        comment: 'Correct pygal usage: custom Style, XY chart, stroke_style dict.
+          Using XY as a drawing canvas is the right choice but doesn''t leverage high-level
+          chart-type features.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Named series ('Entry →', 'Goal ★') for HTML tooltip exposure is a
+          genuine pygal-specific feature. Also saves interactive HTML. stroke_style
+          with linecap/linejoin is pygal-specific. Not exceptional but solidly distinctive.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - patches
+  - html-export
+  - hover-tooltips
   patterns:
   - data-generation
-  - matrix-construction
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
