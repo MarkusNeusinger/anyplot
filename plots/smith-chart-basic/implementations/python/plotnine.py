@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-20
@@ -11,12 +11,14 @@ import pandas as pd
 from plotnine import (
     aes,
     annotate,
+    arrow,
     coord_fixed,
     element_blank,
     element_rect,
     element_text,
     geom_path,
     geom_point,
+    geom_segment,
     geom_text,
     ggplot,
     labs,
@@ -78,16 +80,31 @@ z_norm = (z_real + 1j * z_imag) / Z0
 gamma = (z_norm - 1) / (z_norm + 1)
 impedance_df = pd.DataFrame({"x": np.real(gamma), "y": np.imag(gamma), "freq": freq_ghz})
 
-# Frequency labels at 4 key points
+# Frequency labels at 4 key points with per-label nudges to prevent crowding
 label_freqs = [1.0, 2.5, 4.5, 6.0]
 label_idx = [int(np.argmin(np.abs(freq_ghz - f))) for f in label_freqs]
 labels_df = impedance_df.iloc[label_idx].copy()
 labels_df["label"] = [f"{f:.1f} GHz" for f in label_freqs]
-labels_df["y_label"] = labels_df["y"] + 0.1
+
+# Per-label offsets: nudge 2.5/4.5 GHz apart horizontally; push 1.0 GHz up to clear Z=Z0 text
+x_nudges = np.array([0.00, 0.13, -0.13, 0.00])
+y_nudges = np.array([0.15, 0.15, 0.15, 0.14])
+labels_df["x_label"] = labels_df["x"].values + x_nudges
+labels_df["y_label"] = labels_df["y"].values + y_nudges
 
 # Resistance circle labels just above the real axis at each circle's leftmost point
 r_label_rows = [{"x": (r - 1) / (r + 1) + 0.05, "y": 0.09, "label": str(r)} for r in r_values]
 r_labels_df = pd.DataFrame(r_label_rows)
+
+# Mid-locus directional arrow (index 23→25) to indicate increasing frequency direction
+arr_df = pd.DataFrame(
+    {
+        "x": [float(impedance_df.iloc[23]["x"])],
+        "xend": [float(impedance_df.iloc[25]["x"])],
+        "y": [float(impedance_df.iloc[23]["y"])],
+        "yend": [float(impedance_df.iloc[25]["y"])],
+    }
+)
 
 # Plot
 plot = (
@@ -98,17 +115,20 @@ plot = (
     + geom_path(aes(x="x", y="y"), data=axis_df, color=INK_SOFT, size=0.5)
     + geom_path(aes(x="x", y="y"), data=impedance_df, color=OKABE_ITO[0], size=1.5)
     + geom_point(aes(x="x", y="y"), data=impedance_df, color=OKABE_ITO[0], size=2.5, alpha=0.65)
-    + geom_text(aes(x="x", y="y_label", label="label"), data=labels_df, color=INK, size=9, fontweight="bold")
-    + geom_text(aes(x="x", y="y", label="label"), data=r_labels_df, color=INK_MUTED, size=7)
+    + geom_segment(
+        aes(x="x", xend="xend", y="y", yend="yend"), data=arr_df, color=OKABE_ITO[0], size=2.0, arrow=arrow(length=0.10)
+    )
+    + geom_text(aes(x="x_label", y="y_label", label="label"), data=labels_df, color=INK, size=9, fontweight="bold")
+    + geom_text(aes(x="x", y="y", label="label"), data=r_labels_df, color=INK_MUTED, size=8)
     + annotate("point", x=0, y=0, color=OKABE_ITO[1], size=4)
-    + annotate("text", x=0.15, y=-0.09, label="Z=Z₀", color=OKABE_ITO[1], size=9)
+    + annotate("text", x=0.15, y=-0.20, label="Z=Z₀", color=OKABE_ITO[1], size=9)
     + coord_fixed(ratio=1, xlim=(-1.3, 1.3), ylim=(-1.3, 1.3))
     + scale_x_continuous(breaks=[])
     + scale_y_continuous(breaks=[])
     + labs(title="smith-chart-basic · python · plotnine · anyplot.ai", x="", y="")
     + theme(
         figure_size=(6, 6),
-        plot_title=element_text(size=12, ha="center", color=INK),
+        plot_title=element_text(size=12, ha="center", color=INK, fontweight="bold"),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_blank(),
