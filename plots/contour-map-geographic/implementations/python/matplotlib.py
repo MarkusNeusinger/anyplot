@@ -1,135 +1,142 @@
-""" pyplots.ai
+""" anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-17
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-20
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
-from matplotlib.patches import Polygon
 
 
-# Data: Synthetic elevation data over Western US region
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Data: Synthetic elevation data over European Alps
 np.random.seed(42)
 
-# Define geographic bounds (Western US)
-lon_min, lon_max = -125, -105
-lat_min, lat_max = 32, 49
+lon_min, lon_max = 5.0, 17.0
+lat_min, lat_max = 43.5, 48.5
 
-# Create regular grid
 n_points = 60
 lons = np.linspace(lon_min, lon_max, n_points)
 lats = np.linspace(lat_min, lat_max, n_points)
 lon_grid, lat_grid = np.meshgrid(lons, lats)
 
-# Generate synthetic elevation data with mountain ranges
-# Base terrain
-elevation = 500 + 300 * np.sin(np.radians(lon_grid) * 10) * np.cos(np.radians(lat_grid) * 8)
+# Base undulating terrain
+elevation = 400 + 200 * np.sin(np.radians(lon_grid) * 15) * np.cos(np.radians(lat_grid) * 12)
 
-# Add mountain ranges (Sierra Nevada, Cascades, Rockies simulation)
-# Sierra Nevada / Cascades (western edge)
-sierra = 2500 * np.exp(-((lon_grid - (-121)) ** 2) / 8) * np.exp(-((lat_grid - 40) ** 2) / 100)
-elevation += sierra
+# Western Alps: Mont Blanc massif (~4808 m peak)
+elevation += 4400 * np.exp(-((lon_grid - 7.0) ** 2) / 3) * np.exp(-((lat_grid - 45.8) ** 2) / 1.5)
 
-# Rocky Mountains (eastern edge)
-rockies = 2800 * np.exp(-((lon_grid - (-108)) ** 2) / 12) * np.exp(-((lat_grid - 42) ** 2) / 150)
-elevation += rockies
+# Central Swiss Alps
+elevation += 3600 * np.exp(-((lon_grid - 9.5) ** 2) / 5) * np.exp(-((lat_grid - 46.5) ** 2) / 1.2)
 
-# Add some noise for realism
-elevation += np.random.normal(0, 100, elevation.shape)
-elevation = np.clip(elevation, 0, None)  # No negative elevations
+# Austrian Tyrol / Hohe Tauern (Großglockner ~3798 m)
+elevation += 3000 * np.exp(-((lon_grid - 13.0) ** 2) / 4) * np.exp(-((lat_grid - 47.0) ** 2) / 1.5)
 
-# Simplified coastline points (Pacific Coast approximation)
-coastline_lons = [
-    -124.5,
-    -124.2,
-    -123.8,
-    -124.0,
-    -124.2,
-    -123.5,
-    -122.5,
-    -121.5,
-    -120.5,
-    -120.0,
-    -119.0,
-    -118.0,
-    -117.5,
-]
-coastline_lats = [49, 47, 45, 43, 42, 40, 38, 36.5, 35, 34.5, 34, 33.5, 32.5]
+# Po Valley lowlands (Italian side — low elevation)
+elevation -= 700 * np.exp(-((lon_grid - 11.0) ** 2) / 20) * np.exp(-((lat_grid - 44.2) ** 2) / 0.8)
 
-# State borders (simplified)
-state_borders = [
-    # Oregon-California border
-    {"lons": [-124.2, -120, -117], "lats": [42, 42, 42]},
-    # Oregon-Washington border
-    {"lons": [-124.0, -120, -117], "lats": [46, 46, 46]},
-    # Nevada-California border (partial)
-    {"lons": [-120, -120, -117], "lats": [42, 39, 36]},
-    # Idaho border (partial)
-    {"lons": [-117, -117], "lats": [49, 42]},
+# Add noise for realism
+elevation += np.random.normal(0, 80, elevation.shape)
+elevation = np.clip(elevation, 0, None)
+
+# Simplified country border lines
+borders = [
+    {"lons": [5.5, 6.5, 7.0, 7.5], "lats": [47.5, 47.5, 46.0, 45.8]},
+    {"lons": [6.8, 8.0, 10.0, 12.5, 13.8], "lats": [45.8, 45.9, 46.0, 46.3, 46.5]},
+    {"lons": [8.0, 9.5, 10.5, 12.0, 13.0, 15.0, 17.0], "lats": [47.7, 47.6, 47.7, 47.8, 48.0, 48.5, 48.5]},
+    {"lons": [13.5, 14.5, 15.5, 16.5], "lats": [46.5, 46.3, 46.0, 45.8]},
 ]
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Notable peaks to annotate
+peaks = [
+    {"name": "Mont Blanc\n4808 m", "lon": 6.86, "lat": 45.83},
+    {"name": "Matterhorn\n4478 m", "lon": 7.66, "lat": 45.98},
+    {"name": "Großglockner\n3798 m", "lon": 12.69, "lat": 47.07},
+]
 
-# Create filled contours (background)
-levels = np.arange(0, 4500, 250)
-filled_contours = ax.contourf(lon_grid, lat_grid, elevation, levels=levels, cmap="terrain", alpha=0.8, extend="max")
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Add contour lines
-contour_lines = ax.contour(
-    lon_grid,
-    lat_grid,
-    elevation,
-    levels=levels[::2],  # Every other level for cleaner lines
-    colors="#333333",
-    linewidths=1.2,
-)
+# Filled contours using terrain colormap
+levels = np.arange(0, 5000, 200)
+filled = ax.contourf(lon_grid, lat_grid, elevation, levels=levels, cmap="terrain", alpha=0.85, extend="max")
 
-# Add contour labels
-ax.clabel(contour_lines, inline=True, fontsize=11, fmt="%d m")
+# Contour lines every 500 m — heavier weight for high-res visibility
+line_levels = np.arange(500, 5000, 500)
+contour_lines = ax.contour(lon_grid, lat_grid, elevation, levels=line_levels, colors=INK, linewidths=2.0, alpha=0.45)
+ax.clabel(contour_lines, inline=True, fontsize=9, fmt="%d m", colors=INK_MUTED)
 
-# Draw Pacific Ocean (fill west of coastline)
-ocean_lons = [-126, -126] + coastline_lons + [-117.5, -126]
-ocean_lats = [49, 32] + coastline_lats + [32, 32]
-ocean_poly = Polygon(
-    list(zip(ocean_lons, ocean_lats, strict=True)), facecolor="#b0d0e8", edgecolor="none", alpha=0.9, zorder=2
-)
-ax.add_patch(ocean_poly)
+# Country border lines
+for border in borders:
+    ax.plot(border["lons"], border["lats"], color=INK_SOFT, linewidth=1.0, linestyle="--", zorder=4)
 
-# Draw coastline
-ax.plot(coastline_lons, coastline_lats, color="#1a1a1a", linewidth=2.5, zorder=3)
+# Peak markers and annotations — focal point emphasis
+for peak in peaks:
+    ax.plot(peak["lon"], peak["lat"], marker="^", markersize=6, color=INK, zorder=6, markeredgewidth=0)
+    ax.annotate(
+        peak["name"],
+        xy=(peak["lon"], peak["lat"]),
+        xytext=(peak["lon"] + 0.25, peak["lat"] - 0.35),
+        fontsize=7,
+        color=INK,
+        fontweight="bold",
+        bbox={
+            "facecolor": ELEVATED_BG,
+            "edgecolor": INK_SOFT,
+            "alpha": 0.85,
+            "boxstyle": "round,pad=0.2",
+            "linewidth": 0.5,
+        },
+        zorder=7,
+    )
 
-# Draw state borders
-for border in state_borders:
-    ax.plot(border["lons"], border["lats"], color="#666666", linewidth=1, linestyle="--", zorder=3)
+# Colorbar — idiomatic fig.colorbar
+cbar = fig.colorbar(filled, ax=ax, orientation="vertical", pad=0.02, shrink=0.88)
+cbar.set_label("Elevation (m)", fontsize=10, color=INK)
+cbar.ax.tick_params(labelsize=8, labelcolor=INK_SOFT)
+cbar.outline.set_edgecolor(INK_SOFT)
 
-# Add colorbar
-cbar = plt.colorbar(filled_contours, ax=ax, orientation="vertical", pad=0.02, shrink=0.85)
-cbar.set_label("Elevation (m)", fontsize=18)
-cbar.ax.tick_params(labelsize=14)
-
-# Set axis labels and formatting
-ax.set_xlabel("Longitude (°W)", fontsize=20)
-ax.set_ylabel("Latitude (°N)", fontsize=20)
-ax.tick_params(axis="both", labelsize=16)
-
-# Format tick labels to show degrees
-ax.set_xticks(np.arange(-125, -104, 5))
-ax.set_xticklabels([f"{abs(x)}°W" for x in np.arange(-125, -104, 5)])
-ax.set_yticks(np.arange(32, 50, 4))
-ax.set_yticklabels([f"{y}°N" for y in np.arange(32, 50, 4)])
-
-# Add grid
-ax.grid(True, alpha=0.4, linestyle="--", linewidth=0.8, zorder=1)
-
-# Set axis limits
+# Axis limits and tick formatting
 ax.set_xlim(lon_min, lon_max)
 ax.set_ylim(lat_min, lat_max)
-ax.set_aspect("equal")
+
+lon_ticks = np.arange(6, 17, 2)
+ax.set_xticks(lon_ticks)
+ax.set_xticklabels([f"{int(x)}°E" for x in lon_ticks])
+
+lat_ticks = np.arange(44, 49, 1)
+ax.set_yticks(lat_ticks)
+ax.set_yticklabels([f"{int(y)}°N" for y in lat_ticks])
+
+ax.tick_params(axis="both", labelsize=8, labelcolor=INK_SOFT)
+
+# Axis labels
+ax.set_xlabel("Longitude", fontsize=10, color=INK)
+ax.set_ylabel("Latitude", fontsize=10, color=INK)
 
 # Title
-ax.set_title("contour-map-geographic · matplotlib · pyplots.ai", fontsize=24, pad=15)
+ax.set_title(
+    "contour-map-geographic · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10
+)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Spines — keep all four as map border, color-adapt them
+for spine in ax.spines.values():
+    spine.set_color(INK_SOFT)
+
+# Subtle grid
+ax.grid(True, alpha=0.15, linewidth=0.6, color=INK, linestyle="--", zorder=1)
+
+fig.subplots_adjust(left=0.08, right=0.88, top=0.93, bottom=0.12)
+
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
+plt.close()
