@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 point-and-figure-basic: Point and Figure Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, FixedTicker, HoverTool, Range1d
+from bokeh.models import BoxAnnotation, ColumnDataSource, FixedTicker, HoverTool, Range1d
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -151,7 +151,7 @@ p.yaxis.major_label_text_font_size = "34pt"
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 p.title.text_color = INK
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
@@ -168,6 +168,13 @@ p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
+
+# Alternating column background shading via BoxAnnotation (Bokeh-native feature)
+for col_idx, col in enumerate(columns):
+    fill = X_COLOR if col["type"] == "X" else O_COLOR
+    p.add_layout(
+        BoxAnnotation(left=col_idx - 0.5, right=col_idx + 0.5, fill_color=fill, fill_alpha=0.05, line_color=None)
+    )
 
 # X markers — bullish rising price columns
 x_source = ColumnDataSource(data={"col": x_cols, "price": x_prices, "label": x_labels})
