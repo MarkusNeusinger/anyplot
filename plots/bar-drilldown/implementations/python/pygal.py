@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 86/100 | Updated: 2026-05-20
+Quality: 88/100 | Updated: 2026-05-20
 """
 
 import json
