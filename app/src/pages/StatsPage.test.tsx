@@ -57,7 +57,9 @@ const mockDashboard = {
   ],
   tag_distribution: {
     plot_type: { scatter: 42, line: 30 },
-    data_type: { numeric: 80 },
+    // "time series" has a space so the tag-link test below can assert
+    // encodeURIComponent is actually exercised (href -> data=time%20series).
+    data_type: { numeric: 80, 'time series': 12 },
   },
   score_distribution: { '50-60': 5, '60-70': 10, '70-80': 20, '80-90': 30, '90-100': 15 },
   timeline: [
@@ -267,10 +269,22 @@ describe('StatsPage', () => {
     const scatterLink = screen.getByText('scatter').closest('a');
     expect(scatterLink).toHaveAttribute('href', '/plots?plot=scatter');
 
+    // Tag with a space exercises encodeURIComponent — proves the encoding
+    // step isn't a no-op.
+    const timeSeriesLink = screen.getByText('time series').closest('a');
+    expect(timeSeriesLink).toHaveAttribute('href', '/plots?data=time%20series');
+
     await user.click(scatterLink!);
     expect(mockTrackEvent).toHaveBeenCalledWith('tag_click', {
       param: 'plot',
       value: 'scatter',
+      source: 'stats',
+    });
+
+    await user.click(timeSeriesLink!);
+    expect(mockTrackEvent).toHaveBeenCalledWith('tag_click', {
+      param: 'data',
+      value: 'time series',
       source: 'stats',
     });
   });
