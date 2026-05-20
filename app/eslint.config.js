@@ -38,6 +38,7 @@ export default [
         requestAnimationFrame: 'readonly',
         cancelAnimationFrame: 'readonly',
         performance: 'readonly',
+        crypto: 'readonly',
         // DOM types
         HTMLElement: 'readonly',
         HTMLDivElement: 'readonly',

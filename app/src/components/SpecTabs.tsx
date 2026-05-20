@@ -221,7 +221,7 @@ export function SpecTabs({
   const handleTagClick = useCallback(
     (paramName: string, value: string) => {
       onTrackEvent?.('tag_click', { param: paramName, value, source: 'spec_detail' });
-      navigate(`/?${paramName}=${encodeURIComponent(value)}`);
+      navigate(`/plots?${paramName}=${encodeURIComponent(value)}`);
     },
     [navigate, onTrackEvent]
   );
