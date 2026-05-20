@@ -45,6 +45,17 @@ plot = (
 )
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+| Orientation | `figure_size` | `ggsave` `width × height` (`units='in'`, `dpi=400`) | Final PNG     |
+|-------------|---------------|------------------------------------------------------|---------------|
+| Landscape   | `(8, 4.5)`    | `width=8, height=4.5`                                | 3200 × 1800   |
+| Square      | `(6, 6)`      | `width=6, height=6`                                  | 2400 × 2400   |
+
+Pick the orientation that suits the spec — same decision the other libraries make. plotnine's matplotlib backend respects `figure_size`/`width`/`height` directly, so no extra tricks are required as long as you don't pass `bbox_inches='tight'` to `ggsave` (`ggsave` doesn't expose it, but if you fall back to `plt.savefig`, do **not** add it — same trim risk as matplotlib/seaborn).
+
 ## Figure Size & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python

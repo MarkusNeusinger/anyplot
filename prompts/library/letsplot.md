@@ -19,10 +19,21 @@ plot = (
 )
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+| Orientation | `ggsize` | `ggsave` `scale` | Final PNG     |
+|-------------|----------|------------------|---------------|
+| Landscape   | `(800, 450)` | `scale=4` | 3200 × 1800   |
+| Square      | `(600, 600)` | `scale=4` | 2400 × 2400   |
+
+Don't deviate from these pairs (e.g. `ggsize(900, 500)` lands at 3600×2000, well outside the ±16 px gate). Pick the orientation that suits the spec.
+
 ## Figure Size & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python
-# Base size (scaled 4x on export = 3200 × 1800 px)
+# Base size (scaled 4x on export = 3200 × 1800 px) — see "Canvas" above
 plot = plot + ggsize(800, 450)
 
 # Text and element sizes

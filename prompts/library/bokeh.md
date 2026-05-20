@@ -8,10 +8,18 @@ from bokeh.models import ColumnDataSource
 from bokeh.io import output_file, save
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+- **Landscape**: `width=3200, height=1800`
+- **Square**: `width=2400, height=2400`
+
+The Selenium `--window-size` below **must match** these dims. **Do not omit `toolbar_location=None`** — bokeh's default toolbar adds ~30–50 px above the plot, which is what shrank every May 2026 bokeh PNG from 3200×1800 to 3200×1661. The HTML artifact still gets a working toolbar from `output_file(...)`.
+
 ## Create Figure
 
 ```python
-# Target: 3200 × 1800 px (see default-style-guide.md).
 # `width` / `height` are the TOTAL canvas; axis labels at the new 36–42pt
 # native-pixel sizes need explicit `min_border_*` reservations or they get
 # clipped at the edges of the rendered PNG. Reserve ~150px per side for

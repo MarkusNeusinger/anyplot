@@ -65,6 +65,17 @@ p <- ggplot(df, aes(x = col_x, y = col_y)) +
   theme_minimal(base_size = 8)
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+| Orientation | `ggsave` `width × height` (`units="in"`, `dpi=400`) | Final PNG     |
+|-------------|------------------------------------------------------|---------------|
+| Landscape   | `width = 8, height = 4.5`                            | 3200 × 1800   |
+| Square      | `width = 6, height = 6`                              | 2400 × 2400   |
+
+Pick the orientation that suits the spec. `ragg::agg_png` honours these values without trimming, so no extra tricks are required — just don't deviate.
+
 ## Figure Size & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ggplot2 inherits sizes via `theme(... base_size = ...)`. Override individual

@@ -103,19 +103,37 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")          # MUST be the new headless mode
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=3200,1800")
+chrome_options.add_argument("--hide-scrollbars")       # otherwise Chrome reserves ~16 px on the right
+chrome_options.add_argument("--window-size=3200,1800") # NOTE: not authoritative — see CDP override below
 
 driver = webdriver.Chrome(options=chrome_options)
+# Force the inner viewport to exactly W×H. `--window-size` alone gets eaten by
+# Chrome chrome (toolbar/scrollbar leftovers in headless mode), which is what
+# left every May 2026 highcharts screenshot at 3200×1661 instead of 3200×1800.
+# `setDeviceMetricsOverride` makes the viewport authoritative.
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride",
+    {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False},
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)  # Wait for chart to render
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()  # Clean up temp file
+
+# Belt-and-braces: even with the CDP override, an occasional ±1–2 px rounding
+# can occur. Pin the saved PNG to exact dims so the post-render gate is happy.
+from PIL import Image
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):           # or (2400, 2400) for square charts
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
 ```
 
 ## Sizing for 3200×1800 px (starting values — review-loop tunes)
@@ -132,10 +150,21 @@ chart.options.plot_options = {
 
 See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
-**IMPORTANT:** Three places encode the canvas size — keep them in sync:
-1. Selenium `--window-size=3200,1800`
-2. HTML `<div id="container" style="width: 3200px; height: 1800px;">`
-3. `chart.options.chart = {'width': 3200, 'height': 1800, ...}` (see below)
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+- **Landscape**: 3200 × 1800
+- **Square**: 2400 × 2400
+
+**Four places encode the canvas size — keep all of them in sync** (in the May 2026 fan-out only Selenium and one HTML attribute were aligned, which is why every highcharts PNG saved at 3200×1661):
+
+1. Selenium `--window-size=3200,1800` (or 2400,2400)
+2. CDP `Emulation.setDeviceMetricsOverride` — **this is the authoritative one**; `--window-size` alone is not (Chrome chrome eats ~139 px in headless mode)
+3. HTML `<div id="container" style="width: 3200px; height: 1800px;">`
+4. `chart.options.chart = {'width': 3200, 'height': 1800, ...}` (see below)
+
+If you can't get the screenshot to land on exact dims, the PIL pad-or-crop snippet in the export code above is the final safety net. Do not remove it.
 
 ## Output Files
 
