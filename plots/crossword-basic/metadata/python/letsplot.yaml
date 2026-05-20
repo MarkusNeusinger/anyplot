@@ -1,152 +1,190 @@
 library: letsplot
+language: python
 specification_id: crossword-basic
 created: '2026-01-15T21:40:42Z'
-updated: '2026-01-15T21:43:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047166159
+updated: '2026-05-20T02:33:03Z'
+generated_by: claude-sonnet
+workflow_run: 26136939510
 issue: 3805
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/letsplot/plot.html
-quality_score: 94
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/letsplot/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of the crossword grid using geom_tile for cells
-  - Proper 180-degree rotational symmetry in black cell placement
-  - Clean, publication-ready monochrome design suitable for printing
-  - Correct numbering logic that identifies word start positions (across and down)
-  - Good use of coord_fixed(ratio=1) for square cells
-  - Appropriate use of theme_void() for clean appearance
-  - Correct title format and good text sizing
-  - Deterministic, reproducible code with clear structure
+  - 'Perfect spec compliance: all crossword features (white/black cells, clue numbers,
+    rotational symmetry, square aspect ratio) implemented correctly'
+  - 'Excellent code quality: clean KISS structure, deterministic data, all imports
+    used'
+  - Idiomatic letsplot usage with grammar-of-graphics layering and distinctive layer_tooltips()
+    feature
+  - Correct theme-adaptive chrome (PAGE_BG and INK tokens) with appropriate background
+    colors in both themes
+  - 'Realistic crossword data: 15x15 grid with authentic black cell density (~16%)
+    and ~69 clues'
   weaknesses:
-  - Library features score could be higher; the implementation uses basic lets-plot
-    features without leveraging interactive capabilities
-  image_description: The plot displays a 15×15 crossword puzzle grid with a clean,
-    newspaper-style layout. White entry cells are bordered with black lines, and black
-    blocking cells are solid black squares. Clue numbers (1-69) are positioned in
-    the top-left corner of cells that start across or down words, displayed in blue
-    bold text (#306998). The grid exhibits proper 180-degree rotational symmetry in
-    its black cell pattern. The title "crossword-basic · letsplot · pyplots.ai" appears
-    centered above the grid in bold black text. The overall design is monochrome (black
-    and white with blue numbers), optimized for printing. The grid uses square cells
-    with 1:1 aspect ratio and proper spacing.
+  - 'Rightmost column (x=14) labels clip the canvas edge — geom_text with hjust=0
+    places labels starting at x=14.05 with no right padding, causing numbers like
+    13, 38, 62 to be cut off. Fix: add scale_x_continuous(expand=expansion(add=0.5))
+    to give rightmost labels breathing room'
+  - Design Excellence limited by spec constraints (monochrome) but DE-02 could improve
+    with more deliberate cell border styling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "crossword-basic · python · letsplot · anyplot.ai" in bold dark text (#1A1A17 via INK token), centered at top. No axis labels or tick labels (theme_void, appropriate for crossword). All visible chrome is clearly readable.
+      Data: 15x15 crossword grid with white entry cells and solid black blocking cells rendered via geom_tile (width=0.98, height=0.98 creating uniform grid lines). Clue numbers 1-69 in bold dark text placed in top-left corner of word-starting cells. 180-degree rotational symmetry of black cell pattern is visually evident.
+      Legibility verdict: PASS — all text readable. Minor issue: rightmost column (x=14) clue numbers slightly clip the canvas right edge (numbers 13, 38, 62 may be slightly truncated).
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title rendered in light INK token (#F0EFE8), clearly readable against the dark background. No dark-on-dark failures for chrome elements. No axis labels or ticks.
+      Data: Same white/black crossword grid — data colors identical to light render (monochrome design is spec-mandated). Clue numbers hardcoded as #1A1A17 (dark) but remain readable on white cells. Data color consistency confirmed.
+      Legibility verdict: PASS with minor issue — rightmost column labels (13, 38, 62) appear more noticeably clipped in dark render due to the dark background border making the clip boundary visible. Not a dark-on-dark failure — cells remain white so number contrast is fine.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title is large and bold (28pt), clue numbers are clearly readable
-          at size 8 with bold face
+        comment: 'Font sizes explicitly set (title=16px, numbers=size=8). All visible
+          text well-proportioned. Minor: rightmost column numbers (13, 38, 62) slightly
+          clipped at canvas right edge due to insufficient right padding for left-aligned
+          labels at x=14.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; numbers positioned in top-left corners without
-          collision
+        comment: No overlapping text or elements. Adjacent-cell numbers (27 28 29,
+          48 49) well-separated within their cells.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All cells clearly visible with proper borders and fill colors
+        comment: Black and white cells clearly distinct. Clue numbers appropriately
+          sized and fully visible within cells.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Monochrome design with high contrast (black/white cells, blue numbers)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Grid is well-centered, square format is appropriate, good use of
-          canvas
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for this plot type; no axes needed (theme_void used appropriately)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean cell borders, no legend needed
+        comment: 'Maximum contrast black-on-white crossword design. Clue numbers #1A1A17
+          on white cells have excellent contrast.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Square 2400x2400 format correct for grid. Grid fills ~85% of canvas.
+          Minor: rightmost labels clip canvas edge — insufficient right padding.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows mandated format exactly. No axis labels appropriate
+          (theme_void for crossword).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light background #FAF8F1, dark background #1A1A17. Title uses INK
+          tokens. Monochrome design (black/white cells) is spec-mandated.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Clean professional newspaper-style crossword. theme_void well-chosen,
+          tile sizing creates proper grid line effect. Design constrained by spec
+          (monochrome) so limited latitude, but executed well.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: theme_void eliminates unnecessary chrome, geom_tile
+          with width=0.98/height=0.98 produces clean grid lines, coord_fixed ensures
+          perfect square cells. Goes beyond library defaults.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Crossword displays structure clearly but is inherently structural
+          visualization without data narrative. Default score.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct crossword grid visualization with tiles
+        comment: Correct crossword grid with white entry cells, black blocking cells,
+          and numbered positions.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: White for entry cells, black for blocking cells, properly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: white entry cells, black blocking cells,
-          numbered positions, 180° symmetry, square cells'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: white/black cells, clue numbers in top-left,
+          180-degree rotational symmetry, uniform grid lines, monochrome design, 1:1
+          cell aspect ratio.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 15x15 grid visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Grid coordinates correctly mapped, Y-axis flipped so row 0 at top,
+          coord_fixed ensures square cells.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for this plot type
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: crossword-basic · letsplot · pyplots.ai'
+        comment: Title is exactly 'crossword-basic · python · letsplot · anyplot.ai'.
+          No legend needed.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows black cells with symmetry, numbered word starts, variety in
-          word lengths
+        comment: 'Shows all aspects: blocked cells, open entry cells, numbered across/down
+          positions, 180-degree symmetry.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Traditional newspaper-style crossword pattern that is plausible and
-          neutral
+        comment: Authentic newspaper-style 15x15 crossword with realistic black cell
+          density (~16%) and ~69 clue numbers.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 15x15 is standard size; 69 clues is realistic
+        comment: 15x15 is standard NYT/newspaper crossword size. Clue count and black
+          cell pattern are realistic.
     code_quality:
       score: 10
       max: 10
@@ -156,51 +194,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data creation → plot → save'
+        comment: Clean Imports -> Data -> Plot -> Save structure. No functions or
+          classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random elements)
+        comment: Grid deterministically constructed from hardcoded black_positions.
+          No randomness needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pandas, lets_plot'
+        comment: os, numpy, pandas, lets_plot — all used. No unused imports.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current lets-plot API
+        comment: Clean, Pythonic. Clue number generation logic is appropriately complex.
+          No over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics approach: multiple geom layers (geom_tile
+          + geom_text), aes() mappings, coord_fixed(), labs(), theme_void() + theme()
+          layering. Fully idiomatic letsplot.'
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_tile effectively, coord_fixed for square aspect ratio,
-          theme_void, and lets-plot's ggsize() for proper sizing. Could leverage more
-          interactive features.
+        comment: Uses layer_tooltips() across all three geom layers (cell type and
+          clue direction tooltips) — distinctive letsplot interactive feature. HTML
+          export alongside PNG.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - annotations
+  - hover-tooltips
+  - html-export
   patterns:
-  - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
