@@ -1,11 +1,17 @@
-""" anyplot.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
 """
 
 import os
+import sys
 import zlib
+
+
+# Remove this file's directory from sys.path to avoid circular import with the altair package
+if sys.path and os.path.exists(os.path.join(sys.path[0] or ".", "altair.py")):
+    sys.path = sys.path[1:]
 
 import altair as alt
 import numpy as np
@@ -16,12 +22,14 @@ import pandas as pd
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+QUIET_FILL = "#C8C5BE"  # warm gray on white inner bg shows quiet zone in both themes
 
 # Data — 16×16 Data Matrix ECC 200 barcode encoding "SERIAL:12345678"
 np.random.seed(42)
 size = 16
-quiet_zone = 1  # minimum 1 module per spec; tighter quiet zone fills canvas better
-total_size = size + 2 * quiet_zone
+quiet_zone = 1  # minimum 1 module per spec
+total_size = size + 2 * quiet_zone  # 18
 
 matrix = np.zeros((total_size, total_size), dtype=int)
 
@@ -45,7 +53,7 @@ for row in range(1, size - 1):
         idx = row * size + col
         matrix[quiet_zone + row, quiet_zone + col] = ((hash_val >> (idx % 32)) ^ (idx * 13)) % 2
 
-# Convert to DataFrame with cell-type labels for interactive tooltips
+# Convert to DataFrame; color_key collapses cell_type × value for Altair's color encoding
 rows = []
 for row in range(total_size):
     for col in range(total_size):
@@ -58,18 +66,25 @@ for row in range(total_size):
             cell_type = "Timing Pattern"
         else:
             cell_type = "Data Cell"
+        val = matrix[row, col]
+        color_key = "quiet" if cell_type == "Quiet Zone" else ("on" if val == 1 else "off")
         rows.append(
             {
                 "x": col,
                 "y": total_size - 1 - row,  # flip y so row=0 maps to chart top
-                "value": matrix[row, col],
+                "value": val,
                 "cell_type": cell_type,
+                "color_key": color_key,
             }
         )
 df = pd.DataFrame(rows)
 
-# Plot — square format (600×600 at scale_factor=4 → 2400×2400 px)
-no_pad = alt.Scale(paddingInner=0, paddingOuter=0)  # eliminates gaps between cells
+# Interactive selection — click a region type to highlight it; empty=True keeps all opaque when idle
+region_sel = alt.selection_point(fields=["cell_type"], on="click", empty=True, clear="dblclick")
+
+# 720×720 plot area: 18 cells × 40 px/cell = 720 px (integer — eliminates sub-pixel gap artifacts)
+no_pad = alt.Scale(paddingInner=0, paddingOuter=0)
+color_scale = alt.Scale(domain=["on", "off", "quiet"], range=["#000000", "#FFFFFF", QUIET_FILL])
 
 chart = (
     alt.Chart(df)
@@ -77,18 +92,31 @@ chart = (
     .encode(
         x=alt.X("x:O", axis=None, scale=no_pad),
         y=alt.Y("y:O", axis=None, scale=no_pad),
-        color=alt.Color("value:N", scale=alt.Scale(domain=[0, 1], range=["#FFFFFF", "#000000"]), legend=None),
+        color=alt.Color("color_key:N", scale=color_scale, legend=None),
+        opacity=alt.condition(region_sel, alt.value(1.0), alt.value(0.35)),
         tooltip=[
+            alt.Tooltip("cell_type:N", title="Region"),
             alt.Tooltip("x:O", title="Column"),
             alt.Tooltip("y:O", title="Row"),
-            alt.Tooltip("cell_type:N", title="Cell Type"),
         ],
     )
+    .add_params(region_sel)
     .properties(
-        width=600,
-        height=600,
+        width=720,
+        height=720,
         background=PAGE_BG,
-        title=alt.Title("datamatrix-basic · python · altair · anyplot.ai", fontSize=16, color=INK, anchor="middle"),
+        title=alt.Title(
+            "datamatrix-basic · python · altair · anyplot.ai",
+            subtitle=[
+                "Content: SERIAL:12345678  ·  16×16 ECC 200  ·  Quiet zone shown in gray",
+                "Click a region to highlight: Finder (L-shape) · Timing (alternating) · Data · Quiet Zone",
+            ],
+            fontSize=16,
+            subtitleFontSize=10,
+            color=INK,
+            subtitleColor=INK_SOFT,
+            anchor="middle",
+        ),
     )
     .configure_view(fill="#FFFFFF", strokeWidth=0)
     .configure_axis(grid=False)
