@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-20
@@ -86,15 +86,16 @@ while stack:
 ring_width = 1.0
 center_radius = 0.5
 entrance_sector = 0
-n_arc_points = 50
+n_arc_points = 100  # Increased for smoother arcs
 
-# Collect wall segments as lines
+# Collect wall segments — outer ring gets heavier weight for visual depth
 wall_segments = []
 
 # Draw arc walls (circular walls between rings)
 for ring in range(1, num_rings + 1):
-    outer_r = center_radius + ring * ring_width if ring > 0 else center_radius
+    outer_r = center_radius + ring * ring_width
     n_sectors = sectors_per_ring[ring]
+    lw = 3.0 if ring == num_rings else 1.5  # Outer boundary emphasized
 
     for sector in range(n_sectors):
         # Check if there's a passage to the outer ring
@@ -122,13 +123,14 @@ for ring in range(1, num_rings + 1):
         for i in range(len(theta_vals) - 1):
             x1, y1 = outer_r * np.cos(theta_vals[i]), outer_r * np.sin(theta_vals[i])
             x2, y2 = outer_r * np.cos(theta_vals[i + 1]), outer_r * np.sin(theta_vals[i + 1])
-            wall_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2})
+            wall_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2, "lw": lw})
 
 # Draw radial walls (between sectors in same ring)
 for ring in range(1, num_rings + 1):
     n_sectors = sectors_per_ring[ring]
     inner_r = center_radius + (ring - 1) * ring_width if ring > 1 else center_radius
     outer_r = center_radius + ring * ring_width
+    lw = 3.0 if ring == num_rings else 1.5  # Outer boundary emphasized
 
     for sector in range(n_sectors):
         next_sector = (sector + 1) % n_sectors
@@ -138,7 +140,7 @@ for ring in range(1, num_rings + 1):
         theta = 2 * np.pi * (sector + 1) / n_sectors - np.pi / 2
         x1, y1 = inner_r * np.cos(theta), inner_r * np.sin(theta)
         x2, y2 = outer_r * np.cos(theta), outer_r * np.sin(theta)
-        wall_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2})
+        wall_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2, "lw": lw})
 
 # Draw inner walls for ring 1 connecting to center
 inner_r = center_radius
@@ -151,7 +153,7 @@ for sector in range(sectors_per_ring[1]):
         for i in range(len(theta_vals) - 1):
             x1, y1 = inner_r * np.cos(theta_vals[i]), inner_r * np.sin(theta_vals[i])
             x2, y2 = inner_r * np.cos(theta_vals[i + 1]), inner_r * np.sin(theta_vals[i + 1])
-            wall_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2})
+            wall_segments.append({"x": x1, "y": y1, "xend": x2, "yend": y2, "lw": 1.5})
 
 df_walls = pd.DataFrame(wall_segments)
 
@@ -164,15 +166,29 @@ entrance_theta = (
 start_x = (outer_r + 0.8) * np.cos(entrance_theta)
 start_y = (outer_r + 0.8) * np.sin(entrance_theta)
 
-df_markers = pd.DataFrame({"x": [start_x, 0], "y": [start_y, 0], "label": ["START", "GOAL"], "color": [BRAND, ACCENT]})
+df_markers = pd.DataFrame(
+    {
+        "x": [start_x, 0],
+        "y": [start_y, 0.15],  # GOAL shifted up to clear innermost ring walls
+        "label": ["START", "GOAL"],
+        "color": [BRAND, ACCENT],
+        "info": [f"Entry — outer ring, sector {entrance_sector}", f"Navigate {num_rings} rings, seed 42"],
+    }
+)
 
-# Plot
+# Plot — wall size aesthetic drives visual hierarchy; tooltips + ggtb() use lets_plot interactivity
 plot_radius = outer_r + 1.5
 plot = (
     ggplot()
-    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend"), data=df_walls, color=INK, size=1.5)
+    + geom_segment(aes(x="x", y="y", xend="xend", yend="yend", size="lw"), data=df_walls, color=INK, show_legend=False)
+    + scale_size_identity()
     + geom_text(
-        aes(x="x", y="y", label="label", color="color"), data=df_markers, size=8, fontface="bold", show_legend=False
+        aes(x="x", y="y", label="label", color="color"),
+        data=df_markers,
+        size=8,
+        fontface="bold",
+        show_legend=False,
+        tooltips=layer_tooltips().line("@label").line("@info"),
     )
     + scale_color_identity()
     + coord_fixed(ratio=1, xlim=(-plot_radius, plot_radius), ylim=(-plot_radius, plot_radius))
@@ -184,6 +200,7 @@ plot = (
     )
     + labs(title="maze-circular · python · letsplot · anyplot.ai")
     + ggsize(600, 600)
+    + ggtb()
 )
 
 # Save
