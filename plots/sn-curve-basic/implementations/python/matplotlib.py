@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -59,6 +59,11 @@ endurance_limit = 200
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
+# Fatigue region shading — axhspan highlights the three life regimes
+ax.axhspan(120, endurance_limit, alpha=0.07, color=BRAND, zorder=0)
+ax.axhspan(endurance_limit, yield_strength, alpha=0.05, color=COLOR_FIT, zorder=0)
+ax.axhspan(yield_strength, 650, alpha=0.05, color=COLOR_ULT, zorder=0)
+
 ax.scatter(
     cycles, stress, s=100, color=BRAND, alpha=0.75, edgecolors=PAGE_BG, linewidths=0.5, label="Test Data", zorder=5
 )
@@ -93,7 +98,7 @@ ax.axhline(
 ax.set_xscale("log")
 ax.set_yscale("log")
 ax.set_xlim(1e2, 1e8)
-ax.set_ylim(150, 650)
+ax.set_ylim(120, 650)
 
 # Style
 ax.set_xlabel("Number of Cycles to Failure (N)", fontsize=10, color=INK)
@@ -104,6 +109,9 @@ for spine in ("left", "bottom"):
     ax.spines[spine].set_color(INK_SOFT)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
+
+# Plain integer formatting for MPa Y-axis (engineering convention over scientific notation)
+ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f"{x:.0f}"))
 
 ax.grid(True, which="major", alpha=0.12, linewidth=0.6, color=INK)
 ax.grid(True, which="minor", alpha=0.06, linewidth=0.4, color=INK)
@@ -125,9 +133,9 @@ ax.annotate(
     style="italic",
     bbox={"boxstyle": "round,pad=0.2", "facecolor": PAGE_BG, "alpha": 0.75, "edgecolor": "none"},
 )
-ax.annotate("Infinite Life", xy=(5e7, 170), fontsize=7, ha="center", color=INK_MUTED, style="italic")
+ax.annotate("Infinite Life", xy=(5e7, 182), fontsize=7, ha="center", color=INK_MUTED, style="italic")
 
 plt.tight_layout()
 
-# Save
-plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
+# Save — no bbox_inches="tight" to preserve exact 3200×1800 canvas
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
