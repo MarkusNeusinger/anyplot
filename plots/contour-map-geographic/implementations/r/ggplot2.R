@@ -4,7 +4,6 @@
 #' Quality: 84/100 | Created: 2026-05-20
 
 library(ggplot2)
-library(dplyr)
 library(ragg)
 
 set.seed(42)
@@ -34,6 +33,16 @@ grid$pressure <- with(grid,
 # 4 hPa isobar intervals — standard for synoptic weather maps
 isobar_breaks <- seq(994, 1032, by = 4)
 
+# Compute isobar label positions — midpoint of the longest segment per level
+pressure_matrix <- matrix(grid$pressure, nrow = length(lon_seq), ncol = length(lat_seq))
+label_df <- do.call(rbind, lapply(isobar_breaks, function(level) {
+  cl <- contourLines(lon_seq, lat_seq, pressure_matrix, levels = level)
+  if (length(cl) == 0) return(NULL)
+  main <- cl[[which.max(sapply(cl, function(c) length(c$x)))]]
+  mid  <- ceiling(length(main$x) / 2)
+  data.frame(lon = main$x[mid], lat = main$y[mid], label = as.character(level))
+}))
+
 # World coastlines and political borders
 world <- map_data("world")
 
@@ -57,7 +66,17 @@ p <- ggplot() +
     breaks    = isobar_breaks,
     color     = INK,
     linewidth = 0.3,
-    alpha     = 0.55
+    alpha     = 0.75
+  ) +
+  geom_label(
+    data          = label_df,
+    aes(x = lon, y = lat, label = label),
+    color         = INK,
+    fill          = PAGE_BG,
+    size          = 2.2,
+    label.size    = 0.15,
+    label.padding = unit(0.1, "lines"),
+    fontface      = "bold"
   ) +
   coord_fixed(xlim = c(-30, 45), ylim = c(35, 72), expand = FALSE) +
   scale_fill_viridis_d(option = "viridis", name = "Pressure\n(hPa)") +
