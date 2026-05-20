@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: highcharts unknown | Python 3.13.13
 Quality: 79/100 | Updated: 2026-05-20
@@ -65,7 +65,17 @@ ms_table = {
 
 rows, cols = elevation.shape
 contour_levels = [500, 1000, 1500, 2000, 2500, 3000]
-level_colors = {500: "#2E7D32", 1000: "#1565C0", 1500: "#306998", 2000: "#7B1FA2", 2500: "#C62828", 3000: "#FF6F00"}
+
+# Viridis palette — CVD-safe for continuous elevation data
+viridis_stops = [
+    [0.0, "#440154"],
+    [0.2, "#3B528B"],
+    [0.4, "#21908C"],
+    [0.6, "#5DC863"],
+    [0.8, "#ADDC30"],
+    [1.0, "#FDE725"],
+]
+level_colors = {500: "#440154", 1000: "#3B528B", 1500: "#21908C", 2000: "#5DC863", 2500: "#ADDC30", 3000: "#FDE725"}
 
 all_features = []
 label_points = []
@@ -156,23 +166,22 @@ for level in contour_levels:
             mid = path[len(path) // 2]
             label_points.append({"lon": mid[0], "lat": mid[1], "level": level, "color": color})
 
-# Build Highcharts series list
-contour_series = []
-legend_seen = set()
+# Group features by level for per-level series (preserves lineWidth variation)
+segments_by_level = {level: [] for level in contour_levels}
 for feat in all_features:
-    level, color = feat["level"], feat["color"]
-    show_in_legend = level not in legend_seen
-    if show_in_legend:
-        legend_seen.add(level)
+    segments_by_level[feat["level"]].append({"geometry": feat["geometry"], "value": feat["level"]})
+
+# Build Highcharts series list — each series uses colorAxis for gradient coloring
+contour_series = []
+for level in contour_levels:
     contour_series.append(
         {
             "type": "mapline",
             "name": f"{level}m",
-            "data": [{"geometry": feat["geometry"], "color": color}],
-            "color": color,
+            "colorAxis": 0,
             "lineWidth": 12 if level % 1000 == 0 else 6,
-            "enableMouseTracking": True,
-            "showInLegend": show_in_legend,
+            "showInLegend": False,
+            "data": segments_by_level[level],
             "zIndex": 10 + (level // 500),
             "states": {"inactive": {"opacity": 1}},
         }
@@ -194,23 +203,31 @@ chart_config = {
         "style": {"fontSize": "44px", "color": INK_SOFT},
         "y": 110,
     },
+    # Zoom to Alpine region using fitToGeometry bounding box
+    "mapView": {"fitToGeometry": {"type": "MultiPoint", "coordinates": [[4.0, 43.0], [16.5, 51.0]]}},
     "mapNavigation": {"enabled": False},
+    # Gradient colorbar via colorAxis (viridis — CVD-safe)
+    "colorAxis": [
+        {
+            "min": 500,
+            "max": 3000,
+            "stops": viridis_stops,
+            "labels": {"format": "{value}m", "style": {"fontSize": "36px", "color": INK_SOFT}},
+        }
+    ],
     "legend": {
         "enabled": True,
-        "layout": "vertical",
-        "align": "right",
-        "verticalAlign": "middle",
-        "floating": True,
-        "x": -40,
+        "layout": "horizontal",
+        "align": "center",
+        "verticalAlign": "bottom",
+        "y": -40,
         "backgroundColor": ELEVATED_BG,
         "borderColor": INK_SOFT,
         "borderWidth": 1,
-        "padding": 20,
-        "itemStyle": {"fontSize": "44px", "color": INK_SOFT},
-        "title": {"text": "Elevation", "style": {"fontSize": "48px", "fontWeight": "bold", "color": INK}},
-        "symbolWidth": 40,
-        "symbolHeight": 6,
-        "itemMarginBottom": 8,
+        "padding": 24,
+        "title": {"text": "Elevation (m)", "style": {"fontSize": "44px", "fontWeight": "bold", "color": INK}},
+        "symbolWidth": 500,
+        "symbolHeight": 24,
     },
     "tooltip": {"useHTML": True, "headerFormat": "", "pointFormat": tooltip_format},
     "plotOptions": {
