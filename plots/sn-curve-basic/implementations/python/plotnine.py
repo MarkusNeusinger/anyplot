@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-20
@@ -19,6 +19,7 @@ from plotnine import (
     geom_line,
     geom_point,
     geom_ribbon,
+    geom_rug,
     ggplot,
     labs,
     scale_shape_manual,
@@ -90,13 +91,15 @@ anyplot_theme = theme(
     panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
     panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
     panel_border=element_blank(),
+    axis_line_x=element_blank(),
+    axis_line_y=element_line(color=INK_SOFT),
     axis_title=element_text(color=INK, size=10),
     axis_text=element_text(color=INK_SOFT, size=8),
-    axis_line=element_line(color=INK_SOFT),
     plot_title=element_text(color=INK, size=12),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=8),
     legend_title=element_text(color=INK, size=9),
+    plot_margin=0.05,
 )
 
 plot = (
@@ -106,7 +109,9 @@ plot = (
     # Basquin fit line
     + geom_line(df_fit, aes(x="cycles", y="stress"), color=OKABE_ITO[0], size=1.2, alpha=0.85)
     # Data points — shape mapped to type for runout vs failure distinction
-    + geom_point(df, aes(x="cycles", y="stress", shape="type"), color=OKABE_ITO[0], size=3.0, alpha=0.80)
+    + geom_point(df, aes(x="cycles", y="stress", shape="type"), color=OKABE_ITO[0], size=4.2, alpha=0.80)
+    # geom_rug exposes marginal data density along both axes — distinctive plotnine feature
+    + geom_rug(df, aes(x="cycles", y="stress"), color=OKABE_ITO[0], alpha=0.35, size=0.5)
     # Reference lines with Okabe-Ito colors; endurance limit slightly thicker as focal point
     + geom_hline(yintercept=ultimate_strength, linetype="dashed", color=OKABE_ITO[1], size=0.9, alpha=0.85)
     + geom_hline(yintercept=yield_strength, linetype="dashed", color=OKABE_ITO[2], size=0.9, alpha=0.85)
@@ -117,15 +122,15 @@ plot = (
         x=3e2,
         y=ultimate_strength + 20,
         label="Ultimate Strength (550 MPa)",
-        size=9,
+        size=10,
         color=OKABE_ITO[1],
         ha="left",
     )
     + annotate(
-        "text", x=3e2, y=yield_strength + 20, label="Yield Strength (350 MPa)", size=9, color=OKABE_ITO[2], ha="left"
+        "text", x=3e2, y=yield_strength + 20, label="Yield Strength (350 MPa)", size=10, color=OKABE_ITO[2], ha="left"
     )
     + annotate(
-        "text", x=3e2, y=endurance_limit - 25, label="Endurance Limit (250 MPa)", size=9, color=OKABE_ITO[3], ha="left"
+        "text", x=3e2, y=endurance_limit - 25, label="Endurance Limit (250 MPa)", size=10, color=OKABE_ITO[3], ha="left"
     )
     # Logarithmic scales
     + scale_x_log10()
