@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-20
@@ -24,10 +24,10 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 ACCENT = "#009E73"  # Okabe-Ito position 1
 
-# Maze parameters
+# Maze parameters — outer rings have more sectors than inner rings
 np.random.seed(42)
 NUM_RINGS = 7
-SECTORS = [6, 12, 18, 24, 30, 36, 42]
+SECTORS = [42, 36, 30, 24, 18, 12, 6]
 
 # Wall arrays: radial_walls[r][s] = wall clockwise from sector s in ring r
 #              ring_walls[r][s]   = wall between ring r and ring r+1 at sector s
@@ -68,22 +68,20 @@ while dfs_stack:
 # Build undirected passage graph for BFS
 graph = {}
 
-
-def add_passage(a, b):
-    graph.setdefault(a, []).append(b)
-    graph.setdefault(b, []).append(a)
-
-
 for r in range(NUM_RINGS):
     for s in range(SECTORS[r]):
         if not radial_walls[r][s]:
-            add_passage((r, s), (r, (s + 1) % SECTORS[r]))
+            a, b = (r, s), (r, (s + 1) % SECTORS[r])
+            graph.setdefault(a, []).append(b)
+            graph.setdefault(b, []).append(a)
 
 for r in range(NUM_RINGS - 1):
     for s in range(SECTORS[r]):
         if not ring_walls[r][s]:
             inner_s = int(s * SECTORS[r + 1] / SECTORS[r])
-            add_passage((r, s), (r + 1, inner_s))
+            a, b = (r, s), (r + 1, inner_s)
+            graph.setdefault(a, []).append(b)
+            graph.setdefault(b, []).append(a)
 
 # BFS to find the unique solution path to the innermost ring
 bfs_queue = deque([((0, 0), [(0, 0)])])
@@ -100,16 +98,14 @@ while bfs_queue:
             bfs_seen.add(nb)
             bfs_queue.append((nb, path + [nb]))
 
-
-# Cell midpoint in Cartesian coordinates
-def cell_mid(ring, sector):
-    r_mid = ((NUM_RINGS - ring - 1) + (NUM_RINGS - ring)) / 2
-    angle = (sector + 0.5) * 2 * np.pi / SECTORS[ring]
-    return r_mid * np.cos(angle), r_mid * np.sin(angle)
-
-
-sol_x = [cell_mid(r, s)[0] for r, s in solution] + [0.0]
-sol_y = [cell_mid(r, s)[1] for r, s in solution] + [0.0]
+sol_x, sol_y = [], []
+for r, s in solution:
+    r_mid = NUM_RINGS - r - 0.5
+    angle = (s + 0.5) * 2 * np.pi / SECTORS[r]
+    sol_x.append(r_mid * np.cos(angle))
+    sol_y.append(r_mid * np.sin(angle))
+sol_x.append(0.0)
+sol_y.append(0.0)
 
 # Drawing constants
 OUTER_R = NUM_RINGS
@@ -130,7 +126,7 @@ for r in range(NUM_RINGS - 1):
                     x=inner_r * np.cos(theta),
                     y=inner_r * np.sin(theta),
                     mode="lines",
-                    line=dict(color=INK, width=WALL_W),
+                    line={"color": INK, "width": WALL_W},
                     showlegend=False,
                     hoverinfo="skip",
                 )
@@ -145,7 +141,7 @@ fig.add_trace(
         x=OUTER_R * np.cos(theta_outer),
         y=OUTER_R * np.sin(theta_outer),
         mode="lines",
-        line=dict(color=INK, width=WALL_W + 1),
+        line={"color": INK, "width": WALL_W + 1},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -164,7 +160,7 @@ for r in range(NUM_RINGS):
                     x=[r_in * np.cos(theta), r_out * np.cos(theta)],
                     y=[r_in * np.sin(theta), r_out * np.sin(theta)],
                     mode="lines",
-                    line=dict(color=INK, width=WALL_W),
+                    line={"color": INK, "width": WALL_W},
                     showlegend=False,
                     hoverinfo="skip",
                 )
@@ -177,7 +173,7 @@ fig.add_trace(
         y=sol_y,
         mode="lines",
         name="Show Solution",
-        line=dict(color="#D55E00", width=4, dash="dot"),
+        line={"color": "#D55E00", "width": 4, "dash": "dot"},
         opacity=0.85,
         visible="legendonly",
     )
@@ -192,7 +188,7 @@ fig.add_trace(
         y=goal_r * np.sin(theta_g),
         fill="toself",
         fillcolor=ACCENT,
-        line=dict(color=ACCENT, width=2),
+        line={"color": ACCENT, "width": 2},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -202,7 +198,7 @@ fig.add_trace(
         x=[0.0],
         y=[0.0],
         mode="markers",
-        marker=dict(symbol="star", size=20, color="#F0E442", line=dict(color=ACCENT, width=2)),
+        marker={"symbol": "star", "size": 20, "color": "#F0E442", "line": {"color": ACCENT, "width": 2}},
         showlegend=False,
         hoverinfo="skip",
     )
@@ -213,8 +209,8 @@ entry_angle = 0.5 * 2 * np.pi / SECTORS[0]
 fig.add_annotation(
     x=OUTER_R * np.cos(entry_angle),
     y=OUTER_R * np.sin(entry_angle),
-    ax=(OUTER_R + 0.8) * np.cos(entry_angle),
-    ay=(OUTER_R + 0.8) * np.sin(entry_angle),
+    ax=(OUTER_R + 1.5) * np.cos(entry_angle),
+    ay=(OUTER_R + 1.5) * np.sin(entry_angle),
     xref="x",
     yref="y",
     axref="x",
@@ -226,44 +222,55 @@ fig.add_annotation(
     arrowcolor=ACCENT,
 )
 fig.add_annotation(
-    x=(OUTER_R + 1.3) * np.cos(entry_angle),
-    y=(OUTER_R + 1.3) * np.sin(entry_angle),
+    x=(OUTER_R + 2.8) * np.cos(entry_angle),
+    y=(OUTER_R + 2.8) * np.sin(entry_angle),
     text="START",
     showarrow=False,
-    font=dict(size=22, color=ACCENT, family="Arial Black"),
+    xref="x",
+    yref="y",
+    font={"size": 22, "color": ACCENT, "family": "Arial Black"},
 )
 fig.add_annotation(
-    x=0.0, y=-(goal_r + 1.0), text="GOAL", showarrow=False, font=dict(size=22, color=ACCENT, family="Arial Black")
+    x=0.0,
+    y=-(OUTER_R + 1.5),
+    text="GOAL",
+    showarrow=False,
+    xref="x",
+    yref="y",
+    font={"size": 22, "color": ACCENT, "family": "Arial Black"},
 )
 
 # Layout
 fig.update_layout(
-    title=dict(
-        text="maze-circular · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
-    ),
-    xaxis=dict(
-        showgrid=False,
-        zeroline=False,
-        showticklabels=False,
-        scaleanchor="y",
-        scaleratio=1,
-        range=[-(OUTER_R + 2.5), OUTER_R + 2.5],
-    ),
-    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-(OUTER_R + 2.5), OUTER_R + 2.5]),
+    title={
+        "text": "maze-circular · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    xaxis={
+        "showgrid": False,
+        "zeroline": False,
+        "showticklabels": False,
+        "scaleanchor": "y",
+        "scaleratio": 1,
+        "range": [-(OUTER_R + 4.0), OUTER_R + 4.0],
+    },
+    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-(OUTER_R + 4.0), OUTER_R + 4.0]},
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
     showlegend=True,
-    legend=dict(
-        bgcolor=ELEVATED_BG,
-        bordercolor=INK_SOFT,
-        borderwidth=1,
-        font=dict(color=INK_SOFT, size=10),
-        x=0.02,
-        y=0.98,
-        xanchor="left",
-        yanchor="top",
-    ),
-    margin=dict(l=50, r=50, t=100, b=50),
+    legend={
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
+        "font": {"color": INK_SOFT, "size": 10},
+        "x": 0.02,
+        "y": 0.98,
+        "xanchor": "left",
+        "yanchor": "top",
+    },
+    margin={"l": 50, "r": 50, "t": 100, "b": 50},
 )
 
 # Save
