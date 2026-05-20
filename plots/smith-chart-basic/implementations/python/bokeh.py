@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -111,6 +111,21 @@ for x in [0.2, 0.5, 1, 2, 5]:
 # Real axis (pure resistance line, x = 0)
 p.line([-1, 1], [0, 0], line_width=2, line_color=INK_SOFT, alpha=0.5)
 
+# VSWR=1.5 reference zone — well-matched region (|gamma| = 0.2)
+vswr_r = (1.5 - 1) / (1.5 + 1)  # = 0.2
+p.ellipse(
+    x=0,
+    y=0,
+    width=2 * vswr_r,
+    height=2 * vswr_r,
+    fill_color=MARKER_COLOR,
+    fill_alpha=0.08,
+    line_color=MARKER_COLOR,
+    line_dash="dashed",
+    line_width=2.5,
+    line_alpha=0.60,
+)
+
 # Data: antenna S11 sweep 1–6 GHz (series RLC resonance at 3.5 GHz, Q=5)
 np.random.seed(42)
 n_points = 60
@@ -145,11 +160,17 @@ p.scatter("gr", "gi", source=source, size=14, fill_color=LOCUS_COLOR, line_color
 # Frequency labels at key points along the locus
 label_indices = [0, n_points // 4, n_points // 2, 3 * n_points // 4, n_points - 1]
 for idx in label_indices:
-    offset_y = 0.09 if gamma_imag[idx] >= 0 else -0.13
+    gx, gy = gamma_real[idx], gamma_imag[idx]
+    # push near-center labels clear of the Z=Z0 marker at (0.07, 0.07)
+    if abs(gx) < 0.2 and abs(gy) < 0.2:
+        lx, ly = gx, gy + 0.22
+    else:
+        lx = gx
+        ly = gy + (0.09 if gy >= 0 else -0.13)
     p.add_layout(
         Label(
-            x=gamma_real[idx],
-            y=gamma_imag[idx] + offset_y,
+            x=lx,
+            y=ly,
             text=f"{freq[idx] / 1e9:.1f} GHz",
             text_font_size="26pt",
             text_color=BOUNDARY_COLOR,
@@ -160,6 +181,18 @@ for idx in label_indices:
 # Matched condition marker — Γ = 0 (Z = Z₀)
 p.scatter([0], [0], size=24, fill_color=MARKER_COLOR, line_color=PAGE_BG, line_width=3)
 p.add_layout(Label(x=0.07, y=0.07, text="Z=Z₀", text_font_size="26pt", text_color=MARKER_COLOR, text_font_style="bold"))
+
+# VSWR=1.5 annotation on the reference circle
+p.add_layout(
+    Label(
+        x=vswr_r * np.cos(np.pi / 4) + 0.02,
+        y=vswr_r * np.sin(np.pi / 4) + 0.02,
+        text="VSWR=1.5",
+        text_font_size="20pt",
+        text_color=MARKER_COLOR,
+        text_font_style="italic",
+    )
+)
 
 # Grid r-value labels along real axis (enlarged from previous)
 for r in [0.2, 0.5, 1, 2]:
