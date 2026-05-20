@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:47:13Z'
-updated: '2026-05-20T00:02:05Z'
+updated: '2026-05-20T00:17:05Z'
 generated_by: claude-sonnet
 workflow_run: 26132141198
 issue: 3826
@@ -12,100 +12,101 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 77
+quality_score: 75
 review:
   strengths:
-  - 'Excellent data quality: Basquin-equation S-N data with lognormal scatter, physically
-    accurate material properties (550/350/250 MPa), and runout points'
-  - Clear data storytelling via color-coded annotated reference lines for Ultimate
-    Strength, Yield Strength, and Endurance Limit
-  - Log-log scales correctly applied; Basquin fit curve overlaid cleanly on scatter
-    data
-  - KISS code structure with deterministic random seed (np.random.seed(42))
+  - Clean three-region fatigue narrative using annotated reference lines communicates
+    material behavior immediately
+  - Correct log-log axis scaling for wide cycle range (10^2 to 10^8)
+  - Realistic Basquin equation data generation with per-stress scatter captures real
+    test variability
+  - 'Good plotnine idiomatic layering: multi-DataFrame geoms, log scales, annotate()'
+  - Both rendered images show correct theme-adaptive backgrounds and chrome
   weaknesses:
-  - 'color="#306998" (Python Blue) used for both data geoms — must be #009E73 (Okabe-Ito
-    position 1)'
-  - 'No ANYPLOT_THEME handling: code never reads env var, no PAGE_BG/INK/INK_SOFT
-    tokens, no theme-adaptive chrome — dual-theme output is absent'
-  - 'Wrong save call: plot.save("plot.png", dpi=300) must be plot.save(f"plot-{THEME}.png",
-    dpi=400, width=8, height=4.5, units="in")'
-  - 'Wrong title: "sn-curve-basic · plotnine · pyplots.ai" must be "sn-curve-basic
-    · python · plotnine · anyplot.ai"'
-  - 'Wrong figure size: (16, 9) at dpi=300 gives 4800x2700; use (8, 4.5) at dpi=400
-    for required 3200x1800'
-  - 'Reference line colors are non-Okabe-Ito (#e74c3c, #f39c12, #27ae60) — replace
-    with #D55E00, #0072B2, #CC79A7'
-  - 'API misuse: panel_grid_major_x=element_text(...) must be element_line(color=INK,
-    size=0.3, alpha=0.10)'
+  - 'CRITICAL: data color is #306998 (Python Blue) — must be #009E73 (Okabe-Ito position
+    1)'
+  - 'CRITICAL: no ANYPLOT_THEME env reading; no PAGE_BG/INK/INK_SOFT theme tokens;
+    plot_background, axis_text, axis_title, plot_title not set from theme tokens'
+  - 'CRITICAL: output saved as plot.png — must be plot-{THEME}.png with dpi=400, width=8,
+    height=4.5, units=''in'''
+  - 'CRITICAL: labs() title is ''sn-curve-basic · plotnine · pyplots.ai'' — must be
+    ''sn-curve-basic · python · plotnine · anyplot.ai'''
+  - 'Reference line colors (#e74c3c, #f39c12, #27ae60) are non-Okabe-Ito — must use
+    #D55E00 (ultimate), #0072B2 (yield), #CC79A7 (endurance) and matching annotation
+    text colors'
+  - panel_grid_major_x/y=element_text(alpha=0.3) uses wrong class — must be element_line(color=INK,
+    size=0.3, alpha=0.10)
+  - Canvas size 4800x2700 (16in x 9in @ 300dpi) exceeds spec target of 3200x1800 —
+    use figure_size=(8, 4.5) at dpi=400
+  - Runout data points (cycles >= 1e7) are not visually distinguished from failure
+    points — use a different marker shape (e.g., triangle)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, close to #FAF8F1 — not pure white, correct.
-      Chrome: Title "sn-curve-basic · python · plotnine · anyplot.ai" in dark text, clearly readable. Y-axis label "Stress Amplitude (MPa)" and X-axis label "Number of Cycles to Failure (N)" in dark ink, readable. Tick labels on both log axes are legible. All text passes readability check.
-      Data: S-N scatter points and Basquin fit line render in teal-green (appears to be #009E73). Three dashed reference lines: orange-red (Ultimate Strength), blue (Yield Strength), pink/lavender (Endurance Limit). Color-matched annotation labels. No overlap.
+      Background: Warm off-white (~#FAF8F1) — correct anyplot light surface
+      Chrome: Title "sn-curve-basic · python · plotnine · anyplot.ai" in dark text, ~70% canvas width, clearly readable. Axis labels "Number of Cycles to Failure (N)" and "Stress Amplitude (MPa)" in dark text with units. Tick labels (1e3, 1e5, 1e7 / 200, 300, 400, 500) dark and legible. Top/right spines removed (L-shaped frame). Subtle grid lines visible.
+      Data: ~50 scatter points in teal-green (~#009E73), Basquin fit line in matching green. Three dashed reference lines: orange (Ultimate Strength ~550 MPa), blue (Yield Strength ~350 MPa), pink/purple (Endurance Limit ~250 MPa). Matching-color text annotations for each reference line.
       Legibility verdict: PASS
+
+      NOTE: Images appear to be from a prior correctly-fixed code version. The current source code uses #306998 (Python Blue) for data, has no ANYPLOT_THEME logic, and saves as plot.png — all of which contradict what is shown in these images. The code has been regressed relative to the images.
 
     Dark render (plot-dark.png):
-      Background: Near-black, close to #1A1A17 — not pure black, correct.
-      Chrome: Title, axis labels, tick labels, and annotation text all render in light colors (white/off-white) against the dark surface. No dark-on-dark failures. All text is readable.
-      Data: S-N scatter points and fit line are the same teal-green as in the light render — data colors are theme-independent and identical. Reference line colors unchanged.
+      Background: Warm near-black (~#1A1A17) — correct anyplot dark surface
+      Chrome: Title, axis labels, tick labels all rendered in light-colored text, clearly visible against the dark background. No dark-on-dark failures observed. Grid lines subtle on dark surface.
+      Data: Colors identical to light render — teal-green data points and fit line, orange/blue/pink reference lines. Only background and text chrome flips between themes.
       Legibility verdict: PASS
-
-    CRITICAL NOTE: The images appear to be from a different (previous) version of the code than what is currently committed. The committed code uses color="#306998" (Python Blue) which cannot render as the green seen in both images. The committed code also lacks any ANYPLOT_THEME handling yet the images show proper dual-theme output. The committed title is "sn-curve-basic · plotnine · pyplots.ai" but the images show "sn-curve-basic · python · plotnine · anyplot.ai". Visual scores reflect the rendered images; code scores reflect the actual committed source.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set; all text readable in both themes. Minor
-          deduction: code generates 4800x2700 (figsize=16x9 at dpi=300) instead of
-          required 3200x1800.'
+        comment: Sizes explicitly set; canvas is 4800x2700 (16x9 @300dpi) instead
+          of 3200x1800; text looks proportional in output
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlap between annotation labels, tick labels, or axis labels.
+        comment: No text or element collisions in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: ~40-50 data points with size=4 markers are well visible; fit line
-          and reference lines are clear. Slightly below optimal.
+        comment: ~50 points at size=4 alpha=0.7 are visible but slightly small for
+          medium density; fit and reference lines clear
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Multiple hues distinguishable without red-green sole signal; CVD-safe
-          palette used.
+        comment: CVD-safe palette; distinguishable colors for reference lines; good
+          contrast in both themes
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good canvas utilization. Fit line extends past visible data range
-          (below endurance limit) wastes some lower canvas.
+        comment: Good layout; Basquin fit extending below data range creates some
+          wasted lower-right space
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Stress Amplitude (MPa) and Number of Cycles to Failure (N) are descriptive
-          with units.
+        comment: Both axes descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 0
         max: 2
         passed: false
-        comment: 'Code uses color=''#306998'' (Python Blue) — explicitly non-compliant.
-          Reference line colors (#e74c3c, #f39c12, #27ae60) are not Okabe-Ito. No
-          ANYPLOT_THEME handling in code.'
+        comment: 'Code uses #306998 Python Blue (explicit 0-scorer); no ANYPLOT_THEME
+          env reading; no theme tokens in theme(); reference line colors non-Okabe-Ito;
+          saves as plot.png not plot-{THEME}.png'
     design_excellence:
       score: 11
       max: 20
@@ -115,22 +116,22 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Well-configured above generic defaults. Annotated reference lines
-          are a thoughtful design choice. Does not reach FiveThirtyEight-level polish.
+        comment: Clean professional look with theme_minimal and annotated reference
+          lines; not exceptional, well-configured default
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: theme_minimal removes top/right spines; grid is subtle; annotations
-          neatly placed. Above defaults.
+        comment: Top/right spines removed, subtle grid, decent whitespace; grid element_text
+          API bug silently drops grid customization
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three annotated reference lines immediately orient viewer to key
-          material properties. Good visual hierarchy.
+        comment: Three reference lines with colored text labels create clear three-region
+          fatigue narrative; guides viewer through engineering context
     spec_compliance:
       score: 13
       max: 15
@@ -140,53 +141,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct S-N curve: log-log scatter + fit line + horizontal reference
-          lines.'
+        comment: 'Correct S-N curve: log-log scatter + Basquin fit + material property
+          reference lines'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Both log axes, three reference lines (Ultimate/Yield/Endurance),
-          scatter with lognormal noise, Basquin fit curve, runout points.
+        comment: Log-log axes, scatter, fit line, reference lines with labels all
+          present; runout points not visually distinguished from failure points
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cycles on X (log), Stress Amplitude on Y (log). Correct per spec.
+        comment: X=cycles(N), Y=stress amplitude(MPa), both log scale, full range
+          shown
       - id: SC-04
         name: Title & Legend
-        score: 1
+        score: 2
         max: 3
-        passed: false
-        comment: Code title is 'sn-curve-basic · plotnine · pyplots.ai' — missing
-          'python' language token and uses wrong domain 'pyplots.ai' instead of 'anyplot.ai'.
+        passed: true
+        comment: Images show correct title; code has wrong title 'sn-curve-basic ·
+          plotnine · pyplots.ai' (missing language, wrong domain)
     data_quality:
-      score: 15
+      score: 13
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'Shows all S-N aspects: scatter at each stress level, fit curve,
-          all three reference lines, runout points, three fatigue regions.'
+        comment: Shows realistic scatter, Basquin fit, three fatigue regions; runout
+          marking present in data but not visually differentiated
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel specimen fatigue testing with Basquin parameters (A=1200 MPa,
-          b=-0.12) realistic for high-strength steel.
+        comment: 'Steel coupon fatigue testing: neutral, scientifically grounded,
+          real-world engineering scenario'
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Ultimate 550 / Yield 350 / Endurance 250 MPa with cycles from ~10^2
-          to 5x10^7 are physically correct for structural steel.
+        comment: Ultimate 550MPa, yield 350MPa, endurance 250MPa plausible for medium-strength
+          steel; Basquin A=1200MPa b=-0.12 within typical range
     code_quality:
       score: 8
       max: 10
@@ -196,53 +198,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat Imports -> Data -> Plot -> Save. No functions or classes.
+        comment: Flat imports -> data -> plot -> save structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic scatter generation.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are actually used; no dead imports.
+        comment: All imported symbols are used
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: 'API misuse: panel_grid_major_x=element_text(alpha=0.3) — grid lines
-          require element_line, not element_text. Silently ignored.'
+        passed: true
+        comment: panel_grid_major_x=element_text(alpha=0.3) uses wrong class — should
+          be element_line; otherwise reasonable
       - id: CQ-05
         name: Output & API
         score: 0
         max: 1
         passed: false
-        comment: 'Saves as plot.png instead of plot-{THEME}.png. Must be: plot.save(f''plot-{THEME}.png'',
-          dpi=400, width=8, height=4.5, units=''in'').'
+        comment: Saves as plot.png not plot-{THEME}.png; dpi=300 should be 400 per
+          plotnine library guide
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics layer composition is correct. Log scales via
-          scale_x/y_log10() and geom_hline() are idiomatic. API misuse in theme is
-          a deduction.
+        comment: Clean plotnine grammar with multi-DataFrame geoms, log scale, annotate();
+          idiomatic ggplot layering
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Log-scale transforms and annotate() for text labels are standard
-          features. No use of scale_color_manual, element_line for grid styling, or
-          other library-specific capabilities.
+        comment: Uses annotate(), geom_hline(), multi-DataFrame layer composition;
+          no advanced plotnine-specific patterns like faceting or scale_color_manual
   verdict: REJECTED
 impl_tags:
   dependencies: []
@@ -252,6 +252,7 @@ impl_tags:
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - regression
   styling:
   - alpha-blending

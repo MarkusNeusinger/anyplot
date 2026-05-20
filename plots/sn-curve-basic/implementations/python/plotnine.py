@@ -1,7 +1,7 @@
 """ anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: plotnine 0.15.4 | Python 3.13.13
-Quality: 77/100 | Updated: 2026-05-20
+Quality: 75/100 | Updated: 2026-05-20
 """
 
 import numpy as np
