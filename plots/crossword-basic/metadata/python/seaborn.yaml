@@ -1,146 +1,193 @@
 library: seaborn
+language: python
 specification_id: crossword-basic
 created: '2026-01-15T21:38:48Z'
-updated: '2026-01-15T21:41:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047166057
+updated: '2026-05-20T02:16:06Z'
+generated_by: claude-sonnet
+workflow_run: 26136486214
 issue: 3805
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent implementation of 180-degree rotational symmetry for black cells
-  - Clean, professional appearance matching newspaper-style crosswords
-  - Proper algorithm for calculating clue numbers (starts across/down words)
-  - Good use of seaborn heatmap with square cells and grid lines
-  - Appropriate color scheme with blue accents
+  - Clean 15x15 crossword grid with correct 180-degree rotational symmetry and 79
+    properly numbered word-start cells
+  - 'Excellent theme adaptation: warm off-white open cells in dark mode ensure dark
+    clue numbers remain readable (no dark-on-dark issue)'
+  - Perfect square canvas (2400x2400px) appropriate for a symmetric grid, all font
+    sizes explicitly set
+  - 'Spec-perfect: white entry cells, black blocking cells, numbered positions, uniform
+    grid lines, monochrome design'
+  - Idiomatic seaborn heatmap usage with square=True and linewidths for cell borders,
+    clean binary cmap via sns.color_palette
   weaknesses:
-  - Cell numbers could be slightly larger for better legibility at smaller sizes
-  - Heavy reliance on matplotlib ax.text() for annotations rather than seaborn-specific
-    features
-  image_description: The plot displays a 15x15 crossword puzzle grid with white entry
-    cells and black blocking cells. The grid follows traditional 180-degree rotational
-    symmetry with black cells distributed appropriately. Clue numbers (1-79) are positioned
-    in the top-left corner of cells that start across or down words, rendered in a
-    blue color (#306998). The grid lines are blue with a thicker blue border around
-    the entire puzzle. The title "crossword-basic · seaborn · pyplots.ai" appears
-    at the top in a bold font. The overall layout is clean, monochrome (white, black,
-    and blue), and resembles a traditional newspaper crossword puzzle.
+  - 'DE-01/DE-02: Design is functional and theme-adaptive but constrained to monochrome
+    crossword conventions — no room for aesthetic elevation beyond clean execution'
+  - 'LM-02: heatmap with binary cmap is a clever but straightforward seaborn use —
+    no deeply distinctive seaborn-specific features beyond square=True and linewidths'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "crossword-basic · python · seaborn · anyplot.ai" in dark (#1A1A17) ink, spans ~75% of canvas width (expected for mandated title). No axis tick labels (appropriate for crossword). Spines visible in INK_SOFT.
+      Data: 15x15 grid with pure-white (#FFFFFF) open cells and near-black (#1A1A17) blocked cells creating high contrast. 79 clue numbers in bold #1A1A17 ink in top-left corners of numbered cells. 180-degree rotational symmetry clearly visible.
+      Legibility verdict: PASS — all elements clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct, matches warm dark surface
+      Chrome: Title rendered in light (#F0EFE8) ink against dark background — readable. Spines visible in INK_SOFT (#B8B7B0 in dark mode). No dark-on-dark failures.
+      Data: Open cells are warm off-white (#FAF8F1), blocked cells are pure black (#000000). Clue numbers are dark (#1A1A17) on off-white cells — dark ink on light cells, NOT dark-on-dark. Data colors (cell fill scheme) are theme-adapted correctly: open cells lighter than background, blocked cells darker.
+      Legibility verdict: PASS — no dark-on-dark failures; clue numbers clearly read against their off-white cell backgrounds
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and clue numbers are clearly readable, though numbers could
-          be slightly larger
+        comment: Title fontsize=12 and clue numbers fontsize=9 explicitly set; both
+          themes readable; title ~75% width expected for mandated title string; clue
+          numbers well-positioned and proportional
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, all numbers positioned cleanly
+        comment: Clue numbers in separate cells with generous spacing; no overlap
+          with other text or data elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: All cells, grid lines, and numbers are clearly visible
+        comment: Open and blocked cells clearly distinguishable in both themes; high
+          contrast between cell types; grid lines visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/white/black scheme is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Grid fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for crossword (no axes needed)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid lines are clean and appropriately weighted
+        comment: Monochrome design; very high contrast between open and blocked cells;
+          CVD-safe by design
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square canvas (2400x2400px) appropriate for symmetric grid; tight_layout
+          applied; grid fills canvas well with balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'No axis labels needed (crossword requires none); title in correct
+          format: crossword-basic · python · seaborn · anyplot.ai'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Monochrome design per spec; background #FAF8F1 light / #1A1A17 dark
+          correct; theme chrome (INK, INK_SOFT) properly adapted; no Okabe-Ito required
+          for binary grid'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional crossword aesthetic above defaults; theme-adaptive
+          cell colors show design thought; warm off-white background adds intentional
+          personality over pure white; constrained design space (monochrome crossword)
+          limits further elevation
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Cell borders use INK_SOFT (subtle, theme-adaptive); all 4 spines
+          kept appropriately for enclosed grid; linewidth=1.5 on spines; tight_layout
+          for clean margins
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Default — crossword grid displays the puzzle structure without interpretive
+          emphasis; the 180-degree symmetric pattern and numbered cells present the
+          data but don't guide viewer attention toward specific insight
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct crossword puzzle grid visualization
+        comment: Correct crossword puzzle grid; binary heatmap approach is the canonical
+          visualization for this spec
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Binary grid correctly mapped to white/black cells
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: White entry cells, black blocking, numbered positions all present
-      - id: SC-04
-        name: Data Range
+        comment: White entry cells, black blocking cells, numbered word-start positions,
+          180-degree rotational symmetry, uniform grid lines, monochrome design, 1:1
+          cell aspect ratio via square=True — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 15x15 grid displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 2D grid array correctly mapped; numbers dict correctly overlaid at
+          cell positions; 15x15 standard size
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for crossword (no legend needed)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correct format crossword-basic · seaborn · pyplots.ai
+        comment: 'Title: ''crossword-basic · python · seaborn · anyplot.ai'' — correct
+          format; no legend (appropriate for monochrome crossword)'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows symmetric pattern, numbered cells, both white/black cells
+        comment: 'Shows all aspects: blocked cells, open cells, numbered positions,
+          rotational symmetry, multiple row/column patterns; 79 clue numbers covering
+          realistic word distribution'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Authentic newspaper-style crossword layout
+        comment: Traditional newspaper-style crossword with authentic blocked pattern;
+          15x15 is the standard newspaper crossword size; neutral context (puzzle/game)
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 15x15 is appropriate, 79 clues is reasonable
+        comment: 15x15 cells is the standard size; 79 clue numbers is realistic for
+          this grid density; symmetric pattern follows established crossword conventions
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -148,52 +195,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: 'Linear: imports → theme tokens → data construction → plot → style
+          → save; no functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: 'Fully deterministic: blocked_positions hardcoded; clue numbering
+          is algorithmic with no randomness'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: os, matplotlib.pyplot, numpy, seaborn — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Symmetric blocked positions applied with a two-line loop; numbering
+          algorithm is clean and standard scan-order; no fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: figsize=(12, 12) produces ~3600x3600 at 300dpi which is acceptable
-          but not standard
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current seaborn/matplotlib API used
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.heatmap() with square=True, cbar=False, linewidths, linecolor
+          — idiomatic seaborn patterns for grid visualization; sns.set_theme() with
+          rc for theme adaptation; creative application of heatmap to non-traditional
+          use case
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.heatmap() effectively with square=True and linewidths, sns.set_style(),
-          sns.color_palette(), but relies heavily on matplotlib for annotations
+        comment: square=True in sns.heatmap is seaborn-specific; linewidths/linecolor
+          for cell borders is distinctive; sns.color_palette([...]) for binary cmap;
+          not deeply distinctive beyond these parameters
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   patterns:
-  - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
-  styling:
-  - edge-highlighting
+  styling: []
