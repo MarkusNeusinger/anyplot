@@ -7,9 +7,10 @@ library(ggplot2)
 library(ragg)
 
 # Theme tokens
-THEME   <- Sys.getenv("ANYPLOT_THEME", "light")
-PAGE_BG <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-INK     <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+THEME    <- Sys.getenv("ANYPLOT_THEME", "light")
+PAGE_BG  <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
+INK      <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
+INK_SOFT <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 
 # 13x13 crossword grid (1 = black cell, 0 = entry cell)
 # Traditional 180-degree rotational symmetry
@@ -44,23 +45,17 @@ df <- data.frame(
 )
 
 # Assign clue numbers in reading order (top-left to bottom-right)
-starts_across <- function(r, c) {
-  grid_data[r, c] == 0 &&
-    (c == 1 || grid_data[r, c - 1] == 1) &&
-    c < n && grid_data[r, c + 1] == 0
-}
-
-starts_down <- function(r, c) {
-  grid_data[r, c] == 0 &&
-    (r == 1 || grid_data[r - 1, c] == 1) &&
-    r < n && grid_data[r + 1, c] == 0
-}
-
 num_list <- list()
 clue_n   <- 1
 for (r in 1:n) {
   for (c in 1:n) {
-    if (starts_across(r, c) || starts_down(r, c)) {
+    is_across <- grid_data[r, c] == 0 &&
+      (c == 1 || grid_data[r, c - 1] == 1) &&
+      c < n && grid_data[r, c + 1] == 0
+    is_down <- grid_data[r, c] == 0 &&
+      (r == 1 || grid_data[r - 1, c] == 1) &&
+      r < n && grid_data[r + 1, c] == 0
+    if (is_across || is_down) {
       num_list[[length(num_list) + 1]] <- data.frame(
         col   = c,
         y     = n + 1 - r,
@@ -89,13 +84,16 @@ p <- ggplot(df, aes(x = col, y = y)) +
     xmin = 0.5, xmax = n + 0.5,
     ymin = 0.5, ymax = n + 0.5,
     fill      = NA,
-    color     = "black",
+    color     = INK,
     linewidth = 0.7
   ) +
   coord_fixed(ratio = 1, clip = "off") +
   scale_x_continuous(expand = expansion(add = 0.25)) +
   scale_y_continuous(expand = expansion(add = 0.25)) +
-  labs(title = "crossword-basic · r · ggplot2 · anyplot.ai") +
+  labs(
+    title    = "crossword-basic · r · ggplot2 · anyplot.ai",
+    subtitle = "13×13 American-style crossword · 53 entries"
+  ) +
   theme_void() +
   theme(
     plot.background = element_rect(fill = PAGE_BG, color = PAGE_BG),
@@ -103,7 +101,13 @@ p <- ggplot(df, aes(x = col, y = y)) +
       color  = INK,
       size   = 12,
       hjust  = 0.5,
-      margin = margin(t = 8, b = 12)
+      margin = margin(t = 8, b = 4)
+    ),
+    plot.subtitle = element_text(
+      color  = INK_SOFT,
+      size   = 8,
+      hjust  = 0.5,
+      margin = margin(b = 12)
     ),
     plot.margin = margin(12, 15, 12, 15)
   )
