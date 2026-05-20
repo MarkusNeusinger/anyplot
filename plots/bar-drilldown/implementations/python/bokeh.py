@@ -1,16 +1,37 @@
-""" pyplots.ai
+"""anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-16
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-20
 """
 
-from bokeh.io import export_png, save
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# This file is named bokeh.py — remove its directory from sys.path so that
+# `import bokeh` resolves to the installed package, not this file itself.
+sys.path = [p for p in sys.path if Path(p).resolve() != Path(__file__).resolve().parent]
+
+from bokeh.io import save
 from bokeh.layouts import column, row
-from bokeh.models import Button, ColumnDataSource, CustomJS, Div, LabelSet, Legend, TapTool
+from bokeh.models import Button, ColumnDataSource, CustomJS, Div, LabelSet, TapTool
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Hierarchical data structure: Sales by Region > Country > City
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
+
+# Data: 3-level geographic sales hierarchy (Region → Country → City)
 hierarchy_data = {
     "root": {"children": ["north_america", "europe", "asia_pacific"]},
     "north_america": {"name": "North America", "value": 450, "parent": "root", "children": ["usa", "canada", "mexico"]},
@@ -21,7 +42,6 @@ hierarchy_data = {
         "parent": "root",
         "children": ["japan", "australia", "singapore"],
     },
-    # North America children
     "usa": {"name": "USA", "value": 280, "parent": "north_america", "children": ["new_york", "los_angeles", "chicago"]},
     "canada": {
         "name": "Canada",
@@ -35,11 +55,9 @@ hierarchy_data = {
         "parent": "north_america",
         "children": ["mexico_city", "guadalajara", "monterrey"],
     },
-    # Europe children
     "uk": {"name": "UK", "value": 140, "parent": "europe", "children": ["london", "manchester", "birmingham"]},
     "germany": {"name": "Germany", "value": 130, "parent": "europe", "children": ["berlin", "munich", "hamburg"]},
     "france": {"name": "France", "value": 110, "parent": "europe", "children": ["paris", "lyon", "marseille"]},
-    # Asia Pacific children
     "japan": {"name": "Japan", "value": 150, "parent": "asia_pacific", "children": ["tokyo", "osaka", "kyoto"]},
     "australia": {
         "name": "Australia",
@@ -48,7 +66,6 @@ hierarchy_data = {
         "children": ["sydney", "melbourne", "brisbane"],
     },
     "singapore": {"name": "Singapore", "value": 70, "parent": "asia_pacific", "children": []},
-    # Level 3: Cities (leaf nodes - no children)
     "new_york": {"name": "New York", "value": 120, "parent": "usa", "children": []},
     "los_angeles": {"name": "Los Angeles", "value": 95, "parent": "usa", "children": []},
     "chicago": {"name": "Chicago", "value": 65, "parent": "usa", "children": []},
@@ -75,56 +92,54 @@ hierarchy_data = {
     "brisbane": {"name": "Brisbane", "value": 20, "parent": "australia", "children": []},
 }
 
-# Get data for a specific level
+# Initial root-level data
 root_children = hierarchy_data["root"]["children"]
-names = [hierarchy_data[child]["name"] for child in root_children]
-values = [hierarchy_data[child]["value"] for child in root_children]
-ids = root_children
-has_children = [len(hierarchy_data[child].get("children", [])) > 0 for child in root_children]
+init_names = [hierarchy_data[c]["name"] for c in root_children]
+init_values = [hierarchy_data[c]["value"] for c in root_children]
+init_max = max(init_values)
 
-# Colors for bars (Python blue and complementary colors)
-colors = ["#306998", "#FFD43B", "#4B8BBE", "#FFE873", "#646464"]
-
-# Create ColumnDataSource
 source = ColumnDataSource(
     data={
-        "names": names,
-        "values": values,
-        "ids": ids,
-        "colors": [colors[i % len(colors)] for i in range(len(names))],
-        "has_children": has_children,
-        "label_y": [v + 10 for v in values],
+        "names": init_names,
+        "values": init_values,
+        "ids": root_children,
+        "colors": [OKABE_ITO[i % len(OKABE_ITO)] for i in range(len(init_names))],
+        "has_children": [len(hierarchy_data[c].get("children", [])) > 0 for c in root_children],
+        "label_y": [v + init_max * 0.025 for v in init_values],
     }
 )
 
-# State source to track current level and path
 state_source = ColumnDataSource(
     data={"current_parent": ["root"], "breadcrumb_path": ["All"], "breadcrumb_ids": ["root"]}
 )
 
-# Create figure with categorical x-axis
+# Plot — figure height 1640 leaves room for nav row in the combined layout
 p = figure(
-    x_range=names,
-    width=4800,
-    height=2700,
-    title="bar-drilldown · bokeh · pyplots.ai",
+    x_range=init_names,
+    width=3200,
+    height=1640,
+    title="bar-drilldown · python · bokeh · anyplot.ai",
     tools="tap",
     toolbar_location=None,
+    x_axis_label="Region",
+    y_axis_label="Sales ($ millions)",
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Render bars
-bars = p.vbar(
+p.vbar(
     x="names",
     top="values",
-    width=0.7,
+    width=0.65,
     source=source,
     fill_color="colors",
-    line_color="white",
-    line_width=2,
-    fill_alpha=0.9,
+    line_color=PAGE_BG,
+    line_width=3,
+    fill_alpha=0.92,
 )
 
-# Add value labels on bars
 labels = LabelSet(
     x="names",
     y="label_y",
@@ -132,278 +147,198 @@ labels = LabelSet(
     source=source,
     text_align="center",
     text_baseline="bottom",
-    text_font_size="28pt",
+    text_font_size="34pt",
     text_font_style="bold",
-    text_color="#333333",
+    text_color=INK,
 )
 p.add_layout(labels)
 
-# Styling - increased font sizes for better legibility
-p.title.text_font_size = "42pt"
-p.title.text_font_style = "bold"
-p.xaxis.axis_label = "Category"
-p.yaxis.axis_label = "Sales (millions $)"
-p.xaxis.axis_label_text_font_size = "30pt"
-p.yaxis.axis_label_text_font_size = "30pt"
-p.xaxis.major_label_text_font_size = "28pt"
-p.yaxis.major_label_text_font_size = "24pt"
-p.xaxis.major_label_orientation = 0  # Horizontal labels
-p.y_range.start = 0
-p.y_range.end = max(values) * 1.15
+# Style
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Grid styling
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.major_label_orientation = 0
+
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
 p.xgrid.grid_line_color = None
-p.ygrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_dash = [6, 4]
+p.ygrid.grid_line_color = INK
+p.ygrid.grid_line_alpha = 0.10
 
-# Outline
-p.outline_line_color = "#cccccc"
-p.outline_line_width = 2
+p.y_range.start = 0
+p.y_range.end = init_max * 1.18
 
-# Hover cursor indicator
-bars.selection_glyph = bars.glyph
-bars.nonselection_glyph = bars.glyph
-
-# Add legend showing region colors using separate renderers for reliable PNG export
-legend_renderers = []
-for i, child_id in enumerate(root_children):
-    # Create invisible scatter points for legend entries
-    legend_source = ColumnDataSource(data={"x": [names[i]], "y": [values[i] / 2]})
-    scatter = p.scatter(
-        x="x",
-        y="y",
-        source=legend_source,
-        fill_color=colors[i % len(colors)],
-        line_color="white",
-        size=0,  # Invisible points
-        marker="square",
-    )
-    legend_renderers.append((hierarchy_data[child_id]["name"], [scatter]))
-
-legend = Legend(items=legend_renderers, location="top_right", label_text_font_size="24pt")
-legend.background_fill_alpha = 0.9
-legend.background_fill_color = "white"
-legend.border_line_color = "#cccccc"
-legend.border_line_width = 2
-legend.padding = 20
-legend.spacing = 12
-legend.glyph_height = 30
-legend.glyph_width = 30
-legend.label_standoff = 10
-p.add_layout(legend, "right")
-
-# Breadcrumb div for navigation (display only - Back button handles navigation)
+# Navigation: breadcrumb trail + back button
 breadcrumb_div = Div(
-    text='<div style="font-size: 28pt; font-family: Arial, sans-serif; padding: 15px; '
-    'background: #f5f5f5; border-radius: 8px; display: inline-block;">'
-    '<span style="color: #306998; font-weight: bold;">📍 </span>'
-    '<span style="color: #333; font-weight: bold;">All</span>'
-    "</div>",
-    width=2400,
+    text=(
+        f'<div style="font-size:28pt;font-family:Arial,sans-serif;'
+        f"padding:14px 20px;background:{ELEVATED_BG};"
+        f"border-radius:8px;display:inline-block;"
+        f'color:{INK};border:1px solid {INK_SOFT};">'
+        f"<b>All</b></div>"
+    ),
+    width=2700,
+    height=90,
 )
 
-# Back button (visible but only functional when not at root)
-back_button = Button(label="⬅ Back", button_type="primary", width=200, height=60)
+back_button = Button(label="← Back", button_type="primary", width=240, height=90, disabled=True)
 
-# Instructions div - increased font size for better legibility
-instructions_div = Div(
-    text='<div style="font-size: 28pt; font-family: Arial, sans-serif; padding: 20px; '
-    'color: #333; text-align: center; background: #e8f4fc; border-radius: 8px; margin-top: 20px;">'
-    "👆 <b>Click on a bar to drill down</b> | Use Back button to navigate up"
-    "</div>",
-    width=4800,
-)
-
-# JavaScript callback for drilling down
+# Drill-down: click a bar to show its children
 drill_callback = CustomJS(
     args={
         "source": source,
         "state": state_source,
         "p": p,
         "hierarchy": hierarchy_data,
-        "colors": colors,
+        "okabe_ito": OKABE_ITO,
         "breadcrumb_div": breadcrumb_div,
         "back_button": back_button,
+        "ink": INK,
+        "ink_soft": INK_SOFT,
+        "elevated_bg": ELEVATED_BG,
     },
     code="""
     const indices = source.selected.indices;
     if (indices.length === 0) return;
-
     const idx = indices[0];
     const clicked_id = source.data['ids'][idx];
     const node = hierarchy[clicked_id];
-
-    // Check if this node has children
     if (!node || !node.children || node.children.length === 0) {
         source.selected.indices = [];
         return;
     }
-
-    // Get children data
     const children_ids = node.children;
-    const names = [];
-    const values = [];
-    const has_children = [];
-
-    for (const child_id of children_ids) {
-        const child = hierarchy[child_id];
-        names.push(child.name);
-        values.push(child.value);
-        has_children.push(child.children && child.children.length > 0);
+    const names = [], values = [], has_children = [];
+    for (const cid of children_ids) {
+        const c = hierarchy[cid];
+        names.push(c.name);
+        values.push(c.value);
+        has_children.push(c.children && c.children.length > 0);
     }
-
-    // Update source data
     source.data['names'] = names;
     source.data['values'] = values;
     source.data['ids'] = children_ids;
     source.data['has_children'] = has_children;
-    source.data['colors'] = names.map((_, i) => colors[i % colors.length]);
-    source.data['label_y'] = values.map(v => v + 5);
-
-    // Update x_range
+    source.data['colors'] = names.map((_, i) => okabe_ito[i % okabe_ito.length]);
+    const max_v = Math.max(...values);
+    source.data['label_y'] = values.map(v => v + max_v * 0.025);
     p.x_range.factors = names;
-
-    // Update y_range
-    const max_val = Math.max(...values);
-    p.y_range.end = max_val * 1.15;
-
-    // Update state
-    const current_path = state.data['breadcrumb_path'].slice();
-    const current_ids = state.data['breadcrumb_ids'].slice();
-    current_path.push(node.name);
-    current_ids.push(clicked_id);
+    p.y_range.end = max_v * 1.18;
+    const path = state.data['breadcrumb_path'].slice();
+    const ids_path = state.data['breadcrumb_ids'].slice();
+    path.push(node.name);
+    ids_path.push(clicked_id);
     state.data['current_parent'] = [clicked_id];
-    state.data['breadcrumb_path'] = current_path;
-    state.data['breadcrumb_ids'] = current_ids;
-
-    // Update breadcrumb display
-    let breadcrumb_html = '<div style="font-size: 28pt; font-family: Arial, sans-serif; padding: 15px; background: #f5f5f5; border-radius: 8px; display: inline-block;">';
-    breadcrumb_html += '<span style="color: #306998; font-weight: bold;">📍 </span>';
-
-    for (let i = 0; i < current_path.length; i++) {
-        if (i > 0) {
-            breadcrumb_html += '<span style="color: #999;"> › </span>';
-        }
-        const is_last = (i === current_path.length - 1);
-        if (is_last) {
-            breadcrumb_html += '<span style="color: #333; font-weight: bold;">' + current_path[i] + '</span>';
-        } else {
-            breadcrumb_html += '<span style="color: #306998;">' + current_path[i] + '</span>';
-        }
+    state.data['breadcrumb_path'] = path;
+    state.data['breadcrumb_ids'] = ids_path;
+    let html = '<div style="font-size:28pt;font-family:Arial,sans-serif;padding:14px 20px;background:' + elevated_bg + ';border-radius:8px;display:inline-block;color:' + ink + ';border:1px solid ' + ink_soft + ';">';
+    for (let i = 0; i < path.length; i++) {
+        if (i > 0) html += ' <span style="color:' + ink_soft + ';">›</span> ';
+        html += (i === path.length - 1) ? '<b>' + path[i] + '</b>' : path[i];
     }
-    breadcrumb_html += '</div>';
-    breadcrumb_div.text = breadcrumb_html;
-
-    // Enable Back button when not at root
+    html += '</div>';
+    breadcrumb_div.text = html;
     back_button.disabled = false;
-
     source.selected.indices = [];
     source.change.emit();
     state.change.emit();
 """,
 )
 
-# JavaScript callback for drilling up (Back button)
+# Drill-up: back button navigates to parent level
 drill_up_callback = CustomJS(
     args={
         "source": source,
         "state": state_source,
         "p": p,
         "hierarchy": hierarchy_data,
-        "colors": colors,
+        "okabe_ito": OKABE_ITO,
         "breadcrumb_div": breadcrumb_div,
         "back_button": back_button,
+        "ink": INK,
+        "ink_soft": INK_SOFT,
+        "elevated_bg": ELEVATED_BG,
     },
     code="""
-    const current_path = state.data['breadcrumb_path'];
-    const current_ids = state.data['breadcrumb_ids'];
-
-    // If at root level, do nothing
-    if (current_ids.length <= 1) return;
-
-    // Go up one level
-    const new_path = current_path.slice(0, -1);
-    const new_ids = current_ids.slice(0, -1);
+    const path = state.data['breadcrumb_path'];
+    const ids_path = state.data['breadcrumb_ids'];
+    if (ids_path.length <= 1) return;
+    const new_path = path.slice(0, -1);
+    const new_ids = ids_path.slice(0, -1);
     const parent_id = new_ids[new_ids.length - 1];
-
-    // Get data for parent level
-    let children_ids;
-    if (parent_id === 'root') {
-        children_ids = hierarchy['root']['children'];
-    } else {
-        children_ids = hierarchy[parent_id]['children'];
+    const children_ids = (parent_id === 'root') ? hierarchy['root']['children'] : hierarchy[parent_id]['children'];
+    const names = [], values = [], has_children = [];
+    for (const cid of children_ids) {
+        const c = hierarchy[cid];
+        names.push(c.name);
+        values.push(c.value);
+        has_children.push(c.children && c.children.length > 0);
     }
-
-    const names = [];
-    const values = [];
-    const has_children = [];
-
-    for (const child_id of children_ids) {
-        const child = hierarchy[child_id];
-        names.push(child.name);
-        values.push(child.value);
-        has_children.push(child.children && child.children.length > 0);
-    }
-
-    // Update source data
     source.data['names'] = names;
     source.data['values'] = values;
     source.data['ids'] = children_ids;
     source.data['has_children'] = has_children;
-    source.data['colors'] = names.map((_, i) => colors[i % colors.length]);
-    source.data['label_y'] = values.map(v => v + 5);
-
-    // Update x_range
+    source.data['colors'] = names.map((_, i) => okabe_ito[i % okabe_ito.length]);
+    const max_v = Math.max(...values);
+    source.data['label_y'] = values.map(v => v + max_v * 0.025);
     p.x_range.factors = names;
-
-    // Update y_range
-    const max_val = Math.max(...values);
-    p.y_range.end = max_val * 1.15;
-
-    // Update state
+    p.y_range.end = max_v * 1.18;
     state.data['current_parent'] = [parent_id];
     state.data['breadcrumb_path'] = new_path;
     state.data['breadcrumb_ids'] = new_ids;
-
-    // Update breadcrumb display
-    let breadcrumb_html = '<div style="font-size: 28pt; font-family: Arial, sans-serif; padding: 15px; background: #f5f5f5; border-radius: 8px; display: inline-block;">';
-    breadcrumb_html += '<span style="color: #306998; font-weight: bold;">📍 </span>';
-
+    let html = '<div style="font-size:28pt;font-family:Arial,sans-serif;padding:14px 20px;background:' + elevated_bg + ';border-radius:8px;display:inline-block;color:' + ink + ';border:1px solid ' + ink_soft + ';">';
     for (let i = 0; i < new_path.length; i++) {
-        if (i > 0) {
-            breadcrumb_html += '<span style="color: #999;"> › </span>';
-        }
-        const is_last = (i === new_path.length - 1);
-        if (is_last) {
-            breadcrumb_html += '<span style="color: #333; font-weight: bold;">' + new_path[i] + '</span>';
-        } else {
-            breadcrumb_html += '<span style="color: #306998;">' + new_path[i] + '</span>';
-        }
+        if (i > 0) html += ' <span style="color:' + ink_soft + ';">›</span> ';
+        html += (i === new_path.length - 1) ? '<b>' + new_path[i] + '</b>' : new_path[i];
     }
-    breadcrumb_html += '</div>';
-    breadcrumb_div.text = breadcrumb_html;
-
-    // Disable Back button if at root
-    if (new_ids.length <= 1) {
-        back_button.disabled = true;
-    }
-
+    html += '</div>';
+    breadcrumb_div.text = html;
+    if (new_ids.length <= 1) back_button.disabled = true;
     source.change.emit();
     state.change.emit();
 """,
 )
 
-# Attach drill-up callback to back button
 back_button.js_on_click(drill_up_callback)
-back_button.disabled = True  # Start disabled since we're at root
-
-# Add tap tool callback
 p.select(TapTool).callback = drill_callback
 
-# Create layout with navigation row containing breadcrumb and back button
-nav_row = row(breadcrumb_div, back_button)
-layout = column(nav_row, p, instructions_div)
+nav_row = row(breadcrumb_div, back_button, spacing=20)
+layout = column(nav_row, p, spacing=10)
 
-# Save outputs (PNG for static preview, HTML for interactivity)
-export_png(layout, filename="plot.png")
-save(layout, filename="plot.html", title="bar-drilldown · bokeh · pyplots.ai")
+# Save HTML for interactive use
+save(layout, filename=f"plot-{THEME}.html", title="bar-drilldown · python · bokeh · anyplot.ai")
+
+# Save PNG via headless Chrome (Selenium) — export_png is not reliable in this env
+W, H = 3200, 1860
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
