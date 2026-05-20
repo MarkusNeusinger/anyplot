@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-20
@@ -80,7 +80,7 @@ line_df = pd.DataFrame(line_rows).sort_values(["seg_id", "order"])
 # One contour label per level: pick the point nearest lon=15°E within visible range
 # Visible latitude range is approx 36-64°N at scale=400, center=(15°N,52°N), height=310
 label_rows = []
-for lvl in [5, 15, 25]:
+for lvl in [-5, 5, 15, 25]:
     subset = line_df[
         (line_df["level"] == float(lvl))
         & (line_df["longitude"] > 5)
@@ -113,7 +113,7 @@ heat = (
         latitude="latitude:Q",
         color=alt.Color(
             "temperature:Q",
-            scale=alt.Scale(scheme="redyellowblue", reverse=True, domain=[-10, 30]),
+            scale=alt.Scale(scheme="brownbluegreen", domain=[-10, 30]),
             legend=alt.Legend(
                 title="Temp (°C)",
                 titleFontSize=12,
@@ -170,6 +170,7 @@ chart = (
         ),
     )
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=0.5)
+    .configure_axis(labelColor=INK_SOFT, titleColor=INK)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
