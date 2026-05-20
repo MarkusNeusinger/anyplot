@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -13,7 +13,6 @@ import plotly.graph_objects as go
 # Theme
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
-ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
@@ -52,7 +51,7 @@ yield_strength = 450  # MPa
 endurance_limit = 230  # MPa
 
 # Basquin fit line
-fit_cycles = np.logspace(2, 8, 100)
+fit_cycles = np.logspace(2, 7, 100)
 fit_stress = A * fit_cycles**b
 
 # Plot
@@ -80,7 +79,9 @@ fig.add_trace(
     )
 )
 
-x_range = [100, 1e8]
+x_range = [100, 1e7]
+
+fig.add_hrect(y0=200, y1=endurance_limit, opacity=0.05, fillcolor=BRAND, layer="below")
 
 fig.add_trace(
     go.Scatter(
@@ -131,14 +132,12 @@ fig.update_layout(
         "title": {"text": "Cycles to Failure (N)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "type": "log",
-        "showgrid": True,
-        "gridwidth": 1,
-        "gridcolor": GRID,
+        "showgrid": False,
         "showline": True,
         "linewidth": 1,
         "linecolor": INK_SOFT,
         "mirror": False,
-        "range": [2, 8],
+        "range": [2, 7],
         "zerolinecolor": GRID,
     },
     yaxis={
@@ -161,9 +160,8 @@ fig.update_layout(
         "y": 0.95,
         "xanchor": "right",
         "yanchor": "top",
-        "bgcolor": ELEVATED_BG,
-        "bordercolor": INK_SOFT,
-        "borderwidth": 1,
+        "bgcolor": "rgba(0,0,0,0)",
+        "borderwidth": 0,
     },
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
