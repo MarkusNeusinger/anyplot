@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: crossword-basic
 created: '2026-01-15T21:40:49Z'
-updated: '2026-05-20T02:21:51Z'
+updated: '2026-05-20T02:42:45Z'
 generated_by: claude-sonnet
 workflow_run: 26136813764
 issue: 3805
@@ -12,36 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/python/pygal/plot-dark.html
-quality_score: 81
+quality_score: 87
 review:
   strengths:
-  - Perfect visual output in both themes — clean, accurate, well-proportioned crossword
-    grid
-  - Correct 180° rotational symmetry and proper clue numbering algorithm
-  - Warm theme-adaptive backgrounds (not pure white/black) correctly applied
-  - Fully correct spec compliance and data quality for this plot type
-  - Both PNG and HTML outputs properly generated with theme-suffixed filenames
+  - 'Perfect spec compliance across all dimensions: 15x15 grid, black/white cells,
+    clue numbers, 180-degree symmetry, clean grid lines'
+  - 'Excellent theme adaptation: correct background tokens (#FAF8F1/#1A1A17) and readable
+    text in both renders'
+  - Creative use of pygal's Graph subclass and SVG node API to implement a chart type
+    not natively supported by the library
+  - Appropriate cairosvg integration for PNG + interactive HTML dual output
+  - 'Realistic crossword data: 67 clues, authentic black cell density, symmetric pattern'
   weaknesses:
-  - custom_style = Style(...) is dead code — all SVG rendering uses raw token variables
-    (INK, PAGE_BG) and hardcoded font sizes; the Style object is never passed to or
-    used by any rendering pipeline
-  - pygal chart API completely bypassed — no chart class instantiated, no chart.render()
-    called; essentially a cairosvg SVG renderer with an unused pygal Style import
-  - Bottom canvas margin (100px) smaller than top margin (200px) — slight visual imbalance
-  - In dark mode, blocking cells render as light cream (#F0EFE8) while entry cells
-    are dark — inverted from the traditional black-cells-are-blockers crossword convention
+  - 'Dark theme semantically inverts crossword colors: blocking cells become light
+    (#F0EFE8) and entry cells become dark (#242420). Traditional crosswords keep black
+    blocking cells even on dark-mode backgrounds - while readable, this departs from
+    crossword convention.'
+  - Design Excellence ceiling is inherent to the monochrome crossword format - limited
+    room for aesthetic sophistication beyond correct rendering.
+  - CrosswordGrid class technically violates KISS principle (no functions/classes
+    guideline), though genuinely necessary for pygal's custom chart pattern.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Bold centered title "crossword-basic · python · pygal · anyplot.ai" in dark near-black #1A1A17 — clearly readable. No axis labels (N/A for crossword). Clue numbers in dark #1A1A17 at 28px — readable at canvas size.
-      Data: 15×15 crossword grid; blocking cells filled #1A1A17 (near-black), entry cells filled #FFFDF6 (elevated off-white). Grid lines in muted #4A4A44 at 2px. 67 clue numbers placed at word-starting cell top-left corners.
+      Background: Warm off-white (#FAF8F1) - correct light theme surface
+      Chrome: Title "crossword-basic · python · pygal · anyplot.ai" in dark ink at top, ~75% canvas width - readable. No axis labels (N/A for crossword). Clue numbers (1-67) in dark ink in entry cells - readable.
+      Data: 15x15 crossword grid with jet-black blocking cells (#1A1A17) and warm off-white entry cells (#FFFDF6). Muted gray cell borders (#4A4A44). 180-degree rotational symmetry visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title in warm off-white #F0EFE8 — clearly readable against dark background. Clue numbers in #F0EFE8 — readable on dark entry cells (#242420). No dark-on-dark failures observed.
-      Data: Colors inverted by theme tokens — entry cells #242420 (dark), blocking cells #F0EFE8 (light cream). Colors identical to the theme-token values (monochrome design, no Okabe-Ito categorical series). Grid lines subtle and visible.
-      Legibility verdict: PASS
+      Background: Near-black (#1A1A17) - correct dark theme surface
+      Chrome: Title in light cream text - clearly readable against dark background. No dark-on-dark failures for title or clue numbers.
+      Data: Colors are inverted from light render due to theme token assignment: blocking cells (grid==1) render as light cream (#F0EFE8) and entry cells (grid==0) render as near-black (#242420). Clue numbers appear as light cream text (#F0EFE8) on dark entry cells - readable with adequate contrast. This is a semantic inversion of the traditional crossword convention (black=blocked) but all elements remain legible.
+      Legibility verdict: PASS (all text readable; note: crossword color semantics inverted in dark mode - blocking cells light, entry cells dark)
   criteria_checklist:
     visual_quality:
       score: 30
@@ -52,73 +54,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=66, numbers=28); both themes
-          fully readable; proportional for plot type
+        comment: All font sizes explicitly set (title_font_size=66, NUM_SZ=28). Title
+          and clue numbers well-proportioned in both renders.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collisions in either render
+        comment: No overlapping text; crossword cells naturally partition the space.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Black/entry cell contrast is clear; clue numbers legible at canvas
-          size
+        comment: All cells clearly distinct; clue numbers readable in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Monochrome design, maximum contrast, no hue dependency
+        comment: High-contrast monochrome; CVD-safe by design.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 2400x2400 square canvas; grid fills ~76% of canvas; 150px side margins;
-          well-proportioned
+        comment: 2400x2400 square; 150px margins; grid fills ~87% of plot area; well-balanced
+          whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format exactly; no axis labels needed for
-          this plot type
+        comment: Title format correct; axis labels N/A for crossword grid.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Light background #FAF8F1, dark #1A1A17; INK tokens correct in both
-          renders; monochrome design'
+        comment: 'Background correctly #FAF8F1 (light) / #1A1A17 (dark); monochrome
+          palette appropriate; theme tokens wired correctly.'
     design_excellence:
-      score: 11
+      score: 10
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Clean, functional design using warm backgrounds over pure white/black.
-          Reads as a well-executed default rather than a standout design.
+        passed: true
+        comment: Clean, professional monochrome execution. Warm off-white entry cells
+          show design awareness, but format limits sophistication ceiling.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: 'Subtle grid strokes (INK_SOFT), no unnecessary decorations. Minor
-          layout imbalance: top margin 200px vs bottom 100px.'
+        passed: true
+        comment: Generous 150px margins, no legend, no axis guides, muted borders.
+          Good refinement for custom chart type.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 2
         max: 6
         passed: false
-        comment: 180° rotational symmetry visually evident; clue numbering creates
-          visual hierarchy. Limited storytelling scope inherent to plot type.
+        comment: Correct crossword structure with 180-degree symmetry and proper numbering,
+          but no additional visual hierarchy or emphasis.
     spec_compliance:
       score: 15
       max: 15
@@ -128,28 +128,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct crossword grid with white/black cells and numbered positions
+        comment: Correct crossword puzzle grid with white entry cells, black blocking
+          cells, numbered positions.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: White entry cells, black blocking cells, top-left corner clue numbers,
-          180° symmetry, 1:1 cell aspect ratio, uniform grid lines all present
+        comment: 'All spec features present: white/black cells, clue numbers, 180-degree
+          symmetry, uniform grid lines, 1:1 aspect ratio, 15x15 grid.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 15x15 grid correctly rendered; all 67 clue numbers correctly placed
-          at word-starting cells
+        comment: 2D grid array correctly maps to visual cells; blocking pattern correctly
+          applied.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly crossword-basic · python · pygal · anyplot.ai; no
-          legend needed
+        comment: Title is exactly 'crossword-basic · python · pygal · anyplot.ai';
+          no legend appropriate.
     data_quality:
       score: 15
       max: 15
@@ -159,24 +160,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all crossword features: entry cells, blocking cells, numbering
-          algorithm, rotational symmetry'
+        comment: 'Shows all crossword aspects: blocking/entry cells, numbered word
+          starts (across and down), symmetric pattern, realistic density.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Authentic newspaper-style 15x15 crossword layout with realistic black-cell
-          density (~18%) and proper clue count
+        comment: Standard 15x15 newspaper-style crossword with realistic black cell
+          density; 67 clue numbers is authentic for this format.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 67 clue numbers in a 15x15 grid is realistic; black cell positions
-          well-distributed
+        comment: 15x15 is the canonical newspaper crossword size; black cell count
+          and distribution are realistic.
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
@@ -184,54 +185,56 @@ review:
         score: 2
         max: 3
         passed: false
-        comment: Clean linear structure but custom_style object is defined and never
-          referenced in rendering (dead code)
+        comment: CrosswordGrid class subclassing pygal's Graph is technically a KISS
+          violation, but genuinely necessary for pygal's custom chart type pattern.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) present
+        comment: np.random.seed(42) set; grid defined deterministically via hard-coded
+          positions.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are referenced at least once
+        comment: 'All imports used. Minor: os imported twice (_os for sys.path, os
+          for getenv) - not a real issue.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: SVG f-string generation appropriate for custom grid, but custom_style
-          is fully unused — its values are never applied to SVG rendering
+        passed: true
+        comment: Necessary sys.path manipulation explained; SVG rendering via pygal
+          node API is clean; no fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png (via cairosvg) and plot-{THEME}.html (via
+          pygal render pipeline). Correct filenames.
     library_mastery:
-      score: 2
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: Only pygal.style.Style imported; no pygal chart class instantiated.
-          Style object created but its values never applied to chart rendering — SVG
-          generated entirely manually using raw f-strings and cairosvg.
+        passed: true
+        comment: Correctly uses pygal's Style object, render pipeline, and SVG node
+          API. Graph subclassing is the appropriate pygal pattern for custom chart
+          types.
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: No pygal-distinctive features used (no interactive SVG chart, no
-          chart.render(), no pygal series API). HTML output is manually embedded SVG,
-          not pygal's interactive chart output.
-  verdict: REJECTED
+        passed: true
+        comment: Uses pygal's internal SVG node API (self.svg.node()) and _plot()
+          override to create a chart type not natively supported by pygal.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
@@ -239,7 +242,6 @@ impl_tags:
   - html-export
   - annotations
   patterns:
-  - data-generation
   - matrix-construction
   dataprep: []
   styling:
