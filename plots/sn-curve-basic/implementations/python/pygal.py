@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
-Library: pygal | Python 3.13
-Quality: 78/100 | Updated: 2026-05-19
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-20
 """
 
 import os
