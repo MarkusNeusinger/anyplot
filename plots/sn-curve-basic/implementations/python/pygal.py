@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -100,7 +100,7 @@ custom_style = Style(
     legend_font_size=44,
     value_font_size=36,
     stroke_width=3,
-    opacity=0.9,
+    opacity=0.75,
     opacity_hover=1.0,
 )
 
@@ -120,7 +120,7 @@ chart = pygal.XY(
     show_y_guides=True,
     x_label_rotation=45,
     legend_at_bottom=True,
-    legend_box_size=32,
+    legend_box_size=44,
     margin=100,
     range=(math.log10(120), math.log10(640)),
     value_formatter=lambda xy: f"{xy[0]:.2e} cycles, {10 ** xy[1]:.0f} MPa" if isinstance(xy, tuple) else str(xy),
@@ -134,7 +134,7 @@ y_tick_vals = [150, 200, 250, 300, 350, 400, 450, 500, 550]
 chart.y_labels = [{"value": math.log10(v), "label": str(v)} for v in y_tick_vals]
 
 # Series: Test Data first (most prominent), then derived/reference
-chart.add("Test Data", xy_points, dots_size=26, stroke=False, show_dots=True)
+chart.add("Test Data", xy_points, dots_size=20, stroke=False, show_dots=True)
 chart.add(
     "Basquin Fit (S = A·N^b)",
     fit_points,
@@ -162,7 +162,7 @@ chart.add(
     [(100, end_log), (1e7, end_log)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 5, "dasharray": "6, 8", "opacity": 0.75},
+    stroke_style={"width": 7, "dasharray": "6, 8"},
 )
 
 # Save
