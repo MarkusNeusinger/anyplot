@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-20
@@ -11,6 +11,7 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 from matplotlib.lines import Line2D
+from matplotlib.patches import Patch
 from matplotlib.ticker import ScalarFormatter
 
 
@@ -57,33 +58,98 @@ ax.set_xlim(-50, 58)
 skew_slope = np.tan(np.radians(45))
 p_bg = np.logspace(np.log10(45), np.log10(1050), 150)
 
-# Isotherms (45-degree skewed temperature lines)
+# Isotherms — seaborn lineplot with units for multi-line rendering (seaborn-idiomatic)
+iso_frames = []
 for t in np.arange(-80, 65, 10):
     x_iso = t + skew_slope * np.log(1000 / p_bg)
-    ax.plot(x_iso, p_bg, color=INK_SOFT, linewidth=0.4, alpha=0.30, zorder=1)
+    iso_frames.append(pd.DataFrame({"x": x_iso, "pressure": p_bg, "T": t}))
+df_iso = pd.concat(iso_frames, ignore_index=True)
+sns.lineplot(
+    data=df_iso,
+    x="x",
+    y="pressure",
+    units="T",
+    estimator=None,
+    color=INK_SOFT,
+    linewidth=0.4,
+    alpha=0.30,
+    ax=ax,
+    zorder=1,
+    legend=False,
+)
 
-# Dry adiabats (potential temperature θ = const)
+# Dry adiabats (potential temperature θ = const) — seaborn lineplot
+dry_frames = []
 for theta in np.arange(250, 470, 20):
     t_dry = theta * (p_bg / 1000) ** 0.286 - 273.15
     x_dry = t_dry + skew_slope * np.log(1000 / p_bg)
-    ax.plot(x_dry, p_bg, color=OKABE_ITO[4], linewidth=0.5, alpha=0.50, zorder=1)
+    dry_frames.append(pd.DataFrame({"x": x_dry, "pressure": p_bg, "theta": theta}))
+df_dry = pd.concat(dry_frames, ignore_index=True)
+sns.lineplot(
+    data=df_dry,
+    x="x",
+    y="pressure",
+    units="theta",
+    estimator=None,
+    color=OKABE_ITO[4],
+    linewidth=0.5,
+    alpha=0.50,
+    ax=ax,
+    zorder=1,
+    legend=False,
+)
 
-# Moist adiabats (equivalent potential temperature θ_e = const, simplified)
+# Moist adiabats (equivalent potential temperature θ_e = const) — seaborn lineplot
+moist_frames = []
 for theta_e in np.arange(270, 400, 20):
     t_moist = (theta_e - 30) * (p_bg / 1000) ** 0.30 - 273.15
     x_moist = t_moist + skew_slope * np.log(1000 / p_bg)
-    ax.plot(x_moist, p_bg, color=OKABE_ITO[2], linewidth=0.5, alpha=0.40, linestyle="--", zorder=1)
+    moist_frames.append(pd.DataFrame({"x": x_moist, "pressure": p_bg, "theta_e": theta_e}))
+df_moist = pd.concat(moist_frames, ignore_index=True)
+sns.lineplot(
+    data=df_moist,
+    x="x",
+    y="pressure",
+    units="theta_e",
+    estimator=None,
+    color=OKABE_ITO[2],
+    linewidth=0.5,
+    alpha=0.40,
+    linestyle="--",
+    ax=ax,
+    zorder=1,
+    legend=False,
+)
 
-# Mixing ratio lines (w = const, g/kg) — plotted only in lower troposphere
+# Mixing ratio lines (w = const, g/kg) — lower troposphere only — seaborn lineplot
 p_mix = np.logspace(np.log10(400), np.log10(1050), 60)
+mix_frames = []
 for w in [1, 2, 4, 7, 10, 16, 24]:
     t_mix = 35 * np.log10(w) - 20 + 5 * np.log10(p_mix / 1000)
     x_mix = t_mix + skew_slope * np.log(1000 / p_mix)
-    ax.plot(x_mix, p_mix, color=OKABE_ITO[3], linewidth=0.5, alpha=0.40, linestyle=":", zorder=1)
+    mix_frames.append(pd.DataFrame({"x": x_mix, "pressure": p_mix, "w": w}))
+df_mix = pd.concat(mix_frames, ignore_index=True)
+sns.lineplot(
+    data=df_mix,
+    x="x",
+    y="pressure",
+    units="w",
+    estimator=None,
+    color=OKABE_ITO[3],
+    linewidth=0.5,
+    alpha=0.40,
+    linestyle=":",
+    ax=ax,
+    zorder=1,
+    legend=False,
+)
 
 # Apply skew transform to sounding data
 x_temp = temperature + skew_slope * np.log(1000 / pressure)
 x_dew = dewpoint + skew_slope * np.log(1000 / pressure)
+
+# CAPE region: shade area between temperature and dewpoint profiles (T > Td = instability)
+ax.fill_betweenx(pressure, x_dew, x_temp, alpha=0.12, color=OKABE_ITO[4], zorder=2)
 
 df = pd.DataFrame(
     {
@@ -93,7 +159,7 @@ df = pd.DataFrame(
     }
 )
 
-# Plot sounding profiles with seaborn lineplot
+# Plot sounding profiles with seaborn lineplot (hue + style + markers = seaborn-idiomatic)
 sns.lineplot(
     data=df,
     x="x",
@@ -127,17 +193,18 @@ ax.spines["left"].set_color(INK_SOFT)
 ax.spines["bottom"].set_color(INK_SOFT)
 ax.yaxis.grid(True, alpha=0.10, linewidth=0.5, color=INK)
 
-# Legend with profile lines and all reference line types (addresses SC-05)
+# Legend — upper-left where 100-200 hPa data is sparse (reduces crowding with mixing ratio lines)
 legend_handles = [
     Line2D([0], [0], color=OKABE_ITO[0], lw=2.5, marker="o", markersize=5, label="Temperature"),
     Line2D([0], [0], color=OKABE_ITO[1], lw=2.5, linestyle=(0, (5, 2)), marker="s", markersize=5, label="Dewpoint"),
+    Patch(facecolor=OKABE_ITO[4], alpha=0.30, edgecolor="none", label="CAPE Region"),
     Line2D([0], [0], color=INK_SOFT, lw=0.8, alpha=0.6, label="Isotherms"),
     Line2D([0], [0], color=OKABE_ITO[4], lw=0.8, alpha=0.7, label="Dry Adiabats"),
     Line2D([0], [0], color=OKABE_ITO[2], lw=0.8, alpha=0.6, linestyle="--", label="Moist Adiabats"),
     Line2D([0], [0], color=OKABE_ITO[3], lw=0.8, alpha=0.6, linestyle=":", label="Mixing Ratio"),
 ]
 ax.legend(
-    handles=legend_handles, loc="lower left", fontsize=8, framealpha=0.92, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
+    handles=legend_handles, loc="upper left", fontsize=8, framealpha=0.92, facecolor=ELEVATED_BG, edgecolor=INK_SOFT
 )
 
 plt.tight_layout()
