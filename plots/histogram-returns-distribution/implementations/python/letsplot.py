@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: letsplot 4.10.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -113,15 +113,16 @@ plot = (
     + anyplot_theme
     + ggsize(800, 450)  # noqa: F405
     + geom_label(  # noqa: F405
-        x=x_max - 0.5,
-        y=normal_pdf.max() * 0.95,
+        x=upper_tail + 2.5,
+        y=normal_pdf.max() * 0.90,
         label=stats_text,
         size=10,
-        hjust=1,
+        hjust=0.5,
         fill=ELEVATED_BG,
         color=INK,
         alpha=0.9,
         label_padding=0.5,
+        label_size=0.3,
     )
 )
 
