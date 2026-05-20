@@ -1,7 +1,7 @@
 """ anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-20
+Quality: 87/100 | Updated: 2026-05-20
 """
 
 import os
@@ -50,10 +50,10 @@ fit_df = pd.DataFrame({"cycles": fit_cycles, "stress": fit_stress})
 # Material property reference lines
 ref_df = pd.DataFrame({"property": ["UTS: 520 MPa", "YS: 380 MPa", "EL: 150 MPa"], "stress": [520, 380, 150]})
 
-# Infinite-life design zone — subtle band below endurance limit highlights the safe operating region
+# Infinite-life design zone — subtle band below endurance limit
 band_df = pd.DataFrame({"y1": [100], "y2": [150]})
 
-# Region text labels — top two above UTS line, "Infinite Life" inside the shaded zone
+# Region text labels — annotate the three fatigue life zones
 region_df = pd.DataFrame(
     {
         "cycles": [700.0, 150000.0, 800000.0],
@@ -74,7 +74,7 @@ band = alt.Chart(band_df).mark_rect(opacity=0.10, color=C_EL).encode(y=alt.Y("y1
 # Scatter: individual test specimens
 points = (
     alt.Chart(df)
-    .mark_point(size=180, filled=True, opacity=0.75, color=BRAND)
+    .mark_point(size=180, filled=True, opacity=0.75, color=BRAND, stroke=PAGE_BG, strokeWidth=0.8)
     .encode(
         x=alt.X("cycles:Q", scale=x_scale, title="Cycles to Failure (N)"),
         y=alt.Y("stress:Q", scale=y_scale, title="Stress Amplitude (MPa)"),
@@ -99,7 +99,7 @@ ref_rules = (
             "property:N",
             scale=alt.Scale(domain=["UTS: 520 MPa", "YS: 380 MPa", "EL: 150 MPa"], range=[C_UTS, C_YS, C_EL]),
             legend=alt.Legend(
-                title="Material Properties", titleFontSize=12, labelFontSize=10, labelLimit=200, orient="bottom-left"
+                title="Material Properties", titleFontSize=12, labelFontSize=10, labelLimit=200, orient="bottom-right"
             ),
         ),
     )
@@ -112,29 +112,30 @@ region_labels = (
     .encode(x=alt.X("cycles:Q", scale=x_scale), y=alt.Y("stress:Q", scale=y_scale), text="label:N")
 )
 
-# Title as in-view mark_text — keeps it inside the 800×450 bounds so PIL center-crop cannot remove it
-title_layer = (
-    alt.Chart(pd.DataFrame({"_": [0]}))
-    .mark_text(text=TITLE, fontSize=13, fontWeight="bold", color=INK, align="center", baseline="top")
-    .encode(x=alt.value(400), y=alt.value(8))
-)
-
-# Compose all layers
+# Compose all layers — inner view 620×320 so vl-convert padding fits within 3200×1800
 chart = (
-    (band + points + fit_line + ref_rules + region_labels + title_layer)
-    .properties(width=800, height=450, background=PAGE_BG, padding={"left": 0, "right": 0, "top": 0, "bottom": 0})
-    .configure_view(fill=PAGE_BG, strokeOpacity=0, continuousWidth=800, continuousHeight=450)
+    (band + points + fit_line + ref_rules + region_labels)
+    .properties(
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
+        title=alt.Title(TITLE, fontSize=16),
+    )
+    .configure_view(fill=PAGE_BG, strokeOpacity=0, continuousWidth=620, continuousHeight=320)
     .configure_axis(
         domainColor=INK_SOFT,
+        domainOpacity=1,
         tickColor=INK_SOFT,
         gridColor=INK,
-        gridOpacity=0.10,
+        gridOpacity=0.06,
         labelColor=INK_SOFT,
         titleColor=INK,
         labelFontSize=10,
         titleFontSize=12,
     )
-    .configure_title(color=INK, fontWeight="bold")
+    .configure_axisX(gridOpacity=0)
+    .configure_title(color=INK, fontWeight="bold", fontSize=16)
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
@@ -145,22 +146,21 @@ chart = (
     )
 )
 
-# Save PNG (3200×1800) and interactive HTML
+# Save PNG and interactive HTML
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
 
-# Normalize to exact 3200×1800 — vl-convert pads outside width/height
+# PAD-only to exact 3200×1800 — raise if vl-convert overshoots (do NOT crop)
 TW, TH = 3200, 1800
 _img = Image.open(f"plot-{THEME}.png").convert("RGB")
 _w, _h = _img.size
 if _w > TW or _h > TH:
-    _l = max((_w - TW) // 2, 0)
-    _t = max((_h - TH) // 2, 0)
-    _img = _img.crop((_l, _t, _l + min(_w, TW), _t + min(_h, TH)))
-    _w, _h = _img.size
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
 if _w < TW or _h < TH:
     _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
     _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
-    _img = _canvas
-_img.save(f"plot-{THEME}.png")
+    _canvas.save(f"plot-{THEME}.png")
 
 chart.save(f"plot-{THEME}.html")

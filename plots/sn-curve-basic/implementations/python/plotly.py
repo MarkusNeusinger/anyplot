@@ -1,7 +1,7 @@
 """ anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: plotly 6.7.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-20
+Quality: 87/100 | Updated: 2026-05-20
 """
 
 import os
@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 # Theme
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
@@ -53,6 +54,7 @@ endurance_limit = 230  # MPa
 # Basquin fit line
 fit_cycles = np.logspace(2, 7, 100)
 fit_stress = A * fit_cycles**b
+n_knee = (endurance_limit / A) ** (1 / b)  # transition point to infinite life
 
 # Plot
 fig = go.Figure()
@@ -81,8 +83,10 @@ fig.add_trace(
 
 x_range = [100, 1e7]
 
-fig.add_hrect(y0=200, y1=endurance_limit, opacity=0.05, fillcolor=BRAND, layer="below")
+# Infinite-life zone fill — opacity raised so the region registers as a meaningful cue
+fig.add_hrect(y0=200, y1=endurance_limit, opacity=0.11, fillcolor=BRAND, layer="below")
 
+# Reference lines — excluded from legend; annotated directly at right edge instead
 fig.add_trace(
     go.Scatter(
         x=x_range,
@@ -90,6 +94,7 @@ fig.add_trace(
         mode="lines",
         name=f"Ultimate Strength ({ultimate_strength} MPa)",
         line={"color": C3, "width": 2, "dash": "dash"},
+        showlegend=False,
         hovertemplate=f"Ultimate Strength: {ultimate_strength} MPa<extra></extra>",
     )
 )
@@ -101,6 +106,7 @@ fig.add_trace(
         mode="lines",
         name=f"Yield Strength ({yield_strength} MPa)",
         line={"color": C4, "width": 2, "dash": "dash"},
+        showlegend=False,
         hovertemplate=f"Yield Strength: {yield_strength} MPa<extra></extra>",
     )
 )
@@ -112,8 +118,59 @@ fig.add_trace(
         mode="lines",
         name=f"Endurance Limit ({endurance_limit} MPa)",
         line={"color": C5, "width": 2, "dash": "dash"},
+        showlegend=False,
         hovertemplate=f"Endurance Limit: {endurance_limit} MPa<extra></extra>",
     )
+)
+
+# Direct line labels via add_annotation — plotly-native, cleaner than legend entries
+for y_val, label, color, anchor in [
+    (ultimate_strength, f"Ult. Strength<br>{ultimate_strength} MPa", C3, "top"),
+    (yield_strength, f"Yield Strength<br>{yield_strength} MPa", C4, "bottom"),
+    (endurance_limit, f"End. Limit<br>{endurance_limit} MPa", C5, "top"),
+]:
+    fig.add_annotation(
+        x=8e6,
+        y=y_val,
+        text=label,
+        xanchor="right",
+        yanchor=anchor,
+        showarrow=False,
+        font={"color": color, "size": 12},
+        bgcolor=ELEVATED_BG,
+        bordercolor=color,
+        borderwidth=1,
+        borderpad=3,
+    )
+
+# Fatigue knee annotation — where Basquin fit intersects endurance limit
+fig.add_annotation(
+    x=n_knee,
+    y=endurance_limit,
+    text="Fatigue Knee<br>(~10⁶ cycles)",
+    showarrow=True,
+    arrowhead=2,
+    arrowcolor=INK_SOFT,
+    arrowsize=1.2,
+    ax=-70,
+    ay=-70,
+    font={"size": 10, "color": INK_SOFT},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=3,
+    xanchor="center",
+)
+
+# Infinite-life zone label inside the green fill region
+fig.add_annotation(
+    x=5e5,
+    y=218,
+    text="Infinite Life Zone",
+    showarrow=False,
+    font={"size": 10, "color": BRAND},
+    xanchor="center",
+    yanchor="middle",
 )
 
 # Style
@@ -132,7 +189,9 @@ fig.update_layout(
         "title": {"text": "Cycles to Failure (N)", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
         "type": "log",
-        "showgrid": False,
+        "showgrid": True,
+        "gridwidth": 1,
+        "gridcolor": GRID,
         "showline": True,
         "linewidth": 1,
         "linecolor": INK_SOFT,
@@ -156,14 +215,15 @@ fig.update_layout(
     },
     legend={
         "font": {"size": 10, "color": INK_SOFT},
-        "x": 0.95,
-        "y": 0.95,
-        "xanchor": "right",
-        "yanchor": "top",
-        "bgcolor": "rgba(0,0,0,0)",
-        "borderwidth": 0,
+        "x": 0.05,
+        "y": 0.05,
+        "xanchor": "left",
+        "yanchor": "bottom",
+        "bgcolor": ELEVATED_BG,
+        "bordercolor": INK_SOFT,
+        "borderwidth": 1,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    margin={"l": 80, "r": 60, "t": 80, "b": 60},
 )
 
 # Save
