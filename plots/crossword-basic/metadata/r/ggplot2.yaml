@@ -1,0 +1,261 @@
+library: ggplot2
+language: r
+specification_id: crossword-basic
+created: '2026-05-20T02:20:18Z'
+updated: '2026-05-20T02:35:49Z'
+generated_by: claude-sonnet
+workflow_run: 26137003649
+issue: 3805
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/crossword-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Clean and professional crossword grid using theme_void() — all chart chrome removed,
+    no unnecessary axes or grid lines competing with the puzzle structure
+  - Correct 180-degree rotational symmetry in black cell placement follows traditional
+    newspaper-style conventions
+  - Clue numbering algorithm correctly identifies across/down word starts in reading
+    order — 53 entries over a 13×13 grid is plausible
+  - Outer border annotate('rect') framed with INK token that flips between themes
+    — adds visual definition without hardcoding
+  - coord_fixed(ratio=1) ensures perfect square cells as required by spec
+  - Canvas is 6×6 in at 400 dpi (2400×2400 px) — correct square format for a grid-based
+    visualization
+  - Chrome (title, subtitle, border) adapts correctly to both light and dark themes
+    via INK/INK_SOFT tokens
+  weaknesses:
+  - 'DE-01 moderate: Design is clean but constrained by the monochrome format — no
+    opportunity to apply Okabe-Ito palette; could increase sophistication slightly
+    with a very subtle warm tint in the outer padding or a thicker/bolder outer border
+    frame for more visual presence'
+  - 'DE-02 partial: Grid lines (linewidth=0.3) and outer border (linewidth=0.7) are
+    good, but there is no further refinement such as slightly rounded or more prominent
+    outer frame to make it feel less raw; whitespace could be marginally more generous'
+  - 'DE-03 limited: The symmetric black cell pattern is the main visual story but
+    it is implicit — a brief note in the subtitle about the symmetry already exists
+    (''American-style'') which is good, but the overall storytelling is minimal'
+  - 'LM-02 generic: Uses geom_tile + geom_text + annotate which are all standard ggplot2
+    tools; no distinctly ggplot2-exclusive feature exploited beyond the correct grammar-of-graphics
+    approach'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, non-pure-white surface
+      Chrome: Title "crossword-basic · r · ggplot2 · anyplot.ai" in dark ink, centered, clearly readable. Subtitle "13×13 American-style crossword · 53 entries" in INK_SOFT gray, readable.
+      Data: 13×13 grid with hard black blocking cells and white entry cells. Clue numbers 1–53 positioned in top-left corners of word-start cells in black text. Outer border rectangle in INK color frames the grid. Grid separator lines in #333333 are visible and clean.
+      Legibility verdict: PASS — all title, subtitle, and clue number text is readable. Numbers at size=2.0 are appropriately small for cell-corner placement and remain legible at canvas size.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct warm near-black surface
+      Chrome: Title in light #F0EFE8 cream, clearly readable against dark background. Subtitle in #B8B7B0 light gray, readable. Outer border rectangle uses INK (light cream) and is visible.
+      Data: Grid cells remain fixed black/white (semantically required for crossword — spec mandates monochrome design). Clue numbers are hardcoded black but appear only in white entry cells (never on black blocking cells), so black-on-white remains readable in dark theme. Data colors identical to light render.
+      Legibility verdict: PASS — no dark-on-dark failures. The fixed black/white cell design is spec-mandated (monochrome crossword); chrome elements correctly flip to light-on-dark.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'Font sizes explicitly set: title=12, subtitle=8, numbers=2.0. All
+          readable in both themes. Numbers are small but appropriate for cell-corner
+          placement in a crossword.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements. Numbers fit cleanly in top-left corners
+          without collision.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Black and white cells clearly distinguishable. Numbers visible. Outer
+          border adds clarity.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: High contrast monochrome — maximum accessibility for a crossword
+          grid.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 6x6in square canvas at 400dpi = 2400x2400px. Grid fills canvas well
+          with generous margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels needed for a crossword grid. Title and subtitle are
+          descriptive and informative.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Spec mandates monochrome design. Plot backgrounds are #FAF8F1 (light)
+          and #1A1A17 (dark). Chrome tokens adapt correctly. Fixed black/white cells
+          are semantically required.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional look with theme_void(), warm background, and outer
+          border. Above default 4 due to intentional design choices, but constrained
+          by monochrome format.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void() removes all chart chrome. Outer border frames the grid
+          cleanly. Good whitespace. Above default 2.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Symmetric black cell arrangement creates visual pattern. Subtitle
+          contextualizes the grid. Limited storytelling scope given monochrome format
+          constraints.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct crossword puzzle grid visualization.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: White entry cells, black blocking cells, numbered word starts, 180-degree
+          rotational symmetry, clean grid lines, 1:1 square cells — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 13×13 grid correctly mapped with y-axis inverted to show row 1 at
+          top.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is 'crossword-basic · r · ggplot2 · anyplot.ai'. No legend
+          needed for monochrome design.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all crossword features: black/white cells, numbered
+          entries, across and down word starts, symmetric pattern.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: American-style crossword is a universally recognizable, neutral,
+          real-world scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 13×13 grid is within the 10×15 spec range. 53 numbered entries is
+          plausible for this grid size.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Clean linear flow: imports → tokens → data → number logic → plot
+          → save. For-loop for numbering is necessary complexity.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Grid data is hardcoded and fully deterministic. No randomness needed.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean R code appropriate to the task. No fake functionality.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png using sprintf. ragg device used correctly.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct grammar-of-graphics approach: geom_tile + scale_fill_identity
+          + coord_fixed + theme_void. Idiomatic ggplot2 for grid visualizations.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses coord_fixed() + scale_fill_identity() combination, annotate('rect')
+          for outer border, and expansion() for padding — these are distinctly ggplot2
+          patterns, though not deeply unique.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - matrix-construction
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
