@@ -1,83 +1,99 @@
-""" pyplots.ai
+"""anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: altair | Python 3.13
+Quality: 91/100 | Updated: 2026-05-20
 """
+
+import os
+import zlib
 
 import altair as alt
 import numpy as np
 import pandas as pd
 
 
-# Data - Generate Data Matrix pattern (ECC 200 format)
-# Data Matrix uses an L-shaped finder pattern and alternating timing pattern
-np.random.seed(42)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
-# Use 16x16 matrix (common size for moderate data)
+# Data — 16×16 Data Matrix ECC 200 barcode encoding "SERIAL:12345678"
+np.random.seed(42)
 size = 16
-quiet_zone = 2  # Minimum 1 module, we use 2 for clarity
+quiet_zone = 1  # minimum 1 module per spec; tighter quiet zone fills canvas better
 total_size = size + 2 * quiet_zone
 
-# Initialize matrix with white (0)
 matrix = np.zeros((total_size, total_size), dtype=int)
 
-# Add L-shaped finder pattern (solid black on left and bottom edges)
-# Left edge - solid black column
+# L-shaped finder pattern: solid black on left and bottom edges
 for row in range(size):
     matrix[quiet_zone + row, quiet_zone] = 1
-
-# Bottom edge - solid black row
 for col in range(size):
     matrix[quiet_zone + size - 1, quiet_zone + col] = 1
 
-# Add alternating (clock) timing pattern on top and right edges
-# Top edge - alternating pattern starting with black
+# Alternating timing pattern on top and right edges
 for col in range(size):
     matrix[quiet_zone, quiet_zone + col] = col % 2
-
-# Right edge - alternating pattern starting with black
 for row in range(size):
     matrix[quiet_zone + row, quiet_zone + size - 1] = row % 2
 
-# Fill data area with deterministic pattern representing "SERIAL:12345678"
+# Interior data area: deterministic bit pattern derived from content
 content = "SERIAL:12345678"
-hash_val = hash(content)
-
-# Data area is inside the finder/timing patterns (rows 1 to size-2, cols 1 to size-2)
+hash_val = zlib.crc32(content.encode())  # zlib.crc32 is deterministic unlike hash()
 for row in range(1, size - 1):
     for col in range(1, size - 1):
-        # Create deterministic pattern from position and content hash
         idx = row * size + col
         matrix[quiet_zone + row, quiet_zone + col] = ((hash_val >> (idx % 32)) ^ (idx * 13)) % 2
 
-# Convert matrix to DataFrame for Altair
-data = []
+# Convert to DataFrame with cell-type labels for interactive tooltips
+rows = []
 for row in range(total_size):
     for col in range(total_size):
-        # Flip y-axis so bottom-left origin matches Data Matrix convention
-        data.append({"x": col, "y": total_size - 1 - row, "value": matrix[row, col]})
-df = pd.DataFrame(data)
+        r, c = row - quiet_zone, col - quiet_zone
+        if r < 0 or r >= size or c < 0 or c >= size:
+            cell_type = "Quiet Zone"
+        elif c == 0 or r == size - 1:
+            cell_type = "Finder Pattern"
+        elif r == 0 or c == size - 1:
+            cell_type = "Timing Pattern"
+        else:
+            cell_type = "Data Cell"
+        rows.append(
+            {
+                "x": col,
+                "y": total_size - 1 - row,  # flip y so row=0 maps to chart top
+                "value": matrix[row, col],
+                "cell_type": cell_type,
+            }
+        )
+df = pd.DataFrame(rows)
 
-# Create Data Matrix visualization using mark_rect
+# Plot — square format (600×600 at scale_factor=4 → 2400×2400 px)
+no_pad = alt.Scale(paddingInner=0, paddingOuter=0)  # eliminates gaps between cells
+
 chart = (
     alt.Chart(df)
     .mark_rect(stroke=None)
     .encode(
-        x=alt.X("x:O", axis=None),
-        y=alt.Y("y:O", axis=None),
+        x=alt.X("x:O", axis=None, scale=no_pad),
+        y=alt.Y("y:O", axis=None, scale=no_pad),
         color=alt.Color("value:N", scale=alt.Scale(domain=[0, 1], range=["#FFFFFF", "#000000"]), legend=None),
+        tooltip=[
+            alt.Tooltip("x:O", title="Column"),
+            alt.Tooltip("y:O", title="Row"),
+            alt.Tooltip("cell_type:N", title="Cell Type"),
+        ],
     )
     .properties(
-        width=800,
-        height=800,
-        title=alt.Title("datamatrix-basic · altair · pyplots.ai", fontSize=28, anchor="middle", dy=-10),
+        width=600,
+        height=600,
+        background=PAGE_BG,
+        title=alt.Title("datamatrix-basic · python · altair · anyplot.ai", fontSize=16, color=INK, anchor="middle"),
     )
-    .configure_view(strokeWidth=0)
+    .configure_view(fill="#FFFFFF", strokeWidth=0)
     .configure_axis(grid=False)
 )
 
-# Save as PNG (square format: 3600 x 3600 px with scale_factor)
-chart.save("plot.png", scale_factor=4.5)
-
-# Save interactive HTML version
-chart.save("plot.html")
+# Save
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+chart.save(f"plot-{THEME}.html")
