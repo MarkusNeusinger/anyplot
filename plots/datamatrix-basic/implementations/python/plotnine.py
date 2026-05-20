@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
-Library: plotnine | Python 3.13
-Quality: 92/100 | Updated: 2026-05-20
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-20
 """
 
 import os
