@@ -1,13 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-16
+Library: matplotlib | Python 3.13
+Quality: 90/100 | Updated: 2026-05-20
 """
 
-import matplotlib.patches as mpatches
+import os
+
+import matplotlib.lines as mlines
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+LAND_COLOR = "#D4E5D4" if THEME == "light" else "#2A3D2A"
+OCEAN_COLOR = "#C8DFF0" if THEME == "light" else "#1A2D3A"
+BORDER_COLOR = "#888888" if THEME == "light" else "#555555"
 
 # Data - Trade flows between major world ports
 np.random.seed(42)
@@ -45,15 +58,27 @@ flows = [
     ("Busan", "Shanghai", 1.8),
 ]
 
-# Create figure
-fig, ax = plt.subplots(figsize=(16, 9))
+# Label offsets to avoid overlap (lon_offset, lat_offset)
+label_offsets = {
+    "Shanghai": (4, 2),
+    "Singapore": (4, -4),
+    "Rotterdam": (-6, -5),
+    "Los Angeles": (-8, -5),
+    "Dubai": (4, -5),
+    "Hong Kong": (3, -5),
+    "Busan": (3, 2),
+    "Hamburg": (-8, 3),
+    "New York": (-10, 3),
+    "Santos": (-10, -4),
+}
 
-# Draw simplified world map background (coastline approximation)
-ax.set_facecolor("#e8f4f8")
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(OCEAN_COLOR)
 ax.set_xlim(-180, 180)
 ax.set_ylim(-60, 80)
 
-# Simplified continent outlines (rough polygons)
+# Simplified continent outlines
 continent_coords = [
     [
         (-170, 60),
@@ -90,87 +115,95 @@ continent_coords = [
 for coords in continent_coords:
     xs = [c[0] for c in coords]
     ys = [c[1] for c in coords]
-    ax.fill(xs, ys, color="#d4e5d4", edgecolor="#888888", linewidth=0.5, zorder=1)
+    ax.fill(xs, ys, color=LAND_COLOR, edgecolor=BORDER_COLOR, linewidth=0.5, zorder=1)
 
-# Normalize flow values for line width
+# Normalize flow values for line width scaling
 max_flow = max(f[2] for f in flows)
 min_flow = min(f[2] for f in flows)
 
-# Draw flows with curved arcs (Bezier curves)
-t = np.linspace(0, 1, 50)  # Parameter for curve
-height_factor = 0.25
+# Draw flows using quadratic Bezier curves
+t = np.linspace(0, 1, 80)
+height_factor = 0.28
 
 for origin_name, dest_name, flow in flows:
     ox, oy = ports[origin_name]
     dx, dy = ports[dest_name]
 
-    # Calculate midpoint
     mx, my = (ox + dx) / 2, (oy + dy) / 2
-
-    # Distance between points
     distance = np.sqrt((dx - ox) ** 2 + (dy - oy) ** 2)
 
-    # Perpendicular direction for curve control point
     if distance > 0:
         px, py = -(dy - oy) / distance, (dx - ox) / distance
     else:
         px, py = 0, 1
 
-    # Control point for quadratic Bezier curve
     cx = mx + px * distance * height_factor
     cy = my + py * distance * height_factor
 
-    # Quadratic Bezier curve formula
     x = (1 - t) ** 2 * ox + 2 * (1 - t) * t * cx + t**2 * dx
     y = (1 - t) ** 2 * oy + 2 * (1 - t) * t * cy + t**2 * dy
 
-    # Calculate line width based on flow (2-10 range)
     normalized = (flow - min_flow) / (max_flow - min_flow) if max_flow > min_flow else 0.5
-    line_width = 2 + normalized * 8
+    line_width = 1.5 + normalized * 6.5
+    alpha = 0.45 + normalized * 0.35
 
-    # Calculate alpha based on flow (0.4-0.8 range)
-    alpha = 0.4 + normalized * 0.4
-
-    # Draw arc with color based on flow magnitude
+    # Blue colormap works well in both light and dark themes
     color = plt.cm.Blues(0.4 + normalized * 0.5)
     ax.plot(x, y, color=color, linewidth=line_width, alpha=alpha, zorder=3, solid_capstyle="round")
 
 # Draw port markers
 for port_name, (lon, lat) in ports.items():
-    ax.scatter(lon, lat, s=250, c="#306998", edgecolors="white", linewidths=2, zorder=4)
-    # Add labels with offset
+    ax.scatter(lon, lat, s=60, c="#0072B2", edgecolors=PAGE_BG, linewidths=1.2, zorder=4)
+    lon_off, lat_off = label_offsets.get(port_name, (4, 3))
     ax.annotate(
         port_name,
         (lon, lat),
-        xytext=(5, 5),
+        xytext=(lon_off, lat_off),
         textcoords="offset points",
-        fontsize=12,
+        fontsize=6,
         fontweight="bold",
-        color="#333333",
+        color=INK,
         zorder=5,
     )
 
-# Create legend for flow magnitude
-legend_flows = [2, 5, 8]
+# Legend with actual line samples to reflect line-width encoding
+legend_levels = [(1.9, "~2 M TEUs"), (5.0, "~5 M TEUs"), (8.5, "~8.5 M TEUs")]
 legend_handles = []
-for lf in legend_flows:
+for lf, label in legend_levels:
     normalized = (lf - min_flow) / (max_flow - min_flow)
+    lw = 1.5 + normalized * 6.5
     color = plt.cm.Blues(0.4 + normalized * 0.5)
-    line = mpatches.Patch(facecolor=color, edgecolor="none", label=f"{lf} M TEUs", alpha=0.7)
-    legend_handles.append(line)
+    handle = mlines.Line2D([], [], color=color, linewidth=lw, label=label, alpha=0.8, solid_capstyle="round")
+    legend_handles.append(handle)
 
-ax.legend(
-    handles=legend_handles, loc="lower left", fontsize=14, title="Trade Volume", title_fontsize=16, framealpha=0.9
+leg = ax.legend(
+    handles=legend_handles,
+    loc="lower left",
+    fontsize=6,
+    title="Trade Volume",
+    title_fontsize=7,
+    framealpha=0.9,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
+plt.setp(leg.get_title(), color=INK)
+plt.setp(leg.get_texts(), color=INK_SOFT)
 
-# Labels and title
-ax.set_xlabel("Longitude", fontsize=20)
-ax.set_ylabel("Latitude", fontsize=20)
-ax.set_title("Global Port Trade Routes · flowmap-origin-destination · matplotlib · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
-
-# Add grid
-ax.grid(True, alpha=0.3, linestyle="--", zorder=0)
+# Style
+ax.set_xlabel("Longitude", fontsize=8, color=INK)
+ax.set_ylabel("Latitude", fontsize=8, color=INK)
+ax.set_title(
+    "Global Port Trade Routes · flowmap-origin-destination · python · matplotlib · anyplot.ai",
+    fontsize=8,
+    fontweight="medium",
+    color=INK,
+)
+ax.tick_params(axis="both", labelsize=6, colors=INK_SOFT)
+for s in ("left", "bottom"):
+    ax.spines[s].set_color(INK_SOFT)
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.grid(True, alpha=0.10, linewidth=0.5, color=INK, zorder=0)
 
 plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+plt.savefig(f"plot-{THEME}.png", dpi=400, bbox_inches="tight", facecolor=PAGE_BG)
