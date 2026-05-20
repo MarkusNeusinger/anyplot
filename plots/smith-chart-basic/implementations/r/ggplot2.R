@@ -76,6 +76,15 @@ label_idx   <- sapply(label_freqs, function(f) which.min(abs(locus$freq - f)))
 label_pts   <- locus[label_idx, ]
 label_pts$lbl <- c("1 GHz", "2 GHz\n(res.)", "3 GHz")
 
+# Directional arrow at 3 GHz end to show sweep direction
+n_loc <- nrow(locus)
+dx    <- locus$gre[n_loc] - locus$gre[n_loc - 5]
+dy    <- locus$gim[n_loc] - locus$gim[n_loc - 5]
+norm  <- sqrt(dx^2 + dy^2)
+arr_len <- 0.055
+arr_x0  <- locus$gre[n_loc] - (dx / norm) * arr_len
+arr_y0  <- locus$gim[n_loc] - (dy / norm) * arr_len
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot() +
   # Grid: outer circle
@@ -94,13 +103,19 @@ p <- ggplot() +
   geom_path(data = vswr_circle, aes(x = x, y = y),
             color = OKABE_ITO[3], linewidth = 0.5, linetype = "dashed") +
   annotate("text", x = -0.38, y = 0.06,
-           label = "VSWR = 2", size = 2.4, color = OKABE_ITO[3]) +
+           label = "VSWR = 2", size = 3.0, color = OKABE_ITO[3]) +
   # Matched-load centre marker
   geom_point(aes(x = 0, y = 0),
              color = INK_SOFT, size = 1.8, shape = 3) +
   # Impedance locus
   geom_path(data = locus, aes(x = gre, y = gim),
             color = OKABE_ITO[1], linewidth = 1.4) +
+  # Directional arrow at 3 GHz end showing sweep direction
+  annotate("segment",
+           x = arr_x0, xend = locus$gre[n_loc],
+           y = arr_y0, yend = locus$gim[n_loc],
+           color = OKABE_ITO[1], linewidth = 1.4,
+           arrow = arrow(length = unit(0.1, "inches"), type = "closed")) +
   # Start (1 GHz) and end (3 GHz) markers
   geom_point(data = locus[1, ], aes(x = gre, y = gim),
              color = OKABE_ITO[1], size = 3.5, shape = 16) +
@@ -108,13 +123,13 @@ p <- ggplot() +
              color = OKABE_ITO[2], size = 3.5, shape = 17) +
   # Frequency labels
   geom_text(data = label_pts, aes(x = gre, y = gim, label = lbl),
-            color = INK, size = 2.6, hjust = -0.15, lineheight = 0.9) +
+            color = INK, size = 3.2, hjust = -0.15, lineheight = 0.9) +
   # Resistance value labels along real axis
   annotate("text",
            x = (r_vals - 1) / (r_vals + 1),
            y = -0.06,
            label = as.character(r_vals),
-           size = 2.1, color = INK_SOFT, vjust = 1) +
+           size = 3.0, color = INK_SOFT, vjust = 1) +
   coord_fixed(xlim = c(-1.15, 1.35), ylim = c(-1.15, 1.15)) +
   labs(
     title = "smith-chart-basic · r · ggplot2 · anyplot.ai",
