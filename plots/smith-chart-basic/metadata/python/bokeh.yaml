@@ -1,166 +1,182 @@
 library: bokeh
+language: python
 specification_id: smith-chart-basic
 created: '2026-01-15T21:53:06Z'
-updated: '2026-01-15T21:55:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047489015
+updated: '2026-05-20T01:33:55Z'
+generated_by: claude-sonnet
+workflow_run: 26135024222
 issue: 3792
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/bokeh/plot.html
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/bokeh/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Mathematically correct Smith chart implementation with proper constant-r circles
-    and constant-x arcs
-  - Excellent realistic RF engineering data scenario with antenna resonance model
-  - Clean visual hierarchy with yellow locus standing out against blue/gray grid
-  - 'Good use of Bokeh features: ColumnDataSource, Label annotations, both PNG and
-    HTML export'
-  - Proper normalization and gamma conversion mathematics
-  - Well-positioned frequency labels with offset to avoid overlap with data points
+  - Perfect spec compliance with all required Smith chart elements including optional
+    VSWR reference circle
+  - 'Excellent data quality: physically realistic series RLC antenna model with correct
+    impedance-to-gamma derivation'
+  - Intentional color semantics using Okabe-Ito — green=data locus, blue=physical
+    boundary, orange=engineering reference points — create clear visual hierarchy
+  - 'Perfect code quality: flat KISS structure, reproducible with seed, correct Selenium/HTML
+    export pattern'
+  - Both themes fully readable with correctly adapted chrome tokens; no dark-on-dark
+    failures
   weaknesses:
-  - Could add HoverTool for interactive impedance/frequency inspection in the HTML
-    version
-  - Grid r/x labels are slightly small compared to other text elements
-  - Axis labels could include dimensionless clarification
-  image_description: The plot shows a Smith chart with the classic circular impedance
-    coordinate system. A blue outer boundary represents the unit circle (|Γ| = 1).
-    Gray constant resistance circles (r = 0.2, 0.5, 1, 2) are visible emanating from
-    the right side, and gray constant reactance arcs curve symmetrically above and
-    below the horizontal axis. A yellow impedance locus curve with circular markers
-    traces a frequency sweep from 1.0 GHz to 6.0 GHz, forming a characteristic loop
-    pattern in the right half of the chart. Frequency labels (1.0 GHz, 2.2 GHz, 3.6
-    GHz, 4.8 GHz, 6.0 GHz) are placed at key points along the locus in blue text.
-    A dark blue marker at the center marks the matched condition (Z=Z₀). Small gray
-    labels indicate r-values (r=0.2, r=0.5, r=1, r=2) along the horizontal axis and
-    x-values (x=0.5, x=1, x=2) on the boundary arcs. The title "smith-chart-basic
-    · bokeh · pyplots.ai" appears at top-left. Axes are labeled "Real(Γ)" and "Imag(Γ)".
-    The background is light gray (#fafafa).
+  - '"4.8 GHz" and "6.0 GHz" frequency labels are tightly spaced in the upper-right
+    quadrant — increase vertical offset for one to create more breathing room'
+  - Standard Bokeh axis spines remain visible around the circular chart; consider
+    reducing outline_line_alpha or hiding axis lines for cleaner circular framing
+  - Core Smith chart grid is hand-computed in numpy rather than using bokeh-distinctive
+    rendering (Arc glyph or patches) — limits LM-02 score
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "smith-chart-basic · python · bokeh · anyplot.ai" in dark ink — readable. Axis labels "Real(Γ) (dimensionless)" and "Imag(Γ) (dimensionless)" in dark ink — readable. Tick labels in softer dark tone — readable. Grid arc labels (r=, x=) in muted dark tone — readable.
+      Data: First series (impedance locus) in #009E73 (brand green) ✓. Boundary circle in #0072B2 (blue). Matched condition marker in #D55E00 (orange). All colors identical to dark render.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct theme surface
+      Chrome: Title in #F0EFE8 (light) — readable. Axis labels in light tone — readable. Tick labels in #B8B7B0 — readable against dark background. Grid arc labels in #A8A79F — adequate contrast. No dark-on-dark failures detected.
+      Data: Colors identical to light render — green locus (#009E73), blue boundary (#0072B2), orange markers (#D55E00). VSWR dashed outline visible; fill nearly invisible at 8% alpha (intentional).
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and frequency annotations are clearly readable
-          at high resolution. Some r/x labels on the grid are small but still legible.
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements; frequency labels are well-positioned
-          with offsets.
+        comment: All font sizes explicitly set (title 50pt, axis labels 42pt, tick
+          labels 34pt, annotations 20-26pt). Well-proportioned in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor label proximity between 4.8 GHz and 6.0 GHz labels in upper-right
+          quadrant; all other labels well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Impedance locus markers (size=14) and line (width=5) are clearly
-          visible. The matched condition marker is prominent.
+        comment: Locus line_width=5 with size=14 markers, boundary circle line_width=4,
+          matched marker size=24. Optimal for 60-point dataset.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Yellow/gold (#FFD43B) locus against blue (#306998) boundary provides
-          excellent contrast. Gray grid lines are subtle. Colorblind-safe.
+        comment: Okabe-Ito palette, CVD-safe, good luminance contrast in both themes.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Square aspect ratio is appropriate for Smith chart. Good utilization
-          of canvas with x_range/y_range (-1.35, 1.35) providing balanced margins.
+        comment: 2400x2400 square canvas appropriate for symmetric circular plot.
+          min_border_* correctly set.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels Real(Γ) and Imag(Γ) are descriptive but lack explicit units
-          (dimensionless coefficient).
+        comment: Descriptive labels with dimensionless notation. Title format correct.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid alpha=0.4 is appropriate; no explicit legend but frequency labels
-          serve the purpose.
+        comment: 'First series #009E73, Okabe-Ito positions 1-3 used. Backgrounds
+          #FAF8F1/#1A1A17. All chrome tokens theme-adapted.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Strong design with intentional color semantics. Clearly above configured
+          default but not publication-ready level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Cartesian grid disabled, custom arcs at 30% alpha. Standard axis
+          frame remains visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Good visual hierarchy through color. VSWR circle and frequency labels
+          create impedance sweep narrative.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Smith chart implementation with constant resistance circles
-          and reactance arcs.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Impedance correctly normalized (Z/Z0) and converted to reflection
-          coefficient Γ.
-      - id: SC-03
+        comment: Correct Smith chart with unit circle, resistance circles, reactance
+          arcs, and impedance locus.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has resistance circles, reactance arcs, impedance locus, frequency
-          labels, matched condition marker. VSWR circles noted as optional in spec
-          and not included.
-      - id: SC-04
-        name: Data Range
+        comment: All spec requirements present including optional VSWR circle.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Chart shows full unit circle with appropriate padding.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Real(Gamma), Y=Imag(Gamma), correctly derived. Axes span full Smith
+          chart domain.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Labels correctly identify frequency points and r/x values.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: smith-chart-basic · bokeh · pyplots.ai'
+        comment: Title format correct. No formal legend needed; elements labeled via
+          annotations.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows impedance variation with frequency, resonance behavior, both
-          positive and negative reactance regions. Could show more variation in the
-          pattern.
+        comment: Locus covers inductive, capacitive, and near-matched regions. Shows
+          resonance behavior at 3.5 GHz.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: 'Excellent RF engineering scenario: antenna S11 sweep 1-6 GHz with
-          series RLC resonance model at 3.5 GHz, Q=5.'
+        comment: Realistic RF antenna S11 sweep 1-6 GHz, series RLC model, Q=5, Z0=50
+          ohm standard.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: R=45-55Ω, X varies realistically. Z0=50Ω standard reference impedance.
+        comment: R~45-55 ohm at resonance (realistic), correct series RLC reactance
+          formula, proper gamma derivation.
     code_quality:
       score: 10
       max: 10
@@ -170,50 +186,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → constants → figure → grid drawing → data
-          generation → plotting → save.'
+        comment: 'Flat structure: imports -> theme tokens -> canvas -> data -> plot
+          -> save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set for reproducibility.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: numpy, bokeh.io, bokeh.models, bokeh.plotting.'
+        comment: All imports used. noqa comments are import-ordering pragmatics, not
+          lint suppression.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API.
+        comment: Clean, Pythonic. Numpy math for Smith chart arcs is correct approach.
+          No fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png via Selenium per bokeh.md
+          pattern.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource, match_aspect=True, add_layout(Label), HoverTool,
+          output_file+save, Selenium screenshot — all idiomatic bokeh patterns.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Label annotations, export_png, and saves interactive
-          HTML. Could utilize HoverTool for interactive impedance/frequency display.
+        comment: HoverTool for interactive impedance readout, dual HTML+PNG output,
+          match_aspect for geometric correctness. Core arcs are numpy geometry rather
+          than bokeh-distinctive rendering.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
-  - patches
+  - annotations
   patterns:
   - data-generation
   - columndatasource
@@ -222,4 +250,3 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
-  - grid-styling
