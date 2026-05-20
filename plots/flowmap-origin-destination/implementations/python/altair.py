@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -106,12 +106,21 @@ for _, row in df_flows.iterrows():
 
 df_arcs = pd.DataFrame(arc_data)
 max_flow, min_flow = df_flows["flow"].max(), df_flows["flow"].min()
-df_arcs["stroke_width"] = 0.5 + 3.5 * (df_arcs["flow"] - min_flow) / (max_flow - min_flow)
+df_arcs["stroke_width"] = 0.5 + 5.5 * (df_arcs["flow"] - min_flow) / (max_flow - min_flow)
 
-# Plot — geographic projection centered on Europe
+# Per-city label groups to avoid crowding in the dense London/Paris/Brussels/Amsterdam cluster
+# Brussels placed below its dot; London/Paris/Amsterdam offset horizontally
+dense_cities = {"London", "Paris", "Amsterdam", "Brussels"}
+df_labels_normal = df_cities[~df_cities["city"].isin(dense_cities)]
+df_london = df_cities[df_cities["city"] == "London"]
+df_paris = df_cities[df_cities["city"] == "Paris"]
+df_amsterdam = df_cities[df_cities["city"] == "Amsterdam"]
+df_brussels = df_cities[df_cities["city"] == "Brussels"]
+
+# Plot — geographic projection centered on Europe, tightened to fill canvas
 world_url = "https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json"
 world = alt.topo_feature(world_url, "countries")
-proj = {"type": "mercator", "scale": 400, "center": [8, 50], "clipExtent": [[0, 0], [800, 450]]}
+proj = {"type": "mercator", "scale": 440, "center": [6, 49], "clipExtent": [[0, 0], [800, 450]]}
 
 base = (
     alt.Chart(world)
@@ -122,7 +131,7 @@ base = (
 
 arcs = (
     alt.Chart(df_arcs)
-    .mark_line(opacity=0.55, strokeCap="round")
+    .mark_line(opacity=0.65, strokeCap="round")
     .encode(
         longitude="lon:Q",
         latitude="lat:Q",
@@ -146,15 +155,17 @@ points = (
     .project(**proj)
 )
 
-labels = (
-    alt.Chart(df_cities)
-    .mark_text(dy=-14, fontSize=11, fontWeight="bold", color=INK)
-    .encode(longitude="lon:Q", latitude="lat:Q", text="city:N")
-    .project(**proj)
-)
+lbl_kw = {"fontSize": 11, "fontWeight": "bold", "color": INK}
+lbl_enc = {"longitude": "lon:Q", "latitude": "lat:Q", "text": "city:N"}
+
+labels_normal = alt.Chart(df_labels_normal).mark_text(dy=-14, **lbl_kw).encode(**lbl_enc).project(**proj)
+labels_london = alt.Chart(df_london).mark_text(dx=-15, dy=-14, **lbl_kw).encode(**lbl_enc).project(**proj)
+labels_paris = alt.Chart(df_paris).mark_text(dx=-12, dy=-14, **lbl_kw).encode(**lbl_enc).project(**proj)
+labels_amsterdam = alt.Chart(df_amsterdam).mark_text(dx=14, dy=-14, **lbl_kw).encode(**lbl_enc).project(**proj)
+labels_brussels = alt.Chart(df_brussels).mark_text(dx=16, dy=12, **lbl_kw).encode(**lbl_enc).project(**proj)
 
 chart = (
-    (base + arcs + points + labels)
+    (base + arcs + points + labels_normal + labels_london + labels_paris + labels_amsterdam + labels_brussels)
     .properties(
         title=alt.Title(
             "flowmap-origin-destination · python · altair · anyplot.ai", fontSize=16, anchor="start", offset=10
