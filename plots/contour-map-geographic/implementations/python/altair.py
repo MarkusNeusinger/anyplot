@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 82/100 | Updated: 2026-05-20
+Quality: 81/100 | Updated: 2026-05-20
 """
 
 import os
