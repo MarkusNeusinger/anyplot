@@ -1,9 +1,11 @@
-""" pyplots.ai
+"""anyplot.ai
 crossword-basic: Crossword Puzzle Grid
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-15
+Library: highcharts-core | Python 3.13
+Quality: 91/100 | Updated: 2026-05-20
 """
 
+import json
+import os
 import tempfile
 import time
 import urllib.request
@@ -17,14 +19,18 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Create a 15x15 crossword grid with 180-degree rotational symmetry
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data - 15x15 crossword grid with 180-degree rotational symmetry
 np.random.seed(42)
 grid_size = 15
 
-# Generate symmetric black cell pattern (1 = black/blocked, 0 = white/entry)
 grid = np.zeros((grid_size, grid_size), dtype=int)
 
-# Define black cells for one half (will be mirrored for symmetry)
 black_cells = [
     (0, 4),
     (0, 10),
@@ -46,12 +52,11 @@ black_cells = [
     (7, 7),
 ]
 
-# Place black cells with 180-degree symmetry
 for r, c in black_cells:
     grid[r, c] = 1
     grid[grid_size - 1 - r, grid_size - 1 - c] = 1
 
-# Calculate clue numbers - number cells that start words (across or down)
+# Calculate clue numbers
 numbers = {}
 clue_num = 1
 for r in range(grid_size):
@@ -64,69 +69,60 @@ for r in range(grid_size):
             numbers[(r, c)] = clue_num
             clue_num += 1
 
-# Prepare heatmap data - black cells = 1, white cells = 0
+# Heatmap data: [col, flipped_row, cell_value]
 heatmap_data = []
 for r in range(grid_size):
     for c in range(grid_size):
         heatmap_data.append([c, grid_size - 1 - r, int(grid[r, c])])
 
-# Create chart
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "heatmap",
-    "width": 3600,
-    "height": 3600,
-    "backgroundColor": "#ffffff",
-    "marginTop": 120,
-    "marginBottom": 100,
-    "marginLeft": 100,
-    "marginRight": 100,
+    "width": 2400,
+    "height": 2400,
+    "backgroundColor": PAGE_BG,
+    "marginTop": 140,
+    "marginBottom": 130,
+    "marginLeft": 150,
+    "marginRight": 80,
 }
 
-# Title
 chart.options.title = {
-    "text": "crossword-basic · highcharts · pyplots.ai",
-    "style": {"fontSize": "48px", "fontWeight": "bold"},
+    "text": "crossword-basic · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK},
 }
 
-# Remove colorAxis legend
-chart.options.color_axis = {"min": 0, "max": 1, "stops": [[0, "#ffffff"], [1, "#000000"]], "visible": False}
+# White = entry cells, black = blocked cells (data colors are theme-independent)
+chart.options.color_axis = {"min": 0, "max": 1, "stops": [[0, "#FFFFFF"], [1, "#000000"]], "visible": False}
 
-# X-axis (columns 1-15)
+row_labels = [chr(65 + i) for i in range(grid_size)]
+
 chart.options.x_axis = {
     "categories": [str(i + 1) for i in range(grid_size)],
-    "title": {"text": None},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Column", "style": {"fontSize": "56px", "color": INK}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "lineWidth": 2,
-    "lineColor": "#000000",
+    "lineColor": INK,
     "tickWidth": 0,
     "tickLength": 0,
-    "startOnTick": False,
-    "endOnTick": False,
 }
 
-# Y-axis (rows A-O)
-row_labels = [chr(65 + i) for i in range(grid_size)]
 chart.options.y_axis = {
     "categories": list(reversed(row_labels)),
-    "title": {"text": None},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Row", "style": {"fontSize": "56px", "color": INK}},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "lineWidth": 2,
-    "lineColor": "#000000",
+    "lineColor": INK,
     "tickWidth": 0,
     "tickLength": 0,
-    "startOnTick": False,
-    "endOnTick": False,
     "reversed": False,
 }
 
-# Legend disabled
 chart.options.legend = {"enabled": False}
 
-# Create heatmap series
 series = HeatmapSeries()
 series.name = "Grid"
 series.data = heatmap_data
@@ -136,69 +132,92 @@ series.data_labels = {"enabled": False}
 
 chart.add_series(series)
 
-# Add clue numbers as annotations
-annotations = []
-for (r, c), num in numbers.items():
-    annotations.append(
-        {
-            "point": {"x": c, "y": grid_size - 1 - r, "xAxis": 0, "yAxis": 0},
-            "text": str(num),
-            "align": "left",
-            "verticalAlign": "top",
-            "x": -85,
-            "y": -75,
-            "style": {"fontSize": "28px", "fontWeight": "bold", "color": "#000000"},
-            "backgroundColor": "transparent",
-            "borderWidth": 0,
-            "shadow": False,
-        }
-    )
-
-chart.options.annotations = [{"labels": annotations, "draggable": ""}]
-
-# Plot options for heatmap - ensure all cells have visible borders
 chart.options.plot_options = {
     "heatmap": {
         "borderWidth": 3,
-        "borderColor": "#333333",
+        "borderColor": "#000000",
         "dataLabels": {"enabled": False},
         "colsize": 1,
         "rowsize": 1,
     }
 }
 
-# Download Highcharts JS and heatmap module
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Download Highcharts JS and heatmap module (browser UA required to avoid 403)
+_ua = {
+    "User-Agent": (
+        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    ),
+    "Referer": "https://www.highcharts.com/",
+}
+_js_assets = {}
+for _url in ["https://code.highcharts.com/highcharts.js", "https://code.highcharts.com/modules/heatmap.js"]:
+    _req = urllib.request.Request(_url, headers=_ua)
+    with urllib.request.urlopen(_req, timeout=30) as _r:
+        _js_assets[_url] = _r.read().decode("utf-8")
 
-heatmap_url = "https://code.highcharts.com/modules/heatmap.js"
-with urllib.request.urlopen(heatmap_url, timeout=30) as response:
-    heatmap_js = response.read().decode("utf-8")
+highcharts_js = _js_assets["https://code.highcharts.com/highcharts.js"]
+heatmap_js = _js_assets["https://code.highcharts.com/modules/heatmap.js"]
 
-annotations_url = "https://code.highcharts.com/modules/annotations.js"
-with urllib.request.urlopen(annotations_url, timeout=30) as response:
-    annotations_js = response.read().decode("utf-8")
+# Clue positions as JSON for JS renderer (avoids deprecated annotations module)
+clue_positions_json = json.dumps([{"r": r, "c": c, "num": num} for (r, c), num in numbers.items()])
 
-# Generate HTML with inline scripts
 html_str = chart.to_js_literal()
-html_content = f"""<!DOCTYPE html>
+
+# Render clue numbers via Highcharts SVG renderer — no annotations module needed
+# Uses window.load so it fires after DOMContentLoaded (where Highcharts initializes)
+clue_script = f"""
+window.addEventListener('load', function() {{
+    var chart = Highcharts.charts[0];
+    if (!chart) {{ return; }}
+    var clues = {clue_positions_json};
+    var cellW = chart.plotWidth / {grid_size};
+    var cellH = chart.plotHeight / {grid_size};
+    clues.forEach(function(p) {{
+        var x = chart.plotLeft + p.c * cellW + cellW * 0.06;
+        var y = chart.plotTop + p.r * cellH + cellH * 0.34;
+        chart.renderer.text(String(p.num), x, y)
+            .css({{ fontSize: '44px', fontWeight: 'bold', color: '#000000' }})
+            .attr({{ zIndex: 10 }})
+            .add();
+    }});
+}});
+"""
+
+html_inline = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
     <script>{heatmap_js}</script>
-    <script>{annotations_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 3600px; height: 3600px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 2400px; height: 2400px;"></div>
     <script>{html_str}</script>
+    <script>{clue_script}</script>
 </body>
 </html>"""
 
-# Write temp HTML and take screenshot
+# HTML artifact with CDN for interactive use
+html_cdn = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="https://code.highcharts.com/highcharts.js"></script>
+    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
+</head>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 100%; height: 100vh;"></div>
+    <script>{html_str}</script>
+    <script>{clue_script}</script>
+</body>
+</html>"""
+
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_cdn)
+
+# Write temp file and screenshot for PNG artifact
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
-    f.write(html_content)
+    f.write(html_inline)
     temp_path = f.name
 
 chrome_options = Options()
@@ -206,29 +225,12 @@ chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=3600,3600")
+chrome_options.add_argument("--window-size=2400,2400")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-driver.save_screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
-
-# Also save HTML for interactive version
-html_output = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-    <script src="https://code.highcharts.com/modules/heatmap.js"></script>
-    <script src="https://code.highcharts.com/modules/annotations.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 100vh;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_output)
