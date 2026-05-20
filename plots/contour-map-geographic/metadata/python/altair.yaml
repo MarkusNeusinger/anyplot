@@ -1,214 +1,270 @@
 library: altair
+language: python
 specification_id: contour-map-geographic
 created: '2026-01-17T11:55:07Z'
-updated: '2026-01-18T22:37:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21093797329
+updated: '2026-05-20T23:28:09Z'
+generated_by: claude-sonnet
+workflow_run: 26194166508
 issue: 3772
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/altair/plot.html
-quality_score: 82
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/altair/plot-dark.html
+quality_score: 81
 review:
   strengths:
-  - Good use of Altair geographic projection capabilities (Mercator with custom center/scale)
-  - Effective layer composition combining basemap, temperature fill, contour markers,
-    and labels
-  - Colorblind-friendly diverging color scheme (redyellowblue)
-  - Interactive tooltips showing exact coordinates and temperature
-  - Temperature labels with white stroke provide good contrast
-  - Realistic temperature pattern with regional variations (Alps, Scandinavia cold
-    spots)
+  - Sophisticated multi-layer geographic visualization using real-world TopoJSON basemap
+    via alt.topo_feature
+  - Creative use of contourpy for true isoline computation with correct segment ordering
+    via detail channel
+  - Mercator-uniform latitude grid eliminates stripe artefacts in the raster fill
+  - Correct theme-adaptive chrome with all tokens applied (PAGE_BG, INK, INK_SOFT,
+    ELEVATED_BG)
+  - Canvas padding logic correctly avoids cropping and pads to exact 3200×1800 target
+  - BrBG diverging colormap is appropriate for signed temperature data spanning negative
+    and positive values
+  - sys.path guard prevents the file from shadowing the installed altair package —
+    a real edge case handled cleanly
   weaknesses:
-  - Contour lines are represented as scattered point markers rather than true smooth
-    isolines - fundamental Altair limitation
-  - 'Title format incorrect: includes European Temperature Contours prefix instead
-    of just the required spec-id format'
-  - Filled contours use mark_square which creates a pixelated appearance rather than
-    smooth continuous fills
-  - Altair cannot natively produce true isolines without external contour computation
-  image_description: The plot displays a geographic contour map of European temperature
-    data. The visualization covers Europe from approximately 25°W to 55°E longitude
-    and 30°N to 72°N latitude. Temperature values are shown using a red-yellow-blue
-    color scheme (reversed, so red=warm, blue=cold) with values ranging from -10°C
-    to 30°C. The southern regions (Mediterranean) appear in deep red (~25-30°C), transitioning
-    through orange and yellow in central Europe (~10-20°C), to cooler blue tones in
-    northern Scandinavia (~0-5°C). A light gray geographic basemap shows world country
-    outlines. Contour "lines" are represented as small black circles marking temperature
-    isoline boundaries. Temperature labels (0°C, 10°C, 20°C) appear with white stroke
-    for contrast. A colorbar legend on the right displays the temperature scale with
-    "Temperature (°C)" title. Longitude labels (20°W to 50°E) appear along the bottom
-    edge, and latitude labels (35°N to 70°N) along the left edge. The title reads
-    "European Temperature Contours · contour-map-geographic · altair · pyplots.ai"
-    which includes an extra prefix before the required spec-id format. The temperature
-    data uses a dense grid of square markers to create a filled contour effect, with
-    black circle markers overlaid to indicate contour level boundaries.
+  - 'Only 1–2 contour labels appear visible in the renders (light: only 25°C; dark:
+    15°C and 25°C). The label-selection filter (lon 5–40, lat 35–64) excludes the
+    −5°C and 5°C isotherms which sit in northern or off-map latitudes at these summer
+    temperatures — expand the label filter or annotate at more isoline crossings closer
+    to the center of the map.'
+  - Contour isolines are thin (strokeWidth=0.9 × scale_factor=4 = 3.6 px at full resolution).
+    On the colored raster they can be hard to distinguish especially in regions with
+    low temperature gradient. Increase strokeWidth to 1.3–1.5 for better prominence.
+  - The mark_square raster fill produces a grid of discrete squares rather than a
+    smooth continuous fill. The size=40 squares are visible as a pixel-grid artefact,
+    particularly at the edges of the projection. Consider increasing grid resolution
+    or using a finer square size to reduce the blocky appearance.
+  - BrBG assigns green/teal to WARM temperatures (positive end) and brown to COLD
+    (negative end), which is counterintuitive for a temperature map where audiences
+    expect blue=cold, red/orange=warm. A cividis or viridis scheme (or reversing BrBG)
+    would feel more natural for a weather-context map.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the canvas margins around the geographic map area. PASS.
+      Chrome: Title "contour-map-geographic · python · altair · anyplot.ai" is clearly readable in dark text against the off-white background. Colorbar on the right shows "Temp (°C)" label with tick values from −10 to 30; all readable. No lat/lon axis labels (standard for geographic projections).
+      Data: The temperature raster covers Europe and surroundings using the BrBG (brownbluegreen) diverging colormap with domain [−10, 30]. Cooler/lower-positive temperatures (northern/central Europe ~0–10°C) appear as light near-white or faint teal; warmer southern areas (Mediterranean ~20–25°C) appear as greenish-teal; the southernmost warm areas approach brown. Country borders are drawn as thin gray lines. Seven contour isolines (−5, 0, 5, 10, 15, 20, 25°C) are drawn in dark ink. Only one contour label is visible: "25°C" near the southern edge of the map, shown as dark fill with white halo. Data elements use first series as #009E73 (N/A; continuous colormap applies).
+      Legibility verdict: PASS — all chrome text readable; contour label uses adequate stroke halo.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) fills the canvas margins. PASS.
+      Chrome: Title in light off-white text clearly readable against dark background. Colorbar "Temp (°C)" label and scale ticks readable. Isolines rendered in light (#F0EFE8) color instead of dark, making them visible over the colored raster. Country borders in slightly lighter gray than light theme.
+      Data: Temperature raster colors are identical to the light render — BrBG diverging colormap with same values; data palette unchanged between themes. Two contour labels are visible: "15°C" in the northern-central area and "25°C" near the southern edge. Both labels show light fill with dark halo. No dark-on-dark failure: the dark-theme background (#1A1A17) shows light chrome text, and the colored raster areas underneath the labels provide sufficient contrast.
+      Legibility verdict: PASS — no dark-on-dark issue; all visible text readable against their respective backgrounds.
   criteria_checklist:
     visual_quality:
-      score: 32
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
-        passed: true
-        comment: Title and colorbar labels readable; contour labels with white stroke;
-          axis labels slightly small
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 8
         passed: true
-        comment: Temperature grid visible but contour lines as scattered circles are
-          not true isolines
+        comment: 'Title, colorbar labels readable in both themes. Contour labels use
+          fill+stroke halo technique adequately. Slight concern: with only 1–2 labels
+          visible per render, the font-size benefit is limited.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-on-text overlap. Occasional dense isoline clustering but
+          no collision with labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Raster, borders, and isolines all distinguishable. Isolines at strokeWidth=0.9
+          are thin at full resolution (≈3.6 px) but visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Red-yellow-blue diverging scheme is colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good canvas utilization but data doesn't fully extend to map edges
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Latitude/longitude labels with directional indicators
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: BrBG is CVD-safe; no red-green distinction as sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas 3200×1800; title centered; colorbar well-placed. Geographic
+          map slightly tight at the sides but no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: No visible grid lines on map
+        passed: true
+        comment: Colorbar labeled 'Temp (°C)'; title in correct format; no lat/lon
+          axis labels expected for geographic projection.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Continuous diverging data uses BrBG (brownbluegreen); backgrounds:
+          light=#FAF8F1, dark=#1A1A17; chrome adaptive.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Sophisticated layered geographic map with real basemap, filled raster,
+          and isolines. Mercator projection with scale tuned to show Europe clearly.
+          BrBG colormap choice is appropriate for signed data.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Clean chrome; thin border strokes; no unnecessary axes on geographic
+          projection; opacity=0.90 on raster for subtlety. The discrete-square raster
+          fill has a minor pixel-grid artefact.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Geographic temperature gradient tells a clear story: south warm
+          (brownish-teal), north cool (faint teal). Isolines identify specific temperature
+          zones. Limited annotation labels reduce depth of storytelling.'
     spec_compliance:
-      score: 19
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 6
-        max: 8
-        passed: true
-        comment: Shows temperature over geography but contour lines are point-based
-          approximations
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Latitude/longitude correctly mapped with Mercator projection
-      - id: SC-03
+        comment: 'Correct: contour isolines overlaid on geographic basemap with filled
+          raster.'
+      - id: SC-02
         name: Required Features
-        score: 2
-        max: 5
-        passed: false
-        comment: Missing true smooth contour lines - uses scattered points instead
-      - id: SC-04
-        name: Data Range
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Basemap ✓; filled raster ✓; isolines ✓; colorbar ✓; 5°C intervals
+          ✓. Contour labeling sparse: only 1–2 labels visible per render due to restrictive
+          geographic filter.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full temperature range visible from -10 to 30°C
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Lat/lon grid correctly mapped; temperature to BrBG color; isolines
+          at correct temperature levels.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled with Temperature (°C)
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Title includes extra prefix instead of just spec-id format
+        comment: 'Title: ''contour-map-geographic · python · altair · anyplot.ai''
+          ✓; colorbar with descriptive label ✓.'
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows temperature gradient with regional variations (Alps, Scandinavia)
+        comment: Shows filled contour raster, isolines, country borders, colorbar,
+          and select labels — covers all key geographic contour features. Labeling
+          coverage could be wider.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: European temperature distribution is realistic and neutral
+        comment: Simulated European summer temperature field with realistic latitude
+          gradient and spatial patterns. Neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature range -10 to 30°C is plausible for European climate
+        comment: Temperature range −15 to 35°C appropriate for European summer; 5°C
+          contour intervals are meaningful.
     code_quality:
       score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear code structure: imports → data → plot → save'
+        comment: Flat top-level script. The sys.path guard and contour-segment loop
+          add lines but are necessary. No functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported
+        comment: All imports (altair, numpy, pandas, contourpy, PIL) are actively
+          used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake interactivity; real HTML output; clean layer composition.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png but also plot.html
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; altair 6.1.0 current
+          API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses geographic projections, topo_feature, layer composition, tooltips;
-          lacks native contour support
+        comment: Proper use of longitude:Q/latitude:Q geographic encoding, alt.topo_feature,
+          alt.layer, detail channel for multi-segment lines, and projection system.
+          mark_square workaround is functional but not the most idiomatic approach
+          for raster fills.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Mercator projection with custom scale/center, alt.topo_feature
+          TopoJSON basemap, detail channel for line continuity, and layered chart
+          composition — all distinctively Altair features.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - contourpy
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
-  - html-export
   - annotations
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
