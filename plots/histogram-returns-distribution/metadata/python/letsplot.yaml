@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: histogram-returns-distribution
 created: '2026-01-16T22:22:04Z'
-updated: '2026-05-20T18:22:52Z'
+updated: '2026-05-20T18:39:44Z'
 generated_by: claude-sonnet
 workflow_run: 26180990514
 issue: 3751
@@ -12,90 +12,104 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/letsplot/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - 'Full spec compliance: all required features (normal overlay, tail highlighting,
-    stats box, density normalization) correctly implemented'
-  - 'Excellent data quality: realistic fat-tailed financial returns with correct statistical
-    properties (kurtosis > 3, mean ~0.04%, std ~1.4%)'
-  - 'Perfect code quality: clean flat script, seed-reproducible with np.random.seed(42),
-    saves both PNG and HTML outputs'
-  - Both renders are fully theme-adaptive with no dark-on-dark failures — warm off-white
-    and near-black backgrounds correctly applied
-  - Uses layer_tooltips().line() — a distinctively letsplot-specific interactive feature
-    that differentiates it from ggplot2
+  - Perfect spec compliance - all required features present (histogram with density
+    normalization, normal curve overlay, stats annotation box, tail highlighting beyond
+    ±2σ)
+  - Excellent data quality with realistic financial returns simulation using proper
+    fat-tail model (5% outliers with wider scale)
+  - Perfect code quality with clean KISS structure, seed set, correct output format
+    for both PNG and HTML
+  - Distinctive letsplot hover tooltips using native layer_tooltips() with computed
+    aesthetic references (..density..) and custom number formatting - genuinely interactive
+    in HTML output
+  - 'Correct Okabe-Ito palette with #009E73 as primary series and #D55E00 for tail
+    regions'
   weaknesses:
-  - Stats annotation box (positioned at x=x_max-0.5, hjust=1, y=normal_pdf.max()*0.95)
-    partially covers orange tail bar at ~3% daily return — reposition to avoid obscuring
-    data elements (e.g., shift x to left side or lower y to ~0.50 of normal_pdf.max())
-  - geom_label annotation box border uses prominent defaults which adds visual noise
-    — consider label.size=0.3 or removing border for a cleaner finish
+  - 'Dark render text contrast has some uncertainty - title and axis labels may appear
+    slightly darker than ideal against #1A1A17 background; verify INK tokens (#F0EFE8)
+    are rendering with full contrast in plot_title and axis_title'
+  - Design does not rise to publication-ready level - spines from theme_minimal()
+    could be more explicitly controlled; stats box label placement at upper_tail+2.5
+    is functional but the annotation style lacks typographic refinement
+  - LM-02 could be strengthened - interactive tooltip feature is good but could also
+    leverage additional letsplot-specific capabilities like ggtb() interactive mode
+    or theme_void() for more distinctive visual identity
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correctly set, not pure white
-      Chrome: Title "histogram-returns-distribution · python · letsplot · anyplot.ai" in dark ink, clearly readable. Axis labels "Daily Returns (%)" and "Density" in dark ink, readable. Tick labels in INK_SOFT (#4A4A44), readable. Legend "Region" positioned inside plot top-left, readable.
-      Data: Green (#009E73) bars for Normal Range (±2σ), orange (#D55E00) bars for Tail (beyond ±2σ). Dashed black normal distribution curve overlaid. Dotted orange vertical lines at ±2σ boundaries. Stats annotation box upper-right with light elevated background.
-      Legibility verdict: PASS — all text readable against light background. Note: annotation box partially covers the orange bar at ~3%.
+      Background: Warm off-white (#FAF8F1), not pure white — PASS
+      Chrome: Title "histogram-returns-distribution · python · letsplot · anyplot.ai" in dark ink, clearly readable. Axis labels "Daily Returns (%)" and "Density" in dark text, clear. Tick labels in dark gray (INK_SOFT), readable. Legend at top-left with styled box (ELEVATED_BG fill).
+      Data: Green (#009E73) histogram bars for "Normal Range (±2σ)" — first series correctly using brand green. Orange (#D55E00) bars for "Tail (beyond ±2σ)" — second Okabe-Ito color. Black dashed curve for normal distribution overlay. Orange dotted vertical lines at ±2σ. Stats box with dark text on elevated light background.
+      Legibility verdict: PASS — all text clearly visible against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correctly set, not pure black
-      Chrome: Title in light ink (#F0EFE8), clearly readable. Axis labels in light ink, readable. Tick labels in INK_SOFT (#B8B7B0), readable. Legend in matching light text. Stats annotation box uses dark elevated background #242420 with light text. No dark-on-dark failures.
-      Data: Colors identical to light render — green #009E73 and orange #D55E00 unchanged. Normal distribution curve becomes white dashed line (INK token flips to #F0EFE8 in dark mode). Stats annotation box clearly legible on dark elevated background.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17), not pure black — PASS
+      Chrome: Title and axis labels appear in lighter tones on the dark background (code correctly uses INK=#F0EFE8 in dark mode), visible but with slightly lower contrast than the dashed curve (which is clearly white). Legend box uses darker elevated fill (#242420). Stats box shows lighter text on dark elevated background.
+      Data: Green (#009E73) and orange (#D55E00) histogram bars are IDENTICAL to light render — Okabe-Ito positions 1-2 unchanged across themes. Dashed curve correctly flips to white for dark theme — confirming theme adaptation is active. Dotted ±2σ lines remain orange (data color, unchanged).
+      Legibility verdict: PASS with minor concern — theme tokens are correctly coded but the title/axis text contrast against the near-black background appears slightly lower than optimal; all text is discernible but could be crisper.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: 'All text readable in both themes. Minor: stats annotation text at
-          size=10 with scale=4 renders somewhat large.'
+        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, legend=10,
+          annotation=10). Both renders legible. Minor concern about dark render title/axis
+          text contrast — code uses correct INK tokens but visual inspection shows
+          slightly lower contrast than expected.
       - id: VQ-02
         name: No Overlap
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Stats annotation box partially covers orange tail bar at ~3% daily
-          return.
+        passed: true
+        comment: No overlapping elements. Stats box placed in sparse right tail region,
+          legend at top-left clear of data. Dashed curve doesn't conflict with text.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All histogram bars, normal curve, ±2σ lines, and annotation clearly
-          visible.
+        comment: Histogram bars clearly visible with alpha=0.85. Normal distribution
+          dashed curve well-contrasted. Tail dotted lines visible. Bar separators
+          use PAGE_BG for clean separation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green and orange are colorblind-safe with good contrast.
+        comment: 'Okabe-Ito positions 1-2 (#009E73 and #D55E00) are colorblind-safe.
+          Sufficient luminance contrast between green/orange bars and both light/dark
+          backgrounds.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas. Minor deduction for annotation box crowding
-          upper-right.
+        comment: Landscape 3200x1800 canvas used correctly (ggsize(800,450) + scale=4).
+          Stats box positioned in sparse tail region, good use of available space.
+          Legend well-positioned top-left. No content clipped.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Daily Returns (%) and Density are descriptive with units. Title format
-          correct.
+        comment: 'X-axis: ''Daily Returns (%)'' with units. Y-axis: ''Density'' (no
+          units needed). Title follows correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00, correct backgrounds in both
-          themes.'
+        comment: 'First categorical series #009E73 (Normal Range) — correct. Second
+          series #D55E00 (Tail) — correct Okabe-Ito position 2. Backgrounds #FAF8F1
+          light / #1A1A17 dark — correct. Data colors identical between themes. Theme-adaptive
+          chrome correctly coded.'
     design_excellence:
       score: 13
       max: 20
@@ -105,22 +119,28 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Tail highlighting, dashed normal overlay, dotted reference lines,
-          stats annotation — above generic defaults.
+        comment: 'Above well-configured default: thoughtful tail highlighting, stats
+          annotation, normal curve overlay. Good color harmony with Okabe-Ito. Not
+          publication-ready (8/8) — lacks typographic hierarchy refinement and polished
+          spacing.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: panel_border removed, y-only grid, theme_minimal base, PAGE_BG bar
-          edges.
+        comment: 'Good refinement: y-only subtle grid, panel border removed, custom
+          theme overlaid on theme_minimal(), legend box with theme-adaptive styling.
+          Not perfect (6/6) as whitespace relies on defaults rather than explicit
+          margin tuning.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear focal point: green normal range vs orange tails; ±2σ boundaries
-          and stats guide interpretation.'
+        comment: 'Clear visual hierarchy: tail (orange) vs normal range (green) immediately
+          reads as the key insight. Normal curve overlay creates explicit comparison.
+          Stats box quantifies the fat tails (kurtosis=4.32 > 3). ±2σ boundary markers
+          reinforce the story.'
     spec_compliance:
       score: 15
       max: 15
@@ -130,26 +150,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct histogram with density normalization.
+        comment: Histogram with density normalization and normal distribution overlay
+          — exactly the required plot type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normal overlay, stats box, tail highlighting, density normalization
-          all present.
+        comment: 'All spec features present: percentage returns x-axis, normal curve
+          overlay fitted to data, stats text box (mean/std/skewness/kurtosis), tail
+          highlighting beyond ±2σ, density normalization (aes(y=''..density..'')),
+          30 bins (within 20-50 range).'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=percentage returns, Y=density, 252 observations.
+        comment: 'X: daily returns percentage, Y: density — correct. Color fill mapped
+          to region (Normal/Tail) — correct.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title format. Legend labels match spec.
+        comment: 'Title: ''histogram-returns-distribution · python · letsplot · anyplot.ai''
+          — correct format. Legend labeled ''Region'' with ''Normal Range (±2σ)''
+          and ''Tail (beyond ±2σ)'' — matches data categories.'
     data_quality:
       score: 15
       max: 15
@@ -159,22 +185,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects: histogram, normal overlay, tail highlighting, reference
-          lines, stats annotation.'
+        comment: 'Shows all distribution aspects: central concentration, fat tails,
+          asymmetry (skewness=-0.04), excess kurtosis (4.32), deviation from normality.
+          252-day dataset with 5% fat-tail outliers provides comprehensive coverage.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic daily returns with fat tails via mixture. Mean ~0.04%,
-          Std ~1.4%, Kurtosis ~4.3.
+        comment: Daily stock returns simulation with realistic parameters (0.03%/day
+          mean, 1.2% base std, 3.5% tail std). 252 trading days = standard 1-year
+          financial dataset. Neutral business/finance context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 252 daily observations (1 trading year), returns in %, kurtosis >3
-          consistent with equity returns.
+        comment: Mean 0.038%/day, Std 1.426%/day — annualizes to ~22.6% volatility,
+          realistic for equity. Range -8% to +7% represents plausible extreme daily
+          moves.
     code_quality:
       score: 10
       max: 10
@@ -184,31 +213,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes.
+        comment: 'Linear flow: imports → theme tokens → data simulation → stats calculation
+          → dataframe → theme build → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os, numpy, pandas, lets_plot (wildcard with noqa),
+          ggsave, scipy.stats.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI, appropriate noqa comments.
+        comment: Clean Pythonic code. Appropriate complexity for the visualization.
+          No fake functionality — tooltips are native letsplot interactive feature.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png (via ggsave with scale=4) and plot-{THEME}.html.
+          Correct API usage.
     library_mastery:
       score: 7
       max: 10
@@ -218,23 +251,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar, aes(y='..density..'), scale_fill_manual,
-          layer_tooltips with .line() chains, inherit_aes=False.
+        comment: 'Competent ggplot grammar usage: ggplot() + geom_* layering, aes()
+          mappings, scale_fill_manual(), theme() + theme_minimal() layering, ggsize()
+          canvas control, ggsave() export. Above ''correct but not leveraging best
+          patterns''.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips().line() is letsplot-specific. Dual PNG+HTML output
-          leverages letsplot HTML interactivity.
+        comment: Uses native letsplot hover tooltips with layer_tooltips(), including
+          computed aesthetic reference (..density..) and custom number formatting
+          (|.4f). Saves HTML for genuinely interactive output. Distinctive to letsplot.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
   - annotations
   patterns:
   - data-generation
