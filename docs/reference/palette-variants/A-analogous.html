@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>variant A. analogous — anyplot palette</title>
+<style>
+:root {
+    --bg-page:     #F5F3EC;
+    --bg-surface:  #FAF8F1;
+    --bg-elevated: #FFFDF6;
+    --ink:         #1A1A17;
+    --ink-soft:    #4A4A44;
+    --ink-muted:   #6B6A63;
+    --rule:        rgba(26, 26, 23, 0.10);
+    --ok-green:    #009E73;
+    --ok-amber:    #E69F00;
+    --ok-bad:      #D55E00;
+    --mono: 'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, Menlo, Monaco, monospace;
+}
+body.theme-dark {
+    --bg-page:     #121210;
+    --bg-surface:  #1A1A17;
+    --bg-elevated: #242420;
+    --ink:         #F0EFE8;
+    --ink-soft:    #B8B7B0;
+    --ink-muted:   #A8A79F;
+    --rule:        rgba(240, 239, 232, 0.10);
+}
+* { box-sizing: border-box; }
+body {
+    font-family: var(--mono);
+    background: var(--bg-page);
+    color: var(--ink);
+    margin: 0;
+    padding: 32px 48px 80px;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
+}
+header.masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 18px;
+    margin-bottom: 32px;
+}
+header.masthead h1 {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+header.masthead h1 .dot {
+    color: var(--ok-green);
+    font-size: 1.5em;
+    line-height: 0;
+    vertical-align: -0.05em;
+    margin: 0 2px;
+}
+header.masthead .meta {
+    color: var(--ink-muted);
+    font-size: 11px;
+}
+button.theme-toggle {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+button.theme-toggle:hover { color: var(--ok-green); border-color: var(--ok-green); }
+
+section.domain {
+    background: var(--bg-surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 24px 28px 28px;
+    margin-bottom: 28px;
+}
+section.domain > h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.01em;
+}
+section.domain > h2::before {
+    content: "❯ ";
+    color: var(--ink-muted);
+    font-weight: 400;
+}
+section.domain > p.lede {
+    margin: 0 0 24px 0;
+    color: var(--ink-soft);
+    font-size: 12px;
+}
+
+/* sample charts */
+.sample-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.sample-charts svg { width: 100%; height: auto; display: block; }
+
+/* swatch row */
+.swatch-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.swatch-row .sw {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 60px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    font-size: 11px;
+}
+.swatch-row .sw code { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; }
+.swatch-row .sw span { font-size: 10px; opacity: 0.85; }
+
+/* delta E matrix */
+.matrix {
+    margin: 0;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px 16px;
+}
+.matrix figcaption {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+    text-transform: lowercase;
+}
+.matrix table.delta {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 10px;
+}
+.matrix table.delta th {
+    font-weight: 400;
+    color: var(--ink-muted);
+    padding: 2px 4px;
+    text-align: center;
+    vertical-align: bottom;
+    font-size: 9.5px;
+}
+.matrix table.delta th.rowlab {
+    text-align: right;
+    padding-right: 6px;
+    color: var(--ink-soft);
+}
+.matrix table.delta th.rot { white-space: nowrap; }
+.matrix table.delta th.rot span {
+    display: inline-block;
+    transform: rotate(-45deg) translateX(6px);
+    transform-origin: bottom left;
+}
+.matrix table.delta td {
+    padding: 4px 6px;
+    text-align: center;
+    font-size: 10px;
+    border: 1px solid rgba(26,26,23,0.04);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+}
+body.theme-dark .matrix table.delta td {
+    border-color: rgba(240,239,232,0.06);
+}
+.cell-ok   { background: rgba(0,158,115,0.22); }
+.cell-meh  { background: rgba(240,228,66,0.30); }
+.cell-warn { background: rgba(230,159,0,0.26); }
+.cell-bad  { background: rgba(213,94,0,0.30); }
+.diag      { background: var(--rule); }
+.wcag table.delta td { font-size: 10px; }
+.wcag table.delta td small {
+    display: block;
+    font-size: 9px;
+    opacity: 0.65;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.matrix-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 8px;
+}
+@media (max-width: 1100px) { .matrix-pair { grid-template-columns: 1fr; } }
+
+/* first-n summary */
+.first-n {
+    margin: 0 0 22px;
+    max-width: 460px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 12px 16px 14px;
+}
+.first-n figcaption {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+}
+.first-n table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+.first-n th {
+    text-align: left;
+    color: var(--ink-muted);
+    font-weight: 400;
+    padding: 3px 8px;
+    font-size: 10.5px;
+}
+.first-n td {
+    padding: 4px 8px;
+    text-align: center;
+}
+.first-n td.add { text-align: left; color: var(--ink-soft); }
+
+/* legend */
+.legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 10px;
+    color: var(--ink-muted);
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+.legend i {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+    border-radius: 2px;
+    vertical-align: -2px;
+}
+
+/* compact colormap rows */
+.cmap-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 220px;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rule);
+}
+.cmap-row:last-child { border-bottom: none; }
+.cmap-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+}
+.badge {
+    font-size: 10.5px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 2px 8px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+}
+.badge em {
+    font-style: normal;
+    color: var(--ink-muted);
+    font-size: 9.5px;
+}
+.gradient {
+    display: flex;
+    height: 22px;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+}
+.gradient span { flex: 1; display: block; }
+
+/* hero mockups */
+.hero-mockup-stack {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+.hero-mockup {
+    border-radius: 8px;
+    padding: 24px 26px 18px;
+    font-family: var(--mono);
+    line-height: 1.4;
+    position: relative;
+}
+.hero-meta {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.55;
+    color: var(--badge-color);
+}
+.hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 14px;
+}
+.hero-eyebrow .rule-line {
+    display: inline-block;
+    width: 18px;
+    height: 1.5px;
+}
+.hero-h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    margin: 6px 0 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.hero-h1 .word { white-space: nowrap; }
+.hero-h1 .dot {
+    display: inline-block;
+    width: 0.28em;
+    height: 0.28em;
+    border-radius: 50%;
+    vertical-align: 0.15em;
+    margin: 0 1px;
+}
+.hero-accent {
+    font-size: 22px;
+    font-style: italic;
+    margin: 2px 0 18px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.hero-subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.hero-prose {
+    font-size: 12px;
+    margin: 0 0 16px;
+}
+.hero-tagline {
+    font-size: 16px;
+    font-style: italic;
+    margin-bottom: 18px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.hero-tagline .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 16px;
+    vertical-align: -3px;
+    margin: 0 4px 0 2px;
+}
+.hero-ctas {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+.cta-primary, .cta-hover {
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 4px;
+    padding: 7px 13px;
+    display: inline-block;
+}
+.cta-hover em { font-style: italic; opacity: 0.7; font-size: 10px; margin-left: 4px; }
+.cta-secondary { font-size: 11px; }
+.hero-cta-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--badge-color);
+    margin-bottom: 14px;
+}
+.hero-cta-badges span { display: flex; gap: 6px; align-items: center; }
+.hero-surfaces {
+    display: flex;
+    gap: 6px;
+    padding-top: 12px;
+    margin-top: 4px;
+}
+.surface-chip {
+    flex: 1;
+    border: 1px solid;
+    border-color: var(--badge-color);
+    border-radius: 3px;
+    padding: 6px 8px;
+    font-size: 9.5px;
+    letter-spacing: 0.02em;
+    opacity: 0.7;
+}
+
+.cbadge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-style: normal;
+    color: var(--badge-color);
+    font-variant-numeric: tabular-nums;
+    vertical-align: 1px;
+}
+.cb-ok   { background: rgba(0, 158, 115, 0.28); }
+.cb-warn { background: rgba(230, 159, 0, 0.34); }
+.cb-bad  { background: rgba(213, 94, 0, 0.42); }
+
+/* surface section layout */
+section.surface {
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+section.surface h3 {
+    margin: 0 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.surface-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 24px;
+    margin-bottom: 18px;
+}
+
+/* notes footer */
+.notes {
+    color: var(--ink-muted);
+    font-size: 11px;
+    line-height: 1.7;
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+}
+.notes code { color: var(--ink-soft); }
+
+.variant-nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+.variant-nav a {
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    background: var(--bg-surface);
+    color: var(--ink-soft);
+    text-decoration: none;
+}
+.variant-nav a.current {
+    background: var(--ok-green);
+    color: #ffffff;
+    border-color: var(--ok-green);
+    font-weight: 600;
+}
+.variant-nav a:hover:not(.current) {
+    color: var(--ok-green);
+    border-color: var(--ok-green);
+}
+.variant-summary {
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    line-height: 1.7;
+}
+.variant-summary .score-row {
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+.variant-summary .score {
+    font-variant-numeric: tabular-nums;
+    background: var(--bg-surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 4px 10px;
+}
+.variant-summary .score em {
+    color: var(--ink-muted);
+    font-style: normal;
+    margin-right: 6px;
+    font-size: 10.5px;
+}
+.variant-summary .delta-pos { color: var(--ok-green); }
+.variant-summary .delta-neg { color: var(--ok-bad); }
+</style>
+</head>
+<body>
+<header class="masthead">
+    <h1>any<span class="dot">.</span>plot() — variant A. analogous</h1>
+    <div class="meta">CAM02-UCS · #5817</div>
+    <button class="theme-toggle">◐ dark</button>
+</header>
+
+<nav class="variant-nav">
+    <a href="index.html">← all variants</a>
+    <a href="A-analogous.html" class="current">A · analogous</a><a href="B-triadic.html" class="">B · triadic</a><a href="C-split-complementary.html" class="">C · split-complementary</a><a href="D-balanced.html" class="">D · balanced</a><a href="E-okabe-tuned.html" class="">E · okabe-tuned</a><a href="F-okabe-shifted.html" class="">F · okabe-shifted</a>
+</nav>
+
+<div class="variant-summary">
+    <strong>strategy:</strong> harmony over distinctness — hues cluster within ±90° of brand green.<br>
+    paper-ink corridor: J' ∈ [45, 72], C ∈ [22, 50].
+    first-4 reordered to maximise min worst-CVD ΔE within {1..4}.
+    <div class="score-row">
+        <span class="score"><em>first-4 worst-CVD min ΔE</em>16.34
+        <span class="delta-pos">(+4.62 vs Okabe-Ito 11.73)</span></span>
+        <span class="score"><em>all-pairs normal min ΔE</em>13.44</span>
+    </div>
+</div>
+
+<section class="domain">
+    <h2>palette</h2>
+    <p class="lede">7 hues + 2 adaptive neutrals. positions 1–4 are the "first-4 most beautiful" subset chosen to maximise min worst-CVD ΔE. positions 5–7 follow in descending min-distance-to-the-first-4. neutrals stay theme-adaptive (same as today's design tokens).</p>
+    <div class="swatch-row"><div class="sw" style="background:#009E73;color:#F0EFE8"><code>#009E73</code><span>cyan</span></div><div class="sw" style="background:#835C00;color:#F0EFE8"><code>#835C00</code><span>lime</span></div><div class="sw" style="background:#99B314;color:#F0EFE8"><code>#99B314</code><span>green</span></div><div class="sw" style="background:#4467A3;color:#F0EFE8"><code>#4467A3</code><span>blue</span></div><div class="sw" style="background:#16B8F3;color:#F0EFE8"><code>#16B8F3</code><span>azure</span></div><div class="sw" style="background:#8C8B2C;color:#F0EFE8"><code>#8C8B2C</code><span>green</span></div><div class="sw" style="background:#1671FA;color:#F0EFE8"><code>#1671FA</code><span>blue</span></div><div class="sw" style="background:#1A1A17;color:#F0EFE8"><code>#1A1A17</code><span>neutral·light</span></div><div class="sw" style="background:#F0EFE8;color:#1A1A17"><code>#F0EFE8</code><span>neutral·dark</span></div></div>
+</section>
+
+<section class="domain">
+    <h2>sample &amp; first-n</h2>
+    <p class="lede">3-series chart on both production bg-page surfaces. the first-n table reads as "if you only use the first n positions, what's the weakest pair under normal vision vs. worst CVD".</p>
+    <div class="sample-charts"><svg viewBox="0 0 460 240" class="sample-chart" preserveAspectRatio="xMidYMid meet" style="background:#F5F3EC;border:1px solid #DFDDD6;border-radius:6px"><text x="36" y="16" fill="#6B6A63" font-size="10" text-anchor="start">light — bg-page #F5F3EC</text><line x1="36" y1="70.0" x2="442" y2="70.0" stroke="rgba(26,26,23,0.06)" stroke-width="1" /><line x1="36" y1="118.0" x2="442" y2="118.0" stroke="rgba(26,26,23,0.06)" stroke-width="1" /><line x1="36" y1="166.0" x2="442" y2="166.0" stroke="rgba(26,26,23,0.06)" stroke-width="1" /><line x1="36" y1="22" x2="36" y2="214" stroke="#DFDDD6" stroke-width="1" /><line x1="36" y1="214" x2="442" y2="214" stroke="#DFDDD6" stroke-width="1" /><polyline points="36.0,118.0 44.6,104.5 53.3,91.6 61.9,79.8 70.6,69.4 79.2,60.8 87.8,54.3 96.5,50.1 105.1,48.3 113.7,49.0 122.4,52.0 131.0,57.3 139.7,64.7 148.3,73.8 156.9,84.4 165.6,96.0 174.2,108.2 182.9,120.7 191.5,132.9 200.1,144.4 208.8,154.9 217.4,164.0 226.0,171.4 234.7,176.8 243.3,180.1 252.0,181.2 260.6,180.1 269.2,176.9 277.9,171.6 286.5,164.6 295.1,156.0 303.8,146.2 312.4,135.6 321.1,124.4 329.7,113.2 338.3,102.3 347.0,92.1 355.6,82.9 364.3,75.1 372.9,68.8 381.5,64.4 390.2,61.9 398.8,61.3 407.4,62.8 416.1,66.1 424.7,71.2 433.4,77.9 442.0,85.8" stroke="#009E73" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><polyline points="36.0,76.0 44.6,66.8 53.3,60.0 61.9,55.8 70.6,54.4 79.2,55.9 87.8,60.0 96.5,66.7 105.1,75.6 113.7,86.2 122.4,98.1 131.0,110.7 139.7,123.5 148.3,135.8 156.9,147.2 165.6,157.1 174.2,165.2 182.9,171.1 191.5,174.5 200.1,175.4 208.8,173.7 217.4,169.6 226.0,163.3 234.7,155.0 243.3,145.3 252.0,134.4 260.6,123.1 269.2,111.6 277.9,100.7 286.5,90.6 295.1,82.0 303.8,75.0 312.4,70.1 321.1,67.4 329.7,66.9 338.3,68.7 347.0,72.7 355.6,78.6 364.3,86.1 372.9,95.0 381.5,104.7 390.2,114.8 398.8,124.9 407.4,134.5 416.1,143.2 424.7,150.7 433.4,156.5 442.0,160.6" stroke="#835C00" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><polyline points="36.0,61.3 44.6,60.9 53.3,63.7 61.9,69.5 70.6,77.7 79.2,88.1 87.8,100.0 96.5,112.6 105.1,125.4 113.7,137.5 122.4,148.4 131.0,157.5 139.7,164.2 148.3,168.3 156.9,169.6 165.6,168.0 174.2,163.7 182.9,157.0 191.5,148.3 200.1,138.0 208.8,126.8 217.4,115.4 226.0,104.3 234.7,94.1 243.3,85.4 252.0,78.7 260.6,74.2 269.2,72.2 277.9,72.8 286.5,75.8 295.1,81.1 303.8,88.3 312.4,97.0 321.1,106.7 329.7,116.8 338.3,126.7 347.0,136.0 355.6,144.1 364.3,150.7 372.9,155.3 381.5,157.7 390.2,158.0 398.8,156.0 407.4,152.0 416.1,146.3 424.7,139.1 433.4,130.9 442.0,122.2" stroke="#99B314" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><text x="36.0" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">0</text><text x="137.5" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">25</text><text x="239.0" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">50</text><text x="340.5" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">75</text><text x="442.0" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">100</text></svg><svg viewBox="0 0 460 240" class="sample-chart" preserveAspectRatio="xMidYMid meet" style="background:#121210;border:1px solid #1E1E1B;border-radius:6px"><text x="36" y="16" fill="#A8A79F" font-size="10" text-anchor="start">dark — bg-page #121210</text><line x1="36" y1="70.0" x2="442" y2="70.0" stroke="rgba(240,239,232,0.06)" stroke-width="1" /><line x1="36" y1="118.0" x2="442" y2="118.0" stroke="rgba(240,239,232,0.06)" stroke-width="1" /><line x1="36" y1="166.0" x2="442" y2="166.0" stroke="rgba(240,239,232,0.06)" stroke-width="1" /><line x1="36" y1="22" x2="36" y2="214" stroke="#1E1E1B" stroke-width="1" /><line x1="36" y1="214" x2="442" y2="214" stroke="#1E1E1B" stroke-width="1" /><polyline points="36.0,118.0 44.6,104.5 53.3,91.6 61.9,79.8 70.6,69.4 79.2,60.8 87.8,54.3 96.5,50.1 105.1,48.3 113.7,49.0 122.4,52.0 131.0,57.3 139.7,64.7 148.3,73.8 156.9,84.4 165.6,96.0 174.2,108.2 182.9,120.7 191.5,132.9 200.1,144.4 208.8,154.9 217.4,164.0 226.0,171.4 234.7,176.8 243.3,180.1 252.0,181.2 260.6,180.1 269.2,176.9 277.9,171.6 286.5,164.6 295.1,156.0 303.8,146.2 312.4,135.6 321.1,124.4 329.7,113.2 338.3,102.3 347.0,92.1 355.6,82.9 364.3,75.1 372.9,68.8 381.5,64.4 390.2,61.9 398.8,61.3 407.4,62.8 416.1,66.1 424.7,71.2 433.4,77.9 442.0,85.8" stroke="#009E73" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><polyline points="36.0,76.0 44.6,66.8 53.3,60.0 61.9,55.8 70.6,54.4 79.2,55.9 87.8,60.0 96.5,66.7 105.1,75.6 113.7,86.2 122.4,98.1 131.0,110.7 139.7,123.5 148.3,135.8 156.9,147.2 165.6,157.1 174.2,165.2 182.9,171.1 191.5,174.5 200.1,175.4 208.8,173.7 217.4,169.6 226.0,163.3 234.7,155.0 243.3,145.3 252.0,134.4 260.6,123.1 269.2,111.6 277.9,100.7 286.5,90.6 295.1,82.0 303.8,75.0 312.4,70.1 321.1,67.4 329.7,66.9 338.3,68.7 347.0,72.7 355.6,78.6 364.3,86.1 372.9,95.0 381.5,104.7 390.2,114.8 398.8,124.9 407.4,134.5 416.1,143.2 424.7,150.7 433.4,156.5 442.0,160.6" stroke="#835C00" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><polyline points="36.0,61.3 44.6,60.9 53.3,63.7 61.9,69.5 70.6,77.7 79.2,88.1 87.8,100.0 96.5,112.6 105.1,125.4 113.7,137.5 122.4,148.4 131.0,157.5 139.7,164.2 148.3,168.3 156.9,169.6 165.6,168.0 174.2,163.7 182.9,157.0 191.5,148.3 200.1,138.0 208.8,126.8 217.4,115.4 226.0,104.3 234.7,94.1 243.3,85.4 252.0,78.7 260.6,74.2 269.2,72.2 277.9,72.8 286.5,75.8 295.1,81.1 303.8,88.3 312.4,97.0 321.1,106.7 329.7,116.8 338.3,126.7 347.0,136.0 355.6,144.1 364.3,150.7 372.9,155.3 381.5,157.7 390.2,158.0 398.8,156.0 407.4,152.0 416.1,146.3 424.7,139.1 433.4,130.9 442.0,122.2" stroke="#99B314" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><text x="36.0" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">0</text><text x="137.5" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">25</text><text x="239.0" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">50</text><text x="340.5" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">75</text><text x="442.0" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">100</text></svg></div>
+    <figure class="first-n"><figcaption>worst pair if you use only positions 1..n</figcaption><table><tr><th></th><th>added</th><th>normal</th><th>worst-cvd</th></tr><tr><th>n=2</th><td class="add">+ lime</td><td class="cell-ok">36.2</td><td class="cell-ok">22.2</td></tr><tr><th>n=3</th><td class="add">+ green</td><td class="cell-ok">28.2</td><td class="cell-ok">21.9</td></tr><tr><th>n=4</th><td class="add">+ blue</td><td class="cell-ok">28.2</td><td class="cell-ok">16.3</td></tr><tr><th>n=5</th><td class="add">+ azure</td><td class="cell-ok">28.2</td><td class="cell-ok">15.6</td></tr><tr><th>n=6</th><td class="add">+ green</td><td class="cell-ok">15.2</td><td class="cell-meh">13.2</td></tr><tr><th>n=7</th><td class="add">+ blue</td><td class="cell-meh">13.4</td><td class="cell-meh">11.7</td></tr></table></figure>
+</section>
+
+<section class="domain">
+    <h2>ΔE matrix</h2>
+    <p class="lede">normal vision left, worst-of-3-cvd right. cells coloured by the 4-step Petroff-2021 scale: ≥15 optimal, 10–15 okay, 5–10 marginal, &lt;5 confusable.</p>
+    <div class="matrix-pair"><figure class="matrix"><figcaption>normal vision</figcaption><table class="delta"><tr><th></th><th class="rot"><span>cyan</span></th><th class="rot"><span>lime</span></th><th class="rot"><span>green</span></th><th class="rot"><span>blue</span></th><th class="rot"><span>azure</span></th><th class="rot"><span>green</span></th><th class="rot"><span>blue</span></th><th class="rot"><span>neutral·light</span></th><th class="rot"><span>neutral·dark</span></th></tr><tr><th class="rowlab">cyan</th><td class="diag"></td><td class="cell-ok" title="cyan × lime · normal ΔE=36.23">36.2</td><td class="cell-ok" title="cyan × green · normal ΔE=28.20">28.2</td><td class="cell-ok" title="cyan × blue · normal ΔE=36.89">36.9</td><td class="cell-ok" title="cyan × azure · normal ΔE=31.99">32.0</td><td class="cell-ok" title="cyan × green · normal ΔE=25.00">25.0</td><td class="cell-ok" title="cyan × blue · normal ΔE=44.06">44.1</td><td class="cell-ok" title="cyan × neutral·light · normal ΔE=51.97">52.0</td><td class="cell-ok" title="cyan × neutral·dark · normal ΔE=43.25">43.2</td></tr><tr><th class="rowlab">lime</th><td class="cell-ok" title="lime × cyan · normal ΔE=36.23">36.2</td><td class="diag"></td><td class="cell-ok" title="lime × green · normal ΔE=31.87">31.9</td><td class="cell-ok" title="lime × blue · normal ΔE=47.89">47.9</td><td class="cell-ok" title="lime × azure · normal ΔE=58.33">58.3</td><td class="cell-ok" title="lime × green · normal ΔE=17.39">17.4</td><td class="cell-ok" title="lime × blue · normal ΔE=60.19">60.2</td><td class="cell-ok" title="lime × neutral·light · normal ΔE=39.34">39.3</td><td class="cell-ok" title="lime × neutral·dark · normal ΔE=55.01">55.0</td></tr><tr><th class="rowlab">green</th><td class="cell-ok" title="green × cyan · normal ΔE=28.20">28.2</td><td class="cell-ok" title="green × lime · normal ΔE=31.87">31.9</td><td class="diag"></td><td class="cell-ok" title="green × blue · normal ΔE=58.63">58.6</td><td class="cell-ok" title="green × azure · normal ΔE=52.41">52.4</td><td class="cell-ok" title="green × green · normal ΔE=15.21">15.2</td><td class="cell-ok" title="green × blue · normal ΔE=66.84">66.8</td><td class="cell-ok" title="green × neutral·light · normal ΔE=65.63">65.6</td><td class="cell-ok" title="green × neutral·dark · normal ΔE=38.24">38.2</td></tr><tr><th class="rowlab">blue</th><td class="cell-ok" title="blue × cyan · normal ΔE=36.89">36.9</td><td class="cell-ok" title="blue × lime · normal ΔE=47.89">47.9</td><td class="cell-ok" title="blue × green · normal ΔE=58.63">58.6</td><td class="diag"></td><td class="cell-ok" title="blue × azure · normal ΔE=28.90">28.9</td><td class="cell-ok" title="blue × green · normal ΔE=48.33">48.3</td><td class="cell-meh" title="blue × blue · normal ΔE=13.44">13.4</td><td class="cell-ok" title="blue × neutral·light · normal ΔE=41.06">41.1</td><td class="cell-ok" title="blue × neutral·dark · normal ΔE=56.31">56.3</td></tr><tr><th class="rowlab">azure</th><td class="cell-ok" title="azure × cyan · normal ΔE=31.99">32.0</td><td class="cell-ok" title="azure × lime · normal ΔE=58.33">58.3</td><td class="cell-ok" title="azure × green · normal ΔE=52.41">52.4</td><td class="cell-ok" title="azure × blue · normal ΔE=28.90">28.9</td><td class="diag"></td><td class="cell-ok" title="azure × green · normal ΔE=49.55">49.5</td><td class="cell-ok" title="azure × blue · normal ΔE=24.96">25.0</td><td class="cell-ok" title="azure × neutral·light · normal ΔE=65.88">65.9</td><td class="cell-ok" title="azure × neutral·dark · normal ΔE=39.17">39.2</td></tr><tr><th class="rowlab">green</th><td class="cell-ok" title="green × cyan · normal ΔE=25.00">25.0</td><td class="cell-ok" title="green × lime · normal ΔE=17.39">17.4</td><td class="cell-ok" title="green × green · normal ΔE=15.21">15.2</td><td class="cell-ok" title="green × blue · normal ΔE=48.33">48.3</td><td class="cell-ok" title="green × azure · normal ΔE=49.55">49.5</td><td class="diag"></td><td class="cell-ok" title="green × blue · normal ΔE=58.50">58.5</td><td class="cell-ok" title="green × neutral·light · normal ΔE=51.32">51.3</td><td class="cell-ok" title="green × neutral·dark · normal ΔE=42.27">42.3</td></tr><tr><th class="rowlab">blue</th><td class="cell-ok" title="blue × cyan · normal ΔE=44.06">44.1</td><td class="cell-ok" title="blue × lime · normal ΔE=60.19">60.2</td><td class="cell-ok" title="blue × green · normal ΔE=66.84">66.8</td><td class="cell-meh" title="blue × blue · normal ΔE=13.44">13.4</td><td class="cell-ok" title="blue × azure · normal ΔE=24.96">25.0</td><td class="cell-ok" title="blue × green · normal ΔE=58.50">58.5</td><td class="diag"></td><td class="cell-ok" title="blue × neutral·light · normal ΔE=53.53">53.5</td><td class="cell-ok" title="blue × neutral·dark · normal ΔE=57.92">57.9</td></tr><tr><th class="rowlab">neutral·light</th><td class="cell-ok" title="neutral·light × cyan · normal ΔE=51.97">52.0</td><td class="cell-ok" title="neutral·light × lime · normal ΔE=39.34">39.3</td><td class="cell-ok" title="neutral·light × green · normal ΔE=65.63">65.6</td><td class="cell-ok" title="neutral·light × blue · normal ΔE=41.06">41.1</td><td class="cell-ok" title="neutral·light × azure · normal ΔE=65.88">65.9</td><td class="cell-ok" title="neutral·light × green · normal ΔE=51.32">51.3</td><td class="cell-ok" title="neutral·light × blue · normal ΔE=53.53">53.5</td><td class="diag"></td><td class="cell-ok" title="neutral·light × neutral·dark · normal ΔE=82.49">82.5</td></tr><tr><th class="rowlab">neutral·dark</th><td class="cell-ok" title="neutral·dark × cyan · normal ΔE=43.25">43.2</td><td class="cell-ok" title="neutral·dark × lime · normal ΔE=55.01">55.0</td><td class="cell-ok" title="neutral·dark × green · normal ΔE=38.24">38.2</td><td class="cell-ok" title="neutral·dark × blue · normal ΔE=56.31">56.3</td><td class="cell-ok" title="neutral·dark × azure · normal ΔE=39.17">39.2</td><td class="cell-ok" title="neutral·dark × green · normal ΔE=42.27">42.3</td><td class="cell-ok" title="neutral·dark × blue · normal ΔE=57.92">57.9</td><td class="cell-ok" title="neutral·dark × neutral·light · normal ΔE=82.49">82.5</td><td class="diag"></td></tr></table></figure><figure class="matrix"><figcaption>worst of 3 cvd (deuter · protan · tritan)</figcaption><table class="delta"><tr><th></th><th class="rot"><span>cyan</span></th><th class="rot"><span>lime</span></th><th class="rot"><span>green</span></th><th class="rot"><span>blue</span></th><th class="rot"><span>azure</span></th><th class="rot"><span>green</span></th><th class="rot"><span>blue</span></th><th class="rot"><span>neutral·light</span></th><th class="rot"><span>neutral·dark</span></th></tr><tr><th class="rowlab">cyan</th><td class="diag"></td><td class="cell-ok" title="cyan × lime · worst-cvd ΔE=22.20 (deuteranopia=22.2 · protanopia=25.0 · tritanopia=43.9)">22.2</td><td class="cell-ok" title="cyan × green · worst-cvd ΔE=21.89 (deuteranopia=25.7 · protanopia=21.9 · tritanopia=24.1)">21.9</td><td class="cell-ok" title="cyan × blue · worst-cvd ΔE=16.34 (deuteranopia=33.2 · protanopia=36.8 · tritanopia=16.3)">16.3</td><td class="cell-ok" title="cyan × azure · worst-cvd ΔE=15.61 (deuteranopia=33.8 · protanopia=35.8 · tritanopia=15.6)">15.6</td><td class="cell-ok" title="cyan × green · worst-cvd ΔE=15.42 (deuteranopia=16.8 · protanopia=15.4 · tritanopia=28.9)">15.4</td><td class="cell-meh" title="cyan × blue · worst-cvd ΔE=11.73 (deuteranopia=42.2 · protanopia=45.7 · tritanopia=11.7)">11.7</td><td class="cell-ok" title="cyan × neutral·light · worst-cvd ΔE=46.04 (deuteranopia=46.0 · protanopia=51.4 · tritanopia=52.7)">46.0</td><td class="cell-ok" title="cyan × neutral·dark · worst-cvd ΔE=32.91 (deuteranopia=36.8 · protanopia=32.9 · tritanopia=42.5)">32.9</td></tr><tr><th class="rowlab">lime</th><td class="cell-ok" title="lime × cyan · worst-cvd ΔE=22.20 (deuteranopia=22.2 · protanopia=25.0 · tritanopia=43.9)">22.2</td><td class="diag"></td><td class="cell-ok" title="lime × green · worst-cvd ΔE=26.17 (deuteranopia=26.2 · protanopia=30.8 · tritanopia=32.8)">26.2</td><td class="cell-ok" title="lime × blue · worst-cvd ΔE=39.25 (deuteranopia=47.3 · protanopia=45.9 · tritanopia=39.2)">39.2</td><td class="cell-ok" title="lime × azure · worst-cvd ΔE=53.31 (deuteranopia=55.0 · protanopia=57.3 · tritanopia=53.3)">53.3</td><td class="cell-meh" title="lime × green · worst-cvd ΔE=13.88 (deuteranopia=13.9 · protanopia=16.6 · tritanopia=18.6)">13.9</td><td class="cell-ok" title="lime × blue · worst-cvd ΔE=44.16 (deuteranopia=58.7 · protanopia=58.9 · tritanopia=44.2)">44.2</td><td class="cell-ok" title="lime × neutral·light · worst-cvd ΔE=36.38 (deuteranopia=39.9 · protanopia=36.4 · tritanopia=37.2)">36.4</td><td class="cell-ok" title="lime × neutral·dark · worst-cvd ΔE=53.22 (deuteranopia=54.0 · protanopia=57.3 · tritanopia=53.2)">53.2</td></tr><tr><th class="rowlab">green</th><td class="cell-ok" title="green × cyan · worst-cvd ΔE=21.89 (deuteranopia=25.7 · protanopia=21.9 · tritanopia=24.1)">21.9</td><td class="cell-ok" title="green × lime · worst-cvd ΔE=26.17 (deuteranopia=26.2 · protanopia=30.8 · tritanopia=32.8)">26.2</td><td class="diag"></td><td class="cell-ok" title="green × blue · worst-cvd ΔE=33.11 (deuteranopia=58.4 · protanopia=58.1 · tritanopia=33.1)">33.1</td><td class="cell-ok" title="green × azure · worst-cvd ΔE=25.84 (deuteranopia=53.7 · protanopia=53.2 · tritanopia=25.8)">25.8</td><td class="cell-meh" title="green × green · worst-cvd ΔE=13.21 (deuteranopia=13.2 · protanopia=14.5 · tritanopia=14.4)">13.2</td><td class="cell-ok" title="green × blue · worst-cvd ΔE=28.77 (deuteranopia=66.2 · protanopia=66.1 · tritanopia=28.8)">28.8</td><td class="cell-ok" title="green × neutral·light · worst-cvd ΔE=58.51 (deuteranopia=64.5 · protanopia=65.8 · tritanopia=58.5)">58.5</td><td class="cell-ok" title="green × neutral·dark · worst-cvd ΔE=25.03 (deuteranopia=34.9 · protanopia=36.7 · tritanopia=25.0)">25.0</td></tr><tr><th class="rowlab">blue</th><td class="cell-ok" title="blue × cyan · worst-cvd ΔE=16.34 (deuteranopia=33.2 · protanopia=36.8 · tritanopia=16.3)">16.3</td><td class="cell-ok" title="blue × lime · worst-cvd ΔE=39.25 (deuteranopia=47.3 · protanopia=45.9 · tritanopia=39.2)">39.2</td><td class="cell-ok" title="blue × green · worst-cvd ΔE=33.11 (deuteranopia=58.4 · protanopia=58.1 · tritanopia=33.1)">33.1</td><td class="diag"></td><td class="cell-ok" title="blue × azure · worst-cvd ΔE=25.79 (deuteranopia=25.8 · protanopia=28.8 · tritanopia=29.5)">25.8</td><td class="cell-ok" title="blue × green · worst-cvd ΔE=30.54 (deuteranopia=48.7 · protanopia=48.6 · tritanopia=30.5)">30.5</td><td class="cell-meh" title="blue × blue · worst-cvd ΔE=12.86 (deuteranopia=13.4 · protanopia=15.3 · tritanopia=12.9)">12.9</td><td class="cell-ok" title="blue × neutral·light · worst-cvd ΔE=38.89 (deuteranopia=40.2 · protanopia=42.4 · tritanopia=38.9)">38.9</td><td class="cell-ok" title="blue × neutral·dark · worst-cvd ΔE=53.85 (deuteranopia=57.8 · protanopia=53.9 · tritanopia=54.2)">53.9</td></tr><tr><th class="rowlab">azure</th><td class="cell-ok" title="azure × cyan · worst-cvd ΔE=15.61 (deuteranopia=33.8 · protanopia=35.8 · tritanopia=15.6)">15.6</td><td class="cell-ok" title="azure × lime · worst-cvd ΔE=53.31 (deuteranopia=55.0 · protanopia=57.3 · tritanopia=53.3)">53.3</td><td class="cell-ok" title="azure × green · worst-cvd ΔE=25.84 (deuteranopia=53.7 · protanopia=53.2 · tritanopia=25.8)">25.8</td><td class="cell-ok" title="azure × blue · worst-cvd ΔE=25.79 (deuteranopia=25.8 · protanopia=28.8 · tritanopia=29.5)">25.8</td><td class="diag"></td><td class="cell-ok" title="azure × green · worst-cvd ΔE=35.93 (deuteranopia=49.4 · protanopia=50.8 · tritanopia=35.9)">35.9</td><td class="cell-ok" title="azure × blue · worst-cvd ΔE=18.41 (deuteranopia=21.5 · protanopia=23.7 · tritanopia=18.4)">18.4</td><td class="cell-ok" title="azure × neutral·light · worst-cvd ΔE=63.18 (deuteranopia=63.2 · protanopia=68.1 · tritanopia=67.0)">63.2</td><td class="cell-ok" title="azure × neutral·dark · worst-cvd ΔE=31.44 (deuteranopia=38.5 · protanopia=31.4 · tritanopia=33.9)">31.4</td></tr><tr><th class="rowlab">green</th><td class="cell-ok" title="green × cyan · worst-cvd ΔE=15.42 (deuteranopia=16.8 · protanopia=15.4 · tritanopia=28.9)">15.4</td><td class="cell-meh" title="green × lime · worst-cvd ΔE=13.88 (deuteranopia=13.9 · protanopia=16.6 · tritanopia=18.6)">13.9</td><td class="cell-meh" title="green × green · worst-cvd ΔE=13.21 (deuteranopia=13.2 · protanopia=14.5 · tritanopia=14.4)">13.2</td><td class="cell-ok" title="green × blue · worst-cvd ΔE=30.54 (deuteranopia=48.7 · protanopia=48.6 · tritanopia=30.5)">30.5</td><td class="cell-ok" title="green × azure · worst-cvd ΔE=35.93 (deuteranopia=49.4 · protanopia=50.8 · tritanopia=35.9)">35.9</td><td class="diag"></td><td class="cell-ok" title="green × blue · worst-cvd ΔE=31.05 (deuteranopia=58.2 · protanopia=58.9 · tritanopia=31.1)">31.1</td><td class="cell-ok" title="green × neutral·light · worst-cvd ΔE=46.69 (deuteranopia=51.3 · protanopia=51.4 · tritanopia=46.7)">46.7</td><td class="cell-ok" title="green × neutral·dark · worst-cvd ΔE=36.83 (deuteranopia=41.0 · protanopia=43.2 · tritanopia=36.8)">36.8</td></tr><tr><th class="rowlab">blue</th><td class="cell-meh" title="blue × cyan · worst-cvd ΔE=11.73 (deuteranopia=42.2 · protanopia=45.7 · tritanopia=11.7)">11.7</td><td class="cell-ok" title="blue × lime · worst-cvd ΔE=44.16 (deuteranopia=58.7 · protanopia=58.9 · tritanopia=44.2)">44.2</td><td class="cell-ok" title="blue × green · worst-cvd ΔE=28.77 (deuteranopia=66.2 · protanopia=66.1 · tritanopia=28.8)">28.8</td><td class="cell-meh" title="blue × blue · worst-cvd ΔE=12.86 (deuteranopia=13.4 · protanopia=15.3 · tritanopia=12.9)">12.9</td><td class="cell-ok" title="blue × azure · worst-cvd ΔE=18.41 (deuteranopia=21.5 · protanopia=23.7 · tritanopia=18.4)">18.4</td><td class="cell-ok" title="blue × green · worst-cvd ΔE=31.05 (deuteranopia=58.2 · protanopia=58.9 · tritanopia=31.1)">31.1</td><td class="diag"></td><td class="cell-ok" title="blue × neutral·light · worst-cvd ΔE=50.87 (deuteranopia=52.8 · protanopia=56.9 · tritanopia=50.9)">50.9</td><td class="cell-ok" title="blue × neutral·dark · worst-cvd ΔE=45.27 (deuteranopia=58.8 · protanopia=53.8 · tritanopia=45.3)">45.3</td></tr><tr><th class="rowlab">neutral·light</th><td class="cell-ok" title="neutral·light × cyan · worst-cvd ΔE=46.04 (deuteranopia=46.0 · protanopia=51.4 · tritanopia=52.7)">46.0</td><td class="cell-ok" title="neutral·light × lime · worst-cvd ΔE=36.38 (deuteranopia=39.9 · protanopia=36.4 · tritanopia=37.2)">36.4</td><td class="cell-ok" title="neutral·light × green · worst-cvd ΔE=58.51 (deuteranopia=64.5 · protanopia=65.8 · tritanopia=58.5)">58.5</td><td class="cell-ok" title="neutral·light × blue · worst-cvd ΔE=38.89 (deuteranopia=40.2 · protanopia=42.4 · tritanopia=38.9)">38.9</td><td class="cell-ok" title="neutral·light × azure · worst-cvd ΔE=63.18 (deuteranopia=63.2 · protanopia=68.1 · tritanopia=67.0)">63.2</td><td class="cell-ok" title="neutral·light × green · worst-cvd ΔE=46.69 (deuteranopia=51.3 · protanopia=51.4 · tritanopia=46.7)">46.7</td><td class="cell-ok" title="neutral·light × blue · worst-cvd ΔE=50.87 (deuteranopia=52.8 · protanopia=56.9 · tritanopia=50.9)">50.9</td><td class="diag"></td><td class="cell-ok" title="neutral·light × neutral·dark · worst-cvd ΔE=82.43 (deuteranopia=82.5 · protanopia=82.4 · tritanopia=82.5)">82.4</td></tr><tr><th class="rowlab">neutral·dark</th><td class="cell-ok" title="neutral·dark × cyan · worst-cvd ΔE=32.91 (deuteranopia=36.8 · protanopia=32.9 · tritanopia=42.5)">32.9</td><td class="cell-ok" title="neutral·dark × lime · worst-cvd ΔE=53.22 (deuteranopia=54.0 · protanopia=57.3 · tritanopia=53.2)">53.2</td><td class="cell-ok" title="neutral·dark × green · worst-cvd ΔE=25.03 (deuteranopia=34.9 · protanopia=36.7 · tritanopia=25.0)">25.0</td><td class="cell-ok" title="neutral·dark × blue · worst-cvd ΔE=53.85 (deuteranopia=57.8 · protanopia=53.9 · tritanopia=54.2)">53.9</td><td class="cell-ok" title="neutral·dark × azure · worst-cvd ΔE=31.44 (deuteranopia=38.5 · protanopia=31.4 · tritanopia=33.9)">31.4</td><td class="cell-ok" title="neutral·dark × green · worst-cvd ΔE=36.83 (deuteranopia=41.0 · protanopia=43.2 · tritanopia=36.8)">36.8</td><td class="cell-ok" title="neutral·dark × blue · worst-cvd ΔE=45.27 (deuteranopia=58.8 · protanopia=53.8 · tritanopia=45.3)">45.3</td><td class="cell-ok" title="neutral·dark × neutral·light · worst-cvd ΔE=82.43 (deuteranopia=82.5 · protanopia=82.4 · tritanopia=82.5)">82.4</td><td class="diag"></td></tr></table></figure></div>
+    <div class="legend"><span><i style="background:rgba(0,158,115,0.45)"></i>ΔE ≥ 15 — optimal (Petroff 2021 target)</span><span><i style="background:rgba(240,228,66,0.60)"></i>10 ≤ ΔE &lt; 15 — okay, below comfort threshold</span><span><i style="background:rgba(230,159,0,0.50)"></i>5 ≤ ΔE &lt; 10 — marginal</span><span><i style="background:rgba(213,94,0,0.55)"></i>ΔE &lt; 5 — confusable</span></div>
+</section>
+
+<section class="domain">
+    <h2>continuous colormap</h2>
+    <p class="lede">perceptually-uniform interpolation in CAM02-UCS, anchored at brand green. badge reports worst adjacent-sample ΔE across normal + 3 cvd (a value above ~2.5 indicates visible banding under at least one condition).</p>
+    <div class="cmap-row"><span class="cmap-name">green→teal→blue</span><div class="gradient"><span style="background:#009E73"></span><span style="background:#019E73"></span><span style="background:#029D73"></span><span style="background:#039D73"></span><span style="background:#049C74"></span><span style="background:#059C74"></span><span style="background:#079C74"></span><span style="background:#089B74"></span><span style="background:#099B74"></span><span style="background:#0A9A74"></span><span style="background:#0B9A74"></span><span style="background:#0C9A74"></span><span style="background:#0C9975"></span><span style="background:#0D9975"></span><span style="background:#0E9875"></span><span style="background:#0F9875"></span><span style="background:#109875"></span><span style="background:#109775"></span><span style="background:#119775"></span><span style="background:#119675"></span><span style="background:#129676"></span><span style="background:#139576"></span><span style="background:#139576"></span><span style="background:#149576"></span><span style="background:#149476"></span><span style="background:#159476"></span><span style="background:#159376"></span><span style="background:#169376"></span><span style="background:#169376"></span><span style="background:#169276"></span><span style="background:#179276"></span><span style="background:#179277"></span><span style="background:#189177"></span><span style="background:#189177"></span><span style="background:#189077"></span><span style="background:#199077"></span><span style="background:#199077"></span><span style="background:#198F77"></span><span style="background:#1A8F77"></span><span style="background:#1A8E77"></span><span style="background:#1A8E77"></span><span style="background:#1B8E77"></span><span style="background:#1B8D77"></span><span style="background:#1B8D77"></span><span style="background:#1B8C77"></span><span style="background:#1C8C78"></span><span style="background:#1C8C78"></span><span style="background:#1C8B78"></span><span style="background:#1C8B78"></span><span style="background:#1D8A78"></span><span style="background:#1D8A78"></span><span style="background:#1D8A78"></span><span style="background:#1D8978"></span><span style="background:#1D8978"></span><span style="background:#1E8978"></span><span style="background:#1E8878"></span><span style="background:#1E8878"></span><span style="background:#1E8778"></span><span style="background:#1E8778"></span><span style="background:#1E8778"></span><span style="background:#1F8678"></span><span style="background:#1F8678"></span><span style="background:#1F8678"></span><span style="background:#1F8578"></span><span style="background:#1F8578"></span><span style="background:#1F8478"></span><span style="background:#1F8478"></span><span style="background:#1F8478"></span><span style="background:#1F8379"></span><span style="background:#208379"></span><span style="background:#208279"></span><span style="background:#208279"></span><span style="background:#208279"></span><span style="background:#208179"></span><span style="background:#208179"></span><span style="background:#208179"></span><span style="background:#208079"></span><span style="background:#208079"></span><span style="background:#208079"></span><span style="background:#207F79"></span><span style="background:#207F79"></span><span style="background:#207E79"></span><span style="background:#207E79"></span><span style="background:#207E79"></span><span style="background:#207D79"></span><span style="background:#207D79"></span><span style="background:#207D79"></span><span style="background:#207C79"></span><span style="background:#207C79"></span><span style="background:#207B79"></span><span style="background:#207B79"></span><span style="background:#207B79"></span><span style="background:#207A79"></span><span style="background:#207A79"></span><span style="background:#207A79"></span><span style="background:#207979"></span><span style="background:#207979"></span><span style="background:#207979"></span><span style="background:#207879"></span><span style="background:#207879"></span><span style="background:#207879"></span><span style="background:#207779"></span><span style="background:#1F7779"></span><span style="background:#1F7679"></span><span style="background:#1F7679"></span><span style="background:#1F7679"></span><span style="background:#1F7579"></span><span style="background:#1F7579"></span><span style="background:#1F7579"></span><span style="background:#1F7479"></span><span style="background:#1F7479"></span><span style="background:#1E7479"></span><span style="background:#1E7379"></span><span style="background:#1E7379"></span><span style="background:#1E7379"></span><span style="background:#1E7279"></span><span style="background:#1E7279"></span><span style="background:#1E7179"></span><span style="background:#1D7179"></span><span style="background:#1D7179"></span><span style="background:#1D7079"></span><span style="background:#1D7079"></span><span style="background:#1D7079"></span><span style="background:#1D6F79"></span><span style="background:#1C6F79"></span><span style="background:#1C6F79"></span><span style="background:#1C6E79"></span><span style="background:#1C6E79"></span><span style="background:#1B6E79"></span><span style="background:#1B6D79"></span><span style="background:#1B6D79"></span><span style="background:#1B6D79"></span><span style="background:#1B6C79"></span><span style="background:#1A6C79"></span><span style="background:#1A6C79"></span><span style="background:#1A6B79"></span><span style="background:#1A6B79"></span><span style="background:#196B79"></span><span style="background:#196A79"></span><span style="background:#196A79"></span><span style="background:#186A79"></span><span style="background:#186979"></span><span style="background:#186979"></span><span style="background:#186979"></span><span style="background:#176879"></span><span style="background:#176879"></span><span style="background:#176879"></span><span style="background:#16677A"></span><span style="background:#16677A"></span><span style="background:#16667A"></span><span style="background:#15667A"></span><span style="background:#15667A"></span><span style="background:#15657A"></span><span style="background:#14657A"></span><span style="background:#14657A"></span><span style="background:#13647A"></span><span style="background:#13647A"></span><span style="background:#13647A"></span><span style="background:#12637A"></span><span style="background:#12637A"></span><span style="background:#11637A"></span><span style="background:#11627A"></span><span style="background:#10627A"></span><span style="background:#10627A"></span><span style="background:#10617A"></span><span style="background:#0F617A"></span><span style="background:#0F617A"></span><span style="background:#0E607A"></span><span style="background:#0D607A"></span><span style="background:#0D607B"></span><span style="background:#0C5F7B"></span><span style="background:#0C5F7B"></span><span style="background:#0B5F7B"></span><span style="background:#0B5E7B"></span><span style="background:#0A5E7B"></span><span style="background:#095E7B"></span><span style="background:#095D7B"></span><span style="background:#085D7B"></span><span style="background:#075D7B"></span><span style="background:#075C7B"></span><span style="background:#065C7B"></span><span style="background:#055C7B"></span><span style="background:#055B7C"></span><span style="background:#045B7C"></span><span style="background:#045B7C"></span><span style="background:#035A7C"></span><span style="background:#025A7C"></span><span style="background:#025A7C"></span><span style="background:#01597C"></span><span style="background:#00597C"></span><span style="background:#00597C"></span><span style="background:#00587C"></span><span style="background:#00587D"></span><span style="background:#00577D"></span><span style="background:#00577D"></span><span style="background:#00577D"></span><span style="background:#00567D"></span><span style="background:#00567D"></span><span style="background:#00567D"></span><span style="background:#00557D"></span><span style="background:#00557E"></span><span style="background:#00557E"></span><span style="background:#00547E"></span><span style="background:#00547E"></span><span style="background:#00547E"></span><span style="background:#00537E"></span><span style="background:#00537E"></span><span style="background:#00537F"></span><span style="background:#00527F"></span><span style="background:#00527F"></span><span style="background:#00517F"></span><span style="background:#00517F"></span><span style="background:#00517F"></span><span style="background:#005080"></span><span style="background:#005080"></span><span style="background:#005080"></span><span style="background:#004F80"></span><span style="background:#004F80"></span><span style="background:#004F81"></span><span style="background:#004E81"></span><span style="background:#004E81"></span><span style="background:#004D81"></span><span style="background:#004D81"></span><span style="background:#004D82"></span><span style="background:#004C82"></span><span style="background:#004C82"></span><span style="background:#004B82"></span><span style="background:#004B82"></span><span style="background:#004B83"></span><span style="background:#004A83"></span><span style="background:#004A83"></span><span style="background:#004A83"></span><span style="background:#004984"></span><span style="background:#004984"></span><span style="background:#004884"></span><span style="background:#004884"></span><span style="background:#004885"></span><span style="background:#004785"></span><span style="background:#004785"></span><span style="background:#004686"></span><span style="background:#004686"></span><span style="background:#004586"></span><span style="background:#004586"></span><span style="background:#004587"></span><span style="background:#004487"></span><span style="background:#004487"></span><span style="background:#004388"></span><span style="background:#004388"></span><span style="background:#004288"></span><span style="background:#004289"></span><span style="background:#004289"></span><span style="background:#004189"></span><span style="background:#00418A"></span><span style="background:#00408A"></span><span style="background:#00408A"></span><span style="background:#003F8B"></span></div><span class="badge">worst Δ: 0.29 <em>(protanopia)</em></span></div>
+</section>
+
+<section class="domain">
+    <h2>on the website</h2>
+    <p class="lede">hero mockup pair using this variant's brand position-1 colour as the green-dot anchor. wcag badges live-update against the production bg-page surfaces.</p>
+    <div class="hero-mockup-stack">
+<div class="hero-mockup" style="background:#F5F3EC;border:1px solid #DFDDD6;color:#1A1A17;--badge-color:#6B6A63">
+    <div class="hero-meta">light — bg-page #F5F3EC</div>
+
+    <div class="hero-eyebrow" style="color:#6B6A63">
+        <span class="rule-line" style="background:#009E73"></span>
+        — the open plot catalogue <span class="cbadge cb-warn">4.89:1 AA</span>
+    </div>
+
+    <div class="hero-h1">
+        <span class="word">any<span class="dot" style="background:#009E73"></span>plot()</span>
+        <span class="paren"><span class="cbadge cb-warn">3.08:1 AA</span></span>
+    </div>
+    <div class="hero-accent">— any library. <span class="cbadge cb-ok">15.71:1 AAA</span> <span class="cbadge cb-ok">15.71:1 AAA</span></div>
+
+    <div class="hero-subtitle">one spec · every library · always current. <span class="cbadge cb-ok">15.71:1 AAA</span></div>
+
+    <p class="hero-prose" style="color:#4A4A44">
+        every plot begins as a library-agnostic spec. <span class="cbadge cb-ok">8.03:1 AAA</span>
+    </p>
+
+    <div class="hero-tagline">
+        steal like an artist.<span class="cursor" style="background:#009E73"></span>
+        <span class="cbadge cb-ok">15.71:1 AAA</span>
+    </div>
+
+    <div class="hero-ctas">
+        <span class="cta-primary" style="background:#1A1A17;color:#F5F3EC">.browse()</span>
+        <span class="cta-hover" style="background:#009E73;color:#FFFFFF">.browse() <em>hover</em></span>
+        <a class="cta-secondary" style="color:#4A4A44">or connect via mcp →</a>
+    </div>
+    <div class="hero-cta-badges">
+        <span>filled cta: <span class="cbadge cb-ok">15.71:1 AAA</span></span>
+        <span>hover green: <span class="cbadge cb-warn">3.42:1 AA</span></span>
+        <span>secondary link: <span class="cbadge cb-ok">8.03:1 AAA</span></span>
+    </div>
+
+    <div class="hero-surfaces" style="border-top:1px solid #DFDDD6">
+        <div class="surface-chip" style="background:#F5F3EC;color:#6B6A63">bg-page #F5F3EC</div>
+        <div class="surface-chip" style="background:#FAF8F1;color:#6B6A63">bg-surface #FAF8F1</div>
+        <div class="surface-chip" style="background:#FFFDF6;color:#6B6A63">bg-elevated #FFFDF6</div>
+    </div>
+</div>
+
+<div class="hero-mockup" style="background:#121210;border:1px solid #1E1E1B;color:#F0EFE8;--badge-color:#A8A79F">
+    <div class="hero-meta">dark — bg-page #121210</div>
+
+    <div class="hero-eyebrow" style="color:#A8A79F">
+        <span class="rule-line" style="background:#009E73"></span>
+        — the open plot catalogue <span class="cbadge cb-ok">7.76:1 AAA</span>
+    </div>
+
+    <div class="hero-h1">
+        <span class="word">any<span class="dot" style="background:#009E73"></span>plot()</span>
+        <span class="paren"><span class="cbadge cb-ok">5.48:1 AAA</span></span>
+    </div>
+    <div class="hero-accent">— any library. <span class="cbadge cb-ok">16.27:1 AAA</span> <span class="cbadge cb-ok">16.27:1 AAA</span></div>
+
+    <div class="hero-subtitle">one spec · every library · always current. <span class="cbadge cb-ok">16.27:1 AAA</span></div>
+
+    <p class="hero-prose" style="color:#B8B7B0">
+        every plot begins as a library-agnostic spec. <span class="cbadge cb-ok">9.32:1 AAA</span>
+    </p>
+
+    <div class="hero-tagline">
+        steal like an artist.<span class="cursor" style="background:#009E73"></span>
+        <span class="cbadge cb-ok">16.27:1 AAA</span>
+    </div>
+
+    <div class="hero-ctas">
+        <span class="cta-primary" style="background:#F0EFE8;color:#121210">.browse()</span>
+        <span class="cta-hover" style="background:#009E73;color:#FFFFFF">.browse() <em>hover</em></span>
+        <a class="cta-secondary" style="color:#B8B7B0">or connect via mcp →</a>
+    </div>
+    <div class="hero-cta-badges">
+        <span>filled cta: <span class="cbadge cb-ok">16.27:1 AAA</span></span>
+        <span>hover green: <span class="cbadge cb-warn">3.42:1 AA</span></span>
+        <span>secondary link: <span class="cbadge cb-ok">9.32:1 AAA</span></span>
+    </div>
+
+    <div class="hero-surfaces" style="border-top:1px solid #1E1E1B">
+        <div class="surface-chip" style="background:#121210;color:#A8A79F">bg-page #121210</div>
+        <div class="surface-chip" style="background:#1A1A17;color:#A8A79F">bg-surface #1A1A17</div>
+        <div class="surface-chip" style="background:#242420;color:#A8A79F">bg-elevated #242420</div>
+    </div>
+</div>
+</div>
+</section>
+
+<script>
+(function () {
+    var t = document.querySelector('button.theme-toggle');
+    if (!t) return;
+    t.addEventListener('click', function () {
+        document.body.classList.toggle('theme-dark');
+        t.textContent = document.body.classList.contains('theme-dark')
+            ? '☀ light'
+            : '◐ dark';
+    });
+})();
+</script>
+</body>
+</html>

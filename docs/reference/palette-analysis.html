@@ -100,7 +100,7 @@ section.domain > p.lede {
     font-size: 12px;
 }
 
-/* sample charts (real-bg multi-line preview) */
+/* sample charts */
 .sample-charts {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -178,22 +178,27 @@ section.domain > p.lede {
 body.theme-dark .matrix table.delta td {
     border-color: rgba(240,239,232,0.06);
 }
-.cell-ok   { background: rgba(0,158,115,0.22); }      /* ≥ 15 — distinct (Petroff target) */
-.cell-meh  { background: rgba(240,228,66,0.30); }     /* 10–15 — okay-ish */
-.cell-warn { background: rgba(230,159,0,0.26); }      /* 5–10 — marginal */
-.cell-bad  { background: rgba(213,94,0,0.30); }       /* < 5 — confusable */
+.cell-ok   { background: rgba(0,158,115,0.22); }
+.cell-meh  { background: rgba(240,228,66,0.30); }
+.cell-warn { background: rgba(230,159,0,0.26); }
+.cell-bad  { background: rgba(213,94,0,0.30); }
 .diag      { background: var(--rule); }
+.wcag table.delta td { font-size: 10px; }
+.wcag table.delta td small {
+    display: block;
+    font-size: 9px;
+    opacity: 0.65;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
 
-/* side-by-side matrix layout (normal + worst-cvd) */
 .matrix-pair {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 16px;
     margin-top: 8px;
 }
-@media (max-width: 1100px) {
-    .matrix-pair { grid-template-columns: 1fr; }
-}
+@media (max-width: 1100px) { .matrix-pair { grid-template-columns: 1fr; } }
 
 /* first-n summary */
 .first-n {
@@ -226,18 +231,7 @@ body.theme-dark .matrix table.delta td {
     padding: 4px 8px;
     text-align: center;
 }
-.first-n td.add {
-    text-align: left;
-    color: var(--ink-soft);
-}
-.wcag table.delta td { font-size: 10px; }
-.wcag table.delta td small {
-    display: block;
-    font-size: 9px;
-    opacity: 0.65;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-}
+.first-n td.add { text-align: left; color: var(--ink-soft); }
 
 /* legend */
 .legend {
@@ -247,6 +241,7 @@ body.theme-dark .matrix table.delta td {
     font-size: 10px;
     color: var(--ink-muted);
     margin-top: 12px;
+    flex-wrap: wrap;
 }
 .legend i {
     display: inline-block;
@@ -257,24 +252,10 @@ body.theme-dark .matrix table.delta td {
     vertical-align: -2px;
 }
 
-/* colormaps */
-section.cmap {
-    background: var(--bg-elevated);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    padding: 16px 18px 20px;
-    margin-bottom: 16px;
-}
-section.cmap h3 {
-    margin: 0 0 12px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--ink);
-}
 /* compact colormap rows */
 .cmap-row {
     display: grid;
-    grid-template-columns: 90px 1fr 220px;
+    grid-template-columns: 130px 1fr 220px;
     align-items: center;
     gap: 14px;
     padding: 8px 0;
@@ -309,7 +290,7 @@ section.cmap h3 {
 }
 .gradient span { flex: 1; display: block; }
 
-/* hero mockups (homepage preview with live wcag badges) */
+/* hero mockups */
 .hero-mockup-stack {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -446,7 +427,6 @@ section.cmap h3 {
     opacity: 0.7;
 }
 
-/* wcag contrast badges (live, inline next to text) */
 .cbadge {
     display: inline-block;
     padding: 1px 6px;
@@ -463,7 +443,7 @@ section.cmap h3 {
 .cb-warn { background: rgba(230, 159, 0, 0.34); }
 .cb-bad  { background: rgba(213, 94, 0, 0.42); }
 
-/* surface sections */
+/* surface section layout */
 section.surface {
     background: var(--bg-elevated);
     border: 1px solid var(--rule);
@@ -636,6 +616,7 @@ section.surface h3 {
 <script>
 (function () {
     var t = document.querySelector('button.theme-toggle');
+    if (!t) return;
     t.addEventListener('click', function () {
         document.body.classList.toggle('theme-dark');
         t.textContent = document.body.classList.contains('theme-dark')

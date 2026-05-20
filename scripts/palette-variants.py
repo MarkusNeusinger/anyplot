@@ -1,0 +1,932 @@
+#!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.13"
+# dependencies = [
+#   "colorspacious>=1.1.2",
+#   "numpy>=2.0",
+#   "matplotlib>=3.10",
+#   "pillow>=11.0",
+# ]
+# ///
+"""Palette variant generator for anyplot (Issue #5817).
+
+Generates 5 candidate replacement palettes inspired by Anselmoo's
+``dracula-palette`` generator (https://anselmoo.github.io/dracula-palette/),
+all anchored at the brand green ``#009E73`` and selected by max-min ΔE in
+CAM02-UCS under normal vision + 3 CVD conditions (deuteranomaly,
+protanomaly, tritanomaly, each at 100% severity).
+
+Variants differ in their hue-selection strategy:
+
+  A — analogous            (harmony over distinctness; hues clustered)
+  B — triadic              (three hue anchors 120° apart)
+  C — split-complementary  (green plus two flanking complements)
+  D — balanced             (Petroff-style max-min, paper-ink chroma)
+  E — okabe-tuned          (Wong-Okabe-Ito bones, weak pairs nudged)
+
+For each, the script:
+
+  1. Picks 7 hues respecting the strategy's hue rule, the paper-ink
+     chroma/lightness corridor (J' ∈ [45,72], C ∈ [25,55]), and gamut.
+  2. Reorders positions 2..4 so the first 4 maximise their internal
+     min worst-CVD ΔE — the "most beautiful subset" criterion.
+  3. Builds a perceptually-uniform continuous colormap starting at the
+     brand green.
+  4. Renders a self-contained HTML using the same rendering pipeline as
+     ``palette-analysis.py``, so the variant pages are directly comparable
+     to the baseline diagnostic.
+
+Output: ``docs/reference/palette-variants/{A..E}-<name>.html`` plus an
+``index.html`` linking the five.
+
+Run::
+
+    uv run --script scripts/palette-variants.py
+"""
+
+from __future__ import annotations
+
+import argparse
+import itertools
+import logging
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable
+
+import numpy as np
+from colorspacious import cspace_convert
+
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT))
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+
+from core.images import OK_GREEN, OKABE_PALETTE  # noqa: E402
+from _palette_common import (  # noqa: E402
+    CVD_ORDER,
+    DARK_THEME_FULL,
+    LIGHT_THEME_FULL,
+    NEUTRAL_DARK,
+    NEUTRAL_LIGHT,
+    PAGE_CSS,
+    PAGE_JS,
+    cell_class,
+    hex_to_rgb1,
+    pairwise_delta_e,
+    render_colormap_row,
+    render_first_n_summary,
+    render_hero_mockup_pair,
+    render_legend,
+    render_matrix_block,
+    render_sample_charts,
+    render_swatch_table,
+    rgb1_to_hex,
+    simulate_cvd,
+    to_jab,
+    worst_cvd_pairwise_delta_e,
+)
+
+
+DEFAULT_OUT_DIR = REPO_ROOT / "docs" / "reference" / "palette-variants"
+
+# ── Paper-ink corridor in CAM02-UCS (J' = lightness, C = chroma, H = hue) ─────
+# Lower J' bound: at 45 the colour is dark enough to read against #F5F3EC light bg.
+# Upper J' bound: at 72 the colour is still light enough to read against #121210 dark bg.
+# Chroma corridor is the paper-ink lever (Caligo sits at C≈60-90, Okabe-Ito at
+# C≈40-75). Per-variant overrides below let D be the most muted ("dusty") and
+# E honour Okabe-Ito's hotter native chroma.
+J_MIN, J_MAX, J_STEP = 45.0, 72.0, 2.0
+C_MIN, C_MAX, C_STEP = 22.0, 50.0, 2.0
+H_STEP_DEG = 5.0
+
+
+# Per-variant chroma corridors — tightening C is the single biggest paper-ink lever.
+# At hue ≈ 25° (red) the in-gamut max chroma in CAM02-UCS reaches ~70; capping C
+# means warm picks stay matte instead of going neon-red. A/B/C sit at "muted",
+# D at "dusty" (most restrained), E at "okabe-honest" (slightly hotter to
+# respect Okabe-Ito's native saturation).
+PER_VARIANT_C_RANGE: dict[str, tuple[float, float]] = {
+    "analogous":      (24.0, 40.0),
+    "triadic":        (26.0, 42.0),
+    "split-comp":     (26.0, 42.0),
+    "balanced":       (22.0, 36.0),
+    "okabe-tuned":    (30.0, 50.0),
+    "okabe-shifted":  (28.0, 48.0),  # cap applied per-colour as a hue-preserving projection
+}
+
+
+# -----------------------------------------------------------------------------
+# CAM02-UCS / LCh helpers
+# -----------------------------------------------------------------------------
+
+
+def jab_to_rgb1(jab: np.ndarray) -> np.ndarray:
+    """Inverse of `to_jab`. Output may go out of gamut — caller clips/checks."""
+    return cspace_convert(jab, "CAM02-UCS", "sRGB1")
+
+
+def jab_batch_to_rgb1(jab_arr: np.ndarray) -> np.ndarray:
+    return cspace_convert(jab_arr, "CAM02-UCS", "sRGB1")
+
+
+def lch_to_jab(L: float, C: float, H_deg: float) -> np.ndarray:
+    h = np.deg2rad(H_deg)
+    return np.array([L, C * np.cos(h), C * np.sin(h)])
+
+
+def jab_to_lch(jab: np.ndarray) -> tuple[float, float, float]:
+    L, a, b = float(jab[0]), float(jab[1]), float(jab[2])
+    C = float(np.hypot(a, b))
+    H = float(np.rad2deg(np.arctan2(b, a))) % 360
+    return L, C, H
+
+
+def hue_in_band(hue: float, center: float, half_width: float) -> bool:
+    """Circular hue containment, half_width in degrees."""
+    d = abs((hue - center + 180) % 360 - 180)
+    return d <= half_width
+
+
+# -----------------------------------------------------------------------------
+# Candidate grid — generated once per run, reused across all variants
+# -----------------------------------------------------------------------------
+
+
+@dataclass
+class CandidatePool:
+    """All candidate colours within the global paper-ink corridor, plus
+    precomputed Jab coordinates under each of the 4 conditions. Per-variant
+    chroma corridors are applied later as a candidate-mask."""
+
+    rgb1: np.ndarray  # (N, 3) sRGB-1
+    hues_deg: np.ndarray  # (N,) circular hue 0-360
+    chromas: np.ndarray  # (N,) C in CAM02-UCS
+    lightnesses: np.ndarray  # (N,) J' in CAM02-UCS
+    jab_per_cond: dict[str, np.ndarray]  # cond → (N, 3)
+
+    @classmethod
+    def build(cls, log: logging.Logger) -> "CandidatePool":
+        js = np.arange(J_MIN, J_MAX + 0.01, J_STEP)
+        cs_ = np.arange(C_MIN, C_MAX + 0.01, C_STEP)
+        hs = np.arange(0.0, 360.0, H_STEP_DEG)
+
+        log.info("building candidate grid (J×C×H = %d×%d×%d) …", len(js), len(cs_), len(hs))
+
+        rows = []
+        for J in js:
+            for C in cs_:
+                for H in hs:
+                    rows.append((J, C, H))
+        grid = np.array(rows)  # (M, 3) where columns are J, C, H
+
+        jab_arr = np.stack(
+            [grid[:, 0], grid[:, 1] * np.cos(np.deg2rad(grid[:, 2])), grid[:, 1] * np.sin(np.deg2rad(grid[:, 2]))],
+            axis=1,
+        )
+        rgb_arr = jab_batch_to_rgb1(jab_arr)
+
+        # Strict gamut: tol=0.001. Looser tolerances let near-gamut Jab points
+        # clip into oversaturated sRGB (a "muted red" Jab projects to a vivid
+        # #F81118 once R clamps to 1.0), which silently breaks the paper-ink
+        # intent of the chroma corridor.
+        in_gamut = np.all((rgb_arr >= -0.001) & (rgb_arr <= 1.001), axis=1)
+        rgb_arr = np.clip(rgb_arr[in_gamut], 0.0, 1.0)
+        hues_arr = grid[in_gamut, 2]
+        chromas_arr = grid[in_gamut, 1]
+        lightnesses_arr = grid[in_gamut, 0]
+
+        log.info("kept %d / %d in-gamut candidates", rgb_arr.shape[0], grid.shape[0])
+
+        jab_per_cond: dict[str, np.ndarray] = {}
+        for cond in CVD_ORDER:
+            sim = simulate_cvd(rgb_arr, cond)
+            jab_per_cond[cond] = to_jab(sim)
+
+        return cls(
+            rgb1=rgb_arr,
+            hues_deg=hues_arr,
+            chromas=chromas_arr,
+            lightnesses=lightnesses_arr,
+            jab_per_cond=jab_per_cond,
+        )
+
+
+# -----------------------------------------------------------------------------
+# Greedy selection
+# -----------------------------------------------------------------------------
+
+
+def selected_jabs(selected_rgb: list[np.ndarray]) -> dict[str, np.ndarray]:
+    """Pre-compute Jab for the already-selected colours under each condition.
+    K is small (≤7) so this is cheap and called every pick."""
+    arr = np.array(selected_rgb)
+    out: dict[str, np.ndarray] = {}
+    for cond in CVD_ORDER:
+        out[cond] = to_jab(simulate_cvd(arr, cond))
+    return out
+
+
+def score_candidates(
+    pool: CandidatePool, sel_jabs: dict[str, np.ndarray]
+) -> np.ndarray:
+    """For every candidate, return the min ΔE to any selected colour, taken
+    across the 4 conditions. Higher is better (more distinct)."""
+    n_cand = pool.rgb1.shape[0]
+    best = np.full(n_cand, np.inf)
+    for cond in CVD_ORDER:
+        # pool.jab_per_cond[cond] is (N, 3); sel_jabs[cond] is (K, 3)
+        diff = pool.jab_per_cond[cond][:, None, :] - sel_jabs[cond][None, :, :]
+        dist = np.linalg.norm(diff, axis=2)  # (N, K)
+        min_per_cand = dist.min(axis=1)
+        best = np.minimum(best, min_per_cand)
+    return best
+
+
+def select_palette(
+    strategy: str, pool: CandidatePool, n_hues: int = 7
+) -> list[str]:
+    """Pick 7 hues for a variant.
+
+    ``okabe-shifted`` is special: instead of a greedy search it does a
+    hue-preserving projection of each Okabe-Ito colour onto the paper-ink
+    corridor. The result is the minimally-perturbed Okabe-Ito palette — the
+    most conservative option, useful when the goal is "same vocabulary, just
+    less hot".
+
+    All other strategies do greedy max-min ΔE selection under all 4 CVD
+    conditions, with per-position hue bands and the per-variant chroma
+    corridor as candidate masks. If no candidate matches the strictest band,
+    the band half-width is widened in 10° steps until something fits.
+    """
+    if strategy == "okabe-shifted":
+        return _select_okabe_shifted(strategy, n_hues)
+
+    brand_rgb = hex_to_rgb1(OK_GREEN)
+    _, _, brand_H = jab_to_lch(to_jab(brand_rgb.reshape(1, 3))[0])
+
+    bands_per_pos = _strategy_bands(strategy, brand_H, n_hues)
+    c_min, c_max = PER_VARIANT_C_RANGE[strategy]
+    chroma_mask = (pool.chromas >= c_min) & (pool.chromas <= c_max)
+
+    selected_rgb: list[np.ndarray] = [brand_rgb]
+    for i in range(1, n_hues):
+        sel_jabs = selected_jabs(selected_rgb)
+        scores = score_candidates(pool, sel_jabs)
+
+        bands = bands_per_pos[i]
+        mask = _bands_mask(pool.hues_deg, bands) & chroma_mask
+        # Widen if the (hue-band ∩ chroma-band) is empty
+        widen = 0
+        while not mask.any() and widen < 60:
+            widen += 10
+            widened = [(c, w + widen) for (c, w) in bands]
+            mask = _bands_mask(pool.hues_deg, widened) & chroma_mask
+        if not mask.any():
+            mask = chroma_mask  # last-resort: drop hue rule
+
+        masked_scores = np.where(mask, scores, -np.inf)
+        best_idx = int(np.argmax(masked_scores))
+        selected_rgb.append(pool.rgb1[best_idx])
+
+    return [rgb1_to_hex(rgb) for rgb in selected_rgb]
+
+
+def _select_okabe_shifted(strategy: str, n_hues: int) -> list[str]:
+    """Hue-preserving projection of each Okabe-Ito colour onto the paper-ink
+    corridor (clamp J' to [J_MIN, J_MAX] and C to the variant's range; hue
+    stays exact). Brand green is in-corridor already, so it survives untouched.
+    Anything previously above C-max gets gently pulled toward grey while
+    keeping its hue identity.
+    """
+    c_min, c_max = PER_VARIANT_C_RANGE[strategy]
+    out: list[str] = []
+    for hx in OKABE_PALETTE[:n_hues]:
+        jab = to_jab(hex_to_rgb1(hx).reshape(1, 3))[0]
+        L, C, H = jab_to_lch(jab)
+        L_proj = float(np.clip(L, J_MIN, J_MAX))
+        C_proj = float(np.clip(C, c_min, c_max))
+        rgb = jab_to_rgb1(lch_to_jab(L_proj, C_proj, H))
+        rgb = np.clip(rgb, 0.0, 1.0)
+        out.append(rgb1_to_hex(rgb))
+    return out
+
+
+def _bands_mask(hues: np.ndarray, bands: list[tuple[float, float]] | None) -> np.ndarray:
+    """Union of (center, half_width) hue bands. None = no constraint."""
+    if bands is None:
+        return np.ones_like(hues, dtype=bool)
+    mask = np.zeros_like(hues, dtype=bool)
+    for center, hw in bands:
+        d = np.abs((hues - center + 180) % 360 - 180)
+        mask |= d <= hw
+    return mask
+
+
+def _strategy_bands(
+    strategy: str, brand_hue: float, n_hues: int
+) -> list[list[tuple[float, float]] | None]:
+    """Return a list of length n_hues; entry i is the acceptable hue bands
+    for position i. Each entry is a list of (center_deg, half_width_deg)
+    tuples, or None to mean "no hue constraint"."""
+    if strategy == "analogous":
+        return [[(brand_hue, 90)] for _ in range(n_hues)]
+
+    if strategy == "triadic":
+        anchors = [
+            (brand_hue, 24),
+            ((brand_hue + 120) % 360, 24),
+            ((brand_hue + 240) % 360, 24),
+        ]
+        # Cycle through anchors so each anchor is hit at positions 0, 3 / 1, 4 / 2, 5; pos 6 free among the three
+        return [
+            [anchors[0]], [anchors[1]], [anchors[2]],
+            [anchors[0]], [anchors[1]], [anchors[2]],
+            anchors,
+        ][:n_hues]
+
+    if strategy == "split-comp":
+        anchors = [
+            (brand_hue, 22),
+            ((brand_hue + 150) % 360, 22),
+            ((brand_hue + 210) % 360, 22),
+        ]
+        return [
+            [anchors[0]], [anchors[1]], [anchors[2]],
+            [anchors[1]], [anchors[2]], [anchors[1]],
+            anchors,
+        ][:n_hues]
+
+    if strategy == "balanced":
+        # No hue rule at any position; differentiation comes from the tighter
+        # chroma corridor (C ∈ [25, 40]) which forces every pick to be muted.
+        return [None for _ in range(n_hues)]
+
+    if strategy == "okabe-tuned":
+        okabe_hues = [
+            jab_to_lch(to_jab(hex_to_rgb1(hx).reshape(1, 3))[0])[2]
+            for hx in OKABE_PALETTE
+        ]
+        return [[(okabe_hues[i], 22)] if i < len(okabe_hues) else None for i in range(n_hues)]
+
+    raise ValueError(f"unknown strategy: {strategy}")
+
+
+# -----------------------------------------------------------------------------
+# Reorder so the first 4 are the "most beautiful" subset
+# -----------------------------------------------------------------------------
+
+
+def reorder_first_4(hexes: list[str]) -> list[str]:
+    """Position 0 (brand green) stays. Among {1..6}, find the 3-tuple whose
+    inclusion in the first-4 maximises the min worst-CVD ΔE inside that
+    4-set. Positions 5–7 follow in order of decreasing min-distance-to-the-
+    first-4."""
+    n = len(hexes)
+    assert n == 7
+
+    rgb_all = np.array([hex_to_rgb1(hx) for hx in hexes])
+    M_worst, _ = worst_cvd_pairwise_delta_e(rgb_all)
+
+    best_triple: tuple[int, ...] | None = None
+    best_score = -1.0
+    for triple in itertools.combinations(range(1, n), 3):
+        sub = (0, *triple)
+        sub_M = M_worst[np.ix_(sub, sub)]
+        triu = np.triu_indices(len(sub), k=1)
+        score = float(sub_M[triu].min())
+        if score > best_score:
+            best_score = score
+            best_triple = triple
+
+    assert best_triple is not None
+    chosen = [0, *best_triple]
+    rest = [i for i in range(1, n) if i not in best_triple]
+
+    # Sort remainder by min worst-CVD ΔE to the chosen first-4 (descending)
+    rest_scores: list[tuple[float, int]] = []
+    for i in rest:
+        col = M_worst[i, chosen]
+        rest_scores.append((float(col.min()), i))
+    rest_scores.sort(reverse=True)
+
+    final_order = chosen + [i for _, i in rest_scores]
+    return [hexes[i] for i in final_order]
+
+
+def measure_first_4(hexes: list[str]) -> float:
+    rgb = np.array([hex_to_rgb1(hx) for hx in hexes[:4]])
+    M_worst, _ = worst_cvd_pairwise_delta_e(rgb)
+    triu = np.triu_indices(4, k=1)
+    return float(M_worst[triu].min())
+
+
+def measure_all_normal_min(hexes: list[str]) -> float:
+    rgb = np.array([hex_to_rgb1(hx) for hx in hexes])
+    M = pairwise_delta_e(rgb, "normal")
+    triu = np.triu_indices(len(hexes), k=1)
+    return float(M[triu].min())
+
+
+# -----------------------------------------------------------------------------
+# Naming colours by hue band
+# -----------------------------------------------------------------------------
+
+
+HUE_BANDS = [
+    (15, "red"), (35, "orange"), (55, "amber"), (70, "yellow"),
+    (95, "lime"), (135, "green"), (165, "teal"), (200, "cyan"),
+    (235, "azure"), (255, "blue"), (285, "indigo"), (315, "purple"),
+    (345, "magenta"), (360, "pink"),
+]
+
+
+def hue_to_name(hex_str: str) -> str:
+    jab = to_jab(hex_to_rgb1(hex_str).reshape(1, 3))[0]
+    _, _, h = jab_to_lch(jab)
+    for boundary, name in HUE_BANDS:
+        if h < boundary:
+            return name
+    return HUE_BANDS[-1][1]
+
+
+def names_for_palette(hexes: list[str]) -> list[str]:
+    return [hue_to_name(hx) for hx in hexes]
+
+
+# -----------------------------------------------------------------------------
+# Continuous colormap construction (perceptually uniform in CAM02-UCS)
+# -----------------------------------------------------------------------------
+
+
+def _interp_two(start: np.ndarray, end: np.ndarray, n: int) -> np.ndarray:
+    ts = np.linspace(0, 1, n).reshape(-1, 1)
+    jabs = (1 - ts) * start + ts * end
+    return np.clip(jab_batch_to_rgb1(jabs), 0, 1)
+
+
+def _interp_three(start: np.ndarray, mid: np.ndarray, end: np.ndarray, n: int) -> np.ndarray:
+    half = n // 2
+    a = _interp_two(start, mid, half)
+    b = _interp_two(mid, end, n - half)
+    return np.vstack([a, b])
+
+
+def build_continuous(strategy: str, palette: list[str], n: int = 256) -> np.ndarray:
+    """Each variant's continuous colormap starts at brand green and follows
+    a strategy-appropriate trajectory in CAM02-UCS. All are sampled at 256
+    steps and clipped to the sRGB gamut."""
+    brand_jab = to_jab(hex_to_rgb1(OK_GREEN).reshape(1, 3))[0]
+
+    if strategy == "analogous":
+        # green → desaturated dark teal-blue (sequential, single polarity)
+        return _interp_two(brand_jab, lch_to_jab(28, 28, 250), n)
+    if strategy == "triadic":
+        # green ↔ near-neutral ↔ magenta (diverging)
+        mid = lch_to_jab(70, 6, 0)
+        end = to_jab(hex_to_rgb1(palette[1]).reshape(1, 3))[0]
+        return _interp_three(brand_jab, mid, end, n)
+    if strategy == "split-comp":
+        # green ↔ near-black neutral ↔ warm complement (diverging)
+        mid = lch_to_jab(32, 5, 0)
+        end = to_jab(hex_to_rgb1(palette[2]).reshape(1, 3))[0]
+        return _interp_three(brand_jab, mid, end, n)
+    if strategy == "balanced":
+        # green → blue → purple (viridis-like, monotonic J' descent)
+        return _interp_three(brand_jab, lch_to_jab(40, 45, 240), lch_to_jab(22, 35, 305), n)
+    if strategy == "okabe-tuned":
+        # green → light yellow (Okabe pos-7-flavoured sequential)
+        return _interp_two(brand_jab, lch_to_jab(92, 60, 95), n)
+    if strategy == "okabe-shifted":
+        # cividis-style: green → desaturated mid → muted yellow
+        mid = lch_to_jab(60, 18, 90)
+        end = lch_to_jab(88, 48, 95)
+        return _interp_three(brand_jab, mid, end, n)
+    raise ValueError(strategy)
+
+
+# -----------------------------------------------------------------------------
+# Variant definitions
+# -----------------------------------------------------------------------------
+
+
+@dataclass
+class Variant:
+    key: str  # "A".."E"
+    slug: str  # filename-safe
+    title: str  # short name
+    strategy: str  # algorithm identifier
+    one_liner: str  # human description shown on each page + index
+    continuous_label: str  # short label for the cmap row
+
+
+VARIANTS = [
+    Variant(
+        "A", "analogous", "analogous",
+        "analogous",
+        "harmony over distinctness — hues cluster within ±90° of brand green",
+        "green→teal→blue",
+    ),
+    Variant(
+        "B", "triadic", "triadic",
+        "triadic",
+        "three hue anchors 120° apart (green · magenta · azure), then warm fillers",
+        "green ↔ magenta diverging",
+    ),
+    Variant(
+        "C", "split-complementary", "split-complementary",
+        "split-comp",
+        "green plus the two flanking complements (~150°, ~210°)",
+        "green ↔ vermillion diverging",
+    ),
+    Variant(
+        "D", "balanced", "balanced",
+        "balanced",
+        "Petroff-style max-min ΔE optimisation under the paper-ink corridor — no hue rule",
+        "green→blue→purple",
+    ),
+    Variant(
+        "E", "okabe-tuned", "okabe-tuned",
+        "okabe-tuned",
+        "keep Okabe-Ito's hue family but nudge each into the paper-ink corridor",
+        "green→yellow sequential",
+    ),
+    Variant(
+        "F", "okabe-shifted", "okabe-shifted",
+        "okabe-shifted",
+        "hue-preserving projection of Okabe-Ito onto the paper-ink corridor — the most conservative change possible",
+        "green→cividis-style sequential",
+    ),
+]
+
+
+# -----------------------------------------------------------------------------
+# Per-variant HTML rendering
+# -----------------------------------------------------------------------------
+
+
+def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray) -> str:
+    names = names_for_palette(hues)
+    full_hexes = [*hues, NEUTRAL_LIGHT, NEUTRAL_DARK]
+    full_labels = [*names, "neutral·light", "neutral·dark"]
+
+    first_4_score = measure_first_4(hues)
+    normal_min = measure_all_normal_min(hues)
+
+    swatches = render_swatch_table(full_hexes, full_labels)
+    full_rgb = np.array([hex_to_rgb1(hx) for hx in full_hexes])
+    matrix = render_matrix_block(full_rgb, full_labels)
+    sample_charts = render_sample_charts(hues, n_series=3)
+    first_n = render_first_n_summary(hues, names)
+    cmap_row = render_colormap_row(variant.continuous_label, samples_rgb=cmap_rgb)
+    hero_pair = render_hero_mockup_pair(hues[0])
+
+    # Methodology summary block
+    okabe_hex_lower = [h.lower() for h in OKABE_PALETTE]
+    baseline_4 = measure_first_4(OKABE_PALETTE)
+    delta_vs_baseline = first_4_score - baseline_4
+    delta_sign = "+" if delta_vs_baseline >= 0 else ""
+
+    legend = render_legend()
+
+    nav = "".join(
+        f'<a href="{v.key}-{v.slug}.html" class="{"current" if v.key == variant.key else ""}">{v.key} · {v.title}</a>'
+        for v in VARIANTS
+    )
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>variant {variant.key}. {variant.title} — anyplot palette</title>
+<style>{PAGE_CSS}
+.variant-nav {{
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}}
+.variant-nav a {{
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    background: var(--bg-surface);
+    color: var(--ink-soft);
+    text-decoration: none;
+}}
+.variant-nav a.current {{
+    background: var(--ok-green);
+    color: #ffffff;
+    border-color: var(--ok-green);
+    font-weight: 600;
+}}
+.variant-nav a:hover:not(.current) {{
+    color: var(--ok-green);
+    border-color: var(--ok-green);
+}}
+.variant-summary {{
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 12px;
+    line-height: 1.7;
+}}
+.variant-summary .score-row {{
+    display: flex;
+    gap: 18px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}}
+.variant-summary .score {{
+    font-variant-numeric: tabular-nums;
+    background: var(--bg-surface);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 4px 10px;
+}}
+.variant-summary .score em {{
+    color: var(--ink-muted);
+    font-style: normal;
+    margin-right: 6px;
+    font-size: 10.5px;
+}}
+.variant-summary .delta-pos {{ color: var(--ok-green); }}
+.variant-summary .delta-neg {{ color: var(--ok-bad); }}
+</style>
+</head>
+<body>
+<header class="masthead">
+    <h1>any<span class="dot">.</span>plot() — variant {variant.key}. {variant.title}</h1>
+    <div class="meta">CAM02-UCS · #5817</div>
+    <button class="theme-toggle">◐ dark</button>
+</header>
+
+<nav class="variant-nav">
+    <a href="index.html">← all variants</a>
+    {nav}
+</nav>
+
+<div class="variant-summary">
+    <strong>strategy:</strong> {variant.one_liner}.<br>
+    paper-ink corridor: J' ∈ [{J_MIN:.0f}, {J_MAX:.0f}], C ∈ [{C_MIN:.0f}, {C_MAX:.0f}].
+    first-4 reordered to maximise min worst-CVD ΔE within {{1..4}}.
+    <div class="score-row">
+        <span class="score"><em>first-4 worst-CVD min ΔE</em>{first_4_score:.2f}
+        <span class="{ 'delta-pos' if delta_vs_baseline >= 0 else 'delta-neg'}">({delta_sign}{delta_vs_baseline:.2f} vs Okabe-Ito {baseline_4:.2f})</span></span>
+        <span class="score"><em>all-pairs normal min ΔE</em>{normal_min:.2f}</span>
+    </div>
+</div>
+
+<section class="domain">
+    <h2>palette</h2>
+    <p class="lede">7 hues + 2 adaptive neutrals. positions 1–4 are the "first-4 most beautiful" subset chosen to maximise min worst-CVD ΔE. positions 5–7 follow in descending min-distance-to-the-first-4. neutrals stay theme-adaptive (same as today's design tokens).</p>
+    {swatches}
+</section>
+
+<section class="domain">
+    <h2>sample &amp; first-n</h2>
+    <p class="lede">3-series chart on both production bg-page surfaces. the first-n table reads as "if you only use the first n positions, what's the weakest pair under normal vision vs. worst CVD".</p>
+    {sample_charts}
+    {first_n}
+</section>
+
+<section class="domain">
+    <h2>ΔE matrix</h2>
+    <p class="lede">normal vision left, worst-of-3-cvd right. cells coloured by the 4-step Petroff-2021 scale: ≥15 optimal, 10–15 okay, 5–10 marginal, &lt;5 confusable.</p>
+    {matrix}
+    {legend}
+</section>
+
+<section class="domain">
+    <h2>continuous colormap</h2>
+    <p class="lede">perceptually-uniform interpolation in CAM02-UCS, anchored at brand green. badge reports worst adjacent-sample ΔE across normal + 3 cvd (a value above ~2.5 indicates visible banding under at least one condition).</p>
+    {cmap_row}
+</section>
+
+<section class="domain">
+    <h2>on the website</h2>
+    <p class="lede">hero mockup pair using this variant's brand position-1 colour as the green-dot anchor. wcag badges live-update against the production bg-page surfaces.</p>
+    {hero_pair}
+</section>
+
+<script>{PAGE_JS}</script>
+</body>
+</html>
+"""
+
+
+# -----------------------------------------------------------------------------
+# Index page (links all 5 variants)
+# -----------------------------------------------------------------------------
+
+
+def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> str:
+    cards = []
+    for variant, hues, first4, normal_min in rows:
+        chip_top = "".join(
+            f'<span class="big" style="background:{hx}" title="{hx}"></span>' for hx in hues[:4]
+        )
+        chip_tail = "".join(
+            f'<span class="small" style="background:{hx}" title="{hx}"></span>' for hx in hues[4:]
+        )
+        score_class = cell_class(first4)
+        cards.append(f"""
+<a class="variant-card" href="{variant.key}-{variant.slug}.html">
+    <div class="card-head">
+        <span class="key">{variant.key}</span>
+        <h3>{variant.title}</h3>
+    </div>
+    <p class="one-liner">{variant.one_liner}.</p>
+    <div class="strip">
+        <div class="chips-big">{chip_top}</div>
+        <div class="chips-tail">{chip_tail}</div>
+    </div>
+    <div class="metrics">
+        <span class="metric {score_class}"><em>first-4 worst-CVD</em>{first4:.2f}</span>
+        <span class="metric"><em>all-pairs normal</em>{normal_min:.2f}</span>
+    </div>
+    <div class="open">open →</div>
+</a>
+""")
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>palette variants — anyplot #5817</title>
+<style>{PAGE_CSS}
+.intro {{
+    max-width: 720px;
+    margin-bottom: 32px;
+}}
+.intro p {{ color: var(--ink-soft); font-size: 13px; line-height: 1.7; }}
+.intro code {{ color: var(--ink-soft); }}
+.variants-grid {{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 18px;
+}}
+.variant-card {{
+    background: var(--bg-surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 22px 24px 18px;
+    color: var(--ink);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color 0.2s, transform 0.2s;
+}}
+.variant-card:hover {{
+    border-color: var(--ok-green);
+    transform: translateY(-2px);
+}}
+.card-head {{ display: flex; align-items: baseline; gap: 12px; }}
+.card-head .key {{
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ok-green);
+    font-variant-numeric: tabular-nums;
+}}
+.card-head h3 {{ margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }}
+.one-liner {{ margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }}
+.strip {{ display: flex; gap: 6px; align-items: stretch; }}
+.chips-big {{ display: flex; gap: 4px; flex: 1; }}
+.chips-big .big {{ flex: 1; height: 56px; border-radius: 4px; }}
+.chips-tail {{ display: flex; gap: 3px; align-items: stretch; }}
+.chips-tail .small {{ width: 18px; height: 56px; border-radius: 3px; opacity: 0.85; }}
+.metrics {{ display: flex; gap: 8px; flex-wrap: wrap; }}
+.metric {{
+    font-size: 10.5px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 3px 8px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+}}
+.metric em {{ font-style: normal; color: var(--ink-muted); margin-right: 6px; }}
+.metric.cell-ok   {{ background: rgba(0,158,115,0.22); color: var(--ink); }}
+.metric.cell-meh  {{ background: rgba(240,228,66,0.30); color: var(--ink); }}
+.metric.cell-warn {{ background: rgba(230,159,0,0.26); color: var(--ink); }}
+.metric.cell-bad  {{ background: rgba(213,94,0,0.30); color: var(--ink); }}
+.open {{
+    margin-top: auto;
+    font-size: 11px;
+    color: var(--ok-green);
+    text-align: right;
+    letter-spacing: 0.04em;
+}}
+</style>
+</head>
+<body>
+<header class="masthead">
+    <h1>any<span class="dot">.</span>plot() — palette variants (#5817)</h1>
+    <div class="meta">CAM02-UCS · Petroff target ≥ 15</div>
+    <button class="theme-toggle">◐ dark</button>
+</header>
+
+<section class="intro">
+    <p>five candidate palettes inspired by Anselmoo's <code>dracula-palette</code> generator —
+    all anchored at brand green <code>{OK_GREEN}</code>, generated by greedy max-min ΔE
+    selection in CAM02-UCS under normal vision + 3 CVD conditions (deuteranopia, protanopia,
+    tritanopia at 100% severity). all colours sit inside a paper-ink corridor
+    (J' ∈ [{J_MIN:.0f}, {J_MAX:.0f}], C ∈ [{C_MIN:.0f}, {C_MAX:.0f}]) — that's the lever that
+    keeps the palette away from caligo-style neon while staying perceptually uniform.</p>
+    <p>positions 1–4 in each variant are the "first-4 most beautiful" subset: the 3 colours
+    out of 6 that, together with brand green, maximise their internal min worst-CVD ΔE.
+    most plots use 2–3 series so this subset is in 95% of the visual surface.</p>
+</section>
+
+<div class="variants-grid">
+{"".join(cards)}
+</div>
+
+<footer class="notes">
+    <p>baseline (Okabe-Ito) first-4 worst-CVD min ΔE = {measure_first_4(OKABE_PALETTE):.2f}
+    — the bar these variants try to clear. references: petroff (2021) arXiv:2107.02270,
+    okabe &amp; ito (2008), wong (2011), machado et al. (2009), dracula-palette generator
+    (anselmoo.github.io/dracula-palette).</p>
+</footer>
+
+<script>{PAGE_JS}</script>
+</body>
+</html>
+"""
+
+
+# -----------------------------------------------------------------------------
+# CLI
+# -----------------------------------------------------------------------------
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Generate palette variants for #5817")
+    parser.add_argument(
+        "--out-dir", type=Path, default=DEFAULT_OUT_DIR,
+        help=f"Output directory (default: {DEFAULT_OUT_DIR})",
+    )
+    parser.add_argument("--quiet", action="store_true")
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.WARNING if args.quiet else logging.INFO,
+        format="%(message)s",
+    )
+    log = logging.getLogger("palette-variants")
+
+    args.out_dir.mkdir(parents=True, exist_ok=True)
+
+    pool = CandidatePool.build(log)
+
+    rows: list[tuple[Variant, list[str], float, float]] = []
+    # Strategies whose whole point is "respect Okabe-Ito's choices" — keep the
+    # canonical green/vermillion/blue/purple/orange/sky/yellow order. Other
+    # strategies use the max-min-distance reorder so their first 4 are the
+    # subset that produces the strongest min worst-CVD ΔE.
+    PRESERVE_OKABE_ORDER = {"okabe-tuned", "okabe-shifted"}
+
+    for variant in VARIANTS:
+        log.info("generating variant %s. %s …", variant.key, variant.title)
+        hues = select_palette(variant.strategy, pool, n_hues=7)
+        if variant.strategy not in PRESERVE_OKABE_ORDER:
+            hues = reorder_first_4(hues)
+
+        first_4 = measure_first_4(hues)
+        normal_min = measure_all_normal_min(hues)
+        baseline_4 = measure_first_4(OKABE_PALETTE)
+        log.info(
+            "  hues: %s",
+            " ".join(hues),
+        )
+        log.info(
+            "  first-4 worst-CVD min ΔE = %.2f (baseline Okabe-Ito = %.2f; Δ %+.2f)",
+            first_4, baseline_4, first_4 - baseline_4,
+        )
+
+        cmap = build_continuous(variant.strategy, hues)
+        html = render_variant_page(variant, hues, cmap)
+
+        out_path = args.out_dir / f"{variant.key}-{variant.slug}.html"
+        out_path.write_text(html, encoding="utf-8")
+        size_kb = out_path.stat().st_size / 1024
+        log.info("  wrote %s (%.1f kB)", out_path, size_kb)
+
+        rows.append((variant, hues, first_4, normal_min))
+
+    index_html = render_index_page(rows)
+    index_path = args.out_dir / "index.html"
+    index_path.write_text(index_html, encoding="utf-8")
+    log.info("wrote %s (%.1f kB)", index_path, index_path.stat().st_size / 1024)
+
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
