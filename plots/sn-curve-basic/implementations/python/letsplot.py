@@ -1,7 +1,6 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-20
 """
 
 import os
@@ -56,6 +55,15 @@ fit_cycles = np.logspace(2, 7, 100)
 fit_stress = A * fit_cycles**b
 df_fit = pd.DataFrame({"cycles": fit_cycles, "stress": fit_stress})
 
+# Fatigue regime zones: infinite life / high-cycle / low-cycle
+df_zone_infinite = pd.DataFrame({"xmin": [100.0], "xmax": [1e8], "ymin": [100.0], "ymax": [float(endurance_limit)]})
+df_zone_highcycle = pd.DataFrame(
+    {"xmin": [100.0], "xmax": [1e8], "ymin": [float(endurance_limit)], "ymax": [float(yield_strength)]}
+)
+df_zone_lowcycle = pd.DataFrame(
+    {"xmin": [100.0], "xmax": [1e8], "ymin": [float(yield_strength)], "ymax": [float(ultimate_strength)]}
+)
+
 anyplot_theme = theme(  # noqa: F405
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),  # noqa: F405
     panel_background=element_rect(fill=PAGE_BG),  # noqa: F405
@@ -72,6 +80,28 @@ anyplot_theme = theme(  # noqa: F405
 
 plot = (
     ggplot()  # noqa: F405
+    # Zone shading — demarcates fatigue regimes (rendered first, behind data)
+    + geom_rect(  # noqa: F405
+        data=df_zone_lowcycle,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),  # noqa: F405
+        fill=OI_2,
+        alpha=0.07,
+        color="transparent",
+    )
+    + geom_rect(  # noqa: F405
+        data=df_zone_highcycle,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),  # noqa: F405
+        fill=OI_3,
+        alpha=0.07,
+        color="transparent",
+    )
+    + geom_rect(  # noqa: F405
+        data=df_zone_infinite,
+        mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"),  # noqa: F405
+        fill=OI_4,
+        alpha=0.07,
+        color="transparent",
+    )
     # Basquin power-law fit line
     + geom_line(  # noqa: F405
         data=df_fit,
@@ -85,8 +115,8 @@ plot = (
         data=df,
         mapping=aes(x="cycles", y="stress"),  # noqa: F405
         color=BRAND,
-        size=2.5,
-        alpha=0.7,
+        size=3.5,
+        alpha=0.85,
         tooltips=layer_tooltips()  # noqa: F405
         .line("Cycles to failure|@cycles{,.0f}")
         .line("Stress amplitude|@stress MPa"),
