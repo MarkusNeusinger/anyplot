@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>anyplot palette — baseline diagnostic</title>
+<style>
+:root {
+    --bg-page:     #F5F3EC;
+    --bg-surface:  #FAF8F1;
+    --bg-elevated: #FFFDF6;
+    --ink:         #1A1A17;
+    --ink-soft:    #4A4A44;
+    --ink-muted:   #6B6A63;
+    --rule:        rgba(26, 26, 23, 0.10);
+    --ok-green:    #009E73;
+    --ok-amber:    #E69F00;
+    --ok-bad:      #D55E00;
+    --mono: 'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, Menlo, Monaco, monospace;
+}
+body.theme-dark {
+    --bg-page:     #121210;
+    --bg-surface:  #1A1A17;
+    --bg-elevated: #242420;
+    --ink:         #F0EFE8;
+    --ink-soft:    #B8B7B0;
+    --ink-muted:   #A8A79F;
+    --rule:        rgba(240, 239, 232, 0.10);
+}
+* { box-sizing: border-box; }
+body {
+    font-family: var(--mono);
+    background: var(--bg-page);
+    color: var(--ink);
+    margin: 0;
+    padding: 32px 48px 80px;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
+}
+header.masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 18px;
+    margin-bottom: 32px;
+}
+header.masthead h1 {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+header.masthead h1 .dot {
+    color: var(--ok-green);
+    font-size: 1.5em;
+    line-height: 0;
+    vertical-align: -0.05em;
+    margin: 0 2px;
+}
+header.masthead .meta {
+    color: var(--ink-muted);
+    font-size: 11px;
+}
+button.theme-toggle {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+button.theme-toggle:hover { color: var(--ok-green); border-color: var(--ok-green); }
+
+section.domain {
+    background: var(--bg-surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 24px 28px 28px;
+    margin-bottom: 28px;
+}
+section.domain > h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.01em;
+}
+section.domain > h2::before {
+    content: "❯ ";
+    color: var(--ink-muted);
+    font-weight: 400;
+}
+section.domain > p.lede {
+    margin: 0 0 24px 0;
+    color: var(--ink-soft);
+    font-size: 12px;
+}
+
+/* sample charts (real-bg multi-line preview) */
+.sample-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.sample-charts svg { width: 100%; height: auto; display: block; }
+
+/* swatch row */
+.swatch-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.swatch-row .sw {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 60px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    font-size: 11px;
+}
+.swatch-row .sw code { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; }
+.swatch-row .sw span { font-size: 10px; opacity: 0.85; }
+
+/* delta E matrix */
+.matrix {
+    margin: 0;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px 16px;
+}
+.matrix figcaption {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+    text-transform: lowercase;
+}
+.matrix table.delta {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 10px;
+}
+.matrix table.delta th {
+    font-weight: 400;
+    color: var(--ink-muted);
+    padding: 2px 4px;
+    text-align: center;
+    vertical-align: bottom;
+    font-size: 9.5px;
+}
+.matrix table.delta th.rowlab {
+    text-align: right;
+    padding-right: 6px;
+    color: var(--ink-soft);
+}
+.matrix table.delta th.rot { white-space: nowrap; }
+.matrix table.delta th.rot span {
+    display: inline-block;
+    transform: rotate(-45deg) translateX(6px);
+    transform-origin: bottom left;
+}
+.matrix table.delta td {
+    padding: 4px 6px;
+    text-align: center;
+    font-size: 10px;
+    border: 1px solid rgba(26,26,23,0.04);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+}
+body.theme-dark .matrix table.delta td {
+    border-color: rgba(240,239,232,0.06);
+}
+.cell-ok   { background: rgba(0,158,115,0.22); }      /* ≥ 15 — distinct (Petroff target) */
+.cell-meh  { background: rgba(240,228,66,0.30); }     /* 10–15 — okay-ish */
+.cell-warn { background: rgba(230,159,0,0.26); }      /* 5–10 — marginal */
+.cell-bad  { background: rgba(213,94,0,0.30); }       /* < 5 — confusable */
+.diag      { background: var(--rule); }
+
+/* side-by-side matrix layout (normal + worst-cvd) */
+.matrix-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 8px;
+}
+@media (max-width: 1100px) {
+    .matrix-pair { grid-template-columns: 1fr; }
+}
+
+/* first-n summary */
+.first-n {
+    margin: 0 0 22px;
+    max-width: 460px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 12px 16px 14px;
+}
+.first-n figcaption {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+}
+.first-n table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+.first-n th {
+    text-align: left;
+    color: var(--ink-muted);
+    font-weight: 400;
+    padding: 3px 8px;
+    font-size: 10.5px;
+}
+.first-n td {
+    padding: 4px 8px;
+    text-align: center;
+}
+.first-n td.add {
+    text-align: left;
+    color: var(--ink-soft);
+}
+.wcag table.delta td { font-size: 10px; }
+.wcag table.delta td small {
+    display: block;
+    font-size: 9px;
+    opacity: 0.65;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+/* legend */
+.legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 10px;
+    color: var(--ink-muted);
+    margin-top: 12px;
+}
+.legend i {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+    border-radius: 2px;
+    vertical-align: -2px;
+}
+
+/* colormaps */
+section.cmap {
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 16px 18px 20px;
+    margin-bottom: 16px;
+}
+section.cmap h3 {
+    margin: 0 0 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+}
+/* compact colormap rows */
+.cmap-row {
+    display: grid;
+    grid-template-columns: 90px 1fr 220px;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rule);
+}
+.cmap-row:last-child { border-bottom: none; }
+.cmap-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+}
+.badge {
+    font-size: 10.5px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 2px 8px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+}
+.badge em {
+    font-style: normal;
+    color: var(--ink-muted);
+    font-size: 9.5px;
+}
+.gradient {
+    display: flex;
+    height: 22px;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+}
+.gradient span { flex: 1; display: block; }
+
+/* hero mockups (homepage preview with live wcag badges) */
+.hero-mockup-stack {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+.hero-mockup {
+    border-radius: 8px;
+    padding: 24px 26px 18px;
+    font-family: var(--mono);
+    line-height: 1.4;
+    position: relative;
+}
+.hero-meta {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.55;
+    color: var(--badge-color);
+}
+.hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 14px;
+}
+.hero-eyebrow .rule-line {
+    display: inline-block;
+    width: 18px;
+    height: 1.5px;
+}
+.hero-h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    margin: 6px 0 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.hero-h1 .word { white-space: nowrap; }
+.hero-h1 .dot {
+    display: inline-block;
+    width: 0.28em;
+    height: 0.28em;
+    border-radius: 50%;
+    vertical-align: 0.15em;
+    margin: 0 1px;
+}
+.hero-accent {
+    font-size: 22px;
+    font-style: italic;
+    margin: 2px 0 18px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.hero-subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.hero-prose {
+    font-size: 12px;
+    margin: 0 0 16px;
+}
+.hero-tagline {
+    font-size: 16px;
+    font-style: italic;
+    margin-bottom: 18px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.hero-tagline .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 16px;
+    vertical-align: -3px;
+    margin: 0 4px 0 2px;
+}
+.hero-ctas {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+.cta-primary, .cta-hover {
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 4px;
+    padding: 7px 13px;
+    display: inline-block;
+}
+.cta-hover em { font-style: italic; opacity: 0.7; font-size: 10px; margin-left: 4px; }
+.cta-secondary { font-size: 11px; }
+.hero-cta-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--badge-color);
+    margin-bottom: 14px;
+}
+.hero-cta-badges span { display: flex; gap: 6px; align-items: center; }
+.hero-surfaces {
+    display: flex;
+    gap: 6px;
+    padding-top: 12px;
+    margin-top: 4px;
+}
+.surface-chip {
+    flex: 1;
+    border: 1px solid;
+    border-color: var(--badge-color);
+    border-radius: 3px;
+    padding: 6px 8px;
+    font-size: 9.5px;
+    letter-spacing: 0.02em;
+    opacity: 0.7;
+}
+
+/* wcag contrast badges (live, inline next to text) */
+.cbadge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-style: normal;
+    color: var(--badge-color);
+    font-variant-numeric: tabular-nums;
+    vertical-align: 1px;
+}
+.cb-ok   { background: rgba(0, 158, 115, 0.28); }
+.cb-warn { background: rgba(230, 159, 0, 0.34); }
+.cb-bad  { background: rgba(213, 94, 0, 0.42); }
+
+/* surface sections */
+section.surface {
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+section.surface h3 {
+    margin: 0 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.surface-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 24px;
+    margin-bottom: 18px;
+}
+
+/* notes footer */
+.notes {
+    color: var(--ink-muted);
+    font-size: 11px;
+    line-height: 1.7;
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+}
+.notes code { color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<header class="masthead">
+    <h1>any<span class="dot">.</span>plot() — palette baseline</h1>
+    <div class="meta">CAM02-UCS · colorspacious · severity 100%</div>
+    <button class="theme-toggle">◐ dark</button>
+</header>
+
+<section class="domain">
+    <h2>A. categorical plot palette</h2>
+    <p class="lede">okabe-ito (positions 1–7) plus the two adaptive neutrals.
+    sample charts render the typical 3-series case on the production bg-page surfaces.
+    matrices side-by-side: <em>normal vision</em> left, <em>worst of the 3 cvd
+    conditions</em> right. the "first-n" table below answers the practical question —
+    at what palette size does the weakest pair drop below comfortable distinguishability?</p>
+    <div class="sample-charts"><svg viewBox="0 0 460 240" class="sample-chart" preserveAspectRatio="xMidYMid meet" style="background:#F5F3EC;border:1px solid #DFDDD6;border-radius:6px"><text x="36" y="16" fill="#6B6A63" font-size="10" text-anchor="start">light — bg-page #F5F3EC</text><line x1="36" y1="70.0" x2="442" y2="70.0" stroke="rgba(26,26,23,0.06)" stroke-width="1" /><line x1="36" y1="118.0" x2="442" y2="118.0" stroke="rgba(26,26,23,0.06)" stroke-width="1" /><line x1="36" y1="166.0" x2="442" y2="166.0" stroke="rgba(26,26,23,0.06)" stroke-width="1" /><line x1="36" y1="22" x2="36" y2="214" stroke="#DFDDD6" stroke-width="1" /><line x1="36" y1="214" x2="442" y2="214" stroke="#DFDDD6" stroke-width="1" /><polyline points="36.0,118.0 44.6,104.5 53.3,91.6 61.9,79.8 70.6,69.4 79.2,60.8 87.8,54.3 96.5,50.1 105.1,48.3 113.7,49.0 122.4,52.0 131.0,57.3 139.7,64.7 148.3,73.8 156.9,84.4 165.6,96.0 174.2,108.2 182.9,120.7 191.5,132.9 200.1,144.4 208.8,154.9 217.4,164.0 226.0,171.4 234.7,176.8 243.3,180.1 252.0,181.2 260.6,180.1 269.2,176.9 277.9,171.6 286.5,164.6 295.1,156.0 303.8,146.2 312.4,135.6 321.1,124.4 329.7,113.2 338.3,102.3 347.0,92.1 355.6,82.9 364.3,75.1 372.9,68.8 381.5,64.4 390.2,61.9 398.8,61.3 407.4,62.8 416.1,66.1 424.7,71.2 433.4,77.9 442.0,85.8" stroke="#009E73" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><polyline points="36.0,76.0 44.6,66.8 53.3,60.0 61.9,55.8 70.6,54.4 79.2,55.9 87.8,60.0 96.5,66.7 105.1,75.6 113.7,86.2 122.4,98.1 131.0,110.7 139.7,123.5 148.3,135.8 156.9,147.2 165.6,157.1 174.2,165.2 182.9,171.1 191.5,174.5 200.1,175.4 208.8,173.7 217.4,169.6 226.0,163.3 234.7,155.0 243.3,145.3 252.0,134.4 260.6,123.1 269.2,111.6 277.9,100.7 286.5,90.6 295.1,82.0 303.8,75.0 312.4,70.1 321.1,67.4 329.7,66.9 338.3,68.7 347.0,72.7 355.6,78.6 364.3,86.1 372.9,95.0 381.5,104.7 390.2,114.8 398.8,124.9 407.4,134.5 416.1,143.2 424.7,150.7 433.4,156.5 442.0,160.6" stroke="#D55E00" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><polyline points="36.0,61.3 44.6,60.9 53.3,63.7 61.9,69.5 70.6,77.7 79.2,88.1 87.8,100.0 96.5,112.6 105.1,125.4 113.7,137.5 122.4,148.4 131.0,157.5 139.7,164.2 148.3,168.3 156.9,169.6 165.6,168.0 174.2,163.7 182.9,157.0 191.5,148.3 200.1,138.0 208.8,126.8 217.4,115.4 226.0,104.3 234.7,94.1 243.3,85.4 252.0,78.7 260.6,74.2 269.2,72.2 277.9,72.8 286.5,75.8 295.1,81.1 303.8,88.3 312.4,97.0 321.1,106.7 329.7,116.8 338.3,126.7 347.0,136.0 355.6,144.1 364.3,150.7 372.9,155.3 381.5,157.7 390.2,158.0 398.8,156.0 407.4,152.0 416.1,146.3 424.7,139.1 433.4,130.9 442.0,122.2" stroke="#0072B2" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><text x="36.0" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">0</text><text x="137.5" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">25</text><text x="239.0" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">50</text><text x="340.5" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">75</text><text x="442.0" y="228" fill="#6B6A63" font-size="9" text-anchor="middle">100</text></svg><svg viewBox="0 0 460 240" class="sample-chart" preserveAspectRatio="xMidYMid meet" style="background:#121210;border:1px solid #1E1E1B;border-radius:6px"><text x="36" y="16" fill="#A8A79F" font-size="10" text-anchor="start">dark — bg-page #121210</text><line x1="36" y1="70.0" x2="442" y2="70.0" stroke="rgba(240,239,232,0.06)" stroke-width="1" /><line x1="36" y1="118.0" x2="442" y2="118.0" stroke="rgba(240,239,232,0.06)" stroke-width="1" /><line x1="36" y1="166.0" x2="442" y2="166.0" stroke="rgba(240,239,232,0.06)" stroke-width="1" /><line x1="36" y1="22" x2="36" y2="214" stroke="#1E1E1B" stroke-width="1" /><line x1="36" y1="214" x2="442" y2="214" stroke="#1E1E1B" stroke-width="1" /><polyline points="36.0,118.0 44.6,104.5 53.3,91.6 61.9,79.8 70.6,69.4 79.2,60.8 87.8,54.3 96.5,50.1 105.1,48.3 113.7,49.0 122.4,52.0 131.0,57.3 139.7,64.7 148.3,73.8 156.9,84.4 165.6,96.0 174.2,108.2 182.9,120.7 191.5,132.9 200.1,144.4 208.8,154.9 217.4,164.0 226.0,171.4 234.7,176.8 243.3,180.1 252.0,181.2 260.6,180.1 269.2,176.9 277.9,171.6 286.5,164.6 295.1,156.0 303.8,146.2 312.4,135.6 321.1,124.4 329.7,113.2 338.3,102.3 347.0,92.1 355.6,82.9 364.3,75.1 372.9,68.8 381.5,64.4 390.2,61.9 398.8,61.3 407.4,62.8 416.1,66.1 424.7,71.2 433.4,77.9 442.0,85.8" stroke="#009E73" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><polyline points="36.0,76.0 44.6,66.8 53.3,60.0 61.9,55.8 70.6,54.4 79.2,55.9 87.8,60.0 96.5,66.7 105.1,75.6 113.7,86.2 122.4,98.1 131.0,110.7 139.7,123.5 148.3,135.8 156.9,147.2 165.6,157.1 174.2,165.2 182.9,171.1 191.5,174.5 200.1,175.4 208.8,173.7 217.4,169.6 226.0,163.3 234.7,155.0 243.3,145.3 252.0,134.4 260.6,123.1 269.2,111.6 277.9,100.7 286.5,90.6 295.1,82.0 303.8,75.0 312.4,70.1 321.1,67.4 329.7,66.9 338.3,68.7 347.0,72.7 355.6,78.6 364.3,86.1 372.9,95.0 381.5,104.7 390.2,114.8 398.8,124.9 407.4,134.5 416.1,143.2 424.7,150.7 433.4,156.5 442.0,160.6" stroke="#D55E00" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><polyline points="36.0,61.3 44.6,60.9 53.3,63.7 61.9,69.5 70.6,77.7 79.2,88.1 87.8,100.0 96.5,112.6 105.1,125.4 113.7,137.5 122.4,148.4 131.0,157.5 139.7,164.2 148.3,168.3 156.9,169.6 165.6,168.0 174.2,163.7 182.9,157.0 191.5,148.3 200.1,138.0 208.8,126.8 217.4,115.4 226.0,104.3 234.7,94.1 243.3,85.4 252.0,78.7 260.6,74.2 269.2,72.2 277.9,72.8 286.5,75.8 295.1,81.1 303.8,88.3 312.4,97.0 321.1,106.7 329.7,116.8 338.3,126.7 347.0,136.0 355.6,144.1 364.3,150.7 372.9,155.3 381.5,157.7 390.2,158.0 398.8,156.0 407.4,152.0 416.1,146.3 424.7,139.1 433.4,130.9 442.0,122.2" stroke="#0072B2" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round" /><text x="36.0" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">0</text><text x="137.5" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">25</text><text x="239.0" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">50</text><text x="340.5" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">75</text><text x="442.0" y="228" fill="#A8A79F" font-size="9" text-anchor="middle">100</text></svg></div>
+    <figure class="first-n"><figcaption>worst pair if you use only positions 1..n</figcaption><table><tr><th></th><th>added</th><th>normal</th><th>worst-cvd</th></tr><tr><th>n=2</th><td class="add">+ vermillion</td><td class="cell-ok">49.8</td><td class="cell-ok">20.0</td></tr><tr><th>n=3</th><td class="add">+ blue</td><td class="cell-ok">34.6</td><td class="cell-meh">11.7</td></tr><tr><th>n=4</th><td class="add">+ purple</td><td class="cell-ok">31.7</td><td class="cell-meh">11.7</td></tr><tr><th>n=5</th><td class="add">+ orange</td><td class="cell-ok">21.6</td><td class="cell-meh">11.0</td></tr><tr><th>n=6</th><td class="add">+ sky</td><td class="cell-ok">21.6</td><td class="cell-meh">11.0</td></tr><tr><th>n=7</th><td class="add">+ yellow</td><td class="cell-ok">20.8</td><td class="cell-meh">11.0</td></tr></table></figure>
+    <div class="swatch-row"><div class="sw" style="background:#009E73;color:#F0EFE8"><code>#009E73</code><span>green</span></div><div class="sw" style="background:#D55E00;color:#F0EFE8"><code>#D55E00</code><span>vermillion</span></div><div class="sw" style="background:#0072B2;color:#F0EFE8"><code>#0072B2</code><span>blue</span></div><div class="sw" style="background:#CC79A7;color:#F0EFE8"><code>#CC79A7</code><span>purple</span></div><div class="sw" style="background:#E69F00;color:#F0EFE8"><code>#E69F00</code><span>orange</span></div><div class="sw" style="background:#56B4E9;color:#F0EFE8"><code>#56B4E9</code><span>sky</span></div><div class="sw" style="background:#F0E442;color:#1A1A17"><code>#F0E442</code><span>yellow</span></div><div class="sw" style="background:#1A1A17;color:#F0EFE8"><code>#1A1A17</code><span>neutral·light</span></div><div class="sw" style="background:#F0EFE8;color:#1A1A17"><code>#F0EFE8</code><span>neutral·dark</span></div></div>
+    <div class="matrix-pair"><figure class="matrix"><figcaption>normal vision</figcaption><table class="delta"><tr><th></th><th class="rot"><span>green</span></th><th class="rot"><span>vermillion</span></th><th class="rot"><span>blue</span></th><th class="rot"><span>purple</span></th><th class="rot"><span>orange</span></th><th class="rot"><span>sky</span></th><th class="rot"><span>yellow</span></th><th class="rot"><span>neutral·light</span></th><th class="rot"><span>neutral·dark</span></th></tr><tr><th class="rowlab">green</th><td class="diag"></td><td class="cell-ok" title="green × vermillion · normal ΔE=49.77">49.8</td><td class="cell-ok" title="green × blue · normal ΔE=34.55">34.6</td><td class="cell-ok" title="green × purple · normal ΔE=47.98">48.0</td><td class="cell-ok" title="green × orange · normal ΔE=42.55">42.5</td><td class="cell-ok" title="green × sky · normal ΔE=31.53">31.5</td><td class="cell-ok" title="green × yellow · normal ΔE=44.19">44.2</td><td class="cell-ok" title="green × neutral·light · normal ΔE=51.97">52.0</td><td class="cell-ok" title="green × neutral·dark · normal ΔE=43.25">43.2</td></tr><tr><th class="rowlab">vermillion</th><td class="cell-ok" title="vermillion × green · normal ΔE=49.77">49.8</td><td class="diag"></td><td class="cell-ok" title="vermillion × blue · normal ΔE=62.37">62.4</td><td class="cell-ok" title="vermillion × purple · normal ΔE=31.74">31.7</td><td class="cell-ok" title="vermillion × orange · normal ΔE=21.56">21.6</td><td class="cell-ok" title="vermillion × sky · normal ΔE=61.43">61.4</td><td class="cell-ok" title="vermillion × yellow · normal ΔE=42.08">42.1</td><td class="cell-ok" title="vermillion × neutral·light · normal ΔE=56.88">56.9</td><td class="cell-ok" title="vermillion × neutral·dark · normal ΔE=48.82">48.8</td></tr><tr><th class="rowlab">blue</th><td class="cell-ok" title="blue × green · normal ΔE=34.55">34.6</td><td class="cell-ok" title="blue × vermillion · normal ΔE=62.37">62.4</td><td class="diag"></td><td class="cell-ok" title="blue × purple · normal ΔE=44.23">44.2</td><td class="cell-ok" title="blue × orange · normal ΔE=64.68">64.7</td><td class="cell-ok" title="blue × sky · normal ΔE=24.60">24.6</td><td class="cell-ok" title="blue × yellow · normal ΔE=70.82">70.8</td><td class="cell-ok" title="blue × neutral·light · normal ΔE=44.68">44.7</td><td class="cell-ok" title="blue × neutral·dark · normal ΔE=56.46">56.5</td></tr><tr><th class="rowlab">purple</th><td class="cell-ok" title="purple × green · normal ΔE=47.98">48.0</td><td class="cell-ok" title="purple × vermillion · normal ΔE=31.74">31.7</td><td class="cell-ok" title="purple × blue · normal ΔE=44.23">44.2</td><td class="diag"></td><td class="cell-ok" title="purple × orange · normal ΔE=39.71">39.7</td><td class="cell-ok" title="purple × sky · normal ΔE=41.37">41.4</td><td class="cell-ok" title="purple × yellow · normal ΔE=52.05">52.1</td><td class="cell-ok" title="purple × neutral·light · normal ΔE=57.74">57.7</td><td class="cell-ok" title="purple × neutral·dark · normal ΔE=38.43">38.4</td></tr><tr><th class="rowlab">orange</th><td class="cell-ok" title="orange × green · normal ΔE=42.55">42.5</td><td class="cell-ok" title="orange × vermillion · normal ΔE=21.56">21.6</td><td class="cell-ok" title="orange × blue · normal ΔE=64.68">64.7</td><td class="cell-ok" title="orange × purple · normal ΔE=39.71">39.7</td><td class="diag"></td><td class="cell-ok" title="orange × sky · normal ΔE=56.83">56.8</td><td class="cell-ok" title="orange × yellow · normal ΔE=20.76">20.8</td><td class="cell-ok" title="orange × neutral·light · normal ΔE=68.59">68.6</td><td class="cell-ok" title="orange × neutral·dark · normal ΔE=36.10">36.1</td></tr><tr><th class="rowlab">sky</th><td class="cell-ok" title="sky × green · normal ΔE=31.53">31.5</td><td class="cell-ok" title="sky × vermillion · normal ΔE=61.43">61.4</td><td class="cell-ok" title="sky × blue · normal ΔE=24.60">24.6</td><td class="cell-ok" title="sky × purple · normal ΔE=41.37">41.4</td><td class="cell-ok" title="sky × orange · normal ΔE=56.83">56.8</td><td class="diag"></td><td class="cell-ok" title="sky × yellow · normal ΔE=56.67">56.7</td><td class="cell-ok" title="sky × neutral·light · normal ΔE=64.60">64.6</td><td class="cell-ok" title="sky × neutral·dark · normal ΔE=36.68">36.7</td></tr><tr><th class="rowlab">yellow</th><td class="cell-ok" title="yellow × green · normal ΔE=44.19">44.2</td><td class="cell-ok" title="yellow × vermillion · normal ΔE=42.08">42.1</td><td class="cell-ok" title="yellow × blue · normal ΔE=70.82">70.8</td><td class="cell-ok" title="yellow × purple · normal ΔE=52.05">52.1</td><td class="cell-ok" title="yellow × orange · normal ΔE=20.76">20.8</td><td class="cell-ok" title="yellow × sky · normal ΔE=56.67">56.7</td><td class="diag"></td><td class="cell-ok" title="yellow × neutral·light · normal ΔE=83.39">83.4</td><td class="cell-ok" title="yellow × neutral·dark · normal ΔE=29.43">29.4</td></tr><tr><th class="rowlab">neutral·light</th><td class="cell-ok" title="neutral·light × green · normal ΔE=51.97">52.0</td><td class="cell-ok" title="neutral·light × vermillion · normal ΔE=56.88">56.9</td><td class="cell-ok" title="neutral·light × blue · normal ΔE=44.68">44.7</td><td class="cell-ok" title="neutral·light × purple · normal ΔE=57.74">57.7</td><td class="cell-ok" title="neutral·light × orange · normal ΔE=68.59">68.6</td><td class="cell-ok" title="neutral·light × sky · normal ΔE=64.60">64.6</td><td class="cell-ok" title="neutral·light × yellow · normal ΔE=83.39">83.4</td><td class="diag"></td><td class="cell-ok" title="neutral·light × neutral·dark · normal ΔE=82.49">82.5</td></tr><tr><th class="rowlab">neutral·dark</th><td class="cell-ok" title="neutral·dark × green · normal ΔE=43.25">43.2</td><td class="cell-ok" title="neutral·dark × vermillion · normal ΔE=48.82">48.8</td><td class="cell-ok" title="neutral·dark × blue · normal ΔE=56.46">56.5</td><td class="cell-ok" title="neutral·dark × purple · normal ΔE=38.43">38.4</td><td class="cell-ok" title="neutral·dark × orange · normal ΔE=36.10">36.1</td><td class="cell-ok" title="neutral·dark × sky · normal ΔE=36.68">36.7</td><td class="cell-ok" title="neutral·dark × yellow · normal ΔE=29.43">29.4</td><td class="cell-ok" title="neutral·dark × neutral·light · normal ΔE=82.49">82.5</td><td class="diag"></td></tr></table></figure><figure class="matrix"><figcaption>worst of 3 cvd (deuter · protan · tritan)</figcaption><table class="delta"><tr><th></th><th class="rot"><span>green</span></th><th class="rot"><span>vermillion</span></th><th class="rot"><span>blue</span></th><th class="rot"><span>purple</span></th><th class="rot"><span>orange</span></th><th class="rot"><span>sky</span></th><th class="rot"><span>yellow</span></th><th class="rot"><span>neutral·light</span></th><th class="rot"><span>neutral·dark</span></th></tr><tr><th class="rowlab">green</th><td class="diag"></td><td class="cell-ok" title="green × vermillion · worst-cvd ΔE=20.03 (deuteranopia=22.6 · protanopia=20.0 · tritanopia=59.9)">20.0</td><td class="cell-meh" title="green × blue · worst-cvd ΔE=11.73 (deuteranopia=35.0 · protanopia=36.7 · tritanopia=11.7)">11.7</td><td class="cell-meh" title="green × purple · worst-cvd ΔE=14.77 (deuteranopia=14.8 · protanopia=24.7 · tritanopia=46.9)">14.8</td><td class="cell-ok" title="green × orange · worst-cvd ΔE=20.74 (deuteranopia=30.5 · protanopia=20.7 · tritanopia=50.8)">20.7</td><td class="cell-meh" title="green × sky · worst-cvd ΔE=13.71 (deuteranopia=31.7 · protanopia=33.8 · tritanopia=13.7)">13.7</td><td class="cell-ok" title="green × yellow · worst-cvd ΔE=34.71 (deuteranopia=41.0 · protanopia=34.7 · tritanopia=45.3)">34.7</td><td class="cell-ok" title="green × neutral·light · worst-cvd ΔE=46.04 (deuteranopia=46.0 · protanopia=51.4 · tritanopia=52.7)">46.0</td><td class="cell-ok" title="green × neutral·dark · worst-cvd ΔE=32.91 (deuteranopia=36.8 · protanopia=32.9 · tritanopia=42.5)">32.9</td></tr><tr><th class="rowlab">vermillion</th><td class="cell-ok" title="vermillion × green · worst-cvd ΔE=20.03 (deuteranopia=22.6 · protanopia=20.0 · tritanopia=59.9)">20.0</td><td class="diag"></td><td class="cell-ok" title="vermillion × blue · worst-cvd ΔE=49.09 (deuteranopia=56.2 · protanopia=49.1 · tritanopia=59.4)">49.1</td><td class="cell-ok" title="vermillion × purple · worst-cvd ΔE=15.97 (deuteranopia=35.5 · protanopia=40.6 · tritanopia=16.0)">16.0</td><td class="cell-ok" title="vermillion × orange · worst-cvd ΔE=15.15 (deuteranopia=15.2 · protanopia=20.2 · tritanopia=18.9)">15.2</td><td class="cell-ok" title="vermillion × sky · worst-cvd ΔE=52.43 (deuteranopia=52.4 · protanopia=52.7 · tritanopia=64.1)">52.4</td><td class="cell-ok" title="vermillion × yellow · worst-cvd ΔE=30.77 (deuteranopia=30.8 · protanopia=40.1 · tritanopia=40.6)">30.8</td><td class="cell-ok" title="vermillion × neutral·light · worst-cvd ΔE=44.37 (deuteranopia=55.0 · protanopia=44.4 · tritanopia=59.6)">44.4</td><td class="cell-ok" title="vermillion × neutral·dark · worst-cvd ΔE=43.07 (deuteranopia=43.1 · protanopia=50.7 · tritanopia=51.0)">43.1</td></tr><tr><th class="rowlab">blue</th><td class="cell-meh" title="blue × green · worst-cvd ΔE=11.73 (deuteranopia=35.0 · protanopia=36.7 · tritanopia=11.7)">11.7</td><td class="cell-ok" title="blue × vermillion · worst-cvd ΔE=49.09 (deuteranopia=56.2 · protanopia=49.1 · tritanopia=59.4)">49.1</td><td class="diag"></td><td class="cell-meh" title="blue × purple · worst-cvd ΔE=13.96 (deuteranopia=28.5 · protanopia=14.0 · tritanopia=47.3)">14.0</td><td class="cell-ok" title="blue × orange · worst-cvd ΔE=53.45 (deuteranopia=64.4 · protanopia=56.9 · tritanopia=53.5)">53.5</td><td class="cell-ok" title="blue × sky · worst-cvd ΔE=22.40 (deuteranopia=25.0 · protanopia=24.5 · tritanopia=22.4)">22.4</td><td class="cell-ok" title="blue × yellow · worst-cvd ΔE=51.88 (deuteranopia=72.7 · protanopia=68.6 · tritanopia=51.9)">51.9</td><td class="cell-ok" title="blue × neutral·light · worst-cvd ΔE=42.91 (deuteranopia=42.9 · protanopia=46.2 · tritanopia=43.6)">42.9</td><td class="cell-ok" title="blue × neutral·dark · worst-cvd ΔE=50.09 (deuteranopia=57.8 · protanopia=51.4 · tritanopia=50.1)">50.1</td></tr><tr><th class="rowlab">purple</th><td class="cell-meh" title="purple × green · worst-cvd ΔE=14.77 (deuteranopia=14.8 · protanopia=24.7 · tritanopia=46.9)">14.8</td><td class="cell-ok" title="purple × vermillion · worst-cvd ΔE=15.97 (deuteranopia=35.5 · protanopia=40.6 · tritanopia=16.0)">16.0</td><td class="cell-meh" title="purple × blue · worst-cvd ΔE=13.96 (deuteranopia=28.5 · protanopia=14.0 · tritanopia=47.3)">14.0</td><td class="diag"></td><td class="cell-meh" title="purple × orange · worst-cvd ΔE=10.97 (deuteranopia=39.2 · protanopia=44.9 · tritanopia=11.0)">11.0</td><td class="cell-ok" title="purple × sky · worst-cvd ΔE=16.47 (deuteranopia=17.3 · protanopia=16.5 · tritanopia=49.3)">16.5</td><td class="cell-ok" title="purple × yellow · worst-cvd ΔE=28.69 (deuteranopia=45.2 · protanopia=55.3 · tritanopia=28.7)">28.7</td><td class="cell-ok" title="purple × neutral·light · worst-cvd ΔE=50.20 (deuteranopia=53.7 · protanopia=50.2 · tritanopia=57.9)">50.2</td><td class="cell-ok" title="purple × neutral·dark · worst-cvd ΔE=30.95 (deuteranopia=31.0 · protanopia=38.4 · tritanopia=37.3)">31.0</td></tr><tr><th class="rowlab">orange</th><td class="cell-ok" title="orange × green · worst-cvd ΔE=20.74 (deuteranopia=30.5 · protanopia=20.7 · tritanopia=50.8)">20.7</td><td class="cell-ok" title="orange × vermillion · worst-cvd ΔE=15.15 (deuteranopia=15.2 · protanopia=20.2 · tritanopia=18.9)">15.2</td><td class="cell-ok" title="orange × blue · worst-cvd ΔE=53.45 (deuteranopia=64.4 · protanopia=56.9 · tritanopia=53.5)">53.5</td><td class="cell-meh" title="orange × purple · worst-cvd ΔE=10.97 (deuteranopia=39.2 · protanopia=44.9 · tritanopia=11.0)">11.0</td><td class="diag"></td><td class="cell-ok" title="orange × sky · worst-cvd ΔE=51.21 (deuteranopia=54.7 · protanopia=51.2 · tritanopia=51.6)">51.2</td><td class="cell-ok" title="orange × yellow · worst-cvd ΔE=15.85 (deuteranopia=15.9 · protanopia=20.0 · tritanopia=21.8)">15.9</td><td class="cell-ok" title="orange × neutral·light · worst-cvd ΔE=63.79 (deuteranopia=69.5 · protanopia=63.8 · tritanopia=67.1)">63.8</td><td class="cell-ok" title="orange × neutral·dark · worst-cvd ΔE=32.50 (deuteranopia=34.7 · protanopia=37.7 · tritanopia=32.5)">32.5</td></tr><tr><th class="rowlab">sky</th><td class="cell-meh" title="sky × green · worst-cvd ΔE=13.71 (deuteranopia=31.7 · protanopia=33.8 · tritanopia=13.7)">13.7</td><td class="cell-ok" title="sky × vermillion · worst-cvd ΔE=52.43 (deuteranopia=52.4 · protanopia=52.7 · tritanopia=64.1)">52.4</td><td class="cell-ok" title="sky × blue · worst-cvd ΔE=22.40 (deuteranopia=25.0 · protanopia=24.5 · tritanopia=22.4)">22.4</td><td class="cell-ok" title="sky × purple · worst-cvd ΔE=16.47 (deuteranopia=17.3 · protanopia=16.5 · tritanopia=49.3)">16.5</td><td class="cell-ok" title="sky × orange · worst-cvd ΔE=51.21 (deuteranopia=54.7 · protanopia=51.2 · tritanopia=51.6)">51.2</td><td class="diag"></td><td class="cell-ok" title="sky × yellow · worst-cvd ΔE=41.01 (deuteranopia=57.8 · protanopia=55.8 · tritanopia=41.0)">41.0</td><td class="cell-ok" title="sky × neutral·light · worst-cvd ΔE=62.56 (deuteranopia=62.6 · protanopia=66.6 · tritanopia=65.0)">62.6</td><td class="cell-ok" title="sky × neutral·dark · worst-cvd ΔE=30.70 (deuteranopia=36.5 · protanopia=30.7 · tritanopia=34.9)">30.7</td></tr><tr><th class="rowlab">yellow</th><td class="cell-ok" title="yellow × green · worst-cvd ΔE=34.71 (deuteranopia=41.0 · protanopia=34.7 · tritanopia=45.3)">34.7</td><td class="cell-ok" title="yellow × vermillion · worst-cvd ΔE=30.77 (deuteranopia=30.8 · protanopia=40.1 · tritanopia=40.6)">30.8</td><td class="cell-ok" title="yellow × blue · worst-cvd ΔE=51.88 (deuteranopia=72.7 · protanopia=68.6 · tritanopia=51.9)">51.9</td><td class="cell-ok" title="yellow × purple · worst-cvd ΔE=28.69 (deuteranopia=45.2 · protanopia=55.3 · tritanopia=28.7)">28.7</td><td class="cell-ok" title="yellow × orange · worst-cvd ΔE=15.85 (deuteranopia=15.9 · protanopia=20.0 · tritanopia=21.8)">15.9</td><td class="cell-ok" title="yellow × sky · worst-cvd ΔE=41.01 (deuteranopia=57.8 · protanopia=55.8 · tritanopia=41.0)">41.0</td><td class="diag"></td><td class="cell-ok" title="yellow × neutral·light · worst-cvd ΔE=78.52 (deuteranopia=83.8 · protanopia=83.0 · tritanopia=78.5)">78.5</td><td class="cell-meh" title="yellow × neutral·dark · worst-cvd ΔE=11.89 (deuteranopia=28.0 · protanopia=31.5 · tritanopia=11.9)">11.9</td></tr><tr><th class="rowlab">neutral·light</th><td class="cell-ok" title="neutral·light × green · worst-cvd ΔE=46.04 (deuteranopia=46.0 · protanopia=51.4 · tritanopia=52.7)">46.0</td><td class="cell-ok" title="neutral·light × vermillion · worst-cvd ΔE=44.37 (deuteranopia=55.0 · protanopia=44.4 · tritanopia=59.6)">44.4</td><td class="cell-ok" title="neutral·light × blue · worst-cvd ΔE=42.91 (deuteranopia=42.9 · protanopia=46.2 · tritanopia=43.6)">42.9</td><td class="cell-ok" title="neutral·light × purple · worst-cvd ΔE=50.20 (deuteranopia=53.7 · protanopia=50.2 · tritanopia=57.9)">50.2</td><td class="cell-ok" title="neutral·light × orange · worst-cvd ΔE=63.79 (deuteranopia=69.5 · protanopia=63.8 · tritanopia=67.1)">63.8</td><td class="cell-ok" title="neutral·light × sky · worst-cvd ΔE=62.56 (deuteranopia=62.6 · protanopia=66.6 · tritanopia=65.0)">62.6</td><td class="cell-ok" title="neutral·light × yellow · worst-cvd ΔE=78.52 (deuteranopia=83.8 · protanopia=83.0 · tritanopia=78.5)">78.5</td><td class="diag"></td><td class="cell-ok" title="neutral·light × neutral·dark · worst-cvd ΔE=82.43 (deuteranopia=82.5 · protanopia=82.4 · tritanopia=82.5)">82.4</td></tr><tr><th class="rowlab">neutral·dark</th><td class="cell-ok" title="neutral·dark × green · worst-cvd ΔE=32.91 (deuteranopia=36.8 · protanopia=32.9 · tritanopia=42.5)">32.9</td><td class="cell-ok" title="neutral·dark × vermillion · worst-cvd ΔE=43.07 (deuteranopia=43.1 · protanopia=50.7 · tritanopia=51.0)">43.1</td><td class="cell-ok" title="neutral·dark × blue · worst-cvd ΔE=50.09 (deuteranopia=57.8 · protanopia=51.4 · tritanopia=50.1)">50.1</td><td class="cell-ok" title="neutral·dark × purple · worst-cvd ΔE=30.95 (deuteranopia=31.0 · protanopia=38.4 · tritanopia=37.3)">31.0</td><td class="cell-ok" title="neutral·dark × orange · worst-cvd ΔE=32.50 (deuteranopia=34.7 · protanopia=37.7 · tritanopia=32.5)">32.5</td><td class="cell-ok" title="neutral·dark × sky · worst-cvd ΔE=30.70 (deuteranopia=36.5 · protanopia=30.7 · tritanopia=34.9)">30.7</td><td class="cell-meh" title="neutral·dark × yellow · worst-cvd ΔE=11.89 (deuteranopia=28.0 · protanopia=31.5 · tritanopia=11.9)">11.9</td><td class="cell-ok" title="neutral·dark × neutral·light · worst-cvd ΔE=82.43 (deuteranopia=82.5 · protanopia=82.4 · tritanopia=82.5)">82.4</td><td class="diag"></td></tr></table></figure></div>
+    <div class="legend"><span><i style="background:rgba(0,158,115,0.45)"></i>ΔE ≥ 15 — optimal (Petroff 2021 target)</span><span><i style="background:rgba(240,228,66,0.60)"></i>10 ≤ ΔE &lt; 15 — okay, below comfort threshold</span><span><i style="background:rgba(230,159,0,0.50)"></i>5 ≤ ΔE &lt; 10 — marginal</span><span><i style="background:rgba(213,94,0,0.55)"></i>ΔE &lt; 5 — confusable</span></div>
+</section>
+
+<section class="domain">
+    <h2>B. continuous plot colormaps</h2>
+    <p class="lede">256-step samples of the three sequential / diverging colormaps named in
+    style-guide §9.2. badge reports the worst-case adjacent-sample ΔE across normal + 3 cvd —
+    a value above ~2.5 indicates visible banding under at least one condition.</p>
+    <div class="cmap-row"><span class="cmap-name">viridis</span><div class="gradient"><span style="background:#440154"></span><span style="background:#440256"></span><span style="background:#450457"></span><span style="background:#450559"></span><span style="background:#46075A"></span><span style="background:#46085C"></span><span style="background:#460A5D"></span><span style="background:#460B5E"></span><span style="background:#470D60"></span><span style="background:#470E61"></span><span style="background:#471063"></span><span style="background:#471164"></span><span style="background:#471365"></span><span style="background:#481467"></span><span style="background:#481668"></span><span style="background:#481769"></span><span style="background:#48186A"></span><span style="background:#481A6C"></span><span style="background:#481B6D"></span><span style="background:#481C6E"></span><span style="background:#481D6F"></span><span style="background:#481F70"></span><span style="background:#482071"></span><span style="background:#482173"></span><span style="background:#482374"></span><span style="background:#482475"></span><span style="background:#482576"></span><span style="background:#482677"></span><span style="background:#482878"></span><span style="background:#482979"></span><span style="background:#472A7A"></span><span style="background:#472C7A"></span><span style="background:#472D7B"></span><span style="background:#472E7C"></span><span style="background:#472F7D"></span><span style="background:#46307E"></span><span style="background:#46327E"></span><span style="background:#46337F"></span><span style="background:#463480"></span><span style="background:#453581"></span><span style="background:#453781"></span><span style="background:#453882"></span><span style="background:#443983"></span><span style="background:#443A83"></span><span style="background:#443B84"></span><span style="background:#433D84"></span><span style="background:#433E85"></span><span style="background:#423F85"></span><span style="background:#424086"></span><span style="background:#424186"></span><span style="background:#414287"></span><span style="background:#414487"></span><span style="background:#404588"></span><span style="background:#404688"></span><span style="background:#3F4788"></span><span style="background:#3F4889"></span><span style="background:#3E4989"></span><span style="background:#3E4A89"></span><span style="background:#3E4C8A"></span><span style="background:#3D4D8A"></span><span style="background:#3D4E8A"></span><span style="background:#3C4F8A"></span><span style="background:#3C508B"></span><span style="background:#3B518B"></span><span style="background:#3B528B"></span><span style="background:#3A538B"></span><span style="background:#3A548C"></span><span style="background:#39558C"></span><span style="background:#39568C"></span><span style="background:#38588C"></span><span style="background:#38598C"></span><span style="background:#375A8C"></span><span style="background:#375B8D"></span><span style="background:#365C8D"></span><span style="background:#365D8D"></span><span style="background:#355E8D"></span><span style="background:#355F8D"></span><span style="background:#34608D"></span><span style="background:#34618D"></span><span style="background:#33628D"></span><span style="background:#33638D"></span><span style="background:#32648E"></span><span style="background:#32658E"></span><span style="background:#31668E"></span><span style="background:#31678E"></span><span style="background:#31688E"></span><span style="background:#30698E"></span><span style="background:#306A8E"></span><span style="background:#2F6B8E"></span><span style="background:#2F6C8E"></span><span style="background:#2E6D8E"></span><span style="background:#2E6E8E"></span><span style="background:#2E6F8E"></span><span style="background:#2D708E"></span><span style="background:#2D718E"></span><span style="background:#2C718E"></span><span style="background:#2C728E"></span><span style="background:#2C738E"></span><span style="background:#2B748E"></span><span style="background:#2B758E"></span><span style="background:#2A768E"></span><span style="background:#2A778E"></span><span style="background:#2A788E"></span><span style="background:#29798E"></span><span style="background:#297A8E"></span><span style="background:#297B8E"></span><span style="background:#287C8E"></span><span style="background:#287D8E"></span><span style="background:#277E8E"></span><span style="background:#277F8E"></span><span style="background:#27808E"></span><span style="background:#26818E"></span><span style="background:#26828E"></span><span style="background:#26828E"></span><span style="background:#25838E"></span><span style="background:#25848E"></span><span style="background:#25858E"></span><span style="background:#24868E"></span><span style="background:#24878E"></span><span style="background:#23888E"></span><span style="background:#23898E"></span><span style="background:#238A8D"></span><span style="background:#228B8D"></span><span style="background:#228C8D"></span><span style="background:#228D8D"></span><span style="background:#218E8D"></span><span style="background:#218F8D"></span><span style="background:#21908D"></span><span style="background:#21918C"></span><span style="background:#20928C"></span><span style="background:#20928C"></span><span style="background:#20938C"></span><span style="background:#1F948C"></span><span style="background:#1F958B"></span><span style="background:#1F968B"></span><span style="background:#1F978B"></span><span style="background:#1F988B"></span><span style="background:#1F998A"></span><span style="background:#1F9A8A"></span><span style="background:#1E9B8A"></span><span style="background:#1E9C89"></span><span style="background:#1E9D89"></span><span style="background:#1F9E89"></span><span style="background:#1F9F88"></span><span style="background:#1FA088"></span><span style="background:#1FA188"></span><span style="background:#1FA187"></span><span style="background:#1FA287"></span><span style="background:#20A386"></span><span style="background:#20A486"></span><span style="background:#21A585"></span><span style="background:#21A685"></span><span style="background:#22A785"></span><span style="background:#22A884"></span><span style="background:#23A983"></span><span style="background:#24AA83"></span><span style="background:#25AB82"></span><span style="background:#25AC82"></span><span style="background:#26AD81"></span><span style="background:#27AD81"></span><span style="background:#28AE80"></span><span style="background:#29AF7F"></span><span style="background:#2AB07F"></span><span style="background:#2CB17E"></span><span style="background:#2DB27D"></span><span style="background:#2EB37C"></span><span style="background:#2FB47C"></span><span style="background:#31B57B"></span><span style="background:#32B67A"></span><span style="background:#34B679"></span><span style="background:#35B779"></span><span style="background:#37B878"></span><span style="background:#38B977"></span><span style="background:#3ABA76"></span><span style="background:#3BBB75"></span><span style="background:#3DBC74"></span><span style="background:#3FBC73"></span><span style="background:#40BD72"></span><span style="background:#42BE71"></span><span style="background:#44BF70"></span><span style="background:#46C06F"></span><span style="background:#48C16E"></span><span style="background:#4AC16D"></span><span style="background:#4CC26C"></span><span style="background:#4EC36B"></span><span style="background:#50C46A"></span><span style="background:#52C569"></span><span style="background:#54C568"></span><span style="background:#56C667"></span><span style="background:#58C765"></span><span style="background:#5AC864"></span><span style="background:#5CC863"></span><span style="background:#5EC962"></span><span style="background:#60CA60"></span><span style="background:#63CB5F"></span><span style="background:#65CB5E"></span><span style="background:#67CC5C"></span><span style="background:#69CD5B"></span><span style="background:#6CCD5A"></span><span style="background:#6ECE58"></span><span style="background:#70CF57"></span><span style="background:#73D056"></span><span style="background:#75D054"></span><span style="background:#77D153"></span><span style="background:#7AD151"></span><span style="background:#7CD250"></span><span style="background:#7FD34E"></span><span style="background:#81D34D"></span><span style="background:#84D44B"></span><span style="background:#86D549"></span><span style="background:#89D548"></span><span style="background:#8BD646"></span><span style="background:#8ED645"></span><span style="background:#90D743"></span><span style="background:#93D741"></span><span style="background:#95D840"></span><span style="background:#98D83E"></span><span style="background:#9BD93C"></span><span style="background:#9DD93B"></span><span style="background:#A0DA39"></span><span style="background:#A2DA37"></span><span style="background:#A5DB36"></span><span style="background:#A8DB34"></span><span style="background:#AADC32"></span><span style="background:#ADDC30"></span><span style="background:#B0DD2F"></span><span style="background:#B2DD2D"></span><span style="background:#B5DE2B"></span><span style="background:#B8DE29"></span><span style="background:#BADE28"></span><span style="background:#BDDF26"></span><span style="background:#C0DF25"></span><span style="background:#C2DF23"></span><span style="background:#C5E021"></span><span style="background:#C8E020"></span><span style="background:#CAE11F"></span><span style="background:#CDE11D"></span><span style="background:#D0E11C"></span><span style="background:#D2E21B"></span><span style="background:#D5E21A"></span><span style="background:#D8E219"></span><span style="background:#DAE319"></span><span style="background:#DDE318"></span><span style="background:#DFE318"></span><span style="background:#E2E418"></span><span style="background:#E5E419"></span><span style="background:#E7E419"></span><span style="background:#EAE51A"></span><span style="background:#ECE51B"></span><span style="background:#EFE51C"></span><span style="background:#F1E51D"></span><span style="background:#F4E61E"></span><span style="background:#F6E620"></span><span style="background:#F8E621"></span><span style="background:#FBE723"></span><span style="background:#FDE725"></span></div><span class="badge">worst Δ: 0.92 <em>(tritanopia)</em></span></div>
+<div class="cmap-row"><span class="cmap-name">cividis</span><div class="gradient"><span style="background:#00224E"></span><span style="background:#00234F"></span><span style="background:#002451"></span><span style="background:#002553"></span><span style="background:#002554"></span><span style="background:#002656"></span><span style="background:#002758"></span><span style="background:#002859"></span><span style="background:#00285B"></span><span style="background:#00295D"></span><span style="background:#002A5F"></span><span style="background:#002A61"></span><span style="background:#002B62"></span><span style="background:#002C64"></span><span style="background:#002C66"></span><span style="background:#002D68"></span><span style="background:#002E6A"></span><span style="background:#002E6C"></span><span style="background:#002F6D"></span><span style="background:#00306F"></span><span style="background:#003070"></span><span style="background:#003170"></span><span style="background:#003171"></span><span style="background:#013271"></span><span style="background:#053371"></span><span style="background:#083370"></span><span style="background:#0C3470"></span><span style="background:#0F3570"></span><span style="background:#123570"></span><span style="background:#143670"></span><span style="background:#163770"></span><span style="background:#18376F"></span><span style="background:#1A386F"></span><span style="background:#1C396F"></span><span style="background:#1E3A6F"></span><span style="background:#203A6F"></span><span style="background:#213B6E"></span><span style="background:#233C6E"></span><span style="background:#243C6E"></span><span style="background:#263D6E"></span><span style="background:#273E6E"></span><span style="background:#293F6E"></span><span style="background:#2A3F6D"></span><span style="background:#2B406D"></span><span style="background:#2D416D"></span><span style="background:#2E416D"></span><span style="background:#2F426D"></span><span style="background:#31436D"></span><span style="background:#32436D"></span><span style="background:#33446D"></span><span style="background:#34456C"></span><span style="background:#35456C"></span><span style="background:#36466C"></span><span style="background:#38476C"></span><span style="background:#39486C"></span><span style="background:#3A486C"></span><span style="background:#3B496C"></span><span style="background:#3C4A6C"></span><span style="background:#3D4A6C"></span><span style="background:#3E4B6C"></span><span style="background:#3F4C6C"></span><span style="background:#404C6C"></span><span style="background:#414D6C"></span><span style="background:#424E6C"></span><span style="background:#434E6C"></span><span style="background:#444F6C"></span><span style="background:#45506C"></span><span style="background:#46516C"></span><span style="background:#47516C"></span><span style="background:#48526C"></span><span style="background:#49536C"></span><span style="background:#4A536C"></span><span style="background:#4B546C"></span><span style="background:#4C556C"></span><span style="background:#4D556C"></span><span style="background:#4E566C"></span><span style="background:#4F576C"></span><span style="background:#50576C"></span><span style="background:#51586D"></span><span style="background:#52596D"></span><span style="background:#535A6D"></span><span style="background:#545A6D"></span><span style="background:#555B6D"></span><span style="background:#555C6D"></span><span style="background:#565C6D"></span><span style="background:#575D6D"></span><span style="background:#585E6D"></span><span style="background:#595E6E"></span><span style="background:#5A5F6E"></span><span style="background:#5B606E"></span><span style="background:#5C616E"></span><span style="background:#5D616E"></span><span style="background:#5E626E"></span><span style="background:#5E636F"></span><span style="background:#5F636F"></span><span style="background:#60646F"></span><span style="background:#61656F"></span><span style="background:#62656F"></span><span style="background:#636670"></span><span style="background:#646770"></span><span style="background:#656870"></span><span style="background:#656870"></span><span style="background:#666970"></span><span style="background:#676A71"></span><span style="background:#686A71"></span><span style="background:#696B71"></span><span style="background:#6A6C71"></span><span style="background:#6B6D72"></span><span style="background:#6C6D72"></span><span style="background:#6C6E72"></span><span style="background:#6D6F72"></span><span style="background:#6E6F73"></span><span style="background:#6F7073"></span><span style="background:#707173"></span><span style="background:#717274"></span><span style="background:#727274"></span><span style="background:#727374"></span><span style="background:#737475"></span><span style="background:#747475"></span><span style="background:#757575"></span><span style="background:#767676"></span><span style="background:#777776"></span><span style="background:#777777"></span><span style="background:#787877"></span><span style="background:#797977"></span><span style="background:#7A7A78"></span><span style="background:#7B7A78"></span><span style="background:#7C7B78"></span><span style="background:#7D7C78"></span><span style="background:#7E7C78"></span><span style="background:#7E7D78"></span><span style="background:#7F7E78"></span><span style="background:#807F78"></span><span style="background:#817F78"></span><span style="background:#828079"></span><span style="background:#838179"></span><span style="background:#848279"></span><span style="background:#858279"></span><span style="background:#868379"></span><span style="background:#878478"></span><span style="background:#888578"></span><span style="background:#898578"></span><span style="background:#8A8678"></span><span style="background:#8B8778"></span><span style="background:#8C8878"></span><span style="background:#8D8878"></span><span style="background:#8E8978"></span><span style="background:#8F8A78"></span><span style="background:#908B78"></span><span style="background:#918B78"></span><span style="background:#928C78"></span><span style="background:#928D78"></span><span style="background:#938E78"></span><span style="background:#948E77"></span><span style="background:#958F77"></span><span style="background:#969077"></span><span style="background:#979177"></span><span style="background:#989277"></span><span style="background:#999277"></span><span style="background:#9A9376"></span><span style="background:#9B9476"></span><span style="background:#9C9576"></span><span style="background:#9D9576"></span><span style="background:#9E9676"></span><span style="background:#9F9775"></span><span style="background:#A09875"></span><span style="background:#A19975"></span><span style="background:#A29975"></span><span style="background:#A39A74"></span><span style="background:#A49B74"></span><span style="background:#A59C74"></span><span style="background:#A69C74"></span><span style="background:#A79D73"></span><span style="background:#A89E73"></span><span style="background:#A99F73"></span><span style="background:#AAA073"></span><span style="background:#ABA072"></span><span style="background:#ACA172"></span><span style="background:#ADA272"></span><span style="background:#AEA371"></span><span style="background:#AFA471"></span><span style="background:#B0A571"></span><span style="background:#B1A570"></span><span style="background:#B3A670"></span><span style="background:#B4A76F"></span><span style="background:#B5A86F"></span><span style="background:#B6A96F"></span><span style="background:#B7A96E"></span><span style="background:#B8AA6E"></span><span style="background:#B9AB6D"></span><span style="background:#BAAC6D"></span><span style="background:#BBAD6D"></span><span style="background:#BCAE6C"></span><span style="background:#BDAE6C"></span><span style="background:#BEAF6B"></span><span style="background:#BFB06B"></span><span style="background:#C0B16A"></span><span style="background:#C1B26A"></span><span style="background:#C2B369"></span><span style="background:#C3B369"></span><span style="background:#C4B468"></span><span style="background:#C5B568"></span><span style="background:#C6B667"></span><span style="background:#C7B767"></span><span style="background:#C8B866"></span><span style="background:#C9B965"></span><span style="background:#CBB965"></span><span style="background:#CCBA64"></span><span style="background:#CDBB63"></span><span style="background:#CEBC63"></span><span style="background:#CFBD62"></span><span style="background:#D0BE62"></span><span style="background:#D1BF61"></span><span style="background:#D2C060"></span><span style="background:#D3C05F"></span><span style="background:#D4C15F"></span><span style="background:#D5C25E"></span><span style="background:#D6C35D"></span><span style="background:#D7C45C"></span><span style="background:#D9C55C"></span><span style="background:#DAC65B"></span><span style="background:#DBC75A"></span><span style="background:#DCC859"></span><span style="background:#DDC858"></span><span style="background:#DEC958"></span><span style="background:#DFCA57"></span><span style="background:#E0CB56"></span><span style="background:#E1CC55"></span><span style="background:#E2CD54"></span><span style="background:#E4CE53"></span><span style="background:#E5CF52"></span><span style="background:#E6D051"></span><span style="background:#E7D150"></span><span style="background:#E8D24F"></span><span style="background:#E9D34E"></span><span style="background:#EAD34C"></span><span style="background:#EBD44B"></span><span style="background:#EDD54A"></span><span style="background:#EED649"></span><span style="background:#EFD748"></span><span style="background:#F0D846"></span><span style="background:#F1D945"></span><span style="background:#F2DA44"></span><span style="background:#F3DB42"></span><span style="background:#F5DC41"></span><span style="background:#F6DD3F"></span><span style="background:#F7DE3E"></span><span style="background:#F8DF3C"></span><span style="background:#F9E03A"></span><span style="background:#FBE138"></span><span style="background:#FCE236"></span><span style="background:#FDE334"></span><span style="background:#FEE434"></span><span style="background:#FEE535"></span><span style="background:#FEE636"></span><span style="background:#FEE838"></span></div><span class="badge">worst Δ: 0.47 <em>(tritanopia)</em></span></div>
+<div class="cmap-row"><span class="cmap-name">BrBG</span><div class="gradient"><span style="background:#543005"></span><span style="background:#563105"></span><span style="background:#583305"></span><span style="background:#5B3406"></span><span style="background:#5D3506"></span><span style="background:#5F3606"></span><span style="background:#613806"></span><span style="background:#633906"></span><span style="background:#663A07"></span><span style="background:#683C07"></span><span style="background:#6A3D07"></span><span style="background:#6C3E07"></span><span style="background:#6E4007"></span><span style="background:#714108"></span><span style="background:#734208"></span><span style="background:#754308"></span><span style="background:#774508"></span><span style="background:#794608"></span><span style="background:#7C4709"></span><span style="background:#7E4909"></span><span style="background:#804A09"></span><span style="background:#824B09"></span><span style="background:#844C09"></span><span style="background:#874E0A"></span><span style="background:#894F0A"></span><span style="background:#8B500A"></span><span style="background:#8D520B"></span><span style="background:#8F540C"></span><span style="background:#91560D"></span><span style="background:#93580F"></span><span style="background:#955910"></span><span style="background:#975B12"></span><span style="background:#995D13"></span><span style="background:#9B5F14"></span><span style="background:#9D6116"></span><span style="background:#9F6317"></span><span style="background:#A16518"></span><span style="background:#A3671A"></span><span style="background:#A5691B"></span><span style="background:#A76A1D"></span><span style="background:#A96C1E"></span><span style="background:#AB6E1F"></span><span style="background:#AD7021"></span><span style="background:#AF7222"></span><span style="background:#B17423"></span><span style="background:#B37625"></span><span style="background:#B57826"></span><span style="background:#B77928"></span><span style="background:#B97B29"></span><span style="background:#BB7D2A"></span><span style="background:#BD7F2C"></span><span style="background:#BF812D"></span><span style="background:#C08430"></span><span style="background:#C28633"></span><span style="background:#C38936"></span><span style="background:#C48B3A"></span><span style="background:#C58E3D"></span><span style="background:#C79040"></span><span style="background:#C89343"></span><span style="background:#C99546"></span><span style="background:#CA9849"></span><span style="background:#CC9A4C"></span><span style="background:#CD9D50"></span><span style="background:#CEA053"></span><span style="background:#CFA256"></span><span style="background:#D1A559"></span><span style="background:#D2A75C"></span><span style="background:#D3AA5F"></span><span style="background:#D4AC62"></span><span style="background:#D6AF65"></span><span style="background:#D7B169"></span><span style="background:#D8B46C"></span><span style="background:#D9B76F"></span><span style="background:#DBB972"></span><span style="background:#DCBC75"></span><span style="background:#DDBE78"></span><span style="background:#DEC17B"></span><span style="background:#DFC37E"></span><span style="background:#E0C481"></span><span style="background:#E1C684"></span><span style="background:#E2C787"></span><span style="background:#E3C989"></span><span style="background:#E4CA8C"></span><span style="background:#E5CC8F"></span><span style="background:#E6CD92"></span><span style="background:#E7CF94"></span><span style="background:#E8D097"></span><span style="background:#E8D29A"></span><span style="background:#E9D39D"></span><span style="background:#EAD59F"></span><span style="background:#EBD6A2"></span><span style="background:#ECD8A5"></span><span style="background:#EDD9A8"></span><span style="background:#EEDBAA"></span><span style="background:#EFDCAD"></span><span style="background:#F0DEB0"></span><span style="background:#F1DFB3"></span><span style="background:#F1E1B5"></span><span style="background:#F2E2B8"></span><span style="background:#F3E4BB"></span><span style="background:#F4E5BE"></span><span style="background:#F5E7C0"></span><span style="background:#F6E8C3"></span><span style="background:#F6E9C5"></span><span style="background:#F6E9C7"></span><span style="background:#F6EAC9"></span><span style="background:#F6EACB"></span><span style="background:#F6EBCD"></span><span style="background:#F6EBCF"></span><span style="background:#F6ECD1"></span><span style="background:#F6ECD3"></span><span style="background:#F6EDD5"></span><span style="background:#F6EDD7"></span><span style="background:#F6EED9"></span><span style="background:#F6EEDB"></span><span style="background:#F5EFDC"></span><span style="background:#F5EFDE"></span><span style="background:#F5F0E0"></span><span style="background:#F5F0E2"></span><span style="background:#F5F1E4"></span><span style="background:#F5F1E6"></span><span style="background:#F5F2E8"></span><span style="background:#F5F2EA"></span><span style="background:#F5F3EC"></span><span style="background:#F5F3EE"></span><span style="background:#F5F4F0"></span><span style="background:#F5F4F2"></span><span style="background:#F5F5F4"></span><span style="background:#F4F5F5"></span><span style="background:#F2F4F4"></span><span style="background:#F0F4F3"></span><span style="background:#EFF3F3"></span><span style="background:#EDF3F2"></span><span style="background:#EBF3F2"></span><span style="background:#E9F2F1"></span><span style="background:#E7F2F0"></span><span style="background:#E6F1F0"></span><span style="background:#E4F1EF"></span><span style="background:#E2F0EE"></span><span style="background:#E0F0EE"></span><span style="background:#DEF0ED"></span><span style="background:#DDEFED"></span><span style="background:#DBEFEC"></span><span style="background:#D9EEEB"></span><span style="background:#D7EEEB"></span><span style="background:#D5EDEA"></span><span style="background:#D4EDE9"></span><span style="background:#D2EDE9"></span><span style="background:#D0ECE8"></span><span style="background:#CEECE8"></span><span style="background:#CCEBE7"></span><span style="background:#CBEBE6"></span><span style="background:#C9EAE6"></span><span style="background:#C7EAE5"></span><span style="background:#C4E9E4"></span><span style="background:#C1E8E2"></span><span style="background:#BFE7E1"></span><span style="background:#BCE5DF"></span><span style="background:#B9E4DE"></span><span style="background:#B6E3DD"></span><span style="background:#B4E2DB"></span><span style="background:#B1E1DA"></span><span style="background:#AEE0D8"></span><span style="background:#ABDFD7"></span><span style="background:#A8DDD5"></span><span style="background:#A6DCD4"></span><span style="background:#A3DBD3"></span><span style="background:#A0DAD1"></span><span style="background:#9DD9D0"></span><span style="background:#9AD8CE"></span><span style="background:#98D7CD"></span><span style="background:#95D6CC"></span><span style="background:#92D4CA"></span><span style="background:#8FD3C9"></span><span style="background:#8DD2C7"></span><span style="background:#8AD1C6"></span><span style="background:#87D0C5"></span><span style="background:#84CFC3"></span><span style="background:#81CEC2"></span><span style="background:#7FCCC0"></span><span style="background:#7CCABE"></span><span style="background:#79C8BC"></span><span style="background:#76C6BA"></span><span style="background:#73C3B8"></span><span style="background:#70C1B6"></span><span style="background:#6DBFB4"></span><span style="background:#6ABDB2"></span><span style="background:#67BBB0"></span><span style="background:#64B9AE"></span><span style="background:#61B7AC"></span><span style="background:#5EB5AA"></span><span style="background:#5BB3A8"></span><span style="background:#58B0A7"></span><span style="background:#55AEA5"></span><span style="background:#52ACA3"></span><span style="background:#4FAAA1"></span><span style="background:#4DA89F"></span><span style="background:#4AA69D"></span><span style="background:#47A49B"></span><span style="background:#44A299"></span><span style="background:#419F97"></span><span style="background:#3E9D95"></span><span style="background:#3B9B93"></span><span style="background:#389991"></span><span style="background:#35978F"></span><span style="background:#33958D"></span><span style="background:#31938B"></span><span style="background:#2F9189"></span><span style="background:#2D8F87"></span><span style="background:#2B8D85"></span><span style="background:#298B83"></span><span style="background:#278A82"></span><span style="background:#258880"></span><span style="background:#23867E"></span><span style="background:#21847C"></span><span style="background:#1F827A"></span><span style="background:#1D8078"></span><span style="background:#1A7E76"></span><span style="background:#187C74"></span><span style="background:#167A72"></span><span style="background:#147870"></span><span style="background:#12766E"></span><span style="background:#10746C"></span><span style="background:#0E726A"></span><span style="background:#0C7169"></span><span style="background:#0A6F67"></span><span style="background:#086D65"></span><span style="background:#066B63"></span><span style="background:#046961"></span><span style="background:#02675F"></span><span style="background:#01655D"></span><span style="background:#01645B"></span><span style="background:#016259"></span><span style="background:#016058"></span><span style="background:#015F56"></span><span style="background:#015D54"></span><span style="background:#015B52"></span><span style="background:#015A50"></span><span style="background:#01584F"></span><span style="background:#01564D"></span><span style="background:#01554B"></span><span style="background:#015349"></span><span style="background:#015147"></span><span style="background:#005046"></span><span style="background:#004E44"></span><span style="background:#004C42"></span><span style="background:#004B40"></span><span style="background:#00493E"></span><span style="background:#00483D"></span><span style="background:#00463B"></span><span style="background:#004439"></span><span style="background:#004337"></span><span style="background:#004135"></span><span style="background:#003F34"></span><span style="background:#003E32"></span><span style="background:#003C30"></span></div><span class="badge">worst Δ: 0.93 <em>(protanopia)</em></span></div>
+</section>
+
+<section class="domain">
+    <h2>C. website chrome — homepage hero &amp; surface tokens</h2>
+    <p class="lede">tiny renditions of the anyplot.ai hero (style-guide §5.3) for both themes,
+    with every visible text/UI element tagged with its live wcag contrast ratio. badges turn
+    red the moment a colour change drops a pair below aa — that is the lighthouse-green
+    check at a glance. surface tokens, ΔE matrices and wcag tables drill down below.</p>
+    <div class="hero-mockup-stack">
+<div class="hero-mockup" style="background:#F5F3EC;border:1px solid #DFDDD6;color:#1A1A17;--badge-color:#6B6A63">
+    <div class="hero-meta">light — bg-page #F5F3EC</div>
+
+    <div class="hero-eyebrow" style="color:#6B6A63">
+        <span class="rule-line" style="background:#009E73"></span>
+        — the open plot catalogue <span class="cbadge cb-warn">4.89:1 AA</span>
+    </div>
+
+    <div class="hero-h1">
+        <span class="word">any<span class="dot" style="background:#009E73"></span>plot()</span>
+        <span class="paren"><span class="cbadge cb-warn">3.08:1 AA</span></span>
+    </div>
+    <div class="hero-accent">— any library. <span class="cbadge cb-ok">15.71:1 AAA</span> <span class="cbadge cb-ok">15.71:1 AAA</span></div>
+
+    <div class="hero-subtitle">one spec · every library · always current. <span class="cbadge cb-ok">15.71:1 AAA</span></div>
+
+    <p class="hero-prose" style="color:#4A4A44">
+        every plot begins as a library-agnostic spec. <span class="cbadge cb-ok">8.03:1 AAA</span>
+    </p>
+
+    <div class="hero-tagline">
+        steal like an artist.<span class="cursor" style="background:#009E73"></span>
+        <span class="cbadge cb-ok">15.71:1 AAA</span>
+    </div>
+
+    <div class="hero-ctas">
+        <span class="cta-primary" style="background:#1A1A17;color:#F5F3EC">.browse()</span>
+        <span class="cta-hover" style="background:#009E73;color:#FFFFFF">.browse() <em>hover</em></span>
+        <a class="cta-secondary" style="color:#4A4A44">or connect via mcp →</a>
+    </div>
+    <div class="hero-cta-badges">
+        <span>filled cta: <span class="cbadge cb-ok">15.71:1 AAA</span></span>
+        <span>hover green: <span class="cbadge cb-warn">3.42:1 AA</span></span>
+        <span>secondary link: <span class="cbadge cb-ok">8.03:1 AAA</span></span>
+    </div>
+
+    <div class="hero-surfaces" style="border-top:1px solid #DFDDD6">
+        <div class="surface-chip" style="background:#F5F3EC;color:#6B6A63">bg-page #F5F3EC</div>
+        <div class="surface-chip" style="background:#FAF8F1;color:#6B6A63">bg-surface #FAF8F1</div>
+        <div class="surface-chip" style="background:#FFFDF6;color:#6B6A63">bg-elevated #FFFDF6</div>
+    </div>
+</div>
+
+<div class="hero-mockup" style="background:#121210;border:1px solid #1E1E1B;color:#F0EFE8;--badge-color:#A8A79F">
+    <div class="hero-meta">dark — bg-page #121210</div>
+
+    <div class="hero-eyebrow" style="color:#A8A79F">
+        <span class="rule-line" style="background:#009E73"></span>
+        — the open plot catalogue <span class="cbadge cb-ok">7.76:1 AAA</span>
+    </div>
+
+    <div class="hero-h1">
+        <span class="word">any<span class="dot" style="background:#009E73"></span>plot()</span>
+        <span class="paren"><span class="cbadge cb-ok">5.48:1 AAA</span></span>
+    </div>
+    <div class="hero-accent">— any library. <span class="cbadge cb-ok">16.27:1 AAA</span> <span class="cbadge cb-ok">16.27:1 AAA</span></div>
+
+    <div class="hero-subtitle">one spec · every library · always current. <span class="cbadge cb-ok">16.27:1 AAA</span></div>
+
+    <p class="hero-prose" style="color:#B8B7B0">
+        every plot begins as a library-agnostic spec. <span class="cbadge cb-ok">9.32:1 AAA</span>
+    </p>
+
+    <div class="hero-tagline">
+        steal like an artist.<span class="cursor" style="background:#009E73"></span>
+        <span class="cbadge cb-ok">16.27:1 AAA</span>
+    </div>
+
+    <div class="hero-ctas">
+        <span class="cta-primary" style="background:#F0EFE8;color:#121210">.browse()</span>
+        <span class="cta-hover" style="background:#009E73;color:#FFFFFF">.browse() <em>hover</em></span>
+        <a class="cta-secondary" style="color:#B8B7B0">or connect via mcp →</a>
+    </div>
+    <div class="hero-cta-badges">
+        <span>filled cta: <span class="cbadge cb-ok">16.27:1 AAA</span></span>
+        <span>hover green: <span class="cbadge cb-warn">3.42:1 AA</span></span>
+        <span>secondary link: <span class="cbadge cb-ok">9.32:1 AAA</span></span>
+    </div>
+
+    <div class="hero-surfaces" style="border-top:1px solid #1E1E1B">
+        <div class="surface-chip" style="background:#121210;color:#A8A79F">bg-page #121210</div>
+        <div class="surface-chip" style="background:#1A1A17;color:#A8A79F">bg-surface #1A1A17</div>
+        <div class="surface-chip" style="background:#242420;color:#A8A79F">bg-elevated #242420</div>
+    </div>
+</div>
+</div>
+    <section class="surface"><h3>light theme</h3><div class="swatch-row"><div class="sw" style="background:#F5F3EC;color:#1A1A17"><code>#F5F3EC</code><span>bg-page</span></div><div class="sw" style="background:#FAF8F1;color:#1A1A17"><code>#FAF8F1</code><span>bg-surface</span></div><div class="sw" style="background:#FFFDF6;color:#1A1A17"><code>#FFFDF6</code><span>bg-elevated</span></div><div class="sw" style="background:#1A1A17;color:#F0EFE8"><code>#1A1A17</code><span>ink</span></div><div class="sw" style="background:#4A4A44;color:#F0EFE8"><code>#4A4A44</code><span>ink-soft</span></div><div class="sw" style="background:#6B6A63;color:#F0EFE8"><code>#6B6A63</code><span>ink-muted</span></div></div><div class="surface-grid"><div class="surface-col"><div class="matrix-pair"><figure class="matrix"><figcaption>normal vision</figcaption><table class="delta"><tr><th></th><th class="rot"><span>bg-page</span></th><th class="rot"><span>bg-surface</span></th><th class="rot"><span>bg-elevated</span></th><th class="rot"><span>ink</span></th><th class="rot"><span>ink-soft</span></th><th class="rot"><span>ink-muted</span></th></tr><tr><th class="rowlab">bg-page</th><td class="diag"></td><td class="cell-bad" title="bg-page × bg-surface · normal ΔE=1.48">1.5</td><td class="cell-bad" title="bg-page × bg-elevated · normal ΔE=2.93">2.9</td><td class="cell-ok" title="bg-page × ink · normal ΔE=83.76">83.8</td><td class="cell-ok" title="bg-page × ink-soft · normal ΔE=63.27">63.3</td><td class="cell-ok" title="bg-page × ink-muted · normal ΔE=49.44">49.4</td></tr><tr><th class="rowlab">bg-surface</th><td class="cell-bad" title="bg-surface × bg-page · normal ΔE=1.48">1.5</td><td class="diag"></td><td class="cell-bad" title="bg-surface × bg-elevated · normal ΔE=1.45">1.5</td><td class="cell-ok" title="bg-surface × ink · normal ΔE=85.24">85.2</td><td class="cell-ok" title="bg-surface × ink-soft · normal ΔE=64.74">64.7</td><td class="cell-ok" title="bg-surface × ink-muted · normal ΔE=50.91">50.9</td></tr><tr><th class="rowlab">bg-elevated</th><td class="cell-bad" title="bg-elevated × bg-page · normal ΔE=2.93">2.9</td><td class="cell-bad" title="bg-elevated × bg-surface · normal ΔE=1.45">1.5</td><td class="diag"></td><td class="cell-ok" title="bg-elevated × ink · normal ΔE=86.69">86.7</td><td class="cell-ok" title="bg-elevated × ink-soft · normal ΔE=66.19">66.2</td><td class="cell-ok" title="bg-elevated × ink-muted · normal ΔE=52.37">52.4</td></tr><tr><th class="rowlab">ink</th><td class="cell-ok" title="ink × bg-page · normal ΔE=83.76">83.8</td><td class="cell-ok" title="ink × bg-surface · normal ΔE=85.24">85.2</td><td class="cell-ok" title="ink × bg-elevated · normal ΔE=86.69">86.7</td><td class="diag"></td><td class="cell-ok" title="ink × ink-soft · normal ΔE=20.52">20.5</td><td class="cell-ok" title="ink × ink-muted · normal ΔE=34.35">34.3</td></tr><tr><th class="rowlab">ink-soft</th><td class="cell-ok" title="ink-soft × bg-page · normal ΔE=63.27">63.3</td><td class="cell-ok" title="ink-soft × bg-surface · normal ΔE=64.74">64.7</td><td class="cell-ok" title="ink-soft × bg-elevated · normal ΔE=66.19">66.2</td><td class="cell-ok" title="ink-soft × ink · normal ΔE=20.52">20.5</td><td class="diag"></td><td class="cell-meh" title="ink-soft × ink-muted · normal ΔE=13.83">13.8</td></tr><tr><th class="rowlab">ink-muted</th><td class="cell-ok" title="ink-muted × bg-page · normal ΔE=49.44">49.4</td><td class="cell-ok" title="ink-muted × bg-surface · normal ΔE=50.91">50.9</td><td class="cell-ok" title="ink-muted × bg-elevated · normal ΔE=52.37">52.4</td><td class="cell-ok" title="ink-muted × ink · normal ΔE=34.35">34.3</td><td class="cell-meh" title="ink-muted × ink-soft · normal ΔE=13.83">13.8</td><td class="diag"></td></tr></table></figure><figure class="matrix"><figcaption>worst of 3 cvd (deuter · protan · tritan)</figcaption><table class="delta"><tr><th></th><th class="rot"><span>bg-page</span></th><th class="rot"><span>bg-surface</span></th><th class="rot"><span>bg-elevated</span></th><th class="rot"><span>ink</span></th><th class="rot"><span>ink-soft</span></th><th class="rot"><span>ink-muted</span></th></tr><tr><th class="rowlab">bg-page</th><td class="diag"></td><td class="cell-bad" title="bg-page × bg-surface · worst-cvd ΔE=1.47 (deuteranopia=1.5 · protanopia=1.5 · tritanopia=1.5)">1.5</td><td class="cell-bad" title="bg-page × bg-elevated · worst-cvd ΔE=2.91 (deuteranopia=2.9 · protanopia=2.9 · tritanopia=2.9)">2.9</td><td class="cell-ok" title="bg-page × ink · worst-cvd ΔE=83.67 (deuteranopia=83.8 · protanopia=83.7 · tritanopia=83.8)">83.7</td><td class="cell-ok" title="bg-page × ink-soft · worst-cvd ΔE=63.19 (deuteranopia=63.3 · protanopia=63.2 · tritanopia=63.3)">63.2</td><td class="cell-ok" title="bg-page × ink-muted · worst-cvd ΔE=49.42 (deuteranopia=49.4 · protanopia=49.4 · tritanopia=49.4)">49.4</td></tr><tr><th class="rowlab">bg-surface</th><td class="cell-bad" title="bg-surface × bg-page · worst-cvd ΔE=1.47 (deuteranopia=1.5 · protanopia=1.5 · tritanopia=1.5)">1.5</td><td class="diag"></td><td class="cell-bad" title="bg-surface × bg-elevated · worst-cvd ΔE=1.44 (deuteranopia=1.4 · protanopia=1.5 · tritanopia=1.6)">1.4</td><td class="cell-ok" title="bg-surface × ink · worst-cvd ΔE=85.14 (deuteranopia=85.3 · protanopia=85.1 · tritanopia=85.2)">85.1</td><td class="cell-ok" title="bg-surface × ink-soft · worst-cvd ΔE=64.67 (deuteranopia=64.7 · protanopia=64.7 · tritanopia=64.7)">64.7</td><td class="cell-ok" title="bg-surface × ink-muted · worst-cvd ΔE=50.89 (deuteranopia=50.9 · protanopia=50.9 · tritanopia=50.9)">50.9</td></tr><tr><th class="rowlab">bg-elevated</th><td class="cell-bad" title="bg-elevated × bg-page · worst-cvd ΔE=2.91 (deuteranopia=2.9 · protanopia=2.9 · tritanopia=2.9)">2.9</td><td class="cell-bad" title="bg-elevated × bg-surface · worst-cvd ΔE=1.44 (deuteranopia=1.4 · protanopia=1.5 · tritanopia=1.6)">1.4</td><td class="diag"></td><td class="cell-ok" title="bg-elevated × ink · worst-cvd ΔE=86.57 (deuteranopia=86.7 · protanopia=86.6 · tritanopia=86.6)">86.6</td><td class="cell-ok" title="bg-elevated × ink-soft · worst-cvd ΔE=66.08 (deuteranopia=66.2 · protanopia=66.1 · tritanopia=66.1)">66.1</td><td class="cell-ok" title="bg-elevated × ink-muted · worst-cvd ΔE=52.25 (deuteranopia=52.3 · protanopia=52.4 · tritanopia=52.3)">52.3</td></tr><tr><th class="rowlab">ink</th><td class="cell-ok" title="ink × bg-page · worst-cvd ΔE=83.67 (deuteranopia=83.8 · protanopia=83.7 · tritanopia=83.8)">83.7</td><td class="cell-ok" title="ink × bg-surface · worst-cvd ΔE=85.14 (deuteranopia=85.3 · protanopia=85.1 · tritanopia=85.2)">85.1</td><td class="cell-ok" title="ink × bg-elevated · worst-cvd ΔE=86.57 (deuteranopia=86.7 · protanopia=86.6 · tritanopia=86.6)">86.6</td><td class="diag"></td><td class="cell-ok" title="ink × ink-soft · worst-cvd ΔE=20.50 (deuteranopia=20.6 · protanopia=20.5 · tritanopia=20.5)">20.5</td><td class="cell-ok" title="ink × ink-muted · worst-cvd ΔE=34.26 (deuteranopia=34.4 · protanopia=34.3 · tritanopia=34.3)">34.3</td></tr><tr><th class="rowlab">ink-soft</th><td class="cell-ok" title="ink-soft × bg-page · worst-cvd ΔE=63.19 (deuteranopia=63.3 · protanopia=63.2 · tritanopia=63.3)">63.2</td><td class="cell-ok" title="ink-soft × bg-surface · worst-cvd ΔE=64.67 (deuteranopia=64.7 · protanopia=64.7 · tritanopia=64.7)">64.7</td><td class="cell-ok" title="ink-soft × bg-elevated · worst-cvd ΔE=66.08 (deuteranopia=66.2 · protanopia=66.1 · tritanopia=66.1)">66.1</td><td class="cell-ok" title="ink-soft × ink · worst-cvd ΔE=20.50 (deuteranopia=20.6 · protanopia=20.5 · tritanopia=20.5)">20.5</td><td class="diag"></td><td class="cell-meh" title="ink-soft × ink-muted · worst-cvd ΔE=13.76 (deuteranopia=13.9 · protanopia=13.8 · tritanopia=13.8)">13.8</td></tr><tr><th class="rowlab">ink-muted</th><td class="cell-ok" title="ink-muted × bg-page · worst-cvd ΔE=49.42 (deuteranopia=49.4 · protanopia=49.4 · tritanopia=49.4)">49.4</td><td class="cell-ok" title="ink-muted × bg-surface · worst-cvd ΔE=50.89 (deuteranopia=50.9 · protanopia=50.9 · tritanopia=50.9)">50.9</td><td class="cell-ok" title="ink-muted × bg-elevated · worst-cvd ΔE=52.25 (deuteranopia=52.3 · protanopia=52.4 · tritanopia=52.3)">52.3</td><td class="cell-ok" title="ink-muted × ink · worst-cvd ΔE=34.26 (deuteranopia=34.4 · protanopia=34.3 · tritanopia=34.3)">34.3</td><td class="cell-meh" title="ink-muted × ink-soft · worst-cvd ΔE=13.76 (deuteranopia=13.9 · protanopia=13.8 · tritanopia=13.8)">13.8</td><td class="diag"></td></tr></table></figure></div></div><div class="surface-col"><figure class="matrix wcag"><figcaption>WCAG contrast</figcaption><table class="delta"><tr><th></th><th>bg-page</th><th>bg-surface</th><th>bg-elevated</th></tr><tr><th>ink</th><td class="cell-ok">15.71<small>AAA</small></td><td class="cell-ok">16.41<small>AAA</small></td><td class="cell-ok">17.14<small>AAA</small></td></tr><tr><th>ink-soft</th><td class="cell-ok">8.03<small>AAA</small></td><td class="cell-ok">8.39<small>AAA</small></td><td class="cell-ok">8.76<small>AAA</small></td></tr><tr><th>ink-muted</th><td class="cell-warn">4.89<small>AA</small></td><td class="cell-warn">5.11<small>AA</small></td><td class="cell-warn">5.34<small>AA</small></td></tr></table></figure></div></div></section>
+    <section class="surface"><h3>dark theme</h3><div class="swatch-row"><div class="sw" style="background:#121210;color:#F0EFE8"><code>#121210</code><span>bg-page</span></div><div class="sw" style="background:#1A1A17;color:#F0EFE8"><code>#1A1A17</code><span>bg-surface</span></div><div class="sw" style="background:#242420;color:#F0EFE8"><code>#242420</code><span>bg-elevated</span></div><div class="sw" style="background:#F0EFE8;color:#1A1A17"><code>#F0EFE8</code><span>ink</span></div><div class="sw" style="background:#B8B7B0;color:#1A1A17"><code>#B8B7B0</code><span>ink-soft</span></div><div class="sw" style="background:#A8A79F;color:#F0EFE8"><code>#A8A79F</code><span>ink-muted</span></div></div><div class="surface-grid"><div class="surface-col"><div class="matrix-pair"><figure class="matrix"><figcaption>normal vision</figcaption><table class="delta"><tr><th></th><th class="rot"><span>bg-page</span></th><th class="rot"><span>bg-surface</span></th><th class="rot"><span>bg-elevated</span></th><th class="rot"><span>ink</span></th><th class="rot"><span>ink-soft</span></th><th class="rot"><span>ink-muted</span></th></tr><tr><th class="rowlab">bg-page</th><td class="diag"></td><td class="cell-bad" title="bg-page × bg-surface · normal ΔE=3.18">3.2</td><td class="cell-warn" title="bg-page × bg-elevated · normal ΔE=7.31">7.3</td><td class="cell-ok" title="bg-page × ink · normal ΔE=85.64">85.6</td><td class="cell-ok" title="bg-page × ink-soft · normal ΔE=67.37">67.4</td><td class="cell-ok" title="bg-page × ink-muted · normal ΔE=61.59">61.6</td></tr><tr><th class="rowlab">bg-surface</th><td class="cell-bad" title="bg-surface × bg-page · normal ΔE=3.18">3.2</td><td class="diag"></td><td class="cell-bad" title="bg-surface × bg-elevated · normal ΔE=4.13">4.1</td><td class="cell-ok" title="bg-surface × ink · normal ΔE=82.49">82.5</td><td class="cell-ok" title="bg-surface × ink-soft · normal ΔE=64.22">64.2</td><td class="cell-ok" title="bg-surface × ink-muted · normal ΔE=58.44">58.4</td></tr><tr><th class="rowlab">bg-elevated</th><td class="cell-warn" title="bg-elevated × bg-page · normal ΔE=7.31">7.3</td><td class="cell-bad" title="bg-elevated × bg-surface · normal ΔE=4.13">4.1</td><td class="diag"></td><td class="cell-ok" title="bg-elevated × ink · normal ΔE=78.38">78.4</td><td class="cell-ok" title="bg-elevated × ink-soft · normal ΔE=60.10">60.1</td><td class="cell-ok" title="bg-elevated × ink-muted · normal ΔE=54.32">54.3</td></tr><tr><th class="rowlab">ink</th><td class="cell-ok" title="ink × bg-page · normal ΔE=85.64">85.6</td><td class="cell-ok" title="ink × bg-surface · normal ΔE=82.49">82.5</td><td class="cell-ok" title="ink × bg-elevated · normal ΔE=78.38">78.4</td><td class="diag"></td><td class="cell-ok" title="ink × ink-soft · normal ΔE=18.28">18.3</td><td class="cell-ok" title="ink × ink-muted · normal ΔE=24.07">24.1</td></tr><tr><th class="rowlab">ink-soft</th><td class="cell-ok" title="ink-soft × bg-page · normal ΔE=67.37">67.4</td><td class="cell-ok" title="ink-soft × bg-surface · normal ΔE=64.22">64.2</td><td class="cell-ok" title="ink-soft × bg-elevated · normal ΔE=60.10">60.1</td><td class="cell-ok" title="ink-soft × ink · normal ΔE=18.28">18.3</td><td class="diag"></td><td class="cell-warn" title="ink-soft × ink-muted · normal ΔE=5.80">5.8</td></tr><tr><th class="rowlab">ink-muted</th><td class="cell-ok" title="ink-muted × bg-page · normal ΔE=61.59">61.6</td><td class="cell-ok" title="ink-muted × bg-surface · normal ΔE=58.44">58.4</td><td class="cell-ok" title="ink-muted × bg-elevated · normal ΔE=54.32">54.3</td><td class="cell-ok" title="ink-muted × ink · normal ΔE=24.07">24.1</td><td class="cell-warn" title="ink-muted × ink-soft · normal ΔE=5.80">5.8</td><td class="diag"></td></tr></table></figure><figure class="matrix"><figcaption>worst of 3 cvd (deuter · protan · tritan)</figcaption><table class="delta"><tr><th></th><th class="rot"><span>bg-page</span></th><th class="rot"><span>bg-surface</span></th><th class="rot"><span>bg-elevated</span></th><th class="rot"><span>ink</span></th><th class="rot"><span>ink-soft</span></th><th class="rot"><span>ink-muted</span></th></tr><tr><th class="rowlab">bg-page</th><td class="diag"></td><td class="cell-bad" title="bg-page × bg-surface · worst-cvd ΔE=3.15 (deuteranopia=3.2 · protanopia=3.2 · tritanopia=3.1)">3.1</td><td class="cell-warn" title="bg-page × bg-elevated · worst-cvd ΔE=7.26 (deuteranopia=7.3 · protanopia=7.3 · tritanopia=7.3)">7.3</td><td class="cell-ok" title="bg-page × ink · worst-cvd ΔE=85.58 (deuteranopia=85.7 · protanopia=85.6 · tritanopia=85.6)">85.6</td><td class="cell-ok" title="bg-page × ink-soft · worst-cvd ΔE=67.29 (deuteranopia=67.4 · protanopia=67.3 · tritanopia=67.4)">67.3</td><td class="cell-ok" title="bg-page × ink-muted · worst-cvd ΔE=61.50 (deuteranopia=61.7 · protanopia=61.5 · tritanopia=61.6)">61.5</td></tr><tr><th class="rowlab">bg-surface</th><td class="cell-bad" title="bg-surface × bg-page · worst-cvd ΔE=3.15 (deuteranopia=3.2 · protanopia=3.2 · tritanopia=3.1)">3.1</td><td class="diag"></td><td class="cell-bad" title="bg-surface × bg-elevated · worst-cvd ΔE=4.11 (deuteranopia=4.1 · protanopia=4.1 · tritanopia=4.1)">4.1</td><td class="cell-ok" title="bg-surface × ink · worst-cvd ΔE=82.43 (deuteranopia=82.5 · protanopia=82.4 · tritanopia=82.5)">82.4</td><td class="cell-ok" title="bg-surface × ink-soft · worst-cvd ΔE=64.15 (deuteranopia=64.3 · protanopia=64.1 · tritanopia=64.2)">64.1</td><td class="cell-ok" title="bg-surface × ink-muted · worst-cvd ΔE=58.35 (deuteranopia=58.5 · protanopia=58.4 · tritanopia=58.4)">58.4</td></tr><tr><th class="rowlab">bg-elevated</th><td class="cell-warn" title="bg-elevated × bg-page · worst-cvd ΔE=7.26 (deuteranopia=7.3 · protanopia=7.3 · tritanopia=7.3)">7.3</td><td class="cell-bad" title="bg-elevated × bg-surface · worst-cvd ΔE=4.11 (deuteranopia=4.1 · protanopia=4.1 · tritanopia=4.1)">4.1</td><td class="diag"></td><td class="cell-ok" title="bg-elevated × ink · worst-cvd ΔE=78.33 (deuteranopia=78.4 · protanopia=78.3 · tritanopia=78.4)">78.3</td><td class="cell-ok" title="bg-elevated × ink-soft · worst-cvd ΔE=60.04 (deuteranopia=60.1 · protanopia=60.0 · tritanopia=60.1)">60.0</td><td class="cell-ok" title="bg-elevated × ink-muted · worst-cvd ΔE=54.25 (deuteranopia=54.4 · protanopia=54.2 · tritanopia=54.3)">54.2</td></tr><tr><th class="rowlab">ink</th><td class="cell-ok" title="ink × bg-page · worst-cvd ΔE=85.58 (deuteranopia=85.7 · protanopia=85.6 · tritanopia=85.6)">85.6</td><td class="cell-ok" title="ink × bg-surface · worst-cvd ΔE=82.43 (deuteranopia=82.5 · protanopia=82.4 · tritanopia=82.5)">82.4</td><td class="cell-ok" title="ink × bg-elevated · worst-cvd ΔE=78.33 (deuteranopia=78.4 · protanopia=78.3 · tritanopia=78.4)">78.3</td><td class="diag"></td><td class="cell-ok" title="ink × ink-soft · worst-cvd ΔE=18.27 (deuteranopia=18.3 · protanopia=18.3 · tritanopia=18.3)">18.3</td><td class="cell-ok" title="ink × ink-muted · worst-cvd ΔE=24.05 (deuteranopia=24.0 · protanopia=24.1 · tritanopia=24.1)">24.0</td></tr><tr><th class="rowlab">ink-soft</th><td class="cell-ok" title="ink-soft × bg-page · worst-cvd ΔE=67.29 (deuteranopia=67.4 · protanopia=67.3 · tritanopia=67.4)">67.3</td><td class="cell-ok" title="ink-soft × bg-surface · worst-cvd ΔE=64.15 (deuteranopia=64.3 · protanopia=64.1 · tritanopia=64.2)">64.1</td><td class="cell-ok" title="ink-soft × bg-elevated · worst-cvd ΔE=60.04 (deuteranopia=60.1 · protanopia=60.0 · tritanopia=60.1)">60.0</td><td class="cell-ok" title="ink-soft × ink · worst-cvd ΔE=18.27 (deuteranopia=18.3 · protanopia=18.3 · tritanopia=18.3)">18.3</td><td class="diag"></td><td class="cell-warn" title="ink-soft × ink-muted · worst-cvd ΔE=5.79 (deuteranopia=5.8 · protanopia=5.8 · tritanopia=5.8)">5.8</td></tr><tr><th class="rowlab">ink-muted</th><td class="cell-ok" title="ink-muted × bg-page · worst-cvd ΔE=61.50 (deuteranopia=61.7 · protanopia=61.5 · tritanopia=61.6)">61.5</td><td class="cell-ok" title="ink-muted × bg-surface · worst-cvd ΔE=58.35 (deuteranopia=58.5 · protanopia=58.4 · tritanopia=58.4)">58.4</td><td class="cell-ok" title="ink-muted × bg-elevated · worst-cvd ΔE=54.25 (deuteranopia=54.4 · protanopia=54.2 · tritanopia=54.3)">54.2</td><td class="cell-ok" title="ink-muted × ink · worst-cvd ΔE=24.05 (deuteranopia=24.0 · protanopia=24.1 · tritanopia=24.1)">24.0</td><td class="cell-warn" title="ink-muted × ink-soft · worst-cvd ΔE=5.79 (deuteranopia=5.8 · protanopia=5.8 · tritanopia=5.8)">5.8</td><td class="diag"></td></tr></table></figure></div></div><div class="surface-col"><figure class="matrix wcag"><figcaption>WCAG contrast</figcaption><table class="delta"><tr><th></th><th>bg-page</th><th>bg-surface</th><th>bg-elevated</th></tr><tr><th>ink</th><td class="cell-ok">16.27<small>AAA</small></td><td class="cell-ok">15.13<small>AAA</small></td><td class="cell-ok">13.51<small>AAA</small></td></tr><tr><th>ink-soft</th><td class="cell-ok">9.32<small>AAA</small></td><td class="cell-ok">8.67<small>AAA</small></td><td class="cell-ok">7.74<small>AAA</small></td></tr><tr><th>ink-muted</th><td class="cell-ok">7.76<small>AAA</small></td><td class="cell-ok">7.22<small>AAA</small></td><td class="cell-warn">6.45<small>AA</small></td></tr></table></figure></div></div></section>
+    <div class="legend"><span><i style="background:rgba(0,158,115,0.45)"></i>ΔE ≥ 15 — optimal (Petroff 2021 target)</span><span><i style="background:rgba(240,228,66,0.60)"></i>10 ≤ ΔE &lt; 15 — okay, below comfort threshold</span><span><i style="background:rgba(230,159,0,0.50)"></i>5 ≤ ΔE &lt; 10 — marginal</span><span><i style="background:rgba(213,94,0,0.55)"></i>ΔE &lt; 5 — confusable</span></div>
+</section>
+
+<footer class="notes">
+    <p>method: ΔE is euclidean distance in CAM02-UCS (Luo et al. 2006), computed via
+    <code>colorspacious.cspace_convert(rgb, "sRGB1", "CAM02-UCS")</code>.
+    cvd simulation uses the machado et al. (2009) model exposed by
+    <code>colorspacious</code>'s <code>sRGB1+CVD</code> space at <code>severity=100</code>
+    for deuteranomaly, protanomaly, and tritanomaly.</p>
+    <p>palette source: <code>core/images.py</code> · spec: <code>docs/reference/style-guide.md §4, §9</code>.
+    references: okabe &amp; ito (2008), wong (2011), machado et al. (2009), petroff (2021).</p>
+</footer>
+
+<script>
+(function () {
+    var t = document.querySelector('button.theme-toggle');
+    t.addEventListener('click', function () {
+        document.body.classList.toggle('theme-dark');
+        t.textContent = document.body.classList.contains('theme-dark')
+            ? '☀ light'
+            : '◐ dark';
+    });
+})();
+</script>
+</body>
+</html>
