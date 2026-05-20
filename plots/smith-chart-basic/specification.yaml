@@ -6,7 +6,7 @@ title: Smith Chart for RF/Impedance
 
 # Specification tracking
 created: 2026-01-11T22:53:47Z
-updated: null
+updated: 2026-05-20T14:28:35Z
 issue: 3792
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - polar
-    - specialized
   data_type:
     - numeric
     - complex
