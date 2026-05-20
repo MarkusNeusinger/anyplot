@@ -1,156 +1,186 @@
 library: altair
+language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:06:11Z'
-updated: '2026-01-16T08:09:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21059785737
+updated: '2026-05-20T09:51:53Z'
+generated_by: claude-sonnet
+workflow_run: 26153789297
 issue: 3765
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/altair/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent implementation of curved Bezier arcs using mathematical computation
-  - Clean integration of basemap from CDN using topo_feature
-  - 'Good layer composition: basemap + arcs + points + labels'
-  - Proper use of Altair geographic projection with clipExtent
-  - Interactive tooltips enabled for exploring flow details
-  - Color gradient effectively encodes flow magnitude
-  - Transparency and rounded stroke caps prevent visual clutter
+  - Correct blues sequential colormap for continuous flow data with dual-encoding
+    (width + color) for magnitude hierarchy
+  - 'Expert use of Altair geo stack: alt.topo_feature(), mark_geoshape(), project(),
+    detail channel for per-arc paths'
+  - Alternating arc curvature direction deterministically separates bidirectional
+    corridors cleanly
+  - 'Full theme adaptation: MAP_FILL, INK, ELEVATED_BG, PAGE_BG all correctly flip;
+    city labels and legend readable in both renders'
+  - Realistic European migration data with accurate city coordinates and plausible
+    flow magnitudes
   weaknesses:
-  - Some arc bundles overlap heavily in the London-Paris-Berlin corridor making individual
-    flows hard to distinguish
-  - Legend is positioned far from the main visualization in the bottom-right corner
-  image_description: The plot displays an origin-destination flow map of European
-    cities overlaid on a world map basemap. The map shows 10 European cities (Dublin,
-    London, Amsterdam, Brussels, Berlin, Paris, Vienna, Madrid, Lisbon, Rome) connected
-    by curved arcs representing migration flows. Arc thickness varies with flow magnitude,
-    and color encoding uses a blue gradient ("blues" scheme) ranging from 2,189 to
-    49,732. The basemap shows country boundaries in light gray (#e8e8e8) with white
-    borders. City points are rendered as blue circles (#306998) with white stroke,
-    and city labels appear in bold black text above each point. The title "flowmap-origin-destination
-    · altair · pyplots.ai" is positioned at the top-left. A color legend for "Flow
-    Volume" appears in the bottom-right corner with values from 2,189 to 49,732.
+  - Five separate label chart objects for per-city dx/dy offsets is repetitive — consolidate
+    into one chart with dx/dy offset columns in df_cities
+  - City label fontSize=11 is compact for the dense cluster; 12 would give slightly
+    more breathing room
+  - No descriptive title prefix and blues-only arc palette, while correct, limits
+    visual richness ceiling for DE-01
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 surface — correct theme background.
+      Chrome: Title "flowmap-origin-destination · python · altair · anyplot.ai" in dark #1A1A17 ink at top-left, fontSize=16. City labels (fontSize=11 bold) in dark ink with per-city dx/dy offsets for the dense London/Paris/Brussels/Amsterdam cluster. Legend "Flow Volume" box with dark title and secondary-ink labels, elevated fill #FFFDF6.
+      Data: Arc lines in blues colormap (light blue = low flow, dark blue = high flow), width 0.5–6 px, opacity=0.65. City points in #009E73 (brand green) with white stroke rings. Country fills in adaptive light-gray #D8D6CE.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 surface — correct dark theme background.
+      Chrome: Title in light #F0EFE8 ink, clearly visible. City labels adapt to light #F0EFE8 ink (INK token dark-mode value), no dark-on-dark failures. Country fills flip to dark slate #2D2D2A. Legend box uses elevated dark fill #242420 with light label/title text.
+      Data: Arc colors are identical blues colormap to light render — only chrome flips. City points remain #009E73, clearly visible on dark surface.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues observed.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title and city labels are clearly readable, legend text is adequate
-      - id: VQ-02
-        name: No Overlap
         score: 7
         max: 8
         passed: true
-        comment: Minor overlap between some arc bundles in the London-Paris-Berlin
-          corridor, but city labels are well-positioned
+        comment: All font sizes explicitly set; both themes readable. City labels
+          at fontSize=11 slightly compact for dense cluster but acceptable.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Careful per-city dx/dy offsets handle dense London/Paris/Brussels/Amsterdam
+          cluster. Minor residual crowding at cluster centre.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Arcs are well-sized with appropriate opacity (0.5), city markers
-          clearly visible
+        comment: Arc widths 0.5-6 clearly visible; city circles size=150 with white
+          stroke prominent; opacity=0.65 balances overlap legibility.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blues colorscheme is colorblind-safe, good contrast against gray
-          basemap
+        comment: Blues colormap CVD-safe; green city points strong contrast on both
+          surfaces.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas space with Europe centered, though some empty
-          space in corners
+        comment: Europe fills canvas well; legend positioned bottom-left without obscuring
+          data; good margins.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: N/A for geographic projection; legend properly labeled Flow Volume
+        comment: Geo map needs no axis labels. Flow Volume legend correctly labels
+          colorbar. Title spec-compliant.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed in bottom-right, basemap subtle
+        comment: 'City points #009E73 (brand/Okabe-Ito position 1); blues sequential
+          for flow data; backgrounds #FAF8F1/#1A1A17; chrome fully adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Strong design: warm surfaces, blues-monochrome dual-encoding arcs,
+          branded green nodes with white stroke, elevated legend box. Above defaults;
+          not publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No spines/grid appropriate for map; arc opacity=0.65; strokeWidth=0
+          on view; adaptive MAP_FILL token. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual encoding (width+color) makes high-volume corridors immediately
+          legible. Hub-and-spoke pattern clearly visible. Alternating curvature reduces
+          clutter.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct origin-destination flow map with curved arcs
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Origin/destination coordinates correctly mapped, flow determines
-          width and color
-      - id: SC-03
+        comment: Correct O-D flow map with geographic basemap and Bezier curved arcs.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Curved arcs, width proportional to flow, transparency, color gradient,
-          basemap, tooltips all present. Missing optional animation
-      - id: SC-04
-        name: Data Range
+        comment: Bezier arcs, width proportional to flow, transparency 0.65, color
+          gradient, country boundary basemap, interactive tooltips — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All cities and flows visible within the projection
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Lat/lon correctly mapped via longitude/latitude encoding; all 10
+          cities rendered; full flow range displayed.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Flow Volume legend correctly shows flow magnitude scale
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: flowmap-origin-destination · altair · pyplots.ai'
+        comment: Title matches required format exactly. Legend 'Flow Volume' with
+          correct range.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows flows from hub cities to other cities AND reverse flows. Good
-          variety in flow magnitudes.
+        comment: Hub cities with high-volume bidirectional flows AND peripheral cities
+          with lower flows. Full arc thickness range shown.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: European migration flows between major capitals is a realistic and
-          neutral scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Flow values 2,000-50,000 are plausible for city-to-city migration/travel
-          data
+        comment: European city migration flows — real coordinates, neutral domain,
+          comprehensible scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Hub flows 5k-50k, secondary 2k-20k — plausible annual migration figures
+          between European capitals.
     code_quality:
       score: 9
       max: 10
@@ -160,55 +190,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes, follows imports → data → plot → save pattern
+        comment: Flat imports→data→Bezier generation→plot layers→save. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only imports altair, numpy, pandas (all used)
+        comment: Only os, altair, numpy, pandas — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: false
+        comment: Five separate label alt.Chart objects for per-city offsets is repetitive;
+          a loop over an offset dict would be cleaner.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html - minor redundancy
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale_factor=4.0) and plot-{THEME}.html.
+          Current Altair API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses Altair declarative layer composition, geographic projections,
-          topo_feature for basemap, and interactive tooltips
+        comment: alt.topo_feature(), mark_geoshape(), project(), detail channel for
+          per-arc paths, order encoding, + layer composition — all idiomatic Altair.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: alt.topo_feature()+mark_geoshape() for TopoJSON basemap, detail channel
+          to split DataFrame into individual arc polylines, geographic projection
+          are Altair-distinctive. Bezier math done in numpy (not Altair-specific).
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
   - alpha-blending
-  - edge-highlighting
