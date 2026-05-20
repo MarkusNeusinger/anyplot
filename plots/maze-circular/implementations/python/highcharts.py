@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -155,7 +155,7 @@ chart.options.chart = {
     "width": 2400,
     "height": 2400,
     "backgroundColor": PAGE_BG,
-    "marginTop": 160,
+    "marginTop": 200,
     "marginBottom": 80,
 }
 
@@ -225,23 +225,33 @@ highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/highc
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Build HTML — START label placed via absolute div near entry opening
-entry_label_left_pct = (entry_x := cx + (outer_boundary_r + 0.07) * math.cos(entry_angle_center)) * 100
-entry_label_top_pct = (1 - (cy + (outer_boundary_r + 0.07) * math.sin(entry_angle_center))) * 100
+# Entry label coordinates for Highcharts SVG renderer
+entry_label_x = cx + (outer_boundary_r + 0.07) * math.cos(entry_angle_center)
+entry_label_y = cy + (outer_boundary_r + 0.07) * math.sin(entry_angle_center)
 
 html_str = chart.to_js_literal()
+# Use SVG renderer for innermost-ring highlight and START label — Highcharts-native features
+inner_ring_top_y = cy + center_radius + ring_width
+renderer_js = f"""document.addEventListener('DOMContentLoaded',function(){{
+var chart=Highcharts.charts[0],xAxis=chart.xAxis[0],yAxis=chart.yAxis[0];
+var cxPx=xAxis.toPixels({cx}),cyPx=yAxis.toPixels({cy});
+var innerR=Math.abs(cyPx-yAxis.toPixels({inner_ring_top_y:.4f}));
+chart.renderer.circle(cxPx,cyPx,innerR).attr({{fill:'rgba(0,158,115,0.10)',stroke:'none',zIndex:1}}).add();
+var sX=xAxis.toPixels({entry_label_x:.4f}),sY=yAxis.toPixels({entry_label_y:.4f});
+chart.renderer.text('START',sX,sY).css({{color:'{INK}',fontSize:'40px',fontWeight:'bold',fontFamily:'sans-serif'}}).attr({{align:'center',zIndex:10}}).add();
+}});"""
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; background:{PAGE_BG}; position:relative;">
+<body style="margin:0; background:{PAGE_BG};">
     <div id="container" style="width: 2400px; height: 2400px;"></div>
-    <div style="position:absolute; left:{entry_label_left_pct:.1f}%; top:{entry_label_top_pct:.1f}%;
-                transform:translate(-50%,-50%); font-size:40px; font-weight:bold;
-                color:{INK}; font-family:sans-serif;">START</div>
-    <script>{html_str}</script>
+    <script>
+{html_str}
+{renderer_js}
+    </script>
 </body>
 </html>"""
 
