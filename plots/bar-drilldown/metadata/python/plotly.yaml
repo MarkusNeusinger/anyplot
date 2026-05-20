@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: bar-drilldown
 created: '2026-01-16T17:18:44Z'
-updated: '2026-05-20T11:31:47Z'
+updated: '2026-05-20T11:45:43Z'
 generated_by: claude-sonnet
 workflow_run: 26158938199
 issue: 3783
@@ -12,46 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/plotly/plot-dark.html
-quality_score: 85
+quality_score: 89
 review:
   strengths:
-  - Correct use of Plotly animation frames + dropdown updatemenus — the idiomatic
-    approach for drilldown in a standalone script
-  - 'Full theme-adaptive chrome: all tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG,
-    GRID) applied consistently to dropdown, axis labels, tick labels, value text,
-    and bar edges'
-  - Smooth transitions (400ms frame, 250ms ease) give the chart a polished interactive
-    feel in the HTML output
-  - 'Okabe-Ito palette in correct order; first series correctly #009E73; frame-level
-    titles follow the required format'
+  - Full theme-adaptive chrome throughout both renders — backgrounds, text, grid,
+    dropdown all flip correctly between light (#FAF8F1) and dark (#1A1A17)
+  - 'Opacity storytelling: Q1–Q3 bars muted at 0.75 opacity, Q4 at 1.0, paired with
+    a Holiday Peak annotation — creates a clear visual focal point without annotations
+    on every bar'
+  - 'Frame-based drilldown via go.Frame + updatemenus animate method: title and breadcrumb
+    path update per frame, demonstrating Plotly-distinctive animation API'
+  - 'Internally consistent hierarchical data: monthly values sum exactly to quarterly
+    totals (Q1: 390+420+430=1240, Q2: 520+570+590=1680, Q3: 680+750+710=2140, Q4:
+    740+940+700=2380)'
+  - All font sizes explicitly set (title=16, axis=12, ticks=10, bar labels=12) and
+    proportional in both renders
   weaknesses:
-  - Q1 and Q2 have no monthly drill-down frames; clicking them in the dropdown just
-    shows the annual view — add go.Frame(name="q1", ...) and go.Frame(name="q2", ...)
-    with January/February/March and April/May/June monthly breakdowns
-  - 'No visual storytelling emphasis: Q4 is the holiday-season peak ($2.38M) but nothing
-    draws the eye to it — consider a subtle annotation or slightly distinct opacity
-    for the highest bar'
-  - Three bar_kwargs_* dicts repeat identical keys; refactor into a shared base dict
-    merged with per-level overrides
-  - '# noqa: E402 lint-suppression comment violates project style rules — restructure
-    import block so the noqa is unnecessary'
-  - Bottom margin (margin.b=110) creates excess whitespace below the footer annotation
-    — reduce to ~70-80 to tighten the canvas
+  - 'SC-02: Drilldown is triggered by dropdown menu, not by clicking directly on a
+    bar column — spec says ''Click on a column to drill into its sub-level breakdown''.
+    The dropdown is a valid Plotly-native fallback (click callbacks without Dash require
+    raw JS), but the spec intent is not fully met'
+  - 'Color identity not maintained across drill levels: all monthly detail views reuse
+    OKABE_ITO[:3], so January and April both render as #009E73 green, losing the cross-level
+    identity that the spec requests (''maintain consistent color mapping across drill
+    levels when possible'')'
+  - 'CQ-04: Five nearly-identical bar_kwargs_qX dicts and five frames are verbose;
+    a short loop building these would cut ~60 lines without sacrificing the flat KISS
+    structure'
+  - 'DE-01/DE-02: Design is above defaults (opacity differential, styled dropdown,
+    bar edges) but could push further — e.g., stronger typographic hierarchy between
+    title and axis labels, or a more prominent visual entry cue on the dropdown'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "2024 Retail Sales · bar-drilldown · python · plotly · anyplot.ai" centered, dark ink (#1A1A17); axis labels "Quarter" and "Revenue ($K)" in dark ink; tick labels in INK_SOFT (#4A4A44); dropdown control with FFFDF6 fill and dark border/text — all readable
-      Data: 4 bars in Okabe-Ito order: Q1 #009E73 (green), Q2 #D55E00 (orange), Q3 #0072B2 (blue), Q4 #CC79A7 (pink); value labels $1.24M/$1.68M/$2.14M/$2.38M above bars in dark ink; subtle y-axis grid lines; footer annotation in INK_SOFT
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct light surface, not pure white.
+      Chrome: Title "2024 Retail Sales · bar-drilldown · python · plotly · anyplot.ai" in dark ink, spans ~75% of width, fully readable. Axis labels "Quarter" (x) and "Revenue ($K)" (y) in dark text at proportional size. Tick labels (Q1–Q4, 0–3000) in INK_SOFT grey, clearly readable. Footer instruction text below x-axis in muted grey. Dropdown button "▶ 2024 Annual — All Quarters ▼" top-left with elevated background.
+      Data: Four bars in Okabe-Ito order — Q1 green (#009E73), Q2 vermillion (#D55E00), Q3 blue (#0072B2), Q4 pink (#CC79A7). Q1–Q3 rendered at 0.75 opacity (subtle muting), Q4 at full opacity. Value labels ($1.24M, $1.68M, $2.14M, $2.38M) in dark text above bars. "★ Holiday Peak" annotation in Q4 pink at top-right. Subtle horizontal grid lines on y-axis only.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title in light cream (#F0EFE8); axis labels and tick labels in light colors (INK/INK_SOFT tokens flipped); dropdown control with #242420 fill and light border/text — all readable; no dark-on-dark failures detected
-      Data: Bar colors identical to light render — #009E73, #D55E00, #0072B2, #CC79A7 (Okabe-Ito positions 1–4); value labels in #F0EFE8 (light cream); subtle light horizontal grid lines visible
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title and all axis labels render in light cream (#F0EFE8), clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0). Footer text in muted tone. Dropdown button uses elevated dark background (#242420) with light text — readable. No dark-on-dark failures detected.
+      Data: Bar colors are identical to light render — Q1 #009E73, Q2 #D55E00, Q3 #0072B2, Q4 #CC79A7. Value label text renders in light cream above bars. "★ Holiday Peak" annotation in Q4 pink. Horizontal grid lines subtle on dark background. Bar edges (PAGE_BG = #1A1A17) create a clean separator between bars.
+      Legibility verdict: PASS — all text readable against dark background, data colors identical to light render, chrome flips correctly.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -59,71 +64,77 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; INK token applied to value textfont
-          enabling correct dark-mode flip; proportions balanced
+        comment: 'All font sizes explicitly set: title=16, axis=12, ticks=10, bar
+          labels=12. Proportional and readable in both themes at full and mobile scale.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps in either render
+        comment: No overlapping elements. Bar labels above bars, Holiday Peak annotation
+          clear of labels, footer below axis.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 4 bars clearly visible; good proportions
+        comment: Four large bars clearly visible. Value labels outside bars legible.
+          Opacity differential (0.75 vs 1.0) adds emphasis without obscuring.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito is CVD-safe; good contrast in both themes
+        comment: Okabe-Ito palette is CVD-safe. Good luminance contrast between bars
+          and background in both themes.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good layout but margin.b=110 creates excess whitespace below footer
-          annotation
+        comment: Good proportions. Margins t=80,b=80,l=80,r=40. Dropdown positioned
+          cleanly at top-left. Footer annotation adds breathing room below axis.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Quarter and Revenue ($K) — descriptive with units
+        comment: 'Y-axis: ''Revenue ($K)'' with units. X-axis: ''Quarter''. Drill
+          levels add breadcrumb path to x-label.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order 1-4; correct theme backgrounds
-          and chrome'
+        comment: 'First series #009E73. Multi-series follows Okabe-Ito order. Backgrounds
+          #FAF8F1 light / #1A1A17 dark. Chrome flips correctly in both renders.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured following style guide but does not rise above configured
-          defaults
+        comment: 'Above well-configured default: opacity differential for emphasis,
+          styled dropdown with Unicode arrows, bar edges matching background. Not
+          quite publication-ready polish.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: x-axis grid disabled, subtle y-grid, bar edge styling; L-shaped axis
-          frame achieved
+        comment: Y-axis grid only (x-axis hidden), no legend, bar edge separator,
+          showlegend=False. Good refinement but further chrome removal possible.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Q4 holiday peak visible from bar heights but not visually emphasized;
-          no hierarchy or focal point
+        passed: true
+        comment: 'Clear visual hierarchy: Q4 emphasized via full opacity + Holiday
+          Peak annotation. Breadcrumb in axis title per drill level. Data shows growing
+          retail trend with holiday peak.'
     spec_compliance:
       score: 14
       max: 15
@@ -133,53 +144,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Bar chart with hierarchical drilldown via animation frames and dropdown
-          — correct
+        comment: Correct column/bar chart with hierarchical drilldown via animated
+          frames. Two-level hierarchy (year → quarter → month) fully implemented.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: Breadcrumbs in axis title, animation, value labels present; but Q1
-          and Q2 have no monthly drill-down frames
+        passed: true
+        comment: 'Value labels ✓, animated transitions ✓, breadcrumb in axis title
+          ✓, back navigation via dropdown ✓. Missing: direct click-on-bar trigger
+          (uses dropdown instead). Color mapping not maintained across levels.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=quarters, Y=revenue in $K; all data visible
+        comment: X=quarters/months, Y=revenue. All data visible across all frames.
+          Axes correctly labeled.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title follows required format with descriptive prefix; no legend
-          needed for single-level view
+        comment: 'Title: ''2024 Retail Sales · bar-drilldown · python · plotly · anyplot.ai''
+          follows {Descriptive} · {spec-id} · {lang} · {lib} · anyplot.ai format.
+          No legend (showlegend=False) — appropriate for categorical bar chart.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 2-level hierarchy shown; only Q3 and Q4 have monthly detail; Q1 and
-          Q2 not drillable
+        comment: Shows all 4 quarters at top level and all 3 months per quarter at
+          detail level. Demonstrates drilldown navigation. Values vary meaningfully
+          across categories.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 2024 Retail Sales with year/quarter/month hierarchy — real, neutral
-          business scenario
+        comment: 2024 retail sales with quarterly/monthly breakdown. Q4 holiday peak
+          realistic. Neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Values internally consistent; Q4 peak realistic; November > December
-          (Black Friday) plausible
+        comment: Monthly values sum exactly to quarterly totals. Q4 Nov=$940K plausibly
+          highest (holiday shopping). Annual ~$7.44M plausible for mid-size retailer.
+          Internally consistent.
     code_quality:
       score: 9
       max: 10
@@ -189,60 +205,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear imports → tokens → data → plot → save; no functions or classes
+        comment: Flat imports → data → plot → save structure. sys.path manipulation
+          is a standard monorepo best practice. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic
+        comment: Hardcoded deterministic data — no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, sys, plotly.graph_objects; sys.path manipulation is justified
-          workaround
+        comment: Only importlib, os, sys used — all necessary.
       - id: CQ-04
         name: Code Elegance
         score: 1
         max: 2
-        passed: false
-        comment: 'Three near-identical bar_kwargs_* dicts with repeated keys; # noqa:
-          E402 disable comment violates project rules'
+        passed: true
+        comment: Shared _bar_chrome dict with ** unpacking is clean. However 5 nearly-identical
+          bar_kwargs_qX dicts and 5 nearly-identical frames repeat ~60 lines that
+          a short loop would eliminate.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct theme suffix.
+          Current Plotly API.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: fig.frames + updatemenus with method=animate is the idiomatic plotly
-          drilldown pattern
+        comment: Uses go.Figure, go.Bar, go.Frame idiomatically. updatemenus with
+          animate method is the correct Plotly GO pattern for frame-based navigation.
+          Layout per-frame updates are correct.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Animation frames + dropdown is genuinely Plotly-distinctive; write_html
-          with cdn best practice
-  verdict: REJECTED
+        comment: go.Frame with named frames + updatemenus animate method is distinctly
+          Plotly — enables smooth animated transitions with per-frame layout/axis/title
+          updates. Could not be replicated in matplotlib or seaborn.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
   - annotations
+  - html-export
   - hover-tooltips
   patterns: []
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting
-  - grid-styling
