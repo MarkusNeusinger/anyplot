@@ -2,9 +2,9 @@ library: altair
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:46:05Z'
-updated: '2026-05-20T00:02:16Z'
+updated: '2026-05-20T14:52:07Z'
 generated_by: claude-sonnet
-workflow_run: 26132065805
+workflow_run: 26168434670
 issue: 3826
 language_version: 3.13.13
 library_version: 6.1.0
@@ -12,86 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/altair/plot-dark.html
-quality_score: 91
+quality_score: 84
 review:
   strengths:
-  - 'Full spec compliance: log-log axes, Basquin fit, three reference lines, three
-    region annotations all correctly implemented'
-  - Excellent Okabe-Ito palette discipline — data/fit use position 1 (#009E73), reference
-    lines use positions 2–4 in canonical order
-  - Theme-adaptive chrome correctly implemented through all configure_* methods —
-    dark render passes fully
-  - Altair layer composition used idiomatically; HTML export provides interactive
-    tooltip functionality
-  - Realistic steel fatigue data with physically plausible Basquin parameters
+  - 'Excellent spec compliance: all required S-N curve features present — log-log
+    axes, scatter with natural scatter, Basquin power-law fit line, UTS/YS/EL reference
+    lines, three fatigue region labels, and infinite-life band'
+  - 'Correct Okabe-Ito palette usage: brand green #009E73 for primary data and fit
+    line, followed by Okabe-Ito positions 2-4 for reference lines (orange, blue, pink)'
+  - 'Perfect theme-adaptive chrome: both light (#FAF8F1) and dark (#1A1A17) renders
+    use correct backgrounds, all chrome tokens adapt correctly, no dark-on-dark or
+    light-on-light failures'
+  - 'Realistic domain context: medium-carbon steel fatigue data with physically plausible
+    Basquin coefficients (A=800, b=-0.12), realistic stress range 150–450 MPa, realistic
+    material properties (UTS=520, YS=380, EL=150 MPa)'
+  - 'Good data storytelling: three fatigue regions clearly labeled, infinite-life
+    safe zone highlighted with subtle band, reference lines guide the eye to critical
+    material limits'
+  - Clean reproducible code with np.random.seed(42), inline PIL crop/pad normalization,
+    and correct plot-{THEME}.png + .html output
   weaknesses:
-  - Region annotation text (fontSize=10, INK_MUTED color) is slightly small and muted
-    — may be hard to read at mobile scale (~400 px width)
-  - 'DE-01 could reach 6+ with minor additions: e.g., removing visible axis domain
-    lines, or adding a subtle area fill between EL and YS to highlight the infinite-life
-    design zone'
+  - 'Axis titles cropped by PIL center crop: ''Stress Amplitude (MPa)'' (Y-axis) and
+    ''Cycles to Failure (N)'' (X-axis) are set in alt.X/alt.Y encoding but placed
+    outside the 800×450 view area by vl-convert; the center crop to 3200×1800 removes
+    them. Fix: add these as mark_text annotations inside the view, or accept that
+    region labels and tick values provide sufficient context and remove the encoding
+    titles to stop them from inflating image dimensions unnecessarily.'
+  - 'DE-01 slightly below publication-ready: design is strong but no explicit spine
+    removal code (relying on altair defaults for L-shaped axes). Adding configure_axis(domain=False)
+    for top/right axes would improve visual refinement.'
+  - mark_text used for chart title (y=alt.value(8)) as a workaround for the PIL crop
+    — pragmatic but not idiomatic altair; the proper alt.Title approach with fine-tuned
+    padding would be more aligned with library conventions.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title "sn-curve-basic · python · altair · anyplot.ai" bold and centered (~65-70% width). Axis labels "Stress Amplitude (MPa)" and "Cycles to Failure (N)" clearly readable. Tick labels on log-scale axes legible. Italic muted-gray region annotations ("Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life") visible near top of chart. Legend box with elevated background in upper right.
-      Data: ~45 green (#009E73) scatter markers (opacity=0.75) with Basquin power-law fit line. Three dashed reference lines: orange (#D55E00) UTS, blue (#0072B2) YS, reddish-purple (#CC79A7) EL.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, fills entire canvas.
+      Chrome: Chart title "sn-curve-basic · python · altair · anyplot.ai" visible as mark_text at top of view (fontSize=13, bold, dark ink). Y-axis tick labels (100–700 MPa) and X-axis tick labels (100 to 100,000,000, log scale) are readable in dark ink. Y-axis title "Stress Amplitude (MPa)" and X-axis title "Cycles to Failure (N)" are NOT visible — they are placed outside the view area by vl-convert and removed by the PIL center crop. Region labels ("Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life") visible in soft gray italic. Legend "Material Properties" with three colored entries visible in bottom-left corner.
+      Data: Green (#009E73) filled scatter markers (size=180, opacity=0.75) — ~40 points across stress levels 150–450 MPa. Green Basquin fit line (strokeWidth=2.5, opacity=0.85) runs diagonally through data. Orange dashed rule (UTS: 520 MPa), blue dashed rule (YS: 380 MPa), pink dashed rule (EL: 150 MPa) as horizontal reference lines. Subtle pink band marks the infinite-life zone below EL.
+      Legibility verdict: PASS for visible elements. FAIL for axis titles (cropped by PIL center crop — not visible in rendered output).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title, axis labels, and tick labels all render in light ink tokens (#F0EFE8/#B8B7B0), clearly visible against dark surface. Legend box uses dark elevated background (#242420). Italic region annotations muted but readable. Grid subtle. No dark-on-dark failures.
-      Data: Colors identical to light render — #009E73 scatter/fit, #D55E00/#0072B2/#CC79A7 reference lines.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, fills entire canvas.
+      Chrome: Same title visible at top in light ink (#F0EFE8). Tick labels readable in silver-gray (#B8B7B0) against dark background. No dark-on-dark failures observed. Region labels visible in light gray. Legend box has slightly elevated dark background (#242420) with light text. Same axis title cropping issue as light render.
+      Data: Data colors are IDENTICAL to light render — green (#009E73) scatter and fit line, orange UTS rule, blue YS rule, pink EL rule. The infinite-life band is the same pink-tinted color at 10% opacity. Color identity between themes confirms correct implementation.
+      Legibility verdict: PASS for visible elements. No dark-on-dark text failures. Same axis title crop issue as light render.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
         passed: true
-        comment: All font sizes explicitly set; region annotations at fontSize=10
-          with INK_MUTED slightly small for mobile
+        comment: Font sizes explicitly set (fontSize=10/12/13); all visible text readable
+          in both themes; axis titles 'Stress Amplitude (MPa)' and 'Cycles to Failure
+          (N)' are cropped by PIL center crop and not visible in rendered output
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No text overlaps with data or other text elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ~45 points at size=180 opacity=0.75; fit and reference lines all
-          clear
+        comment: Scatter markers size=180 are well-sized for ~40 data points; Basquin
+          fit line strokeWidth=2.5 clearly visible; reference lines strokeWidth=3
+          prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito CVD-safe; color+dash redundant signals
+        comment: Okabe-Ito palette is CVD-safe; good contrast between all elements
+          on both backgrounds
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 2
         max: 4
         passed: true
-        comment: Good canvas utilization, balanced margins, legend well-anchored
+        comment: 'Canvas gate passed (3200x1800); plot fills canvas well; minor issue:
+          axis titles outside view area are cropped by PIL normalization'
       - id: VQ-06
         name: Axis Labels & Title
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Both axes have descriptive labels with units
+        passed: false
+        comment: Chart title visible and correctly formatted; axis titles with units
+          are in the code but NOT visible in rendered output due to PIL center crop
+          removing the axis label areas outside the view
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: '#009E73 first series; Okabe-Ito pos 2-4 for reference lines; correct
-          backgrounds; full theme-adaptive chrome'
+        comment: 'First series (data + fit) uses brand green #009E73; reference lines
+          follow Okabe-Ito positions 2-4; backgrounds #FAF8F1 (light) and #1A1A17
+          (dark) correct; data colors identical across themes'
     design_excellence:
       score: 13
       max: 20
@@ -101,22 +122,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Deliberate color-role assignment, styled legend, explicit dash pattern,
-          italic muted region labels. Above default but not publication-level.
+        comment: 'Strong design: multiple coordinated visual layers, infinite-life
+          band, region text, reference lines — above a well-configured default but
+          not quite publication-ready'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid at 0.10 opacity, chart border removed, dashed reference lines
-          with explicit pattern. Well-refined but not fully polished.
+        comment: Grid adjusted to 10% opacity, view border removed (strokeOpacity=0),
+          L-shaped axes; some refinement clearly visible
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear visual hierarchy: scatter → Basquin fit → reference lines
-          → zone labels. Effectively communicates engineering narrative.'
+        comment: 'Clear visual hierarchy: three fatigue life regions labeled, safe
+          operating zone highlighted, reference lines mark critical material limits;
+          viewer immediately understands fatigue life behavior'
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +149,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: S-N curve on log-log scales with scatter + power-law fit
+        comment: 'Correct S-N curve: scatter on log-log axes with power-law fit line'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log scales, three reference lines, Basquin fit, three region annotations
-          all present
+        comment: Log-log axes, scatter with multiple samples per stress level, Basquin
+          fit, UTS/YS/EL reference lines, three region labels, infinite-life band
+          — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cycles on X, Stress Amplitude on Y, all data visible
+        comment: X=cycles (log), Y=stress amplitude (log); all data visible
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match spec material properties
+        comment: Title 'sn-curve-basic · python · altair · anyplot.ai' correct; legend
+          'Material Properties' with UTS/YS/EL labels present
     data_quality:
       score: 15
       max: 15
@@ -155,21 +180,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows scatter with variability, Basquin fit, three distinct fatigue
-          regions, three material property lines
+        comment: Shows scatter with natural variation (3-5 samples/level), three fatigue
+          regions, reference lines, infinite-life zone — all aspects covered
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Medium-carbon steel fatigue testing scenario; no controversial content
+        comment: Medium-carbon steel fatigue data; physically plausible Basquin coefficients
+          (A=800, b=-0.12); realistic stress range 150-450 MPa; neutral engineering
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: A=800 MPa/b=-0.12 physically plausible; stress 160-450 MPa; EL=150/YS=380/UTS=520
-          MPa factually reasonable
+        comment: UTS=520, YS=380, EL=150 MPa — consistent, physically correct for
+          medium-carbon steel; cycle range 100 to 10^8 appropriate for S-N curves
     code_quality:
       score: 10
       max: 10
@@ -179,52 +206,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Layers → Save. No functions/classes.
+        comment: Linear Imports → Data → Plot layers → Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, altair, numpy, pandas — all used
+        comment: os, altair, numpy, pandas, PIL.Image — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Altair; no fake functionality
+        comment: Clean Pythonic code; appropriate complexity; no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current altair
+          6.x API
     library_mastery:
-      score: 9
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
-        max: 5
-        passed: true
-        comment: Expert use of layer composition, declarative encoding with types
-          (Q/N), configure_* methods, log scale with explicit domain
-      - id: LM-02
-        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Layer composition, custom color scale with explicit domain/range,
-          HTML+PNG dual export, tooltips in interactive output. No advanced selections/bindings.
+        comment: Layer composition with + operator, declarative encoding with typed
+          fields (Q/N), configure_* theming blocks — idiomatic; mark_text for title
+          at absolute pixel coords is a pragmatic workaround rather than idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Layer composition (+), mark_rect band with data encoding, alt.value()
+          pixel positioning — uses several altair-specific features
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - annotations
@@ -232,7 +262,7 @@ impl_tags:
   - html-export
   patterns:
   - data-generation
-  dataprep:
-  - regression
+  - iteration-over-groups
+  dataprep: []
   styling:
   - alpha-blending

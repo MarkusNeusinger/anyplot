@@ -1,7 +1,7 @@
 """ anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-20
+Quality: 84/100 | Updated: 2026-05-20
 """
 
 import os
@@ -9,6 +9,7 @@ import os
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
 # Theme tokens
@@ -17,7 +18,6 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Okabe-Ito palette
 BRAND = "#009E73"  # pos 1 — fatigue test data & Basquin fit
@@ -48,18 +48,16 @@ fit_stress = A * fit_cycles**b
 fit_df = pd.DataFrame({"cycles": fit_cycles, "stress": fit_stress})
 
 # Material property reference lines
-ref_df = pd.DataFrame(
-    {
-        "property": ["Ultimate Strength: 520 MPa", "Yield Strength: 380 MPa", "Endurance Limit: 150 MPa"],
-        "stress": [520, 380, 150],
-    }
-)
+ref_df = pd.DataFrame({"property": ["UTS: 520 MPa", "YS: 380 MPa", "EL: 150 MPa"], "stress": [520, 380, 150]})
 
-# Region text labels — positioned above the data in each fatigue zone
+# Infinite-life design zone — subtle band below endurance limit highlights the safe operating region
+band_df = pd.DataFrame({"y1": [100], "y2": [150]})
+
+# Region text labels — top two above UTS line, "Infinite Life" inside the shaded zone
 region_df = pd.DataFrame(
     {
-        "cycles": [700.0, 100000.0, 8000000.0],
-        "stress": [650.0, 650.0, 650.0],
+        "cycles": [700.0, 150000.0, 800000.0],
+        "stress": [580.0, 580.0, 125.0],
         "label": ["Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life"],
     }
 )
@@ -69,6 +67,9 @@ x_scale = alt.Scale(type="log", domain=[100, 1e8])
 y_scale = alt.Scale(type="log", domain=[100, 750])
 
 TITLE = "sn-curve-basic · python · altair · anyplot.ai"
+
+# Infinite-life zone fill (band below endurance limit)
+band = alt.Chart(band_df).mark_rect(opacity=0.10, color=C_EL).encode(y=alt.Y("y1:Q", scale=y_scale), y2=alt.Y2("y2:Q"))
 
 # Scatter: individual test specimens
 points = (
@@ -96,11 +97,10 @@ ref_rules = (
         y=alt.Y("stress:Q", scale=y_scale),
         color=alt.Color(
             "property:N",
-            scale=alt.Scale(
-                domain=["Ultimate Strength: 520 MPa", "Yield Strength: 380 MPa", "Endurance Limit: 150 MPa"],
-                range=[C_UTS, C_YS, C_EL],
+            scale=alt.Scale(domain=["UTS: 520 MPa", "YS: 380 MPa", "EL: 150 MPa"], range=[C_UTS, C_YS, C_EL]),
+            legend=alt.Legend(
+                title="Material Properties", titleFontSize=12, labelFontSize=10, labelLimit=200, orient="bottom-left"
             ),
-            legend=alt.Legend(title="Material Properties", titleFontSize=12, labelFontSize=10, labelLimit=280),
         ),
     )
 )
@@ -108,15 +108,22 @@ ref_rules = (
 # Region text annotations — label the three fatigue life zones
 region_labels = (
     alt.Chart(region_df)
-    .mark_text(fontSize=10, fontStyle="italic", align="left", baseline="top", color=INK_MUTED)
+    .mark_text(fontSize=12, fontStyle="italic", align="left", baseline="top", color=INK_SOFT)
     .encode(x=alt.X("cycles:Q", scale=x_scale), y=alt.Y("stress:Q", scale=y_scale), text="label:N")
+)
+
+# Title as in-view mark_text — keeps it inside the 800×450 bounds so PIL center-crop cannot remove it
+title_layer = (
+    alt.Chart(pd.DataFrame({"_": [0]}))
+    .mark_text(text=TITLE, fontSize=13, fontWeight="bold", color=INK, align="center", baseline="top")
+    .encode(x=alt.value(400), y=alt.value(8))
 )
 
 # Compose all layers
 chart = (
-    (points + fit_line + ref_rules + region_labels)
-    .properties(width=800, height=450, background=PAGE_BG, title=alt.Title(text=TITLE, fontSize=16, anchor="middle"))
-    .configure_view(fill=PAGE_BG, strokeOpacity=0)
+    (band + points + fit_line + ref_rules + region_labels + title_layer)
+    .properties(width=800, height=450, background=PAGE_BG, padding={"left": 0, "right": 0, "top": 0, "bottom": 0})
+    .configure_view(fill=PAGE_BG, strokeOpacity=0, continuousWidth=800, continuousHeight=450)
     .configure_axis(
         domainColor=INK_SOFT,
         tickColor=INK_SOFT,
@@ -140,4 +147,20 @@ chart = (
 
 # Save PNG (3200×1800) and interactive HTML
 chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# Normalize to exact 3200×1800 — vl-convert pads outside width/height
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    _l = max((_w - TW) // 2, 0)
+    _t = max((_h - TH) // 2, 0)
+    _img = _img.crop((_l, _t, _l + min(_w, TW), _t + min(_h, TH)))
+    _w, _h = _img.size
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _img = _canvas
+_img.save(f"plot-{THEME}.png")
+
 chart.save(f"plot-{THEME}.html")
