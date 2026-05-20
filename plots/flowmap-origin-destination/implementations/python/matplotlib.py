@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-20
@@ -151,16 +151,16 @@ for origin_name, dest_name, flow in flows:
     color = plt.cm.Blues(0.4 + normalized * 0.5)
     ax.plot(x, y, color=color, linewidth=line_width, alpha=alpha, zorder=3, solid_capstyle="round")
 
-# Draw port markers
+# Draw port markers — brand green for single categorical series (Okabe-Ito position 1)
 for port_name, (lon, lat) in ports.items():
-    ax.scatter(lon, lat, s=60, c="#0072B2", edgecolors=PAGE_BG, linewidths=1.2, zorder=4)
+    ax.scatter(lon, lat, s=60, c="#009E73", edgecolors=PAGE_BG, linewidths=1.2, zorder=4)
     lon_off, lat_off = label_offsets.get(port_name, (4, 3))
     ax.annotate(
         port_name,
         (lon, lat),
         xytext=(lon_off, lat_off),
         textcoords="offset points",
-        fontsize=6,
+        fontsize=7,
         fontweight="bold",
         color=INK,
         zorder=5,
@@ -179,9 +179,9 @@ for lf, label in legend_levels:
 leg = ax.legend(
     handles=legend_handles,
     loc="lower left",
-    fontsize=6,
+    fontsize=8,
     title="Trade Volume",
-    title_fontsize=7,
+    title_fontsize=9,
     framealpha=0.9,
     facecolor=ELEVATED_BG,
     edgecolor=INK_SOFT,
@@ -190,15 +190,15 @@ plt.setp(leg.get_title(), color=INK)
 plt.setp(leg.get_texts(), color=INK_SOFT)
 
 # Style
-ax.set_xlabel("Longitude", fontsize=8, color=INK)
-ax.set_ylabel("Latitude", fontsize=8, color=INK)
+ax.set_xlabel("Longitude", fontsize=10, color=INK)
+ax.set_ylabel("Latitude", fontsize=10, color=INK)
 ax.set_title(
     "Global Port Trade Routes · flowmap-origin-destination · python · matplotlib · anyplot.ai",
-    fontsize=8,
+    fontsize=10,
     fontweight="medium",
     color=INK,
 )
-ax.tick_params(axis="both", labelsize=6, colors=INK_SOFT)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 ax.spines["top"].set_visible(False)
