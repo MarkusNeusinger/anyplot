@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-20
@@ -41,8 +41,24 @@ counts, bin_edges = np.histogram(returns, bins=n_bins, density=True)
 lower_tail = mean_return - 2 * std_return
 upper_tail = mean_return + 2 * std_return
 
-x_curve = np.linspace(returns.min() - 0.5, returns.max() + 0.5, 150)
+# Histogram bars: pygal.Histogram native format (value, xmin, xmax)
+normal_bars = []
+tail_bars = []
+for i, count in enumerate(counts):
+    left = float(bin_edges[i])
+    right = float(bin_edges[i + 1])
+    center = (left + right) / 2
+    height = float(count)
+    bar = (height, left, right)
+    if center < lower_tail or center > upper_tail:
+        tail_bars.append(bar)
+    else:
+        normal_bars.append(bar)
+
+# Normal distribution curve — 300 dense adjacent thin bins approximate a smooth overlay
+x_curve = np.linspace(float(bin_edges[0]), float(bin_edges[-1]), 300)
 normal_pdf = (1 / (std_return * np.sqrt(2 * np.pi))) * np.exp(-0.5 * ((x_curve - mean_return) / std_return) ** 2)
+curve_data = [(float(normal_pdf[i]), float(x_curve[i]), float(x_curve[i + 1])) for i in range(len(x_curve) - 1)]
 
 # Style
 custom_style = Style(
@@ -64,8 +80,7 @@ custom_style = Style(
 
 stats_text = f"Mean: {mean_return:.3f}% | Std: {std_return:.3f}% | Skew: {skewness:.2f} | Kurt: {kurtosis:.2f}"
 
-# Plot — XY chart used to overlay histogram bars and normal curve on the same axes
-chart = pygal.XY(
+chart = pygal.Histogram(
     width=3200,
     height=1800,
     explicit_size=True,
@@ -77,36 +92,17 @@ chart = pygal.XY(
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
     legend_box_size=32,
-    show_y_guides=True,
+    show_y_guides=False,
     show_x_guides=False,
     margin_bottom=200,
     margin_left=120,
     margin_right=80,
     print_values=False,
-    show_dots=False,
-    stroke=True,
-    fill=True,
 )
 
-# Build histogram bars as box polygons: (left,0)→(left,h)→(right,h)→(right,0)
-normal_bars_xy = []
-tail_bars_xy = []
-
-for i, count in enumerate(counts):
-    left = float(bin_edges[i])
-    right = float(bin_edges[i + 1])
-    center = (left + right) / 2
-    height = float(count)
-    box = [(left, 0), (left, height), (right, height), (right, 0)]
-    if center < lower_tail or center > upper_tail:
-        tail_bars_xy.extend(box)
-    else:
-        normal_bars_xy.extend(box)
-
-chart.add("Returns (within 2σ)", normal_bars_xy, fill=True, stroke_style={"width": 2})
-chart.add("Tails (beyond ±2σ)", tail_bars_xy, fill=True, stroke_style={"width": 2})
-curve_data = [(float(x), float(y)) for x, y in zip(x_curve, normal_pdf, strict=True)]
-chart.add("Normal Distribution", curve_data, fill=False, stroke_style={"width": 6})
+chart.add("Returns (within 2σ)", normal_bars)
+chart.add("Tails (beyond ±2σ)", tail_bars)
+chart.add("Normal Distribution", curve_data)
 
 # Save
 with open(f"plot-{THEME}.html", "wb") as f:
