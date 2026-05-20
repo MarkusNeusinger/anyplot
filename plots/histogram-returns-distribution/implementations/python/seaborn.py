@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 histogram-returns-distribution: Returns Distribution Histogram
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-20
@@ -9,6 +9,7 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib.patches import Patch
 from scipy import stats
 
 
@@ -37,7 +38,6 @@ sns.set_theme(
     },
 )
 
-# Synthetic daily returns: 2 years for a smoother, more representative distribution
 np.random.seed(42)
 n_days = 504
 daily_returns = np.random.normal(loc=0.05, scale=1.5, size=n_days)  # % units
@@ -53,35 +53,39 @@ upper_tail = mean_ret + 2 * std_ret
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
 
 bins = np.linspace(daily_returns.min() - 0.1, daily_returns.max() + 0.1, 32)
-mask_center = (daily_returns >= lower_tail) & (daily_returns <= upper_tail)
 
-sns.histplot(
-    daily_returns[mask_center], bins=bins, stat="density", color=OKABE_ITO[0], alpha=0.7, ax=ax, label="Returns (±2σ)"
-)
-sns.histplot(
-    daily_returns[~mask_center],
-    bins=bins,
-    stat="density",
-    color=OKABE_ITO[1],
-    alpha=0.85,
-    ax=ax,
-    label="Tail regions (>2σ)",
-)
+# Single histplot on the full dataset so all bars share the same density normalization;
+# recolor tail-region bars afterward (two-call approach normalizes each subset independently)
+sns.histplot(daily_returns, bins=bins, stat="density", color=OKABE_ITO[0], alpha=0.7, ax=ax)
+for patch in ax.patches:
+    bin_center = patch.get_x() + patch.get_width() / 2
+    if bin_center < lower_tail or bin_center > upper_tail:
+        patch.set_facecolor(OKABE_ITO[1])
+        patch.set_alpha(0.85)
 
 # Empirical KDE via seaborn (seaborn-native feature for distribution comparison)
-sns.kdeplot(daily_returns, ax=ax, color=OKABE_ITO[0], linewidth=1.5, linestyle=":", alpha=0.8, label="Empirical KDE")
+sns.kdeplot(daily_returns, ax=ax, color=OKABE_ITO[0], linewidth=1.5, linestyle=":", alpha=0.8)
+kde_line = ax.lines[-1]
 
 # Normal distribution curve fitted to the data
 x_range = np.linspace(daily_returns.min() - 0.5, daily_returns.max() + 0.5, 300)
 normal_pdf = stats.norm.pdf(x_range, mean_ret, std_ret)
-ax.plot(x_range, normal_pdf, color=OKABE_ITO[2], linewidth=2.0, label="Normal fit")
+ax.plot(x_range, normal_pdf, color=OKABE_ITO[2], linewidth=2.0)
+normal_line = ax.lines[-1]
 
 # Vertical dashed lines at ±2σ boundaries
 ax.axvline(lower_tail, color=INK_SOFT, linestyle="--", linewidth=1.0, alpha=0.7)
 ax.axvline(upper_tail, color=INK_SOFT, linestyle="--", linewidth=1.0, alpha=0.7)
 
-# Statistics text box — upper right, theme-adaptive
-stats_text = f"Mean: {mean_ret:.3f}%\nStd Dev: {std_ret:.3f}%\nSkewness: {skewness:.3f}\nKurtosis: {kurtosis:.3f}"
+# Statistics text box — header with separator for visual hierarchy
+stats_text = (
+    f"Statistics\n"
+    f"{'─' * 18}\n"
+    f"Mean: {mean_ret:.3f}%\n"
+    f"Std Dev: {std_ret:.3f}%\n"
+    f"Skewness: {skewness:.3f}\n"
+    f"Kurtosis: {kurtosis:.3f}"
+)
 ax.text(
     0.975,
     0.97,
@@ -101,8 +105,12 @@ ax.tick_params(axis="both", labelsize=8)
 ax.spines["top"].set_visible(False)
 ax.spines["right"].set_visible(False)
 
-# Legend at lower left — below the tail bars where density is near zero
-ax.legend(fontsize=8, loc="lower left")
+# Legend: histogram bars first (primary data), then analytical curves; no frame
+center_patch = Patch(facecolor=OKABE_ITO[0], alpha=0.7, label="Returns (±2σ)")
+tail_patch = Patch(facecolor=OKABE_ITO[1], alpha=0.7, label="Tail regions (>2σ)")
+kde_line.set_label("Empirical KDE")
+normal_line.set_label("Normal fit")
+ax.legend(handles=[center_patch, tail_patch, kde_line, normal_line], fontsize=8, loc="lower left", frameon=False)
 
 ax.yaxis.grid(True, alpha=0.12, linewidth=0.5)
 ax.set_axisbelow(True)
