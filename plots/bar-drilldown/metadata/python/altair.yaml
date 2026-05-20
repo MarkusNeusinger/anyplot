@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: bar-drilldown
 created: '2026-01-16T17:16:59Z'
-updated: '2026-05-20T11:37:57Z'
+updated: '2026-05-20T11:46:11Z'
 generated_by: claude-sonnet
 workflow_run: 26159133310
 issue: 3783
@@ -12,94 +12,95 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/altair/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Perfect palette compliance: #009E73 first, full Okabe-Ito order, theme-adaptive
-    chrome in both renders'
-  - 'Excellent data hierarchy: children sum exactly to parents, three full levels
-    of Region → Country → City with 4 root nodes and 3 children each'
-  - Dollar-formatted value labels ($520, $450, $380, $180) above each bar enable precise
-    comparison at a glance
-  - Bars sorted descending by value — natural visual ranking hierarchy immediately
-    communicates the story
-  - HTML output includes working breadcrumb navigation with clickable path items and
-    full drill-up support
-  - All font sizes explicitly set; both light and dark renders pass legibility checks
-    with no dark-on-dark failures
+  - 'Correct Okabe-Ito palette (first series #009E73) with proper order through all
+    4 regions; both light and dark themes fully legible'
+  - 'Complete drilldown functionality in HTML: breadcrumbs, back navigation, cursor
+    pointer, value labels, and smooth transitions with Vega-Lite; parent-child sums
+    always match'
+  - Comprehensive 3-level hierarchy (region → country → city) with 4 root categories,
+    each with 3 children and some with grandchildren — fully exercises the spec
+  - 'Clean idiomatic Altair: layer composition (bars + text), configure_axis/configure_view
+    theme tokens, alt.Title with subtitle, all explicitly set font sizes'
+  - Sorted-by-value layout makes the bar chart immediately communicative; subtitle
+    honestly directs users to the HTML version
   weaknesses:
-  - 'configure_view(stroke=INK_SOFT) draws a full rectangular border (all 4 sides)
-    around the plot area. Together with configure_axis(domainColor=INK_SOFT) this
-    double-borders the chart. Style guide requires removing top and right spines (L-shaped
-    frame). Fix: use configure_view(fill=PAGE_BG, stroke=None).'
-  - 'No smooth animated transitions between drill levels in the interactive HTML —
-    vegaEmbed replaces the full spec abruptly. Add config.transition (e.g., {"duration":
-    300}) to the Vega-Lite spec object in the JavaScript renderChart() function.'
-  - Subtitle font at fontSize=10 (→ 40px at scale=4) is at the lower edge of legibility;
-    consider bumping to 11–12pt.
+  - Design sophistication is solid but not exceptional — the static PNG is a plain
+    4-bar chart; no emphasis (no highlighted bar, no annotation on the largest region,
+    no visual storytelling beyond sort order)
+  - 'DE-02 could go further: spines are present on left/bottom but a top-right guideline
+    removal or lighter axis domain line could polish the look'
+  - 'LM-02: the HTML chart re-implements Vega-Lite from scratch in raw JSON rather
+    than using Altair Python API to generate the spec — loses some library-distinctive
+    Altair identity in the interactive path'
+  - Transition config (config.transition.duration=300) in Vega-Lite HTML may not actually
+    animate between re-renders since vegaEmbed replaces the chart rather than updating
+    it — consider using view.change() + run() for smooth transitions
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (~#FAF8F1) — correct, not pure white.
-      Chrome: Title "bar-drilldown · python · altair · anyplot.ai" bold, dark ink, centered, ~70% width. Subtitle in smaller muted tone, readable. Y-axis label "Sales (millions USD)" and X-axis label "Region" in dark ink. Tick labels in muted dark color. All chrome clearly readable.
-      Data: Four bars in Okabe-Ito order — Asia Pacific #009E73 (brand green), Americas #D55E00 (vermillion), Europe #0072B2 (blue), Africa #CC79A7 (reddish-purple). Dollar-formatted value labels ($520, $450, $380, $180) in dark ink above each bar.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "bar-drilldown · python · altair · anyplot.ai" in bold dark ink, clearly readable. Subtitle in softer INK_SOFT tone. X-axis label "Region" and Y-axis label "Sales (millions USD)" in dark ink, well-proportioned. Tick labels in INK_SOFT at 10px — readable. Grid lines are subtle horizontal lines at low opacity.
+      Data: 4 bars — Asia Pacific (#009E73 brand green), Americas (#D55E00 vermillion), Europe (#0072B2 blue), Africa (#CC79A7 reddish purple). Bars sorted descending by value. Bold value labels ($520, $450, $380, $180) appear above each bar in dark ink. Rounded top corners on each bar.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black (~#1A1A17) — correct, not pure black.
-      Chrome: Title, subtitle, axis labels, tick labels all rendered in light cream/off-white text. No dark-on-dark failures detected. Subtle grid lines in light-opacity stroke. View border visible in lighter stroke. All chrome correctly flipped to dark-theme tokens.
-      Data: Bar colors are identical to light render — #009E73, #D55E00, #0072B2, #CC79A7 — data colors are theme-invariant as required. Value labels in light cream text, clearly readable against dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light #F0EFE8-range text, clearly visible. Subtitle in lighter INK_SOFT-equivalent tone. Axis labels in light text, readable. Tick labels in INK_SOFT equivalent, readable. Grid lines are subtle at low opacity against dark background.
+      Data: Identical bar colors to light render — Asia Pacific (#009E73), Americas (#D55E00), Europe (#0072B2), Africa (#CC79A7). Value labels appear in light-colored text clearly distinguishable from dark background. No dark-on-dark failures observed.
+      Legibility verdict: PASS — all text elements are light-colored and readable against near-black background; brand green #009E73 remains clearly visible; no dark-on-dark issues detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title, axis labels, value labels all
-          readable in both themes. Subtitle at fontSize=10 is at the lower edge of
-          legibility.
+        comment: All font sizes explicitly set (title 16, subtitle 12, axis labels
+          12, tick labels 10, value labels 12); proportions well-balanced in both
+          themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element collision in either render.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Four prominent bars, well-proportioned for the data density.
+        comment: Bars well-sized, value labels clearly visible, rounded corners add
+          definition
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; CVD-safe; no red-green-only distinction.
+        comment: Okabe-Ito palette, good luminance contrast between all bars and background
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Bars fill canvas well; balanced margins; no overflow or cut-off.
+        comment: Bars fill canvas well, balanced margins, good whitespace around plot
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Sales (millions USD)'' with units; X-axis: ''Region''
-          descriptive.'
+        comment: Y-axis 'Sales (millions USD)' with units, X-axis 'Region' descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73; Okabe-Ito order correct; backgrounds #FAF8F1/#1A1A17;
-          chrome theme-correct in both renders.'
+        comment: 'First series #009E73, Okabe-Ito order, #FAF8F1 light bg, #1A1A17
+          dark bg, all chrome theme-adaptive'
     design_excellence:
       score: 12
       max: 20
@@ -109,26 +110,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Rounded bar corners, cursor pointer, intentional Okabe-Ito color
-          order, clean typography hierarchy. Above generic default but not publication-ready.
+        comment: 'Above well-configured defaults: rounded bar corners, sorted layout,
+          layered chart with value labels; not exceptional'
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Grid is beautifully subtle (gridOpacity=0.10) and no legend is correct.
-          But configure_view(stroke=INK_SOFT) draws a full rectangular border on all
-          four sides, contradicting the L-shaped frame recommendation. Double-bordered
-          with axis domain lines.
-      - id: DE-03
-        name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Bars sorted descending convey ranking immediately. Dollar labels
-          enable precise comparison. Subtitle guides users to the interactive HTML.
+        comment: Subtle 10% opacity grid, no view border (stroke=None), proper INK_SOFT
+          axis chrome — good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Sorted descending makes comparison immediate; informative subtitle
+          directs to HTML; no focal point emphasis
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -136,30 +135,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Column chart with full hierarchical drill-down in HTML; breadcrumb
-          navigation; color-coded bars.
+        comment: Correct bar chart with full hierarchical drilldown in HTML
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Click-to-drill, breadcrumbs, drill-up, cursor pointer, value labels,
-          consistent colors all present. Missing smooth animated transitions — vegaEmbed
-          replaces spec abruptly.
+        comment: Drilldown, breadcrumbs, back navigation, cursor pointer, value labels,
+          color mapping, transition config all implemented
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Region/Category on X, Sales value on Y; all three hierarchy levels
-          in data.
+        comment: X=region names, Y=sales values; 3-level hierarchy fully modeled
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'bar-drilldown · python · altair · anyplot.ai';
-          no legend needed.
+        comment: Title is 'bar-drilldown · python · altair · anyplot.ai'; no legend
+          needed (per-bar colors keyed by axis labels)
     data_quality:
       score: 15
       max: 15
@@ -169,22 +165,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Three hierarchy levels (Region → Country → City); 4 root categories;
-          3 children per node; children sum exactly to parent values.
+        comment: 3 hierarchy levels, 4 root regions, 3 children each, some with grandchildren;
+          children sums match parent values
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world geographic sales hierarchy; neutral business context;
-          real region, country, and city names.
+        comment: Geographic sales data with named real regions, countries, and cities
+          — neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Plausible regional sales figures in millions USD; relative proportions
-          make geographic sense.
+        comment: Sales in millions USD with plausible regional proportions; Asia Pacific
+          > Americas > Europe > Africa is reasonable
     code_quality:
       score: 10
       max: 10
@@ -194,35 +190,35 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Imports → Data → Chart → Save PNG → Generate HTML. No functions or
-          classes.
+        comment: 'Flat structure: imports → tokens → data → chart → save; HTML generation
+          is inline but necessary'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Data fully deterministic (hardcoded).
+        comment: Fully deterministic hardcoded data; no random state needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: json, os, altair, pandas all used; no dead imports.
+        comment: json, os, altair, pandas — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Python; HTML generation appropriately inline; no
-          fake UI.
+        comment: Clean Altair layering, well-organized HTML generation; appropriate
+          complexity for the interactive spec
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Altair 6 API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -230,24 +226,23 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct mark_bar + mark_text layer composition; proper encoding types;
-          alt.Title with subtitle; full configure_* chain.
+        comment: Layer composition with +, proper encoding types (:N, :Q), alt.Title
+          with subtitle, configure_axis/configure_view — expert Altair usage
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Generates live Vega-Lite JSON spec in JavaScript, leveraging deep
-          knowledge of Altair''s underlying representation. Creative dual-path: Altair
-          Python API for PNG, raw Vega-Lite spec for interactive HTML. Loses one point
-          for bypassing Altair''s native selection API.'
-  verdict: REJECTED
+        comment: Altair layer composition and HTML export used; but interactive HTML
+          rebuilds Vega-Lite spec in raw JSON rather than using Altair Python API,
+          losing some library identity
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - html-export
-  - hover-tooltips
   - layer-composition
+  - hover-tooltips
+  - html-export
   patterns: []
   dataprep: []
   styling: []
