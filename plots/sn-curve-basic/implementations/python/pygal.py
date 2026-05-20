@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -94,7 +94,7 @@ chart = pygal.XY(
     width=3200,
     height=1800,
     style=custom_style,
-    title="sn-curve-basic · python · pygal · anyplot.ai",
+    title="Steel Fatigue · sn-curve-basic · python · pygal · anyplot.ai",
     x_title="Cycles to Failure (N)",
     y_title="Stress Amplitude (MPa)",
     logarithmic=True,
@@ -103,11 +103,11 @@ chart = pygal.XY(
     stroke=True,
     show_x_guides=False,
     show_y_guides=True,
-    x_label_rotation=90,
+    x_label_rotation=45,
     legend_at_bottom=True,
     legend_box_size=32,
     margin=80,
-    range=(150, 550),
+    range=(120, 580),
     value_formatter=lambda xy: f"{xy[0]:.2e} cycles, {xy[1]:.0f} MPa" if isinstance(xy, tuple) else str(xy),
 )
 
@@ -123,26 +123,27 @@ chart.add(
     show_dots=False,
     stroke_style={"width": 6, "dasharray": "20, 10"},
 )
+# Distinct stroke styles per reference line: solid / long-dash / dotted
 chart.add(
     f"Ultimate Strength ({ultimate_strength} MPa)",
     [(100, ultimate_strength), (1e7, ultimate_strength)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 6, "opacity": 0.65},
+    stroke_style={"width": 5, "opacity": 0.80},
 )
 chart.add(
     f"Yield Strength ({yield_strength} MPa)",
     [(100, yield_strength), (1e7, yield_strength)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 6, "opacity": 0.65},
+    stroke_style={"width": 5, "dasharray": "30, 8", "opacity": 0.80},
 )
 chart.add(
     f"Endurance Limit ({endurance_limit} MPa)",
     [(100, endurance_limit), (1e7, endurance_limit)],
     stroke=True,
     show_dots=False,
-    stroke_style={"width": 6, "opacity": 0.65},
+    stroke_style={"width": 5, "dasharray": "6, 8", "opacity": 0.80},
 )
 
 # Save
