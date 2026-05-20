@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: smith-chart-basic
 created: '2026-01-15T21:56:23Z'
-updated: '2026-05-20T01:31:58Z'
+updated: '2026-05-20T02:06:04Z'
 generated_by: claude-sonnet
 workflow_run: 26135284795
 issue: 3792
@@ -12,49 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/smith-cha
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/smith-chart-basic/python/highcharts/plot-dark.html
-quality_score: 79
+quality_score: 88
 review:
   strengths:
-  - Mathematically correct Smith chart data in Gamma-plane with accurate normalization,
-    resistance circles, and reactance arcs
-  - 'Excellent Okabe-Ito palette compliance with #009E73 impedance locus and positions
-    2-4 for VSWR circles'
-  - Perfect theme adaptation — dark render correctly flips all chrome while preserving
-    identical data colors
-  - All spec-required features present including optional VSWR circles and frequency
-    annotations
-  - Clean well-structured code with seed for reproducibility and Highcharts annotations
-    module usage
-  - Realistic domain-accurate RF engineering context with physically plausible resonance
-    behavior
+  - Complete Smith chart with all required features plus optional VSWR circles and
+    matched-condition marker
+  - 'Proper Okabe-Ito palette with first series as #009E73; all 5 colors follow canonical
+    positions 1-5'
+  - Frequency annotation callouts using Highcharts annotations module are a distinctive
+    library-specific feature
+  - Both themes render correctly with theme-adaptive chrome; no dark-on-dark failures
+    in dark render
+  - Realistic RF engineering data model (resonant antenna at 3.5 GHz, Z0=50 ohm) with
+    physically correct impedance locus
   weaknesses:
-  - 'Critical: Unit circle and all resistance/VSWR circles appear as ellipses because
-    the plot area is not square — fix by enforcing equal aspect ratio (increase spacingTop/adjust
-    spacing so plot area height equals width)'
-  - Legend is clipped at the bottom image edge in both renders — increase spacingBottom
-    from 120 to at least 180
-  - Only 3 of 5 frequency annotations are visible; 2.25 GHz and 6.0 GHz labels are
-    hidden or overlapping — reduce to 3 well-spaced labels (1 GHz, 3.5 GHz, 6 GHz)
-    with offset handling
+  - Canvas size is 2400x2600 (non-standard) — should be 2400x2400 square for a circular
+    Smith chart; update chart.options.chart, div style, and --window-size in sync
+  - Legend item font size 36px is below the recommended 44px — increase to match tick
+    label size for visual balance
+  - Connected-line series use ScatterSeries + line_width instead of LineSeries — more
+    idiomatic Highcharts would use LineSeries for impedance locus and VSWR/grid circles
+  - Design Excellence could be pushed further with a descriptive title prefix and
+    stronger visual emphasis on the resonance region near the center
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct per style guide
-      Chrome: Title "smith-chart-basic · python · highcharts · anyplot.ai" in bold dark ink — readable. Subtitle "Antenna Impedance Sweep 1–6 GHz (Z₀ = 50 Ω)" in INK_SOFT — readable. Axis labels Re(Γ) and Im(Γ) in dark ink — readable. Tick labels in INK_SOFT — readable. Annotation boxes with semi-transparent fill and INK-colored text — readable.
-      Data: Impedance locus in #009E73 (green, Okabe-Ito pos 1) with radius-8 circular markers. VSWR 1.5 in #D55E00 (vermillion), VSWR 2.0 in #0072B2 (blue), VSWR 3.0 in #CC79A7 (reddish purple). Matched point gold diamond (#E69F00). Unit circle in dark INK. Resistance circles and reactance arcs in GRID_MED / GRID_FAINT (dotted).
-      Key issue: Unit circle and all resistance/VSWR circles appear as ELLIPSES (wider than tall) because the plot area is not square despite the 2400x2400 canvas — title, subtitle, and legend consume vertical space making the plot area wider than tall.
-      Legend: Visible at bottom but tightly clipped at image edge.
-      Frequency annotations: 3 of 5 expected visible (1.0 GHz, 3.6 GHz, 4.8 GHz); 2.25 GHz and 6.0 GHz labels missing.
-      Legibility verdict: PASS (all visible text is readable against light background)
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
+      Chrome: Title bold black "smith-chart-basic · python · highcharts · anyplot.ai" at ~70% canvas width (expected for mandated format). Subtitle "Antenna Impedance Sweep 1–6 GHz (Z₀ = 50 Ω)" in soft gray. X-axis "Re(Γ)" and Y-axis "Im(Γ)" labels in dark ink. Tick labels -1.5 to 1.5 in INK_SOFT. Legend top-left with dark text on ELEVATED_BG frame.
+      Data: Impedance locus in #009E73 (brand green, position 1) with circle markers forming a connected sweep. VSWR 1.5 in #D55E00 (vermillion, position 2), VSWR 2.0 in #0072B2 (blue, position 3), VSWR 3.0 in #CC79A7 (pink-purple, position 4) — all dashed. Matched point diamond in #E69F00 (orange, position 5) at center. Unit circle boundary in near-black. Resistance circles and reactance arcs in semi-transparent GRID_MED/GRID_FAINT. Frequency callout boxes at 1.0 GHz, 3.6 GHz, 6.0 GHz with dark text.
+      Legibility verdict: PASS — all text clearly readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct per style guide
-      Chrome: Title and subtitle rendered in light cream (#F0EFE8) — readable. Axis labels and tick labels in light gray (#B8B7B0) — readable. Unit circle rendered in white/light INK — visible. Annotation boxes with dark semi-transparent background (rgba(36,36,32,0.92)) and light-colored text — readable. No dark-on-dark failures detected.
-      Data: Colors IDENTICAL to light render — green locus (#009E73), orange VSWR 1.5 (#D55E00), blue VSWR 2.0 (#0072B2), pink VSWR 3.0 (#CC79A7), gold matched point. Only chrome elements (background, text, grid, unit circle) have flipped.
-      Same elliptical circle distortion and bottom legend clipping present.
-      Legibility verdict: PASS (all visible text is readable against dark background; no dark-on-dark failures)
+      Background: Near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title and subtitle in light #F0EFE8 text, clearly readable. Axis labels and tick labels in light INK_SOFT (#B8B7B0). Legend has light text on dark elevated background (#242420). Unit circle boundary renders in light/white. Grid circles/arcs use dark-theme GRID_MED/GRID_FAINT (rgba(240,239,232,...)) — visible and subtle.
+      Data: All data colors IDENTICAL to light render — #009E73 green locus, #D55E00/#0072B2/#CC79A7 VSWR circles, #E69F00 diamond. Frequency annotation boxes use dark elevated background with light text.
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable on near-black background
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -62,136 +56,135 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout (66px title, 56px axis labels,
-          44px ticks, 36px annotations); annotation text slightly smaller than body
-          text but readable
+        comment: All font sizes explicitly set (title 66px, axis 56px, ticks 44px);
+          legend text 36px slightly below recommended 44px but legible
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: Only 3 of 5 frequency annotations visible; ~2.25 GHz and 6.0 GHz
-          labels absent/hidden; legend tightly clipped at bottom
-      - id: VQ-03
-        name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 50-point locus with radius=8 appropriate; VSWR circles clearly visible;
-          Smith chart grid intentionally faint but present
+        comment: No overlapping elements; annotation callouts cleanly positioned;
+          legend doesn't overlap data
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Impedance locus (50 pts, radius 8) clearly visible; grid circles/arcs
+          appropriately subtle
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe Okabe-Ito palette; good contrast in both themes
+        comment: Okabe-Ito CVD-safe palette; shape + color differentiation (dashed
+          VSWR vs solid locus vs diamond)
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Legend clips at bottom image edge in both renders; spacingBottom=120
-          insufficient; elliptical distortion reduces visual balance
+        passed: true
+        comment: Canvas is 2400x2600 (non-standard; should be 2400x2400 square); Smith
+          chart fills space reasonably but portrait aspect creates slight extra vertical
+          padding
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Re(Gamma) and Im(Gamma) are correct engineering notation; subtitle
-          provides meaningful context
+        comment: Re(Γ) and Im(Γ) correct physics notation; subtitle provides units
+          (Z0=50 Ω) and frequency range
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Impedance locus is #009E73; VSWR circles follow Okabe-Ito positions
-          2-4; correct backgrounds #FAF8F1/#1A1A17'
+        comment: 'Impedance locus #009E73 (position 1); VSWR positions 2-4; matched
+          point position 5; backgrounds #FAF8F1/#1A1A17; theme chrome correct in both
+          renders'
     design_excellence:
-      score: 11
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: 'Above configured default: layered Smith chart grid, distinct dot/dash
-          styles, styled annotation boxes; elliptical circle distortion significantly
-          undermines design'
+        passed: true
+        comment: 'Clearly above defaults: Okabe-Ito, theme-adaptive chrome, annotation
+          callouts, Smith grid with correct weight hierarchy. Not quite publication-ready.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Removed default grid replaced with custom Smith chart circles; annotation
-          box borders and backgrounds show detail; bottom legend clipping is unfinished
+        passed: true
+        comment: Native Highcharts grid removed (gridLineWidth:0); Smith chart circles/arcs
+          used as idiomatic grid; legend styled with border/elevated background
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Frequency labels guide viewer through resonance trajectory; VSWR
-          circles contextualize matching quality; gold diamond at center makes impedance-matched
-          target obvious
+        comment: Frequency annotations at 1.0/3.6/6.0 GHz guide viewer; VSWR circles
+          provide reference context; resonance near center is visually apparent
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Smith chart concept correct, data mathematically accurate, but circles
-          appear as ellipses due to non-square plot area — fundamental geometric requirement
-          for Smith chart not met
+        passed: true
+        comment: Correct Smith chart in Γ-plane with unit circle boundary as chart
+          frame
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: unit circle boundary, resistance circles (r=0.2/0.5/1/2/5),
-          reactance arcs, normalized impedance locus, frequency labels, VSWR circles'
+        comment: Resistance circles (r=0.2,0.5,1,2,5), reactance arcs (x=±0.2,±0.5,±1,±2),
+          impedance locus, frequency labels, VSWR circles, matched marker, normalized
+          impedance
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct gamma-plane mapping; Z normalized by Z0=50 Ohm; Re(Gamma)
-          on X, Im(Gamma) on Y
+        comment: Re(Γ) on X, Im(Γ) on Y; range ±1.2 shows full unit circle; 50-point
+          locus is smooth
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'smith-chart-basic · python · highcharts · anyplot.ai' correct;
-          legend labels accurate
+        comment: 'Title matches spec format; legend labels accurate: VSWR 1.5/2.0/3.0,
+          Matched (Z=Z₀), Impedance Locus (1–6 GHz)'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Comprehensive: resistance circles, reactance arcs, VSWR circles,
-          impedance locus, matched point, frequency annotations; locus stays in narrow
-          region limiting visual diversity'
+        comment: 'Full Smith chart feature set: grid, VSWR circles, impedance trajectory,
+          resonance, frequency annotations'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Real RF engineering: antenna impedance sweep 1-6 GHz with resonance
-          near 3.5 GHz, physically plausible Q factor'
+        comment: RF antenna impedance sweep 1-6 GHz with Z0=50 Ω; Q=5 resonance at
+          3.5 GHz is physically realistic
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: '|Gamma| < 1 throughout; physically realistic impedance values and
-          resonance shape'
+        comment: All gamma values within unit circle (passive device constraint satisfied);
+          frequency range and model are factually consistent
     code_quality:
       score: 10
       max: 10
@@ -201,32 +194,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions/classes; clean Imports -> Data -> Plot -> Save structure
+        comment: 'Linear flow: imports → tokens → data → chart → series → render;
+          no classes or functions'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; data is deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; clean loops for Smith chart grid generation;
-          no over-engineering
+        comment: Appropriate complexity; resistance/reactance loops are justified;
+          CDN download block is necessary; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current highcharts_core
+          API
     library_mastery:
       score: 7
       max: 10
@@ -236,17 +231,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good idiomatic use: Chart constructor with container, HighchartsOptions,
-          ScatterSeries with line_width for connected curves, annotations module,
-          Selenium export pipeline'
+        comment: Correct Chart(container='container'), HighchartsOptions, ScatterSeries,
+          annotations module; follows library guide
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Highcharts annotations module (freq_annotations with point anchoring)
-          is distinctive; custom dash styles (Dot, ShortDash) for grid/VSWR differentiation
-  verdict: REJECTED
+        comment: Uses Highcharts annotations module with callout boxes (library-specific);
+          HTML interactive output; ScatterSeries instead of LineSeries is slightly
+          non-idiomatic
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
@@ -258,4 +253,6 @@ impl_tags:
   - iteration-over-groups
   dataprep:
   - normalization
-  styling: []
+  styling:
+  - alpha-blending
+  - grid-styling
