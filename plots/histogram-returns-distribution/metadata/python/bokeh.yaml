@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: histogram-returns-distribution
 created: '2026-01-16T22:13:52Z'
-updated: '2026-05-20T18:11:09Z'
+updated: '2026-05-20T18:20:29Z'
 generated_by: claude-sonnet
 workflow_run: 26180466541
 issue: 3751
@@ -12,54 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/histogram
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/histogram-returns-distribution/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - 'Correct two-color histogram with tail highlighting (#009E73 normal, #D55E00 tail)
-    using Okabe-Ito palette in canonical order'
-  - BoxAnnotation tail shading clearly delineates ±2σ regions and reinforces the tail
-    narrative
-  - Normal distribution overlay (#0072B2, line_width=5) is thick and clearly visible
-    against the histogram
-  - Stats label (mean, std dev, skewness, kurtosis) is well-styled with elevated background
-    and border
-  - HoverTool provides bin-range and density on hover — genuine bokeh interactivity
-  - 'Full theme-adaptive chrome: backgrounds, text, grid, legend all adapt correctly
-    in both renders'
-  - All font sizes explicitly set (50pt title, 42pt axis labels, 34pt ticks/legend)
-    at correct proportions
-  - Reproducible with np.random.seed(42); 252 observations is realistic daily-return
-    sample
-  - Correct Selenium+HTML output pattern per bokeh.md; both .html and .png artifacts
-    produced
+  - 'Perfect spec compliance: all four required features (normal overlay, stats box,
+    tail highlighting, density normalization) fully implemented'
+  - Semantic color coding using Okabe-Ito positions in meaningful roles (green = normal,
+    orange = tail, blue = curve)
+  - Correct theme adaptation across both renders with proper background tokens and
+    adaptive chrome
+  - 'Good Bokeh-specific usage: HoverTool scoped to bars, BoxAnnotation for tail regions,
+    screen-coordinate Label'
+  - KISS flat structure with clean, reproducible code
   weaknesses:
-  - Stats label (x=90, y=90, screen units, lower-left) overlaps with the orange tail
-    bars in that corner — shift it to top-left or upper portion of the plot where
-    density is low
-  - X-axis grid lines (xgrid) are unnecessary for a histogram and add visual noise
-    — remove xgrid or set xgrid.grid_line_color=None; keep only ygrid
-  - All four plot spines remain (outline_line_color = INK_SOFT draws a full box) —
-    remove top and right spines to get an L-shaped frame more consistent with the
-    style guide
-  - 'DE-01 opportunity: the legend frame uses a border box (style guide recommends
-    removing legend box frames for cleaner look); removing border_line_color would
-    add polish'
+  - Legend border_line_color set to None rather than INK_SOFT, deviating from the
+    style guide theme-adaptive border recommendation
+  - Tick marks still rendered on both axes — setting major_tick_line_color = None
+    would elevate visual refinement
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — correct theme surface.
-      Chrome: Title "histogram-returns-distribution · python · bokeh · anyplot.ai" in bold dark ink at ~70-75% of plot width — expected for the mandated long title. Y-axis label "Density" and X-axis label "Daily Returns (%)" in dark ink, both legible. Tick labels in INK_SOFT gray, readable. Stats box (lower-left) shows white/light-gray background elevated box with Mean/Std Dev/Skewness/Kurtosis text in dark ink — readable.
-      Data: Central histogram bars in #009E73 (brand green) with fill_alpha=0.80. Tail bars beyond ±2σ in #D55E00 (vermillion/orange). Beige BoxAnnotation shading over both tail regions. Normal distribution curve in #0072B2 (blue), line_width=5, clearly visible. Legend top-right shows "Normal Distribution" with blue line swatch.
-      Layout: Stats box position (x=90, y=90 screen) places it in the lower-left, partially overlapping the small orange tail bars in that region — minor but visible overlap.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "histogram-returns-distribution · python · bokeh · anyplot.ai" in dark #1A1A17, clearly readable. X-axis label "Daily Returns (%)" and Y-axis label "Density" in dark INK, readable. Tick labels in #4A4A44 (INK_SOFT), readable. Legend "Normal Distribution" in INK_SOFT, readable. Stats box with elevated #FFFDF6 background and dark INK text — readable.
+      Data: Main histogram bars in #009E73 (brand green), tail bars in #D55E00 (orange). BoxAnnotation tail shading at 10% orange fill. Normal distribution curve in #0072B2 (blue) at line_width=5.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black consistent with #1A1A17 — correct dark theme surface. Tail BoxAnnotations appear as dark brownish-orange tinted regions.
-      Chrome: Title in #F0EFE8 (light ink) against near-black — clearly readable. Axis labels in same light ink, tick labels in #B8B7B0 (INK_SOFT), both readable. Legend background is #242420 (elevated dark) with #B8B7B0 label text — legible. Stats box uses elevated dark background with light text — readable.
-      Data: #009E73 bars identical to light render. #D55E00 tail bars identical. #0072B2 normal curve identical. Data colors unchanged between themes — only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark failures detected; all text readable against dark background; brand green #009E73 remains visible.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title in light #F0EFE8 (INK token for dark), clearly readable. Axis labels in INK (#F0EFE8), readable. Tick labels in #B8B7B0 (INK_SOFT for dark), readable. Legend text in INK_SOFT, readable. Stats box with dark elevated #242420 background and light #F0EFE8 text — readable. No dark-on-dark failures detected.
+      Data: Colors identical to light render — #009E73 green bars, #D55E00 orange tail bars, #0072B2 blue normal curve. Theme invariance confirmed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
@@ -67,52 +51,51 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks, 30pt stats, 34pt legend). Well-proportioned in both themes.
+        comment: 'All sizes explicitly set per bokeh.md: title 50pt, axis labels 42pt,
+          tick labels 34pt, legend 34pt, stats box 30pt. Readable in both themes.'
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Stats label at (x=90,y=90 screen) slightly overlaps orange tail bars
-          in lower-left; minor but present.
+        comment: Stats box clears sparse tail bins; legend clears data area. No collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Histogram bars clearly visible (fill_alpha=0.80), normal curve prominent
-          (line_width=5), BoxAnnotations readable.
+        comment: Bars at fill_alpha=0.80 clearly visible; normal curve at line_width=5
+          stands out; tail BoxAnnotation at 10% alpha adds depth.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette applied correctly; green/orange/blue combination
-          is CVD-safe.
+        comment: Okabe-Ito positions 1-3 are CVD-safe; elements distinguishable by
+          shape and hue.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Good use of canvas; tail BoxAnnotations make
-          flanking regions sparse but intentional.
+        comment: 3200x1800 canvas; min_border values match bokeh.md canon; nothing
+          clipped; canvas gate not triggered.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Daily Returns (%)'' with unit, Y: ''Density'' — descriptive
-          and correct.'
+        comment: X-axis 'Daily Returns (%)' has units; Y-axis 'Density' appropriate;
+          title follows required format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, tails #D55E00, curve #0072B2 — Okabe-Ito canonical
-          order. Backgrounds correct in both themes.'
+        comment: 'First series #009E73, tail bars #D55E00, curve #0072B2, backgrounds
+          #FAF8F1/#1A1A17, all chrome adapts correctly.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -120,24 +103,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above generic defaults: intentional two-color encoding, tail shading,
-          styled stats box. Not quite publication-ready due to full box border and
-          x-grid clutter.'
+        comment: Semantic color coding is intentional and purposeful. Stats callout
+          box adds polish. Above generic defaults but not FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.10), styled legend/stats box. Full 4-sided box
-          border remains; x-axis grid unnecessary for histograms; legend box frame
-          not removed.
+        comment: X-grid disabled, Y-grid at 10% alpha, outline_line_color=None, bars
+          at fill_alpha=0.80. Good refinement; legend border is None rather than INK_SOFT
+          (minor gap).
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Tail highlighting + normal overlay + stats box creates a clear risk-analysis
-          narrative. Viewer immediately understands tail risk and distributional comparison.
+        comment: 'Clear narrative: green body vs orange tails, shaded tail regions,
+          fitted normal curve, on-plot statistics guide the viewer to the fat-tail
+          story.'
     spec_compliance:
       score: 15
       max: 15
@@ -147,28 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Histogram with density normalization and normal distribution overlay
-          — correct type.
+        comment: Histogram with density normalization, correct chart type.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features: % returns x-axis, normal curve overlay, stats
-          text box, tail highlighting beyond 2σ, 30 bins, density normalization.'
+        comment: Normal distribution overlay, stats box (mean/std/skewness/kurtosis),
+          tail regions beyond 2-sigma, density normalization — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Returns on x-axis, density on y-axis, all data visible.
+        comment: 'X: Daily Returns (%), Y: Density, 252 observations, 30 bins within
+          spec range of 20-50.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches required format exactly. Legend labels 'Normal Distribution'
-          correctly.
+        comment: Title 'histogram-returns-distribution · python · bokeh · anyplot.ai';
+          legend 'Normal Distribution'.
     data_quality:
       score: 15
       max: 15
@@ -178,21 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All aspects shown: bins, tails, normal overlay, stats, density normalization.'
+        comment: Histogram body, tail bars, normal overlay, stats, tail shading —
+          all aspects represented.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 252 daily stock returns with realistic mean (~0.044%/day) and std
-          dev (~1.45%) — standard financial domain.
+        comment: Daily stock return simulation with loc=0.0005, scale=0.015 — realistic
+          equity parameters, neutral financial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Daily return parameters are realistic for equity returns; skewness/kurtosis
-          values are plausible.
+        comment: Returns ~-5% to +7%, mean ~0.044%, std ~1.45% — accurate real-world
+          equity daily return profile.
     code_quality:
       score: 10
       max: 10
@@ -202,13 +186,14 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → style → save. No functions/classes.'
+        comment: 'Flat: imports -> tokens -> data -> plot -> style -> save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
@@ -220,15 +205,13 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, appropriate complexity, sys.path manipulation
-          is justified for bokeh shadowing.
+        comment: Clean Pythonic code, no over-engineering, no fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct Selenium pattern
-          per bokeh.md.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh 3.x API.
     library_mastery:
       score: 7
       max: 10
@@ -238,24 +221,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource with per-bar color column, HoverTool, BoxAnnotation,
-          Label with screen units — all idiomatic bokeh patterns.
+        comment: ColumnDataSource with named columns for tooltips, HoverTool with
+          renderers= to scope to bars, figure() with toolbar_location=None, proper
+          p.legend configuration.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: HoverTool (bin range + density on hover), BoxAnnotation (shaded tail
-          regions), Label (screen-unit positioned stats box) — genuinely bokeh-distinctive
-          features.
-  verdict: REJECTED
+        comment: HoverTool with rich per-bar tooltips, BoxAnnotation for tail shading,
+          Label with screen-coordinate positioning — all Bokeh-distinctive.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
-  - html-export
   - annotations
+  - html-export
   patterns:
   - data-generation
   - columndatasource
