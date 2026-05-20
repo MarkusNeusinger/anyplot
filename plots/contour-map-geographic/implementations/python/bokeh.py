@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-20
@@ -15,7 +15,7 @@ sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd(), os.path.dirna
 
 import numpy as np  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColorBar, ColumnDataSource, LabelSet, LinearColorMapper  # noqa: E402
+from bokeh.models import ColorBar, ColumnDataSource, Label, LabelSet, LinearColorMapper  # noqa: E402
 from bokeh.palettes import Viridis256  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from contourpy import contour_generator  # noqa: E402
@@ -44,7 +44,7 @@ lon_grid, lat_grid = np.meshgrid(lons, lats)
 # Base: elevation rises west → east
 base_elevation = (lon_grid - lon_min) / (lon_max - lon_min) * 1000
 
-# Cascade Range
+# Cascade Range — two-peak morphology from sin modulation
 cascade_center_lon = -121.5
 cascade_width = 1.0
 cascade_height = np.exp(-((lon_grid - cascade_center_lon) ** 2) / (2 * cascade_width**2))
@@ -62,6 +62,15 @@ for _ in range(3):
 
 elevation = np.clip(base_elevation + cascade_elevation + terrain_noise, 0, None)
 
+# Find the two Cascade Range peaks for narrative annotation
+north_elev = np.where(lat_grid > 46.5, elevation, 0)
+north_idx = np.unravel_index(np.argmax(north_elev), north_elev.shape)
+north_lat, north_lon = lats[north_idx[0]], lons[north_idx[1]]
+
+south_elev = np.where(lat_grid <= 46.5, elevation, 0)
+south_idx = np.unravel_index(np.argmax(south_elev), south_elev.shape)
+south_lat, south_lon = lats[south_idx[0]], lons[south_idx[1]]
+
 # Extract contour paths with contourpy (no matplotlib import needed here)
 levels = list(np.arange(250, 3500, 250))
 gen = contour_generator(x=lon_grid, y=lat_grid, z=elevation)
@@ -71,7 +80,7 @@ W, H = 3200, 1800
 p = figure(
     width=W,
     height=H,
-    title="contour-map-geographic · bokeh · pyplots.ai",
+    title="contour-map-geographic · python · bokeh · anyplot.ai",
     x_axis_label="Longitude (°W)",
     y_axis_label="Latitude (°N)",
     x_range=(lon_min, lon_max),
@@ -122,7 +131,8 @@ p.image(
     alpha=0.72,
 )
 
-# --- Contour lines (theme-adaptive) ---
+# --- Contour lines with overlap-aware label placement ---
+MIN_LABEL_DIST = 0.8  # minimum degrees between elevation label centers
 label_data = {"x": [], "y": [], "text": []}
 for level in levels:
     paths = gen.lines(level)
@@ -133,9 +143,15 @@ for level in levels:
         p.line(x=path[:, 0], y=path[:, 1], line_color=INK_SOFT, line_width=line_width, line_alpha=0.85)
         if level % 500 == 0 and len(path) > 20:
             mid = len(path) // 2
-            label_data["x"].append(path[mid, 0])
-            label_data["y"].append(path[mid, 1])
-            label_data["text"].append(f"{int(level)}m")
+            cx, cy = path[mid, 0], path[mid, 1]
+            too_close = any(
+                (cx - ex) ** 2 + (cy - ey) ** 2 < MIN_LABEL_DIST**2
+                for ex, ey in zip(label_data["x"], label_data["y"], strict=False)
+            )
+            if not too_close:
+                label_data["x"].append(cx)
+                label_data["y"].append(cy)
+                label_data["text"].append(f"{int(level)}m")
 
 # --- Contour elevation labels ---
 label_source = ColumnDataSource(data=label_data)
@@ -144,7 +160,7 @@ labels = LabelSet(
     y="y",
     text="text",
     source=label_source,
-    text_font_size="22pt",
+    text_font_size="28pt",
     text_color=INK,
     text_font_style="bold",
     background_fill_color=ELEVATED_BG,
@@ -154,10 +170,43 @@ labels = LabelSet(
 )
 p.add_layout(labels)
 
-# --- Approximate Pacific coastline (Okabe-Ito position 3: blue, semantically appropriate) ---
+# --- Approximate Pacific coastline (Okabe-Ito #0072B2: blue = water, semantically justified) ---
 coast_lons = [-125.0, -124.8, -124.5, -124.2, -124.0, -123.8, -124.0, -124.3, -124.5]
 coast_lats = [42.0, 43.5, 45.0, 46.0, 46.5, 47.5, 48.0, 48.5, 49.0]
 p.line(x=coast_lons, y=coast_lats, line_color="#0072B2", line_width=5, legend_label="Coastline (approx.)")
+
+# --- Oregon / Washington state border (lat ≈ 46.2) for geographic context ---
+p.line(
+    x=[lon_min, -124.0],
+    y=[46.2, 46.2],
+    line_color="#D55E00",  # Okabe-Ito orange
+    line_width=3.5,
+    line_dash="dashed",
+    legend_label="OR / WA Border",
+)
+
+# --- Cascade Range peak markers and annotations for geographic narrative ---
+for peak_lon, peak_lat, peak_elev, name in [
+    (south_lon, south_lat, int(elevation[south_idx]), "S. Cascades"),
+    (north_lon, north_lat, int(elevation[north_idx]), "N. Cascades"),
+]:
+    p.add_layout(
+        Label(
+            x=peak_lon + 0.15,
+            y=peak_lat + 0.12,
+            text=f"{name}\n~{peak_elev:,} m",
+            text_font_size="24pt",
+            text_color=INK,
+            text_font_style="bold",
+            background_fill_color=ELEVATED_BG,
+            background_fill_alpha=0.88,
+            border_line_color=INK_SOFT,
+            border_line_alpha=0.5,
+        )
+    )
+p.scatter(
+    x=[south_lon, north_lon], y=[south_lat, north_lat], marker="inverted_triangle", size=28, color=INK, alpha=0.75
+)
 
 # --- Colorbar ---
 color_bar = ColorBar(
