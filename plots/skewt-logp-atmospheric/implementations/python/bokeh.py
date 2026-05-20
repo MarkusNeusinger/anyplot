@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -10,7 +10,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, HoverTool, Label
+from bokeh.models import ColumnDataSource, CrosshairTool, HoverTool, Label, WheelZoomTool
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -100,7 +100,7 @@ fig = figure(
 # Theme-adaptive chrome
 fig.background_fill_color = PAGE_BG
 fig.border_fill_color = PAGE_BG
-fig.outline_line_color = INK_SOFT
+fig.outline_line_color = None
 
 fig.title.text_color = INK
 fig.title.text_font_size = "50pt"
@@ -127,7 +127,7 @@ for t in isotherm_temps:
     log_p = np.log10(p_range / 1000.0)
     x_iso = np.full_like(p_range, t) - SKEW_FACTOR * log_p
     src = ColumnDataSource(data={"x": x_iso, "y": p_range})
-    fig.line(x="x", y="y", source=src, line_color=INK_MUTED, line_width=1.2, line_alpha=0.35)
+    fig.line(x="x", y="y", source=src, line_color=INK_MUTED, line_width=1.2, line_alpha=0.20)
 
 # Dry adiabats (lines of constant potential temperature)
 p0 = 1000.0
@@ -139,7 +139,7 @@ for theta in np.arange(250, 400, 20):
     mask = (t_adiabat > -80) & (t_adiabat < 60)
     if np.any(mask):
         src = ColumnDataSource(data={"x": x_adiabat[mask], "y": p_range[mask]})
-        fig.line(x="x", y="y", source=src, line_color=OKABE_ITO[4], line_width=1.5, line_alpha=0.45, line_dash="dashed")
+        fig.line(x="x", y="y", source=src, line_color=OKABE_ITO[4], line_width=1.5, line_alpha=0.50, line_dash="dashed")
 
 # Moist adiabats (pseudoadiabats — simplified iterative approximation)
 for t_start in np.arange(-10, 35, 10):
@@ -157,7 +157,7 @@ for t_start in np.arange(-10, 35, 10):
     if np.any(mask):
         src = ColumnDataSource(data={"x": x_moist[mask], "y": p_range[mask]})
         fig.line(
-            x="x", y="y", source=src, line_color=OKABE_ITO[5], line_width=1.5, line_alpha=0.45, line_dash="dotdash"
+            x="x", y="y", source=src, line_color=OKABE_ITO[5], line_width=1.5, line_alpha=0.50, line_dash="dotdash"
         )
 
 # Mixing ratio lines
@@ -166,7 +166,7 @@ for mr in [1, 2, 4, 8, 12, 16, 20]:
     log_p = np.log10(p_range / 1000.0)
     x_mr = np.full_like(p_range, td_mr) - SKEW_FACTOR * log_p
     src = ColumnDataSource(data={"x": x_mr, "y": p_range})
-    fig.line(x="x", y="y", source=src, line_color=OKABE_ITO[3], line_width=1.2, line_alpha=0.45, line_dash="dotted")
+    fig.line(x="x", y="y", source=src, line_color=OKABE_ITO[3], line_width=1.2, line_alpha=0.40, line_dash="dotted")
 
 # Highlighted 0°C isotherm
 log_p_ref = np.log10(p_range / 1000.0)
@@ -191,16 +191,17 @@ dew_scatter = fig.scatter(x="x", y="y", source=src_dew, size=14, color=OKABE_ITO
 # HoverTools for interactive temperature/pressure display
 fig.add_tools(HoverTool(renderers=[temp_scatter], tooltips=[("Pressure", "@y{0} hPa"), ("Temperature", "@temp_c °C")]))
 fig.add_tools(HoverTool(renderers=[dew_scatter], tooltips=[("Pressure", "@y{0} hPa"), ("Dewpoint", "@dewpt_c °C")]))
+fig.add_tools(CrosshairTool(), WheelZoomTool())
 
 # Reference line labels
 fig.add_layout(
-    Label(x=-34, y=340, text="Dry Adiabats", text_font_size="28pt", text_color=OKABE_ITO[4], text_alpha=0.90)
+    Label(x=-34, y=340, text="Dry Adiabats", text_font_size="33pt", text_color=OKABE_ITO[4], text_alpha=0.90)
 )
 fig.add_layout(
-    Label(x=24, y=195, text="Moist Adiabats", text_font_size="28pt", text_color=OKABE_ITO[5], text_alpha=0.90)
+    Label(x=24, y=195, text="Moist Adiabats", text_font_size="33pt", text_color=OKABE_ITO[5], text_alpha=0.90)
 )
 fig.add_layout(
-    Label(x=-48, y=590, text="Mixing Ratio", text_font_size="28pt", text_color=OKABE_ITO[3], text_alpha=0.90)
+    Label(x=-48, y=590, text="Mixing Ratio", text_font_size="33pt", text_color=OKABE_ITO[3], text_alpha=0.90)
 )
 
 # Legend
