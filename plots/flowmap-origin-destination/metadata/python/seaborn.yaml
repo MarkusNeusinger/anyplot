@@ -1,157 +1,181 @@
 library: seaborn
+language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:05:46Z'
-updated: '2026-01-16T08:13:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21059785697
+updated: '2026-05-20T10:02:32Z'
+generated_by: claude-sonnet
+workflow_run: 26153480997
 issue: 3765
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Excellent label positioning with custom offsets prevents overlap in crowded areas
-    (London/Paris/Frankfurt cluster)
-  - YlOrRd colormap provides clear visual distinction of flow magnitudes
-  - Quadratic Bezier curves create aesthetically pleasing arcs
-  - Geographic reference lines (equator, prime meridian) add context
-  - Clean code structure following KISS principle
-  - Good use of seaborn lineplot with units parameter for multiple paths
+  - 'Perfect spec compliance and data quality: all required features present, realistic
+    neutral data with correct geographic coordinates'
+  - Cohesive dual-encoding (arc width + cividis color for flow magnitude) makes the
+    story immediately clear
+  - 'Fully theme-adaptive: both renders pass legibility checks with correct background
+    tokens and chrome colors'
+  - Custom label offset system effectively prevents overlap across 12 globally-distributed
+    city labels
+  - CVD-safe cividis palette is the correct choice for continuous flow encoding
   weaknesses:
-  - Line width should be proportional to flow magnitude (spec requirement) - currently
-    fixed at 2.5
-  - Grid is slightly too prominent - could use lower alpha
-  image_description: The plot displays an origin-destination flow map showing migration
-    flows between 12 major world cities. Cities are represented as blue circular markers
-    with white edges, positioned at their geographic coordinates (latitude vs longitude).
-    Curved arcs connect origin and destination cities, with arc colors ranging from
-    yellow (lower flow ~280) through orange to dark red (higher flow ~850) using the
-    YlOrRd colormap. The arcs are quadratic Bezier curves with transparency (alpha
-    0.6). City labels are positioned near each marker with custom offsets to minimize
-    overlap. Reference lines for the equator (y=0) and prime meridian (x=0) appear
-    as dashed gray lines. The title reads "flowmap-origin-destination · seaborn ·
-    pyplots.ai" in bold at the top. A vertical colorbar on the right shows "Flow Volume"
-    ranging from ~280 to ~850. The background is a light blue-gray (#f0f4f8), and
-    axes show Longitude (-150 to 150) and Latitude (-60 to 80).
+  - City labels at 6pt and legend text at 5pt will be very small at mobile (~400px)
+    scale — increase to 7-8pt for labels, 6-7pt for legend text
+  - 'Axis labels missing degree units: use ''Longitude (°)'' and ''Latitude (°)'''
+  - Seaborn's role is limited to city scatter and theme setup; the core arc/map rendering
+    is pure matplotlib — limited library mastery ceiling
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "flowmap-origin-destination · python · seaborn · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude"/"Latitude" at 10pt dark ink, readable. Tick labels at 8pt in INK_SOFT, readable. City labels at 6pt dark ink — legible at full resolution, small at mobile scale. Legend title at 6pt and legend text at 5pt — very small but visible. Colorbar label at 8pt readable.
+      Data: 18 Bezier arcs colored via cividis (dark navy ~280 flow, yellow ~850 flow). Arc linewidth 1.0–5.0 proportional to flow. City nodes in #009E73 with PAGE_BG edge, sized 60–350 by incoming flow. Land polygons in taupe #C8C2B8. Dashed equator and prime meridian reference lines.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light warm-white (#F0EFE8), clearly readable. Axis labels and tick labels in light tones, readable. Legend and colorbar text in light INK_SOFT tones. No dark-on-dark failure detected. All text visible against dark background.
+      Data: Arc colors are visually identical to light render (cividis dark navy to yellow — unchanged across themes). City nodes remain #009E73. Land polygons shift to darker charcoal #3A3A35. Overall composition reads clearly on dark surface.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, city labels
-          at 12pt bold - all clearly readable
+        comment: All font sizes explicitly set. City labels at 6pt and legend text
+          at 5pt are small at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: City labels have custom offsets to prevent overlap, even in dense
-          European cluster
+        comment: Custom label offsets prevent most overlap. Minor crowding in European
+          cluster (London/Paris/Frankfurt).
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: City markers large (s=350) with white edges, arcs have appropriate
-          alpha (0.6)
+        comment: Arc linewidths 1.0-5.0 and alpha=0.65 well-adapted to 18 flows. Node
+          sizes 60-350 appropriate.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: YlOrRd colormap is colorblind-friendly sequential palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, good use of 16:9 aspect ratio
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels Longitude and Latitude
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: 'Cividis is CVD-safe. City nodes #009E73 with PAGE_BG edge for definition.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills canvas well. Colorbar and legend integrated without isolated
+          whitespace.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 1
         max: 2
-        passed: false
-        comment: Grid slightly too prominent; colorbar well placed
+        passed: true
+        comment: Descriptive labels 'Longitude'/'Latitude' but missing degree units
+          (°).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'City nodes #009E73 (sole categorical series). Continuous arcs use
+          cividis. Backgrounds #FAF8F1/#1A1A17 correct. Chrome fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: cividis arc coloring with matching colorbar, theme-responsive
+          land color, node sizing by flow. Professional but not publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Styled legends with theme tokens, arc alpha, node PAGE_BG edges,
+          subtle dashed reference lines. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Redundant encoding (arc width + color) strengthens flow magnitude
+          signal. Node size encodes incoming flow. NY-London dominance immediately
+          apparent.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements origin-destination flow map with curved arcs
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Origin/destination coordinates correctly mapped, flow magnitude to
-          color
-      - id: SC-03
+        comment: 'Correct: OD flow map with curved Bezier arcs on geographic basemap.'
+      - id: SC-02
         name: Required Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Has curved arcs and color encoding; missing line WIDTH proportional
-          to flow (uses constant linewidth=2.5)
-      - id: SC-04
-        name: Data Range
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: Bezier arcs, proportional linewidth, alpha=0.65,
+          cividis colorbar, coastline basemap, city labels.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=longitude, Y=latitude, all 18 flows correctly plotted.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly labeled Flow Volume
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: flowmap-origin-destination · seaborn · pyplots.ai'
+        comment: Title exactly 'flowmap-origin-destination · python · seaborn · anyplot.ai'.
+          Colorbar 'Flow Volume', size legend 'Incoming Flow'.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows varied flow magnitudes (280-850), multiple routes, hub patterns
-          visible
+        comment: Variable magnitudes 280-850, hub cities, long-haul intercontinental
+          and short European hops, bidirectional flows.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real-world migration/travel flows between major world cities is plausible,
-          neutral scenario
+        comment: Migration flows between real world cities with correct lat/lon. Neutral
+          topic, plausible magnitudes.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Flow values (280-850) reasonable for normalized migration/travel
-          data
+        comment: Flow values 280-850 plausible for airline/migration data. NY-London
+          as highest flow geographically consistent.
     code_quality:
       score: 10
       max: 10
@@ -161,55 +185,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → plot → save, no functions/classes'
+        comment: 'Clean linear structure: imports → theme tokens → coastline data
+          → city data → flows → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, seaborn)
+        comment: os, matplotlib, numpy, pandas, seaborn — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn 0.13+ API
+        comment: Bezier computation clean and compact. Label offset dict functional.
+          No fake interactivity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png. No deprecated API usage.
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
+        max: 5
+        passed: true
+        comment: sns.scatterplot with size= aesthetic, sns.set_theme() with rc= dict,
+          sns.despine() are idiomatic. Core arc/map rendering is pure matplotlib.
+      - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses sns.lineplot and sns.scatterplot, sns.set_theme, sns.despine
-          - seaborn features, but implementation largely matplotlib-based
+        comment: size= continuous aesthetic with sizes= and legend='brief' is distinctive
+          seaborn. Predominance of matplotlib code limits distinctiveness score.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - bezier-curves
   - colorbar
   - annotations
-  - bezier-curves
   patterns:
   - data-generation
+  - groupby-aggregation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
   - edge-highlighting
-  - grid-styling

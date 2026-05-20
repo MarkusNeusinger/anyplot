@@ -1,154 +1,184 @@
 library: letsplot
+language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:06:07Z'
-updated: '2026-01-16T08:08:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21059785870
+updated: '2026-05-20T09:56:28Z'
+generated_by: claude-sonnet
+workflow_run: 26154196698
 issue: 3765
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/letsplot/plot-dark.html
+quality_score: 82
 review:
   strengths:
-  - Excellent use of lets-plot geom_curve for flow visualization with proper curvature
-  - Good dual-encoding of flow magnitude via both color gradient and line thickness
-  - Clean, professional appearance with appropriate void theme for geographic visualization
-  - Realistic trade flow scenario with recognizable global hub cities
-  - Proper scale functions for both continuous color and size mapping
+  - 'Perfect spec compliance: all required flow map features present and correctly
+    implemented'
+  - Dual encoding (viridis color + arc thickness) creates effective visual hierarchy
+    for trade volume
+  - 'Excellent theme adaptation: continent fills, legend, text all flip correctly
+    between light and dark'
+  - 'Perfect data and code quality: realistic trade port data, clean KISS structure'
+  - Correct viridis colormap for continuous flow data
   weaknesses:
-  - Missing city name labels on the map (spec mentions optional origin_name/dest_name
-    labels)
-  - Hub points could have slightly larger size for better visibility at some locations
-  - Some arc overlap in dense Europe-Asia region
-  image_description: The plot displays a world map with simplified continental polygons
-    in light gray (#E8E8E8) with gray outlines (#CCCCCC). Ten hub cities are marked
-    with solid blue dots (#306998). Curved arcs connect origin-destination pairs representing
-    trade flows between major cities including Shanghai, Los Angeles, Rotterdam, Singapore,
-    Tokyo, Dubai, London, New York, Sydney, and Sao Paulo. Arc thickness varies by
-    trade volume (thinner for lower volumes ~15-22, thicker for higher volumes ~72-85).
-    Arc colors use a gradient from yellow (#FFD43B) for lower volumes to blue (#306998)
-    for higher volumes. Two legends on the right show "Trade Volume" - one as a color
-    gradient bar (20-80) and one as line thickness examples (20-80). The title "flowmap-origin-destination
-    · letsplot · pyplots.ai" is centered at the top. The plot uses a void theme with
-    no axes or grid lines, appropriate for a geographic visualization.
+  - London and Rotterdam city labels overlap in the European hub cluster — increase
+    label_offsets for London (e.g., (-25, 6)) and Rotterdam (e.g., (5, 4)) to create
+    separation
+  - City label font size (size=8) is slightly small for the hub cluster density —
+    consider increasing to size=9 or 10
+  - HTML output does not leverage lets-plot interactive tooltip capability for hover
+    flow details
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white approximately #FAF8F1 — correct light theme surface
+      Chrome: Title "flowmap-origin-destination · python · letsplot · anyplot.ai" in dark text, clearly readable. No axis labels (theme_void, appropriate for geographic map). City labels in dark gray (INK_SOFT). Legend title and text in dark INK colors.
+      Data: Curved arcs colored with viridis (purple=low volume → yellow-green=high volume), thickness proportional to flow (range 1–6). Blue (#0072B2) hub points at all 10 trade cities. Continent polygons in light gray (#E0DDD6) with subtle borders.
+      Legibility verdict: PASS overall — but FAIL for London/Rotterdam label overlap (both labels collide in the European hub cluster region)
+
+    Dark render (plot-dark.png):
+      Background: Near-black approximately #1A1A17 — correct dark theme surface
+      Chrome: Title in light text, clearly readable against dark background. City labels in light gray (#B8B7B0 INK_SOFT). Legend uses elevated dark background (#242420). No dark-on-dark failures detected.
+      Data: Arc colors (viridis) are identical to light render — only chrome flips. Hub point color (#0072B2) unchanged. Continent polygons shift to dark gray (#2E2E2B) with appropriate dark borders.
+      Legibility verdict: PASS — all text readable against dark background; London/Rotterdam label overlap persists but both labels are still legible
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 23
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title and legend text are clearly readable at full size
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements
-      - id: VQ-03
-        name: Element Visibility
         score: 6
         max: 8
         passed: true
-        comment: Flow arcs visible with good alpha (0.6), hub points appropriately
-          sized; some dense European flows slightly overlap but distinguishable
+        comment: Sizes explicitly set (title=16, legend=12/10, labels=8). Readable
+          in both themes. Labels slightly small in dense hub cluster.
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: London and Rotterdam city labels visibly overlap in the European
+          hub cluster in both renders.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Arcs sized 1-6 are well-adapted. Hub points size=7 are prominent.
+          Thinnest arcs marginally visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow-to-blue gradient is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas well, legend positioned on right without isolation
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for map visualizations (void theme appropriate)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Dual legends (color + size) well placed, no grid (correct for maps)
+        comment: Viridis is perceptually uniform and CVD-safe. Blue hub points contrast
+          well.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good canvas utilization. Map fills plot area. Legend column integrated.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels appropriate for geographic map (theme_void). Mandated
+          title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Viridis for continuous flow data correct. Backgrounds #FAF8F1/#1A1A17.
+          Theme-adaptive chrome correct in both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Dual encoding (viridis color + thickness) intentional. Theme-adaptive
+          continent fills. Well-configured defaults territory.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void appropriate for map. Legend has elevated dark/light backgrounds.
+          Continent colors adapt per theme.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual encoding makes high-volume corridors pop as thick and yellow-green.
+          Asia-Europe trade axis visually dominant. Good visual hierarchy.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct origin-destination flow map with curved arcs
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Origin/destination coordinates correctly mapped with geom_curve
-      - id: SC-03
+        comment: Correct origin-destination flow map with curved arcs (geom_curve,
+          curvature=-0.3).
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Curved arcs, line width proportional to flow, transparency, color
-          gradient, basemap all present; missing optional location labels on map
-      - id: SC-04
-        name: Data Range
+        comment: Curved arcs, proportional line width, alpha=0.6 transparency, viridis
+          color gradient, basemap, location labels — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Map extent covers all hubs from -180 to 180 longitude, -60 to 85
-          latitude
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: origin_lon/lat → x/y, dest_lon/lat → xend/yend. flow → size + color.
+          All correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Both color and size legends accurately labeled Trade Volume
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: flowmap-origin-destination · letsplot · pyplots.ai'
+        comment: Title matches mandated format. Legend labeled Trade Volume matches
+          context.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows flows of varying magnitudes, bidirectional routes (LA-Shanghai),
-          multiple hubs; could show more diverse flow patterns
+        comment: 18 flows between 10 hubs across 5 continents, varied volumes 15-85,
+          bidirectional routes shown.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real trade route scenario between actual global port/trade cities
+        comment: Real-world major trade ports. Neutral global trade framing.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Trade volume values (15-85) are abstract but reasonable relative
-          scale
+        comment: Relative volumes plausible for inter-port shipping. Geographic coordinates
+          accurate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -156,49 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports, data, plot, save structure, no functions/classes
+        comment: Clean imports → tokens → data → plot → save structure, no functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (numpy, pandas, lets_plot components)
+        comment: All imports are used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI. Polygon parsing loop appropriate. label_offsets dict
+          is clean.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png but uses path parameter which is non-standard
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of geom_curve with curvature parameter, scale_size,
-          scale_color_gradient, theme_void, geom_polygon for basemap - leverages ggplot2-style
-          grammar well
+        comment: Uses geom_curve, scale_size, scale_color_viridis, theme_void + custom
+          theme overlay — idiomatic lets-plot grammar. HTML output doesn't use interactive
+          tooltip configuration.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_curve with curvature is ggplot-native, HTML export is lets-plot
+          distinctive, theme_void + overlay pattern is idiomatic.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - html-export
+  - bezier-curves
   patterns:
   - data-generation
   - iteration-over-groups

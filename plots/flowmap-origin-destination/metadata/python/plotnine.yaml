@@ -1,221 +1,236 @@
 library: plotnine
+language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:07:17Z'
-updated: '2026-01-16T08:09:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21059785864
+updated: '2026-05-20T09:57:34Z'
+generated_by: claude-sonnet
+workflow_run: 26153892047
 issue: 3765
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent visualization of global shipping flows with proper curved arcs (Bezier
-    curves)
-  - 'Good use of plotnine grammar of graphics: geom_polygon for basemap, geom_path
-    with grouped aesthetics, scale_size_identity, scale_color_gradient, coord_fixed'
-  - Color gradient from yellow to red effectively communicates flow magnitude
-  - Realistic shipping route data between actual major world ports
-  - Proper transparency (alpha=0.55) handles overlapping routes well
-  - Clean professional appearance with appropriate theming
+  - Theme-adaptive geographic color scheme (ocean/land) works beautifully in both
+    light and dark renders
+  - Dual encoding of flow magnitude through both arc width and viridis color creates
+    strong visual hierarchy
+  - Perfect spec compliance — all required features (curved arcs, proportional width,
+    transparency, color gradient, basemap) present
+  - 'Excellent data quality: real-world migration flows between correctly positioned
+    world cities'
+  - Clean, idiomatic plotnine code with KISS structure; perfect code quality score
   weaknesses:
-  - Code includes a helper function bezier_curve() which violates KISS principle (should
-    be inline calculations or no functions)
-  - Legend colorbar shows truncated range (~40-80) instead of full data range (22-95)
-  - Grid styling could be more subtle (currently visible lines)
-  image_description: The plot displays a global shipping flow map on a light blue
-    ocean background with simplified gray continent polygons (North America, South
-    America, Europe, Africa, Asia, Australia). Blue dots mark 15 major port cities
-    (Shanghai, Singapore, Rotterdam, Los Angeles, Dubai, Hong Kong, Tokyo, New York,
-    Hamburg, Busan, Santos, Mumbai, Sydney, Cape Town, Vancouver). Curved arcs (Bezier
-    curves) connect origin-destination pairs, with line thickness proportional to
-    flow volume and color encoded on a yellow-to-red gradient representing flow volume
-    (22-95 units). The title "Global Shipping Routes · flowmap-origin-destination
-    · plotnine · pyplots.ai" appears at the top in bold. Axes are labeled "Longitude
-    (°)" and "Latitude (°)". A color bar legend on the right shows "Flow Volume" ranging
-    from ~40 to ~80. The overall layout is well-balanced with 16:9 aspect ratio.
+  - 'London/Berlin label overlap in Western Europe cluster: increase vertical nudge
+    separation — London (4, 5.0), Berlin (8, 2.5) to prevent crowding at similar latitudes'
+  - City labels (geom_text size=8) are at the lower bound for mobile readability —
+    increase to size=9
+  - 'LM-02: approach is nearly identical to ggplot2; limited use of plotnine-distinctive
+    features beyond grammar layering'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) page background — correct. Ocean panel uses light blue (#DDE9F2).
+      Chrome: Title "flowmap-origin-destination · python · plotnine · anyplot.ai" in bold dark ink — readable. Axis labels "Longitude (°)" and "Latitude (°)" in dark INK (#1A1A17). Tick labels in INK_SOFT (#4A4A44) — readable. Legend title/text in dark tones — readable.
+      Data: 18 curved Bezier arcs colored with viridis (blue ~25k to orange ~142k), width proportional to flow. City dots in #009E73 green. Continent outlines in brownish-gray (#D0CCC4). London/Berlin label area shows crowding.
+      Legibility verdict: PASS (all text readable; minor crowding near London/Berlin labels)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) page background — correct. Ocean panel uses dark navy (#111A22).
+      Chrome: Title, axis labels, tick labels all in light colors (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures. Legend background is elevated (#242420) with light text.
+      Data: Viridis arc colors are IDENTICAL to light render — orange Mumbai-Dubai arc and blue low-flow arcs unchanged. City dots remain #009E73 green. Continent polygons in dark gray (#363632).
+      Legibility verdict: PASS (all text readable in dark theme; chrome adaptation is complete)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 24
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and bold, axis labels and tick labels are clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, arcs have transparency to reduce visual
-          clutter
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Flow arcs are visible with varying thickness, alpha=0.55 helps with
-          overlapping routes; some thin lines could be slightly thicker
+        comment: All font sizes explicitly set; city labels at size=8 slightly small
+          for mobile
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: London and Berlin labels crowd/overlap in Western Europe cluster
+          despite LABEL_NUDGE
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Arc widths 0.3-2.5 with alpha=0.55; thinnest arcs marginally visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Yellow-to-red gradient is colorblind-friendly and provides good contrast
-          against the blue background
+        comment: Viridis CVD-safe; good contrast between green markers and ocean
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Plot fills canvas well, balanced margins, legend positioned appropriately
+        comment: Good canvas utilization; minor imbalance from legend extending outside
+          map panel
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Labels include units (°) which is good, but Longitude and Latitude
-          are standard rather than context-specific
+        passed: true
+        comment: Longitude (deg) and Latitude (deg) with units; title correct
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Legend colorbar range shows 40-80 when actual data is 22-95, causing
-          slight confusion
+        passed: true
+        comment: 'City points #009E73; viridis for continuous flows; backgrounds #FAF8F1/#1A1A17;
+          chrome theme-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: custom ocean/land color scheme, dual encoding, geographic
+          aesthetic'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: coord_fixed, minimal grid (alpha=0.08), ocean panel; some spines
+          from theme_minimal
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Width+color dual encoding creates hierarchy; London hub role apparent
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct origin-destination flow map with curved arcs
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Origin/destination coordinates correctly mapped, flow volume to line
-          width and color
-      - id: SC-03
+        comment: Correct OD flow map with curved Bezier arcs
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
-        passed: false
-        comment: Has curved arcs, line width proportional to flow, transparency, color
-          gradient, basemap; missing location name labels on the map
-      - id: SC-04
-        name: Data Range
+        max: 4
+        passed: true
+        comment: Curved arcs, proportional width, transparency, color gradient, basemap
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All flows visible within the coordinate range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude/Latitude correct; flow mapped to width and color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Flow Volume legend present and correctly labeled
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: Global Shipping Routes · flowmap-origin-destination
-          · plotnine · pyplots.ai'
+        comment: Title format correct; legend Annual migrants (k) correct
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 20 flows between 15 major ports, good variety of directions
-          and distances; could benefit from showing bidirectional flows
+        comment: 18 flows, 14 cities, 6 continents; wide magnitude range 27k-142k
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real-world shipping routes between actual major ports (Shanghai,
-          Rotterdam, Los Angeles, etc.) - neutral and educational
+        comment: Real-world migration with actual city names and correct coordinates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Flow volumes 22-95 are reasonable relative units; coordinates are
-          accurate for named cities
+        comment: Migration volumes plausible; Mumbai-Dubai highest reflects real Gulf
+          patterns
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Code includes a helper function bezier_curve() which violates the
-          KISS principle of no functions/classes
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) is set (though data is deterministic)
+        comment: Imports -> data -> plot -> save; no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; no random state
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used appropriately
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean Bezier computation, well-organized LABEL_NUDGE dict
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png; current API
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of plotnine grammar of graphics: geom_polygon for
-          basemap, geom_path with grouped aesthetics, scale_size_identity, scale_color_gradient,
-          coord_fixed, comprehensive theming'
+        comment: Good grammar layering; scale_size_identity and coord_fixed used idiomatically
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: scale_size_identity is plotnine-idiomatic but overall approach mirrors
+          ggplot2
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - bezier-curves
   - layer-composition
-  - colorbar
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
-  - alpha-blending
   - custom-colormap
-  - grid-styling
+  - alpha-blending
