@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: letsplot 4.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-20
@@ -115,10 +115,12 @@ for xv in xv_values:
 df_x_labels = pd.DataFrame(xv_label_rows)
 
 label_indices = [0, n_points // 2, n_points - 1]
+# Per-label nudge to avoid crowding: 1.0 GHz left+up, 3.5 GHz upper-left, 6.0 GHz lower-right
+label_nudges = [(-0.18, 0.13), (-0.12, 0.22), (0.26, -0.22)]
 df_freq_labels = pd.DataFrame(
     {
-        "x": [gamma_real[i] for i in label_indices],
-        "y": [gamma_imag[i] for i in label_indices],
+        "x": [gamma_real[i] + nx for i, (nx, ny) in zip(label_indices, label_nudges, strict=True)],
+        "y": [gamma_imag[i] + ny for i, (nx, ny) in zip(label_indices, label_nudges, strict=True)],
         "label": [f"{freq[i] / 1e9:.1f} GHz" for i in label_indices],
     }
 )
@@ -139,7 +141,7 @@ df_legend = pd.DataFrame(
 plot = (
     ggplot()
     # Outer boundary
-    + geom_path(aes(x="x", y="y"), data=df_boundary, color=INK, size=1.5)
+    + geom_path(aes(x="x", y="y"), data=df_boundary, color=INK, size=2.0)
     # Real axis
     + geom_path(aes(x="x", y="y"), data=df_axis, color=INK_SOFT, size=0.8)
     # Resistance circles
@@ -161,9 +163,9 @@ plot = (
     # Resistance labels along real axis
     + geom_text(aes(x="x", y="y", label="label"), data=df_r_labels, size=8, nudge_y=-0.08, color=INK_SOFT)
     # Reactance labels at chart boundary
-    + geom_text(aes(x="x", y="y", label="label"), data=df_x_labels, size=7, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_x_labels, size=9, color=INK_SOFT)
     # Impedance locus path
-    + geom_path(aes(x="gamma_real", y="gamma_imag"), data=df_locus, color=BRAND, size=2.5)
+    + geom_path(aes(x="gamma_real", y="gamma_imag"), data=df_locus, color=BRAND, size=3.2)
     # Interactive hover points
     + geom_point(
         aes(x="gamma_real", y="gamma_imag"),
@@ -185,8 +187,8 @@ plot = (
     + geom_point(aes(x="gamma_real", y="gamma_imag"), data=df_end, color=COLOR_END, size=10)
     # Matched condition marker at chart center
     + geom_point(aes(x="x", y="y"), data=df_center, color=INK_SOFT, size=6, shape=3)
-    # Frequency labels along trajectory
-    + geom_text(aes(x="x", y="y", label="label"), data=df_freq_labels, size=11, nudge_x=0.08, nudge_y=0.08, color=INK)
+    # Frequency labels along trajectory (pre-nudged per-label to avoid crowding)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_freq_labels, size=11, color=INK)
     # Manual legend outside chart area
     + geom_point(aes(x="x", y="y"), data=df_legend[df_legend["grp"] == "locus"], color=BRAND, size=5)
     + geom_point(aes(x="x", y="y"), data=df_legend[df_legend["grp"] == "start"], color=COLOR_START, size=7)
