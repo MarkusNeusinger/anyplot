@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T21:43:12Z'
-updated: '2026-05-20T00:00:55Z'
+updated: '2026-05-20T00:12:30Z'
 generated_by: claude-sonnet
 workflow_run: 26132220920
 issue: 3826
@@ -12,93 +12,98 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/pygal/plot-dark.html
-quality_score: 82
+quality_score: 86
 review:
   strengths:
-  - 'Perfect spec compliance: all required S-N curve elements (log axes, 3 reference
-    lines, scatter + Basquin fit) implemented correctly'
-  - Correct Okabe-Ito series ordering and full theme-adaptive chrome in both renders
-  - Clean, well-structured code with proper random seed and reproducible data generation
-  - Interactive HTML output alongside PNG — correctly uses pygal key distinguishing
-    capability
-  - 'Good data storytelling: intentional visual hierarchy from test data to fit to
-    reference lines'
+  - 'Perfect spec compliance: logarithmic axes, Basquin fit, all three material reference
+    lines present and correctly labeled with MPa values'
+  - 'Excellent data quality: physically plausible steel fatigue data with realistic
+    scatter, correct material property ordering (Ultimate > Yield > Endurance)'
+  - Clear visual hierarchy distinguishing scatter (primary), fit (secondary), and
+    reference lines (tertiary) through size, dash style, and opacity
+  - Theme-adaptive chrome correctly implemented with all INK/INK_MUTED/PAGE_BG tokens
+    — both renders pass legibility checks
+  - Clean, reproducible code with pygal idioms (Style object, per-series options,
+    value_formatter, logarithmic XY)
   weaknesses:
-  - 'DE-02 low: Pygal full-frame border and both-axis grid create a visually heavy
-    appearance; minimal visual refinement — try Y-axis-only guides or lower grid intensity'
-  - 'DE-01 moderate: Stops at well-configured default; add opacity to reference lines
-    (0.6-0.7) to visually subordinate them to test data'
-  - 'X-axis tick density: pygal logarithmic=True auto-generates many intermediate
-    minor ticks; use explicit x_labels to show only major decades (1e2 through 1e7)
-    to improve VQ-01, VQ-02, and VQ-05'
-  - 'LM-02 moderate: Does not leverage pygal tooltip customization which would add
-    distinctive interactive value in the HTML output'
+  - 'DE-01 limited to 4/8: still reads as a styled library default rather than a distinctly
+    polished design — richer typography contrast or visual zone accents would improve'
+  - 'DE-02 limited to 3/6: pygal''s SVG renderer cannot remove spines; further refinement
+    (custom legend box fill with ELEVATED_BG, explicit grid opacity) would help'
+  - 'VQ-01 minor: x-tick labels at x_label_rotation=90 require head-tilt — consider
+    45° rotation or scientific notation labels for quicker visual scanning'
+  - 'VQ-05 minor: Ultimate Strength at 520 MPa is very close to the top of y range
+    (150–550), leaving almost no breathing room above the top reference line'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct
-      Chrome: Title "sn-curve-basic · python · pygal · anyplot.ai" in dark ink, centered, ~65-70% of canvas width. Y-axis label "Stress Amplitude (MPa)" and X-axis label "Cycles to Failure (N)" both readable. Y-axis ticks (200, 300, 400, 500) clearly legible. X-axis ticks rotated 90deg showing many intermediate log values (80, 100, 200, 400, 600, 800, 1000, 2000...) — dense and crowded band at bottom.
-      Data: ~35 green (#009E73) scatter markers for test data; dashed orange (#D55E00) Basquin fit line; blue (#0072B2) Ultimate Strength at 520 MPa; pink (#CC79A7) Yield Strength at 350 MPa; amber (#E69F00) Endurance Limit at 190 MPa. Legend at bottom, two rows, 5 entries.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "sn-curve-basic · python · pygal · anyplot.ai" in dark text, clearly readable. Axis labels "Cycles to Failure (N)" and "Stress Amplitude (MPa)" visible. X-tick labels rotated 90° (100 to 10000000), Y-tick labels horizontal (200–500). All text readable against light background.
+      Data: Test Data scatter dots in #009E73 (brand green, prominent, large). Dashed vermillion (#D55E00) Basquin fit line descends log-linearly. Blue (#0072B2) Ultimate Strength at 520 MPa near top. Pink/purple (#CC79A7) Yield Strength at 350 MPa. Amber/orange (#E69F00) Endurance Limit at 190 MPa. 5-item legend at bottom in 2 rows.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct
-      Chrome: Title, axis labels, and tick labels all switch to light-colored text — clearly readable. No dark-on-dark failure. Grid lines very subtle against dark surface. Legend text light and readable.
-      Data: Colors identical to light render — green scatter, dashed orange fit, blue/pink/amber reference lines. Endurance limit amber line at 190 MPa visibly distinct on dark surface.
+      Background: Near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, and tick labels appear in light-colored text against dark background. No dark-on-dark failures detected. Legend text readable. Grid lines subtle via foreground_subtle token.
+      Data: Colors identical to light render — green scatter dots (#009E73), dashed vermillion fit line, blue Ultimate Strength, pink/purple Yield Strength, amber/orange Endurance Limit. Data colors unchanged across themes as required.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set (title=66, label=56, tick=44, legend=44).
-          Readable in both themes. Deduction for dense rotated x-axis tick band.
+        comment: All font sizes explicitly set per style-guide (title=66, label=56,
+          major_label=44, legend=44). Readable in both themes. Minor deduction for
+          90° rotated x-tick labels.
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No data-text collisions. Rotated x-axis ticks individually readable
-          but densely packed from log auto-ticks.
+        comment: No overlapping text or data elements. 5-item bottom legend in 2 rows
+          fits cleanly.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: ~35 scatter markers at dots_size=16 well-sized. Basquin fit and all
-          reference lines clearly visible.
+        comment: Scatter dots at dots_size=16 prominent for ~40 points. Reference
+          lines at stroke width 6 clearly visible. Fit line dashed style distinguishes
+          from solid reference lines.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; CVD-safe; no red-green sole signal.
+        comment: Okabe-Ito palette CVD-safe. Multiple line styles (dashed vs solid)
+          add secondary visual cue beyond hue.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good margins and overall proportions. Crowded x-axis tick area consumes
-          extra vertical space.
+        comment: Good utilization. Ultimate Strength at 520 MPa close to top of y
+          range (150-550), slightly cramped. 5-item bottom legend appropriate.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Both axes labeled with descriptive names and units.
+        comment: Cycles to Failure (N) and Stress Amplitude (MPa) both descriptive
+          with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, Okabe-Ito order, backgrounds #FAF8F1/#1A1A17,
-          both themes correct.'
+        comment: 'First series #009E73, multi-series follows Okabe-Ito order, backgrounds
+          #FAF8F1/#1A1A17, chrome theme-adaptive in both renders.'
     design_excellence:
-      score: 10
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -106,22 +111,23 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: 'Well-configured default: custom Okabe-Ito palette, intentional series
-          hierarchy, proper sizing. Stops at well-configured default level.'
+        comment: Well-configured pygal with Okabe-Ito palette and custom Style. Professional
+          but recognizably a styled library default, not FiveThirtyEight-level polish.
       - id: DE-02
         name: Visual Refinement
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Pygal full-frame border (all 4 spines) and both-axis grid. No spine
-          removal. Minimal refinement.
+        passed: true
+        comment: Y-guides only (x off), generous margins (80), semi-transparent reference
+          lines (opacity=0.65), legend at bottom. Spine removal not possible in pygal.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'S-N fatigue narrative reads clearly: test data -> fit line -> reference
-          lines demarking engineering boundaries. Visual hierarchy guides viewer.'
+        comment: 'Clear visual hierarchy: large green dots (primary) > dashed fit
+          line (model) > semi-transparent reference lines (material limits). Good
+          engineering storytelling.'
     spec_compliance:
       score: 15
       max: 15
@@ -131,27 +137,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: XY scatter with overlaid line chart, correct for S-N curve.
+        comment: 'Correct S-N/Wöhler curve: XY scatter with log axes, power-law fit
+          overlay, horizontal reference lines.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log both axes, all 3 reference lines, multi-specimen scatter, Basquin
-          fit.
+        comment: Logarithmic axes, Basquin fit, Ultimate/Yield/Endurance reference
+          lines, scatter variation all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X = cycles (N), Y = stress amplitude (MPa); full range displayed.
+        comment: X=cycles (N), Y=stress amplitude (MPa), correctly assigned.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'sn-curve-basic · python · pygal · anyplot.ai'; all
-          five legend labels match series.
+        comment: Title is exactly sn-curve-basic · python · pygal · anyplot.ai. Legend
+          labels descriptive with MPa values.
     data_quality:
       score: 15
       max: 15
@@ -161,21 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three fatigue regions, scatter from multiple specimens
-          per stress level, Basquin fit, and three engineering reference properties.
+        comment: Shows scatter variation (3-5 samples per stress level), Basquin fit,
+          three material thresholds, full low-cycle to infinite-life range.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel fatigue test data; neutral scientific engineering scenario.
+        comment: Steel fatigue coupon testing. Stress 190-450 MPa and cycle range
+          1e2-1e7 realistic for high-strength steel characterization.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stress 190-520 MPa and cycles 1e2 to 1e7 realistic for structural
-          steel fatigue testing.
+        comment: Ultimate (520) > Yield (350) > Endurance (190) MPa correct physical
+          ordering. Basquin fit from polyfit is physically plausible.
     code_quality:
       score: 10
       max: 10
@@ -185,33 +193,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> data -> fit -> style -> plot -> save.'
+        comment: Imports → Data → Fit → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys path manipulation justified.
+        comment: All imports (os, sys, numpy, pygal, Style) are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable, no over-engineering.
+        comment: Clean, Pythonic. sys.path manipulation is documented pattern for
+          pygal import shadowing. zip(strict=True) used correctly.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png AND plot-{THEME}.html; correct pygal API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -219,23 +228,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Proper pygal.XY with Style object, per-series stroke_style with dasharray,
-          series-level dots_size/stroke overrides, logarithmic mode, legend_at_bottom.
+        comment: Correctly uses XY chart, Style object, per-series options (dots_size,
+          stroke, show_dots, stroke_style), value_formatter, and logarithmic mode.
+          Above baseline.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses pygal interactive HTML export and logarithmic XY mode. Above
-          default but doesn't leverage tooltip customization or x_label overrides.
-  verdict: REJECTED
+        passed: true
+        comment: Uses pygal-specific SVG dasharray stroke_style, per-series dot overrides,
+          value_formatter for rich tooltips, and HTML interactive SVG export.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - regression
-  styling: []
+  styling:
+  - alpha-blending
