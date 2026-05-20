@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: maze-circular
 created: '2026-01-16T07:19:57Z'
-updated: '2026-05-20T07:53:53Z'
+updated: '2026-05-20T08:05:38Z'
 generated_by: claude-sonnet
 workflow_run: 26148728726
 issue: 3804
@@ -12,41 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/maze-circ
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/maze-circular/python/letsplot/plot-dark.html
-quality_score: 85
+quality_score: 88
 review:
   strengths:
-  - DFS spanning tree guarantees exactly one solution; maze is algorithmically correct
-    and reproducible with seed=42
-  - Theme adaptation is fully correct — walls use INK token so light/dark renders
-    both look good
-  - 'Perfect spec compliance: 7 rings, entry opening on outer wall, GOAL at center,
-    correct Okabe-Ito marker colors'
-  - Square canvas (2400x2400) is the right format choice for a circular maze
-  - Clean flat code with good separation of maze generation, geometry, and plotting
-    phases
+  - DFS spanning tree algorithm guarantees exactly one solution, meeting the algorithmic
+    correctness requirement
+  - Perfect theme adaptation — walls correctly flip from dark (#1A1A17) in light mode
+    to light (#F0EFE8) in dark mode
+  - 'Correct Okabe-Ito palette usage: START uses #009E73 (position 1), GOAL uses #D55E00
+    (position 2)'
+  - 'letsplot-distinctive features: ggtb() interactive toolbar + layer_tooltips()
+    for hover info in HTML output'
+  - Wall thickness hierarchy (outer ring=3.0 vs inner=1.5) adds tasteful visual depth
+    and print-friendly emphasis
+  - Square 2400x2400 canvas is the right format choice for a symmetric circular visualization
   weaknesses:
-  - GOAL text at (0, 0) overlaps with the innermost ring arc walls — shift slightly
-    (e.g. y=0.15) or add label clearance
-  - 'Arc walls in inner rings can appear slightly angular: n_arc_points=50 per arc
-    segment may be too sparse for short inner-ring sectors'
-  - 'Design Excellence is limited: uniform wall weight throughout, no outer boundary
-    emphasis or visual depth variation'
-  - 'LM-02: lets_plot HTML interactivity (tooltips, zoom) unused'
+  - GOAL label (size=8 bold) is slightly crowded inside the tiny innermost center
+    circle — the inner-ring arcs surround it closely; consider placing the label just
+    outside the center cell or increasing center_radius to 0.8
+  - START label could be slightly larger (size=10-11) for improved prominence at the
+    maze perimeter edge
+  - 'DE-01 ceiling: design is clean but not yet FiveThirtyEight-level — a subtle drop-shadow
+    or slight gradient on the outer ring boundary could push polish further'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Title "maze-circular · python · letsplot · anyplot.ai" in dark #1A1A17 text at top — clearly readable. No axis labels (theme_void, appropriate for maze).
-      Data: Circular maze walls in dark #1A1A17; START label in bold brand green #009E73 below outer ring; GOAL label in bold orange #D55E00 at center. Data colors correct.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "maze-circular · python · letsplot · anyplot.ai" rendered in dark ink (#1A1A17), centered, clearly readable. No axis labels or tick labels (theme_void appropriate for maze).
+      Data: Concentric circular maze walls drawn in dark ink (#1A1A17) with outer ring emphasized (heavier stroke). START label in brand green (#009E73) at the bottom perimeter, GOAL label in vermillion (#D55E00) at the center. Seven rings clearly visible with increasing sector density. The entrance gap is at the bottom of the outermost ring, aligned with the START label.
+      Legibility verdict: PASS — all text (title, START, GOAL) clearly readable against warm off-white background. No light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Title in light #F0EFE8 text — clearly readable. Wall segments flip to light #F0EFE8 via INK token, correctly inverting for dark theme.
-      Data: START green (#009E73) and GOAL orange (#D55E00) colors are identical to light render — only chrome flips. Both labels clearly visible.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected.
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title rendered in light cream (#F0EFE8), clearly readable against dark background. Walls correctly flip to light cream on dark surface.
+      Data: Maze walls appear in light cream (#F0EFE8) creating strong contrast against near-black background. START (#009E73 green) and GOAL (#D55E00 vermillion) colors are identical to light render — only the wall/chrome colors flipped. The maze structure and entrance are equally legible.
+      Legibility verdict: PASS — no dark-on-dark failures. Title and all markers are clearly readable. Wall flip from dark→light correctly adapts to the dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -54,47 +56,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and START/GOAL labels readable in both themes; size=8 geom_text
-          (32px effective) adequate but slightly small for 2400px canvas
+        comment: Font sizes explicitly set (title=16, markers=8 bold). All text readable
+          in both themes. START/GOAL slightly small at maze perimeter/center but functional.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: GOAL text at (0,0) slightly overlaps innermost ring arc walls
+        comment: 'Minor: GOAL label inside tiny innermost circle surrounded closely
+          by inner-ring arcs — slight crowding but readable.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Walls clearly visible in both themes; INK token adaptation correct
+        comment: Maze walls clearly visible in both themes; START/GOAL color markers
+          prominent; wall thickness hierarchy (3.0 outer, 1.5 inner) adds depth.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito green and orange used; CVD-safe
+        comment: Okabe-Ito positions 1 and 2 — CVD-safe, distinguishable without hue
+          alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Square 2400x2400 correct for circular maze; generous margins; nothing
-          clipped
+        comment: Square 2400x2400 px, maze fills ~70% of canvas, generous plot_margin=[40,40,40,40]*4.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; no axis labels appropriate for theme_void maze
+        comment: No axis labels appropriate (theme_void maze). Title correctly formatted.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'START=#009E73, GOAL=#D55E00; backgrounds #FAF8F1/#1A1A17 correct'
+        comment: 'START=#009E73 (OI-1), GOAL=#D55E00 (OI-2). Walls use INK token (theme-adaptive).
+          BG #FAF8F1/#1A1A17. Data colors identical in both renders.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -102,21 +107,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional brand palette for markers, theme-adaptive walls, clean
-          print aesthetic; above default but constrained by maze format
+        comment: Clean black-on-cream / cream-on-dark aesthetic with Okabe-Ito markers.
+          Wall thickness hierarchy is intentional. Above defaults but not FiveThirtyEight-level.
       - id: DE-02
         name: Visual Refinement
-        score: 2
-        max: 6
-        passed: false
-        comment: theme_void applied correctly; wall thickness uniform throughout with
-          no visual hierarchy
-      - id: DE-03
-        name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Clear entry-to-goal visual hierarchy with color coding; maze is self-guiding
+        comment: theme_void() correctly used; outer ring emphasized; generous margins.
+          Good refinement for a maze type.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: viewer immediately identifies START (green,
+          outside) and GOAL (orange, center). Entry/exit narrative is intuitive.'
     spec_compliance:
       score: 15
       max: 15
@@ -126,26 +132,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct circular maze with concentric rings and radial passages
+        comment: Correct circular maze with concentric rings and radial passages.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features present: concentric walls, radial walls, passages,
-          marked entry, center goal, DFS single-solution'
+        comment: 'All features present: concentric walls, radial walls, passages between
+          rings, entry marked, goal marked, DFS guarantees unique solution, 7 rings.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 7 rings, seed=42, entry at outer perimeter, goal at center
+        comment: 7 rings with increasing sector density (max(6, ring*4)). Seed=42
+          for reproducibility.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; no legend appropriate
+        comment: 'Title: ''maze-circular · python · letsplot · anyplot.ai'' — exact
+          correct format. No legend needed (direct color labels).'
     data_quality:
       score: 15
       max: 15
@@ -155,21 +163,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All maze features: rings, sectors, passages, entrance opening, center
-          goal'
+        comment: 'Shows all aspects: concentric ring walls, radial sector dividers,
+          cross-ring passages, entry, goal, increasing complexity from center outward.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Maze puzzle is well-defined neutral domain; realistic ring/sector
-          counts
+        comment: Circular maze puzzle is a real-world neutral scenario (puzzle, education,
+          game design). No sensitive topics.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 7 rings with sectors 6 to 28 per ring; good complexity per spec
+        comment: 7 rings with 6-28 sectors per ring, seed=42 — appropriately complex,
+          challenging but solvable maze.
     code_quality:
       score: 10
       max: 10
@@ -179,33 +188,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural script, no functions or classes
+        comment: 'Linear flow: imports → params → adjacency graph → DFS → geometry
+          → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) at top
+        comment: np.random.seed(42) set before maze generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, numpy, pandas, lets_plot — all used
+        comment: os, numpy, pandas, lets_plot — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: DFS maze logic clean and well-organized; no fake interactivity
+        comment: DFS spanning tree is clean. Wall segment generation is logical. Appropriate
+          complexity for the viz type. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct API
+          usage.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -213,25 +225,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent: geom_segment + geom_text + scale_color_identity + coord_fixed
-          + theme_void + ggsize — all idiomatic'
+        comment: 'Expert ggplot grammar: geom_segment, geom_text, scale_size_identity,
+          scale_color_identity, coord_fixed, theme_void, labs, ggsize — idiomatic
+          throughout.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export via ggsave uses a distinctive lets_plot capability; otherwise
-          relies on generic ggplot2-port features
+        passed: true
+        comment: Uses ggtb() interactive toolbar and layer_tooltips() for hover info
+          — letsplot-distinctive. scale_size_identity() with mapped lw aesthetic for
+          variable wall thickness is a sophisticated pattern.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
-  - matrix-construction
   - iteration-over-groups
+  - matrix-construction
   dataprep: []
   styling:
   - minimal-chrome

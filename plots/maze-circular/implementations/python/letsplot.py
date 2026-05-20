@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: letsplot 4.9.0 | Python 3.13.13
-Quality: 85/100 | Updated: 2026-05-20
+Quality: 88/100 | Updated: 2026-05-20
 """
 
 import os
