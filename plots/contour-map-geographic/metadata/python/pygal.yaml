@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: contour-map-geographic
 created: '2026-01-17T11:54:32Z'
-updated: '2026-05-20T23:03:54Z'
+updated: '2026-05-20T23:21:36Z'
 generated_by: claude-sonnet
 workflow_run: 26194325415
 issue: 3772
@@ -12,51 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/pygal/plot-dark.html
-quality_score: 83
+quality_score: 87
 review:
   strengths:
-  - Complete geographic contour map with filled pressure cells, isobar contour lines,
-    coastlines, colorbar, and H/L pressure center labels — all spec requirements satisfied
-  - Sophisticated meteorological color scheme (blue→yellow→red pressure scale) appropriate
-    for sea-level pressure data with physically meaningful color assignment per hPa
-    level
-  - Marching squares contour algorithm correctly implemented with segment chaining
-    into polylines, producing readable isobar lines
-  - 'Both themes adapt correctly: warm off-white (#FAF8F1) light background, near-black
-    (#1A1A17) dark background, and all chrome tokens (INK, INK_SOFT, INK_MUTED) used
-    consistently'
-  - Realistic North Pacific pressure field with physically plausible Aleutian Low
-    (~997 hPa) and North Pacific High (~1030 hPa) that a meteorologist would recognize
+  - Custom marching-squares algorithm produces accurate isobar contour lines at every
+    4 hPa interval — impressive pure-Python geometric computation
+  - Filled pressure field using viridis colormap with alpha blending provides clear
+    color-encoded geographic context
+  - 'Proper meteorological conventions: H/L pressure center markers in Okabe-Ito vermillion
+    and blue, isobar value labels in callout boxes at climatologically correct positions'
+  - 'Complete spec compliance: contour lines, filled contours, colorbar with hPa units,
+    geographic coastlines, and labeled isolines all present'
+  - Both themes render correctly with warm off-white (#FAF8F1) / near-black (#1A1A17)
+    backgrounds and fully theme-adaptive chrome
+  - Realistic North Pacific sea-level pressure data with correct geographic extent
+    and meteorologically plausible values (996–1032 hPa)
   weaknesses:
-  - Continuous colormap uses a custom blue-red pressure scale instead of the style
-    guide's recommended BrBG (diverging) or viridis/cividis (sequential) — VQ-07 partial
-    compliance
-  - Title wraps to two lines in both renders ('North Pacific Pressure Isobars · contour-map-geographic
-    · python · pygal ·' / '· anyplot.ai') — the style guide's recommended title_font_size=66
-    is retained but causes wrapping; reducing to ~52 would keep it to one line
-  - Bulk of the visualization (filled cells, contour lines, colorbar, isobar labels,
-    H/L markers) is rendered via raw SVG injection into pygal's output rather than
-    using pygal's native charting API, limiting idiomatic Library Mastery scores
-  - Marching squares chain-linking uses nested O(n²) linear scan over all segments
-    — correct but complex; slight CQ elegance reduction
-  - 'H/L pressure center label colors (#d73027, #313695, #4575b4) are hard-coded hex
-    values rather than using theme-adaptive tokens, though these are data-encoding
-    colors (acceptable)'
+  - Grid/axis lines show a faint teal-cyan tinge in the light render — pygal's default
+    axis stroke colour leaks through despite guide_stroke_color being set; the tick
+    lines and axis guides should be set to INK_MUTED via foreground_subtle to suppress
+    the teal artefact
+  - Title font_size=52 is below the recommended 66 for the mandated title length;
+    while still readable it is slightly undersized relative to the style-guide target
+  - Isobar label and colorbar annotation text (30–32 px SVG units) will be marginal
+    at mobile scale (~400 px wide); consider increasing to ≥36–40 px
+  - Filled pressure cells render as a slightly blocky mosaic (40×40 grid of rectangles)
+    rather than smooth fills — the visual is functional but the banding between cell
+    boundaries is visible on close inspection
+  - 'Library Mastery is limited: pygal is used mainly as an SVG container and axis
+    frame; the core visualization (marching squares, colorbar, annotations) is raw
+    SVG injection bypassing most pygal chart API features'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, consistent with #FAF8F1 — correct light theme surface, not pure white.
-      Chrome: Title wraps to two lines ("North Pacific Pressure Isobars · contour-map-geographic · python · pygal ·" / "· anyplot.ai") in dark INK text — both lines fully visible. Axis labels "Longitude (°E)" and "Latitude (°N)" are clearly readable. Tick labels (120–240 for longitude, 20–65 for latitude) are smaller but legible. All chrome is dark-on-light with no readability failures.
-      Data: Filled pressure cells render blue (low pressure, upper-left/Aleutian Low region) to orange/yellow/red (high pressure, center-right/North Pacific High). Marching-squares isobar contour lines are clearly drawn in INK/INK_SOFT. Coastlines visible as dark outlines across the Pacific Rim. H (red) and L (blue) pressure center markers prominent. Isobar labels (1000, 1004, 1008, 1012, 1016, 1024) in small background-boxed text. Colorbar on right with hPa labels 996–1032.
-      Legibility verdict: PASS — all text elements are readable against the warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "North Pacific Pressure Isobars · contour-map-geographic · python · pygal · anyplot.ai" in dark ink spans ~75% of width, readable. X-axis label "Longitude (°E)" and Y-axis label "Latitude (°N)" clearly visible in dark ink. Tick labels readable. Grid lines very faint — they show a slight teal/cyan tinge from pygal's default axis stroke leaking through rather than a pure neutral gray, but contrast is acceptable.
+      Data: Filled pressure cells use viridis (purple/dark for low ~996 hPa in NW Pacific near Aleutian Low, yellow-green for high ~1028+ hPa in the subtropical North Pacific High). Isobar contour lines (every 4 hPa, with bold major lines every 8 hPa) overlay the fill. Muted coastlines for Japan, Kamchatka, Aleutians, Alaska, and North American west coast. Isobar callout labels (1000, 1004, 1008, 1012, 1016, 1024) in elevated-background boxes at representative positions. Red "H" (vermillion, Okabe-Ito) marks the North Pacific High near 200°E/35°N; blue "L" (Okabe-Ito blue) marks the Aleutian Low near 145°E/45°N and 185°E/53°N. Colorbar on the right edge shows viridis from 996 to 1032 hPa with "hPa" label.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, consistent with #1A1A17 — correct dark theme surface, not pure black.
-      Chrome: Title, axis labels, and tick labels all render in light-colored text (F0EFE8/INK token) clearly visible against the dark background. Coastlines flip to white/light lines. Isobar label boxes use ELEVATED_BG (#242420) with light INK text — readable. Colorbar tick labels are light-colored. No dark-on-dark failures detected.
-      Data: Pressure cell colors (blue low / orange-red high) are visually identical to the light render — data Okabe-Ito equivalent colors unchanged between themes, only chrome flips. H/L markers retain their red/blue domain colors, both still visible against the dark background.
-      Legibility verdict: PASS — all text elements are readable against the near-black background.
+      Background: Warm near-black #1A1A17 — correct, not pure black.
+      Chrome: Title, axis labels, tick labels all render in light cream/off-white ink, clearly readable against the dark surface. No dark-on-dark failures. Grid lines remain subtle. Colorbar border and labels light-coloured.
+      Data: Viridis fill colours are identical to the light render — purple at low pressure, yellow-green at high. Isobar contour lines, coastlines, H/L markers, and callout labels all maintain same colours; only the background and chrome flip to dark theme. The "H" and "L" markers (Okabe-Ito vermillion and blue) remain visible and distinguishable.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -64,89 +64,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=66, label=56, major_label=44,
-          legend=44, value=36). Readable in both themes. Minor issue: title wraps
-          to two lines due to length at font size 66; all content visible but the
-          wrap leaves ''· anyplot.ai'' alone on line 2.'
+        comment: All font sizes explicitly set and readable in both themes; title
+          at 52px (vs 66 recommended) is slightly small but fits the long mandated
+          string without overflow; SVG-injected isobar and colorbar text at 30–32px
+          is borderline at mobile scale
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No significant text overlap. Isobar labels use background boxes to
-          remain readable over contour lines. Minor crowding near pressure center
-          markers (H/L) which overlap isobar lines but remain legible.
+        comment: Callout label boxes prevent isobar value overlap; minor overlap of
+          coastline lines with some labels is inherent to geographic contour maps
+          and acceptable
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Filled pressure cells at 0.55 opacity, isobar lines at 0.9 opacity,
-          coastlines clearly visible. Major isobars (every 8 hPa) rendered thicker
-          and darker for hierarchy. All elements properly visible in both themes.
+        comment: Viridis fill, isobar contour lines (major/minor weight distinction),
+          coastlines, H/L markers, and colorbar all clearly visible at full resolution
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Blue-to-red pressure scale provides good luminance contrast across
-          the range. H/L labels use distinct hue+size distinction. No red-green sole-signal
-          failures.
+        comment: Viridis is perceptually uniform and colorblind-safe; H/L markers
+          use Okabe-Ito vermillion and blue — distinguishable without relying on hue
+          alone
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Plot fills canvas well with generous margins (100/160/160/240/260).
-          Colorbar positioned to the right with correct vertical centering. No content
-          cut off at canvas edges.
+        comment: 3200×1800 canvas used well; generous margins with plot area filling
+          ~70% of canvas; colorbar correctly positioned at right edge
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Axis labels include units: ''Longitude (°E)'' and ''Latitude (°N)''.
-          Title follows correct format with descriptive prefix.'
+        comment: 'X: ''Longitude (°E)'', Y: ''Latitude (°N)'' — descriptive with units;
+          title has descriptive prefix plus mandatory spec-id format'
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds are correct (#FAF8F1 light / #1A1A17 dark). Chrome tokens
-          adapt correctly. However, continuous colormap uses a custom blue-yellow-red
-          pressure scale instead of the style guide''s recommended BrBG (diverging)
-          or viridis/cividis — partial compliance.'
+        passed: true
+        comment: 'Viridis used for continuous pressure data (compliant); H/L markers
+          use Okabe-Ito positions 2 and 3; backgrounds #FAF8F1/#1A1A17; chrome fully
+          theme-adaptive in both renders'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above generic defaults: domain-appropriate meteorological color
-          scheme, H/L pressure center labels with domain-color coding, labeled isobars
-          with subtle background boxes, differentiated major/minor isobar line widths.
-          Shows clear design thought but not FiveThirtyEight-level polish.'
+        comment: 'Strong design: custom marching-squares contours, filled pressure
+          field, professional meteorological conventions (H/L markers, isobar labels),
+          viridis colormap — clearly above library defaults'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid suppressed (show_x_guides=False, show_y_guides=False). Fill
-          opacity at 0.55 provides layering effect. Clean background. Coastlines at
-          subtle INK_MUTED color. Margins generous. Some refinement visible above
-          defaults.
+        comment: 'Good: major/minor isobar weight distinction, alpha-blended fills
+          (0.55), subtle guide lines; deducted for teal-tinted grid artefact and slightly
+          blocky fill mosaic'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: H/L pressure center labels immediately communicate the key meteorological
-          features. Color gradient (blue=low, red=high) tells the pressure gradient
-          story visually. Isobar labels at key values provide quantitative anchors.
-          Coastline context helps geographic interpretation. Good visual hierarchy.
+        comment: 'Good: color fills + H/L markers create clear focal points; viewer
+          immediately identifies the North Pacific High and Aleutian Low; visual hierarchy
+          guides the eye from pressure centres outward through isobars'
     spec_compliance:
       score: 15
       max: 15
@@ -156,31 +150,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct contour map on geographic coordinates with latitude/longitude
-          axes. Both filled contours and isobar lines present.
+        comment: 'Correct: contour lines on geographic map with basemap (coastlines),
+          isolines, filled contours, and colorbar — all required elements present'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: contour lines on geographic basemap (coastlines),
-          labeled contour lines, filled contours, colorbar, geographically-aware coordinate
-          system, 4 hPa intervals.'
+        comment: 'All spec features: smooth contour lines on basemap, labeled contour
+          lines, filled contours, viridis colormap, colorbar with hPa, 4 hPa intervals'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X-axis, Latitude on Y-axis, pressure encoded as fill
-          color. All data ranges correctly mapped.
+        comment: X=longitude, Y=latitude, color=pressure value; axes span full data
+          range 120°E–240°E, 20°N–65°N
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
         comment: Title 'North Pacific Pressure Isobars · contour-map-geographic ·
-          python · pygal · anyplot.ai' follows correct format with descriptive prefix.
-          No legend (show_legend=False appropriate since colorbar replaces it).
+          python · pygal · anyplot.ai' follows required format with descriptive prefix;
+          colorbar serves as legend with hPa unit label
     data_quality:
       score: 15
       max: 15
@@ -190,63 +183,64 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows both high and low pressure systems, filled contours, labeled
-          isobars, coastlines overlay, H/L center markers. Full coverage of contour
-          map features.
+        comment: 'Comprehensive: multiple pressure systems (high and low), pressure
+          gradient across geographic extent, isobar labeling, H/L centre identification,
+          colorbar range'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: North Pacific sea-level pressure field is a realistic meteorological
-          scenario with named features (Aleutian Low, North Pacific High). Neutral
-          science domain.
+        comment: 'Realistic North Pacific sea-level pressure field with known climatological
+          features: North Pacific High, Aleutian Low, Asian coast secondary low —
+          neutral scientific context'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Pressure values 996–1032 hPa are realistic for North Pacific sea-level
-          pressure. 4 hPa isobar intervals are the meteorological standard. Aleutian
-          Low at ~997 hPa and North Pacific High at ~1030 hPa are plausible.
+        comment: Sea-level pressure 996–1032 hPa is meteorologically realistic (standard
+          ~1013 hPa); 4 hPa contour intervals are standard synoptic practice; geographic
+          extent and feature locations are correct
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: 'Clear structure: imports → data generation → chart setup → SVG injection
-          → save. No functions/classes. However, the marching squares with segment
-          chaining adds substantial complexity (nested loops over segment arrays).'
+        comment: 'Linear: imports → theme tokens → data generation → chart setup →
+          coastlines → filled cells → marching squares → labels → colorbar → render;
+          no functions or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: cairosvg, numpy, pygal, pygal.style.Style — all actually used.
+        comment: 'All imports used: os (env), sys/pathlib (path guard), cairosvg (render),
+          matplotlib.cm/colors (viridis), numpy (data), pygal/pygal.style.Style (chart)'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: The marching squares chain-linking uses an O(n²) scan that is correct
-          but verbose. The SVG injection pattern is creative but circumvents pygal's
-          API. No fake UI elements.
+        comment: 'Complex but appropriate: marching squares and segment chaining are
+          genuinely needed for this visualization type; no over-engineering or fake
+          functionality'
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. Current API.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; no deprecated API calls
     library_mastery:
       score: 5
       max: 10
@@ -256,24 +250,22 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses pygal.XY chart for geographic coordinate system and adds coastlines
-          as XY series (idiomatic). However, the bulk of the visualization (filled
-          cells, contour lines, colorbar, labels) is rendered via SVG injection rather
-          than pygal's charting API — correct usage but doesn't leverage pygal's best
-          patterns.
+        comment: Uses pygal.XY, Style theming, and chart.add() correctly; the SVG
+          injection approach (render + string replace) is a known pygal extension
+          pattern but bypasses most of its charting API
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Uses pygal's XY coordinate system for geographic positioning, HTML/SVG
-          output pipeline, and render(is_unicode=True) → SVG injection pattern that
-          is pygal-specific. Some distinctive features used but the main visualization
-          bypasses pygal's API.
-  verdict: REJECTED
+        comment: SVG manipulation of pygal's render output is library-specific, and
+          HTML output is generated; however, the core visualization (contour lines,
+          colorbar, isobar labels) is raw SVG code rather than pygal features
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - cairosvg
+  - matplotlib
   techniques:
   - colorbar
   - annotations
@@ -284,4 +276,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
+  - custom-colormap
   - alpha-blending
