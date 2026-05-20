@@ -1,203 +1,252 @@
 library: bokeh
+language: python
 specification_id: datamatrix-basic
 created: '2026-01-16T06:52:09Z'
-updated: '2026-01-16T06:54:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21058219364
+updated: '2026-05-20T06:19:24Z'
+generated_by: claude-sonnet
+workflow_run: 26143657161
 issue: 3811
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/datamatrix-basic/python/bokeh/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Correctly implements Data Matrix ECC 200 standard with proper finder and timing
-    patterns
-  - High contrast black/white visualization ideal for scanning
-  - Clean, professional appearance with appropriate canvas utilization
-  - Uses Bokeh-specific features well (ColumnDataSource, rect glyph, Title model)
-  - Includes quiet zone as specified
-  - Realistic example content (serial number use case)
+  - Full GF(256) Reed-Solomon ECC 200 implementation is technically accurate and impressive
+    for inline script code
+  - Educational zone color overlays (Okabe-Ito colors matching labels) create a coherent
+    structural anatomy view
+  - HoverTool with per-module type/row/col information is a genuinely useful Bokeh
+    feature for barcode inspection
+  - 'Both themes work correctly: warm off-white / near-black backgrounds, theme-adaptive
+    text, no dark-on-dark failures'
+  - Square 2400x2400 canvas is the correct choice for a symmetric barcode
   weaknesses:
-  - Code uses helper functions instead of flat KISS structure (encode_ascii, get_symbol_size,
-    reed_solomon_encode, create_datamatrix)
-  - The 3600x3600 square format is appropriate but uses custom sizing instead of library-recommended
-    4800x2700
-  image_description: The plot displays a Data Matrix 2D barcode on a white background
-    with high contrast black modules. The title "datamatrix-basic · bokeh · pyplots.ai"
-    appears at the top in large, readable font. The barcode matrix shows the characteristic
-    L-shaped finder pattern with a solid black left column and solid black bottom
-    row. The alternating timing pattern is visible on the top edge (starting with
-    white) and right edge. The inner data region contains the encoded pattern for
-    "SERIAL:12345678". A subtitle at the bottom displays the encoded content. The
-    barcode is centered with an adequate quiet zone (white border) surrounding it.
-    The overall layout is clean with good canvas utilization.
+  - Zone annotation labels (L-finder, Timing, Data) are 18pt — too small for the 2400x2400
+    canvas; at mobile widths (~400px) they would be ~4px and invisible. Increase to
+    at least 28-34pt.
+  - 'Okabe-Ito colors for zone overlays are not in canonical order: L-finder uses
+    blue (#0072B2 = position 3) before green (#009E73 = position 1). Swap so the data
+    region overlay uses #009E73 first.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "datamatrix-basic · python · bokeh · anyplot.ai" in dark ink (50pt) — clearly readable. Subtitle 'Content: "SERIAL:12345678"' in secondary ink (34pt) — clearly readable. Zone labels "Timing" (orange bordered box, horizontal), "L-finder" (blue bordered box, rotated vertical), "Data" (green bordered box, rotated vertical) at 18pt — readable at full resolution but too small at mobile widths.
+      Data: Barcode cells rendered as near-black (#1A1A17) on light background — high contrast. Zone overlays: teal/mint (#009E73 at 12% alpha) for data region, peach (#D55E00 at 15% alpha) for timing, subtle blue (#0072B2 at 15% alpha) for L-finder column.
+      Legibility verdict: PASS — all primary text readable; zone label size is a minor weakness but not a failure
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface
+      Chrome: Title in near-white (#F0EFE8) — clearly readable. Subtitle in near-white — clearly readable. Zone labels retain Okabe-Ito colors on dark background — readable. No dark-on-dark issues detected.
+      Data: Barcode cells render as near-white (#F0EFE8) on dark background — high contrast (polarity inverted vs light theme, which is expected and correct). Zone overlay hues are identical to light render; only the effective tint changes due to dark background (appears as dark teal for data region, dark brown for timing).
+      Legibility verdict: PASS — all text readable against dark background; no chrome failures
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 36pt and subtitle at 24pt are perfectly readable
+        comment: Title (50pt) and subtitle (34pt) explicitly set and well-proportioned.
+          Zone annotation labels (18pt) too small for 2400x2400 canvas — would be
+          invisible at mobile widths (~4px at 400px). Should be 28-34pt.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Black modules are clearly visible with good sizing
+        comment: Barcode cells perfectly sized and high-contrast. Zone labels readable
+          at full resolution but could be more prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: High contrast black on white, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Barcode fills good portion of canvas, balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for barcode (axes hidden appropriately)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Axes and grid appropriately hidden for barcode visualization
+        comment: High-contrast black/white barcode + Okabe-Ito (colorblind-safe) zone
+          overlays.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Square 2400x2400 correct for barcode; fills ~75% of canvas with appropriate
+          quiet zone margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes correctly hidden; title format correct; subtitle provides encoded
+          content context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Plot backgrounds correct (#FAF8F1/#1A1A17); chrome tokens correct.
+          Okabe-Ito colors used for zone overlays but not in canonical order: blue
+          (position 3) assigned to L-finder before green (position 1). Fix: assign
+          #009E73 to data region first.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Educational zone color overlays distinguish L-finder/timing/data
+          with matching bordered label boxes. Clearly above defaults — strong design
+          with thoughtful Okabe-Ito color assignment to structural zones.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden (correct), no grid, subtle alpha overlays, bordered zone
+          labels with color-matched borders. Good polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Color-coded zones tell a clear educational story about Data Matrix
+          anatomy. Hover tooltips reinforce structural hierarchy interactively.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Data Matrix 2D barcode visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Content correctly encoded into matrix
-      - id: SC-03
+        comment: Correct Data Matrix 2D barcode with L-shaped finder, alternating
+          timing, and data modules.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: L-shaped finder pattern present, timing patterns on opposite edges,
-          quiet zone included; ECC 200 error correction implemented
-      - id: SC-04
-        name: Data Range
+        comment: Quiet zone, L-shaped finder, alternating timing, full ECC 200 Reed-Solomon,
+          correct content encoding all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full barcode visible with quiet zone
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Content SERIAL:12345678 correctly encoded through ASCII codeword
+          RS matrix pipeline.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Content subtitle shown but no additional legend needed
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: datamatrix-basic · bokeh · pyplots.ai'
+        comment: Title matches exact format; no legend needed for single visual element.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all main Data Matrix features including finder pattern, timing
-          patterns, data encoding
+        comment: 'All Data Matrix structural features shown and annotated: L-finder,
+          timing edges, data region, quiet zone, ECC 200.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: SERIAL:12345678 is a realistic industrial serial number use case
+        comment: SERIAL:12345678 is a canonical real-world Data Matrix use case for
+          component serial numbers in electronics/aerospace.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Matrix size appropriate for content length
+        comment: Correct proportions for a 26x26 Data Matrix symbol with 44-codeword
+          capacity; encoding is technically accurate.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses functions/classes instead of flat script structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data encoding, no random elements
+        comment: No functions or classes; inline RS encoding complexity is inherent
+          to the domain.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic input string; no random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported modules are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern Bokeh API usage
+        comment: RS encoding necessarily complex; no over-engineering or fake UI.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.html + plot-{THEME}.png correctly; current Bokeh/Selenium
+          API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, rect glyph, Title model, proper figure configuration,
-          export_png
+        comment: ColumnDataSource, figure.rect(), HoverTool with renderers, Label/Title
+          add_layout — textbook Bokeh patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: HoverTool with per-module type/row/col classification on a barcode
+          is distinctively Bokeh; interactive HTML output alongside PNG is library-specific.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
+  - hover-tooltips
+  - html-export
   - annotations
   patterns:
-  - data-generation
   - matrix-construction
   - columndatasource
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending

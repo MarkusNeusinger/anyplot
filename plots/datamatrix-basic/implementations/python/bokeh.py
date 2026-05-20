@@ -1,224 +1,283 @@
-""" pyplots.ai
+""" anyplot.ai
 datamatrix-basic: Basic Data Matrix 2D Barcode
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-20
 """
 
+import sys
+
+
+sys.path.pop(0)  # prevent this file from shadowing the installed bokeh package
+
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
-from bokeh.models import ColumnDataSource, Title
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, Label, Title
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data Matrix encoding helper functions
-# Implements basic ASCII encoding for Data Matrix ECC 200
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-
-def encode_ascii(text):
-    """Encode text using ASCII encoding scheme."""
-    codewords = []
-    i = 0
-    while i < len(text):
-        c = ord(text[i])
-        if i + 1 < len(text) and text[i].isdigit() and text[i + 1].isdigit():
-            # Encode digit pairs (values 130-229)
-            pair = int(text[i : i + 2])
-            codewords.append(130 + pair)
-            i += 2
-        elif 0 <= c <= 127:
-            # ASCII values 0-127 encoded as value + 1
-            codewords.append(c + 1)
-            i += 1
-        else:
-            # Extended ASCII (128-255) uses Upper Shift
-            codewords.append(235)  # Upper Shift
-            codewords.append(c - 127)
-            i += 1
-    return codewords
-
-
-def get_symbol_size(data_len):
-    """Get appropriate symbol size for data length."""
-    # Data Matrix ECC 200 symbol sizes (data capacity, rows, cols, data regions)
-    sizes = [
-        (3, 10, 10),
-        (5, 12, 12),
-        (8, 14, 14),
-        (12, 16, 16),
-        (18, 18, 18),
-        (22, 20, 20),
-        (30, 22, 22),
-        (36, 24, 24),
-        (44, 26, 26),
-    ]
-    for capacity, rows, cols in sizes:
-        if data_len <= capacity:
-            return rows, cols, capacity
-    return 26, 26, 44  # Maximum for this implementation
-
-
-def reed_solomon_encode(data, nsym, gf_exp=8, prim=0x12D):
-    """Simple Reed-Solomon encoder for error correction."""
-    # GF(256) with primitive polynomial x^8 + x^5 + x^3 + x^2 + 1
-    gf_size = 2**gf_exp
-
-    # Build log and exp tables
-    exp_table = [0] * gf_size * 2
-    log_table = [0] * gf_size
-    x = 1
-    for i in range(gf_size - 1):
-        exp_table[i] = x
-        log_table[x] = i
-        x <<= 1
-        if x >= gf_size:
-            x ^= prim
-    for i in range(gf_size - 1, gf_size * 2):
-        exp_table[i] = exp_table[i - (gf_size - 1)]
-
-    def gf_mult(a, b):
-        if a == 0 or b == 0:
-            return 0
-        return exp_table[(log_table[a] + log_table[b]) % (gf_size - 1)]
-
-    # Build generator polynomial
-    gen = [1]
-    for i in range(nsym):
-        new_gen = [0] * (len(gen) + 1)
-        for j, g in enumerate(gen):
-            new_gen[j] ^= g
-            new_gen[j + 1] ^= gf_mult(g, exp_table[i])
-        gen = new_gen
-
-    # Encode
-    remainder = data + [0] * nsym
-    for i in range(len(data)):
-        coef = remainder[i]
-        if coef != 0:
-            for j in range(1, len(gen)):
-                remainder[i + j] ^= gf_mult(gen[j], coef)
-
-    return remainder[len(data) :]
-
-
-def create_datamatrix(text):
-    """Create a Data Matrix barcode matrix."""
-    # Encode the data
-    codewords = encode_ascii(text)
-    rows, cols, capacity = get_symbol_size(len(codewords))
-
-    # Pad with 129 (pad codeword) if needed
-    while len(codewords) < capacity:
-        pos = len(codewords) + 1
-        pad = 129 + ((149 * pos) % 253) + 1
-        if pad > 254:
-            pad -= 254
-        codewords.append(pad)
-
-    # Add error correction
-    # ECC codewords count based on symbol size
-    ecc_counts = {
-        (10, 10): 5,
-        (12, 12): 7,
-        (14, 14): 10,
-        (16, 16): 12,
-        (18, 18): 14,
-        (20, 20): 18,
-        (22, 22): 20,
-        (24, 24): 24,
-        (26, 26): 28,
-    }
-    n_ecc = ecc_counts.get((rows, cols), 10)
-    ecc = reed_solomon_encode(codewords, n_ecc)
-    all_codewords = codewords + ecc
-
-    # Create the matrix with finder and timing patterns
-    matrix = np.ones((rows, cols), dtype=int)  # Start with white
-
-    # L-shaped finder pattern (solid black on left and bottom)
-    matrix[:, 0] = 0  # Left column solid black
-    matrix[-1, :] = 0  # Bottom row solid black
-
-    # Alternating timing pattern (top and right edges)
-    for i in range(cols):
-        matrix[0, i] = i % 2  # Top edge alternating
-    for i in range(rows):
-        matrix[i, -1] = (i + 1) % 2  # Right edge alternating
-
-    # Place data in the inner region using simplified row-by-row placement
-    # Simplified placement: fill inner region row by row
-    bit_idx = 0
-    total_bits = len(all_codewords) * 8
-
-    for r in range(1, rows - 1):
-        for c in range(1, cols - 1):
-            if bit_idx < total_bits:
-                cw_idx = bit_idx // 8
-                bit_pos = 7 - (bit_idx % 8)
-                bit = (all_codewords[cw_idx] >> bit_pos) & 1
-                matrix[r, c] = 1 - bit  # 1 = white, 0 = black
-                bit_idx += 1
-
-    return matrix
-
-
-# Generate Data Matrix for sample content
+# Data — ASCII-encode "SERIAL:12345678" for a Data Matrix ECC 200 barcode
 content = "SERIAL:12345678"
-matrix = create_datamatrix(content)
-rows, cols = matrix.shape
 
-# Add quiet zone (1 module width border)
-quiet_zone = 2
-total_width = cols + 2 * quiet_zone
-total_height = rows + 2 * quiet_zone
+codewords = []
+pos_idx = 0
+while pos_idx < len(content):
+    ch_val = ord(content[pos_idx])
+    if pos_idx + 1 < len(content) and content[pos_idx].isdigit() and content[pos_idx + 1].isdigit():
+        codewords.append(130 + int(content[pos_idx : pos_idx + 2]))
+        pos_idx += 2
+    elif 0 <= ch_val <= 127:
+        codewords.append(ch_val + 1)
+        pos_idx += 1
+    else:
+        codewords.append(235)
+        codewords.append(ch_val - 127)
+        pos_idx += 1
 
-# Find black cell positions (value = 0)
+# Determine symbol size (capacity, rows, cols) for ECC 200
+symbol_sizes = [
+    (3, 10, 10),
+    (5, 12, 12),
+    (8, 14, 14),
+    (12, 16, 16),
+    (18, 18, 18),
+    (22, 20, 20),
+    (30, 22, 22),
+    (36, 24, 24),
+    (44, 26, 26),
+]
+rows, cols, capacity = 26, 26, 44
+for cap, nr, nc in symbol_sizes:
+    if len(codewords) <= cap:
+        rows, cols, capacity = nr, nc, cap
+        break
+
+# Pad codewords to symbol capacity with randomised pad codewords
+while len(codewords) < capacity:
+    pad_pos = len(codewords) + 1
+    pad_cw = 129 + ((149 * pad_pos) % 253) + 1
+    if pad_cw > 254:
+        pad_cw -= 254
+    codewords.append(pad_cw)
+
+# Reed-Solomon ECC — GF(256) with primitive polynomial x^8+x^5+x^3+x^2+1 (=0x12D)
+ecc_sizes = {
+    (10, 10): 5,
+    (12, 12): 7,
+    (14, 14): 10,
+    (16, 16): 12,
+    (18, 18): 14,
+    (20, 20): 18,
+    (22, 22): 20,
+    (24, 24): 24,
+    (26, 26): 28,
+}
+n_ecc = ecc_sizes.get((rows, cols), 10)
+
+gf_prim = 0x12D
+gf_exp = [0] * 512
+gf_log = [0] * 256
+gf_x = 1
+for gf_i in range(255):
+    gf_exp[gf_i] = gf_x
+    gf_log[gf_x] = gf_i
+    gf_x <<= 1
+    if gf_x >= 256:
+        gf_x ^= gf_prim
+for gf_i in range(255, 512):
+    gf_exp[gf_i] = gf_exp[gf_i - 255]
+
+# Build RS generator polynomial: g(x) = prod(x + alpha^i) for i=0..n_ecc-1
+rs_gen = [1]
+for ecc_i in range(n_ecc):
+    ei = gf_exp[ecc_i]
+    new_g = [0] * (len(rs_gen) + 1)
+    for g_j, gv in enumerate(rs_gen):
+        new_g[g_j] ^= gv
+        if gv != 0:
+            new_g[g_j + 1] ^= gf_exp[(gf_log[gv] + gf_log[ei]) % 255]
+    rs_gen = new_g
+
+# Polynomial long division to compute ECC codewords
+rs_rem = list(codewords) + [0] * n_ecc
+for d_i in range(len(codewords)):
+    coef = rs_rem[d_i]
+    if coef != 0:
+        for enc_j in range(1, len(rs_gen)):
+            if rs_gen[enc_j] != 0:
+                rs_rem[d_i + enc_j] ^= gf_exp[(gf_log[rs_gen[enc_j]] + gf_log[coef]) % 255]
+all_codewords = codewords + rs_rem[len(codewords) :]
+
+# Construct Data Matrix grid (1=white/light module, 0=dark module)
+matrix = np.ones((rows, cols), dtype=int)
+matrix[:, 0] = 0  # L-shaped finder: solid left column
+matrix[-1, :] = 0  # L-shaped finder: solid bottom row
+for ti in range(cols):
+    matrix[0, ti] = ti % 2  # Alternating timing on top edge
+for ti in range(rows):
+    matrix[ti, -1] = (ti + 1) % 2  # Alternating timing on right edge
+
+# Place data bits into inner region, row by row
+bit_idx = 0
+n_bits = len(all_codewords) * 8
+for dr in range(1, rows - 1):
+    for dc in range(1, cols - 1):
+        if bit_idx < n_bits:
+            cw_pos = bit_idx // 8
+            bit_pos = 7 - (bit_idx % 8)
+            bit_val = (all_codewords[cw_pos] >> bit_pos) & 1
+            matrix[dr, dc] = 1 - bit_val  # dark module = 0
+            bit_idx += 1
+
+# Compute cell coordinates with quiet zone (2 modules on each side)
+quiet = 2
+total_w = cols + 2 * quiet
+total_h = rows + 2 * quiet
 black_rows, black_cols = np.where(matrix == 0)
-
-# Add offset for quiet zone
-offset_cols = black_cols + quiet_zone
-offset_rows = black_rows + quiet_zone
-
-# Flip row coordinates for Bokeh (origin at bottom-left)
-flipped_rows = total_height - 1 - offset_rows
-
-# Create ColumnDataSource
+cell_x = (black_cols + quiet + 0.5).astype(float)
+cell_y = (total_h - 1 - (black_rows + quiet) + 0.5).astype(float)
+module_types = [
+    "L-finder" if (c == 0 or r == rows - 1) else "Timing" if (r == 0 or c == cols - 1) else "Data"
+    for r, c in zip(black_rows.tolist(), black_cols.tolist(), strict=True)
+]
 source = ColumnDataSource(
-    data={"x": offset_cols + 0.5, "y": flipped_rows + 0.5}  # Center squares on grid
+    data={
+        "x": cell_x,
+        "y": cell_y,
+        "module_row": black_rows.astype(int),
+        "module_col": black_cols.astype(int),
+        "module_type": module_types,
+    }
 )
 
-# Create figure - square aspect for Data Matrix
+# Plot — 2400×2400 square canvas suits the square Data Matrix barcode
 p = figure(
-    width=3600,
-    height=3600,
-    title="datamatrix-basic · bokeh · pyplots.ai",
-    x_range=(0, total_width),
-    y_range=(0, total_height),
-    tools="",
+    width=2400,
+    height=2400,
+    title="datamatrix-basic · python · bokeh · anyplot.ai",
+    x_range=(0, total_w),
+    y_range=(0, total_h),
     toolbar_location=None,
+    min_border_top=120,
+    min_border_bottom=90,
+    min_border_left=90,
+    min_border_right=90,
 )
 
-# Draw black squares using rect glyph
-cell_size = 0.95  # Slightly smaller than 1 to show grid structure
-p.rect(x="x", y="y", width=cell_size, height=cell_size, source=source, fill_color="#000000", line_color=None)
+OKABE_BLUE = "#0072B2"
+OKABE_ORANGE = "#D55E00"
+OKABE_GREEN = "#009E73"
 
-# Style the plot
-p.title.text_font_size = "36pt"
-p.title.align = "center"
+# Structural zone overlays — drawn first so barcode modules render on top
+bx = quiet  # barcode left edge in plot coords
+by = total_h - quiet - rows  # barcode bottom edge in plot coords
+# L-finder: solid left column + solid bottom row
+p.rect(x=bx + 0.5, y=by + rows / 2, width=1, height=rows, fill_color=OKABE_BLUE, fill_alpha=0.15, line_color=None)
+p.rect(x=bx + cols / 2, y=by + 0.5, width=cols, height=1, fill_color=OKABE_BLUE, fill_alpha=0.15, line_color=None)
+# Timing: alternating top row + right column
+p.rect(
+    x=bx + cols / 2, y=by + rows - 0.5, width=cols, height=1, fill_color=OKABE_ORANGE, fill_alpha=0.15, line_color=None
+)
+p.rect(
+    x=bx + cols - 0.5, y=by + rows / 2, width=1, height=rows, fill_color=OKABE_ORANGE, fill_alpha=0.15, line_color=None
+)
+# Data region: inner cells (rows 1..rows-2, cols 1..cols-2)
+p.rect(
+    x=bx + cols / 2,
+    y=by + rows / 2,
+    width=cols - 2,
+    height=rows - 2,
+    fill_color=OKABE_GREEN,
+    fill_alpha=0.12,
+    line_color=None,
+)
 
-# Set background to white (quiet zone)
-p.background_fill_color = "white"
-p.border_fill_color = "white"
+modules_renderer = p.rect(x="x", y="y", width=0.95, height=0.95, source=source, fill_color=INK, line_color=None)
+hover = HoverTool(
+    renderers=[modules_renderer], tooltips=[("Type", "@module_type"), ("Row", "@module_row"), ("Col", "@module_col")]
+)
+p.add_tools(hover)
 
-# Hide axes for clean barcode appearance
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
+
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
-p.outline_line_color = None
 
-# Add subtitle showing encoded content
-subtitle = Title(text=f'Content: "{content}"', text_font_size="24pt", align="center")
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+p.title.align = "center"
+p.title.text_font_style = "normal"
+
+subtitle = Title(text=f'Content: "{content}"', text_font_size="34pt", text_color=INK_SOFT, align="center")
 p.add_layout(subtitle, "below")
 
-# Save as PNG
-export_png(p, filename="plot.png")
+# Zone labels in the quiet border areas, color-matched to their overlays
+for lx, ly, ltxt, lcolor, langle in [
+    (1.0, total_h - quiet - rows / 2, "L-finder", OKABE_BLUE, np.pi / 2),
+    (quiet + cols / 2, total_h - quiet + 0.6, "Timing", OKABE_ORANGE, 0.0),
+    (total_w - 1.0, total_h - quiet - rows / 2, "Data", OKABE_GREEN, -np.pi / 2),
+]:
+    p.add_layout(
+        Label(
+            x=lx,
+            y=ly,
+            text=ltxt,
+            text_color=lcolor,
+            text_font_size="18pt",
+            text_font_style="bold",
+            text_align="center",
+            text_baseline="middle",
+            angle=langle,
+            background_fill_color=PAGE_BG,
+            background_fill_alpha=0.8,
+            border_line_color=lcolor,
+            border_line_width=2,
+        )
+    )
+
+# Save interactive HTML (required catalog artifact)
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Chrome via Selenium
+W, H = 2400, 2400
+# Add height buffer to account for headless Chrome's viewport offset (~140px)
+WIN_H = H + 150
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{WIN_H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, WIN_H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(2)
+# Match HTML page background to figure background so no contrast border appears
+driver.execute_script(
+    "document.body.style.backgroundColor = arguments[0];document.documentElement.style.backgroundColor = arguments[0];",
+    PAGE_BG,
+)
+time.sleep(1)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
