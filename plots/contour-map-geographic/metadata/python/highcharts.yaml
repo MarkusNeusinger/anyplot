@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: contour-map-geographic
 created: '2026-01-17T11:57:31Z'
-updated: '2026-05-20T23:09:34Z'
+updated: '2026-05-20T23:26:50Z'
 generated_by: claude-sonnet
 workflow_run: 26194404985
 issue: 3772
@@ -12,122 +12,131 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-m
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/highcharts/plot-dark.html
-quality_score: 79
+quality_score: 84
 review:
   strengths:
-  - Correct geographic contour map using Highmaps with Europe topology — right chart
-    type and right library features
-  - 'Theme-adaptive chrome is comprehensive: background, land color, text, and legend
-    all adapt correctly between light and dark with zero dark-on-dark failures'
-  - 'Excellent code quality: flat KISS structure, deterministic seed, clean imports,
-    correct output file naming'
-  - Custom inline marching squares algorithm extracts contours without external geo-processing
-    dependencies
-  - Canvas dimensions correctly enforced at 3200x1800 via CDP override and PIL safety
-    net
+  - Theme-adaptive land colors (LAND_COLOR toggled per theme) showing intentional
+    design care
+  - Viridis gradient applied to contour lines via colorAxis for CVD-safe continuous
+    mapping
+  - Line width hierarchy (12px major / 6px minor) creates visual distinction between
+    contour importance
+  - 'Correct Highmaps API usage: mapline + mappoint + map series types with Europe
+    topology'
+  - Canvas normalization (CDP override + PIL pad) ensuring exact 3200×1800 output
+  - np.random.seed(42) for reproducibility; all font sizes explicitly set
+  - Inline marching-squares contour extraction without external dependencies beyond
+    PIL/Selenium
   weaknesses:
-  - 'Data colors use a custom terrain ramp (#2E7D32 through #C62828) instead of Okabe-Ito
-    or viridis/cividis for continuous elevation data — first series should be #009E73;
-    for continuous elevation a viridis-based colorAxis would be more appropriate and
-    CVD-safe'
-  - 'Full-Europe map extent makes the Alpine data area occupy only 5-8% of the canvas
-    — add mapView: {center: [10.5, 47.0], zoom: 4.5} or similar to zoom to the Alpine
-    region so contours fill the canvas'
-  - Spec requires a colorbar legend showing the value range — a discrete per-level
-    legend is provided instead; switching to Highcharts colorAxis would provide a
-    proper gradient colorbar and also fix the color palette issue
+  - 'Contour labeling is sparse: only the first path of 1000m and 3000m levels receive
+    labels, so 2000m is unlabeled and 500m/1500m/2500m levels have no text at all
+    — add labels at every 1000m interval and at least the first 2-3 paths per level'
+  - Colorbar tick labels use 36px (smaller than the 44px style-guide standard for
+    legend/tick text) — increase to 44px
+  - 'No filled-contour option: spec notes ''Support both line-only contours and optional
+    filled contours between levels'' — consider adding a semi-transparent filled band
+    between contour pairs using a mappolygon series'
+  - Design storytelling could be strengthened — e.g. annotate the highest peak area
+    with a callout label or bold the 3000m contour more prominently to draw the viewer's
+    eye to the key insight
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct per style guide
-      Chrome: Title "contour-map-geographic · python · highcharts · anyplot.ai" in dark ink, clearly readable; subtitle "Terrain elevation contours (meters) · Alpine region" visible; legend "Elevation" with 6 colored entries on right side, all readable
-      Data: Alpine region contour cluster in six colors: dark green (500m), dark blue (1000m), medium blue (1500m), purple (2000m), red (2500m), orange (3000m); "1000m" label visible within cluster; data occupies ~5-8% of canvas; land in sage-green (#d4e6c5)
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) canvas with a soft sage-green land surface (#d4e6c5) — matches the required light theme surface exactly.
+      Chrome: Title "contour-map-geographic · python · highcharts · anyplot.ai" in dark ink (~66px), clearly readable. Subtitle "Terrain elevation contours (meters) · Alpine region" in softer dark ink (~44px), readable. Legend "Elevation (m)" colorbar at the bottom center with gradient label text at ~36px — slightly small but readable.
+      Data: Six contour-level lines drawn over Europe. Colors follow the viridis gradient: dark purple (#440154) at 500m rising through blue, teal, lime-green to yellow (#FDE725) at 3000m. Major lines (12px) and minor (6px) clearly distinguish contour importance. Country borders visible in subtle warm gray. Two contour labels ("3000m" near western peak, "1000m" on lower band) with text outlines for map readability.
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct per style guide
-      Chrome: Title and subtitle in light-colored text, clearly readable against dark surface; legend with dark-elevated background and light text; no dark-on-dark failures detected; all chrome elements correctly theme-adapted
-      Data: Same six contour colors as light render — data colors are identical between themes; "1000m" label visible; land in dark olive-green (#2a3a2a) providing contrast against the map lines
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) canvas with a dark forest-green land surface (#2a3a2a) — matches the required dark theme surface exactly.
+      Chrome: Title in light cream text (#F0EFE8 range), clearly readable against the dark surface. Subtitle in softer light text, readable. Legend "Elevation (m)" colorbar in light text on dark elevated background. Contour labels "3000m" and "1000m" appear in light text with dark text outlines matching the dark background — readable.
+      Data: Contour line colors are identical to the light render (viridis gradient unchanged — only chrome flips). Country borders visible in muted tones. The dark land surface (#2a3a2a) provides clear contrast with the viridis-colored contour lines.
+      Legibility verdict: PASS — all text readable against the warm near-black background; no dark-on-dark failures detected. Data colors correctly identical between light and dark themes.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Font sizes correctly set (66px title, 44px legend, 36px contour labels);
-          all text readable in both themes; contour labels are small relative to full-Europe
-          map scale
+        comment: 'All font sizes explicitly set (66px title, 44px subtitle, 44px legend
+          title, 36px colorbar/contour labels). Readable in both themes. Minor deduction:
+          colorbar labels at 36px are slightly below the 44px style-guide standard
+          for tick/legend text.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements
+        comment: No overlapping text. allowOverlap:False on contour labels prevents
+          collision. Legend and title well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Contour lines clearly visible with distinct colors; Alpine cluster
-          occupies small fraction of canvas due to full-Europe extent
+        comment: 'Contour lines clearly visible with appropriate line widths (12px
+          major, 6px minor). Viridis gradient provides good level distinction. Minor
+          deduction: slight polygonal appearance in some lower-elevation contours
+          from 50x50 grid resolution.'
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Green-to-red progression is problematic for red-green color blindness;
-          color not sole signal but CVD concern remains
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas correctly 3200x1800; legend well-positioned; Alpine data fills
-          only ~5-8% of total canvas
+        comment: Canvas gate passed (3200x1800). Map fills well-proportioned area.
+          Legend centered at bottom with generous padding.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted; descriptive subtitle; no traditional axes
-          needed for map
+        comment: No traditional axes (geographic map). Colorbar legend titled 'Elevation
+          (m)' provides units. Subtitle gives geographic context.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark); chrome tokens
-          adapt correctly; data colors use custom terrain ramp instead of Okabe-Ito
-          or viridis/cividis'
+        passed: true
+        comment: 'Viridis is the correct continuous colormap for elevation data. Backgrounds:
+          #FAF8F1 light / #1A1A17 dark. Both renders theme-correct. Data colors identical
+          across themes.'
     design_excellence:
-      score: 9
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Custom terrain color ramp is intentional; Europe topology basemap
-          adds authenticity; full-Europe zoom diminishes impact
+        passed: true
+        comment: Above default (4). Theme-adaptive land colors (sage/forest green),
+          line width hierarchy, viridis on contour lines, subtitle polish. Not at
+          FiveThirtyEight level but clearly thoughtful design.
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: Theme-adaptive land color is a nice touch; legend styled with border/header;
-          clean map presentation
+        passed: true
+        comment: Above default (2). Map navigation disabled for clean look, spacing
+          tokens applied, legend with proper border/padding/background. Geographic
+          maps have inherently less room for spine/grid refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 3
         max: 6
-        passed: false
-        comment: Elevation gradient communicates higher=warmer; but small data area
-          on large map reduces storytelling impact significantly
+        passed: true
+        comment: Above default (2). Alpine region focus, mapView.fitToGeometry, subtitle
+          contextualizes data. But no single dramatic focal point or peak annotation
+          to guide viewer's eye.
     spec_compliance:
       score: 14
       max: 15
@@ -137,28 +146,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: contour lines on geographic basemap using Highmaps topology'
+        comment: 'Correct: contour lines on geographic basemap with Highmaps topology,
+          mapline series, country borders.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Contour lines on basemap, contour labels, line-only contours all
-          present; spec requires colorbar but discrete legend provided instead
+        comment: 'Has: geographic basemap, contour lines, viridis colormap, colorbar
+          legend, meaningful intervals (500m). Missing: filled contour option (spec:
+          ''optional filled contours between levels''); 2000m level unlabeled.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Latitude/longitude correctly mapped; elevation encoded via contour
-          levels; 50x50 grid in Alpine region
+        comment: Lat/lon grid correctly mapped, elevation drives colorAxis, all 6
+          contour levels shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is contour-map-geographic · python · highcharts · anyplot.ai;
-          legend titled Elevation with all 6 levels
+        comment: 'Title: ''contour-map-geographic · python · highcharts · anyplot.ai''
+          correct. Legend: ''Elevation (m)'' colorbar with gradient.'
     data_quality:
       score: 14
       max: 15
@@ -168,22 +179,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 6 contour levels with line-width variation, geographic basemap, contour
-          labels, interactive tooltips; missing continuous colorbar
+        comment: 'Shows 6 contour levels, realistic Alpine elevation pattern, geographic
+          context. Minor deduction: no filled contour regions shown.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated Alpine elevation with realistic coordinates, named peaks,
-          appropriate elevation range; neutral topic
+        comment: Alpine elevation is a real, scientifically neutral scenario. Simulated
+          peaks represent Mont Blanc, Matterhorn, Austrian Alps, Dolomites — plausible
+          arrangement.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Elevation range 0-4000m realistic for Alps; 500m intervals appropriate;
-          50x50 grid sufficient
+        comment: Elevation 0-4000m for Alps is realistic. 50x50 grid appropriate.
+          Lat 44-50N / Lon 5-15E correctly covers Alpine region.
     code_quality:
       score: 10
       max: 10
@@ -193,34 +205,37 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; flat code; marching squares inline
+        comment: 'Linear structure: imports -> theme tokens -> data generation ->
+          contour extraction -> chart config -> export. No functions or classes defined.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: json, os, tempfile, time, urllib.request, pathlib.Path,
+          numpy, PIL, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured; marching squares lookup table is elegant; segment-chaining
-          is functional
+        comment: Inline marching squares is verbose but appropriate given no scipy
+          dependency. No fake functionality. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Highmaps
+          API (Highcharts.mapChart).
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,28 +243,32 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Highmaps mapChart appropriately; correct mapline series type;
-          mappoint for labels; inline JS embedding; uses raw JSON instead of highcharts_core
-          SDK but valid
+        comment: Correctly uses Highcharts.mapChart, mapView, colorAxis, multiple
+          map series types. Downloads highmaps.js (not highcharts.js) — correct module.
+          Direct JSON injection is necessary since highcharts_core Python SDK lacks
+          Highmaps types.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: 'Leverages Highmaps-specific: geographic topology, mapline/mappoint
-          series types, showInLegend per-series control, interactive tooltips, HTML
-          artifact generation'
+        comment: 'Uses Highmaps-specific geographic features: Europe topology, mapline
+          for contour lines, mappoint for labels, mapView.fitToGeometry for bounding
+          box, colorAxis for gradient. These features are distinctive to Highcharts
+          Maps.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
+  - colorbar
   - html-export
-  - custom-legend
+  - annotations
   patterns:
   - data-generation
   - matrix-construction
   - iteration-over-groups
   dataprep: []
-  styling: []
+  styling:
+  - custom-colormap
