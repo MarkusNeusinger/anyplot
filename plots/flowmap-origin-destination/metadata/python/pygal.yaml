@@ -1,204 +1,241 @@
 library: pygal
+language: python
 specification_id: flowmap-origin-destination
 created: '2026-01-16T08:06:32Z'
-updated: '2026-01-16T08:32:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21059785752
+updated: '2026-05-20T10:05:52Z'
+generated_by: claude-sonnet
+workflow_run: 26153997460
 issue: 3765
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/pygal/plot.html
-quality_score: 78
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/flowmap-origin-destination/python/pygal/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent use of pygal's XY chart for geographic plotting with custom coordinate
-    ranges
-  - Well-implemented Bezier curve algorithm for smooth arc connections
-  - Clean categorical legend grouping flows by magnitude (Low/Medium/High)
-  - Simplified coastlines provide geographic context without overwhelming the data
-  - Interactive tooltips show origin to destination with flow values
-  - Colorblind-safe color palette using viridis-inspired colors
-  - Proper sys.path handling to avoid import conflicts
+  - Semantically separates non-data coastlines (INK_SOFT) from data series (Okabe-Ito)
+    — shows design intent
+  - Creative CSS injection workaround for pygal missing opacity API — idiomatic problem-solving
+  - 3-tier magnitude classification creates clear visual hierarchy without continuous
+    scale complexity
+  - Both light and dark themes fully functional with correct background and text tokens
+  - 'Complete spec compliance: bezier curves, width encoding, transparency, geographic
+    context, interactive HTML'
   weaknesses:
-  - Line width differentiation between flow categories is not visually prominent enough
-    (3/10/18 stroke widths appear similar in rendered output due to pygal's SVG rendering)
-  - The gold (Medium) and purple (High) flow colors are barely visible - most flows
-    render in teal despite being in different categories
-  image_description: 'The plot displays an origin-destination flow map of European
-    trade ports using pygal''s XY chart. The visualization shows a title "flowmap-origin-destination
-    · pygal · pyplots.ai" at the top in black text. The background is a light teal/mint
-    color (#F0F8F8) with white margins. The axes show Longitude (-12 to 28) on the
-    x-axis and Latitude (35-58) on the y-axis, both with subtle grid lines. A legend
-    in the upper-left shows 5 series: Coastlines (gray), Low 220-399 (teal), Medium
-    400-599 (gold), High 600-850 (purple), and Port Cities (coral). Faint gray lines
-    outline European geography including the UK, Iberian Peninsula, France, Italy,
-    and Balkans. Curved flow arcs connect port cities using predominantly teal color,
-    though the line thickness differentiation between Low/Medium/High flows is barely
-    visible - most arcs appear similar width. Coral/orange dots mark 14 European port
-    locations including Rotterdam, Hamburg, Antwerp, London, Le Havre, Barcelona,
-    Marseille, Genoa, Valencia, Lisbon, Piraeus, Copenhagen, Gdansk, and Dublin. The
-    map shows geographic extent well, but the flow magnitude differentiation is weak.'
+  - Helper function make_bezier_curves breaks KISS structure; could be inlined with
+    a loop to stay flat
+  - Arc width differentiation (6/14/28 px) is slightly subtle at mid-range; widening
+    the gap (e.g., 4/16/36) would make magnitude hierarchy more immediately apparent
+  - Box frame (all 4 spines) persists as default pygal XY chrome; for a map-like visualization,
+    removing or suppressing top/right frame would improve refinement
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white
+      Chrome: Title "flowmap-origin-destination · python · pygal · anyplot.ai" clearly readable in dark ink at top; X-axis label "Longitude" and Y-axis label "Latitude" clearly readable; tick labels for lat/lon range clearly readable; legend (5 entries) readable in upper-left
+      Data: Coastlines in INK_SOFT grey; Low flows in #009E73 (brand green, Okabe-Ito pos 1); Medium flows in #D55E00 (Okabe-Ito pos 2); High flows in #0072B2 (Okabe-Ito pos 3); Port Cities in #CC79A7 (Okabe-Ito pos 4); arc transparency 0.6 via CSS injection
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title, axis labels, tick labels all rendered in light-colored ink — clearly readable; no dark-on-dark failures detected; legend text readable against dark background
+      Data: Colors identical to light render — #009E73 green, #D55E00 orange-red, #0072B2 blue, #CC79A7 pink; coastlines render as lighter strokes on dark background; arc transparency preserved
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 32
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and axis labels readable; legend text is small but legible
+        comment: All font sizes explicitly set (title=66, label=56, major_label=44,
+          legend=44); well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Some coastline segments overlap with flow arcs, but generally readable
+        comment: No text collisions; legend placed cleanly in upper-left clear of
+          arcs
       - id: VQ-03
         name: Element Visibility
         score: 5
-        max: 8
-        passed: false
-        comment: Flow line widths not sufficiently differentiated - Low/Medium/High
-          flows look nearly identical despite different stroke widths
+        max: 6
+        passed: true
+        comment: Arc bezier curves visible with 3-tier width difference (6/14/28 px);
+          width differentiation slightly subtle at mid-range
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: 'Colorblind-safe palette (viridis-inspired: teal, gold, purple, coral)'
+        comment: Okabe-Ito palette, CVD-safe; adequate contrast on both theme surfaces
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good use of canvas; right margin for legend is appropriate
+        comment: Generous margins; map content fills 70-80% of canvas; legend well-positioned
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude are descriptive
+        comment: Longitude/Latitude are standard geographic descriptors; title matches
+          mandatory format exactly
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid, legend well-positioned
+        comment: 'First data series is #009E73; multi-series follows Okabe-Ito order;
+          coastlines use INK_SOFT; backgrounds #FAF8F1/#1A1A17; both themes chrome-correct'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: smart INK_SOFT for non-data coastlines, 3-tier classification,
+          semantic color use, transparent arcs, z-ordering. Not FiveThirtyEight-level;
+          simplified coastlines'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Generous margins explicitly set; default box frame remains (unavoidable
+          in XY chart); grid provides geographic reference value
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 3-tier hierarchy communicates volume; Rotterdam hub visually apparent
+          from thick blue arc concentration; visual hierarchy guides viewer
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Flow map using XY chart with curved arcs connecting origins to destinations
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Latitude/Longitude correctly mapped to Y/X axes
-      - id: SC-03
+        comment: Origin-destination flow map with bezier curved arcs; width proportional
+          to magnitude; geographic basemap
+      - id: SC-02
         name: Required Features
-        score: 3
-        max: 5
-        passed: false
-        comment: Has curved arcs, transparency, coastlines for context, but line width
-          proportional to flow magnitude is not visually clear
-      - id: SC-04
-        name: Data Range
+        score: 4
+        max: 4
+        passed: true
+        comment: Curved arcs (bezier), width encoding, transparency (0.6), coastlines,
+          interactive HTML, magnitude color tiers
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Europe covered appropriately (35-58N, -12 to 28E)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude on X, Latitude on Y; all 20 flows plotted; magnitude mapped
+          to arc width
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend categories match flow volume ranges
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: {spec-id} · {library} · pyplots.ai'
+        comment: Title exactly matches mandatory format; legend labels clearly describe
+          tiers and port cities
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 20 flows across 14 ports with varied magnitudes (220-850);
-          good variety
+        comment: Varying magnitudes, spatial clustering (Rotterdam hub), port city
+          positions, coastal geography; all core features present
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: European port trade flows is a plausible, neutral scenario
+        comment: European port trade is neutral, real-world; all 14 ports are real
+          European ports at correct geographic coordinates
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Flow values (220-850 units) and geographic coordinates are realistic
+        comment: Port coordinates geographically correct; trade volume range (220-850
+          units) internally consistent; spatial extent accurate
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, chart, save'
+        comment: Helper function make_bezier_curves breaks strict flat structure;
+          justified but technically violates no-functions rule
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set; data largely hardcoded
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (numpy, pygal, Style)
+        comment: os, sys, cairosvg, numpy, pygal, pygal.style.Style — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: sys.path manipulation necessary; CSS injection creative workaround;
+          overall clean
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (correct for interactive
+          pygal)
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal XY chart, custom Style, stroke_style with width and linecap,
-          SVG export, interactive tooltips via label dictionaries
+        comment: pygal.XY with series-level stroke settings; custom Style; show_dots
+          control per series; HTML+PNG output
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: CSS class injection for per-series opacity; interactive HTML with
+          hover tooltips; stroke_style with linecap=round
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - cairosvg
   techniques:
   - bezier-curves
   - html-export
@@ -208,4 +245,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
