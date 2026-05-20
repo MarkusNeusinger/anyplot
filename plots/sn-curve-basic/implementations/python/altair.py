@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -74,7 +74,7 @@ band = alt.Chart(band_df).mark_rect(opacity=0.10, color=C_EL).encode(y=alt.Y("y1
 # Scatter: individual test specimens
 points = (
     alt.Chart(df)
-    .mark_point(size=180, filled=True, opacity=0.75, color=BRAND)
+    .mark_point(size=180, filled=True, opacity=0.75, color=BRAND, stroke=PAGE_BG, strokeWidth=0.8)
     .encode(
         x=alt.X("cycles:Q", scale=x_scale, title="Cycles to Failure (N)"),
         y=alt.Y("stress:Q", scale=y_scale, title="Stress Amplitude (MPa)"),
@@ -99,7 +99,7 @@ ref_rules = (
             "property:N",
             scale=alt.Scale(domain=["UTS: 520 MPa", "YS: 380 MPa", "EL: 150 MPa"], range=[C_UTS, C_YS, C_EL]),
             legend=alt.Legend(
-                title="Material Properties", titleFontSize=12, labelFontSize=10, labelLimit=200, orient="bottom-left"
+                title="Material Properties", titleFontSize=12, labelFontSize=10, labelLimit=200, orient="bottom-right"
             ),
         ),
     )
@@ -125,14 +125,16 @@ chart = (
     .configure_view(fill=PAGE_BG, strokeOpacity=0, continuousWidth=620, continuousHeight=320)
     .configure_axis(
         domainColor=INK_SOFT,
+        domainOpacity=1,
         tickColor=INK_SOFT,
         gridColor=INK,
-        gridOpacity=0.10,
+        gridOpacity=0.06,
         labelColor=INK_SOFT,
         titleColor=INK,
         labelFontSize=10,
         titleFontSize=12,
     )
+    .configure_axisX(gridOpacity=0)
     .configure_title(color=INK, fontWeight="bold", fontSize=16)
     .configure_legend(
         fillColor=ELEVATED_BG,
