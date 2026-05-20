@@ -1,0 +1,241 @@
+library: seaborn
+language: python
+specification_id: bar-drilldown
+created: '2026-05-20T11:18:01Z'
+updated: '2026-05-20T11:37:36Z'
+generated_by: claude-sonnet
+workflow_run: 26158838659
+issue: 3783
+language_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/bar-drilldown/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - Gold edge accent on East bar is an elegant focal-point technique that guides the
+    viewer to the top performer without simulating interactivity
+  - Quarterly values sum precisely to annual totals — internally consistent data with
+    real-world plausibility
+  - 'Both theme renders fully correct: warm backgrounds (#FAF8F1/#1A1A17), theme-adaptive
+    chrome, identical Okabe-Ito data colors across light and dark'
+  - Two-panel layout with breadcrumb text effectively narrates the hierarchical drilldown
+    concept in static form
+  - Clean code with all font sizes explicitly set and correct current seaborn API
+    usage (errorbar=None, sns.move_legend)
+  weaknesses:
+  - Bottom panel value labels at fontsize=6 are borderline small for mobile readability
+    — raise to 7pt
+  - Most detailed annotation work (patch iteration, ax.text labels) is done at matplotlib
+    level rather than seaborn level, limiting library distinctiveness score
+  - Breadcrumb text styling is functional but plain — a slightly bolder weight or
+    subtle background box would integrate it more visually with the panel design
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Sales by Region · bar-drilldown · python · seaborn · anyplot.ai" in dark ink, readable. Axis labels "Annual Revenue ($M)", "Quarterly Revenue ($M)", "Region" all in dark ink at 10pt. Tick labels at 8pt in INK_SOFT (#4A4A44). Breadcrumb "All Regions ▶ Quarterly Breakdown by Region" in muted dark tone between panels. All chrome elements readable.
+      Data: Top panel — 4 bars in brand green (#009E73), East bar has gold (#E69F00) border accent. Dollar value labels ($12.4M, $8.7M, $15.2M, $10.1M) above bars at 8pt. Bottom panel — 16 grouped bars using Okabe-Ito: Q1=#009E73, Q2=#D55E00, Q3=#0072B2, Q4=#CC79A7. Value labels above each bar at 6pt in INK_SOFT.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light ink (#F0EFE8), readable. Axis labels and tick labels in light chrome (#B8B7B0). Breadcrumb in muted light tone. Legend frame in elevated dark (#242420) with muted border. No dark-on-dark failures — all text elements clearly visible against the dark surface.
+      Data: Identical colors to light render — brand green (#009E73) bars in top panel, East gold border, same Okabe-Ito Q1-Q4 colors in bottom panel. Data series colors unchanged between themes as required.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; 6pt bottom-panel labels borderline
+          small but visible in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Bars clearly visible, colors well-contrasted on both backgrounds
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito is CVD-safe; gold accent supplementary only
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Two-panel layout with height_ratios=[2,3] uses canvas well, no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Descriptive labels with units ($M) on both axes
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73, Okabe-Ito order for multi-series, correct
+          warm backgrounds, full theme-adaptive chrome'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: gold focal-point accent, warm theme backgrounds,
+          clear panel hierarchy — above generic defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: despined axes, very subtle grid (alpha=0.10), elevated legend
+          background, generous panel spacing'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good: two-panel hierarchy narrates overview→drill, gold East border
+          is a data-driven focal point, breadcrumb contextualizes relationship'
+    spec_compliance:
+      score: 13
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct bar chart type with hierarchical data; static two-panel is
+          correct seaborn alternative to click-drill interactivity
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: Breadcrumb, value labels, two-level display, color mapping present.
+          Back button and animations are not feasible for static seaborn.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Region, Y=Revenue correct. All 4 regions × 4 quarters visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title follows required format with descriptive prefix. Quarter legend
+          labels match data.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Shows both hierarchy levels, regional variation, and quarterly seasonal
+          patterns
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real-world regional sales scenario, plausible revenue values, neutral
+          topic
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Quarterly values sum precisely to annual totals — internally consistent
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Linear imports→data→plot→save, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic hardcoded data
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All 4 imports used, no extras
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code, no over-engineering or fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Correct plot-{THEME}.png output, current seaborn API
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct axes-level barplot, errorbar=None, sns.set_theme with rc,
+          sns.despine, sns.move_legend — all idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses sns.move_legend() and sns.despine() distinctively; detailed
+          annotation work is at matplotlib level
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - custom-legend
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - edge-highlighting
+  - grid-styling
