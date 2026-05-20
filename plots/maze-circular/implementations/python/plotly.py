@@ -1,161 +1,220 @@
-""" pyplots.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
-Library: plotly 6.5.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: plotly | Python 3.13
+Quality: 91/100 | Updated: 2026-05-20
 """
 
-import numpy as np
-import plotly.graph_objects as go
+import os
+import sys
+from collections import deque
 
 
-# Parameters
+# Remove current directory from path to avoid importing local plotly.py
+sys.path = [p for p in sys.path if p not in ("", ".", os.path.dirname(__file__))]
+
+import numpy as np  # noqa: E402
+import plotly.graph_objects as go  # noqa: E402
+
+
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ACCENT = "#009E73"  # Okabe-Ito position 1
+
+# Maze parameters
 np.random.seed(42)
-num_rings = 7
-sectors_per_ring = [6, 12, 18, 24, 30, 36, 42]  # Increasing sectors for outer rings
+NUM_RINGS = 7
+SECTORS = [6, 12, 18, 24, 30, 36, 42]
 
-# Build maze structure using depth-first search to guarantee one solution
-# Each cell is identified by (ring, sector) where ring 0 is outermost
-# Track which walls exist between cells
-radial_walls = []  # radial_walls[ring][sector] = True if wall exists to next sector
-ring_walls = []  # ring_walls[ring][sector] = True if wall exists to inner ring
+# Wall arrays: radial_walls[r][s] = wall clockwise from sector s in ring r
+#              ring_walls[r][s]   = wall between ring r and ring r+1 at sector s
+radial_walls = [[True] * SECTORS[r] for r in range(NUM_RINGS)]
+ring_walls = [[True] * SECTORS[r] for r in range(NUM_RINGS - 1)]
 
-for r in range(num_rings):
-    radial_walls.append([True] * sectors_per_ring[r])
-    if r < num_rings - 1:
-        ring_walls.append([True] * sectors_per_ring[r])
+# Depth-first search maze generation — guarantees exactly one solution
+visited = {(0, 0)}
+dfs_stack = [(0, 0)]
 
-# Generate maze using depth-first search (randomized)
-visited = set()
-stack = [(0, 0)]  # Start at ring 0, sector 0 (outer ring)
-visited.add((0, 0))
+while dfs_stack:
+    cr, cs = dfs_stack[-1]
+    n = SECTORS[cr]
 
-while stack:
-    current_ring, current_sector = stack[-1]
-    n_sectors = sectors_per_ring[current_ring]
+    neighbors = [(cr, (cs + 1) % n, "cw"), (cr, (cs - 1) % n, "ccw")]
+    if cr < NUM_RINGS - 1:
+        neighbors.append((cr + 1, int(cs * SECTORS[cr + 1] / n), "in"))
+    if cr > 0:
+        neighbors.append((cr - 1, int(cs * SECTORS[cr - 1] / n), "out"))
 
-    # Build list of neighboring cells
-    neighbors = []
-    # Same ring neighbors
-    neighbors.append((current_ring, (current_sector + 1) % n_sectors, "radial_next"))
-    neighbors.append((current_ring, (current_sector - 1) % n_sectors, "radial_prev"))
-    # Inner ring neighbor
-    if current_ring < num_rings - 1:
-        inner_sectors = sectors_per_ring[current_ring + 1]
-        inner_sector = int(current_sector * inner_sectors / n_sectors)
-        neighbors.append((current_ring + 1, inner_sector, "ring_in"))
-    # Outer ring neighbor
-    if current_ring > 0:
-        outer_sectors = sectors_per_ring[current_ring - 1]
-        outer_sector = int(current_sector * outer_sectors / n_sectors)
-        neighbors.append((current_ring - 1, outer_sector, "ring_out"))
-
-    # Filter to unvisited neighbors
     unvisited = [(r, s, d) for r, s, d in neighbors if (r, s) not in visited]
 
     if unvisited:
-        next_ring, next_sector, direction = unvisited[np.random.randint(len(unvisited))]
-
-        # Remove wall between current and next cell
-        if direction == "radial_next":
-            radial_walls[current_ring][current_sector] = False
-        elif direction == "radial_prev":
-            radial_walls[current_ring][next_sector] = False
-        elif direction == "ring_in":
-            ring_walls[current_ring][current_sector] = False
-        elif direction == "ring_out":
-            ring_walls[next_ring][next_sector] = False
-
-        visited.add((next_ring, next_sector))
-        stack.append((next_ring, next_sector))
+        nr, ns, d = unvisited[np.random.randint(len(unvisited))]
+        if d == "cw":
+            radial_walls[cr][cs] = False
+        elif d == "ccw":
+            radial_walls[cr][ns] = False
+        elif d == "in":
+            ring_walls[cr][cs] = False
+        else:
+            ring_walls[nr][ns] = False
+        visited.add((nr, ns))
+        dfs_stack.append((nr, ns))
     else:
-        stack.pop()
+        dfs_stack.pop()
 
-# Create figure
+# Build undirected passage graph for BFS
+graph = {}
+
+
+def add_passage(a, b):
+    graph.setdefault(a, []).append(b)
+    graph.setdefault(b, []).append(a)
+
+
+for r in range(NUM_RINGS):
+    for s in range(SECTORS[r]):
+        if not radial_walls[r][s]:
+            add_passage((r, s), (r, (s + 1) % SECTORS[r]))
+
+for r in range(NUM_RINGS - 1):
+    for s in range(SECTORS[r]):
+        if not ring_walls[r][s]:
+            inner_s = int(s * SECTORS[r + 1] / SECTORS[r])
+            add_passage((r, s), (r + 1, inner_s))
+
+# BFS to find the unique solution path to the innermost ring
+bfs_queue = deque([((0, 0), [(0, 0)])])
+bfs_seen = {(0, 0)}
+solution = []
+
+while bfs_queue:
+    cell, path = bfs_queue.popleft()
+    if cell[0] == NUM_RINGS - 1:
+        solution = path
+        break
+    for nb in graph.get(cell, []):
+        if nb not in bfs_seen:
+            bfs_seen.add(nb)
+            bfs_queue.append((nb, path + [nb]))
+
+
+# Cell midpoint in Cartesian coordinates
+def cell_mid(ring, sector):
+    r_mid = ((NUM_RINGS - ring - 1) + (NUM_RINGS - ring)) / 2
+    angle = (sector + 0.5) * 2 * np.pi / SECTORS[ring]
+    return r_mid * np.cos(angle), r_mid * np.sin(angle)
+
+
+sol_x = [cell_mid(r, s)[0] for r, s in solution] + [0.0]
+sol_y = [cell_mid(r, s)[1] for r, s in solution] + [0.0]
+
+# Drawing constants
+OUTER_R = NUM_RINGS
+WALL_W = 3
+
 fig = go.Figure()
 
-# Drawing parameters
-center_x, center_y = 0, 0
-ring_width = 1.0
-wall_color = "black"
-wall_width = 3
-outer_radius = num_rings * ring_width
-
-# Draw concentric ring walls (arcs where passages are blocked)
-for ring_idx in range(num_rings):
-    n_sectors = sectors_per_ring[ring_idx]
-    sector_angle = 2 * np.pi / n_sectors
-
-    if ring_idx < num_rings - 1:
-        inner_radius = (num_rings - ring_idx - 1) * ring_width
-        for sector in range(n_sectors):
-            if ring_walls[ring_idx][sector]:
-                theta_start = sector * sector_angle
-                theta_end = (sector + 1) * sector_angle
-                theta = np.linspace(theta_start, theta_end, 30)
-                x = center_x + inner_radius * np.cos(theta)
-                y = center_y + inner_radius * np.sin(theta)
-                fig.add_trace(
-                    go.Scatter(
-                        x=x, y=y, mode="lines", line={"color": wall_color, "width": wall_width}, showlegend=False
-                    )
-                )
-
-# Draw outer boundary with entry gap
-entry_sector = 0
-entry_angle_start = entry_sector * (2 * np.pi / sectors_per_ring[0])
-entry_angle_end = (entry_sector + 1) * (2 * np.pi / sectors_per_ring[0])
-theta = np.linspace(entry_angle_end, entry_angle_start + 2 * np.pi, 180)
-x = center_x + outer_radius * np.cos(theta)
-y = center_y + outer_radius * np.sin(theta)
-fig.add_trace(go.Scatter(x=x, y=y, mode="lines", line={"color": wall_color, "width": wall_width + 1}, showlegend=False))
-
-# Draw radial walls
-for ring_idx in range(num_rings):
-    radius_outer = (num_rings - ring_idx) * ring_width
-    radius_inner = (num_rings - ring_idx - 1) * ring_width
-    n_sectors = sectors_per_ring[ring_idx]
-    sector_angle = 2 * np.pi / n_sectors
-
-    for sector in range(n_sectors):
-        if radial_walls[ring_idx][sector]:
-            theta = (sector + 1) * sector_angle
-            x = [center_x + radius_inner * np.cos(theta), center_x + radius_outer * np.cos(theta)]
-            y = [center_y + radius_inner * np.sin(theta), center_y + radius_outer * np.sin(theta)]
+# Ring arc walls — inner boundary arcs where wall exists
+for r in range(NUM_RINGS - 1):
+    n = SECTORS[r]
+    inner_r = NUM_RINGS - r - 1
+    sa = 2 * np.pi / n
+    for s in range(n):
+        if ring_walls[r][s]:
+            theta = np.linspace(s * sa, (s + 1) * sa, 30)
             fig.add_trace(
-                go.Scatter(x=x, y=y, mode="lines", line={"color": wall_color, "width": wall_width}, showlegend=False)
+                go.Scatter(
+                    x=inner_r * np.cos(theta),
+                    y=inner_r * np.sin(theta),
+                    mode="lines",
+                    line=dict(color=INK, width=WALL_W),
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
             )
 
-# Draw center goal circle
-goal_radius = 0.4
-theta = np.linspace(0, 2 * np.pi, 50)
-x_goal = center_x + goal_radius * np.cos(theta)
-y_goal = center_y + goal_radius * np.sin(theta)
+# Outer boundary circle with entry gap at sector 0
+gap_start = 0.0
+gap_end = 2 * np.pi / SECTORS[0]
+theta_outer = np.linspace(gap_end, gap_start + 2 * np.pi, 300)
 fig.add_trace(
     go.Scatter(
-        x=x_goal, y=y_goal, fill="toself", fillcolor="#306998", line={"color": "#306998", "width": 2}, showlegend=False
-    )
-)
-
-# Add center star marker
-fig.add_trace(
-    go.Scatter(
-        x=[center_x],
-        y=[center_y],
-        mode="markers",
-        marker={"symbol": "star", "size": 20, "color": "#FFD43B", "line": {"color": "#306998", "width": 2}},
+        x=OUTER_R * np.cos(theta_outer),
+        y=OUTER_R * np.sin(theta_outer),
+        mode="lines",
+        line=dict(color=INK, width=WALL_W + 1),
         showlegend=False,
+        hoverinfo="skip",
     )
 )
 
-# Add entry arrow and labels
-entry_angle = (entry_sector + 0.5) * (2 * np.pi / sectors_per_ring[0])
-arrow_x = center_x + (outer_radius + 0.8) * np.cos(entry_angle)
-arrow_y = center_y + (outer_radius + 0.8) * np.sin(entry_angle)
+# Radial walls — spokes between ring boundaries
+for r in range(NUM_RINGS):
+    r_out = NUM_RINGS - r
+    r_in = NUM_RINGS - r - 1
+    n = SECTORS[r]
+    for s in range(n):
+        if radial_walls[r][s]:
+            theta = (s + 1) * 2 * np.pi / n
+            fig.add_trace(
+                go.Scatter(
+                    x=[r_in * np.cos(theta), r_out * np.cos(theta)],
+                    y=[r_in * np.sin(theta), r_out * np.sin(theta)],
+                    mode="lines",
+                    line=dict(color=INK, width=WALL_W),
+                    showlegend=False,
+                    hoverinfo="skip",
+                )
+            )
+
+# Solution path — hidden by default; click legend entry to reveal
+fig.add_trace(
+    go.Scatter(
+        x=sol_x,
+        y=sol_y,
+        mode="lines",
+        name="Show Solution",
+        line=dict(color="#D55E00", width=4, dash="dot"),
+        opacity=0.85,
+        visible="legendonly",
+    )
+)
+
+# Center goal circle
+goal_r = 0.4
+theta_g = np.linspace(0, 2 * np.pi, 60)
+fig.add_trace(
+    go.Scatter(
+        x=goal_r * np.cos(theta_g),
+        y=goal_r * np.sin(theta_g),
+        fill="toself",
+        fillcolor=ACCENT,
+        line=dict(color=ACCENT, width=2),
+        showlegend=False,
+        hoverinfo="skip",
+    )
+)
+fig.add_trace(
+    go.Scatter(
+        x=[0.0],
+        y=[0.0],
+        mode="markers",
+        marker=dict(symbol="star", size=20, color="#F0E442", line=dict(color=ACCENT, width=2)),
+        showlegend=False,
+        hoverinfo="skip",
+    )
+)
+
+# Entry arrow and labels
+entry_angle = 0.5 * 2 * np.pi / SECTORS[0]
 fig.add_annotation(
-    x=center_x + outer_radius * np.cos(entry_angle),
-    y=center_y + outer_radius * np.sin(entry_angle),
-    ax=arrow_x,
-    ay=arrow_y,
+    x=OUTER_R * np.cos(entry_angle),
+    y=OUTER_R * np.sin(entry_angle),
+    ax=(OUTER_R + 0.8) * np.cos(entry_angle),
+    ay=(OUTER_R + 0.8) * np.sin(entry_angle),
     xref="x",
     yref="y",
     axref="x",
@@ -164,48 +223,49 @@ fig.add_annotation(
     arrowhead=2,
     arrowsize=2,
     arrowwidth=3,
-    arrowcolor="#306998",
+    arrowcolor=ACCENT,
 )
-
 fig.add_annotation(
-    x=center_x + (outer_radius + 1.2) * np.cos(entry_angle),
-    y=center_y + (outer_radius + 1.2) * np.sin(entry_angle),
+    x=(OUTER_R + 1.3) * np.cos(entry_angle),
+    y=(OUTER_R + 1.3) * np.sin(entry_angle),
     text="START",
     showarrow=False,
-    font={"size": 22, "color": "#306998", "family": "Arial Black"},
+    font=dict(size=22, color=ACCENT, family="Arial Black"),
 )
-
 fig.add_annotation(
-    x=center_x,
-    y=center_y - goal_radius - 0.8,
-    text="GOAL",
-    showarrow=False,
-    font={"size": 22, "color": "#306998", "family": "Arial Black"},
+    x=0.0, y=-(goal_r + 1.0), text="GOAL", showarrow=False, font=dict(size=22, color=ACCENT, family="Arial Black")
 )
 
-# Update layout
+# Layout
 fig.update_layout(
-    title={
-        "text": "maze-circular · plotly · pyplots.ai",
-        "font": {"size": 28, "color": "black"},
-        "x": 0.5,
-        "xanchor": "center",
-    },
-    xaxis={
-        "showgrid": False,
-        "zeroline": False,
-        "showticklabels": False,
-        "scaleanchor": "y",
-        "scaleratio": 1,
-        "range": [-num_rings - 2, num_rings + 2],
-    },
-    yaxis={"showgrid": False, "zeroline": False, "showticklabels": False, "range": [-num_rings - 2, num_rings + 2]},
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    showlegend=False,
-    margin={"l": 50, "r": 50, "t": 100, "b": 50},
+    title=dict(
+        text="maze-circular · python · plotly · anyplot.ai", font=dict(size=16, color=INK), x=0.5, xanchor="center"
+    ),
+    xaxis=dict(
+        showgrid=False,
+        zeroline=False,
+        showticklabels=False,
+        scaleanchor="y",
+        scaleratio=1,
+        range=[-(OUTER_R + 2.5), OUTER_R + 2.5],
+    ),
+    yaxis=dict(showgrid=False, zeroline=False, showticklabels=False, range=[-(OUTER_R + 2.5), OUTER_R + 2.5]),
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    showlegend=True,
+    legend=dict(
+        bgcolor=ELEVATED_BG,
+        bordercolor=INK_SOFT,
+        borderwidth=1,
+        font=dict(color=INK_SOFT, size=10),
+        x=0.02,
+        y=0.98,
+        xanchor="left",
+        yanchor="top",
+    ),
+    margin=dict(l=50, r=50, t=100, b=50),
 )
 
-# Save as PNG and HTML
-fig.write_image("plot.png", width=1200, height=1200, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
