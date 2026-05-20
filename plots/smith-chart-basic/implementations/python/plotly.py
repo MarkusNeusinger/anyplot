@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 smith-chart-basic: Smith Chart for RF/Impedance
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-20
@@ -111,13 +111,32 @@ fig.add_trace(
 # Impedance locus
 freq_ghz = freq / 1e9
 hover_text = [f"{f:.2f} GHz<br>Z = {z_real[i]:.1f} + j{z_imag[i]:.1f} Ω" for i, f in enumerate(freq_ghz)]
+freq_normalized = np.linspace(0, 1, len(freq))
 fig.add_trace(
     go.Scatter(
         x=gamma_real,
         y=gamma_imag,
         mode="lines+markers",
-        line=dict(color=BRAND, width=3.5),
-        marker=dict(size=7, color=BRAND, line=dict(color=PAGE_BG, width=1.5)),
+        line=dict(color=BRAND, width=4.0),
+        marker=dict(
+            size=7,
+            color=freq_normalized,
+            colorscale="viridis",
+            showscale=True,
+            colorbar=dict(
+                title=dict(text="GHz", font=dict(size=10, color=INK), side="top"),
+                tickvals=[0, 0.5, 1],
+                ticktext=["1", "3.5", "6"],
+                len=0.4,
+                thickness=12,
+                x=1.02,
+                tickfont=dict(size=9, color=INK_SOFT),
+                bgcolor=ELEVATED_BG,
+                bordercolor=INK_SOFT,
+                borderwidth=1,
+            ),
+            line=dict(color=PAGE_BG, width=1.5),
+        ),
         name="Impedance Locus",
         text=hover_text,
         hoverinfo="text",
@@ -126,10 +145,10 @@ fig.add_trace(
 
 # Frequency labels at key points along the locus
 label_configs = [
-    (0, 40, -40),  # 1.0 GHz
+    (0, 50, -30),  # 1.0 GHz — right side
     (16, -50, -30),  # 2.6 GHz
     (32, 50, 30),  # 4.3 GHz
-    (49, 40, -50),  # 6.0 GHz
+    (49, -50, -60),  # 6.0 GHz — left side (opposite of 1.0 GHz to avoid overlap)
 ]
 for idx, ax_offset, ay_offset in label_configs:
     fig.add_annotation(
@@ -203,7 +222,7 @@ fig.update_layout(
     legend=dict(
         x=0.02, y=0.02, font=dict(size=10, color=INK_SOFT), bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, borderwidth=1
     ),
-    margin=dict(l=70, r=70, t=80, b=70),
+    margin=dict(l=70, r=120, t=80, b=70),
 )
 
 fig.write_image(f"plot-{THEME}.png", width=600, height=600, scale=4)
