@@ -4,7 +4,6 @@
 #' Quality: 88/100 | Created: 2026-05-20
 
 library(ggplot2)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -79,7 +78,7 @@ p <- ggplot(df_hist, aes(x = mid, y = density, fill = tail)) +
     fill          = ELEVATED_BG,
     label.padding = unit(0.45, "lines"),
     label.size    = 0.3,
-    size          = 3.2
+    size          = 3.9
   ) +
   scale_x_continuous(labels = function(x) paste0(x, "%")) +
   labs(
@@ -99,8 +98,7 @@ p <- ggplot(df_hist, aes(x = mid, y = density, fill = tail)) +
     axis.title        = element_text(color = INK,      size = 10),
     axis.text         = element_text(color = INK_SOFT, size = 8),
     plot.title        = element_text(color = INK,      size = 12, hjust = 0),
-    legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
-                                     linewidth = 0.3),
+    legend.background = element_rect(fill = ELEVATED_BG, color = NA, linewidth = 0),
     legend.text       = element_text(color = INK_SOFT, size = 8),
     legend.position   = "bottom",
     legend.key.size   = unit(0.5, "cm"),
