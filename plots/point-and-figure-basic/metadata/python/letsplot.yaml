@@ -1,159 +1,193 @@
 library: letsplot
+language: python
 specification_id: point-and-figure-basic
 created: '2026-01-15T21:43:30Z'
-updated: '2026-01-15T21:47:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21047207459
+updated: '2026-05-20T03:56:43Z'
+generated_by: claude-sonnet
+workflow_run: 26139637254
 issue: 3755
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/point-and-figure-basic/python/letsplot/plot-dark.html
+quality_score: 80
 review:
   strengths:
-  - Excellent implementation of the P&F algorithm with correct box size and 3-box
-    reversal logic
-  - Clean use of lets-plot ggplot2-style grammar with appropriate aesthetics mapping
-  - Perfect title format and axis labeling with descriptive names and units
-  - Good color choices with green/red that also include shape distinction (X/O) for
-    accessibility
-  - Proper handling of column-based (not time-based) X-axis which is key to P&F charts
-  - High-resolution export with scale=3 for 4800x2700 output
+  - Full theme-adaptive chrome (PAGE_BG, INK, INK_SOFT) applied to all elements, working
+    correctly in both light and dark renders.
+  - Correct P&F algorithm with 3-box reversal, drop_duplicates guard, and proper column
+    indexing ensuring no mixed-symbol columns.
+  - layer_tooltips() with formatted .line() chains is a genuine letsplot-specific
+    feature that enriches the HTML output with hover data (column, price, signal).
+  - Dual 45-degree trend lines via geom_abline with +/- box_size slope correctly implement
+    P&F charting convention.
+  - Clean code structure with linear flow; algorithm complexity is appropriate and
+    unavoidable for this chart type.
   weaknesses:
-  - Grid styling could be improved - horizontal grid is visible but could use more
-    subtle alpha
-  - The X and O symbols could be slightly larger/bolder for better visual impact at
-    the target resolution
-  - Spec mentions adding support/resistance trend lines which are not implemented
-    (optional per spec)
-  image_description: The plot displays a Point and Figure (P&F) chart with green X
-    symbols representing rising price columns (bullish) and red O symbols representing
-    falling price columns (bearish). The chart shows price movement from approximately
-    $80 to $155 across 23 columns (reversal numbers 0-22). The X-axis is labeled "Column
-    (Reversal Number)" and Y-axis is labeled "Price ($)". The title correctly displays
-    "point-and-figure-basic · letsplot · pyplots.ai". The chart demonstrates clear
-    alternating columns of X's and O's with appropriate spacing, showing multiple
-    trends including uptrends and downtrends. The overall layout is clean with a minimal
-    theme, subtle horizontal grid lines, and no legend (appropriately hidden since
-    color coding is self-explanatory).
+  - Y-grid lines appear at default tick intervals (~$20 apart) rather than at $2 box-size
+    intervals — use scale_y_continuous(breaks=...) with multiples of box_size to align
+    grid with P&F boxes.
+  - Columns 0-2 are visually crowded because early price oscillations produce short
+    columns with overlapping price ranges; consider increasing canvas width or column
+    spacing.
+  - Ascending support trend line (geom_abline) extends into empty lower-left space
+    well below the actual data — replace with geom_segment clipped to the data column
+    range to avoid wasted canvas.
+  - 'Design lacks publication polish: title is not bold, panel margins are tight,
+    and the overall aesthetic is functional but not refined.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "point-and-figure-basic · python · letsplot · anyplot.ai" in dark ink (#1A1A17), filling ~70% of width. Axis labels "Column (Reversal Number)" and "Price ($)" in dark ink. Tick labels in INK_SOFT (#4A4A44). All text clearly readable.
+      Data: Green (#009E73) X markers form bullish columns; orange (#D55E00) O markers form bearish columns, stacked vertically by price level across ~22 column indices. Two dashed trend lines in INK_SOFT. Y-only grid, subtle (size=0.2). Price range ~$80–$155.
+      Legibility verdict: PASS — all text elements visible and readable against the warm off-white surface.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels in light cream (#F0EFE8); tick labels in #B8B7B0. All text clearly readable against the dark surface. NO dark-on-dark failures observed.
+      Data: Colors are identical to light render — green (#009E73) X's and orange (#D55E00) O's are unchanged. Dashed trend lines visible in muted INK_SOFT tone. Horizontal grid lines subtle but perceptible.
+      Legibility verdict: PASS — all chrome adapts correctly; no black-text-on-dark-background failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, and tick marks are all clearly readable at full
-          size
+        comment: All font sizes explicitly set (title=16, axis_title=12, axis_text=10);
+          readable in both themes; minor crowding in first 2-3 columns.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: No overlapping text or symbols
+        comment: No actual symbol-on-symbol overlap (unique column×price per symbol);
+          adjacent columns 0-2 are visually dense due to overlapping price ranges.
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: X and O symbols are visible and appropriately sized, though could
-          be slightly bolder
+        comment: geom_text size=12 renders clear X/O glyphs; prominent and distinguishable
+          at both desktop and mobile scales.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Green and red are distinguishable, X vs O shape provides secondary
-          distinction
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of canvas space, plot fills majority of area with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price ($) and Column (Reversal Number) are descriptive with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: '#009E73 / #D55E00 are Okabe-Ito CVD-safe with sufficient luminance
+          contrast; X/O shape encoding provides redundant channel.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 well-utilized; ascending support line extends into
+          empty lower-left space, creating some wasted area.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend hidden appropriately but horizontal grid could be more subtle
+        passed: true
+        comment: '"Column (Reversal Number)" and "Price ($)" are descriptive with
+          units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'up->#009E73 (OI-1), down->#D55E00 (OI-2). Backgrounds #FAF8F1/#1A1A17
+          correct. Theme-adaptive chrome fully applied.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Intentional Okabe-Ito palette, theme-adaptive styling, dual trend
+          lines add professionalism. Well-configured default rather than bespoke design.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-only subtle grid (size=0.2), no X-grid, legend removed, theme-adaptive
+          chrome throughout. Good refinement level.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Ascending price trend evident in X-column dominance on right; dual
+          trend lines provide analytical context; color hierarchy (green=bullish)
+          guides viewer.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Point and Figure chart with X and O columns
+        comment: 'Correct P&F chart: X columns for rising price, O columns for falling
+          price, column-indexed X-axis.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Columns represent reversals, Y-axis shows price levels
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Uses X for rising, O for falling, green for bullish, red for bearish,
-          3-box reversal
-      - id: SC-04
-        name: Data Range
+        comment: 'X/O symbols, correct colors, 3-box reversal, trend lines, price
+          scale all present. Minor: Y-grid not at box-size ($2) intervals.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full price range visible from ~$80 to ~$155
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis = column (reversal number), Y-axis = price; data fully visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed, color/symbol mapping is standard P&F convention
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as point-and-figure-basic · letsplot · pyplots.ai
+        comment: Title exactly matches required format. Legend appropriately omitted
+          — X/O symbols inherently encode direction in P&F charts.
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows both uptrends and downtrends, multiple reversals, but could
-          show more distinct support/resistance patterns
+        comment: Shows multiple bullish/bearish sequences, multiple reversals, overall
+          uptrend with interim bearish phase. Could show a complete double-top/bottom
+          signal.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock price simulation with realistic price movements and trends
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Price range $80-155 is realistic for stocks, box size of $2 is appropriate
+        comment: Stock price ~$100, σ=2%, $2 box size, 3-box reversal — standard P&F
+          parameters. Plausible but no specific security named.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: $100-$155 range, $2 box size (~2% of price), 300 observations ≈ 12
+          months. All values align with real P&F conventions.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,51 +195,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → P&F algorithm → plot →
-          save'
+        comment: 'Linear flow: imports → tokens → data generation → P&F algorithm
+          → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported symbols are used; no unused imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: P&F algorithm complexity is inherent to the chart type; clean implementation
+          without over-engineering.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png but path argument is explicit rather than implicit
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html; current letsplot
+          API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ggplot grammar, ggsize with scale=4, layer_tooltips, named
+          values in scale_color_manual, proper theme override pattern.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_text for symbol rendering, ggplot grammar, theme customization,
-          and ggsave with scale parameter
+        comment: layer_tooltips() with .line() chains is a genuine letsplot-specific
+          feature for HTML hover interactivity; not replicable in static libraries.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
