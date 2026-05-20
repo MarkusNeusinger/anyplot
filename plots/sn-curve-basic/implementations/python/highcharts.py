@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-20
@@ -92,7 +92,6 @@ chart.options.subtitle = {
     "margin": 30,
 }
 
-# Region shading via plotBands — labels vertically centered to avoid top-crowding with reference lines
 region_bands = [
     {
         "from": 100,
@@ -102,8 +101,8 @@ region_bands = [
             "text": "Low-Cycle Fatigue",
             "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
-            "verticalAlign": "middle",
-            "y": 0,
+            "verticalAlign": "top",
+            "y": 30,
         },
     },
     {
@@ -114,8 +113,8 @@ region_bands = [
             "text": "High-Cycle Fatigue",
             "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
-            "verticalAlign": "middle",
-            "y": 0,
+            "verticalAlign": "top",
+            "y": 30,
         },
     },
     {
@@ -126,8 +125,8 @@ region_bands = [
             "text": "Infinite Life",
             "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
-            "verticalAlign": "middle",
-            "y": 0,
+            "verticalAlign": "top",
+            "y": 30,
         },
     },
 ]
