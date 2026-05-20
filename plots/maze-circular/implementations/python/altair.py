@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 maze-circular: Circular Maze Puzzle
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-20
@@ -22,13 +22,18 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 WALL_COLOR = "#1A1A17" if THEME == "light" else "#E0DFD8"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-ENTRY_COLOR = "#0072B2" if THEME == "light" else "#56B4E9"
-GOAL_COLOR = "#E69F00"  # Okabe-Ito orange, theme-independent
+ENTRY_COLOR = "#0072B2"  # Okabe-Ito position 3, theme-independent (same in light and dark)
+GOAL_COLOR = "#E69F00"  # Okabe-Ito position 5, theme-independent
+
+# Difficulty: "easy" / "medium" / "hard" — scales sector density (more sectors = harder maze)
+DIFFICULTY = os.getenv("ANYPLOT_DIFFICULTY", "medium")
+density_map = {"easy": 0.70, "medium": 1.0, "hard": 1.40}
+density = density_map.get(DIFFICULTY, 1.0)
 
 # Maze parameters
 np.random.seed(42)
 num_rings = 7
-sectors_per_ring = [1] + [12 + i * 4 for i in range(num_rings)]
+sectors_per_ring = [1] + [max(4, round((12 + i * 4) * density)) for i in range(num_rings)]
 ring_width = 1.0
 
 # Data structures for maze walls
@@ -86,7 +91,8 @@ for wall_type, r1, s1, r2, s2 in possible_walls:
 entry_sector = sectors_per_ring[num_rings] // 4
 
 # Generate wall segment coordinates
-wall_data = []
+outer_boundary_data = []  # Outer boundary — rendered thicker for visual emphasis
+wall_data = []  # Interior walls
 wall_count = 0
 
 theta_vals = np.linspace(0, 2 * np.pi, sectors_per_ring[num_rings] + 1)
@@ -94,19 +100,19 @@ entry_theta_start = theta_vals[entry_sector]
 entry_theta_end = theta_vals[entry_sector + 1]
 outer_r = num_rings * ring_width
 
-# Outer boundary with gap at entry
+# Outer boundary arcs with gap at entry — tracked separately for thicker strokeWidth
 if entry_sector > 0:
-    theta = np.linspace(0, entry_theta_start, 40)
+    theta = np.linspace(0, entry_theta_start, 60)
     x_arr, y_arr = outer_r * np.cos(theta), outer_r * np.sin(theta)
     for i in range(len(x_arr)):
-        wall_data.append({"x": x_arr[i], "y": y_arr[i], "wall_id": f"ob_{wall_count}", "order": i})
+        outer_boundary_data.append({"x": x_arr[i], "y": y_arr[i], "wall_id": f"ob_{wall_count}", "order": i})
     wall_count += 1
 
 if entry_sector < sectors_per_ring[num_rings] - 1:
-    theta = np.linspace(entry_theta_end, 2 * np.pi, 40)
+    theta = np.linspace(entry_theta_end, 2 * np.pi, 60)
     x_arr, y_arr = outer_r * np.cos(theta), outer_r * np.sin(theta)
     for i in range(len(x_arr)):
-        wall_data.append({"x": x_arr[i], "y": y_arr[i], "wall_id": f"ob_{wall_count}", "order": i})
+        outer_boundary_data.append({"x": x_arr[i], "y": y_arr[i], "wall_id": f"ob_{wall_count}", "order": i})
     wall_count += 1
 
 # Concentric ring walls (arcs with gaps at passages)
@@ -154,14 +160,23 @@ for ring in range(num_rings):
             wall_count += 1
 
 # DataFrames
+df_outer = pd.DataFrame(outer_boundary_data)
 df_walls = pd.DataFrame(wall_data)
 
-goal_df = pd.DataFrame({"x": [0.0], "y": [0.0], "label": ["★"]})
+# Goal at center: filled halo + star symbol
+goal_halo_df = pd.DataFrame({"x": [0.0], "y": [0.0]})
+goal_star_df = pd.DataFrame({"x": [0.0], "y": [0.0], "label": ["★"]})
 
+# Entry label and inward-pointing arrow indicator
 entry_angle = (entry_theta_start + entry_theta_end) / 2
-entry_label_r = outer_r + 0.85
+entry_label_r = outer_r + 0.90
+entry_arrow_r = outer_r + 0.30
+
 entry_df = pd.DataFrame(
     {"x": [entry_label_r * np.cos(entry_angle)], "y": [entry_label_r * np.sin(entry_angle)], "label": ["START"]}
+)
+arrow_df = pd.DataFrame(
+    {"x": [entry_arrow_r * np.cos(entry_angle)], "y": [entry_arrow_r * np.sin(entry_angle)], "label": ["▼"]}
 )
 
 max_extent = outer_r + 1.6
@@ -170,7 +185,19 @@ max_extent = outer_r + 1.6
 x_scale = alt.Scale(domain=[-max_extent, max_extent])
 y_scale = alt.Scale(domain=[-max_extent, max_extent])
 
-# Wall lines
+# Outer boundary wall lines — thicker for visual boundary emphasis
+outer_chart = (
+    alt.Chart(df_outer)
+    .mark_line(color=WALL_COLOR, strokeWidth=4.0)
+    .encode(
+        x=alt.X("x:Q", axis=None, scale=x_scale),
+        y=alt.Y("y:Q", axis=None, scale=y_scale),
+        detail="wall_id:N",
+        order="order:O",
+    )
+)
+
+# Interior wall lines
 walls_chart = (
     alt.Chart(df_walls)
     .mark_line(color=WALL_COLOR, strokeWidth=2.5)
@@ -182,14 +209,28 @@ walls_chart = (
     )
 )
 
+# Goal halo — subtle filled circle marking the center zone
+goal_halo_chart = (
+    alt.Chart(goal_halo_df)
+    .mark_point(color=GOAL_COLOR, size=350, filled=True, opacity=0.30)
+    .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale))
+)
+
 # Goal star at center — Unicode ★ for reliable rendering
 goal_chart = (
-    alt.Chart(goal_df)
-    .mark_text(fontSize=20, fontWeight="bold", color=GOAL_COLOR)
+    alt.Chart(goal_star_df)
+    .mark_text(fontSize=24, fontWeight="bold", color=GOAL_COLOR)
     .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale), text="label:N")
 )
 
-# Entry label at top of maze for clear readability
+# Inward-pointing arrow at entry gap (▼ points toward center when entry is at top)
+arrow_chart = (
+    alt.Chart(arrow_df)
+    .mark_text(fontSize=14, color=ENTRY_COLOR)
+    .encode(x=alt.X("x:Q", axis=None, scale=x_scale), y=alt.Y("y:Q", axis=None, scale=y_scale), text="label:N")
+)
+
+# Entry label above the maze
 entry_chart = (
     alt.Chart(entry_df)
     .mark_text(fontSize=18, fontWeight="bold", color=ENTRY_COLOR)
@@ -197,7 +238,7 @@ entry_chart = (
 )
 
 chart = (
-    alt.layer(walls_chart, goal_chart, entry_chart)
+    alt.layer(outer_chart, walls_chart, goal_halo_chart, goal_chart, arrow_chart, entry_chart)
     .properties(width=600, height=600, background=PAGE_BG, title="maze-circular · python · altair · anyplot.ai")
     .configure_view(strokeWidth=0, fill=PAGE_BG)
     .configure_axis(grid=False)
