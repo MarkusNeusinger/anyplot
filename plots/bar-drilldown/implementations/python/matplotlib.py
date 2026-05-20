@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 85/100 | Created: 2026-05-20
@@ -13,6 +13,7 @@ sys.path = [p for p in sys.path if "implementations" not in p]  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from matplotlib.gridspec import GridSpec  # noqa: E402
+from matplotlib.patches import ConnectionPatch  # noqa: E402
 
 
 THEME = os.getenv("ANYPLOT_THEME", "light")
@@ -59,7 +60,7 @@ ax1.set_xticklabels(categories, fontsize=9, color=INK_SOFT)
 ax1.set_ylabel("Revenue ($K)", fontsize=9, color=INK)
 ax1.tick_params(axis="both", labelsize=8.5, colors=INK_SOFT)
 ax1.set_ylim(0, max(totals) * 1.22)
-ax1.set_title("All Categories  ·  2024", fontsize=10, color=INK, pad=6)
+ax1.set_title("All Categories  ·  2024", fontsize=11, color=INK, pad=6)
 
 # Drilldown panel — Electronics subcategories
 x2 = np.arange(len(sub_labels))
@@ -80,7 +81,20 @@ ax2.set_ylabel("Revenue ($K)", fontsize=9, color=INK)
 ax2.tick_params(axis="both", labelsize=8.5, colors=INK_SOFT)
 ax2.set_ylim(0, max(sub_values) * 1.22)
 # Title doubles as breadcrumb trail
-ax2.set_title("All Categories  ›  Electronics", fontsize=10, color=INK, pad=6)
+ax2.set_title("All Categories  ›  Electronics", fontsize=11, color=INK, pad=6)
+
+# Back-navigation affordance (static approximation of back-button)
+ax2.text(
+    0.01,
+    0.97,
+    "◄ Back to All Categories",
+    transform=ax2.transAxes,
+    fontsize=8,
+    color=INK_SOFT,
+    va="top",
+    ha="left",
+    fontstyle="italic",
+)
 
 for ax in (ax1, ax2):
     ax.spines["top"].set_visible(False)
@@ -89,6 +103,24 @@ for ax in (ax1, ax2):
         ax.spines[s].set_color(INK_SOFT)
     ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
     ax.set_axisbelow(True)
+
+# ConnectionPatch: visual connector from the active bar's top edges to the drilldown panel
+bar_hw = 0.55 / 2  # half-width of the Electronics bar
+for x_a, x_b in [(-bar_hw, 0.0), (bar_hw, 1.0)]:
+    con = ConnectionPatch(
+        xyA=(focus_idx + x_a, totals[focus_idx]),
+        xyB=(x_b, 1.0),
+        coordsA="data",
+        coordsB="axes fraction",
+        axesA=ax1,
+        axesB=ax2,
+        color=BRAND,
+        lw=0.9,
+        linestyle="--",
+        alpha=0.35,
+        clip_on=False,
+    )
+    fig.add_artist(con)
 
 fig.suptitle("bar-drilldown · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 
