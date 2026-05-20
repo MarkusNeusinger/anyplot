@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 contour-map-geographic: Contour Lines on Geographic Map
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-20
@@ -20,6 +20,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 OCEAN = "#C4D8EC" if THEME == "light" else "#182633"
 LAND = "#D8CEA8" if THEME == "light" else "#5A5040"
 COAST = "#7A7264" if THEME == "light" else "#8A8070"
+HIGHLIGHT = "#D55E00"  # Okabe-Ito warm orange — highlights Arctic signal
 
 # Simplified world coastline polygons (major continents)
 WORLD_COASTLINES = [
@@ -184,39 +185,75 @@ sns.set_theme(
     },
 )
 
-# Canvas — landscape 3200×1800 px (no bbox_inches='tight' per seaborn library rule)
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+# Canvas — landscape 3200×1800 px: main geographic map + zonal mean side panel
+fig, (ax_map, ax_zone) = plt.subplots(
+    1, 2, figsize=(8, 4.5), dpi=400, gridspec_kw={"width_ratios": [4, 1], "wspace": 0.06}
+)
 fig.patch.set_facecolor(PAGE_BG)
 
-# Ocean background and map extent
-ax.set_facecolor(OCEAN)
-ax.set_xlim(-180, 180)
-ax.set_ylim(-70, 85)
+# --- Geographic contour map ---
+ax_map.set_facecolor(OCEAN)
+ax_map.set_xlim(-180, 180)
+ax_map.set_ylim(-70, 85)
 
-# Filled contours for temperature anomalies
+# Filled contours — BrBG_r: warm brown = positive anomaly, teal = negative
 levels = np.linspace(-2, 4.5, 14)
-contourf_plot = ax.contourf(LON, LAT, Z, levels=levels, cmap="RdYlBu_r", alpha=0.85, extend="both", zorder=1)
+contourf_plot = ax_map.contourf(LON, LAT, Z, levels=levels, cmap="BrBG_r", alpha=0.85, extend="both", zorder=1)
 
-# Contour lines at every other level
-contour_lines = ax.contour(LON, LAT, Z, levels=levels[::2], colors=INK, linewidths=0.8, alpha=0.55, zorder=2)
-ax.clabel(contour_lines, inline=True, fontsize=8, fmt="%.1f°C", colors=INK)
+# Contour lines at every other level (alpha increased for visibility)
+contour_lines = ax_map.contour(LON, LAT, Z, levels=levels[::2], colors=INK, linewidths=0.8, alpha=0.75, zorder=2)
+ax_map.clabel(contour_lines, inline=True, fontsize=8, fmt="%.1f°C", colors=INK)
 
-# Coastlines with subtle land fill for geographic context
+# Coastlines with land fill for geographic context
 for coastline in WORLD_COASTLINES:
     if len(coastline) > 2:
         lons = [p[0] for p in coastline]
         lats = [p[1] for p in coastline]
-        ax.fill(lons, lats, color=LAND, edgecolor=COAST, linewidth=1.2, zorder=3)
+        ax_map.fill(lons, lats, color=LAND, edgecolor=COAST, linewidth=1.2, zorder=3)
 
 # Colorbar
-cbar = fig.colorbar(contourf_plot, ax=ax, shrink=0.75, pad=0.02, aspect=30)
-cbar.set_label("Temperature Anomaly (°C)", fontsize=10, color=INK)
-cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
+cbar = fig.colorbar(contourf_plot, ax=ax_map, shrink=0.80, pad=0.02, aspect=30)
+cbar.set_label("Temperature Anomaly (°C)", fontsize=9, color=INK)
+cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
-# Axes labels and title
-ax.set_xlabel("Longitude (°)", fontsize=10, color=INK)
-ax.set_ylabel("Latitude (°)", fontsize=10, color=INK)
+ax_map.set_xlabel("Longitude (°)", fontsize=10, color=INK)
+ax_map.set_ylabel("Latitude (°)", fontsize=10, color=INK)
+ax_map.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
+ax_map.grid(True, alpha=0.10, linewidth=0.5, color=INK_SOFT, zorder=0)
+ax_map.set_axisbelow(True)
+ax_map.spines["top"].set_visible(False)
+ax_map.spines["right"].set_visible(False)
+ax_map.spines["left"].set_color(INK_SOFT)
+ax_map.spines["bottom"].set_color(INK_SOFT)
+
+# --- Zonal mean profile — seaborn lineplot shows Arctic amplification signal ---
+zonal_mean = Z.mean(axis=1)  # mean anomaly over all longitudes per latitude band
+
+sns.lineplot(x=zonal_mean, y=lat, ax=ax_zone, color=HIGHLIGHT, linewidth=2.0, errorbar=None)
+ax_zone.fill_betweenx(lat, 0, zonal_mean, where=(zonal_mean > 0), color=HIGHLIGHT, alpha=0.15)
+
+# Zero reference line
+ax_zone.axvline(0, color=INK_SOFT, linewidth=0.8, linestyle="--", alpha=0.6)
+
+# Mark 60°N — boundary of Arctic amplification zone
+ax_zone.axhline(60, color=HIGHLIGHT, linewidth=0.7, linestyle=":", alpha=0.7)
+ax_zone.text(
+    0.55, 0.93, "Arctic\nAmplification", transform=ax_zone.transAxes, fontsize=6, color=HIGHLIGHT, ha="center", va="top"
+)
+
+ax_zone.set_ylim(-70, 85)
+ax_zone.set_title("Zonal\nMean", fontsize=8, color=INK, pad=4)
+ax_zone.set_xlabel("Anomaly\n(°C)", fontsize=8, color=INK)
+ax_zone.tick_params(axis="x", labelsize=7, colors=INK_SOFT)
+ax_zone.set_yticks([])
+ax_zone.grid(True, alpha=0.10, linewidth=0.5, color=INK_SOFT)
+ax_zone.set_facecolor(PAGE_BG)
+ax_zone.spines["top"].set_visible(False)
+ax_zone.spines["right"].set_visible(False)
+ax_zone.spines["left"].set_visible(False)
+ax_zone.spines["bottom"].set_color(INK_SOFT)
+
 fig.suptitle(
     "Global Temperature Anomaly · contour-map-geographic · python · seaborn · anyplot.ai",
     fontsize=11,
@@ -225,20 +262,6 @@ fig.suptitle(
     y=0.98,
     color=INK,
 )
-ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
-
-# Subtle geographic grid
-ax.grid(True, alpha=0.10, linewidth=0.5, color=INK_SOFT, zorder=0)
-ax.set_axisbelow(True)
-
-# Geographic equal-aspect ratio for correct map proportions
-ax.set_aspect("equal", adjustable="box")
-
-# Remove top/right spines
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
 
 plt.tight_layout()
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
