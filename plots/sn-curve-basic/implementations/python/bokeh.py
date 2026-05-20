@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-19
@@ -58,7 +58,7 @@ ultimate_strength = 500  # MPa
 yield_strength = 350  # MPa
 endurance_limit = 200  # MPa
 
-cycles_fit = np.logspace(2, 7, 100)
+cycles_fit = np.logspace(2, 7.3, 100)
 stress_fit = A * (cycles_fit**b)
 
 source = ColumnDataSource(data={"cycles": cycles, "stress": stress})
@@ -76,7 +76,7 @@ p = figure(
     y_range=(150, 650),
     x_range=(100, 2e7),
     toolbar_location=None,
-    min_border_bottom=160,
+    min_border_bottom=220,
     min_border_left=180,
     min_border_top=110,
     min_border_right=50,
@@ -168,7 +168,7 @@ p.ygrid.grid_line_alpha = 0.10
 
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = None
 
 p.legend.location = "bottom_left"
 p.legend.label_text_font_size = "34pt"
