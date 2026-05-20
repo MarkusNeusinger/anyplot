@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
-Library: matplotlib | Python 3.13
-Quality: pending | Created: 2026-05-20
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 85/100 | Created: 2026-05-20
 """
 
 import os
