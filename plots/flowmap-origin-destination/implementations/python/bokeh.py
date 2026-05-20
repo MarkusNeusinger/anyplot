@@ -1,21 +1,39 @@
-""" pyplots.ai
+"""anyplot.ai
 flowmap-origin-destination: Origin-Destination Flow Map
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-20
 """
+
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# This file is named bokeh.py — remove its directory from sys.path so that
+# `import bokeh` resolves to the installed package, not this file itself.
+sys.path = [p for p in sys.path if Path(p).resolve() != Path(__file__).resolve().parent]
 
 import numpy as np
 import pandas as pd
-from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource, HoverTool
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, HoverTool, WMTSTileSource
+from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
-from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data: Trade flow between major world ports (fictional but realistic magnitude)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data: Global maritime trade flows between major ports
 np.random.seed(42)
 
-# Major port cities with coordinates
 ports = {
     "Shanghai": (31.2304, 121.4737),
     "Singapore": (1.3521, 103.8198),
@@ -29,11 +47,6 @@ ports = {
     "Sydney": (-33.8688, 151.2093),
 }
 
-# Generate flow data between ports
-flows = []
-port_names = list(ports.keys())
-
-# Create meaningful trade flows
 flow_pairs = [
     ("Shanghai", "Los Angeles", 850),
     ("Shanghai", "Rotterdam", 720),
@@ -55,141 +68,170 @@ flow_pairs = [
     ("Dubai", "Hamburg", 260),
 ]
 
-for origin, dest, flow in flow_pairs:
-    origin_lat, origin_lon = ports[origin]
-    dest_lat, dest_lon = ports[dest]
-    flows.append(
+df = pd.DataFrame(
+    [
         {
             "origin_name": origin,
             "dest_name": dest,
-            "origin_lat": origin_lat,
-            "origin_lon": origin_lon,
-            "dest_lat": dest_lat,
-            "dest_lon": dest_lon,
+            "origin_lat": ports[origin][0],
+            "origin_lon": ports[origin][1],
+            "dest_lat": ports[dest][0],
+            "dest_lon": ports[dest][1],
             "flow": flow,
         }
-    )
-
-df = pd.DataFrame(flows)
-
-
-# Convert lat/lon to Web Mercator projection for tile-based map
-def lat_lon_to_mercator(lat, lon):
-    """Convert latitude/longitude to Web Mercator coordinates."""
-    k = 6378137  # Earth radius in meters
-    x = lon * (k * np.pi / 180.0)
-    y = np.log(np.tan((90 + lat) * np.pi / 360.0)) * k
-    return x, y
-
-
-# Convert coordinates
-df["origin_x"], df["origin_y"] = zip(
-    *[lat_lon_to_mercator(lat, lon) for lat, lon in zip(df["origin_lat"], df["origin_lon"], strict=True)], strict=True
-)
-df["dest_x"], df["dest_y"] = zip(
-    *[lat_lon_to_mercator(lat, lon) for lat, lon in zip(df["dest_lat"], df["dest_lon"], strict=True)], strict=True
+        for origin, dest, flow in flow_pairs
+    ]
 )
 
+# Web Mercator projection (EPSG:3857) — inlined, no helper function
+k = 6378137
+df["origin_x"] = df["origin_lon"] * (k * np.pi / 180.0)
+df["origin_y"] = np.log(np.tan((90 + df["origin_lat"]) * np.pi / 360.0)) * k
+df["dest_x"] = df["dest_lon"] * (k * np.pi / 180.0)
+df["dest_y"] = np.log(np.tan((90 + df["dest_lat"]) * np.pi / 360.0)) * k
 
-# Generate Bezier curve points for each flow
-def bezier_curve(x0, y0, x1, y1, num_points=50):
-    """Generate quadratic Bezier curve between two points with control point above midpoint."""
-    t = np.linspace(0, 1, num_points)
-    # Control point: midpoint with vertical offset proportional to distance
-    mid_x = (x0 + x1) / 2
-    mid_y = (y0 + y1) / 2
-    distance = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
-    # Curve height: 20% of distance, curving upward (in Mercator coordinates)
-    ctrl_y = mid_y + distance * 0.2
-    ctrl_x = mid_x
-    # Quadratic Bezier
-    bx = (1 - t) ** 2 * x0 + 2 * (1 - t) * t * ctrl_x + t**2 * x1
-    by = (1 - t) ** 2 * y0 + 2 * (1 - t) * t * ctrl_y + t**2 * y1
-    return bx, by
-
-
-# Create figure with Web Mercator projection
-p = figure(
-    width=4800,
-    height=2700,
-    title="flowmap-origin-destination · bokeh · pyplots.ai",
-    x_axis_type="mercator",
-    y_axis_type="mercator",
-    tools="pan,wheel_zoom,box_zoom,reset",
-)
-
-# Add tile provider for basemap (Bokeh 3.x uses string-based tile provider)
-p.add_tile("CartoDB Positron")
-
-# Style the title and axes
-p.title.text_font_size = "28pt"
-p.xaxis.axis_label = "Longitude"
-p.yaxis.axis_label = "Latitude"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "16pt"
-p.yaxis.major_label_text_font_size = "16pt"
-
-# Normalize flow for line width (scale to 2-12 range)
+# Flow encoding: proportional line width + viridis color (continuous data)
 min_flow = df["flow"].min()
 max_flow = df["flow"].max()
-df["line_width"] = 2 + (df["flow"] - min_flow) / (max_flow - min_flow) * 10
+df["line_width"] = 3 + (df["flow"] - min_flow) / (max_flow - min_flow) * 14
+color_idx = ((df["flow"] - min_flow) / (max_flow - min_flow) * 255).astype(int).clip(0, 255)
+df["line_color"] = [Viridis256[i] for i in color_idx]
 
-# Color scale based on flow magnitude (Python Blue to Yellow gradient)
-df["color"] = df["flow"].apply(
-    lambda f: f"#{int(48 + (255 - 48) * (f - min_flow) / (max_flow - min_flow)):02x}"
-    f"{int(105 + (212 - 105) * (f - min_flow) / (max_flow - min_flow)):02x}"
-    f"{int(152 + (59 - 152) * (f - min_flow) / (max_flow - min_flow)):02x}"
-)
-
-# Draw curved arcs for each flow
+# Quadratic Bezier arcs — inlined loop, no helper function
+t = np.linspace(0, 1, 50)
+arc_xs, arc_ys = [], []
 for _, row in df.iterrows():
-    curve_x, curve_y = bezier_curve(row["origin_x"], row["origin_y"], row["dest_x"], row["dest_y"])
+    x0, y0 = row["origin_x"], row["origin_y"]
+    x1, y1 = row["dest_x"], row["dest_y"]
+    mid_x = (x0 + x1) / 2
+    mid_y = (y0 + y1) / 2
+    dist = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
+    ctrl_y = mid_y + dist * 0.2
+    arc_xs.append(((1 - t) ** 2 * x0 + 2 * (1 - t) * t * mid_x + t**2 * x1).tolist())
+    arc_ys.append(((1 - t) ** 2 * y0 + 2 * (1 - t) * t * ctrl_y + t**2 * y1).tolist())
 
-    # Create source for this arc with hover data
-    arc_source = ColumnDataSource(
-        data={
-            "x": curve_x,
-            "y": curve_y,
-            "origin": [row["origin_name"]] * len(curve_x),
-            "dest": [row["dest_name"]] * len(curve_x),
-            "flow": [row["flow"]] * len(curve_x),
-        }
-    )
-
-    p.line(
-        x="x",
-        y="y",
-        source=arc_source,
-        line_width=row["line_width"],
-        line_color=row["color"],
-        line_alpha=0.6,
-        line_cap="round",
-    )
-
-# Add origin/destination points
-port_data = []
-for name, (lat, lon) in ports.items():
-    x, y = lat_lon_to_mercator(lat, lon)
-    port_data.append({"name": name, "x": x, "y": y, "lat": lat, "lon": lon})
-
-port_df = pd.DataFrame(port_data)
-port_source = ColumnDataSource(port_df)
-
-# Draw port markers
-p.scatter(x="x", y="y", source=port_source, size=20, color="#306998", alpha=0.9, legend_label="Ports")
-
-# Add hover tool for ports
-hover_ports = HoverTool(
-    tooltips=[("Port", "@name"), ("Latitude", "@lat{0.00}"), ("Longitude", "@lon{0.00}")], renderers=[p.renderers[-1]]
+arc_source = ColumnDataSource(
+    {
+        "xs": arc_xs,
+        "ys": arc_ys,
+        "origin": df["origin_name"].tolist(),
+        "dest": df["dest_name"].tolist(),
+        "flow": df["flow"].tolist(),
+        "line_width": df["line_width"].tolist(),
+        "line_color": df["line_color"].tolist(),
+    }
 )
-p.add_tools(hover_ports)
 
-# Legend styling
+# Port marker data — inline mercator conversion
+port_names = list(ports.keys())
+port_lats = np.array([ports[n][0] for n in port_names])
+port_lons = np.array([ports[n][1] for n in port_names])
+port_source = ColumnDataSource(
+    {
+        "x": port_lons * (k * np.pi / 180.0),
+        "y": np.log(np.tan((90 + port_lats) * np.pi / 360.0)) * k,
+        "name": port_names,
+        "lat": port_lats,
+        "lon": port_lons,
+    }
+)
+
+# Theme-adaptive basemap tile URL (WMTSTileSource — not deprecated string API)
+tile_url = (
+    "https://a.basemaps.cartocdn.com/light_all/{Z}/{X}/{Y}.png"
+    if THEME == "light"
+    else "https://a.basemaps.cartocdn.com/dark_all/{Z}/{X}/{Y}.png"
+)
+
+# Plot
+p = figure(
+    width=3200,
+    height=1800,
+    title="flowmap-origin-destination · python · bokeh · anyplot.ai",
+    x_axis_type="mercator",
+    y_axis_type="mercator",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
+)
+
+p.add_tile(WMTSTileSource(url=tile_url))
+
+# Flow arcs via multi_line — single renderer enables per-arc hover tooltips
+arcs = p.multi_line(
+    xs="xs",
+    ys="ys",
+    source=arc_source,
+    line_width="line_width",
+    line_color="line_color",
+    line_alpha=0.65,
+    line_cap="round",
+)
+
+# Port markers (Okabe-Ito position 1 — brand green)
+ports_r = p.scatter(x="x", y="y", source=port_source, size=20, color="#009E73", alpha=0.9, legend_label="Ports")
+
+# Hover tools — arcs and port markers both interactive
+p.add_tools(
+    HoverTool(renderers=[arcs], tooltips=[("Route", "@origin → @dest"), ("Volume", "@flow{,} TEU")]),
+    HoverTool(renderers=[ports_r], tooltips=[("Port", "@name"), ("Lat", "@lat{0.00}°"), ("Lon", "@lon{0.00}°")]),
+)
+
+# Chrome — theme-adaptive colors
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
+
+p.xaxis.axis_label = "Longitude"
+p.yaxis.axis_label = "Latitude"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+
 p.legend.location = "top_left"
-p.legend.label_text_font_size = "18pt"
-p.legend.background_fill_alpha = 0.8
+p.legend.label_text_font_size = "34pt"
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.label_text_color = INK_SOFT
 
-# Save outputs
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="Origin-Destination Flow Map", resources=CDN)
+# Save HTML
+output_file(f"plot-{THEME}.html")
+save(p)
+
+# Screenshot with headless Selenium (export_png uses snap chromedriver — broken)
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
