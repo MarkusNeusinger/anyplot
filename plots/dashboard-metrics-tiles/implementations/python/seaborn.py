@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-21
@@ -40,9 +40,9 @@ sns.set_theme(
 # Data
 np.random.seed(42)
 
-# Status colors — Okabe-Ito positions 3 (blue), 5 (orange), 4 (reddish-purple)
-# Blue/orange/purple avoids red-green distinction issues for colorblind viewers
-status_colors = {"good": "#0072B2", "warning": "#E69F00", "critical": "#CC79A7"}
+# Status colors — Okabe-Ito positions 1 (green), 5 (orange), 4 (reddish-purple)
+# First categorical color must always be #009E73 (brand green)
+status_colors = {"good": "#009E73", "warning": "#E69F00", "critical": "#CC79A7"}
 
 metrics = [
     {
@@ -114,14 +114,13 @@ for ax, metric in zip(axes, metrics, strict=True):
 
     sns.lineplot(data=spark_df, x="time", y="value", ax=inset_ax, color=status_colors[metric["status"]], linewidth=1.5)
     inset_ax.fill_between(
-        spark_df["time"], spark_df["value"].min(), spark_df["value"], color=status_colors[metric["status"]], alpha=0.2
+        spark_df["time"], spark_df["value"].min(), spark_df["value"], color=status_colors[metric["status"]], alpha=0.3
     )
     inset_ax.set_xticks([])
     inset_ax.set_yticks([])
     inset_ax.set_xlabel("")
     inset_ax.set_ylabel("")
-    for spine in inset_ax.spines.values():
-        spine.set_visible(False)
+    sns.despine(ax=inset_ax, left=True, bottom=True, top=True, right=True)
 
     ax.set_xticks([])
     ax.set_yticks([])
@@ -152,9 +151,9 @@ for ax, metric in zip(axes, metrics, strict=True):
     # Lower is better for operational metrics; higher is better for usage/throughput
     decrease_is_good = metric["name"] in ["CPU Usage", "Memory", "Response Time", "Error Rate"]
     if decrease_is_good:
-        change_color = "#0072B2" if change < 0 else "#CC79A7"
+        change_color = "#009E73" if change < 0 else "#CC79A7"
     else:
-        change_color = "#0072B2" if change >= 0 else "#CC79A7"
+        change_color = "#009E73" if change >= 0 else "#CC79A7"
 
     ax.text(
         5,
