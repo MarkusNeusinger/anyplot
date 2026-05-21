@@ -1,167 +1,188 @@
 library: seaborn
+language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:05:21Z'
-updated: '2026-01-19T13:13:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21138482780
+updated: '2026-05-21T03:32:45Z'
+generated_by: claude-sonnet
+workflow_run: 26203111123
 issue: 3791
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent dashboard layout with clear visual hierarchy (large values, supporting
-    context)
-  - Smart colorblind-friendly palette choice (blue/orange/purple instead of red/green)
-  - Good implementation of change indicator logic that considers whether increases
-    or decreases are favorable per metric type
-  - Clean sparklines with fill_between for visual appeal
-  - Proper seaborn integration with sns.lineplot for the sparkline visualization
+  - 'Excellent spec compliance: all required dashboard tile features (value, label,
+    sparkline, change indicator, status color) present and working'
+  - Semantic color-coding (Okabe-Ito palette with status meaning) makes critical metrics
+    immediately obvious without needing a legend
+  - 'Clean theme adaptation: both light and dark renders are fully readable with correct
+    background and text colors (#FAF8F1 / #1A1A17)'
+  - Directional arrows (up/down) combined with color provide redundant encoding for
+    colorblind accessibility
+  - np.cumsum sparkline data creates realistic-looking trend curves; np.random.seed(42)
+    ensures reproducibility
   weaknesses:
-  - Axis labels scoring (VQ-06) does not apply well to dashboard tiles - awarded 0/2
-    per strict criteria but this is a limitation of the rubric for this visualization
-    type
+  - 'Sparkline area fills appear muddy brownish/maroon in dark render due to alpha=0.3
+    blending over near-black #242420 tile backgrounds — increase fill alpha to 0.45-0.5
+    or use theme-aware alpha values'
+  - Four of six 'good' status tiles share identical teal coloring making the grid
+    visually repetitive; minor differentiation within the good group would improve
+    storytelling
+  - 'LM-02 is low: seaborn''s distinctive features (FacetGrid, statistical transforms,
+    hue-mapped theming) are underused — tile layout is done via matplotlib subplots
+    rather than seaborn constructs'
+  - Longer KPI strings like '892req/s' are slightly cramped in the tile at fontsize=26;
+    dynamic sizing or a small reduction for long values would improve balance
   image_description: |-
-    The plot displays a 3x2 grid dashboard with 6 metric tiles on a white background. The title "dashboard-metrics-tiles · seaborn · pyplots.ai" appears at the top in bold black text.
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white.
+      Chrome: Title "dashboard-metrics-tiles · python · seaborn · anyplot.ai" in dark INK color, clearly readable. Metric names in INK_SOFT bold text, readable. No axis labels (appropriate for dashboard tiles). No tick labels (ticks removed). All tile text readable against light backgrounds.
+      Data: Six tiles in 2x3 grid. CPU Usage (45%, good=teal #009E73), Memory (72%, warning=orange #E69F00), Response Time (120ms, good=teal), Active Users (1,847, good=teal), Error Rate (2.3%, critical=pink #CC79A7), Throughput (892req/s, good=teal). Change indicators use green for favorable, pink for unfavorable. Sparklines with area fills visible at bottom of each tile.
+      Legibility verdict: PASS
 
-    Row 1 (left to right):
-    - CPU Usage: Shows 45% in blue (#0173B2), with a down arrow and "-5.2%" change indicator in blue (favorable). Green sparkline with light fill at bottom.
-    - Memory: Shows 72% in orange (#DE8F05 warning color), with up arrow and "+8.1%" change in purple (unfavorable). Orange/yellow sparkline with light fill.
-    - Response Time: Shows 120ms in blue (good status), with down arrow and "-15.3%" in blue (favorable). Blue/green sparkline with fill.
-
-    Row 2 (left to right):
-    - Active Users: Shows 1,847 in blue (good), up arrow with "+12.7%" in blue (favorable - higher users is good). Blue sparkline.
-    - Error Rate: Shows 2.3% in purple (#CC78BC critical), up arrow with "+45.0%" in purple (unfavorable - higher errors is bad). Pink/red sparkline.
-    - Throughput: Shows 892req/s in blue (good), down arrow with "-3.4%" in purple (unfavorable - lower throughput is bad).
-
-    Each tile has a light gray background (#f8f9fa) with subtle borders, metric name at top in gray, large prominent value in center, change indicator below, and an embedded sparkline at the bottom showing trend history. The colorblind-friendly palette uses blue for good, orange for warning, and purple for critical states.
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct, not pure black.
+      Chrome: Title and metric names rendered in light/cream text (#F0EFE8 / #B8B7B0 region), clearly readable against dark surface. INK and INK_SOFT tokens correctly flipped for dark theme. No dark-on-dark failure detected.
+      Data: Data colors (teal, orange, pink) are identical to light render — only chrome flips. Sparkline area fills appear darker/muddier in dark mode due to alpha=0.3 blending over #242420 (Memory fill becomes brownish-olive, Error Rate fill becomes dark maroon), but data lines remain clearly visible at full color saturation.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: All text is clear and readable. Title is large (24pt), metric names
-          are bold (18pt), values are very prominent (42pt), change indicators are
-          readable (18pt).
+        comment: All font sizes explicitly set (KPI=26, labels=10, title=12); readable
+          in both themes. Minor crowding on longer KPI strings like '892req/s'.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements. Each tile has good spacing between name,
-          value, change, and sparkline.
+        comment: No text collision in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Sparklines are appropriately sized and visible within inset axes.
-          Values are prominent and well-positioned.
+        comment: Sparklines and area fills clearly visible in both renders.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses colorblind-friendly palette (blue, orange, purple). No red-green
-          distinction issues.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Good 3x2 grid layout fills canvas well. Minor deduction: tiles could
-          have slightly more padding between them.'
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for dashboard tiles (no traditional axes), but tiles have clear
-          metric names as labels.
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Grid is disabled on main axes; sparklines are clean without distracting
-          elements.
+        comment: Okabe-Ito positions 1/4/5; arrows supplement color for CVD users.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2x3 grid fills canvas well, balanced margins, no clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title in correct format; metric names serve as tile labels (appropriate
+          for dashboard).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Status colors from Okabe-Ito (#009E73, #E69F00, #CC79A7); backgrounds
+          #FAF8F1/#1A1A17; theme chrome correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic defaults: status-based color semantic, clear visual
+          hierarchy. Not publication-ready; whitespace within tiles is tight and 4/6
+          good tiles share identical teal.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Inset sparklines fully despined; elevated tile backgrounds; no grid
+          on tiles. Sparkline fills muddy in dark render reduces polish.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Critical Error Rate tile stands out in pink; change indicator colors
+          guide viewer to favorable/unfavorable trends; clear focal point on worst
+          metric.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct dashboard tile layout with KPI values, sparklines, and change
-          indicators.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Each metric shows current value, historical sparkline, and percentage
-          change.
-      - id: SC-03
+        comment: Dashboard metric tiles in 2x3 grid — correct type.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has all required features: grid layout, value display, metric label,
-          sparkline, change indicator with arrow.'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: prominent value, metric label, mini sparkline
+          with area fill, change indicator with arrow, status color coding.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All values are visible and sensible.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 6 spec example metrics present with correct values and units.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for dashboard (no legend needed), metric labels are accurate.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: dashboard-metrics-tiles · seaborn · pyplots.ai'
+        comment: Title 'dashboard-metrics-tiles · python · seaborn · anyplot.ai' correct;
+          no legend needed.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows good variety: percentages, milliseconds, counts, rates. Shows
-          good/warning/critical statuses. Shows both favorable and unfavorable changes.'
+        comment: All three status states (good/warning/critical), positive and negative
+          changes, varied metric types shown.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Operations monitoring scenario is realistic and appropriate. Metrics
-          are typical server/application KPIs.
+        comment: Operations monitoring metrics are neutral, realistic, and commonly
+          dashboarded.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are sensible (45% CPU, 72% Memory, 120ms response, 1847 users,
-          2.3% error rate, 892 req/s).
+        comment: CPU 45%, Memory 72%, Response Time 120ms, Active Users 1847, Error
+          Rate 2.3%, Throughput 892 req/s — all plausible.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -169,49 +190,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → styling → plotting → save.'
+        comment: 'Linear structure: imports -> tokens -> data -> plot loop -> save.
+          No classes or functions.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set.
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.pyplot, numpy, pandas, seaborn).
+        comment: os, matplotlib, numpy, pandas, seaborn — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic iteration with zip(..., strict=True); no over-engineering;
+          no fake UI elements.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: No deprecated functions used.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly.
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'; current API
+          throughout.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.set_theme() for styling and sns.lineplot() for sparklines.
-          Could leverage more seaborn features, but appropriate for dashboard visualization.
+        comment: Correct use of sns.lineplot, sns.set_theme with rc dict, sns.despine.
+          Most tile content rendered via matplotlib directly.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn used for sparkline line plots but core dashboard structure
+          is matplotlib. No seaborn-specific features (FacetGrid, statistical transforms)
+          leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - inset-axes
   - annotations
+  - inset-axes
   patterns:
   - data-generation
   - iteration-over-groups
