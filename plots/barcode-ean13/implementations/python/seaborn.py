@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-21
@@ -107,22 +107,19 @@ sns.heatmap(
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-# Style
-display_text = f"{code[0]}  {code[1:7]}  {code[7:13]}"
-ax.text(
-    len(barcode_with_quiet) / 2,
-    barcode_data.shape[0] + 12,
-    display_text,
-    fontsize=10,
-    fontfamily="monospace",
-    fontweight="bold",
-    ha="center",
-    va="top",
-    color=INK,
-)
+# EAN-13 standard digit positioning:
+#   code[0]  → left quiet zone (outside/left of start guard at col 9)
+#   code[1:7] → centered below left data section (cols 12–53)
+#   code[7:]  → centered below right data section (cols 59–100)
+digit_y = barcode_data.shape[0] + 7
+text_kw = {"fontsize": 10, "fontfamily": "monospace", "fontweight": "bold", "va": "top", "color": INK}
+
+ax.text(4.5, digit_y, code[0], ha="center", **text_kw)
+ax.text(33.0, digit_y, code[1:7], ha="center", **text_kw)
+ax.text(80.0, digit_y, code[7:], ha="center", **text_kw)
 
 ax.set_xlim(-5, len(barcode_with_quiet) + 5)
-ax.set_ylim(barcode_data.shape[0] + 25, -5)
+ax.set_ylim(barcode_data.shape[0] + 18, -5)
 
 ax.set_title("barcode-ean13 · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
 
