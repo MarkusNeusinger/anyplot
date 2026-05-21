@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-21
@@ -176,15 +176,104 @@ for i, bit in enumerate(barcode_pattern):
 
 total_width = QUIET_ZONE + len(barcode_pattern) * MODULE_W + QUIET_ZONE
 
+# Structural region boundaries in x coordinates (modules: START=11, each char=11, STOP=13)
+START_X0 = QUIET_ZONE
+START_X1 = QUIET_ZONE + 11 * MODULE_W
+
+data_start_x = START_X1
+data_end_x = data_start_x + len(content) * 11 * MODULE_W
+
+check_x0 = data_end_x
+check_x1 = check_x0 + 11 * MODULE_W
+
+stop_x0 = check_x1
+stop_x1 = stop_x0 + 13 * MODULE_W
+
 # Plot
 fig = go.Figure()
 
-# Barcode bars — tall to utilize canvas space
 BAR_Y0 = 90
-BAR_Y1 = 530
+BAR_Y1 = 510
+mid_bar_y = (BAR_Y0 + BAR_Y1) / 2
 
+# Barcode bars — tall to utilize canvas space
 for x, w in zip(x_positions, bar_widths_list, strict=True):
     fig.add_shape(type="rect", x0=x - w / 2, x1=x + w / 2, y0=BAR_Y0, y1=BAR_Y1, fillcolor=INK, line={"width": 0})
+
+# --- Structural anatomy annotations ---
+# Horizontal bracket line spanning the full barcode (above bars)
+BRACKET_Y = BAR_Y1 + 14
+fig.add_shape(
+    type="line", x0=START_X0, x1=stop_x1, y0=BRACKET_Y, y1=BRACKET_Y, line={"color": INK_SOFT, "width": 1}, opacity=0.55
+)
+
+# Vertical tick marks at each region boundary
+for bx in [START_X0, START_X1, data_end_x, check_x1, stop_x1]:
+    fig.add_shape(
+        type="line",
+        x0=bx,
+        x1=bx,
+        y0=BRACKET_Y - 6,
+        y1=BRACKET_Y + 6,
+        line={"color": INK_SOFT, "width": 1},
+        opacity=0.55,
+    )
+
+# Region labels just above the bracket line (narrow regions use smaller font)
+LABEL_Y = BRACKET_Y + 10
+for x0, x1, label, fsize in [
+    (START_X0, START_X1, "START B", 10),
+    (data_start_x, data_end_x, f"DATA  ({len(content)} chars)", 11),
+    (check_x0, check_x1, "CHK", 10),
+    (stop_x0, stop_x1, "STOP", 10),
+]:
+    fig.add_annotation(
+        x=(x0 + x1) / 2,
+        y=LABEL_Y,
+        text=label,
+        showarrow=False,
+        font={"size": fsize, "color": INK_SOFT},
+        xanchor="center",
+        yanchor="bottom",
+    )
+
+# --- Hover interactivity (distinctive plotly feature) ---
+# Per-character data hover points — reveals encoded value for each character
+char_xs = [data_start_x + (i * 11 + 5.5) * MODULE_W for i in range(len(content))]
+char_labels = [
+    f"<b>'{char}'</b>  ·  Code 128B value: {val}<br>Position {i + 1} / {len(content)}"
+    for i, (char, val) in enumerate(zip(content, values[1:-1], strict=False))
+]
+fig.add_trace(
+    go.Scatter(
+        x=char_xs,
+        y=[mid_bar_y] * len(char_xs),
+        mode="markers",
+        marker={"opacity": 0, "size": 30, "color": INK},
+        text=char_labels,
+        hovertemplate="%{text}<extra></extra>",
+        showlegend=False,
+        hoverlabel={"bgcolor": PAGE_BG, "bordercolor": INK_SOFT, "font": {"color": INK, "size": 13}},
+    )
+)
+
+# Structural region hover points
+for cx, hover_text in [
+    ((START_X0 + START_X1) / 2, "<b>START B Pattern</b><br>Signals Code 128 subset B (ASCII 32–127)<br>11 modules"),
+    ((check_x0 + check_x1) / 2, f"<b>Check Digit: {checksum}</b><br>Modulo 103 of weighted symbol sum<br>11 modules"),
+    ((stop_x0 + stop_x1) / 2, "<b>STOP Pattern</b><br>Terminates every Code 128 barcode<br>13 modules"),
+]:
+    fig.add_trace(
+        go.Scatter(
+            x=[cx],
+            y=[mid_bar_y],
+            mode="markers",
+            marker={"opacity": 0, "size": 20},
+            hovertemplate=f"{hover_text}<extra></extra>",
+            showlegend=False,
+            hoverlabel={"bgcolor": PAGE_BG, "bordercolor": INK_SOFT, "font": {"color": INK, "size": 13}},
+        )
+    )
 
 # Human-readable text below barcode
 fig.add_annotation(
@@ -197,10 +286,10 @@ fig.add_annotation(
     yanchor="middle",
 )
 
-# Subset label above barcode
+# Subset label above anatomy bracket
 fig.add_annotation(
     x=total_width / 2,
-    y=580,
+    y=600,
     text="Code 128B  ·  ASCII Subset (32–127)",
     showarrow=False,
     font={"size": 18, "color": INK_SOFT},
@@ -218,7 +307,7 @@ fig.update_layout(
         "xanchor": "center",
     },
     xaxis={"visible": False, "range": [0, total_width], "fixedrange": True},
-    yaxis={"visible": False, "range": [0, 640], "fixedrange": True},
+    yaxis={"visible": False, "range": [0, 650], "fixedrange": True},
     plot_bgcolor=PAGE_BG,
     paper_bgcolor=PAGE_BG,
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
