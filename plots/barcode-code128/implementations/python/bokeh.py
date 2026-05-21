@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-21
@@ -18,7 +18,7 @@ sys.path = [p for p in sys.path if os.path.realpath(p or ".") != _own_dir]
 import base64
 
 from bokeh.embed import file_html
-from bokeh.models import ColumnDataSource, Label
+from bokeh.models import ColumnDataSource, HoverTool, Label
 from bokeh.plotting import figure
 from bokeh.resources import INLINE
 from selenium import webdriver
@@ -29,6 +29,8 @@ from selenium.webdriver.chrome.options import Options
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ACCENT = "#009E73"  # Okabe-Ito green for structural zone annotations
 
 # Code 128 B subset encoding (bar widths per character, 6 elements each)
 CODE128_B = {
@@ -345,32 +347,63 @@ CHECKSUM_PATTERNS = [
 # Barcode content: shipping label example
 content = "SHIP-2024-ABC123"
 
-# Encode using Code 128 subset B
-bar_widths = list(START_B)
+# Calculate checksum (needed before zone tracking for the annotation label)
 checksum = 104  # Start B value
 for i, char in enumerate(content):
-    bar_widths.extend(CODE128_B[char])
     checksum += CODE128_VALUES[char] * (i + 1)
 checksum = checksum % 103
-bar_widths.extend(CHECKSUM_PATTERNS[checksum])
-bar_widths.extend(STOP)
 
-# Build bar positions in module units (1 data unit = 1 module)
+# Build bar positions with zone tracking for structural annotations
 quiet_zone = 10  # standard 10-module quiet zones on each side
 x_pos = quiet_zone
-bar_lefts, bar_rights = [], []
 is_bar = True
-for width in bar_widths:
-    if is_bar:
-        bar_lefts.append(x_pos)
-        bar_rights.append(x_pos + width)
-    x_pos += width
-    is_bar = not is_bar
+bar_lefts, bar_rights, bar_descs = [], [], []
+zones = []  # list of (label, x_start, x_end) for zone bracket annotations
+
+
+def _append_bars(widths, desc):
+    """Consume a pattern of widths, appending bars (not spaces) to the lists."""
+    global x_pos, is_bar
+    for w in widths:
+        if is_bar:
+            bar_lefts.append(x_pos)
+            bar_rights.append(x_pos + w)
+            bar_descs.append(desc)
+        x_pos += w
+        is_bar = not is_bar
+
+
+# Zone: Start Code B
+zs = x_pos
+_append_bars(START_B, "Start Code B")
+zones.append(("Start B", zs, x_pos))
+
+# Zone: Data payload — each character tracked individually for HoverTool
+zs = x_pos
+for i, char in enumerate(content):
+    _append_bars(CODE128_B[char], f"'{char}'  (position {i + 1})")
+zones.append(("Data Payload", zs, x_pos))
+
+# Zone: Check digit
+zs = x_pos
+_append_bars(CHECKSUM_PATTERNS[checksum], f"Check Digit  (value {checksum})")
+zones.append(("Check Digit", zs, x_pos))
+
+# Zone: Stop
+zs = x_pos
+_append_bars(STOP, "Stop Pattern")
+zones.append(("Stop", zs, x_pos))
+
 total_modules = x_pos + quiet_zone
 
-# Bar layout parameters
-BAR_TOP = 530
-BAR_BOTTOM = 75
+# Layout y-coordinates — expanded canvas to accommodate zone annotations above bars
+BAR_TOP = 570
+BAR_BOTTOM = 80
+BRACKET_Y = 608  # horizontal bracket line above bars
+ZONE_TEXT_Y = 638  # zone label text above bracket
+SUBTITLE_Y = 690  # informational subtitle above zone labels
+WHITE_TOP = 735  # top of white barcode background rect
+WHITE_BOTTOM = 20
 
 # Create figure — 3200×1800 canonical landscape canvas
 W, H = 3200, 1800
@@ -379,7 +412,7 @@ p = figure(
     height=H,
     title="barcode-code128 · python · bokeh · anyplot.ai",
     x_range=(0, total_modules),
-    y_range=(0, 600),
+    y_range=(0, 760),
     toolbar_location=None,
     min_border_bottom=80,
     min_border_left=60,
@@ -404,31 +437,80 @@ p.xgrid.visible = False
 p.ygrid.visible = False
 
 # White label background — spec requires high-contrast black bars on white
-p.quad(left=0, right=total_modules, top=560, bottom=20, fill_color="#FFFFFF", line_color=None)
+p.quad(left=0, right=total_modules, top=WHITE_TOP, bottom=WHITE_BOTTOM, fill_color="#FFFFFF", line_color=None)
 
-# Barcode bars (black on white for maximum scan reliability)
+# Barcode bars — ColumnDataSource enables HoverTool interactivity
 source = ColumnDataSource(
     data={
         "left": bar_lefts,
         "right": bar_rights,
         "top": [BAR_TOP] * len(bar_lefts),
         "bottom": [BAR_BOTTOM] * len(bar_lefts),
+        "desc": bar_descs,
     }
 )
-p.quad(left="left", right="right", top="top", bottom="bottom", fill_color="#000000", line_color=None, source=source)
+bars = p.quad(
+    left="left", right="right", top="top", bottom="bottom", fill_color="#000000", line_color=None, source=source
+)
+
+# HoverTool — Bokeh's distinctive interactive feature: reveals encoded element on hover
+hover = HoverTool(renderers=[bars], tooltips=[("Element", "@desc")])
+p.add_tools(hover)
+
+# Zone bracket annotations — educates the viewer about barcode structure
+BRACKET_LW = 4
+for zone_label, zx_start, zx_end in zones:
+    zmid = (zx_start + zx_end) / 2
+    # Horizontal bracket line spanning the zone
+    p.segment(x0=[zx_start], y0=[BRACKET_Y], x1=[zx_end], y1=[BRACKET_Y], line_color=ACCENT, line_width=BRACKET_LW)
+    # Vertical ticks down from bracket to bar top
+    p.segment(
+        x0=[zx_start, zx_end],
+        y0=[BAR_TOP, BAR_TOP],
+        x1=[zx_start, zx_end],
+        y1=[BRACKET_Y, BRACKET_Y],
+        line_color=ACCENT,
+        line_width=BRACKET_LW,
+    )
+    # Zone label text centered above bracket
+    p.add_layout(
+        Label(
+            x=zmid,
+            y=ZONE_TEXT_Y,
+            text=zone_label,
+            text_align="center",
+            text_baseline="bottom",
+            text_font_size="22pt",
+            text_color=ACCENT,
+        )
+    )
+
+# Informational subtitle — context for the viewer (DE-01)
+p.add_layout(
+    Label(
+        x=total_modules / 2,
+        y=SUBTITLE_Y,
+        text=f"Code 128 Subset B  ·  {len(content)} characters  ·  checksum: mod 103  ·  quiet zones: 10 modules",
+        text_align="center",
+        text_baseline="bottom",
+        text_font_size="22pt",
+        text_color=INK_SOFT,
+    )
+)
 
 # Human-readable text below barcode
-label = Label(
-    x=total_modules / 2,
-    y=45,
-    text=content,
-    text_font_size="34pt",
-    text_align="center",
-    text_baseline="middle",
-    text_color="#000000",
-    text_font="monospace",
+p.add_layout(
+    Label(
+        x=total_modules / 2,
+        y=48,
+        text=content,
+        text_font_size="34pt",
+        text_align="center",
+        text_baseline="middle",
+        text_color="#000000",
+        text_font="monospace",
+    )
 )
-p.add_layout(label)
 
 # Save interactive HTML with inline resources (no CDN dependency for offline rendering)
 html_path = Path(f"plot-{THEME}.html").resolve()
