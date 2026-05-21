@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:58:56Z'
-updated: '2026-05-21T01:00:35Z'
+updated: '2026-05-21T01:13:23Z'
 generated_by: claude-sonnet
 workflow_run: 26198377784
 issue: 3809
@@ -12,41 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/bokeh/plot-dark.html
-quality_score: 86
+quality_score: 88
 review:
   strengths:
-  - Flawless spec compliance — all required Code 128 components implemented correctly
-    (quiet zones, Start B, mod-103 checksum, Stop, human-readable text)
-  - Perfect visual quality in both themes — all text explicitly sized, theme chrome
-    correctly adapted, no edge clipping
-  - Clean, deterministic code with appropriate Bokeh patterns; the encoding lookup
-    tables are necessary, not bloat
+  - 'Perfect spec compliance: all Code 128 structural requirements met (start, payload,
+    check digit, stop, quiet zones, human-readable text)'
+  - Zone bracket annotations are an excellent educational feature — actively teaches
+    barcode anatomy, not just renders bars
+  - 'Theme adaptation is thorough: PAGE_BG, INK, INK_SOFT all token-driven; dark render
+    passes every readability check'
+  - Bokeh HoverTool used meaningfully — hovering over any bar reveals which character/zone
+    it encodes, a feature unique to this library
+  - Realistic, neutral shipping-label example with correct checksum implementation
   weaknesses:
-  - 'DE-03 (2/6): No visual storytelling beyond the raw barcode render — the viewer
-    sees a barcode but gets no help understanding its structure; annotating the barcode
-    zones (Start Code B, Data Payload, Check Digit, Stop) with labeled brackets would
-    create visual hierarchy and educational value'
-  - 'LM-02 (2/5): Bokeh''s primary differentiator (interactivity) is unused — the
-    HTML output could include a HoverTool on the quad glyphs showing the encoded character
-    and position for each bar group, which no static library can replicate'
-  - 'DE-01 (4/8): A subtle informational subtitle or footer (e.g., ''Code 128 Subset
-    B · 16 characters · checksum: mod 103'') would elevate this from a plain rendering
-    to an informative, publication-quality visualization'
+  - '''Check Digit'' and ''Stop'' zone labels are tightly packed on the right — consider
+    increasing font tracking or adjusting zone label y-position to add spacing'
+  - Modest empty canvas space at the bottom (~15-20%) — the blank area below SHIP-2024-ABC123
+    creates a noticeable dead zone; increasing bar height or adjusting white-rect
+    margin would fill it
+  - _append_bars helper uses global x_pos / is_bar — consider inlining the loop or
+    using a return-value pattern to stay KISS-compliant
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Title "barcode-code128 · python · bokeh · anyplot.ai" in dark ink, centered, clearly readable. No axis labels or tick labels (intentionally hidden — appropriate for barcode).
-      Data: Black (#000000) Code 128 bars on white (#FFFFFF) inner rectangle. Quiet zones visible on both sides. Human-readable "SHIP-2024-ABC123" in monospace below the bars.
-      Legibility verdict: PASS — all text readable; no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "barcode-code128 · python · bokeh · anyplot.ai" in bold dark ink (#1A1A17), centered, clearly readable. Informational subtitle in muted gray (#4A4A44 INK_SOFT). Zone labels "Start B", "Data Payload", "Check Digit", "Stop" in brand green (#009E73) above bracket lines.
+      Data: High-contrast black bars on white barcode background. "SHIP-2024-ABC123" in monospace black below barcode.
+      Legibility verdict: PASS — all text readable at full and scaled size.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Title text flips to light #F0EFE8, clearly readable against dark background. Inner barcode area remains white (spec-mandated for scan reliability), creating a framed effect. Human-readable text reads as dark-on-white (correct since the inner area is white).
-      Data: Barcode bars and human-readable text are identical to light render — only the outer canvas and title color flip.
-      Legibility verdict: PASS — no dark-on-dark failures; all text readable in both themes
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title switches to light cream text (#F0EFE8), clearly readable against dark background. Subtitle in #B8B7B0 (secondary dark-theme ink), readable. No dark-on-dark failures observed.
+      Data: Zone labels remain #009E73 green — identical to light render. White barcode rect contrasts strongly against dark page. "SHIP-2024-ABC123" in black on white rect (correct — hardcoded black sits on white background rect).
+      Legibility verdict: PASS — all chrome adapted correctly; no text unreadable in dark theme.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -54,70 +54,73 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: Title 50pt, human-readable label 34pt — both explicitly set; readable
-          at full and mobile size in both themes
+        comment: All font sizes explicitly set (title 50pt, zone labels 22pt, subtitle
+          22pt, human-readable 34pt). Readable in both themes.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements; barcode bars and label text clearly separated
+        comment: Check Digit and Stop zone labels are tight on the right but not overlapping.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: High-contrast black bars on white; crisp and clearly visible
+        comment: High-contrast black bars on white; green bracket annotations prominent.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Black-on-white is maximum contrast and inherently CVD-safe
+        comment: 'Black-on-white barcode maximally accessible; #009E73 CVD-safe on
+          both themes.'
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Barcode fills plot area well with proper quiet zones; balanced margins
+        comment: Clean layout; modest empty strip at the bottom (~15-20% of canvas
+          height).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct mandated title format; no axis labels needed for barcode
+        comment: No axes needed; informational subtitle and human-readable text provide
+          context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Theme chrome correct in both renders (PAGE_BG, INK tokens); black/white
-          bars are spec-mandated
+        comment: '#FAF8F1/#1A1A17 backgrounds correct; #009E73 structural accent;
+          INK/INK_SOFT theme-adaptive.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured and professional; appropriate for barcode type but
-          not exceptional
+        comment: Intentional design with brand green for structural annotations; above
+          defaults but not publication-exceptional.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: axes fully hidden, grid off, explicit min_border
-          margins, white inner area cleanly frames barcode'
+        comment: Axes/grid hidden, no decorations, white rect on PAGE_BG creates clean
+          product-label feel.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: No visual hierarchy or annotation explaining barcode structure; plain
-          render without educational/narrative value
+        passed: true
+        comment: Zone bracket annotations teach barcode structure; clear hierarchy
+          from title to human-readable text.
     spec_compliance:
       score: 15
       max: 15
@@ -127,28 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Code 128 barcode with all structural elements
+        comment: Correct Code 128 linear barcode, bar widths match Code 128 B encoding.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones, Start B, mod-103 checksum, Stop, human-readable text,
-          black-on-white — all present
+        comment: Quiet zones, Start Code B, data payload, check digit (mod 103), stop
+          pattern, human-readable text all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct Code 128 Subset B encoding; bars positioned with correct
-          module widths
+        comment: SHIP-2024-ABC123 encoded correctly; checksum calculation present;
+          all structural zones annotated.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'barcode-code128 · python · bokeh · anyplot.ai'; no
-          legend needed
+        comment: Title is barcode-code128 · python · bokeh · anyplot.ai. No legend
+          needed.
     data_quality:
       score: 15
       max: 15
@@ -158,61 +161,60 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete barcode structure: start, data bars, checksum, stop, quiet
-          zones, human-readable text'
+        comment: All Code 128 structural elements rendered and annotated; subset B
+          encoding fully covered.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''SHIP-2024-ABC123'' is a plausible shipping tracking code matching
-          the spec example; neutral context'
+        comment: SHIP-2024-ABC123 is the spec's own shipping-label example; logistics
+          context neutral and recognisable.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correct Code 128 standard proportions; 10-module quiet zones per
-          standard
+        comment: 16 chars within 48-char limit; 10-module quiet zones are ISO standard;
+          bar proportions follow Code 128 spec.
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → encoding tables → computation → figure
-          → save'
+        comment: _append_bars helper uses global state (x_pos, is_bar) — deviates
+          from flat Imports->Data->Plot->Save pattern.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic encoding; no random elements
+        comment: Fully deterministic (hardcoded content, lookup tables).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; no dead imports
+        comment: All imports are used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Large lookup tables necessary for Code 128; sys.path manipulation
-          documented and needed
+        comment: Large lookup tables are necessary for Code 128; complexity proportional
+          to domain.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly using current
-          Bokeh API
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Current Bokeh 3.x API.
     library_mastery:
-      score: 6
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -220,25 +222,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Good Bokeh patterns: ColumnDataSource, figure with explicit params,
-          Label, Selenium screenshot. Uses file_html(INLINE) instead of canonical
-          output_file/save — minor deviation'
+        comment: 'ColumnDataSource, HoverTool, Label via add_layout(), segment for
+          brackets, file_html(INLINE). Minor: uses CDP screenshot instead of driver.save_screenshot.'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: ColumnDataSource for vectorized quads and HTML/INLINE export are
-          Bokeh-specific, but interactive features (HoverTool, tooltips) are unused
-  verdict: REJECTED
+        passed: true
+        comment: HoverTool revealing per-bar encoded character info on hover is genuinely
+          Bokeh-distinctive; ColumnDataSource enables this pattern correctly.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
