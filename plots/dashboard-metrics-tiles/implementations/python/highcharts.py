@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-21
@@ -25,6 +25,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 CANVAS_W = 3200
 CANVAS_H = 1800
+SHADOW = "0 2px 8px rgba(0,0,0,0.12)" if THEME == "light" else "0 2px 8px rgba(0,0,0,0.40)"
 
 # Data
 np.random.seed(42)
@@ -85,6 +86,12 @@ lower_is_better = {"CPU Usage", "Memory", "Response Time", "Error Rate"}
 
 # Okabe-Ito position 1 for sparklines
 SPARK_COLOR = "#009E73"
+# Theme-adaptive gradient alpha: more opaque in dark mode so fill stays visible
+GRAD_TOP = f"{SPARK_COLOR}55" if THEME == "light" else f"{SPARK_COLOR}88"
+GRAD_BOT = f"{SPARK_COLOR}08" if THEME == "light" else f"{SPARK_COLOR}18"
+
+status_icons = {"good": "✓", "warning": "⚠", "critical": "✕"}
+status_labels = {"good": "Good", "warning": "Warning", "critical": "Critical"}
 
 # Layout constants
 COLS = 3
@@ -141,9 +148,15 @@ for i, m in enumerate(metrics):
         border-left: 10px solid {status_color};
         padding: 40px 40px 28px 40px;
         box-sizing: border-box;
+        box-shadow: {SHADOW};
     ">
-        <div style="font-size: 34px; color: {INK_SOFT}; font-weight: 500; margin-bottom: 14px; letter-spacing: 0.5px;">
-            {m["name"]}
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px;">
+            <div style="font-size: 34px; color: {INK_SOFT}; font-weight: 500; letter-spacing: 0.5px;">
+                {m["name"]}
+            </div>
+            <div style="font-size: 22px; font-weight: 700; color: {status_color}; border: 2px solid {status_color}; border-radius: 6px; padding: 4px 14px; white-space: nowrap; line-height: 1.3;">
+                {status_icons[m["status"]]} {status_labels[m["status"]]}
+            </div>
         </div>
         <div style="display: flex; align-items: baseline; margin-bottom: 18px;">
             <span style="font-size: 88px; font-weight: 700; color: {INK}; line-height: 1;">
@@ -180,8 +193,8 @@ for i, m in enumerate(metrics):
                 fillColor: {{
                     linearGradient: {{ x1: 0, y1: 0, x2: 0, y2: 1 }},
                     stops: [
-                        [0, '{SPARK_COLOR}55'],
-                        [1, '{SPARK_COLOR}08']
+                        [0, '{GRAD_TOP}'],
+                        [1, '{GRAD_BOT}']
                     ]
                 }},
                 lineWidth: 7,
