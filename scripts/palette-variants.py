@@ -209,7 +209,24 @@ class CandidatePool:
         chromas_arr = grid[in_gamut, 1]
         lightnesses_arr = grid[in_gamut, 0]
 
-        log.info("kept %d / %d in-gamut candidates", rgb_arr.shape[0], grid.shape[0])
+        # Warm-hue mud filter: warm picks at low J' read as olive/brown, not
+        # as the colour name they algorithmically represent. The floor is
+        # sub-band specific because the mud zone shifts with hue: deep reds
+        # (H ≈ 25-45) still look like reds down to J' ≈ 50, but yellows
+        # (H ≈ 65-100) need J' ≥ 62 or they read as olive/khaki. The previous
+        # uniform J' ≥ 58 over the full [30, 100] band killed too many useful
+        # warm picks in analogous's narrow wedge.
+        red_orange = (hues_arr >= 30.0) & (hues_arr < 65.0)
+        yellow_lime = (hues_arr >= 65.0) & (hues_arr <= 100.0)
+        red_ok = ~red_orange | (lightnesses_arr >= 52.0)
+        yellow_ok = ~yellow_lime | (lightnesses_arr >= 62.0)
+        no_mud = red_ok & yellow_ok
+        rgb_arr = rgb_arr[no_mud]
+        hues_arr = hues_arr[no_mud]
+        chromas_arr = chromas_arr[no_mud]
+        lightnesses_arr = lightnesses_arr[no_mud]
+
+        log.info("kept %d / %d in-gamut, non-muddy candidates", rgb_arr.shape[0], grid.shape[0])
 
         jab_per_cond: dict[str, np.ndarray] = {}
         for cond in CVD_ORDER:
@@ -436,24 +453,45 @@ def _strategy_bands(
 def reorder_first_4(hexes: list[str]) -> list[str]:
     """Position 0 (brand green) stays. Among {1..6}, find the 3-tuple whose
     inclusion in the first-4 maximises the min worst-CVD ΔE inside that
-    4-set. Positions 5–7 follow in order of decreasing min-distance-to-the-
-    first-4."""
+    4-set, subject to a min-pairwise-hue-gap constraint that keeps the four
+    visible families distinct (green×lime, blue×azure are otherwise legal
+    under pure max-min ΔE but read as duplicates). Positions 5–7 follow in
+    order of decreasing min-distance-to-the-first-4."""
     n = len(hexes)
     assert n == 7
 
     rgb_all = np.array([hex_to_rgb1(hx) for hx in hexes])
     M_worst, _ = worst_cvd_pairwise_delta_e(rgb_all)
+    hues_all = np.array(
+        [jab_to_lch(to_jab(rgb_all[i:i + 1])[0])[2] for i in range(n)]
+    )
 
+    def triple_meets_hue_gap(triple: tuple[int, ...], gap_deg: float) -> bool:
+        sub = (0, *triple)
+        sub_hues = hues_all[list(sub)]
+        diff = sub_hues[:, None] - sub_hues[None, :]
+        circ = np.abs(((diff + 180) % 360) - 180)
+        np.fill_diagonal(circ, 360.0)
+        return bool(circ.min() >= gap_deg)
+
+    # Try 60° first; if the 7-hue pool can't satisfy that (analogous wedge
+    # geometry, mostly), step down in 5° increments. Below 30° we'd be back
+    # to the no-clash threshold from select_palette — no improvement.
     best_triple: tuple[int, ...] | None = None
     best_score = -1.0
-    for triple in itertools.combinations(range(1, n), 3):
-        sub = (0, *triple)
-        sub_M = M_worst[np.ix_(sub, sub)]
-        triu = np.triu_indices(len(sub), k=1)
-        score = float(sub_M[triu].min())
-        if score > best_score:
-            best_score = score
-            best_triple = triple
+    for gap in (60.0, 55.0, 50.0, 45.0, 40.0, 35.0, 30.0):
+        for triple in itertools.combinations(range(1, n), 3):
+            if not triple_meets_hue_gap(triple, gap):
+                continue
+            sub = (0, *triple)
+            sub_M = M_worst[np.ix_(sub, sub)]
+            triu = np.triu_indices(len(sub), k=1)
+            score = float(sub_M[triu].min())
+            if score > best_score:
+                best_score = score
+                best_triple = triple
+        if best_triple is not None:
+            break
 
     assert best_triple is not None
     chosen = [0, *best_triple]
