@@ -1,253 +1,199 @@
-""" pyplots.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 72/100 | Created: 2026-01-17
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-20
 """
+
+import os
+import sys
+
+
+sys.path = sys.path[1:]  # prevent self-import when script is named altair.py
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Generate realistic atmospheric sounding data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data
 np.random.seed(42)
 
-# Pressure levels (hPa) - surface to upper troposphere
 pressure = np.array([1000, 925, 850, 700, 500, 400, 300, 250, 200, 150, 100])
-
-# Temperature profile (°C) - typical mid-latitude sounding
-# Decreases with altitude, with a tropopause around 200-300 hPa
 temperature = np.array([25, 20, 15, 5, -15, -28, -45, -52, -55, -55, -55])
-
-# Dewpoint profile (°C) - always less than or equal to temperature
 dewpoint = np.array([18, 15, 10, -5, -25, -38, -55, -62, -70, -75, -80])
 
-# Create main data DataFrame
-sounding_data = pd.DataFrame(
-    {"pressure": pressure, "temperature": temperature, "dewpoint": dewpoint, "log_pressure": np.log10(pressure)}
-)
+skew_factor = 40
+log_p_base = np.log10(pressure)
+skew_offset = (np.log10(1000) - log_p_base) * skew_factor
+temp_skewed = temperature + skew_offset
+dew_skewed = dewpoint + skew_offset
 
-# For Skew-T, we need to skew the temperature axis
-# Skewed temperature = T + (log10(1000) - log10(P)) * skew_factor
-skew_factor = 40  # Controls the skew angle
-sounding_data["temp_skewed"] = (
-    sounding_data["temperature"] + (np.log10(1000) - sounding_data["log_pressure"]) * skew_factor
-)
-sounding_data["dewpoint_skewed"] = (
-    sounding_data["dewpoint"] + (np.log10(1000) - sounding_data["log_pressure"]) * skew_factor
-)
+# X-axis domain — tightened to reduce whitespace on the right
+x_domain = [-48, 60]
+X_MARGIN = 5  # pre-filter margin to exclude vl-convert layout inflation from out-of-range values
 
-# Create combined profile data for legend (long format)
-profile_legend_data = pd.DataFrame({"profile": ["Temperature", "Dewpoint"], "color": ["#DC143C", "#306998"]})
+# Unified color/dash scheme (single legend covers all 6 element types)
+ALL_LABELS = ["Isotherm", "Dry Adiabat", "Moist Adiabat", "Mixing Ratio", "Temperature", "Dewpoint"]
+ALL_COLORS = ["#888888", "#228B22", "#9932CC", "#4169E1", "#DC143C", "#306998"]
+ALL_DASHES = [[4, 4], [1, 0], [6, 3], [2, 2], [1, 0], [8, 4]]
 
-# Create isotherms (constant temperature lines, skewed)
-isotherm_temps = np.arange(-80, 50, 10)  # Temperature range
-isotherm_data = []
-for t in isotherm_temps:
-    for p in np.linspace(100, 1000, 50):
-        log_p = np.log10(p)
-        t_skewed = t + (np.log10(1000) - log_p) * skew_factor
-        isotherm_data.append({"pressure": p, "temp_skewed": t_skewed, "isotherm": t, "log_pressure": log_p})
-isotherm_df = pd.DataFrame(isotherm_data)
+full_color_scale = alt.Scale(domain=ALL_LABELS, range=ALL_COLORS)
+full_dash_scale = alt.Scale(type="ordinal", domain=ALL_LABELS, range=ALL_DASHES)
 
-# Create dry adiabats (lines of constant potential temperature)
-# Potential temperature theta = T * (1000/P)^0.286
-theta_values = np.arange(250, 450, 20)  # Potential temperatures in Kelvin
-dry_adiabat_data = []
-for theta in theta_values:
-    for p in np.linspace(100, 1000, 50):
-        # T = theta * (P/1000)^0.286
-        temp_k = theta * (p / 1000) ** 0.286
-        temp_c = temp_k - 273.15
-        log_p = np.log10(p)
-        t_skewed = temp_c + (np.log10(1000) - log_p) * skew_factor
-        dry_adiabat_data.append({"pressure": p, "temp_skewed": t_skewed, "theta": theta, "log_pressure": log_p})
-dry_adiabat_df = pd.DataFrame(dry_adiabat_data)
+# Reference lines — pre-filtered to x_domain ± margin to prevent layout inflation
+ref_records = []
 
-# Create moist adiabats (lines of constant equivalent potential temperature)
-# Moist adiabats curve more steeply than dry adiabats
-theta_e_values = np.arange(280, 380, 20)  # Equivalent potential temperatures in Kelvin
-moist_adiabat_data = []
-for theta_e in theta_e_values:
-    for p in np.linspace(100, 1000, 50):
-        # Simplified moist adiabatic lapse rate approximation
-        # Temperature decreases more slowly with height for moist air
-        temp_k = theta_e * (p / 1000) ** 0.23  # Lower exponent for moist adiabat
-        temp_c = temp_k - 273.15
-        log_p = np.log10(p)
-        t_skewed = temp_c + (np.log10(1000) - log_p) * skew_factor
-        moist_adiabat_data.append({"pressure": p, "temp_skewed": t_skewed, "theta_e": theta_e, "log_pressure": log_p})
-moist_adiabat_df = pd.DataFrame(moist_adiabat_data)
+for t in np.arange(-80, 50, 10):
+    for p_val in np.linspace(100, 1000, 50):
+        lp = np.log10(p_val)
+        t_sk = t + (np.log10(1000) - lp) * skew_factor
+        if x_domain[0] - X_MARGIN <= t_sk <= x_domain[1] + X_MARGIN:
+            ref_records.append({"pressure": p_val, "temp_skewed": t_sk, "label": "Isotherm", "line_id": f"iso_{t}"})
 
-# Create mixing ratio lines (lines of constant mixing ratio)
-# Simplified: mixing ratio relates to dewpoint and pressure
-mixing_ratios = [1, 2, 4, 7, 10, 15, 20]  # g/kg
-mixing_ratio_data = []
-for w in mixing_ratios:
-    for p in np.linspace(400, 1000, 30):
-        # Approximate saturation vapor pressure from mixing ratio
-        # e = (w * p) / (622 + w)
-        e = (w * p) / (622 + w)
-        # Convert to dewpoint using simplified formula
-        # Td ≈ (243.5 * ln(e/6.112)) / (17.67 - ln(e/6.112))
+for theta in np.arange(250, 450, 20):
+    for p_val in np.linspace(100, 1000, 50):
+        t_c = theta * (p_val / 1000) ** 0.286 - 273.15
+        lp = np.log10(p_val)
+        t_sk = t_c + (np.log10(1000) - lp) * skew_factor
+        if x_domain[0] - X_MARGIN <= t_sk <= x_domain[1] + X_MARGIN:
+            ref_records.append(
+                {"pressure": p_val, "temp_skewed": t_sk, "label": "Dry Adiabat", "line_id": f"dry_{theta}"}
+            )
+
+for theta_e in np.arange(280, 380, 20):
+    for p_val in np.linspace(100, 1000, 50):
+        t_c = theta_e * (p_val / 1000) ** 0.23 - 273.15
+        lp = np.log10(p_val)
+        t_sk = t_c + (np.log10(1000) - lp) * skew_factor
+        if x_domain[0] - X_MARGIN <= t_sk <= x_domain[1] + X_MARGIN:
+            ref_records.append(
+                {"pressure": p_val, "temp_skewed": t_sk, "label": "Moist Adiabat", "line_id": f"moist_{theta_e}"}
+            )
+
+for w in [1, 2, 4, 7, 10, 15, 20]:
+    for p_val in np.linspace(400, 1000, 30):
+        e = (w * p_val) / (622 + w)
         if e > 0.1:
             ln_e = np.log(e / 6.112)
-            td = (243.5 * ln_e) / (17.67 - ln_e) if (17.67 - ln_e) != 0 else -40
-            log_p = np.log10(p)
-            t_skewed = td + (np.log10(1000) - log_p) * skew_factor
-            if -100 < td < 50:  # Filter reasonable values
-                mixing_ratio_data.append(
-                    {"pressure": p, "temp_skewed": t_skewed, "mixing_ratio": w, "log_pressure": log_p}
-                )
-mixing_ratio_df = pd.DataFrame(mixing_ratio_data)
+            denom = 17.67 - ln_e
+            if denom != 0:
+                td = (243.5 * ln_e) / denom
+                if -100 < td < 50:
+                    lp = np.log10(p_val)
+                    t_sk = td + (np.log10(1000) - lp) * skew_factor
+                    if x_domain[0] - X_MARGIN <= t_sk <= x_domain[1] + X_MARGIN:
+                        ref_records.append(
+                            {"pressure": p_val, "temp_skewed": t_sk, "label": "Mixing Ratio", "line_id": f"mix_{w}"}
+                        )
 
-# X-axis domain - tight fit to actual data range with small margin
-# Temperature skewed values range roughly from -40 to 65 based on data
-x_domain = [-50, 70]
-y_axis = alt.Y("pressure:Q", scale=alt.Scale(type="log", domain=[1000, 100]), title="Pressure (hPa)")
+ref_df = pd.DataFrame(ref_records)
 
-# Isotherms - skewed temperature lines (gray, dashed, increased opacity)
-isotherms = (
-    alt.Chart(isotherm_df)
-    .mark_line(strokeDash=[4, 4], strokeWidth=1.2, opacity=0.6)
+# Sounding profile data — same 'label' field for unified color/dash scale
+prof_records = []
+for i in range(len(pressure)):
+    prof_records.append({"pressure": pressure[i], "temp_skewed": temp_skewed[i], "label": "Temperature"})
+    prof_records.append({"pressure": pressure[i], "temp_skewed": dew_skewed[i], "label": "Dewpoint"})
+prof_df = pd.DataFrame(prof_records)
+
+y_scale = alt.Scale(type="log", domain=[1000, 100])
+
+# Reference lines — thin, semi-transparent background grid
+ref_lines = (
+    alt.Chart(ref_df)
+    .mark_line(opacity=0.40, strokeWidth=1.0)
     .encode(
-        x=alt.X("temp_skewed:Q", title="Temperature (°C, skewed)", scale=alt.Scale(domain=x_domain)),
-        y=y_axis,
-        detail="isotherm:N",
-        color=alt.value("#888888"),
+        x=alt.X("temp_skewed:Q", scale=alt.Scale(domain=x_domain), title="Temperature (°C, skewed)"),
+        y=alt.Y("pressure:Q", scale=y_scale, title="Pressure (hPa)"),
+        detail="line_id:N",
+        color=alt.Color("label:N", scale=full_color_scale, legend=None),
+        strokeDash=alt.StrokeDash("label:N", scale=full_dash_scale, legend=None),
     )
 )
 
-# Dry adiabats (green lines, increased opacity)
-dry_adiabats = (
-    alt.Chart(dry_adiabat_df)
-    .mark_line(strokeWidth=1.2, opacity=0.65)
+# Sounding profiles — thick lines; legend here shows all 6 labels via shared scale
+prof_lines = (
+    alt.Chart(prof_df)
+    .mark_line(strokeWidth=3.5)
     .encode(
         x=alt.X("temp_skewed:Q", scale=alt.Scale(domain=x_domain)),
-        y=y_axis,
-        detail="theta:N",
-        color=alt.value("#228B22"),
-    )
-)
-
-# Moist adiabats (purple/magenta dashed lines)
-moist_adiabats = (
-    alt.Chart(moist_adiabat_df)
-    .mark_line(strokeDash=[6, 3], strokeWidth=1.2, opacity=0.65)
-    .encode(
-        x=alt.X("temp_skewed:Q", scale=alt.Scale(domain=x_domain)),
-        y=y_axis,
-        detail="theta_e:N",
-        color=alt.value("#9932CC"),
-    )
-)
-
-# Mixing ratio lines (blue, dashed, increased opacity)
-mixing_lines = (
-    alt.Chart(mixing_ratio_df)
-    .mark_line(strokeDash=[2, 2], strokeWidth=1.2, opacity=0.65)
-    .encode(
-        x=alt.X("temp_skewed:Q", scale=alt.Scale(domain=x_domain)),
-        y=y_axis,
-        detail="mixing_ratio:N",
-        color=alt.value("#4169E1"),
-    )
-)
-
-# Temperature profile (solid red line)
-temp_profile = (
-    alt.Chart(sounding_data)
-    .mark_line(strokeWidth=4, color="#DC143C")
-    .encode(
-        x=alt.X("temp_skewed:Q", scale=alt.Scale(domain=x_domain)), y=y_axis, tooltip=["pressure:Q", "temperature:Q"]
-    )
-)
-
-# Temperature profile points
-temp_points = (
-    alt.Chart(sounding_data)
-    .mark_circle(size=120, color="#DC143C")
-    .encode(
-        x=alt.X("temp_skewed:Q", scale=alt.Scale(domain=x_domain)), y=y_axis, tooltip=["pressure:Q", "temperature:Q"]
-    )
-)
-
-# Dewpoint profile (dashed blue line)
-dewpoint_profile = (
-    alt.Chart(sounding_data)
-    .mark_line(strokeWidth=4, strokeDash=[8, 4], color="#306998")
-    .encode(
-        x=alt.X("dewpoint_skewed:Q", scale=alt.Scale(domain=x_domain)), y=y_axis, tooltip=["pressure:Q", "dewpoint:Q"]
-    )
-)
-
-# Dewpoint profile points
-dewpoint_points = (
-    alt.Chart(sounding_data)
-    .mark_circle(size=120, color="#306998")
-    .encode(
-        x=alt.X("dewpoint_skewed:Q", scale=alt.Scale(domain=x_domain)), y=y_axis, tooltip=["pressure:Q", "dewpoint:Q"]
-    )
-)
-
-# Create legend data for visible points that will generate the legend
-legend_df = pd.DataFrame(
-    {
-        "x": [-45, -45, -45, -45, -45, -45],
-        "y": [980, 900, 820, 740, 660, 580],
-        "element": ["Temperature", "Dewpoint", "Isotherm", "Dry Adiabat", "Moist Adiabat", "Mixing Ratio"],
-    }
-)
-
-# Use mark_point to create visible legend entries - points placed outside visible area but within domain
-combined_legend = (
-    alt.Chart(legend_df)
-    .mark_point(size=150, filled=True)
-    .encode(
-        x=alt.X("x:Q", scale=alt.Scale(domain=x_domain)),
-        y=alt.Y("y:Q", scale=alt.Scale(type="log", domain=[1000, 100])),
+        y=alt.Y("pressure:Q", scale=y_scale),
         color=alt.Color(
-            "element:N",
-            scale=alt.Scale(
-                domain=["Temperature", "Dewpoint", "Isotherm", "Dry Adiabat", "Moist Adiabat", "Mixing Ratio"],
-                range=["#DC143C", "#306998", "#888888", "#228B22", "#9932CC", "#4169E1"],
-            ),
+            "label:N",
+            scale=full_color_scale,
             legend=alt.Legend(
-                title="Legend",
-                orient="right",
-                titleFontSize=16,
-                labelFontSize=14,
-                symbolSize=300,
-                symbolStrokeWidth=3,
-                offset=10,
+                title="", labelFontSize=10, titleFontSize=10, symbolSize=200, symbolStrokeWidth=2, offset=6
             ),
         ),
+        strokeDash=alt.StrokeDash("label:N", scale=full_dash_scale, legend=None),
+        tooltip=["label:N", "pressure:Q", alt.Tooltip("temp_skewed:Q", title="T skewed (°C)", format=".1f")],
     )
 )
 
-# Combine all layers including legend
+# Profile points at each sounding level
+prof_points = (
+    alt.Chart(prof_df)
+    .mark_circle(size=80, filled=True)
+    .encode(
+        x=alt.X("temp_skewed:Q", scale=alt.Scale(domain=x_domain)),
+        y=alt.Y("pressure:Q", scale=y_scale),
+        color=alt.Color("label:N", scale=full_color_scale, legend=None),
+    )
+)
+
+title_text = "skewt-logp-atmospheric · python · altair · anyplot.ai"
+
+# Inner view 540×300 — filtered data keeps total PNG within 3200×1800 after padding
 chart = (
-    alt.layer(
-        isotherms,
-        dry_adiabats,
-        moist_adiabats,
-        mixing_lines,
-        temp_profile,
-        temp_points,
-        dewpoint_profile,
-        dewpoint_points,
-        combined_legend,
-    )
+    alt.layer(ref_lines, prof_lines, prof_points)
+    .resolve_scale(color="shared", strokeDash="shared")
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title("skewt-logp-atmospheric · altair · pyplots.ai", fontSize=28, anchor="middle"),
+        width=540, height=300, background=PAGE_BG, title=alt.Title(title_text, fontSize=16, color=INK, anchor="middle")
     )
-    .configure_axis(labelFontSize=18, titleFontSize=22, gridColor="#EEEEEE")
-    .configure_view(strokeWidth=0)
-    .configure_legend(titleFontSize=16, labelFontSize=14, padding=10, cornerRadius=5)
-    .interactive()
+    .configure_view(fill=PAGE_BG, stroke=None)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=12,
+    )
+    .configure_legend(
+        fillColor=ELEVATED_BG,
+        strokeColor=INK_SOFT,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        labelFontSize=10,
+        titleFontSize=10,
+    )
 )
 
-# Save output
-chart.save("plot.png", scale_factor=3.0)
+# Save PNG
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# PAD-only to canonical 3200×1800 — do NOT crop (would clip title/axis labels)
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+# Save HTML
+chart.save(f"plot-{THEME}.html")
