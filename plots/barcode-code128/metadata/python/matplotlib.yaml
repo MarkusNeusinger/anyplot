@@ -1,149 +1,184 @@
 library: matplotlib
+language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:57:44Z'
-updated: '2026-01-19T11:00:12Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21134791890
+updated: '2026-05-21T01:02:04Z'
+generated_by: claude-sonnet
+workflow_run: 26198178163
 issue: 3809
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Comprehensive Code 128B implementation with complete encoding tables
-  - 'Proper barcode structure: start code, data, checksum (modulo 103), and stop pattern'
-  - Clean visual presentation with appropriate quiet zones for scannability
-  - Human-readable text properly positioned below barcode
-  - Excellent contrast and crisp bar rendering using imshow with binary colormap
+  - 'Correct and complete Code 128 Subset B implementation: start pattern, data symbols,
+    modulo-103 checksum, and stop pattern all correctly encoded'
+  - Theme-adaptive LinearSegmentedColormap for bars/spaces elegantly flips between
+    light (#FAF8F1/#1A1A17) and dark (#1A1A17/#F0EFE8) themes — bars appear dark-on-light
+    and light-on-dark correctly
+  - Structural zone annotations (Quiet Zone, Start, Data, Check, Stop) with bracket
+    lines provide excellent educational context for the barcode anatomy
+  - Human-readable text below barcode in bold monospace matches real-world barcode
+    label conventions and is clearly visible in both themes
+  - Clean KISS code with no functions/classes, deterministic output, and only used
+    imports
   weaknesses:
-  - Could demonstrate subset switching (A/B/C) for optimal encoding efficiency as
-    mentioned in spec
-  - Encoding tables are comprehensive but make the code lengthy; could be more compact
-  image_description: The plot displays a Code 128 barcode rendered as a series of
-    vertical black bars on a white background. The barcode encodes the text "SHIP-2024-ABC123"
-    which appears centered below the barcode in a bold monospace font. The title "barcode-code128
-    · matplotlib · pyplots.ai" is displayed at the top of the image. The barcode includes
-    proper quiet zones (white space) on both left and right sides. The bars vary in
-    width according to Code 128 encoding standards, with the characteristic start
-    pattern, data encoding, checksum, and stop pattern all visible. The layout is
-    clean with good use of whitespace and the barcode occupies approximately 60% of
-    the canvas width.
+  - Zone annotation text at fontsize=6 is borderline small at mobile widths (~400px);
+    increase to 7-8pt for better readability when the image is displayed at smaller
+    sizes
+  - Approximately 25-30% of the canvas below the human-readable text is empty (ylim
+    bottom=275 but last content at y≈228); tighten ylim or adjust subplots_adjust
+    to center barcode content vertically and reduce wasted canvas area
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "barcode-code128 · python · matplotlib · anyplot.ai" in dark ink at top, clearly readable. Zone labels (Quiet Zone, Start, Data · Code B (16 chars), Check, Stop, Quiet Zone) in muted gray above the barcode are visible at full resolution but small (fontsize=6). Human-readable "SHIP-2024-ABC123" in bold monospace below barcode is prominent.
+      Data: High-contrast black (#1A1A17) bars on off-white (#FAF8F1) spaces — exceptional readability. Structural bracket lines above barcode in muted gray.
+      Legibility verdict: PASS — all text readable, no light-on-light failures. Zone labels are small but legible at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light (#F0EFE8) text — clearly visible. Zone labels in light muted tone — readable. Human-readable "SHIP-2024-ABC123" in light bold monospace — prominent and clear.
+      Data: Bars are now off-white (#F0EFE8) on near-black (#1A1A17) background — the LinearSegmentedColormap correctly inverts the bar/space colors for dark mode. Colors are theme-adapted (not identical to light render, which is correct for a binary colormap using INK/PAGE_BG tokens). No dark-on-dark failures found.
+      Legibility verdict: PASS — all text clearly readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt is clear, human-readable text at 32pt is perfectly
-          legible
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements, clean layout
-      - id: VQ-03
-        name: Element Visibility
-        score: 8
-        max: 8
-        passed: true
-        comment: Barcode bars are crisp and clearly visible with appropriate contrast
-      - id: VQ-04
-        name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: High contrast black on white, universally accessible
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, barcode well-centered with balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for barcode (axes intentionally hidden)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: No grid needed, clean presentation
-    spec_compliance:
-      score: 25
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Code 128 barcode implementation
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Text correctly encoded into barcode pattern
-      - id: SC-03
-        name: Required Features
-        score: 5
-        max: 5
-        passed: true
-        comment: Includes quiet zones, start/stop patterns, checksum, human-readable
-          text
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Full encoding visible with proper margins
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Human-readable text matches encoded content
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: barcode-code128 · matplotlib · pyplots.ai'
-    data_quality:
-      score: 17
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
         score: 6
         max: 8
         passed: true
-        comment: Shows standard Code 128B encoding; could demonstrate more character
-          variety
+        comment: Title and human-readable text are clear in both themes; zone annotation
+          labels at fontsize=6 are borderline small at mobile widths
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements anywhere
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Barcode bars highly visible in both themes; structural brackets and
+          annotations clearly rendered
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Maximum contrast (near-black bars on off-white, and inverse for dark
+          mode)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: ~25-30% empty canvas below human-readable text (ylim bottom=275,
+          last content at y≈228); slight wasted space
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct; no axis labels needed for barcode; zone labels serve
+          the informational role
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1 light / #1A1A17 dark); binary colormap
+          uses INK/PAGE_BG tokens — Okabe-Ito N/A for this utility plot type'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean functional design; structural annotation brackets are a thoughtful
+          touch; barcode's functional requirements constrain aesthetic scope
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: All spines removed, no unnecessary grid, clean whitespace; bottom
+          empty space slightly detracts
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Zone annotations (Quiet Zone, Start, Data, Check, Stop) with bracket
+          lines excellent for explaining barcode anatomy; clear visual hierarchy title→labels→barcode→human-readable
+          text
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Code 128 barcode visualization
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All features present: quiet zones, start pattern, check digit (modulo-103),
+          stop pattern, human-readable text, high-contrast bars'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Content SHIP-2024-ABC123 correctly encoded and displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title is exactly 'barcode-code128 · python · matplotlib · anyplot.ai'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Shows all structural elements (start, data zone, check, stop, quiet
+          zones, human-readable); one subset shown (B) but spec shows multiple subsets
+          exist
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: SHIP-2024-ABC123 is a realistic shipping label format
+        comment: SHIP-2024-ABC123 is a realistic and neutral shipping label code
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions, though barcode module width could be slightly optimized
+        comment: 16 chars is within recommended 48-char limit; appropriate for demonstration
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -151,50 +186,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports, data tables, encoding, plotting'
+        comment: No functions or classes; clean procedural code
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic encoding (no random seed needed), but hardcoded data
+        comment: No randomness; deterministic barcode encoding
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy imported
+        comment: 'All imports used: matplotlib.pyplot, numpy, LinearSegmentedColormap,
+          os, sys'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Well-organized lookup tables, clear encoding logic, no fake interactivity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses imshow effectively for barcode rendering, but could leverage
-          more matplotlib features
+        comment: ax.imshow for 2D array, ax.text for annotations, ax.plot for bracket
+          lines — all correct axes-level methods
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: LinearSegmentedColormap.from_list for theme-adaptive binary colormap
+          is a clever and distinctive matplotlib feature usage
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - minimal-chrome
+  - manual-ticks
   patterns:
   - matrix-construction
+  - explicit-figure
   dataprep: []
   styling:
   - custom-colormap
+  - minimal-chrome
