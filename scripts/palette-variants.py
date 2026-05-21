@@ -22,7 +22,8 @@ Variants differ in their hue-selection strategy:
   B — triadic              (three hue anchors 120° apart)
   C — split-complementary  (green plus two flanking complements)
   D — balanced             (Petroff-style max-min, paper-ink chroma)
-  E — okabe-tuned          (Wong-Okabe-Ito bones, weak pairs nudged)
+  E — okabe-spread         (Wong-Okabe-Ito bones, snapped to even 7-slot hue lattice)
+  F — harmonic             (balanced rule but relaxed C corridor)
 
 For each, the script:
 
@@ -111,7 +112,23 @@ PER_VARIANT_C_RANGE: dict[str, tuple[float, float]] = {
     "triadic":        (26.0, 42.0),
     "split-comp":     (26.0, 42.0),
     "balanced":       (22.0, 36.0),
-    "okabe-tuned":    (30.0, 50.0),
+    "okabe-spread":   (28.0, 48.0),
+    "harmonic":       (22.0, 60.0),  # F: relaxed paper-ink — wider C headroom for more harmonious hue picks
+}
+
+
+# Minimum pairwise hue spacing target per strategy (degrees on the colour wheel).
+# Every strategy now enforces this via the diversity penalty inside
+# ``score_candidates``; without it, max-min ΔE optimisation cheerfully picks
+# two near-identical blues or two yellow-greens whenever the chroma corridor
+# leaves headroom for only one warm/cool region.
+PER_VARIANT_HUE_SPREAD: dict[str, float] = {
+    "analogous":      35.0,  # narrow wedge ±90° around green → smaller target
+    "triadic":        45.0,
+    "split-comp":     45.0,
+    "balanced":       50.0,  # 360/7 ≈ 51°, the ideal even spacing
+    "okabe-spread":   45.0,
+    "harmonic":       50.0,
 }
 
 
@@ -249,7 +266,10 @@ def hue_diversity_penalty(
     closer than ``target_spread_deg`` to any already-selected hue. Without
     this, greedy max-min lands on three nearly-identical purples for the
     balanced strategy because the warm/purple corner of CAM02-UCS is where
-    "farthest from green" lives for several conditions at once.
+    "farthest from green" lives for several conditions at once. Weight 1.2 is
+    a tiebreaker — the hard min-hue-gap mask in ``select_palette`` does the
+    actual no-clash enforcement; this penalty just prefers maximally-spread
+    picks among equally-distinct ones.
     """
     if not sel_hues:
         return np.zeros(pool.rgb1.shape[0])
@@ -257,7 +277,22 @@ def hue_diversity_penalty(
     diff = pool.hues_deg[:, None] - sel[None, :]
     circ = np.abs(((diff + 180) % 360) - 180)
     min_hue_dist = circ.min(axis=1)
-    return np.maximum(0.0, target_spread_deg - min_hue_dist) * 0.30
+    return np.maximum(0.0, target_spread_deg - min_hue_dist) * 1.2
+
+
+def hue_gap_mask(
+    pool: CandidatePool, sel_hues: list[float], min_gap_deg: float
+) -> np.ndarray:
+    """Hard mask: True for candidates ≥ min_gap_deg away from every selected
+    hue on the colour wheel. This is the no-clash guarantee — band fallback
+    can drop the per-position bands, but the gap mask still keeps every pick
+    distinguishable from its siblings."""
+    if not sel_hues:
+        return np.ones(pool.rgb1.shape[0], dtype=bool)
+    sel = np.array(sel_hues)
+    diff = pool.hues_deg[:, None] - sel[None, :]
+    circ = np.abs(((diff + 180) % 360) - 180)
+    return circ.min(axis=1) >= min_gap_deg
 
 
 def select_palette(
@@ -276,30 +311,36 @@ def select_palette(
     c_min, c_max = PER_VARIANT_C_RANGE[strategy]
     chroma_mask = (pool.chromas >= c_min) & (pool.chromas <= c_max)
 
-    # Only the balanced strategy needs the diversity penalty — every other
-    # strategy already enforces hue spread via per-position bands. 50° is
-    # roughly 360°/7, the ideal even spacing for 7 colours.
-    use_diversity_penalty = strategy == "balanced"
-    diversity_target_deg = 50.0
+    # The hue-diversity penalty is a soft tiebreaker; the hard guarantee that
+    # no two picks land within ``min_gap`` of each other on the colour wheel
+    # comes from ``hue_gap_mask``. Set to 60% of the target spread — tight
+    # enough to forbid the old two-azures / two-blues clashes, loose enough to
+    # keep the candidate set non-empty even in cramped variants.
+    diversity_target_deg = PER_VARIANT_HUE_SPREAD[strategy]
+    min_gap_deg = diversity_target_deg * 0.6
 
     selected_rgb: list[np.ndarray] = [brand_rgb]
     selected_hues: list[float] = [brand_H]
     for i in range(1, n_hues):
         sel_jabs = selected_jabs(selected_rgb)
         scores = score_candidates(pool, sel_jabs)
-        if use_diversity_penalty:
-            scores = scores - hue_diversity_penalty(pool, selected_hues, diversity_target_deg)
+        scores = scores - hue_diversity_penalty(pool, selected_hues, diversity_target_deg)
 
+        gap_mask = hue_gap_mask(pool, selected_hues, min_gap_deg)
         bands = bands_per_pos[i]
-        mask = _bands_mask(pool.hues_deg, bands) & chroma_mask
-        # Widen if the (hue-band ∩ chroma-band) is empty
+        mask = _bands_mask(pool.hues_deg, bands) & chroma_mask & gap_mask
+        # Widen the per-position hue band first (cheap), then loosen the chroma
+        # corridor, then finally drop the per-position band — but the gap mask
+        # is never relaxed: a near-clash is worse than an off-corridor pick.
         widen = 0
         while not mask.any() and widen < 60:
             widen += 10
             widened = [(c, w + widen) for (c, w) in bands] if bands else None
-            mask = _bands_mask(pool.hues_deg, widened) & chroma_mask
+            mask = _bands_mask(pool.hues_deg, widened) & chroma_mask & gap_mask
         if not mask.any():
-            mask = chroma_mask  # last-resort: drop hue rule
+            mask = chroma_mask & gap_mask  # drop hue rule, keep gap
+        if not mask.any():
+            mask = gap_mask  # last-resort: drop chroma too, keep gap
 
         masked_scores = np.where(mask, scores, -np.inf)
         best_idx = int(np.argmax(masked_scores))
@@ -378,18 +419,46 @@ def _strategy_bands(
         return [[(t, bw)] for t in targets][:n_hues]
 
     if strategy == "balanced":
-        # No hue rule at any position; differentiation comes from the tighter
-        # chroma corridor and a hue-diversity penalty applied at score time
-        # (see ``score_candidates_with_spread``). Without the penalty greedy
-        # max-min lands on three purples in a row.
+        # No hue rule at any position; the hue-diversity penalty at score time
+        # is doing all the work. Most "harmonic but max-distinct" results.
         return [None for _ in range(n_hues)]
 
-    if strategy == "okabe-tuned":
-        okabe_hues = [
+    if strategy == "harmonic":
+        # Same as balanced (no hue rule) but with a relaxed C corridor — tests
+        # whether more chroma headroom yields more pleasing hue choices.
+        return [None for _ in range(n_hues)]
+
+    if strategy == "okabe-spread":
+        # Take Okabe-Ito's hue family as a *prior* but spread the cluster: the
+        # native palette stacks blue/sky/purple within 60°, which is exactly
+        # what made the old "okabe-tuned" land on two blues. We sort Okabe's
+        # hues, then nudge each onto the nearest 360/7 ≈ 51° lattice anchored
+        # at brand green. The chroma corridor + diversity penalty then refine.
+        okabe_hues = sorted(
             jab_to_lch(to_jab(hex_to_rgb1(hx).reshape(1, 3))[0])[2]
             for hx in OKABE_PALETTE
-        ]
-        return [[(okabe_hues[i], bw)] if i < len(okabe_hues) else None for i in range(n_hues)]
+        )
+        spacing = 360.0 / n_hues
+        # Lattice anchored at brand_hue; choose for each Okabe slot the lattice
+        # bin closest to its native hue.
+        lattice = [(brand_hue + k * spacing) % 360 for k in range(n_hues)]
+        used = set()
+        targets: list[float] = []
+        for h in okabe_hues:
+            best_k, best_d = 0, 360.0
+            for k in range(n_hues):
+                if k in used:
+                    continue
+                d = abs(((lattice[k] - h + 180) % 360) - 180)
+                if d < best_d:
+                    best_d, best_k = d, k
+            used.add(best_k)
+            targets.append(lattice[best_k])
+        # Position 0 is brand green (lattice[0]); reorder so it leads.
+        targets = sorted(targets, key=lambda t: abs(((t - brand_hue + 180) % 360) - 180))
+        # Slightly wider bands than other strategies so the algorithm can still
+        # shift each Okabe hue ±28° to find the chroma/lightness sweet spot.
+        return [[(t, 28)] for t in targets][:n_hues]
 
     raise ValueError(f"unknown strategy: {strategy}")
 
@@ -516,7 +585,10 @@ def build_continuous(strategy: str, palette: list[str], n: int = 256) -> np.ndar
     if strategy == "balanced":
         # green → blue → purple (viridis-like, monotonic J' descent)
         return _interp_three(brand_jab, lch_to_jab(40, 45, 240), lch_to_jab(22, 35, 305), n)
-    if strategy == "okabe-tuned":
+    if strategy == "harmonic":
+        # green → blue → magenta with relaxed C so it sings against the muted siblings
+        return _interp_three(brand_jab, lch_to_jab(48, 55, 245), lch_to_jab(30, 55, 320), n)
+    if strategy == "okabe-spread":
         # green → light yellow (Okabe pos-7-flavoured sequential)
         return _interp_two(brand_jab, lch_to_jab(92, 60, 95), n)
     raise ValueError(strategy)
@@ -563,10 +635,16 @@ VARIANTS = [
         "green→blue→purple",
     ),
     Variant(
-        "E", "okabe-tuned", "okabe-tuned",
-        "okabe-tuned",
-        "keep Okabe-Ito's hue family but nudge each into the paper-ink corridor",
+        "E", "okabe-spread", "okabe-spread",
+        "okabe-spread",
+        "take Okabe-Ito's hue family, snap each onto an even 7-slot lattice (~51° apart), reorder for max first-4 CVD distance",
         "green→yellow sequential",
+    ),
+    Variant(
+        "F", "harmonic", "harmonic",
+        "harmonic",
+        "same max-min ΔE selection as balanced, but with the paper-ink chroma corridor widened (C∈[22,60]) for more harmonic headroom",
+        "green→blue→magenta",
     ),
 ]
 
@@ -946,17 +1024,14 @@ def main() -> int:
     pool = CandidatePool.build(log)
 
     rows: list[tuple[Variant, list[str], float, float]] = []
-    # Strategies whose whole point is "respect Okabe-Ito's choices" — keep the
-    # canonical green/vermillion/blue/purple/orange/sky/yellow order. Other
-    # strategies use the max-min-distance reorder so their first 4 are the
-    # subset that produces the strongest min worst-CVD ΔE.
-    PRESERVE_OKABE_ORDER = {"okabe-tuned"}
 
     for variant in VARIANTS:
         log.info("generating variant %s. %s …", variant.key, variant.title)
         hues = select_palette(variant.strategy, pool, n_hues=7)
-        if variant.strategy not in PRESERVE_OKABE_ORDER:
-            hues = reorder_first_4(hues)
+        # Every variant now reorders for max first-4 worst-CVD ΔE — including
+        # okabe-spread, which prizes lattice-even hue distribution over the
+        # native Okabe-Ito order.
+        hues = reorder_first_4(hues)
 
         first_4 = measure_first_4(hues)
         normal_min = measure_all_normal_min(hues)
