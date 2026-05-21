@@ -1,154 +1,198 @@
 library: bokeh
+language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:06:11Z'
-updated: '2026-01-19T13:08:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21138483015
+updated: '2026-05-21T03:40:00Z'
+generated_by: claude-sonnet
+workflow_run: 26203236542
 issue: 3791
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/bokeh/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/bokeh/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent dashboard layout with 6 metric tiles in a clean 3x2 grid
-  - 'Smart color logic: correctly identifies when changes are favorable vs unfavorable
-    (e.g., Error Rate increase is red, Response Time decrease is green)'
-  - Beautiful sparklines with area fill, line, and current value marker
-  - Status indicator bars at top of each tile provide immediate visual status
-  - Good use of Bokeh-specific features (gridplot, ColumnDataSource, Label, patch)
-  - Clean, professional appearance suitable for real operations dashboards
+  - Complete spec compliance — all 6 metric tiles rendered in correct 3×2 grid with
+    status bars, sparklines, directional change indicators, and color-coded status
+  - 'Smart semantic color usage with Okabe-Ito palette — #009E73/good, #E69F00/warning,
+    #D55E00/critical; favorable vs. unfavorable change logic correctly inverts for
+    Response Time and Error Rate'
+  - Both themes render flawlessly — dark render has proper off-white (#F0EFE8) text
+    on near-black (#1A1A17) background with no dark-on-dark failures
+  - Effective dashboard storytelling — status bar colors immediately signal which
+    metrics need attention (Error Rate critical, Memory warning) before reading any
+    values
+  - Excellent data quality — realistic ops metrics (CPU/Memory/Response Time/Error
+    Rate/Throughput/Active Users) with mixed units, realistic values, and varied sparkline
+    patterns
+  - Solid code structure — normalized coordinate system (x_range=(0,1)) is an elegant
+    approach for tile-internal layout; sys.path fixup correctly avoids bokeh.py shadowing
   weaknesses:
-  - Sparklines could have slightly more visual prominence (thicker lines or larger
-    area)
-  - The title figure adds extra height that makes total canvas ~4500x2670 instead
-    of standard 4800x2700
+  - Title at 28pt in the 160px header figure spans ~40% of canvas width — below the
+    expected 70–85% for the mandated anyplot title; the recommended bokeh title size
+    is 50pt which would fill the expected proportion (increase title_fig height or
+    use a larger font)
+  - 'Sparkline area fill (fill_color=#0072B2, fill_alpha=0.25) is near-invisible on
+    the dark render''s #242420 tile background — consider increasing fill_alpha to
+    0.35–0.45 for dark theme or using a slightly lighter fill color'
+  - Tile inner whitespace is functional but unrefined — adding explicit top/bottom
+    padding between status bar and metric name, and between change indicator and sparkline,
+    would improve perceived polish (DE-02)
   image_description: |-
-    The plot displays a 3x2 grid of dashboard metric tiles on a light gray background with a centered title at the top reading "dashboard-metrics-tiles · bokeh · pyplots.ai". Each tile contains:
-    - A colored status bar at the top (green for good, yellow/orange for warning, red for critical)
-    - A metric name label (CPU Usage, Memory, Response Time, Error Rate, Throughput, Active Users)
-    - A large prominent value display (45%, 72%, 120ms, 2.4%, 1250req/s, 8432)
-    - A change indicator with arrow and percentage in green (favorable) or red (unfavorable)
-    - A sparkline chart showing historical trend with blue line, light blue fill area, and a dot marking the current value
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 page background with slightly elevated #FFFDF6 tile backgrounds — correct, no pure white
+      Chrome: Title "dashboard-metrics-tiles · python · bokeh · anyplot.ai" in dark #1A1A17 ink at top center, readable but spans ~40% of canvas width (smaller than the 70–85% recommendation for the standard bokeh 50pt title). Metric name labels (20pt bold, dark ink), value text (42pt bold, dark ink), and change indicators (22pt bold, colored) all clearly readable.
+      Data: 3×2 grid of metric tiles. Each tile has a colored status bar at top (green #009E73 for good, amber #E69F00 for warning, red-orange #D55E00 for critical), large bold current value, directional change indicator (▲/▼), and a compact sparkline with light-blue (#0072B2) filled area at bottom. Endpoint dots on each sparkline.
+      Legibility verdict: PASS — all text is clearly readable against light background; no light-on-light issues
 
-    The color coding correctly shows: CPU Usage (green status, red down arrow - favorable decrease), Memory (yellow status, green up arrow), Response Time (green status, green down arrow - favorable decrease), Error Rate (red status, red up arrow - unfavorable increase), Throughput (green status, green up arrow), Active Users (yellow status, red down arrow).
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 page background with slightly elevated #242420 tile backgrounds — correct, no pure black
+      Chrome: Title in off-white (#F0EFE8) clearly visible on dark background. Metric names, values, and change indicators all render in off-white INK token — no dark-on-dark failures. Tile outlines visible as subtle INK_SOFT borders.
+      Data: Identical layout to light render. Status bar colors unchanged (#009E73 / #E69F00 / #D55E00 — same as light ✅). Change indicator colors unchanged (green #009E73 favorable / orange #D55E00 unfavorable ✅). Sparkline lines visible in blue #0072B2. Sparkline area fill (fill_alpha=0.25 over #242420) is noticeably less visible than in the light render — the fill reads as a very subtle darker shade, providing minimal contrast depth.
+      Legibility verdict: PASS — all text is readable; data colors identical to light render; no dark-on-dark failures; sparkline fill is reduced in visual impact on dark theme but the line itself remains clearly visible
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text clearly readable: metric names at 28pt, values at 56pt,
-          change indicators at 32pt'
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, clean tile layout
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Sparklines and status bars clearly visible, though sparklines could
-          be slightly more prominent
+        comment: All font sizes explicitly set and readable in both themes; title
+          at 28pt spans ~40% of canvas width (below 70–85% expected for the mandated
+          title format at recommended 50pt)
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap in either render; tile layout cleanly separates all text
+          elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparklines prominent (line_width=5), endpoint dots visible (size=14),
+          status bars clear, change indicators bold
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of green/yellow/red status colors with additional context
-          from arrows and text
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent 3x2 grid layout with consistent tile sizing and good canvas
-          utilization
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for dashboard tiles - no traditional axes expected
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No distracting grid, clean minimal chrome design
+        comment: CVD-safe Okabe-Ito status colors; favorable/unfavorable uses green+orange
+          (not red-green sole distinction)
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200×1800); 3×2 grid fills canvas well with 160px
+          title header; balanced layout
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; metric values include units (%, ms, req/s);
+          dashboard tiles have no traditional axes by design
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito status colors (#009E73/#E69F00/#D55E00), sparklines use
+          Okabe-Ito position 3 (#0072B2); backgrounds #FAF8F1 light / #1A1A17 dark;
+          chrome theme-adaptive in both renders'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: custom dashboard layout with status bars, sparklines,
+          and color-coded indicators clearly above library defaults; not FiveThirtyEight-level
+          but professionally polished'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes/grid removed (intentional), clean tile backgrounds with elevated
+          fill, subtle INK_SOFT borders; functional but not perfectly refined inner
+          spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Status bar colors create immediate hierarchy; large bold values are
+          focal point; semantic change indicator colors (green=good, orange=bad) guide
+          interpretation without annotations
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dashboard tile grid layout with all required elements
+        comment: Correct dashboard tile layout with 3×2 grid
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Metric values, sparklines, and change indicators correctly displayed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: KPI value, label, sparkline, change indicator
-          with arrow, status color coding'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: prominent value, metric label, sparkline with fill,
+          change indicator with arrow, status color coding'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within tiles
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 6 metrics displayed; sparklines show 30-point history; current values
+          and change % correctly mapped
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Status colors correctly applied based on metric status
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: dashboard-metrics-tiles · bokeh · pyplots.ai'
+        comment: Title is 'dashboard-metrics-tiles · python · bokeh · anyplot.ai'
+          ✓; no legend needed (tiles are self-labeled)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: 'Shows good variety: different statuses (good/warning/critical),
-          positive and negative changes, various metric types'
+        comment: 'Shows all aspects: good/warning/critical states, positive/negative
+          changes, favorable/unfavorable logic, varied metrics with different units'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Excellent ops monitoring scenario with CPU, Memory, Response Time,
-          Error Rate, Throughput, Active Users
+        comment: Real ops monitoring scenario with realistic CPU%, Memory%, Response
+          Time ms, Error Rate%, Throughput req/s, Active Users
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic (45% CPU, 72% memory, 120ms response time, etc.)
+        comment: CPU 45%, Memory 72%, Response Time 120ms, Error Rate 2.4%, Throughput
+          1250 req/s, Active Users 8432 — all realistic values for a web service
     code_quality:
       score: 10
       max: 10
@@ -158,53 +202,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: No functions/classes; loop for tiles is idiomatic; sequential Imports→Data→Plot→Save
+          flow
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before all data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; sys.path fixup with explanatory context; selenium
+          correctly imported
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean Pythonic code; normalized coordinate system is elegant; no
+          fake UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; Selenium screenshot
+          per library rules; current API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of Bokeh features: ColumnDataSource, gridplot, Label
-          annotations, figure customization, patch for area fill, export_png'
+        comment: Excellent use of bokeh layout API (gridplot+column composition),
+          ColumnDataSource, Label model; output_file+save+Selenium pattern per library
+          guide
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Creative use of normalized coordinate space (x_range=(0,1)) for tile-internal
+          layout; gridplot+column composition for dashboard grid; p.quad() for status
+          bars within figure space; dual HTML+PNG output
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
+  - html-export
   - subplots
-  - patches
+  - annotations
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
+  - columndatasource
   dataprep:
   - normalization
   - cumulative-sum
