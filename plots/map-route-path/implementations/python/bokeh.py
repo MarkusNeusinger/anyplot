@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-21
@@ -6,12 +6,20 @@ Quality: 82/100 | Updated: 2026-05-21
 
 import base64
 import os
+import sys
 import time
 from pathlib import Path
 
+
+# bokeh.py shadows the installed bokeh package when Python adds this file's
+# directory to sys.path[0]; remove it so imports resolve to the package.
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != _here]
+del _here
+
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, Title
+from bokeh.models import ColorBar, ColumnDataSource, LinearColorMapper, Title
 from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
 from selenium import webdriver
@@ -34,11 +42,12 @@ start_lat = 40.343
 n_points = 200
 t = np.linspace(0, 1, n_points)
 
-# Linear trail trending northeast with natural meanders (no self-intersections)
+# Low-frequency meanders: both lon and lat are monotonically increasing at all t,
+# so the trail never crosses itself (verified: d(lon)/dt >= 0.019, d(lat)/dt >= 0.008)
 lon_progress = 0.038 * t
 lat_progress = 0.027 * t
-lon_meander = 0.005 * np.sin(10 * np.pi * t) + 0.002 * np.sin(4 * np.pi * t)
-lat_meander = 0.004 * np.sin(7 * np.pi * t) + 0.0015 * np.cos(5 * np.pi * t)
+lon_meander = 0.006 * np.sin(np.pi * t)
+lat_meander = 0.003 * np.sin(2 * np.pi * t)
 
 lats = start_lat + lat_progress + lat_meander
 lons = start_lon + lon_progress + lon_meander
@@ -48,10 +57,11 @@ k = 20037508.34 / 180
 x_coords = lons * k
 y_coords = np.log(np.tan((90 + lats) * np.pi / 360)) / (np.pi / 180) * k
 
-# Viridis gradient along waypoints to show trail progression
-waypoint_colors = [Viridis256[int(255 * i / (n_points - 1))] for i in range(n_points)]
+# Progress percentage (0–100) drives both dot coloring and the colorbar
+t_pct = t * 100
+mapper = LinearColorMapper(palette=Viridis256, low=0, high=100)
 
-source = ColumnDataSource(data={"x": x_coords, "y": y_coords, "color": waypoint_colors})
+source = ColumnDataSource(data={"x": x_coords, "y": y_coords, "t_pct": t_pct})
 
 # Figure
 W, H = 3200, 1800
@@ -66,7 +76,7 @@ p = figure(
     min_border_bottom=160,
     min_border_left=180,
     min_border_top=110,
-    min_border_right=50,
+    min_border_right=200,  # extra room for the colorbar + tick labels
 )
 
 # Title
@@ -82,8 +92,17 @@ p.add_tile(tile_provider)
 # Route line — Okabe-Ito position 1 (#009E73)
 p.line(x="x", y="y", source=source, line_width=5, line_color="#009E73", line_alpha=0.9)
 
-# Waypoints with viridis gradient showing progression
-p.scatter(x="x", y="y", source=source, size=12, fill_color="color", line_color=PAGE_BG, line_width=1.5, alpha=0.85)
+# Waypoints with viridis gradient showing trail progression
+p.scatter(
+    x="x",
+    y="y",
+    source=source,
+    size=12,
+    fill_color={"field": "t_pct", "transform": mapper},
+    line_color=PAGE_BG,
+    line_width=1.5,
+    alpha=0.85,
+)
 
 # Start marker — Okabe-Ito #009E73 (large circle)
 start_src = ColumnDataSource(data={"x": [x_coords[0]], "y": [y_coords[0]]})
@@ -112,6 +131,22 @@ p.scatter(
     legend_label="End",
 )
 
+# Colorbar decoding the viridis gradient: purple = trail start, yellow = trail end
+color_bar = ColorBar(
+    color_mapper=mapper,
+    label_standoff=16,
+    major_label_text_font_size="28pt",
+    major_label_text_color=INK_SOFT,
+    title="Trail Progress (%)",
+    title_text_font_size="30pt",
+    title_text_color=INK,
+    background_fill_color=PAGE_BG,
+    bar_line_color=INK_SOFT,
+    major_tick_line_color=INK_SOFT,
+    width=40,
+)
+p.add_layout(color_bar, "right")
+
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
@@ -130,11 +165,12 @@ p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 
-# Minimal grid over basemap
+# Slightly more visible grid on the near-black dark basemap
+grid_alpha = 0.06 if THEME == "light" else 0.09
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.06
-p.ygrid.grid_line_alpha = 0.06
+p.xgrid.grid_line_alpha = grid_alpha
+p.ygrid.grid_line_alpha = grid_alpha
 
 # Legend
 p.legend.location = "top_right"
