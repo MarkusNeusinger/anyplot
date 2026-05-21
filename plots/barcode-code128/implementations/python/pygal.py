@@ -1,18 +1,25 @@
-""" pyplots.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-19
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-21
 """
+
+import os
 
 import pygal
 from pygal.style import Style
 
 
-# Code 128B character values (space to DEL mapped to 0-94)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Code 128B character table: space (value 0) through ~ (value 94)
 CODE128B_CHARS = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~"
 
-# All 107 patterns for Code 128 (values 0-106)
-# Each pattern is (bar, space, bar, space, bar, space) with widths 1-4
+# 107 Code 128 bar/space patterns (indices 0–106); each tuple is (b,s,b,s,b,s) widths
+# Index 106 is the STOP pattern with 7 elements
 CODE128_PATTERNS = [
     (2, 1, 2, 2, 2, 2),
     (2, 2, 2, 1, 2, 2),
@@ -120,78 +127,55 @@ CODE128_PATTERNS = [
     (2, 1, 1, 4, 1, 2),
     (2, 1, 1, 2, 1, 4),
     (2, 1, 1, 2, 3, 2),
-    (2, 3, 3, 1, 1, 1, 2),  # STOP pattern (7 elements)
+    (2, 3, 3, 1, 1, 1, 2),
 ]
 
+# Data — laboratory specimen tracking ID
+content = "SPECIMEN-LAB-2024"
 
-def encode_code128b(text):
-    """Encode text using Code 128B and return list of values"""
-    values = [104]  # START_B
-    for char in text:
-        if char in CODE128B_CHARS:
-            values.append(CODE128B_CHARS.index(char))
-        else:
-            values.append(0)  # Space for unsupported chars
+# Encode with Code 128B: START_B=104, data chars, modulo-103 checksum, STOP=106
+values = [104]
+for ch in content:
+    values.append(CODE128B_CHARS.index(ch) if ch in CODE128B_CHARS else 0)
 
-    # Calculate checksum (modulo 103)
-    checksum = values[0]
-    for i, val in enumerate(values[1:], 1):
-        checksum += i * val
-    checksum = checksum % 103
-    values.append(checksum)
-    values.append(106)  # STOP
-    return values
+checksum = values[0]
+for i, v in enumerate(values[1:], 1):
+    checksum += i * v
+values.append(checksum % 103)
+values.append(106)
 
+# Expand encoded values to bar-module widths
+bar_pattern = []
+for val in values:
+    bar_pattern.extend(CODE128_PATTERNS[val])
 
-def values_to_bars(values):
-    """Convert encoded values to bar pattern (list of bar widths)"""
-    bars = []
-    for val in values:
-        pattern = CODE128_PATTERNS[val]
-        bars.extend(pattern)
-    return bars
+# Build per-module height list; even indices = bars (black=100), odd = spaces (white=0)
+quiet_zone = 10
+bar_heights = [0] * quiet_zone
+for idx, width in enumerate(bar_pattern):
+    bar_heights.extend([100 if idx % 2 == 0 else 0] * width)
+bar_heights.extend([0] * quiet_zone)
 
-
-# Data - encode sample shipping label text
-content = "SHIP-2024-ABC123"
-encoded_values = encode_code128b(content)
-bar_pattern = values_to_bars(encoded_values)
-
-# Calculate total width of barcode
-unit_width = 1
-total_barcode_width = sum(bar_pattern) * unit_width
-quiet_zone = 10  # Quiet zone modules on each side
-
-# Create bar heights - all bars at 100 (full height), spaces at 0
-bar_heights = []
-for i, width in enumerate(bar_pattern):
-    is_bar = i % 2 == 0  # Even indices are bars (black)
-    for _ in range(width):
-        bar_heights.append(100 if is_bar else 0)
-
-# Add quiet zones (white space)
-bar_heights = [0] * quiet_zone + bar_heights + [0] * quiet_zone
-
-# Custom style for barcode visualization
+# Style — barcode area stays white for scannability; outer bg follows theme
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#000000",
-    foreground_strong="#000000",
-    foreground_subtle="#333333",
-    colors=("#000000",),  # Black bars
-    title_font_size=56,
-    label_font_size=48,
-    major_label_font_size=40,
-    legend_font_size=0,
+    background=PAGE_BG,
+    plot_background="#FFFFFF",
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=("#000000",),
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=0,
     tooltip_font_size=0,
 )
 
-# Create vertical bar chart for barcode
+# Plot
 chart = pygal.Bar(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
     show_legend=False,
     show_x_labels=False,
@@ -199,21 +183,19 @@ chart = pygal.Bar(
     show_x_guides=False,
     show_y_guides=False,
     spacing=0,
-    margin_top=300,
-    margin_bottom=500,
-    margin_left=600,
-    margin_right=600,
-    title="barcode-code128 · pygal · pyplots.ai",
+    margin_top=200,
+    margin_bottom=400,
+    margin_left=400,
+    margin_right=400,
+    title="barcode-code128 · python · pygal · anyplot.ai",
     print_values=False,
     range=(0, 100),
 )
 
-# Add barcode pattern as single series
 chart.add("", bar_heights)
-
-# Add human-readable text as x_title (below the barcode)
 chart.x_title = content
 
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
