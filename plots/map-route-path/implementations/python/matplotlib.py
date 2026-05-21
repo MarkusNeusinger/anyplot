@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-21
@@ -63,7 +63,7 @@ for i in arrow_indices:
         "",
         xy=(lon[i] + dx * 0.3, lat[i] + dy * 0.3),
         xytext=(lon[i], lat[i]),
-        arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 1.5},
+        arrowprops={"arrowstyle": "->", "color": INK, "lw": 2.0},
     )
 
 # Style
@@ -87,9 +87,6 @@ if leg:
     leg.get_frame().set_facecolor(ELEVATED_BG)
     leg.get_frame().set_edgecolor(INK_SOFT)
     plt.setp(leg.get_texts(), color=INK_SOFT)
-
-# Equal aspect approximates geographic projection for SF lat/lon
-ax.set_aspect("equal")
 
 x_margin = (lon.max() - lon.min()) * 0.1
 y_margin = (lat.max() - lat.min()) * 0.1
