@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-21
@@ -22,6 +22,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_color_manual,
     scale_fill_manual,
     scale_x_continuous,
@@ -98,15 +99,23 @@ y_stats = df.groupby("metric").agg({"y": ["min", "max"]}).reset_index()
 y_stats.columns = ["metric", "y_min", "y_max"]
 
 label_data = label_data.merge(y_stats, on="metric")
-label_data["y_value"] = label_data["y_max"] + (label_data["y_max"] - label_data["y_min"]) * 0.45
-label_data["y_change"] = label_data["y_min"] - (label_data["y_max"] - label_data["y_min"]) * 0.25
+label_data["y_value"] = label_data["y_max"] + (label_data["y_max"] - label_data["y_min"]) * 0.55
+label_data["y_change"] = label_data["y_min"] - (label_data["y_max"] - label_data["y_min"]) * 0.40
 
 # Plot
 plot = (
     ggplot(df, aes("x", "y"))
-    + geom_area(aes(fill="status"), alpha=0.25, show_legend=False)
-    + geom_line(aes(color="status"), size=2, show_legend=False)
-    + geom_point(data=last_points, mapping=aes(color="status"), size=5, show_legend=False)
+    + geom_area(aes(fill="status"), alpha=0.25, show_legend=False, tooltips="none")
+    + geom_line(
+        aes(color="status"), size=2, show_legend=False, tooltips=layer_tooltips().line("@metric").line("value|@y{.1f}")
+    )
+    + geom_point(
+        data=last_points,
+        mapping=aes(color="status"),
+        size=5,
+        show_legend=False,
+        tooltips=layer_tooltips().line("@metric").line("current|@y{.1f}"),
+    )
     + geom_text(
         data=label_data, mapping=aes(x="x", y="y_value", label="value_label"), size=22, fontface="bold", color=INK
     )
@@ -119,7 +128,7 @@ plot = (
     + scale_fill_manual(values=STATUS_COLORS)
     + scale_color_manual(values=STATUS_COLORS)
     + scale_x_continuous(expand=[0.05, 0.05])
-    + scale_y_continuous(expand=[0.45, 0.45])
+    + scale_y_continuous(expand=[0.55, 0.55])
     + facet_wrap("metric", ncol=3, scales="free_y")
     + labs(title="dashboard-metrics-tiles · python · letsplot · anyplot.ai")
     + theme(
