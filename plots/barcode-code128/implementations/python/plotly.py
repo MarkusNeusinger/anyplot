@@ -1,21 +1,26 @@
-""" pyplots.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: plotly 6.5.2 | Python 3.13.11
+Library: plotly | Python 3.13
 Quality: 91/100 | Created: 2026-01-19
 """
+
+import os
 
 import plotly.graph_objects as go
 
 
-# Code 128 encoding patterns (0 = space, 1 = bar)
-# Each character is 11 modules (6 bars, quiet zone not included)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Code 128 encoding patterns (11-module per symbol; STOP is 13 modules)
 CODE128_PATTERNS = {
-    # Start codes
     "START_A": "11010000100",
     "START_B": "11010010000",
     "START_C": "11010011100",
-    "STOP": "1100011101011",  # Stop pattern (13 modules)
-    # Values 0-106
+    "STOP": "1100011101011",
     0: "11011001100",
     1: "11001101100",
     2: "11001100110",
@@ -125,86 +130,101 @@ CODE128_PATTERNS = {
     106: "1100011101011",
 }
 
-# Code 128B character to value mapping (ASCII 32-127)
+# Code 128B: ASCII 32-127 mapped to values 0-95
 CODE128B_MAP = {chr(i): i - 32 for i in range(32, 128)}
 
-# Data - encode a sample string
-content = "PYPLOTS-2024"
+# Data — shipping tracking code (Code 128B subset covers full alphanumeric range)
+content = "SHIP-2024-ABC123"
 
-# Encode using Code 128B
-values = [104]  # Start B
+# Encode using Code 128B subset
+values = [104]  # START_B
 for char in content:
-    if char in CODE128B_MAP:
-        values.append(CODE128B_MAP[char])
-    else:
-        values.append(0)  # Space for unsupported chars
+    values.append(CODE128B_MAP.get(char, 0))
 
-# Calculate check digit (modulo 103)
+# Check digit: modulo 103 algorithm (mandatory per spec)
 checksum = values[0]
 for i, val in enumerate(values[1:], 1):
     checksum += i * val
 checksum = checksum % 103
 values.append(checksum)
 
-# Build pattern
+# Build binary pattern: START_B + data symbols + check digit + STOP
 barcode_pattern = CODE128_PATTERNS["START_B"]
 for val in values[1:-1]:
     barcode_pattern += CODE128_PATTERNS[val]
-barcode_pattern += CODE128_PATTERNS[values[-1]]  # Check digit
+barcode_pattern += CODE128_PATTERNS[values[-1]]
 barcode_pattern += CODE128_PATTERNS["STOP"]
 
-# Calculate bar positions
-bar_width = 3
+# Calculate bar positions and widths from binary pattern
+QUIET_ZONE = 80  # generous quiet zone for reliable scanning
+MODULE_W = 4  # data units per module
 x_positions = []
-widths = []
-current_x = 50  # Start with quiet zone
+bar_widths_list = []
+current_x = QUIET_ZONE
 
 for i, bit in enumerate(barcode_pattern):
     if bit == "1":
-        # Find consecutive 1s
         if i == 0 or barcode_pattern[i - 1] == "0":
-            start_x = current_x
-            width = bar_width
+            width = MODULE_W
             j = i + 1
             while j < len(barcode_pattern) and barcode_pattern[j] == "1":
-                width += bar_width
+                width += MODULE_W
                 j += 1
-            x_positions.append(start_x + width / 2)
-            widths.append(width)
-    current_x += bar_width
+            x_positions.append(current_x + width / 2)
+            bar_widths_list.append(width)
+    current_x += MODULE_W
 
-# Calculate total width
-total_width = 50 + len(barcode_pattern) * bar_width + 50  # quiet zones
+total_width = QUIET_ZONE + len(barcode_pattern) * MODULE_W + QUIET_ZONE
 
 # Plot
 fig = go.Figure()
 
-# Add bars
-for x, w in zip(x_positions, widths, strict=True):
-    fig.add_shape(type="rect", x0=x - w / 2, x1=x + w / 2, y0=100, y1=500, fillcolor="black", line={"width": 0})
+# Barcode bars — tall to utilize canvas space
+BAR_Y0 = 90
+BAR_Y1 = 530
 
-# Add human-readable text below barcode
+for x, w in zip(x_positions, bar_widths_list, strict=True):
+    fig.add_shape(type="rect", x0=x - w / 2, x1=x + w / 2, y0=BAR_Y0, y1=BAR_Y1, fillcolor=INK, line={"width": 0})
+
+# Human-readable text below barcode
 fig.add_annotation(
     x=total_width / 2,
-    y=50,
+    y=45,
     text=content,
     showarrow=False,
-    font={"size": 36, "family": "Courier New, monospace", "color": "black"},
+    font={"size": 26, "family": "Courier New, monospace", "color": INK},
+    xanchor="center",
+    yanchor="middle",
+)
+
+# Subset label above barcode
+fig.add_annotation(
+    x=total_width / 2,
+    y=580,
+    text="Code 128B  ·  ASCII Subset (32–127)",
+    showarrow=False,
+    font={"size": 18, "color": INK_SOFT},
     xanchor="center",
     yanchor="middle",
 )
 
 # Layout
 fig.update_layout(
-    title={"text": "barcode-code128 · plotly · pyplots.ai", "font": {"size": 28}, "x": 0.5, "xanchor": "center"},
+    autosize=False,
+    title={
+        "text": "barcode-code128 · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
     xaxis={"visible": False, "range": [0, total_width], "fixedrange": True},
-    yaxis={"visible": False, "range": [0, 600], "fixedrange": True, "scaleanchor": "x", "scaleratio": 1},
-    plot_bgcolor="white",
-    paper_bgcolor="white",
-    margin={"l": 50, "r": 50, "t": 100, "b": 50},
+    yaxis={"visible": False, "range": [0, 640], "fixedrange": True},
+    plot_bgcolor=PAGE_BG,
+    paper_bgcolor=PAGE_BG,
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
     showlegend=False,
 )
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
