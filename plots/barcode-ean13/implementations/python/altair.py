@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-21
@@ -146,6 +146,14 @@ text_data = [
 ]
 df_text = pd.DataFrame(text_data)
 
+# Structural zone annotations above barcode (EAN-13 anatomy)
+# Left group (x=12–54): country prefix + manufacturer; Right group (x=59–101): product + check
+zone_data = [
+    {"x": 33, "y": 1.20, "text": f"Country · Mfr  ({left_digits})"},
+    {"x": 80, "y": 1.20, "text": f"Product · Check  ({right_digits})"},
+]
+df_zones = pd.DataFrame(zone_data)
+
 # Barcode bars chart
 bars_chart = (
     alt.Chart(df_bars)
@@ -153,7 +161,7 @@ bars_chart = (
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, total_width]), axis=None),
         x2="x2:Q",
-        y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.25, 1.3]), axis=None),
+        y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.25, 1.38]), axis=None),
         y2="y2:Q",
     )
 )
@@ -161,14 +169,19 @@ bars_chart = (
 # Digit labels below barcode
 text_chart = (
     alt.Chart(df_text)
-    .mark_text(fontSize=16, font="monospace", fontWeight="bold", color=INK)
+    .mark_text(fontSize=18, font="monospace", fontWeight="bold", color=INK)
     .encode(x="x:Q", y="y:Q", text="text:N")
+)
+
+# Zone annotation labels above barcode
+zone_chart = (
+    alt.Chart(df_zones).mark_text(fontSize=12, font="monospace", color=INK_SOFT).encode(x="x:Q", y="y:Q", text="text:N")
 )
 
 # Combined chart with canonical landscape canvas
 TITLE = "barcode-ean13 · python · altair · anyplot.ai"
 chart = (
-    (bars_chart + text_chart)
+    (bars_chart + text_chart + zone_chart)
     .properties(
         width=620,
         height=320,
