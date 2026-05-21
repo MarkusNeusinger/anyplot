@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-21
+Quality: 87/100 | Updated: 2026-05-21
 """
 
 import os

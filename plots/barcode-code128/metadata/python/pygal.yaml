@@ -2,7 +2,7 @@ library: pygal
 language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:59:58Z'
-updated: '2026-05-21T00:56:01Z'
+updated: '2026-05-21T01:10:18Z'
 generated_by: claude-sonnet
 workflow_run: 26198580868
 issue: 3809
@@ -12,96 +12,88 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-c
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/pygal/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/pygal/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/pygal/plot-dark.html
-quality_score: 78
+quality_score: 87
 review:
   strengths:
-  - 'Correct full Code 128B encoding: START_B (104), modulo-103 checksum, STOP (106)
-    implemented from scratch with accurate lookup table'
-  - Quiet zones correctly included (10 modules each side) for reliable scanning
-  - White plot_background is the right functional call for barcode scannability
-  - Human-readable text below the barcode per spec requirement
-  - Outer background correctly adapts to light/dark theme via PAGE_BG token
-  - Deterministic, clean code with no randomness or unnecessary complexity
-  - Both PNG and HTML outputs produced correctly per pygal library requirements
+  - 'Full Code 128 spec implementation: START/STOP patterns, check digit (modulo 103),
+    quiet zones, Code B→C subset switching all correct'
+  - Clever ELEVATED_BG (#FFFDF6) fixed for barcode panel regardless of theme, justified
+    by scan-reliability; dark theme creates a visually appealing frame-within-frame
+    effect
+  - Deterministic realistic data (SHIP-20240101) with informative x_title metadata
+    showing subset, char count, check digit
+  - 'Perfect visual quality: all unnecessary chrome removed, clean layout, both themes
+    pass legibility checks'
   weaknesses:
-  - 'Bottom canvas ~35-40% empty: margin_bottom=400 is too large; reduce to <=150
-    and/or switch to 2400x2400 square canvas which better suits a barcode layout'
-  - 'Bars render as dark gray rather than #000000 due to pygal color interpolation;
-    verify bar color is pure black in output'
-  - Code subset switching (A/B/C) not demonstrated — spec explicitly mentions multi-subset
-    capability; consider a content string that exercises Code C or Code A
-  - 'DE-01 lacks polish: single barcode on plain surface; add a subtle elevated background
-    panel (#FFFDF6 light / #242420 dark) instead of pure white for the barcode area,
-    and encoding metadata annotation (subset, character count, check digit) below
-    the human-readable text'
+  - 'Design Excellence is modest: barcode panel is thoughtful but does not reach publication
+    aesthetic level; DE-01 could be raised with typography refinement or annotations
+    showing the subset boundary'
+  - 'LM-02: pygal used as a passive renderer for pre-computed bar widths rather than
+    leveraging library-specific chart logic; adding per-bar tooltips in HTML output
+    showing encoded character/value would demonstrate more library mastery'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "barcode-code128 · python · pygal · anyplot.ai" in dark text at top, fully readable. "SPECIMEN-LAB-2024" human-readable text below barcode in dark text, clearly legible.
-      Data: Barcode area is white (#FFFFFF, functionally justified for scannability) with dark near-black bars of varying widths encoding the Code 128B pattern. Quiet zones visible on both sides. Approximately 35-40% of bottom canvas is unused background.
-      Legibility verdict: PASS — all text readable; bars clearly visible; layout slightly unbalanced (excess bottom whitespace)
+      Background: Warm off-white (#FAF8F1) outer background — correct theme surface
+      Chrome: Title "barcode-code128 · python · pygal · anyplot.ai" in dark text at top (~50% width); x_title "SHIP-20240101 | Subset: Code B→C | 13 chars | Check: 15" in dark text below barcode; all other chrome (axes, ticks, grid) hidden intentionally
+      Data: Elevated cream-white (#FFFDF6) inner panel hosting black vertical bars of varying widths forming a valid Code 128 barcode pattern with quiet zones on both sides; first series uses black (#000000) which is domain-required for scan reliability
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title and "SPECIMEN-LAB-2024" text both render in light/cream color against dark background. All text fully readable. No dark-on-dark failures observed.
-      Data: Barcode area remains pure white (correct for scannability — functional requirement). Bar colors are visually identical to light render (dark bars on white). White barcode box against dark surround creates intentionally stark, high-contrast presentation appropriate for the content type.
-      Legibility verdict: PASS — all text readable in dark theme; no dark-on-dark issues; white barcode area on dark background is correct for this use case
+      Background: Warm near-black (#1A1A17) outer background — correct dark surface
+      Chrome: Title in light off-white text, fully readable against dark background; x_title in light text below barcode, also readable; no dark-on-dark failures observed
+      Data: Same elevated off-white (#FFFDF6) barcode panel preserved regardless of theme (intentional — barcodes require white background for scan reliability); barcode bar colors identical to light render (black bars on white panel)
+      Legibility verdict: PASS — all text clearly readable; frame-within-frame effect from dark outer + white inner panel is visually distinctive
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=66, label=56, major_label=44).
-          All text readable in both themes. Minor deduction: x_title human-readable
-          text appears slightly small relative to the large barcode body.'
+        comment: Font sizes explicitly set (title=66, label=56, major_label=44, legend=44);
+          readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text elements; clean uncluttered layout.
+        comment: No overlapping text; x_title wraps cleanly over two lines
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Bars clearly visible with distinguishable varying widths. Minor
-          deduction: bars render as dark gray rather than pure #000000 due to pygal
-          color interpolation.'
+        comment: Barcode bars clearly visible against elevated white panel in both
+          themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Black-on-white barcode is maximum contrast and fully accessible.
+        comment: 'Black on white/cream: maximum contrast, CVD-safe'
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: ~35-40% of bottom canvas is empty background. margin_bottom=400 too
-          large. Barcode confined to upper portion, layout is top-heavy.
+        passed: true
+        comment: 2400x2400 square appropriate; barcode panel fills ~70% of canvas;
+          balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows correct format; SPECIMEN-LAB-2024 shown as human-readable
-          label below barcode.
+        comment: Title correct format; x_title provides encoding metadata
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Outer background correctly uses theme colors. Bars use #000000 (justified
-          for scan-reliability). Plot background is pure white (#FFFFFF) rather than
-          #FAF8F1 — also functionally justified. Partial score for correct chrome
-          with justified palette deviation.'
+        passed: true
+        comment: 'Black bars domain-required by spec; backgrounds #FAF8F1/#1A1A17
+          correct; elevated panel #FFFDF6 justified'
     design_excellence:
       score: 11
       max: 20
@@ -110,28 +102,25 @@ review:
         name: Aesthetic Sophistication
         score: 4
         max: 8
-        passed: false
-        comment: Functional and clean. Deliberate white barcode area on themed outer
-          background is thoughtful. Still a basic single-element layout with no visual
-          hierarchy beyond barcode + label.
+        passed: true
+        comment: Well-configured above defaults; elevated white panel deliberate domain
+          design choice; dark frame-within-frame effect
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: All axes hidden (no ticks, no grid, no spines) — correct for a barcode.
-          Quiet zones included. Generous margins. Clean minimalism appropriate for
-          content.
+        comment: All non-essential chrome removed; explicit margins; spacing=0 for
+          authentic barcode look
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Human-readable text below barcode provides dual-layer communication
-          (machine + human readable) — the canonical barcode storytelling element.
-          Slightly above default for this intentional design.
+        passed: true
+        comment: x_title exposes encoding metadata (subset switching B→C, check digit,
+          char count) providing context beyond raw display
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -139,122 +128,114 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Code 128 barcode visualization using pygal.Bar as barcode
-          module renderer.
+        comment: Correct Code 128 barcode visualization with genuine binary bar-width
+          encoding
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Quiet zones, start character (104=START_B), modulo-103 checksum,
-          stop character (106), human-readable text, high-contrast — all present.
-          Missing: Code subset switching (A/B/C) not demonstrated.'
+        passed: true
+        comment: Quiet zones, start/stop patterns, check digit (modulo 103), human-readable
+          text, Code B→C subset switching
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Bar heights correctly encode 0 (space) and 100 (bar) per module width;
-          quiet zones correct.
+        comment: Bar widths correctly expanded from CODE128_PATTERNS; encoding verified
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'barcode-code128 · python · pygal · anyplot.ai'.
-          No legend needed for single-series barcode.
+        comment: Title matches required format; no legend correct for single-series
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
-        passed: false
-        comment: 'Quiet zones, start, encoded data (varying bar widths), check digit
-          zone, stop — all visible. Missing: no demonstration of Code C (numeric-pair)
-          or Code A subset which spec mentions.'
+        passed: true
+        comment: Code B, Code C, subset switching, quiet zones, check digit, start/stop
+          all present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: SPECIMEN-LAB-2024 is a realistic laboratory specimen tracking ID;
-          neutral, professional, domain-appropriate.
+        comment: SHIP-20240101 is a realistic shipping label; logistics context matches
+          spec; neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Bar widths follow Code 128 module proportions correctly (1-4 module
-          widths per the 107-entry pattern table).
+        comment: 13 chars within 48-char recommendation; check digit 15 is valid modulo-103
+          result
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Follows constants->data->encoding->plot->save. 107-entry CODE128_PATTERNS
-          table and encoding loop are necessary complexity. Slight deduction for overall
-          script length.
+        comment: 'Linear flow: imports → constants → encoding → chart → render; no
+          functions/classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; hardcoded string content, no randomness.
+        comment: Deterministic hardcoded data; no random elements
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, pygal, pygal.style.Style — all used.
+        comment: Only os, pygal, pygal.style.Style — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Complex but legitimate; barcode encoding requires the lookup table
-          and encoding logic. No fake functionality.
+        comment: Clean, well-commented, appropriate complexity for manual barcode
+          encoding
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Correctly saves plot-{THEME}.png and plot-{THEME}.html (pygal is
-          an interactive library).
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html (correct for interactive
+          pygal)
     library_mastery:
-      score: 5
+      score: 6
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Correct use of pygal.Bar with Style object, spacing=0, range=(0,100),
-          and display flags. Creative but unconventional — pygal.Bar not designed
-          for barcode module rendering.
+        comment: Style object theming, show_x/y_labels=False, spacing=0, range=(0,100)
+          — proper idiomatic pygal.Bar usage
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Leverages pygal theming system and HTML output (interactive by default
-          — genuine pygal distinctive feature). Core rendering does not exploit any
-          pygal-unique capability.
-  verdict: REJECTED
+        comment: HTML interactive export is distinctive; but barcode logic is pure
+          Python, pygal used only as passive bar renderer
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
   patterns:
-  - iteration-over-groups
-  - matrix-construction
+  - data-generation
   dataprep: []
   styling:
   - minimal-chrome
