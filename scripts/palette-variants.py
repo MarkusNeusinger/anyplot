@@ -74,9 +74,11 @@ from _palette_common import (  # noqa: E402
     cell_class,
     hex_to_rgb1,
     pairwise_delta_e,
+    _peaks_png_b64,
     render_cmap_demo,
     render_colormap_row,
     render_first_n_summary,
+    render_gradient,
     render_hero_mockup_pair,
     render_legend,
     render_matrix_block,
@@ -624,37 +626,45 @@ def _interp_three(start: np.ndarray, mid: np.ndarray, end: np.ndarray, n: int) -
     return np.vstack([a, b])
 
 
-def build_continuous(strategy: str, palette: list[str], n: int = 256) -> np.ndarray:
-    """Each variant's continuous colormap starts at brand green and follows
-    a strategy-appropriate trajectory in CAM02-UCS. All are sampled at 256
-    steps and clipped to the sRGB gamut."""
-    brand_jab = to_jab(hex_to_rgb1(OK_GREEN).reshape(1, 3))[0]
+def _find_closest_hue(palette: list[str], target_h: float) -> tuple[str, float]:
+    """Return (hex, hue) of the palette member with hue closest to ``target_h``
+    on the colour wheel."""
+    best_hex, best_h, best_d = palette[0], 0.0, 360.0
+    for hx in palette:
+        _, _, h = jab_to_lch(to_jab(hex_to_rgb1(hx).reshape(1, 3))[0])
+        d = abs(((h - target_h + 180) % 360) - 180)
+        if d < best_d:
+            best_d, best_hex, best_h = d, hx, h
+    return best_hex, best_h
 
-    if strategy == "analogous":
-        # green → desaturated dark teal-blue (sequential, single polarity)
-        return _interp_two(brand_jab, lch_to_jab(28, 28, 250), n)
-    if strategy == "triadic":
-        # green ↔ near-neutral ↔ magenta (diverging)
-        mid = lch_to_jab(70, 6, 0)
-        end = to_jab(hex_to_rgb1(palette[1]).reshape(1, 3))[0]
-        return _interp_three(brand_jab, mid, end, n)
-    if strategy == "split-comp":
-        # green ↔ near-black neutral ↔ warm complement (diverging)
-        mid = lch_to_jab(32, 5, 0)
-        end = to_jab(hex_to_rgb1(palette[2]).reshape(1, 3))[0]
-        return _interp_three(brand_jab, mid, end, n)
-    if strategy == "balanced":
-        # green → blue → purple (viridis-like, monotonic J' descent)
-        return _interp_three(brand_jab, lch_to_jab(40, 45, 240), lch_to_jab(22, 35, 305), n)
-    if strategy == "harmonic":
-        # green → blue → magenta with relaxed C so it sings against the muted siblings
-        return _interp_three(brand_jab, lch_to_jab(48, 55, 245), lch_to_jab(30, 55, 320), n)
-    if strategy == "okabe-anchored":
-        # green → near-neutral → vermillion (diverging, anchored at the two Okabe pillars)
-        vermillion_jab = to_jab(hex_to_rgb1("#D55E00").reshape(1, 3))[0]
-        mid = lch_to_jab(70, 6, 0)
-        return _interp_three(brand_jab, mid, vermillion_jab, n)
-    raise ValueError(strategy)
+
+def build_sequential_cmap(palette: list[str], n: int = 256) -> tuple[np.ndarray, str]:
+    """Sequential colormap: brand-green → dark version of the palette member
+    whose hue sits closest to 240° (blue territory). Hue is palette-derived
+    so the cmap shares identity with the categorical; J' and C are tuned
+    for monotonic lightness descent (J' 59 → 22) and good chroma headroom
+    (C 35) regardless of where the source palette member sits in J/C space."""
+    brand_jab = to_jab(hex_to_rgb1(OK_GREEN).reshape(1, 3))[0]
+    cool_hex, cool_h = _find_closest_hue(palette[1:], 240.0)
+    end = lch_to_jab(22.0, 35.0, cool_h)
+    cmap = _interp_two(brand_jab, end, n)
+    label = f"green → dark {hue_to_name(cool_hex)}"
+    return cmap, label
+
+
+def build_diverging_cmap(palette: list[str], n: int = 256) -> tuple[np.ndarray, str]:
+    """Diverging colormap: warmest palette member ↔ near-neutral ↔ coolest
+    palette member. Both poles normalised to J'=45 C=38 for symmetric
+    visual weight. Mid-grey uses the average of the two hues so the
+    transition reads as continuous rather than two cmaps stitched."""
+    warm_hex, warm_h = _find_closest_hue(palette[1:], 30.0)
+    cool_hex, cool_h = _find_closest_hue(palette[1:], 240.0)
+    warm_jab = lch_to_jab(45.0, 38.0, warm_h)
+    cool_jab = lch_to_jab(45.0, 38.0, cool_h)
+    mid = lch_to_jab(70.0, 5.0, (warm_h + cool_h) / 2.0)
+    cmap = _interp_three(warm_jab, mid, cool_jab, n)
+    label = f"{hue_to_name(warm_hex)} ↔ {hue_to_name(cool_hex)} diverging"
+    return cmap, label
 
 
 # -----------------------------------------------------------------------------
@@ -669,7 +679,6 @@ class Variant:
     title: str  # short name
     strategy: str  # algorithm identifier
     one_liner: str  # human description shown on each page + index
-    continuous_label: str  # short label for the cmap row
 
 
 VARIANTS = [
@@ -677,37 +686,31 @@ VARIANTS = [
         "A", "analogous", "analogous",
         "analogous",
         "harmony over distinctness — hues cluster within ±90° of brand green",
-        "green→teal→blue",
     ),
     Variant(
         "B", "triadic", "triadic",
         "triadic",
         "three primaries 120° apart (green · purple · amber-red), plus four harmonic fillers (azure, magenta, lime, cyan)",
-        "green ↔ purple diverging",
     ),
     Variant(
         "C", "split-complementary", "split-complementary",
         "split-comp",
         "green + the two flanking complements at +150° (magenta) and +210° (red), then four-quadrant fillers",
-        "green ↔ red diverging",
     ),
     Variant(
         "D", "balanced", "balanced",
         "balanced",
         "Petroff-style max-min ΔE optimisation under the paper-ink corridor — no hue rule",
-        "green→blue→purple",
     ),
     Variant(
         "E", "harmonic", "harmonic",
         "harmonic",
         "same max-min ΔE selection as balanced, but with the paper-ink chroma corridor widened (C∈[22,60]) for more harmonic headroom",
-        "green→blue→magenta",
     ),
     Variant(
         "F", "okabe-anchored", "okabe-anchored",
         "okabe-anchored",
         "Okabe-Ito's vermillion (#D55E00) seeded into the 7-hue pool alongside brand-green — both already paper-ink-compliant. reorder_first_4 then chooses top-4 freely; vermillion stays in if it earns the spot.",
-        "green→neutral→vermillion diverging",
     ),
 ]
 
@@ -717,7 +720,14 @@ VARIANTS = [
 # -----------------------------------------------------------------------------
 
 
-def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray) -> str:
+def render_variant_page(
+    variant: Variant,
+    hues: list[str],
+    seq_rgb: np.ndarray,
+    seq_label: str,
+    div_rgb: np.ndarray,
+    div_label: str,
+) -> str:
     names = names_for_palette(hues)
     full_hexes = [*hues, NEUTRAL_LIGHT, NEUTRAL_DARK]
     full_labels = [*names, "neutral·light", "neutral·dark"]
@@ -732,11 +742,11 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
     matrix = render_matrix_block(full_rgb, full_labels)
     sample_charts = render_sample_charts(hues, n_series=4)
     first_n = render_first_n_summary(hues, names)
-    cmap_row = render_colormap_row(variant.continuous_label, samples_rgb=cmap_rgb)
-    cmap_demo = render_cmap_demo(
-        cmap_rgb,
-        label="peaks function — exercises low/mid/high cmap regions in one frame",
-    )
+    seq_row = render_colormap_row(seq_label, samples_rgb=seq_rgb)
+    seq_demo = render_cmap_demo(seq_rgb, label=f"sequential · {seq_label}")
+    div_row = render_colormap_row(div_label, samples_rgb=div_rgb)
+    div_demo = render_cmap_demo(div_rgb, label=f"diverging · {div_label}")
+    cmap_block = f"{seq_row}\n{seq_demo}\n{div_row}\n{div_demo}"
     hero_pair = render_hero_mockup_pair(hues[0])
 
     # Methodology summary block
@@ -825,6 +835,7 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
 
 <nav class="variant-nav">
     <a href="index.html">← all variants</a>
+    <a href="compare.html">side-by-side compare</a>
     {nav}
 </nav>
 
@@ -860,10 +871,9 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
 </section>
 
 <section class="domain">
-    <h2>continuous colormap</h2>
-    <p class="lede">perceptually-uniform interpolation in CAM02-UCS, anchored at brand green. badge reports worst adjacent-sample ΔE across normal + 3 cvd (a value above ~2.5 indicates visible banding under at least one condition). below: the same cmap applied to MATLAB's <code>peaks</code> surface so you can see how it reads on real 2D data.</p>
-    {cmap_row}
-    {cmap_demo}
+    <h2>continuous colormaps</h2>
+    <p class="lede">two cmaps derived from this variant's palette: a <em>sequential</em> (brand-green → dark blue-zone palette member) and a <em>diverging</em> (warmest palette member ↔ coolest palette member through a near-neutral). hues come from the palette so the cmap reads as the same identity; J' and C are tuned for monotonic lightness descent (sequential) or symmetric weight (diverging). below each gradient: MATLAB's <code>peaks</code> surface rendered with that cmap.</p>
+    {cmap_block}
 </section>
 
 <section class="domain">
@@ -881,6 +891,167 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
 # -----------------------------------------------------------------------------
 # Index page (links all 5 variants)
 # -----------------------------------------------------------------------------
+
+
+def render_compare_page(rows: list[tuple[Variant, list[str], float, float]]) -> str:
+    """One-page side-by-side comparison of all variants for decision making.
+    Each row shows: header + score · all 9 swatches · sequential cmap strip
+    with mini peaks demo · diverging cmap strip with mini peaks demo · link
+    to full variant page. Heavier than index.html (~250 kB with embedded
+    PNGs) but everything you need to choose a variant lives in one viewport.
+    """
+    baseline_first4 = measure_first_4(OKABE_PALETTE)
+
+    rendered_rows = []
+    for variant, hues, first4, normal_min in rows:
+        chip_all = "".join(
+            f'<span class="big" style="background:{hx}" title="{hx}"></span>'
+            for hx in hues
+        ) + (
+            f'<span class="big" style="background:{NEUTRAL_LIGHT};border:1px solid var(--rule)" title="{NEUTRAL_LIGHT} neutral·light"></span>'
+            f'<span class="big" style="background:{NEUTRAL_DARK};border:1px solid var(--rule)" title="{NEUTRAL_DARK} neutral·dark"></span>'
+        )
+
+        seq_rgb, seq_label = build_sequential_cmap(hues)
+        div_rgb, div_label = build_diverging_cmap(hues)
+        seq_strip = render_gradient(seq_rgb[::4])  # downsample for compare-page strip width
+        div_strip = render_gradient(div_rgb[::4])
+        # Single-frame peaks demos (no light/dark pair) to keep page weight down
+        seq_png = _peaks_png_b64(seq_rgb)
+        div_png = _peaks_png_b64(div_rgb)
+        seq_demo = f'<img src="{seq_png}" alt="peaks (sequential)" class="peaks-mini">'
+        div_demo = f'<img src="{div_png}" alt="peaks (diverging)" class="peaks-mini">'
+
+        delta = first4 - baseline_first4
+        delta_sign = "+" if delta >= 0 else ""
+        score_class = cell_class(first4)
+
+        rendered_rows.append(f"""
+<section class="compare-card">
+    <header class="compare-head">
+        <div class="title">
+            <span class="key">{variant.key}</span>
+            <h3>{variant.title}</h3>
+        </div>
+        <div class="metrics">
+            <span class="metric {score_class}"><em>first-4 worst-CVD</em>{first4:.2f}</span>
+            <span class="delta {'delta-pos' if delta >= 0 else 'delta-neg'}">{delta_sign}{delta:.2f} vs Okabe-Ito</span>
+            <a class="open-link" href="{variant.key}-{variant.slug}.html">open full ↗</a>
+        </div>
+    </header>
+    <p class="one-liner">{variant.one_liner}.</p>
+    <div class="compare-chips">{chip_all}</div>
+    <div class="compare-cmaps">
+        <div class="cmap-cell">
+            <div class="cmap-cell-label">sequential — {seq_label}</div>
+            {seq_strip}
+            {seq_demo}
+        </div>
+        <div class="cmap-cell">
+            <div class="cmap-cell-label">diverging — {div_label}</div>
+            {div_strip}
+            {div_demo}
+        </div>
+    </div>
+</section>
+""")
+
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>palette variants — side-by-side compare (#5817)</title>
+<style>{PAGE_CSS}
+.compare-card {{
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 16px 18px;
+    margin: 14px 0;
+    background: var(--bg-elevated);
+}}
+.compare-head {{
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 18px;
+    margin-bottom: 8px;
+}}
+.compare-head .title {{ display: flex; align-items: baseline; gap: 12px; }}
+.compare-head .title .key {{
+    font-family: var(--mono);
+    font-size: 18px;
+    color: var(--accent);
+    font-weight: 700;
+}}
+.compare-head h3 {{ margin: 0; font-size: 16px; }}
+.compare-head .metrics {{ display: flex; gap: 12px; align-items: baseline; }}
+.compare-head .metric {{
+    font-family: var(--mono);
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    background: var(--bg-page);
+    border: 1px solid var(--rule);
+}}
+.compare-head .metric em {{
+    font-style: normal;
+    color: var(--muted);
+    margin-right: 6px;
+}}
+.compare-head .delta {{ font-family: var(--mono); font-size: 11px; color: var(--muted); }}
+.compare-head .open-link {{
+    font-size: 11px;
+    color: var(--accent);
+    text-decoration: none;
+}}
+.compare-head .open-link:hover {{ text-decoration: underline; }}
+.compare-card .one-liner {{ color: var(--muted); font-size: 12px; margin: 4px 0 12px; }}
+.compare-chips {{ display: flex; gap: 6px; margin-bottom: 14px; }}
+.compare-chips .big {{
+    flex: 1;
+    height: 28px;
+    border-radius: 3px;
+    box-shadow: inset 0 0 0 0.5px rgba(0,0,0,0.06);
+}}
+.compare-cmaps {{
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+}}
+.cmap-cell-label {{
+    font-size: 11px;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 4px;
+}}
+.cmap-cell .gradient {{ height: 14px; margin-bottom: 4px; }}
+.peaks-mini {{
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 4px;
+}}
+</style>
+</head>
+<body>
+<header class="masthead">
+    <h1>any<span class="dot">.</span>plot() — palette variants · compare</h1>
+    <div class="meta">CAM02-UCS · #5817</div>
+    <button class="theme-toggle">◐ dark</button>
+</header>
+<nav class="variant-nav">
+    <a href="index.html">← grid view</a>
+    <a href="../palette-analysis.html">baseline diagnostic →</a>
+</nav>
+<main class="domain">
+    <p class="lede">all variants side-by-side for decision making. each card shows the full 7-hue + 2-neutral palette (left to right), both palette-derived continuous colormaps (sequential green→dark blue-zone, diverging warmest↔coolest), and a peaks-function preview of each cmap. baseline Okabe-Ito first-4 worst-CVD ΔE = {baseline_first4:.2f} for reference.</p>
+    {"".join(rendered_rows)}
+</main>
+<script>{PAGE_JS}</script>
+</body>
+</html>
+"""
 
 
 def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> str:
@@ -1038,6 +1209,10 @@ def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> st
     <div class="meta">CAM02-UCS · Petroff target ≥ 15</div>
     <button class="theme-toggle">◐ dark</button>
 </header>
+<nav class="variant-nav">
+    <a href="compare.html">side-by-side compare →</a>
+    <a href="../palette-analysis.html">baseline diagnostic →</a>
+</nav>
 
 <section class="intro">
     <p>five candidate palettes inspired by Anselmoo's <code>dracula-palette</code> generator —
@@ -1131,8 +1306,9 @@ def main() -> int:
             first_4, baseline_4, first_4 - baseline_4,
         )
 
-        cmap = build_continuous(variant.strategy, hues)
-        html = render_variant_page(variant, hues, cmap)
+        seq_rgb, seq_label = build_sequential_cmap(hues)
+        div_rgb, div_label = build_diverging_cmap(hues)
+        html = render_variant_page(variant, hues, seq_rgb, seq_label, div_rgb, div_label)
 
         out_path = args.out_dir / f"{variant.key}-{variant.slug}.html"
         out_path.write_text(html, encoding="utf-8")
@@ -1145,6 +1321,11 @@ def main() -> int:
     index_path = args.out_dir / "index.html"
     index_path.write_text(index_html, encoding="utf-8")
     log.info("wrote %s (%.1f kB)", index_path, index_path.stat().st_size / 1024)
+
+    compare_html = render_compare_page(rows)
+    compare_path = args.out_dir / "compare.html"
+    compare_path.write_text(compare_html, encoding="utf-8")
+    log.info("wrote %s (%.1f kB)", compare_path, compare_path.stat().st_size / 1024)
 
     return 0
 

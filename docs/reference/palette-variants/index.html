@@ -274,6 +274,14 @@ body.theme-dark .matrix table.delta td {
     margin-top: 6px;
     font-style: italic;
 }
+.cmap-demo-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.cmap-demo-frame {
+    overflow: hidden;
+}
 .cmap-name {
     font-size: 12px;
     font-weight: 600;
@@ -572,6 +580,10 @@ section.surface h3 {
     <div class="meta">CAM02-UCS · Petroff target ≥ 15</div>
     <button class="theme-toggle">◐ dark</button>
 </header>
+<nav class="variant-nav">
+    <a href="compare.html">side-by-side compare →</a>
+    <a href="../palette-analysis.html">baseline diagnostic →</a>
+</nav>
 
 <section class="intro">
     <p>five candidate palettes inspired by Anselmoo's <code>dracula-palette</code> generator —

@@ -369,15 +369,160 @@ def render_sample_chart(
     )
 
 
+def render_sample_bars(
+    theme: dict[str, str], theme_label: str, series_hexes: Sequence[str]
+) -> str:
+    """Inline SVG bar chart: one group per series, 4 categories per group.
+    Lets the palette show its identity in a categorical (not continuous)
+    context — a common case for the picker not covered by the line chart."""
+    width, height = 460, 240
+    margin_l, margin_r, margin_t, margin_b = 36, 18, 22, 26
+    plot_w = width - margin_l - margin_r
+    plot_h = height - margin_t - margin_b
+
+    bg = theme["bg_page"]
+    ink_muted = theme["ink_muted"]
+    rule = theme.get("rule", "#DFDDD6")
+    is_light = bg.upper().startswith("#F")
+    grid = "rgba(26,26,23,0.06)" if is_light else "rgba(240,239,232,0.06)"
+
+    n_groups = 4
+    n_series = len(series_hexes)
+    # Heights per (group, series) — fabricated but visually believable
+    rng = [(0.42, 0.78, 0.55, 0.66),  # series 0
+           (0.58, 0.45, 0.71, 0.49),  # series 1
+           (0.66, 0.60, 0.38, 0.74),  # series 2
+           (0.36, 0.55, 0.62, 0.41)]  # series 3
+    group_gap = plot_w / n_groups
+    bar_w = (group_gap * 0.78) / max(n_series, 1)
+    bar_gap = (group_gap - bar_w * n_series) / 2
+
+    grid_lines = "".join(
+        f'<line x1="{margin_l}" y1="{margin_t + plot_h * f:.1f}" '
+        f'x2="{margin_l + plot_w}" y2="{margin_t + plot_h * f:.1f}" '
+        f'stroke="{grid}" stroke-width="1" />'
+        for f in (0.25, 0.5, 0.75)
+    )
+
+    bars: list[str] = []
+    for g in range(n_groups):
+        for i, color in enumerate(series_hexes):
+            val = rng[i % len(rng)][g]
+            bx = margin_l + g * group_gap + bar_gap + i * bar_w
+            bh = val * plot_h
+            by = margin_t + plot_h - bh
+            bars.append(
+                f'<rect x="{bx:.1f}" y="{by:.1f}" width="{bar_w - 1.5:.1f}" '
+                f'height="{bh:.1f}" fill="{color}" rx="1.5" />'
+            )
+
+    axes = (
+        f'<line x1="{margin_l}" y1="{margin_t}" '
+        f'x2="{margin_l}" y2="{margin_t + plot_h}" stroke="{rule}" stroke-width="1" />'
+        f'<line x1="{margin_l}" y1="{margin_t + plot_h}" '
+        f'x2="{margin_l + plot_w}" y2="{margin_t + plot_h}" stroke="{rule}" stroke-width="1" />'
+    )
+
+    tick_y = margin_t + plot_h + 14
+    ticks = "".join(
+        f'<text x="{margin_l + (g + 0.5) * group_gap:.1f}" y="{tick_y}" '
+        f'fill="{ink_muted}" font-size="9" text-anchor="middle">Q{g + 1}</text>'
+        for g in range(n_groups)
+    )
+
+    label = (
+        f'<text x="{margin_l}" y="{margin_t - 6}" fill="{ink_muted}" '
+        f'font-size="10" text-anchor="start">{h(theme_label)} — bars</text>'
+    )
+
+    return (
+        f'<svg viewBox="0 0 {width} {height}" class="sample-chart" '
+        f'preserveAspectRatio="xMidYMid meet" '
+        f'style="background:{bg};border:1px solid {rule};border-radius:6px">'
+        f"{label}{grid_lines}{axes}{''.join(bars)}{ticks}"
+        "</svg>"
+    )
+
+
+def render_sample_scatter(
+    theme: dict[str, str], theme_label: str, series_hexes: Sequence[str]
+) -> str:
+    """Inline SVG scatter chart: 4 clusters, ~20 points each. Tests how the
+    palette reads when colours appear in dense small marks rather than long
+    lines or wide bars."""
+    width, height = 460, 240
+    margin_l, margin_r, margin_t, margin_b = 36, 18, 22, 26
+    plot_w = width - margin_l - margin_r
+    plot_h = height - margin_t - margin_b
+
+    bg = theme["bg_page"]
+    ink_muted = theme["ink_muted"]
+    rule = theme.get("rule", "#DFDDD6")
+    is_light = bg.upper().startswith("#F")
+    grid = "rgba(26,26,23,0.06)" if is_light else "rgba(240,239,232,0.06)"
+
+    # Reproducible "random" jitter via a fixed sequence
+    import random as _r
+    rnd = _r.Random(42)
+
+    centres = [(0.25, 0.30), (0.70, 0.25), (0.30, 0.70), (0.75, 0.72)]
+    grid_lines = "".join(
+        f'<line x1="{margin_l}" y1="{margin_t + plot_h * f:.1f}" '
+        f'x2="{margin_l + plot_w}" y2="{margin_t + plot_h * f:.1f}" '
+        f'stroke="{grid}" stroke-width="1" />'
+        for f in (0.25, 0.5, 0.75)
+    )
+
+    dots: list[str] = []
+    for i, color in enumerate(series_hexes):
+        cx_frac, cy_frac = centres[i % len(centres)]
+        for _ in range(22):
+            jx = rnd.gauss(0, 0.08)
+            jy = rnd.gauss(0, 0.08)
+            x = max(0.02, min(0.98, cx_frac + jx))
+            y = max(0.02, min(0.98, cy_frac + jy))
+            px = margin_l + x * plot_w
+            py = margin_t + (1 - y) * plot_h
+            dots.append(
+                f'<circle cx="{px:.1f}" cy="{py:.1f}" r="3.2" '
+                f'fill="{color}" fill-opacity="0.75" />'
+            )
+
+    axes = (
+        f'<line x1="{margin_l}" y1="{margin_t}" '
+        f'x2="{margin_l}" y2="{margin_t + plot_h}" stroke="{rule}" stroke-width="1" />'
+        f'<line x1="{margin_l}" y1="{margin_t + plot_h}" '
+        f'x2="{margin_l + plot_w}" y2="{margin_t + plot_h}" stroke="{rule}" stroke-width="1" />'
+    )
+
+    label = (
+        f'<text x="{margin_l}" y="{margin_t - 6}" fill="{ink_muted}" '
+        f'font-size="10" text-anchor="start">{h(theme_label)} — scatter</text>'
+    )
+
+    return (
+        f'<svg viewBox="0 0 {width} {height}" class="sample-chart" '
+        f'preserveAspectRatio="xMidYMid meet" '
+        f'style="background:{bg};border:1px solid {rule};border-radius:6px">'
+        f"{label}{grid_lines}{axes}{''.join(dots)}"
+        "</svg>"
+    )
+
+
 def render_sample_charts(palette_hexes: Sequence[str], n_series: int = 3) -> str:
-    """Render two sample charts (light + dark bg) using the first ``n_series``
-    colours from the given palette. Default 3 matches style-guide §4 (ideal
-    2–3 categories)."""
+    """Render a 3×2 grid of sample charts (line / bar / scatter × light / dark
+    bg) using the first ``n_series`` colours from the given palette. Default
+    3 matches the style-guide ideal; pass n_series=4 for variant pages that
+    showcase the "first-4 most beautiful" subset."""
     series = list(palette_hexes[:n_series])
     return (
         '<div class="sample-charts">'
-        f"{render_sample_chart(LIGHT_THEME_FULL, 'light', series)}"
-        f"{render_sample_chart(DARK_THEME_FULL, 'dark', series)}"
+        f"{render_sample_chart(LIGHT_THEME_FULL, 'light · lines', series)}"
+        f"{render_sample_chart(DARK_THEME_FULL, 'dark · lines', series)}"
+        f"{render_sample_bars(LIGHT_THEME_FULL, 'light', series)}"
+        f"{render_sample_bars(DARK_THEME_FULL, 'dark', series)}"
+        f"{render_sample_scatter(LIGHT_THEME_FULL, 'light', series)}"
+        f"{render_sample_scatter(DARK_THEME_FULL, 'dark', series)}"
         "</div>"
     )
 
@@ -405,28 +550,18 @@ def render_colormap_row(name: str, samples_rgb: np.ndarray | None = None) -> str
     )
 
 
-def render_cmap_demo(samples_rgb: np.ndarray, label: str = "") -> str:
-    """Apply the 256-step colormap to a 2D sample function (peaks-style
-    bivariate surface) and return an HTML ``<img>`` with the rendered PNG
-    inlined as a data URI. Lets the eye check whether the cmap reads as
-    monotonic in lightness — banding, hue swerves, and lightness inversions
-    all jump out on real 2D data in a way that a 1D gradient strip hides.
-    """
+def _peaks_png_b64(samples_rgb: np.ndarray) -> str:
+    """Render the classic peaks function to a small PNG with the given
+    colormap and return a base64 data URI."""
     import base64
     import io
 
     from PIL import Image
 
-    # 2D resolution. 240×144 keeps the PNG under 6 kB while still showing
-    # smooth gradients across both axes (PNG palette-mode would be smaller
-    # still but loses the cmap's perceptual uniformity if dithered).
     w, h_px = 240, 144
     x = np.linspace(-2.2, 2.2, w)
     y = np.linspace(-1.3, 1.3, h_px)
     X, Y = np.meshgrid(x, y)
-    # Classic "peaks" function (truncated): a positive Gaussian, a tilted
-    # ridge, and a negative depression — exercises low/mid/high cmap
-    # regions across the frame.
     Z = (
         3 * (1 - X) ** 2 * np.exp(-X ** 2 - (Y + 1) ** 2)
         - 10 * (X / 5 - X ** 3 - Y ** 5) * np.exp(-X ** 2 - Y ** 2)
@@ -438,16 +573,44 @@ def render_cmap_demo(samples_rgb: np.ndarray, label: str = "") -> str:
     img = Image.fromarray(rgb, mode="RGB")
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)
-    b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+    return "data:image/png;base64," + base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+def render_cmap_demo(samples_rgb: np.ndarray, label: str = "") -> str:
+    """Apply the 256-step colormap to MATLAB's peaks bivariate function and
+    return an HTML figure with the rendered PNG inlined as a data URI,
+    framed on BOTH the production light-bg and dark-bg surfaces side by
+    side. The peaks pixels are identical in each frame; the surrounding
+    chrome (frame colour, axis/caption text) changes so the user can see
+    how the cmap reads against each surface without toggling the theme.
+    """
+    src = _peaks_png_b64(samples_rgb)
     caption = f'<figcaption>{h(label)}</figcaption>' if label else ""
-    return (
-        '<figure class="cmap-demo">'
-        f'<img src="data:image/png;base64,{b64}" '
+    light = LIGHT_THEME_FULL
+    dark = DARK_THEME_FULL
+    frame = (
+        '<div class="cmap-demo-frame" style="background:{bg};color:{ink};'
+        'border:1px solid {rule};border-radius:6px;padding:8px">'
+        '<div style="font-size:10px;color:{muted};margin-bottom:6px">'
+        '{theme} — bg-page {bg}</div>'
+        '<img src="{src}" '
         'alt="continuous palette applied to the peaks bivariate function" '
-        'style="width:100%;height:auto;display:block;border-radius:6px;image-rendering:auto">'
-        f"{caption}"
-        "</figure>"
+        'style="width:100%;height:auto;display:block;border-radius:4px">'
+        '</div>'
     )
+    pair = (
+        '<div class="cmap-demo-pair">'
+        + frame.format(
+            theme="light", bg=light["bg_page"], ink=light["ink"],
+            muted=light["ink_muted"], rule=light.get("rule", "#DFDDD6"), src=src,
+        )
+        + frame.format(
+            theme="dark", bg=dark["bg_page"], ink=dark["ink"],
+            muted=dark["ink_muted"], rule=dark.get("rule", "#1E1E1B"), src=src,
+        )
+        + "</div>"
+    )
+    return f'<figure class="cmap-demo">{pair}{caption}</figure>'
 
 
 def _wcag_badge(fg_hex: str, bg_hex: str, large: bool = False) -> str:
@@ -878,6 +1041,14 @@ body.theme-dark .matrix table.delta td {
     color: var(--muted);
     margin-top: 6px;
     font-style: italic;
+}
+.cmap-demo-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.cmap-demo-frame {
+    overflow: hidden;
 }
 .cmap-name {
     font-size: 12px;
