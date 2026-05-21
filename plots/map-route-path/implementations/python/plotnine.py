@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-21
@@ -20,7 +20,7 @@ from plotnine import (
     geom_polygon,
     ggplot,
     labs,
-    scale_color_gradient,
+    scale_color_cmap,
     theme,
     theme_minimal,
 )
@@ -122,7 +122,7 @@ plot = (
         shape="s",
         stroke=1.5,
     )
-    + scale_color_gradient(low="#306998", high="#FFD43B", name="Trail Progress (%)")
+    + scale_color_cmap(cmap_name="viridis", name="Trail Progress (%)")
     + coord_fixed(ratio=1.3)
     + labs(title="map-route-path · python · plotnine · anyplot.ai", x="Longitude (°)", y="Latitude (°)")
     + theme_minimal()
