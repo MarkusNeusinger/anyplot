@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 barcode-ean13: EAN-13 Barcode
-Library: highcharts | Python 3.13
-Quality: 91/100 | Updated: 2026-05-21
+Library: highcharts unknown | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-21
 """
 
 import os
