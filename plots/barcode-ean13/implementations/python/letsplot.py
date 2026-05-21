@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-21
@@ -10,12 +10,14 @@ import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
+    element_blank,
     element_rect,
     geom_rect,
     geom_text,
     ggplot,
     ggsave,
     ggsize,
+    layer_tooltips,
     scale_fill_identity,
     theme,
     theme_void,
@@ -70,7 +72,6 @@ R_CODES = {
     "8": "1001000",
     "9": "1110100",
 }
-# Parity patterns for left-side digits based on first digit
 FIRST_DIGIT_PATTERNS = {
     "0": "LLLLLL",
     "1": "LLGLGG",
@@ -84,104 +85,80 @@ FIRST_DIGIT_PATTERNS = {
     "9": "LGGLGL",
 }
 
-
-def calculate_check_digit(digits_12):
-    total = 0
-    for i, d in enumerate(digits_12):
-        weight = 1 if i % 2 == 0 else 3
-        total += int(d) * weight
-    return str((10 - (total % 10)) % 10)
-
-
-def encode_ean13(code):
-    if len(code) == 12:
-        code = code + calculate_check_digit(code)
-    elif len(code) != 13:
-        raise ValueError("EAN-13 code must be 12 or 13 digits")
-
-    first_digit = code[0]
-    left_digits = code[1:7]
-    right_digits = code[7:13]
-    pattern = FIRST_DIGIT_PATTERNS[first_digit]
-
-    # Start guard: 101
-    bars = "101"
-    for i, digit in enumerate(left_digits):
-        bars += L_CODES[digit] if pattern[i] == "L" else G_CODES[digit]
-    # Center guard: 01010
-    bars += "01010"
-    for digit in right_digits:
-        bars += R_CODES[digit]
-    # End guard: 101
-    bars += "101"
-
-    return bars, code
-
-
-def generate_barcode_bars(code, bar_y_min, bar_y_max, guard_y_max, module_width, bar_color):
-    bars_pattern, full_code = encode_ean13(code)
-
-    # Guard bar bit positions (start, center, end) — extend lower than regular bars
-    guard_positions = set(range(3))  # Start guard: bits 0-2
-    guard_positions.update(range(45, 50))  # Center guard: bits 45-49
-    guard_positions.update(range(92, 95))  # End guard: bits 92-94
-
-    all_bars = []
-    x_pos = 9 * module_width  # quiet zone
-
-    for i, bit in enumerate(bars_pattern):
-        if bit == "1":
-            y_max = guard_y_max if i in guard_positions else bar_y_max
-            all_bars.append(
-                {
-                    "xmin": float(x_pos),
-                    "xmax": float(x_pos + module_width),
-                    "ymin": float(bar_y_min),
-                    "ymax": float(y_max),
-                    "fill": bar_color,
-                }
-            )
-        x_pos += module_width
-
-    total_width = x_pos + 9 * module_width  # add right quiet zone
-    return all_bars, total_width, full_code
-
-
-# Data — German product EAN-13
-code = "4006381333931"
+# Data — German product EAN-13 (4006381333931)
+raw_code = "4006381333931"
 module_width = 3
 bar_y_min = 35
 bar_y_max = bar_y_min + 80  # 80-unit bar height
 guard_y_max = bar_y_max + 10  # guard bars extend 10 units lower
 
-bars_data, total_width, full_code = generate_barcode_bars(
-    code, bar_y_min, bar_y_max, guard_y_max, module_width, BAR_COLOR
-)
-df_bars = pd.DataFrame(bars_data)
+# Inline check digit calculation
+digits_12 = raw_code[:12]
+check_total = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(digits_12))
+check_digit = str((10 - (check_total % 10)) % 10)
+full_code = digits_12 + check_digit if len(raw_code) == 12 else raw_code
+
+# Inline EAN-13 bit-pattern encoding
+first_digit = full_code[0]
+left_digits = full_code[1:7]
+right_digits = full_code[7:13]
+parity = FIRST_DIGIT_PATTERNS[first_digit]
+
+bars_pattern = "101"
+for i, d in enumerate(left_digits):
+    bars_pattern += L_CODES[d] if parity[i] == "L" else G_CODES[d]
+bars_pattern += "01010"
+for d in right_digits:
+    bars_pattern += R_CODES[d]
+bars_pattern += "101"
+
+# Section label for each bit position — used in interactive HTML tooltips
+section_labels = ["Start Guard"] * 3
+for i in range(6):
+    section_labels += [f"Left digit {i + 1}: {left_digits[i]}"] * 7
+section_labels += ["Center Guard"] * 5
+for i in range(6):
+    section_labels += [f"Right digit {i + 7}: {right_digits[i]}"] * 7
+section_labels += ["End Guard"] * 3
+
+# Guard bar bit positions (start, center, end) — extend lower than regular bars
+guard_positions = set(range(3)) | set(range(45, 50)) | set(range(92, 95))
+
+# Inline bar rectangle generation
+bars = []
+x_pos = 9 * module_width  # quiet zone offset
+for i, bit in enumerate(bars_pattern):
+    if bit == "1":
+        y_max = guard_y_max if i in guard_positions else bar_y_max
+        bars.append(
+            {
+                "xmin": float(x_pos),
+                "xmax": float(x_pos + module_width),
+                "ymin": float(bar_y_min),
+                "ymax": float(y_max),
+                "fill": BAR_COLOR,
+                "section": section_labels[i],
+                "position": i,
+            }
+        )
+    x_pos += module_width
+
+total_width = x_pos + 9 * module_width  # right quiet zone
+df_bars = pd.DataFrame(bars)
 
 # Digit label positions
 quiet_zone = 9 * module_width
-start_guard_end = quiet_zone + 3 * module_width  # left edge of left digits
+start_guard_end = quiet_zone + 3 * module_width
 left_digit_width = 7 * module_width
 center_guard_start = start_guard_end + 42 * module_width
 right_start = center_guard_start + 5 * module_width
 
 text_y = bar_y_min - 15
-digit_labels = []
-
-# First digit sits outside the left guard
-digit_labels.append({"x": quiet_zone - 5 * module_width, "y": text_y, "label": full_code[0]})
-
-# Left-side digits (positions 1-6)
-for i, digit in enumerate(full_code[1:7]):
-    x = start_guard_end + (i + 0.5) * left_digit_width
-    digit_labels.append({"x": x, "y": text_y, "label": digit})
-
-# Right-side digits (positions 7-12)
-for i, digit in enumerate(full_code[7:13]):
-    x = right_start + (i + 0.5) * left_digit_width
-    digit_labels.append({"x": x, "y": text_y, "label": digit})
-
+digit_labels = [{"x": quiet_zone - 5 * module_width, "y": text_y, "label": full_code[0]}]
+for i, d in enumerate(full_code[1:7]):
+    digit_labels.append({"x": start_guard_end + (i + 0.5) * left_digit_width, "y": text_y, "label": d})
+for i, d in enumerate(full_code[7:13]):
+    digit_labels.append({"x": right_start + (i + 0.5) * left_digit_width, "y": text_y, "label": d})
 df_digits = pd.DataFrame(digit_labels)
 
 title_str = "barcode-ean13 · python · letsplot · anyplot.ai"
@@ -190,14 +167,22 @@ df_title = pd.DataFrame({"x": [total_width / 2], "y": [guard_y_max + 25], "label
 # Plot
 plot = (
     ggplot()
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"), data=df_bars)
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"),
+        data=df_bars,
+        tooltips=layer_tooltips().line("@section").line("Module @position"),
+    )
     + scale_fill_identity()
     + geom_text(aes(x="x", y="y", label="label"), data=df_digits, size=16, family="monospace", color=INK)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_title, size=11, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_title, size=15, color=INK_SOFT)
     + xlim(0, total_width)
-    + ylim(0, guard_y_max + 45)
+    + ylim(-20, guard_y_max + 45)
     + theme_void()
-    + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG), panel_background=element_rect(fill=PAGE_BG))
+    + theme(
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
+    )
     + ggsize(800, 450)
 )
 
