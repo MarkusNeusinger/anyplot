@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-route-path: Route Path Map
 Library: matplotlib 3.10.9 | Python 3.13.13
-Quality: 83/100 | Updated: 2026-05-21
+Quality: 85/100 | Updated: 2026-05-21
 """
 
 import os
