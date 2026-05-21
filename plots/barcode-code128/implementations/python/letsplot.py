@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: letsplot | Python 3.13
-Quality: 92/100 | Updated: 2026-05-21
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-21
 """
 
 import os
