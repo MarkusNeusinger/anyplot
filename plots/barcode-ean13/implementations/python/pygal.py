@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-21
@@ -24,6 +24,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+# Barcode bars use ink tokens (not Okabe-Ito): monochrome is correct for EAN-13 semantics
 BAR_COLOR = "#1A1A17" if THEME == "light" else "#F0EFE8"
 
 # EAN-13 encoding tables
@@ -48,11 +49,21 @@ for d in digits[7:]:
     bits += R_CODE[d]
 bits += "101"  # end guard
 
-# Build per-bar data: black bars as BAR_COLOR, spaces as PAGE_BG (invisible)
-bar_data = [{"value": 1, "color": BAR_COLOR} if b == "1" else {"value": 1, "color": PAGE_BG} for b in bits]
+# Build per-bar data: 9-module quiet zones on each side (spec minimum) + barcode modules
+quiet_zone = [{"value": 1, "color": PAGE_BG}] * 9
+bar_data = (
+    quiet_zone
+    + [{"value": 1, "color": BAR_COLOR} if b == "1" else {"value": 1, "color": PAGE_BG} for b in bits]
+    + quiet_zone
+)
 
-# Human-readable EAN-13 digit grouping: "4  006381  333931"
-x_label = f"{product_code[0]}  {product_code[1:7]}  {product_code[7:]}"
+# EAN-13 digit grouping with structural annotation: GS1 prefix · manufacturer · product · check
+x_label = (
+    f"GS1 Prefix: {product_code[0:3]} (DE)"
+    f" · Mfr: {product_code[3:7]}"
+    f" · Product: {product_code[7:12]}"
+    f" · Check: {product_code[12]}"
+)
 title = "barcode-ean13 · python · pygal · anyplot.ai"
 
 # Chart style
