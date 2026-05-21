@@ -1,160 +1,180 @@
 library: plotly
+language: python
 specification_id: map-route-path
 created: '2026-01-19T17:55:21Z'
-updated: '2026-01-19T17:58:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21147013636
+updated: '2026-05-21T05:57:15Z'
+generated_by: claude-sonnet
+workflow_run: 26207392935
 issue: 3768
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-route-path/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-route-path/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/plotly/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent use of Plotly Scattermap for geographic visualization with OpenStreetMap
-    basemap
-  - Color gradient along the path effectively shows progression through the hike
-  - Clean, well-organized code with realistic hiking trail data
-  - Informative hover tooltips on start/end markers
-  - Good visual hierarchy with distinct start (green) and end (red) markers
+  - Theme-aware basemap selection (open-street-map for light, carto-darkmatter for
+    dark) maintains visual coherence in both renders
+  - Multi-layer trace architecture cleanly separates path connectivity, time-progression
+    gradient, and categorical start/end/checkpoint markers
+  - Colorbar uses explicit human-readable time labels (07:30-13:30) directly connecting
+    data to the hiking narrative
+  - Full spec compliance with correct Okabe-Ito categorical colors and viridis for
+    continuous time data
   weaknesses:
-  - Title includes descriptive prefix instead of starting directly with spec-id
-  - Could have used Plotly animation to show the hike progressing over time
-  - Start/End markers use green/red which may not be fully colorblind-safe
-  image_description: 'The plot displays an interactive OpenStreetMap showing a hiking
-    trail route in the Swiss Alps region (near Zermatt). The route path is rendered
-    with a color gradient transitioning from dark blue/gray at the start to orange/red
-    at the end, indicating progression through the hike. A green circular marker labeled
-    "Start" appears at the beginning of the route, and a red circular marker labeled
-    "End" appears at the terminus. Yellow waypoint markers are placed at regular intervals
-    along the path. The legend in the upper-left corner shows three entries: Start
-    (green), End (red), and Waypoints (yellow). The title "Alpine Hiking Trail · map-route-path
-    · plotly · pyplots.ai" is centered at the top. The map uses OpenStreetMap tiles
-    showing terrain, roads, and geographic features. The route shows a winding path
-    heading generally northeast.'
+  - Synthetic GPS path has unrealistic spiral-loop patterns from high-amplitude sinusoidal
+    drift — reduce amplitudes to <=0.006 deg and frequencies to 3pi-4pi for naturalistic
+    trail undulations
+  - Route connectivity line (width=2, opacity=0.5) is hard to follow through dense
+    spiral sections — increase to width=2.5-3, opacity=0.6-0.7
+  - Waypoint markers (size=6) slightly small for 300 points at this canvas scale —
+    increase to size=7-8
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 paper background with OpenStreetMap basemap covering the Great Smoky Mountains area near Gatlinburg, TN
+      Chrome: Title "map-route-path · python · plotly · anyplot.ai" in dark ink (#1A1A17), centered at top; legend in upper-left with elevated background and readable dark labels; colorbar with explicit time tick labels (07:30-13:30) in dark ink on right side — all readable
+      Data: 300 viridis-gradient circular markers progressing dark purple (07:30) → yellow-green (13:30); Start marker #009E73 (Okabe-Ito pos 1) at lower-left; End marker #D55E00 (Okabe-Ito pos 2) at upper-right; Checkpoint markers #0072B2 (Okabe-Ito pos 3) at intervals; thin semi-transparent grey connectivity line
+      Legibility verdict: PASS — all title, legend, and colorbar text clearly readable against warm off-white background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 paper background with CARTO dark matter basemap — theme-appropriate basemap switch
+      Chrome: Title in light #F0EFE8 tone clearly readable; legend labels in #B8B7B0 (INK_SOFT) on dark elevated #242420 legend frame; colorbar tick labels in light tones — all readable; no dark-on-dark failures
+      Data: Viridis gradient markers, Start (#009E73), End (#D55E00), Checkpoint (#0072B2) colors identical to light render — only chrome flipped; CARTO basemap provides dark spatial context
+      Legibility verdict: PASS — all text renders in light colors against dark background; no dark-on-dark failures detected
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title is large (28pt), legend text is 16pt, all labels are clearly
-          readable
+        comment: Font sizes explicitly set throughout; all text readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements; Start/End labels positioned above markers
+        comment: No text-on-text overlap; minor crowding in spiral-loop sections
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Route line width of 4 is appropriate, markers sized well (20 for
-          start/end, 10 for waypoints)
+        comment: Markers visible; viridis gradient clear; size=6 slightly small for
+          300 points
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Green start and red end markers use common color coding; gradient
-          is distinguishable but relies on green-red which may not be optimal for
-          colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills the canvas well, good margins, route is well-centered
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: true
-        comment: Map has no traditional axes; uses map coordinates which are inherent
-          to the format
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend is well-positioned in upper-left with semi-transparent background,
-          OpenStreetMap provides geographic context
+        comment: Viridis colorblind-safe; Okabe-Ito categorical markers well-contrasted
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); map fills canvas; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Map plot; no axis labels needed; title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito pos 1/2/3 for categorical; viridis for continuous; correct
+          theme backgrounds
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-aware basemap selection and multi-layer trace architecture
+          show genuine design thinking; above defaults but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Legend/colorbar styled with elevated bg and borders; route line as
+          separate layer; good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Viridis gradient narrates journey; start/end anchor the story; spiral
+          loops undermine narrative coherence
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct chart type: route path map with connected waypoints'
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/lon correctly mapped, sequence used for path order and color
-          gradient
-      - id: SC-03
+        comment: Correct geographic route path map using go.Scattermap
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has connected path, start/end markers, color gradient for time progression,
-          basemap. Missing optional direction arrows
-      - id: SC-04
-        name: Data Range
+        comment: Connected path, start/end markers, time gradient, basemap, checkpoints
+          all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Map auto-centers and zooms to show entire route
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: lat/lon correctly mapped; sequence defines path order; timestamps
+          as color
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Start, End, and Waypoints
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Includes descriptive prefix instead of starting with spec-id
+        comment: 'Title: map-route-path · python · plotly · anyplot.ai; legend labels
+          correct'
     data_quality:
-      score: 19
-      max: 20
+      score: 12
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows winding path, start/end points, waypoints, time-based color
-          gradient
+        comment: Demonstrates connected path, start/end, time gradient, waypoints,
+          basemap; optional direction arrows not included
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Swiss Alps hiking trail near Zermatt is an excellent, plausible real-world
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: 150 waypoints over 4 hours is realistic for a hike; coordinates are
-          in valid Swiss Alps region
+        comment: Real Appalachian Trail location and neutral scenario; spiral-loop
+          path patterns noticeably unrealistic for GPS data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Accurate Smoky Mountains coordinates; 300 waypoints at 72s intervals
+          over 6 hours is realistic
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,53 +182,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save, no functions/classes'
+        comment: Flat script; no functions or classes; sys.path guard is necessary
+          pragmatic fix
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, and plotly.graph_objects imported
+        comment: os, sys, numpy, pandas, plotly.graph_objects — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean separation of trace layers with comments; logical flow
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses modern go.Scattermap API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves as both plot.png and plot.html (correct for Plotly)
-    library_features:
-      score: 3
-      max: 5
+        comment: plot-{THEME}.png and plot-{THEME}.html saved; uses current go.Scattermap
+          API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses go.Scattermap with map={} layout (current API), multi-trace
+          composition, hovertemplate — idiomatic
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Scattermap with OpenStreetMap tiles, interactive hover tooltips.
-          Could have leveraged animation for time progression
+        comment: Interactive hover tooltips, theme-adaptive basemap, viridis colorbar
+          on geographic trace — distinctly Plotly
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - time-series
+  - cumulative-sum
   styling:
-  - gradient-fill
+  - custom-colormap
   - alpha-blending
