@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-route-path: Route Path Map
-Library: seaborn | Python 3.13
-Quality: 90/100 | Updated: 2026-05-21
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-21
 """
 
 import os
