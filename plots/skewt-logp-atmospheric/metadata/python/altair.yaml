@@ -1,153 +1,202 @@
 library: altair
+language: python
 specification_id: skewt-logp-atmospheric
 created: '2026-01-17T09:28:57Z'
-updated: '2026-01-18T22:49:27Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21092078682
+updated: '2026-05-21T00:23:40Z'
+generated_by: claude-sonnet
+workflow_run: 26196320155
 issue: 3802
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/altair/plot.html
-quality_score: 72
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/altair/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Correctly implements the fundamental Skew-T Log-P thermodynamic structure with
-    skewed isotherms
-  - Realistic atmospheric sounding data with proper temperature/dewpoint profiles
-  - Good use of Altair layer composition for multiple reference line systems
-  - All reference lines (isotherms, dry/moist adiabats, mixing ratios) are present
-  - Temperature and dewpoint profiles clearly distinguished by color and line style
+  - Correct and complete Skew-T Log-P implementation with all mandatory reference
+    line types (isotherms, dry adiabats, moist adiabats, mixing ratios)
+  - Full Okabe-Ito 6-color scheme applied in canonical order across all diagram elements
+  - Clever pre-filtering of reference lines to x_domain ± margin prevents vl-convert
+    layout inflation — demonstrates deep knowledge of Altair/vl-convert behavior
+  - PAD-only canvas strategy (no cropping) correctly implemented per library guidelines
+  - 'Theme-adaptive chrome fully wired: background, title, axis, legend, grid all
+    flip between light/dark correctly'
+  - detail encoding for reference line grouping is the correct Altair pattern for
+    multi-line categorical series
   weaknesses:
-  - Legend is not visible - the legend data points render inside the plot area as
-    regular markers rather than as a proper legend panel
-  - Y-axis label missing units (should be Pressure hPa not just pressure)
-  - X-axis domain too wide creating unused white space on the right
-  image_description: The plot displays a Skew-T Log-P atmospheric diagram with a white
-    background. The pressure axis (Y-axis) is logarithmic and inverted, ranging from
-    1000 hPa at the bottom to 100 hPa at the top. The X-axis shows skewed temperature
-    values ranging from -40 to 120. The temperature profile is rendered as a solid
-    red line with circular markers, extending from approximately 25°C at surface (1000
-    hPa) to around -55°C at the tropopause. The dewpoint profile is shown as a dashed
-    blue line with circular markers, depicting the expected moisture decrease with
-    altitude. Reference lines include gray dashed isotherms at 45-degree angles, green
-    dry adiabats curving from lower-left to upper-right, purple/magenta dashed moist
-    adiabats, and blue dashed mixing ratio lines. The title "skewt-logp-atmospheric
-    · altair · pyplots.ai" appears at the top. The legend was coded but is not visible
-    in the output image - the legend points appear within the visible plotting domain
-    as regular plot points rather than a separate legend panel. The Y-axis label shows
-    only "pressure" without units.
+  - No annotations highlighting key meteorological features (LCL, CAPE area, temperature
+    inversion); a subtle annotation at one notable atmospheric level would elevate
+    data storytelling
+  - Inner view 540x300 is slightly below canonical 620x320, leaving more padding around
+    the chart than ideal; nudging to 560x310 would improve canvas utilization without
+    risking overflow
+  - Legend lists all 6 element types but reference-line entries (Isotherm, Dry Adiabat,
+    Moist Adiabat, Mixing Ratio) have no strokeDash representation in the legend symbol;
+    a strokeDash legend would clarify line-type encoding
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "skewt-logp-atmospheric · python · altair · anyplot.ai" dark and readable. Axis labels "Pressure (hPa)" and "Temperature (°C, skewed)" visible. Tick labels (100–1000 hPa pressure values) readable in dark ink.
+      Data: Green (#009E73) solid line = Temperature profile (first series, correct). Orange (#D55E00) dashed line = Dewpoint profile (second series, correct). Semi-transparent reference lines: blue isotherms (#0072B2), pink dry adiabats (#CC79A7), orange-yellow moist adiabats (#E69F00), sky blue mixing ratios (#56B4E9). Circle markers at each of 11 pressure levels.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title in light-colored text, fully readable. Axis labels and tick labels rendered in light-adapted tokens (INK_SOFT = #B8B7B0 for secondary text). No dark-on-dark failures observed.
+      Data: Data colors identical to light render — green (#009E73) temperature, orange (#D55E00) dewpoint, and all six reference line colors unchanged. Reference lines visible at 40% opacity against dark background.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 26
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and axis labels readable, tick labels adequately sized
+        comment: 'All font sizes explicitly set (title=16, axis=12, labels=10). Both
+          renders fully readable. Minor: inner view 540x300 slightly below canonical
+          620x320, chart appears slightly compact.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping text or data elements. Pressure tick labels on log
+          axis well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Profiles visible with thick lines and markers
+        comment: 'Profile lines (3.5px) prominent. Reference lines at 40% opacity
+          appropriately subtle. Slight deduction: reference lines could be marginally
+          more distinct in densely packed upper troposphere.'
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
-        passed: true
-        comment: Colors distinguishable but some similar blues
-      - id: VQ-05
-        name: Layout Balance
-        score: 0
-        max: 5
-        passed: false
-        comment: Legend missing - renders as plot markers instead of legend panel
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Y-axis missing units (hPa)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
-        max: 2
-        passed: false
-        comment: Grid subtle but legend missing
-    spec_compliance:
-      score: 20
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Skew-T Log-P diagram
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Temperature and dewpoint correctly mapped
-      - id: SC-03
-        name: Required Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Has all reference lines but missing functional legend
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend not rendered properly
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: Correct title format
-    data_quality:
-      score: 17
+        comment: Full Okabe-Ito palette, CVD-safe. Strong contrast between temperature
+          (green) and dewpoint (orange).
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Chart fills ~55-65% of 3200x1800 canvas. Some whitespace on right
+          side. Balanced margins overall.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'X-axis: Temperature (°C, skewed) with units and skewed qualifier.
+          Y-axis: Pressure (hPa) with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series (Temperature) = #009E73. Second (Dewpoint) = #D55E00.
+          Reference lines use Okabe-Ito positions 3-6. Backgrounds: #FAF8F1 light,
+          #1A1A17 dark. All chrome theme-adaptive.'
+    design_excellence:
+      score: 12
       max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic default: intentional 6-color Okabe-Ito assignment,
+          explicit opacity strategy for reference lines (40%), theme-adaptive chrome.
+          Not publication-ready — no typography hierarchy beyond size, diagram occupies
+          center portion of canvas.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle 10% opacity grid, reference lines at 40% opacity, stroke=None
+          removes chart border, legend with consistent styling.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Strong visual hierarchy: thick sounding profiles (3.5px) over thin
+          reference lines (1.0px). Temperature (green) reads as primary series. No
+          annotations for key meteorological features (LCL, CAPE, inversion).'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Skew-T Log-P diagram with logarithmic inverted pressure axis,
+          skewed temperature coordinates, proper reference lines (isotherms, dry/moist
+          adiabats, mixing ratios), sounding profiles. Wind barbs omitted (optional
+          per spec).
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All mandatory features: logarithmic inverted pressure axis, 45-degree
+          skewed isotherms, dry adiabats, moist adiabats, mixing ratio lines, temperature
+          solid/dewpoint dashed.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Pressure on Y-axis (logarithmic, inverted, 1000->100 hPa). Skewed
+          temperature on X-axis. Both profiles span full altitude range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'skewt-logp-atmospheric · python · altair · anyplot.ai' matches
+          required format. Legend configured with full 6-label domain scale covering
+          all data types.
+    data_quality:
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Realistic sounding with temperature inversion
+        comment: '11 pressure levels from surface to upper troposphere. Temperature
+          and dewpoint profiles realistic. All reference line types rendered. Minor:
+          no atmospheric inversion or notable feature to showcase diagram interpretation
+          utility.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Authentic mid-latitude sounding data
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Ranges appropriate but X-axis too wide
+        comment: Standard radiosonde sounding scenario; neutral scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Temperature range 25°C (surface) to -55°C (100 hPa) is physically
+          realistic. Dewpoint depression increases with altitude as expected in real
+          soundings.
     code_quality:
-      score: 6
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,51 +204,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear structure
+        comment: 'Flat: imports -> data -> reference line generation -> chart construction
+          -> save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set. Data is also deterministic.
       - id: CQ-03
         name: Clean Imports
-        score: 0
+        score: 2
         max: 2
-        passed: false
-        comment: Unused legend data created
+        passed: true
+        comment: All imported modules (os, sys, altair, numpy, pandas, PIL) are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated APIs
+        comment: Pre-filtering reference lines to x_domain ± X_MARGIN to prevent vl-convert
+          layout inflation is clever and well-documented. PAD-only canvas strategy
+          correctly implemented.
       - id: CQ-05
-        name: Output Correct
-        score: 0
+        name: Output & API
+        score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
+          API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Good use of alt.layer(), resolve_scale(color='shared', strokeDash='shared')
+          for unified legend across layers, detail encoding to group individual reference
+          lines, alt.Scale(domain=ALL_LABELS) to force all 6 legend entries.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses layer composition, log scale, interactive mode, tooltips
+        comment: Unified 6-label legend via shared scale domain across layers is Altair-distinctive.
+          The detail encoding for multi-line grouping without color duplication is
+          also Altair-idiomatic. Stops short of more advanced features (parameter-driven
+          interactivity, selections, transforms).
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
   - hover-tooltips
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling

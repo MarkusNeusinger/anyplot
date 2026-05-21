@@ -1,140 +1,170 @@
-""" pyplots.ai
+""" anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 68/100 | Created: 2026-01-17
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 80/100 | Updated: 2026-05-21
 """
+
+import os
+import sys
+
+
+# Running as pygal.py: remove script dir from sys.path so 'import pygal' finds the package
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or os.getcwd()) != _this_dir]
 
 import numpy as np
 import pygal
 from pygal.style import Style
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+NEUTRAL = "#1A1A1A" if THEME == "light" else "#E8E8E0"  # position-8 adaptive neutral
+
+# Position 7 (yellow #F0E442) is prohibited for thin lines on light surfaces;
+# replace with NEUTRAL for the -20°C isotherm reference line
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", NEUTRAL)
+
+# Data — realistic mid-latitude atmospheric sounding
 np.random.seed(42)
-
-# Generate realistic atmospheric sounding data
-# Pressure levels from surface (1000 hPa) to upper troposphere (100 hPa)
 pressure = np.array([1000, 925, 850, 700, 500, 400, 300, 250, 200, 150, 100])
-
-# Temperature profile (typical mid-latitude sounding, decreasing with altitude)
 temperature = np.array([25, 20, 15, 5, -15, -28, -45, -52, -58, -62, -55])
-
-# Dewpoint profile (always <= temperature, converges in clouds)
 dewpoint = np.array([18, 15, 12, -2, -22, -38, -55, -60, -65, -70, -65])
 
-# For Skew-T Log-P: Y-axis uses log of pressure
-# log_p will be 0 at 1000 hPa and positive going up to lower pressures
 log_p = np.log10(1000.0 / pressure)
-
-# Apply skew transformation to temperature (45 degree isotherms)
 skew_factor = 35
 temp_skewed = temperature + skew_factor * log_p
 dewpoint_skewed = dewpoint + skew_factor * log_p
 
-# Create custom style with LARGER fonts for 4800x2700 canvas
+# Physical constants for moist adiabatic lapse rate
+LV = 2.501e6  # Latent heat of vaporization (J/kg)
+RD = 287.05  # Gas constant for dry air (J/kg/K)
+RV = 461.5  # Gas constant for water vapor (J/kg/K)
+CP = 1004.0  # Specific heat of dry air (J/kg/K)
+G = 9.81  # Gravity (m/s^2)
+
+
+def moist_adiabat(T0_C, pressures):
+    """Integrate proper moist adiabatic lapse rate (MALR) along pressure levels."""
+    temps = [T0_C]
+    T = T0_C + 273.15
+    for i in range(len(pressures) - 1):
+        p = pressures[i]
+        es = 6.112 * np.exp(17.67 * (T - 273.15) / ((T - 273.15) + 243.5))
+        ws = 0.622 * es / (p - es)  # saturation mixing ratio kg/kg (p, es both hPa)
+        malr = G * (1 + LV * ws / (RD * T)) / (CP + LV**2 * ws / (RV * T**2))  # K/m
+        # dT/dp_hPa = MALR * Rd*T / (g*p_hPa) — hPa units cancel via hydrostatic
+        T += malr * RD * T / (G * p) * (pressures[i + 1] - p)
+        temps.append(T - 273.15)
+    return np.array(temps)
+
+
+# Style
 custom_style = Style(
-    background="white",
-    plot_background="#f8f9fa",
-    foreground="#2c3e50",
-    foreground_strong="#1a252f",
-    foreground_subtle="#5d6d7e",
-    colors=(
-        "#c0392b",  # Temperature - dark red
-        "#2471a3",  # Dewpoint - blue
-        "#229954",  # Dry adiabat - green
-        "#7d3c98",  # Moist adiabat - purple
-        "#d35400",  # Mixing ratio - orange
-        "#95a5a6",  # Isotherms - gray
-    ),
-    title_font_size=72,
-    label_font_size=44,
-    major_label_font_size=40,
-    legend_font_size=40,
-    value_font_size=32,
-    stroke_width=4,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
-# Create mapping from log_p values to pressure labels
-# These values correspond to standard pressure levels
-log_p_values = [0, 0.033, 0.07, 0.155, 0.301, 0.398, 0.523, 0.602, 0.699, 0.824, 1.0]
-p_labels = ["1000", "925", "850", "700", "500", "400", "300", "250", "200", "150", "100"]
+# Reduced Y-axis label set — skip 925/400/250/150 to avoid crowding at log-compressed bottom
+key_pressures = [1000, 850, 700, 500, 300, 200, 100]
+y_labels = [{"value": float(np.log10(1000.0 / p)), "label": str(p)} for p in key_pressures]
 
-# Create XY chart with explicit margin for legend visibility
+# Plot
 chart = pygal.XY(
-    width=4800,
-    height=3000,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="skewt-logp-atmospheric · pygal · pyplots.ai",
+    title="skewt-logp-atmospheric · python · pygal · anyplot.ai",
     x_title="Temperature (°C, skewed 45°)",
     y_title="Pressure (hPa)",
     show_dots=True,
-    dots_size=8,
-    stroke_style={"width": 5},
+    dots_size=6,
+    stroke_style={"width": 4},
     show_x_guides=True,
     show_y_guides=True,
-    x_label_rotation=0,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    legend_box_size=28,
-    margin_bottom=180,
     range=(0, 1.02),
-    xrange=(-50, 75),
-    y_labels=[{"value": v, "label": lbl} for v, lbl in zip(log_p_values, p_labels, strict=False)],
+    xrange=(-50, 40),  # narrowed from 75 — reference lines reach at most x≈35
+    y_labels=y_labels,
     truncate_legend=-1,
+    legend_box_size=28,
+    margin_bottom=220,
 )
 
-# Add temperature profile (solid red line with markers)
+# Temperature profile (green #009E73 — series 1, primary data)
 temp_points = [(float(temp_skewed[i]), float(log_p[i])) for i in range(len(pressure))]
-chart.add("Temperature", temp_points, stroke_style={"width": 6})
+chart.add("Temperature", temp_points, stroke_style={"width": 7})
 
-# Add dewpoint profile (blue dashed line with markers)
+# Dewpoint profile (vermillion #D55E00 — series 2)
 dewpoint_points = [(float(dewpoint_skewed[i]), float(log_p[i])) for i in range(len(pressure))]
-chart.add("Dewpoint", dewpoint_points, stroke_style={"width": 5, "dasharray": "15,8"})
+chart.add("Dewpoint", dewpoint_points, stroke_style={"width": 6, "dasharray": "15,8"})
 
-# Add ONE dry adiabat (θ=300K) - green curved line
+# Dry adiabat θ=300K (blue #0072B2 — series 3)
 theta = 300
 dry_adiabat_points = []
-for p in np.linspace(1000, 100, 25):
+for p in np.linspace(1000, 100, 30):
     lp = np.log10(1000.0 / p)
-    T_adiabat = theta * (p / 1000.0) ** 0.286 - 273.15
-    T_skewed = T_adiabat + skew_factor * lp
-    if -50 <= T_skewed <= 75:
-        dry_adiabat_points.append((float(T_skewed), float(lp)))
+    t_adiabat = theta * (p / 1000.0) ** 0.286 - 273.15
+    t_skewed = t_adiabat + skew_factor * lp
+    if -50 <= t_skewed <= 40:
+        dry_adiabat_points.append((float(t_skewed), float(lp)))
 chart.add("Dry Adiabat θ=300K", dry_adiabat_points, show_dots=False, stroke_style={"width": 3, "dasharray": "6,4"})
 
-# Add ONE moist adiabat (starting at 20°C) - purple curved line
+# Moist adiabat (reddish purple #CC79A7 — series 4, proper MALR integration)
+moist_pressures = np.linspace(1000, 150, 25)
+moist_temps = moist_adiabat(20.0, moist_pressures)
 moist_points = []
-t_current = 20.0
-for p in np.linspace(1000, 150, 20):
+for T_c, p in zip(moist_temps, moist_pressures, strict=False):
     lp = np.log10(1000.0 / p)
-    T_skewed = t_current + skew_factor * lp
-    if -50 <= T_skewed <= 75:
-        moist_points.append((float(T_skewed), float(lp)))
-    t_current -= 4.0
+    t_skewed = T_c + skew_factor * lp
+    if -50 <= t_skewed <= 40:
+        moist_points.append((float(t_skewed), float(lp)))
 chart.add("Moist Adiabat", moist_points, show_dots=False, stroke_style={"width": 3, "dasharray": "10,5"})
 
-# Add ONE mixing ratio line (r=10 g/kg) - orange nearly vertical line
+# Mixing ratio r=10g/kg (orange #E69F00 — series 5)
 mr_points = []
 mr = 10
-for p in np.linspace(1000, 300, 15):
+for p in np.linspace(1000, 300, 20):
     lp = np.log10(1000.0 / p)
     e = mr * p / (622 + mr)
     if e > 0:
         td = (243.5 * np.log(e / 6.112)) / (17.67 - np.log(e / 6.112))
         td_skewed = td + skew_factor * lp
-        if -50 <= td_skewed <= 75:
+        if -50 <= td_skewed <= 40:
             mr_points.append((float(td_skewed), float(lp)))
 chart.add("Mixing Ratio r=10g/kg", mr_points, show_dots=False, stroke_style={"width": 2, "dasharray": "4,6"})
 
-# Add isotherms (0°C and -20°C) - gray diagonal lines showing the skew
-for isotherm in [0, -20]:
-    isotherm_points = []
-    for lp in np.linspace(0, 1.0, 15):
-        T_skewed = isotherm + skew_factor * lp
-        if -50 <= T_skewed <= 75:
-            isotherm_points.append((float(T_skewed), float(lp)))
-    chart.add(f"{isotherm}°C Isotherm", isotherm_points, show_dots=False, stroke_style={"width": 2, "dasharray": "8,4"})
+# 0°C Isotherm (sky blue #56B4E9 — series 6)
+iso_0_points = []
+for lp in np.linspace(0, 1.0, 20):
+    t_skewed = 0 + skew_factor * lp
+    if -50 <= t_skewed <= 40:
+        iso_0_points.append((float(t_skewed), float(lp)))
+chart.add("0°C Isotherm", iso_0_points, show_dots=False, stroke_style={"width": 2, "dasharray": "8,4"})
 
-# Render to PNG and HTML
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# -20°C Isotherm (NEUTRAL — series 7, replaces yellow which has insufficient contrast on light bg)
+iso_m20_points = []
+for lp in np.linspace(0, 1.0, 20):
+    t_skewed = -20 + skew_factor * lp
+    if -50 <= t_skewed <= 40:
+        iso_m20_points.append((float(t_skewed), float(lp)))
+chart.add("-20°C Isotherm", iso_m20_points, show_dots=False, stroke_style={"width": 2, "dasharray": "8,4"})
+
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
