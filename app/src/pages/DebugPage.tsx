@@ -4,10 +4,14 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
 
 import { DEBUG_API_URL, LIBRARIES, LIB_ABBREV, LIB_TO_LANG } from '../constants';
 import { specPath } from '../utils/paths';
 import { SectionHeader } from '../components/SectionHeader';
+import { useCopyCode } from '../hooks';
 import { typography, colors, semanticColors, fontSize } from '../theme';
 
 // ============================================================================
@@ -159,6 +163,34 @@ function formatDateShort(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return iso;
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// Builds a Claude-Code-ready prompt from a feedback message. Pasted into the
+// CLI it gives Claude the page URL, the user's words, and a clear three-step
+// plan (analyse/reproduce → implement → open PR) so triage flows from the
+// debug page straight into a working session.
+function buildClaudePrompt(
+  message: string,
+  path: string | null,
+  reaction: string | null,
+): string {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const url = path ? `${origin}${path}` : origin || '(unknown URL)';
+  const kind =
+    reaction === 'bug' ? 'bug report'
+    : reaction === 'idea' ? 'feature request'
+    : reaction === 'thumbs_down' ? 'negative feedback'
+    : reaction === 'thumbs_up' ? 'positive feedback'
+    : 'feedback';
+  const quoted = message.split('\n').map(line => `> ${line}`).join('\n');
+  return `A user left the following ${kind} on ${url}:
+
+${quoted}
+
+Please:
+1. Analyze the report and reproduce the issue locally (or scope the feature request).
+2. Implement a fix or the requested change.
+3. Open a pull request with the proposed solution.`;
 }
 
 // Styled native input / select / button using CSS vars
@@ -937,17 +969,22 @@ export function DebugPage() {
                   </Typography>
                 )}
               </Box>
-              <Box
-                component="select"
-                value={m.status}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  updateFeedbackStatus(m.id, e.target.value as FeedbackStatus)
-                }
-                sx={{ ...nativeControlSx, cursor: 'pointer', alignSelf: 'start' }}
-              >
-                {FEEDBACK_STATUS_OPTIONS.map(s => (
-                  <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                ))}
+              <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'start' }}>
+                {m.message && (
+                  <CopyClaudePromptButton message={m.message} path={m.path} reaction={m.reaction} />
+                )}
+                <Box
+                  component="select"
+                  value={m.status}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    updateFeedbackStatus(m.id, e.target.value as FeedbackStatus)
+                  }
+                  sx={{ ...nativeControlSx, cursor: 'pointer', alignSelf: 'start' }}
+                >
+                  {FEEDBACK_STATUS_OPTIONS.map(s => (
+                    <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                  ))}
+                </Box>
               </Box>
             </Box>
           ))}
@@ -1253,6 +1290,28 @@ function FeedbackTopList({ title, items, accent }: { title: string; items: Feedb
         </Box>
       )}
     </Box>
+  );
+}
+
+function CopyClaudePromptButton({ message, path, reaction }: { message: string; path: string | null; reaction: string | null }) {
+  const { copied, copyToClipboard } = useCopyCode();
+  return (
+    <Tooltip title={copied ? 'copied — paste into Claude Code' : 'copy prompt for Claude Code'}>
+      <IconButton
+        onClick={() => copyToClipboard(buildClaudePrompt(message, path, reaction))}
+        aria-label="Copy Claude Code prompt"
+        size="small"
+        sx={{
+          alignSelf: 'start',
+          color: copied ? colors.success : 'var(--ink-muted)',
+          border: '1px solid var(--rule)',
+          borderRadius: 1,
+          '&:hover': { bgcolor: 'var(--bg-surface)', color: colors.primary },
+        }}
+      >
+        {copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+      </IconButton>
+    </Tooltip>
   );
 }
 
