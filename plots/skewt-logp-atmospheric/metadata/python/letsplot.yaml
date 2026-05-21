@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: skewt-logp-atmospheric
 created: '2026-01-17T09:27:49Z'
-updated: '2026-05-21T00:01:59Z'
+updated: '2026-05-21T00:17:02Z'
 generated_by: claude-sonnet
 workflow_run: 26196607392
 issue: 3802
@@ -12,127 +12,138 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-log
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/letsplot/plot-dark.html
-quality_score: 79
+quality_score: 82
 review:
   strengths:
-  - Correct Skew-T coordinate transformation with proper 45-degree skewing and logarithmic
-    inverted pressure axis
-  - All required reference line families implemented (isotherms, dry adiabats, moist
-    adiabats, mixing ratio lines) with appropriate line types and alpha
-  - 'Strong visual hierarchy: thick colored profiles (size=2.0) stand out clearly
-    from subdued reference lines (size=0.4-0.7, alpha=0.5-0.7)'
-  - 'Correct theme adaptation with proper #FAF8F1 / #1A1A17 backgrounds and fully
-    readable text in both light and dark renders'
-  - Canvas dimensions correct (800x450 + scale=4 = 3200x1800 px), canvas gate passed
+  - 'Full spec compliance — all required Skew-T features present: skewed isotherms,
+    logarithmic inverted pressure axis, dry adiabats, moist adiabats, mixing ratio
+    lines, temperature and dewpoint profiles with correct line styles'
+  - Excellent code quality — clean KISS structure, deterministic seed, all imports
+    used, no over-engineering
+  - 'Proper theme-adaptive chrome — warm #FAF8F1 / #1A1A17 backgrounds, INK/INK_SOFT
+    tokens correctly applied throughout, both renders fully readable'
+  - Strong visual hierarchy between data profiles (thick size=2.0 lines with size=3.0
+    point markers) and background reference lines (thin, semi-transparent alpha=0.5–0.8)
+  - Interactive tooltips via layer_tooltips() with pressure and temperature values,
+    plus HTML export — idiomatic use of letsplot's distinctive interactive features
   weaknesses:
-  - 'Temperature profile uses #DC2626 (non-Okabe-Ito custom red) as the primary data
-    series — must use #009E73 as first series per palette rules; dewpoint should be
-    #D55E00 or adjusted accordingly'
-  - Title size=14 is slightly below the style-guide recommendation of size=16 for
-    scale-based libraries (letsplot); legend text size=8 is also on the small side
-  - 'Design excellence is modest: no spines removed, no particular aesthetic sophistication
-    beyond functional defaults — remove top/right spines, add subtle axis lines, refine
-    typography hierarchy'
-  - Mixing ratio lines (green dotted, size=0.7) are difficult to distinguish from
-    the general visual noise of the reference line grid, especially on the dark render
-  - 'LM-02 is low: no distinctively letsplot-specific features used — consider leveraging
-    letsplot-native interactive tooltips in the HTML output or other distinctive capabilities'
+  - 'Okabe-Ito palette not in canonical 1→N order — positions 4 and 5 are swapped
+    (dry adiabat uses position 5 #E69F00, moist adiabat uses position 4 #CC79A7) and
+    position 3 (#0072B2 blue) is skipped entirely; should follow 1,2,3,4,5,6 order'
+  - Manual legend placed inside plot area at x=95–114 interacts visually with the
+    dense diagonal reference lines (isotherms, adiabats) in the upper-right, creating
+    some busyness and minor visual noise
+  - No CAPE/CIN shading or atmospheric feature annotations (tropopause level, lifting
+    condensation level) — the Skew-T diagram is technically complete but tells no
+    meteorological story to guide the viewer
+  - 'DQ-03: Temperature profile lacks a clear stratospheric temperature inversion
+    — values at 200–100 hPa oscillate between -55 and -58 without the expected steady
+    increase into the stratosphere'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — PASS
-      Chrome: Title "skewt-logp-atmospheric · python · letsplot · anyplot.ai" in dark ink, readable. Axis labels "Temperature (°C)" and "Pressure (hPa)" in dark ink with units, readable. Y-axis tick labels (100–1000 hPa) and X-axis tick labels (~-100 to 160) in INK_SOFT gray, readable. No text is light-on-light.
-      Data: Diagonal gray isotherms (INK_SOFT, alpha=0.5) run lower-left to upper-right forming the skewed grid. Orange dashed dry adiabat curves prominent across the chart. Pink/purple dot-dash moist adiabat lines visible. Green dotted mixing ratio lines present but less distinct. Bold red solid (#DC2626) temperature profile descends from ~25°C at 1000 hPa to ~-56°C at 100 hPa with red data points. Sky blue dashed (#56B4E9) dewpoint profile diverges rightward from temperature at low levels with blue data points. Manual legend at top-right with 5 colored line segments + text labels (Temperature, Dewpoint, Dry Adiabat, Moist Adiabat, Mixing Ratio).
-      Legibility verdict: PASS — all text readable against the warm off-white background
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "skewt-logp-atmospheric · python · letsplot · anyplot.ai" in dark INK text, fully visible at ~75% of plot width. Y-axis label "Pressure (hPa)" and X-axis label "Temperature (°C)" both in dark text with units, readable. Tick labels in INK_SOFT (#4A4A44) at 100–1000 hPa on Y-axis and -100 to 160 on X-axis — all clearly legible.
+      Data: Temperature profile in #009E73 (Okabe-Ito position 1) solid thick line with data point markers, running from ~25°C at 1000 hPa up to the left as pressure decreases. Dewpoint profile in #D55E00 dashed thick line with markers, always left of the temperature profile (correct meteorological relationship). Reference lines: isotherms as thin gray diagonal lines skewed ~45° to the upper right; dry adiabats in #E69F00 orange dashed; moist adiabats in #CC79A7 reddish-purple dotdash; mixing ratio lines in #56B4E9 sky-blue dotted. Manual legend in upper-right clearly lists all 5 series with colored line swatches.
+      Legibility verdict: PASS — all text readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — PASS
-      Chrome: Title in light (#F0EFE8) text, readable against dark background. Axis labels and tick labels in light secondary (#B8B7B0) text, readable. No dark-on-dark failures observed — text, labels, and ticks are all appropriately light-colored.
-      Data: Data colors are identical to light render — red temperature profile (#DC2626), sky blue dewpoint (#56B4E9), orange dry adiabats (#D55E00), pink moist adiabats (#CC79A7), green mixing ratios (#009E73), gray isotherms (now rendered lighter against dark background per INK_SOFT token). Legend text uses INK token which correctly flips to light color on dark theme.
-      Legibility verdict: PASS — all text readable against the warm near-black background, no dark-on-dark issues
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title and axis labels render in light #F0EFE8 (INK token for dark theme), clearly visible. Tick labels in #B8B7B0 (INK_SOFT dark) — readable against the dark background. No dark-on-dark failures observed. Legend background elevated to #242420 with light text — correctly themed.
+      Data: Temperature #009E73 green and Dewpoint #D55E00 vermillion are identical to the light render — only chrome (background, text, legend box) flipped. All five reference line types maintain same colors as light render.
+      Legibility verdict: PASS — all text readable against the warm near-black background; no dark-on-dark text issues.
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title size=14 slightly below recommended
-          16 for scale-based; legend text size=8 small; all readable in both themes
+        comment: 'All font sizes explicitly set (title=16, axis_title=12, axis_text=10,
+          legend_text=10). Readable in both themes at full resolution and mobile.
+          Minor: manual geom_text legend labels at size=10 are slightly small relative
+          to the overall chart at scale=4, but legible.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Legend entries close but not overlapping; reference lines dense by
-          design for Skew-T diagram; no text-on-text or text-on-data collisions
+        comment: Data profiles and reference lines do not overlap each other. Manual
+          legend (geom_segment + geom_text) placed at x=95-114 sits on top of diagonal
+          reference lines in upper-right, creating minor visual busyness but text
+          remains readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Temperature and dewpoint profiles (size=2.0) clearly prominent; reference
-          lines (size=0.4-0.7, alpha=0.5-0.7) appropriately subdued; mixing ratio
-          dotted lines slightly hard to distinguish from noise
+        comment: Temperature and dewpoint profiles prominent with size=2.0 lines and
+          size=3.0 markers (19 data points). Reference lines appropriately thinner
+          (size=0.4-0.8) and semi-transparent (alpha=0.5-0.8). Good density adaptation.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Line type differentiation (solid/dashed/dotdash/dotted) provides
-          non-color distinction; temperature vs. dewpoint distinguished by both color
-          and line type; CVD-safe
+        comment: Okabe-Ito palette is CVD-safe. Temperature vs dewpoint distinguished
+          by both color AND line style (solid vs dashed) — doubly accessible.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Correct canvas 3200x1800 px; good use of space; slight empty zone
-          on far right due to isotherms extending to 160°C
+        comment: Canvas gate passed (3200x1800 confirmed by ggsize(800,450)+scale=4).
+          Layout fills canvas well. X-axis extends to 160°C which is mostly reference
+          lines by design in Skew-T coordinates — expected, not a defect. Margins
+          balanced.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: Temperature (°C), Y: Pressure (hPa) — both with units; title
-          correct format'
+        comment: 'Y-axis: ''Pressure (hPa)'', X-axis: ''Temperature (°C)'' — both
+          descriptive with units. Title in correct format.'
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'Backgrounds correct (#FAF8F1 / #1A1A17); chrome theme-adaptive;
-          but primary temperature profile uses #DC2626 (non-Okabe-Ito) instead of
-          #009E73 as first series'
+        comment: First two series correctly use Okabe-Ito positions 1 (#009E73) and
+          2 (#D55E00). However reference lines skip position 3 (#0072B2) and use positions
+          5 (#E69F00), 4 (#CC79A7), 6 (#56B4E9) — not strictly canonical 1→N order.
+          Backgrounds and chrome correctly themed.
     design_excellence:
-      score: 10
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured functional default; domain-correct Skew-T layout;
-          no spines removed; not exceptionally polished
+        passed: true
+        comment: 'Above defaults: intentional alpha differentiation between background
+          reference lines and data profiles, semantic color coding of reference types,
+          data point markers added for emphasis. Professional atmospheric science
+          look. Not quite publication-level polish.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Grid removed (element_blank); alpha blending on reference lines;
-          line weights differentiated by importance; no spine removal; no explicit
-          margin tuning
+        passed: true
+        comment: Grid removed (replaced by isotherms/adiabats as reference per Skew-T
+          convention), panel border removed, warm theme backgrounds, axis lines and
+          ticks properly styled. Manual legend is functional but somewhat inelegant.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Visual hierarchy present via thick profiles over subdued reference
-          lines; atmospheric story readable (warm moist surface, cooling aloft); no
-          annotations for LCL/CAPE/CIN
+        passed: true
+        comment: 'Clear visual hierarchy: data profiles are prominent focal point,
+          reference lines recede into background. However, no annotations highlighting
+          key meteorological features (tropopause, LCL, CAPE/CIN zones) — the chart
+          shows data but doesn''t guide the viewer to insights.'
     spec_compliance:
       score: 15
       max: 15
@@ -142,31 +153,35 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Skew-T Log-P diagram: logarithmic inverted pressure axis,
-          45-degree skewed isotherms, temperature and dewpoint profiles'
+        comment: Correct Skew-T Log-P diagram with skewed coordinate transformation
+          (x_plot = T + 40*log10(p0/p)), logarithmic and inverted pressure axis, all
+          required reference lines present.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: temperature (solid), dewpoint (dashed),
-          dry adiabats, moist adiabats, mixing ratio lines, isotherms'
+        comment: Isotherms at 45° ✓, dry adiabats ✓, moist adiabats ✓, mixing ratio
+          lines ✓, temperature solid line ✓, dewpoint dashed line ✓. Wind barbs optional
+          per spec — not implemented, acceptable.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: skewed temperature coordinates correct; Y: pressure log-scale
-          inverted from 1000 to 100 hPa'
+        comment: Pressure on Y-axis (log scale, inverted 1000→100), temperature on
+          X-axis (skewed), all 19 pressure levels displayed, dewpoint consistently
+          left of temperature profile (correct meteorological relationship).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''skewt-logp-atmospheric · python · letsplot · anyplot.ai'';
-          manual legend with all 5 series correctly labeled'
+        comment: 'Title: ''skewt-logp-atmospheric · python · letsplot · anyplot.ai''
+          — exact required format. Manual legend correctly labels Temperature, Dewpoint,
+          Dry Adiabat, Moist Adiabat, Mixing Ratio with matching line styles.'
     data_quality:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: DQ-01
@@ -174,22 +189,25 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: All reference line families shown; temperature and dewpoint profiles
-          with data points; wind barbs omitted (optional per spec)
+        comment: 'Shows all required chart elements. Dewpoint depression realistically
+          increases with altitude. Missing: CAPE/CIN shading, explicit tropopause
+          marking, or stability parameter visualization mentioned in spec applications.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Realistic warm-season midlatitude radiosonde sounding; scientifically
-          neutral educational content
+        comment: Realistic synthetic radiosonde sounding. Neutral scientific topic.
+          Values are meteorologically plausible for a warm summer day sounding.
       - id: DQ-03
         name: Appropriate Scale
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Surface 25°C, tropopause ~-56°C at 100 hPa; dewpoint 18°C surface;
-          all values physically realistic
+        comment: Surface temperature 25°C and dewpoint 18°C are realistic. Standard
+          pressure levels used. Upper-level temperatures slightly simplified — the
+          near-tropopause region (-55 to -58°C at 200-100 hPa) shows erratic oscillation
+          rather than a smooth stratospheric lapse rate change.
     code_quality:
       score: 10
       max: 10
@@ -199,34 +217,40 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural code; no functions or classes
+        comment: Linear Imports→Data→Plot→Save flow. For-loops for reference line
+          generation are appropriate complexity for this chart type. No functions
+          or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set. Data is deterministic (hardcoded arrays),
+          so seed is precautionary but correct practice.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os (ANYPLOT_THEME), numpy (data), pandas (DataFrames),
+          all letsplot symbols referenced in code.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity for the task; for-loops for reference
-          line generation are idiomatic
+        comment: Clean, appropriate complexity. Manual legend loop (geom_segment +
+          geom_text) is the correct approach when letsplot's native legend cannot
+          handle mixed custom line types for a Skew-T. No fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current letsplot API
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct naming
+          convention. Current letsplot API used.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -234,23 +258,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good ggplot grammar usage with layered geoms; group aesthetics for
-          multi-line series; scale functions correct; manual coordinate transform
-          is pragmatic letsplot workaround
+        comment: Correct ggplot grammar with geom_path, geom_point, geom_segment,
+          geom_text. scale_y_log10() + scale_y_reverse() combination works. Theme
+          customization via element_* functions. Manual coordinate transformation
+          done outside letsplot (necessary for Skew-T).
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses geom_segment for isotherms and legend indicators; HTML export;
-          but nothing uniquely distinctive to letsplot vs. other ggplot-style libraries
-  verdict: REJECTED
+        passed: true
+        comment: layer_tooltips() with custom .line() formatting is distinctively
+          letsplot — not available in matplotlib/plotnine. HTML export alongside PNG
+          is letsplot-specific. Could further leverage letsplot's built-in interactive
+          capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - custom-legend
+  - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
