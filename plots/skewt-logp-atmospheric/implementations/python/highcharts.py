@@ -1,344 +1,348 @@
-""" pyplots.ai
+""" anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-17
+Library: highcharts unknown | Python 3.13.13
+Quality: 82/100 | Updated: 2026-05-21
 """
 
+import os
 import tempfile
 import time
+import urllib.request
 from pathlib import Path
 
 import numpy as np
+from highcharts_core.chart import Chart
+from highcharts_core.options import HighchartsOptions
+from highcharts_core.options.series.area import LineSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Generate synthetic atmospheric sounding data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+PAGE_BG_RGB = (250, 248, 241) if THEME == "light" else (26, 26, 23)
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette — first series always #009E73
+TEMP_COLOR = "#009E73"  # green — temperature profile (first/primary)
+DEW_COLOR = "#D55E00"  # vermillion — dewpoint profile
+DRY_AD_COLOR = "#0072B2"  # blue — dry adiabats
+MOIST_AD_COLOR = "#CC79A7"  # pink — moist adiabats
+MIX_COLOR = "#E69F00"  # orange — mixing ratio lines
+
+# Pressure/temperature extents
+TEMP_MIN, TEMP_MAX = -80, 50
+P_MIN, P_MAX = 100, 1000
+LOG_PMIN = np.log10(P_MIN)  # 2.0
+LOG_PMAX = np.log10(P_MAX)  # 3.0
+LOG_PRANGE = LOG_PMAX - LOG_PMIN  # 1.0
+SKEW_FACTOR = float(TEMP_MAX - TEMP_MIN)  # 130.0 °C — full-width skew
+
+# Sounding data — standard atmospheric profile
 np.random.seed(42)
-
-# Standard pressure levels from surface (1000 hPa) to upper troposphere (100 hPa)
 pressure = np.array([1000, 925, 850, 700, 500, 400, 300, 250, 200, 150, 100])
-
-# Typical temperature profile (decreasing with altitude, with tropopause inversion)
 temperature = np.array([28, 22, 15, 4, -18, -32, -45, -52, -56, -56, -55])
-
-# Dewpoint profile (typically lower than temperature, showing moisture content)
 dewpoint = np.array([20, 16, 10, -2, -25, -42, -55, -62, -70, -75, -80])
 
-# Chart dimensions
-WIDTH = 4800
-HEIGHT = 2700
+# Reference pressure array for background lines
+p_fine = np.linspace(P_MAX, P_MIN, 80)
+yfrac_fine = (np.log10(p_fine) - LOG_PMIN) / LOG_PRANGE  # 0=top(100 hPa), 1=bottom(1000 hPa)
 
-# Plot area margins (in pixels)
-MARGIN_LEFT = 400
-MARGIN_RIGHT = 400
-MARGIN_TOP = 200
-MARGIN_BOTTOM = 200
+# Sounding yfrac for profile data
+yfrac_s = (np.log10(pressure) - LOG_PMIN) / LOG_PRANGE
 
-# Plot area dimensions
-PLOT_WIDTH = WIDTH - MARGIN_LEFT - MARGIN_RIGHT
-PLOT_HEIGHT = HEIGHT - MARGIN_TOP - MARGIN_BOTTOM
+# Download Highcharts JS (required — headless Chrome cannot load CDN from file://)
+highcharts_url = "https://cdn.jsdelivr.net/npm/highcharts@latest/highcharts.js"
+with urllib.request.urlopen(highcharts_url, timeout=30) as response:
+    highcharts_js = response.read().decode("utf-8")
 
-# Temperature range for x-axis (in degrees C)
-TEMP_MIN = -80
-TEMP_MAX = 50
+# Create Highcharts chart
+chart = Chart(container="container")
+chart.options = HighchartsOptions()
 
-# Pressure range (logarithmic)
-P_MIN = 100
-P_MAX = 1000
+chart.options.chart = {
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "plotBackgroundColor": ELEVATED_BG,
+    "marginLeft": 150,
+    "marginRight": 80,
+    "marginTop": 110,
+    "marginBottom": 130,
+    "style": {"fontFamily": "Arial, sans-serif"},
+}
 
-# Skew angle (45 degrees in radians)
-SKEW_ANGLE = 45 * np.pi / 180
+chart.options.title = {
+    "text": "skewt-logp-atmospheric · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "56px", "color": INK, "fontWeight": "bold"},
+    "margin": 20,
+}
 
+chart.options.subtitle = {"text": ""}
 
-def pressure_to_y(p):
-    """Convert pressure to y coordinate (logarithmic scale, 1000 hPa at bottom)."""
-    log_p = np.log10(p)
-    log_min = np.log10(P_MIN)
-    log_max = np.log10(P_MAX)
-    # Higher pressure (1000 hPa) at bottom (higher y), lower pressure (100 hPa) at top
-    frac = (log_p - log_min) / (log_max - log_min)
-    return MARGIN_TOP + frac * PLOT_HEIGHT
+# X-axis: skewed temperature coordinates
+# At P_MAX=1000 hPa (bottom): x = T (no skew offset)
+# At P_MIN=100 hPa (top): x = T - 130 (full SKEW_FACTOR offset leftward)
+# Tick positions at 1000 hPa, where x == T exactly
+x_tick_positions = [float(t) for t in range(-80, 60, 10)]
 
+chart.options.x_axis = {
+    "min": TEMP_MIN - SKEW_FACTOR,  # -210
+    "max": float(TEMP_MAX),  # 50
+    "startOnTick": False,
+    "endOnTick": False,
+    "tickPositions": x_tick_positions,
+    "title": {"text": "Temperature (°C)", "style": {"fontSize": "48px", "color": INK_SOFT}, "margin": 14},
+    "labels": {"style": {"fontSize": "40px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineWidth": 0,
+}
 
-def temp_to_x_at_pressure(temp, p):
-    """Convert temperature to x coordinate with skewing based on pressure."""
-    # Base x position (no skew)
-    frac = (temp - TEMP_MIN) / (TEMP_MAX - TEMP_MIN)
-    base_x = MARGIN_LEFT + frac * PLOT_WIDTH
-
-    # Apply skew based on vertical position (isotherms skew right at lower altitudes/higher pressure)
-    y = pressure_to_y(p)
-    y_frac = (y - MARGIN_TOP) / PLOT_HEIGHT
-    skew_offset = (1 - y_frac) * PLOT_WIDTH * np.tan(SKEW_ANGLE)
-
-    return base_x - skew_offset
-
-
-# Build SVG elements for the skewed grid and data
-
-svg_elements = []
-
-# Background
-svg_elements.append(f'<rect x="0" y="0" width="{WIDTH}" height="{HEIGHT}" fill="#f8f9fa"/>')
-
-# Plot area background
-svg_elements.append(
-    f'<rect x="{MARGIN_LEFT}" y="{MARGIN_TOP}" width="{PLOT_WIDTH}" height="{PLOT_HEIGHT}" fill="white" stroke="#333" stroke-width="3"/>'
-)
-
-# Isotherms (skewed temperature lines) - every 10 degrees
-isotherm_temps = np.arange(-80, 60, 10)
-for temp in isotherm_temps:
-    # Draw line from high pressure (bottom) to low pressure (top)
-    x1 = temp_to_x_at_pressure(temp, P_MAX)
-    y1 = pressure_to_y(P_MAX)  # Bottom (high pressure)
-    x2 = temp_to_x_at_pressure(temp, P_MIN)
-    y2 = pressure_to_y(P_MIN)  # Top (low pressure)
-
-    # Draw if any part is visible
-    svg_elements.append(
-        f'<line x1="{x1:.1f}" y1="{y1:.1f}" x2="{x2:.1f}" y2="{y2:.1f}" '
-        f'stroke="#aaa" stroke-width="1" stroke-dasharray="5,5" '
-        f'clip-path="url(#plotArea)"/>'
-    )
-
-    # Label at bottom (high pressure end) if visible
-    if MARGIN_LEFT < x1 < MARGIN_LEFT + PLOT_WIDTH:
-        svg_elements.append(
-            f'<text x="{x1:.1f}" y="{y1 + 50:.1f}" font-size="28" fill="#666" text-anchor="middle">{int(temp)}</text>'
-        )
-
-# Isobars (horizontal pressure lines)
+# Y-axis: pressure (hPa), logarithmic, reversed (1000 hPa at bottom)
 isobar_pressures = [1000, 850, 700, 500, 400, 300, 200, 150, 100]
-for p in isobar_pressures:
-    y = pressure_to_y(p)
-    svg_elements.append(
-        f'<line x1="{MARGIN_LEFT}" y1="{y:.1f}" x2="{MARGIN_LEFT + PLOT_WIDTH}" y2="{y:.1f}" '
-        f'stroke="#aaa" stroke-width="1"/>'
-    )
-    svg_elements.append(
-        f'<text x="{MARGIN_LEFT - 20}" y="{y + 10:.1f}" font-size="28" fill="#333" text-anchor="end">{int(p)}</text>'
-    )
 
-# Dry adiabats (lines of constant potential temperature)
-# Simplified: using approximate dry adiabatic lapse rate
-dry_adiabat_start_temps = np.arange(-40, 60, 10)
-for start_temp in dry_adiabat_start_temps:
-    points = []
-    pressures = np.linspace(P_MAX, P_MIN, 50)
-    for p in pressures:
-        # Dry adiabatic temperature change: T = T0 * (P/P0)^(R/Cp)
-        # Simplified: T decreases ~10C per 100 hPa decrease
-        theta = start_temp + 273.15  # Potential temperature at 1000 hPa
-        temp = theta * (p / 1000) ** 0.286 - 273.15
-        x = temp_to_x_at_pressure(temp, p)
-        y = pressure_to_y(p)
-        if MARGIN_LEFT <= x <= MARGIN_LEFT + PLOT_WIDTH and MARGIN_TOP <= y <= MARGIN_TOP + PLOT_HEIGHT:
-            points.append(f"{x:.1f},{y:.1f}")
+chart.options.y_axis = {
+    "type": "logarithmic",
+    "reversed": True,
+    "min": P_MIN,
+    "max": P_MAX,
+    "startOnTick": False,
+    "endOnTick": False,
+    "tickPositions": isobar_pressures,
+    "allowDecimals": False,
+    "title": {"text": "Pressure (hPa)", "style": {"fontSize": "48px", "color": INK_SOFT}, "margin": 14},
+    "labels": {"style": {"fontSize": "40px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
+    "gridLineColor": INK_SOFT,
+    "gridLineWidth": 1,
+    "gridLineOpacity": 0.45,
+    "minorGridLineWidth": 0,
+}
 
-    if len(points) >= 2:
-        svg_elements.append(
-            f'<polyline points="{" ".join(points)}" fill="none" '
-            f'stroke="#cc8844" stroke-width="1.5" stroke-opacity="0.5" '
-            f'clip-path="url(#plotArea)"/>'
-        )
+chart.options.legend = {
+    "enabled": True,
+    "itemStyle": {"color": INK, "fontSize": "40px", "fontWeight": "normal"},
+    "itemHoverStyle": {"color": INK_SOFT},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "borderRadius": 8,
+    "padding": 20,
+    "align": "right",
+    "verticalAlign": "top",
+    "layout": "vertical",
+    "symbolWidth": 60,
+    "symbolHeight": 8,
+}
 
-# Moist adiabats (saturated adiabats) - simplified approximation
-moist_adiabat_start_temps = np.arange(-20, 40, 10)
-for start_temp in moist_adiabat_start_temps:
-    points = []
-    pressures = np.linspace(P_MAX, P_MIN, 50)
-    temp = start_temp
-    for i, p in enumerate(pressures):
-        if i > 0:
-            # Moist adiabatic lapse rate is less steep than dry
-            dp = pressures[i - 1] - pressures[i]
-            temp -= 0.5 * dp / 50  # Simplified moist adiabatic decrease
-        x = temp_to_x_at_pressure(temp, p)
-        y = pressure_to_y(p)
-        if MARGIN_LEFT <= x <= MARGIN_LEFT + PLOT_WIDTH and MARGIN_TOP <= y <= MARGIN_TOP + PLOT_HEIGHT:
-            points.append(f"{x:.1f},{y:.1f}")
+chart.options.tooltip = {"enabled": False}
 
-    if len(points) >= 2:
-        svg_elements.append(
-            f'<polyline points="{" ".join(points)}" fill="none" '
-            f'stroke="#44aa44" stroke-width="1.5" stroke-opacity="0.4" stroke-dasharray="10,5" '
-            f'clip-path="url(#plotArea)"/>'
-        )
+chart.options.plot_options = {
+    "line": {
+        "animation": False,
+        "enableMouseTracking": False,
+        "marker": {"enabled": False},
+        "states": {"hover": {"enabled": False}},
+    }
+}
 
-# Mixing ratio lines (approximately straight on skew-T)
-mixing_ratios = [1, 2, 4, 8, 16, 32]  # g/kg
-for mr in mixing_ratios:
-    points = []
-    pressures = np.linspace(P_MAX, 200, 30)
-    for p in pressures:
-        # Approximate dewpoint from mixing ratio
-        # Simplified formula: Td = 243.5 * ln(e/6.112) / (17.67 - ln(e/6.112))
-        # where e = mr * p / (622 + mr)
-        e = mr * p / (622 + mr)
-        if e > 0:
-            ln_ratio = np.log(e / 6.112)
-            td = 243.5 * ln_ratio / (17.67 - ln_ratio)
-            x = temp_to_x_at_pressure(td, p)
-            y = pressure_to_y(p)
-            if MARGIN_LEFT <= x <= MARGIN_LEFT + PLOT_WIDTH and MARGIN_TOP <= y <= MARGIN_TOP + PLOT_HEIGHT:
-                points.append(f"{x:.1f},{y:.1f}")
+chart.options.credits = {"enabled": False}
 
-    if len(points) >= 2:
-        svg_elements.append(
-            f'<polyline points="{" ".join(points)}" fill="none" '
-            f'stroke="#4488cc" stroke-width="1" stroke-opacity="0.4" stroke-dasharray="3,3" '
-            f'clip-path="url(#plotArea)"/>'
-        )
+# ── Series ──────────────────────────────────────────────────────────────────
 
-# Temperature profile (main sounding data)
-temp_points = []
-for p, t in zip(pressure, temperature, strict=True):
-    x = temp_to_x_at_pressure(t, p)
-    y = pressure_to_y(p)
-    temp_points.append(f"{x:.1f},{y:.1f}")
+# 1. Isotherms (skewed, every 10°C, gray dashed — background layer)
+for idx, t_val in enumerate(np.arange(-80, 60, 10)):
+    x_arr = float(t_val) - (1 - yfrac_fine) * SKEW_FACTOR
+    pts = [[float(x), float(p)] for x, p in zip(x_arr, p_fine, strict=False)]
+    s = LineSeries()
+    s.data = pts
+    s.color = INK_SOFT
+    s.line_width = 1
+    s.dash_style = "Dash"
+    s.opacity = 0.35
+    if idx == 0:
+        s.id = "isotherms"
+        s.name = "Isotherm"
+        s.show_in_legend = True
+    else:
+        s.linked_to = "isotherms"
+        s.show_in_legend = False
+    chart.add_series(s)
 
-svg_elements.append(
-    f'<polyline points="{" ".join(temp_points)}" fill="none" '
-    f'stroke="#c41e3a" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>'
-)
+# 2. Dry adiabats (Poisson equation, blue solid thin)
+for idx, st in enumerate(np.arange(-40, 60, 10)):
+    p_arr = np.linspace(P_MAX, P_MIN, 60)
+    theta = st + 273.15
+    t_arr = theta * (p_arr / 1000) ** 0.286 - 273.15
+    mask = np.isfinite(t_arr)
+    p_m, t_m = p_arr[mask], t_arr[mask]
+    if len(p_m) < 2:
+        continue
+    yfrac_m = (np.log10(p_m) - LOG_PMIN) / LOG_PRANGE
+    x_m = t_m - (1 - yfrac_m) * SKEW_FACTOR
+    pts = [[float(x), float(p)] for x, p in zip(x_m, p_m, strict=False)]
+    s = LineSeries()
+    s.data = pts
+    s.color = DRY_AD_COLOR
+    s.line_width = 1.5
+    s.opacity = 0.60
+    if idx == 0:
+        s.id = "dry_adiabats"
+        s.name = "Dry Adiabat"
+        s.show_in_legend = True
+    else:
+        s.linked_to = "dry_adiabats"
+        s.show_in_legend = False
+    chart.add_series(s)
 
-# Data points on temperature profile
-for p, t in zip(pressure, temperature, strict=True):
-    x = temp_to_x_at_pressure(t, p)
-    y = pressure_to_y(p)
-    svg_elements.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="12" fill="#c41e3a"/>')
+# 3. Moist adiabats (~6 K/100 hPa saturated lapse rate, pink dashed thin)
+for idx, st in enumerate(np.arange(-20, 40, 10)):
+    p_arr = np.linspace(P_MAX, P_MIN, 60)
+    t_arr = np.zeros(len(p_arr))
+    t_arr[0] = float(st)
+    for j in range(1, len(p_arr)):
+        dp = p_arr[j - 1] - p_arr[j]
+        t_arr[j] = t_arr[j - 1] - 0.6 * dp / 10
+    mask = np.isfinite(t_arr)
+    p_m, t_m = p_arr[mask], t_arr[mask]
+    if len(p_m) < 2:
+        continue
+    yfrac_m = (np.log10(p_m) - LOG_PMIN) / LOG_PRANGE
+    x_m = t_m - (1 - yfrac_m) * SKEW_FACTOR
+    pts = [[float(x), float(p)] for x, p in zip(x_m, p_m, strict=False)]
+    s = LineSeries()
+    s.data = pts
+    s.color = MOIST_AD_COLOR
+    s.line_width = 1.5
+    s.dash_style = "Dash"
+    s.opacity = 0.55
+    if idx == 0:
+        s.id = "moist_adiabats"
+        s.name = "Moist Adiabat"
+        s.show_in_legend = True
+    else:
+        s.linked_to = "moist_adiabats"
+        s.show_in_legend = False
+    chart.add_series(s)
 
-# Dewpoint profile
-dew_points = []
-for p, d in zip(pressure, dewpoint, strict=True):
-    x = temp_to_x_at_pressure(d, p)
-    y = pressure_to_y(p)
-    dew_points.append(f"{x:.1f},{y:.1f}")
+# 4. Mixing ratio lines (vapor pressure formula, orange dotted thin)
+for idx, mr in enumerate([1, 2, 4, 8, 16, 32]):
+    p_arr = np.linspace(P_MAX, 200, 40)
+    e_arr = mr * p_arr / (622 + mr)
+    ln_ratio = np.log(e_arr / 6.112)
+    td_arr = 243.5 * ln_ratio / (17.67 - ln_ratio)
+    mask = np.isfinite(td_arr) & (td_arr >= TEMP_MIN - 5)
+    p_m, td_m = p_arr[mask], td_arr[mask]
+    if len(p_m) < 2:
+        continue
+    yfrac_m = (np.log10(p_m) - LOG_PMIN) / LOG_PRANGE
+    x_m = td_m - (1 - yfrac_m) * SKEW_FACTOR
+    pts = [[float(x), float(p)] for x, p in zip(x_m, p_m, strict=False)]
+    s = LineSeries()
+    s.data = pts
+    s.color = MIX_COLOR
+    s.line_width = 1.5
+    s.dash_style = "Dot"
+    s.opacity = 0.60
+    if idx == 0:
+        s.id = "mixing_ratios"
+        s.name = "Mixing Ratio"
+        s.show_in_legend = True
+    else:
+        s.linked_to = "mixing_ratios"
+        s.show_in_legend = False
+    chart.add_series(s)
 
-svg_elements.append(
-    f'<polyline points="{" ".join(dew_points)}" fill="none" '
-    f'stroke="#306998" stroke-width="6" stroke-dasharray="20,10" stroke-linecap="round" stroke-linejoin="round"/>'
-)
+# 5. Temperature profile — #009E73 (first Okabe-Ito; primary series)
+x_temp = temperature - (1 - yfrac_s) * SKEW_FACTOR
+temp_data = [[float(x), float(p)] for x, p in zip(x_temp, pressure, strict=False)]
+temp_series = LineSeries()
+temp_series.data = temp_data
+temp_series.name = "Temperature"
+temp_series.show_in_legend = True
+temp_series.color = TEMP_COLOR
+temp_series.line_width = 6
+temp_series.marker = {
+    "enabled": True,
+    "radius": 10,
+    "symbol": "circle",
+    "fillColor": TEMP_COLOR,
+    "lineWidth": 2,
+    "lineColor": PAGE_BG,
+}
+temp_series.z_index = 10
+chart.add_series(temp_series)
 
-# Data points on dewpoint profile
-for p, d in zip(pressure, dewpoint, strict=True):
-    x = temp_to_x_at_pressure(d, p)
-    y = pressure_to_y(p)
-    svg_elements.append(f'<circle cx="{x:.1f}" cy="{y:.1f}" r="12" fill="#306998"/>')
+# 6. Dewpoint profile — #D55E00, dashed thick
+x_dew = dewpoint - (1 - yfrac_s) * SKEW_FACTOR
+dew_data = [[float(x), float(p)] for x, p in zip(x_dew, pressure, strict=False)]
+dew_series = LineSeries()
+dew_series.data = dew_data
+dew_series.name = "Dewpoint"
+dew_series.show_in_legend = True
+dew_series.color = DEW_COLOR
+dew_series.line_width = 6
+dew_series.dash_style = "Dash"
+dew_series.marker = {
+    "enabled": True,
+    "radius": 10,
+    "symbol": "circle",
+    "fillColor": DEW_COLOR,
+    "lineWidth": 2,
+    "lineColor": PAGE_BG,
+}
+dew_series.z_index = 10
+chart.add_series(dew_series)
 
-# Title
-svg_elements.append(
-    f'<text x="{WIDTH // 2}" y="80" font-size="56" font-weight="bold" fill="#333" '
-    f'text-anchor="middle" font-family="Arial, sans-serif">'
-    f"skewt-logp-atmospheric \u00b7 highcharts \u00b7 pyplots.ai</text>"
-)
+# ── Export ──────────────────────────────────────────────────────────────────
 
-# Y-axis label (Pressure)
-svg_elements.append(
-    f'<text x="60" y="{HEIGHT // 2}" font-size="40" fill="#333" '
-    f'text-anchor="middle" font-family="Arial, sans-serif" '
-    f'transform="rotate(-90, 60, {HEIGHT // 2})">Pressure (hPa)</text>'
-)
-
-# X-axis label (Temperature)
-svg_elements.append(
-    f'<text x="{WIDTH // 2}" y="{HEIGHT - 60}" font-size="40" fill="#333" '
-    f'text-anchor="middle" font-family="Arial, sans-serif">Temperature (\u00b0C)</text>'
-)
-
-# Legend
-legend_x = WIDTH - 350
-legend_y = MARGIN_TOP + 50
-
-svg_elements.append(
-    f'<rect x="{legend_x - 20}" y="{legend_y - 10}" width="320" height="400" fill="white" stroke="#ccc" stroke-width="2" rx="10"/>'
-)
-
-svg_elements.append(
-    f'<text x="{legend_x}" y="{legend_y + 30}" font-size="32" font-weight="bold" fill="#333">Legend</text>'
-)
-
-# Temperature
-svg_elements.append(
-    f'<line x1="{legend_x}" y1="{legend_y + 70}" x2="{legend_x + 60}" y2="{legend_y + 70}" stroke="#c41e3a" stroke-width="6"/>'
-)
-svg_elements.append(f'<text x="{legend_x + 80}" y="{legend_y + 78}" font-size="28" fill="#333">Temperature</text>')
-
-# Dewpoint
-svg_elements.append(
-    f'<line x1="{legend_x}" y1="{legend_y + 120}" x2="{legend_x + 60}" y2="{legend_y + 120}" stroke="#306998" stroke-width="6" stroke-dasharray="15,8"/>'
-)
-svg_elements.append(f'<text x="{legend_x + 80}" y="{legend_y + 128}" font-size="28" fill="#333">Dewpoint</text>')
-
-# Dry adiabat
-svg_elements.append(
-    f'<line x1="{legend_x}" y1="{legend_y + 170}" x2="{legend_x + 60}" y2="{legend_y + 170}" stroke="#cc8844" stroke-width="2" stroke-opacity="0.7"/>'
-)
-svg_elements.append(f'<text x="{legend_x + 80}" y="{legend_y + 178}" font-size="28" fill="#333">Dry Adiabat</text>')
-
-# Moist adiabat
-svg_elements.append(
-    f'<line x1="{legend_x}" y1="{legend_y + 220}" x2="{legend_x + 60}" y2="{legend_y + 220}" stroke="#44aa44" stroke-width="2" stroke-opacity="0.7" stroke-dasharray="10,5"/>'
-)
-svg_elements.append(f'<text x="{legend_x + 80}" y="{legend_y + 228}" font-size="28" fill="#333">Moist Adiabat</text>')
-
-# Mixing ratio
-svg_elements.append(
-    f'<line x1="{legend_x}" y1="{legend_y + 270}" x2="{legend_x + 60}" y2="{legend_y + 270}" stroke="#4488cc" stroke-width="2" stroke-opacity="0.7" stroke-dasharray="3,3"/>'
-)
-svg_elements.append(f'<text x="{legend_x + 80}" y="{legend_y + 278}" font-size="28" fill="#333">Mixing Ratio</text>')
-
-# Isotherm
-svg_elements.append(
-    f'<line x1="{legend_x}" y1="{legend_y + 320}" x2="{legend_x + 60}" y2="{legend_y + 320}" stroke="#aaa" stroke-width="1" stroke-dasharray="5,5"/>'
-)
-svg_elements.append(f'<text x="{legend_x + 80}" y="{legend_y + 328}" font-size="28" fill="#333">Isotherm</text>')
-
-# Build complete SVG
-svg_content = f"""<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="{WIDTH}" height="{HEIGHT}" viewBox="0 0 {WIDTH} {HEIGHT}">
-  <defs>
-    <clipPath id="plotArea">
-      <rect x="{MARGIN_LEFT}" y="{MARGIN_TOP}" width="{PLOT_WIDTH}" height="{PLOT_HEIGHT}"/>
-    </clipPath>
-  </defs>
-  {"".join(svg_elements)}
-</svg>"""
-
-# Create HTML wrapper for rendering
+html_str = chart.to_js_literal()
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Skew-T Log-P Diagram</title>
+    <script>{highcharts_js}</script>
 </head>
-<body style="margin:0; padding:0; background:#f8f9fa;">
-    {svg_content}
+<body style="margin:0; padding:0; overflow:hidden; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
+    <script>{html_str}</script>
 </body>
 </html>"""
 
-# Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Use Selenium to render PNG
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument(f"--window-size={WIDTH},{HEIGHT}")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(3)
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG_RGB)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
