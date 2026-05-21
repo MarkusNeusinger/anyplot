@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-21
@@ -9,14 +9,15 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
-from matplotlib.colors import LinearSegmentedColormap
 
 
 # Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 sns.set_theme(
     style="white",
@@ -237,6 +238,7 @@ CHECK_PATTERNS = [
 
 START_B = "11010010000"
 STOP = "1100011101011"
+QUIET = "0" * 10
 
 # Data
 content = "SHIP-2024-ABC123"
@@ -258,33 +260,71 @@ else:
     barcode_binary += CHECK_PATTERNS[check_value - 95]
 
 barcode_binary += STOP
+barcode_with_quiet = QUIET + barcode_binary + QUIET
 
-quiet_zone = "0" * 10
-barcode_with_quiet = quiet_zone + barcode_binary + quiet_zone
+# Zone boundary positions (column indices)
+n_cols = len(barcode_with_quiet)
+q = len(QUIET)  # 10
+s = len(START_B)  # 11
+d = len(content) * 11  # 176
+ck = 11  # check digit symbol
+st = len(STOP)  # 13
 
-# Build 2D array: repeat rows to give bars proper height
+zone_defs = [
+    (0, q, INK_SOFT, 0.20, ""),
+    (q, q + s, "#009E73", 0.85, "Start\n128B"),
+    (q + s, q + s + d, "#0072B2", 0.80, f"Data region · {len(content)} chars"),
+    (q + s + d, q + s + d + ck, "#D55E00", 0.85, "Check\nmod 103"),
+    (q + s + d + ck, q + s + d + ck + st, "#CC79A7", 0.85, "Stop"),
+    (n_cols - q, n_cols, INK_SOFT, 0.20, ""),
+]
+
+# Build 2D barcode matrix
 barcode_array = np.array([[int(bit) for bit in barcode_with_quiet]])
 barcode_data = np.repeat(barcode_array, 40, axis=0)
 
-# Plot
-cmap = LinearSegmentedColormap.from_list("barcode", [PAGE_BG, INK])
+# Seaborn-native two-color blend palette as colormap
+cmap = sns.blend_palette([PAGE_BG, INK], n_colors=256, as_cmap=True)
 
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
-ax.set_facecolor(PAGE_BG)
-
-sns.heatmap(barcode_data, cmap=cmap, cbar=False, xticklabels=False, yticklabels=False, linewidths=0, ax=ax)
-
-for spine in ax.spines.values():
-    spine.set_visible(False)
-
-# Style
-ax.set_title("barcode-code128 · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
-
-fig.text(
-    0.5, 0.07, content, ha="center", va="center", fontsize=10, fontfamily="monospace", fontweight="bold", color=INK
+# Layout: barcode panel + zone annotation strip
+fig, (ax, ax_ann) = plt.subplots(
+    2, 1, figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG, gridspec_kw={"height_ratios": [6, 1], "hspace": 0.03}
 )
 
-fig.subplots_adjust(top=0.88, bottom=0.16, left=0.02, right=0.98)
+# Barcode panel
+sns.heatmap(barcode_data, cmap=cmap, cbar=False, xticklabels=False, yticklabels=False, linewidths=0, ax=ax)
+sns.despine(ax=ax, left=True, bottom=True, top=True, right=True)
+ax.set_title("barcode-code128 · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
+
+# Zone annotation strip — structural callouts for each barcode section
+ax_ann.set_facecolor(ELEVATED_BG)
+ax_ann.set_xlim(0, n_cols)
+ax_ann.set_ylim(0, 1)
+
+for x0, x1, color, alpha, label in zone_defs:
+    width = x1 - x0
+    ax_ann.add_patch(plt.Rectangle((x0, 0), width, 1, color=color, alpha=alpha))
+    if label and width > 12:
+        ax_ann.text(
+            (x0 + x1) / 2,
+            0.5,
+            label,
+            ha="center",
+            va="center",
+            fontsize=5.5,
+            color="white",
+            fontweight="bold",
+            linespacing=1.3,
+        )
+
+sns.despine(ax=ax_ann, left=True, bottom=True, top=True, right=True)
+ax_ann.set_xticks([])
+ax_ann.set_yticks([])
+
+fig.subplots_adjust(top=0.88, bottom=0.11, left=0.02, right=0.98)
+fig.text(
+    0.5, 0.04, content, ha="center", va="center", fontsize=10, fontfamily="monospace", fontweight="bold", color=INK
+)
 
 # Save
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
