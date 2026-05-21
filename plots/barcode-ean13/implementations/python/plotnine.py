@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-21
@@ -127,11 +127,11 @@ plot = (
     + geom_rect(df_bars, aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=INK, color=INK)
     + geom_text(df_labels, aes(x="x", y="y", label="label"), size=14, color=INK, family="monospace", fontweight="bold")
     + labs(title="barcode-ean13 · python · plotnine · anyplot.ai")
-    + coord_cartesian(xlim=(-2, total_width + 2), ylim=(-20, 85))
+    + coord_cartesian(xlim=(-2, total_width + 2), ylim=(-14, 74))
     + theme_void()
     + theme(
         figure_size=(8, 4.5),
-        plot_title=element_text(size=12, color=INK, ha="center", margin={"t": 20, "b": 20}),
+        plot_title=element_text(size=12, color=INK, ha="center", margin={"t": 6, "b": 2}),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
     )
