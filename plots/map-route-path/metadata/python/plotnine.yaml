@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: map-route-path
 created: '2026-01-19T17:53:30Z'
-updated: '2026-05-21T05:47:44Z'
+updated: '2026-05-21T05:59:41Z'
 generated_by: claude-sonnet
 workflow_run: 26207607478
 issue: 3768
@@ -12,105 +12,108 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Theme-adaptive chrome works correctly across both light and dark renders — all
-    text colors, backgrounds, grid lines, and legend elements adapt properly via INK/INK_SOFT
-    tokens.
-  - 'Strong spec compliance: geom_path connects waypoints sequentially, rolling-window
-    smoothing applied, distinct start (green circle) and end (red square) markers
-    used, and color gradient shows trail progress effectively.'
-  - Geographic context created with theme-adaptive park (polygon) and lake (oval)
-    features, providing spatial reference within plotnine's static constraints.
-  - Realistic Pacific Northwest hiking trail data with appropriate coordinate range
-    and proper coordinate-fixed aspect ratio via coord_fixed().
-  - Clean, idiomatic plotnine grammar-of-graphics composition with multiple geom layers
-    (geom_polygon × 2, geom_path, geom_point × 2).
+  - Fully theme-adaptive chrome — all INK/INK_SOFT/PAGE_BG tokens correctly threaded
+    to title, axis labels, tick labels, and legend in both light and dark renders
+  - Geographic context (park polygon, lake ellipse) with theme-adaptive fill/border
+    colors adds meaningful spatial realism
+  - viridis colormap for trail progress is perceptually uniform, CVD-safe, and creates
+    a clear visual narrative of route progression
+  - coord_fixed(ratio=1.3) preserves geographic proportions; rolling-window smoothing
+    mimics real GPS post-processing
+  - 'Correct plotnine grammar-of-graphics layering: geom_polygon → geom_path → geom_point
+    with appropriate alpha on each layer'
+  - 'Perfect spec compliance: connected waypoints in sequence order, distinct start/end
+    markers, color gradient along path, line smoothing all present'
   weaknesses:
-  - Continuous colormap uses a custom gradient (low="#306998", high="#FFD43B") instead
-    of the style-guide-mandated viridis, cividis, or BrBG — replace scale_color_gradient()
-    with scale_color_cmap(cmap_name='viridis') or scale_color_cmap(cmap_name='cividis')
-    for compliance.
-  - Start point (green circle) and end point (red square) occupy the same pixel location
-    because the trail is a closed loop — the start marker is partially obscured. Consider
-    offsetting the markers slightly or adding a legend entry to clarify the loop design.
-  - 'DQ-01: Implementation uses only a single looping trail shape; adding a second
-    or third route segment or waypoint annotations (e.g., distance markers) would
-    improve feature coverage.'
-  - 'DE-01: While park/lake context features are a nice touch, design sophistication
-    is moderate — no annotations, no directional arrows, and the geometric shapes
-    are coarse approximations of geographic features.'
+  - Start (green circle) and end (red square) markers are nearly co-located because
+    the trail is a closed loop (t=0..2π), causing the start marker to be visually
+    occluded by the red square and the overlapping dark-purple trail segment — consider
+    offsetting markers slightly or increasing their size to make both visible
+  - 'Red/green color pair for start/end markers is the classic CVD problematic combination;
+    even though shapes differ (circle vs. square), the markers are small (size=5)
+    making shape discrimination unreliable for low-vision users — use Okabe-Ito safe
+    colors such as #009E73 (green) and #D55E00 (vermillion) instead of pure red'
+  - Park polygon fill (#1B3A1F) in dark mode is nearly indistinguishable from the
+    page background (#1A1A17) — the polygon border (#388E3C) provides marginal definition
+    but the fill area blends in; increase alpha or lighten the dark-mode fill slightly
+  - panel_border retained (all four spines visible as a box frame) — for a map visualization,
+    removing the border or using an L-shaped spine frame would give a cleaner look
+  - 'Design excellence is moderate: no annotations on notable waypoints, no elevation
+    or speed context to enrich storytelling; the park/lake polygons are simple shapes
+    rather than realistic geography'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
-      Chrome: Title "map-route-path · python · plotnine · anyplot.ai" in dark ink, clearly readable. Y-axis label "Latitude (°)" and X-axis label "Longitude (°)" in dark ink, readable. Tick labels (47.7, 47.8, 47.9 on Y; -121.9 to -121.6 on X) in INK_SOFT gray, clearly readable. Legend box has elevated-bg fill (#FFFDF6) with "Trail Progress (%)" title in dark ink and tick labels (0, 25, 50, 75, 100) readable.
-      Data: Large light-green polygon (park boundary, alpha=0.7) fills most of the plot area. Small blue oval (lake, alpha=0.8) near plot center. Trail path rendered as a looping curve using a blue (#306998) to yellow (#FFD43B) custom gradient — 0% is blue (start), 100% is yellow (end). Green circle and red square markers co-located at approximately (-121.6, 47.82) marking start and end of the closed loop.
-      Legibility verdict: PASS — all text elements are clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct, no pure white. PASS.
+      Chrome: Title "map-route-path · python · plotnine · anyplot.ai" in dark ink (~70% width, fontsize 12) — fully readable. Y-axis label "Latitude (°)" and X-axis label "Longitude (°)" in dark ink at fontsize 10 — balanced and readable. Tick labels in INK_SOFT (#4A4A44) at fontsize 8 — clear. Grid is very subtle (alpha=0.10, major only). Panel border retained (box frame). Legend "Trail Progress (%)" colorbar on the right with elevated background (#FFFDF6).
+      Data: Park polygon in light green (#C8E6C9 fill, #4CAF50 border, alpha=0.7) occupies most of the plot area. Lake ellipse in light blue (#81D4FA fill, #0288D1 border, alpha=0.8) visible in the park interior. Trail path colored with viridis colormap (dark purple at 0% → teal/cyan mid → yellow-green at 100%), size=2.5, alpha=0.85. End marker: red square (#EF5350 fill, #C62828 border) at approximately (-121.63, 47.80) — clearly visible. Start marker: green circle (#4CAF50 fill, #2E7D32 border) is nearly co-located with the end marker (the trail is a closed loop) and is partially obscured.
+      Legibility verdict: PASS — all text readable; first series color is viridis (continuous, correct); background is #FAF8F1.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
-      Chrome: Title, axis labels, tick labels, and legend text all rendered in light ink (#F0EFE8 / #B8B7B0 respectively), clearly readable against the dark background. No dark-on-dark failure observed. Legend box uses elevated dark background (#242420). Panel border uses INK_SOFT for subtle framing.
-      Data: Park polygon now dark green (#1B3A1F fill, #388E3C border), lake now dark blue (#0D3B52 fill, #01579B border). Trail path gradient colors (blue to yellow) are IDENTICAL to the light render — only chrome flips between themes, data colors are preserved. Start/end markers retain their green/red colors and remain visible against the dark background.
-      Legibility verdict: PASS — all text elements readable on dark surface. No "dark on dark" failures found.
+      Background: Warm near-black (#1A1A17) — correct, no pure black. PASS.
+      Chrome: Title in light cream (#F0EFE8 = INK in dark mode) — clearly readable against dark background. Axis labels in #F0EFE8 — readable. Tick labels in #B8B7B0 (INK_SOFT dark mode) — clearly visible. No dark-on-dark failures detected. Grid subtle at alpha=0.10. Legend background (#242420 = ELEVATED_BG dark mode) with #B8B7B0 border — correct elevation.
+      Data: Park polygon in dark green (#1B3A1F fill, #388E3C border) — fill is nearly indistinguishable from the #1A1A17 background (very low contrast), border provides marginal definition. Lake ellipse in dark blue (#0D3B52 fill, #01579B border) — visible against the dark green park area. Trail path viridis colors are IDENTICAL to the light render (only chrome flipped) — dark purple through teal to yellow-green. End marker (red square) clearly visible. Start marker still co-located and occluded.
+      Legibility verdict: PASS — all text readable with theme-correct tokens; no dark-on-dark text; viridis data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: All text readable in both themes; font sizes appropriately set (title=12,
-          axis=10, ticks=8). Slight deduction for title font at 12pt being at the
-          low end for the canvas size.
+        comment: All font sizes explicitly set (title=12, axis_title=10, axis_text=8,
+          legend=8). Both renders fully readable. No overflow.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlaps. Start/end markers co-located is a natural
-          consequence of the closed loop, not an overlap error.
+        comment: No overlapping text or data elements. Colorbar legend cleanly separated
+          on the right.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Trail path (size=2.5) and markers (size=5) are clearly visible.
-          Minor deduction: start circle is largely obscured by the co-located end
-          square since the path is a closed loop.'
+        comment: Trail path clearly visible with viridis gradient. End marker (red
+          square) prominent. Start marker (green circle) is nearly co-located with
+          end marker (closed loop) and partially occluded. Park fill in dark mode
+          has very low contrast against background.
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
-        passed: true
-        comment: Blue-to-yellow gradient is CVD-friendly. Start/end markers use different
-          shapes (circle vs square) in addition to color, providing shape-based distinction.
+        passed: false
+        comment: Red-green color pair for start/end markers is the classic CVD problematic
+          combination. Shape distinction (circle vs. square) partially mitigates but
+          markers are small (size=5) making shape discrimination unreliable. Trail
+          uses CVD-safe viridis.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). coord_fixed maintains geographic
-          aspect ratio. Good proportions, legend well-positioned on right. No overflow
-          or clipping.
+        comment: Canvas gate passed. Good layout with legend on right. Map fills ~60%
+          of canvas. coord_fixed maintains geographic proportions. No clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Title matches required format. Axis labels include units: ''Latitude
-          (°)'' and ''Longitude (°)''.'
+        comment: Title format correct. Longitude (°) and Latitude (°) with degree
+          units.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Deduction: continuous
-          colormap uses custom gradient (#306998 to #FFD43B) instead of style-guide-mandated
-          viridis/cividis/BrBG.'
+        passed: true
+        comment: 'Continuous data correctly uses viridis colormap. Backgrounds #FAF8F1
+          (light) and #1A1A17 (dark). All chrome theme-adaptive.'
     design_excellence:
       score: 12
       max: 20
@@ -120,24 +123,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Theme-adaptive park/lake geographic features add real context. Gradient
-          coloring on the trail creates visual interest. Above default (4) but limited
-          by coarse polygon shapes and no annotations.
+        comment: 'Above well-configured default: geographic context with theme-adaptive
+          park/lake colors, intentional alpha layering, professional viridis gradient.
+          Not publication-ready due to retained panel border and absence of any annotation/typographic
+          hierarchy.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Grid is very subtle (alpha=0.10), minor grid hidden, panel border
-          adds structure. Above default (2) for the deliberate grid/background choices.
+        passed: false
+        comment: 'Some refinement: very subtle grid (alpha=0.10), minor grid blanked,
+          elevated legend background. Panel border retained as a full box frame —
+          removing it or switching to L-shaped spines would improve map aesthetics.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Color gradient creates a clear trail progress narrative. Start/end
-          markers guide the viewer. Geographic features (park/lake) provide spatial
-          context. Above default (2).
+        comment: viridis gradient creates clear visual narrative of trail progression.
+          Green/red start/end markers are focal points. Geographic context (park/lake)
+          grounds the story. Visual hierarchy is present but no annotation of key
+          waypoints.
     spec_compliance:
       score: 15
       max: 15
@@ -147,55 +153,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct route path map using geom_path for continuous line connecting
-          waypoints.
+        comment: 'Correct: geom_path creates connected route path between sequential
+          waypoints.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Sequential path connection, distinct start/end markers, color gradient
-          for progress, rolling-window smoothing, and geographic context all implemented.
-          Real basemap not feasible in plotnine without extensions.
+        comment: 'All required features: connected waypoints in sequence order, distinct
+          start/end markers (green circle, red square), color gradient showing progression,
+          rolling-window smoothing.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lon→X, lat→Y, sequence→color (progress). All 200 waypoints plotted.
+        comment: X=longitude, Y=latitude, color=trail progress (0-100%). 200 waypoints
+          rendered.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches format 'map-route-path · python · plotnine · anyplot.ai'.
-          Colorbar legend 'Trail Progress (%)' present.
+        comment: 'Title: ''map-route-path · python · plotnine · anyplot.ai'' — exact
+          required format. Legend: ''Trail Progress (%)'' colorbar.'
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows route path with progress gradient, start/end markers, geographic
-          context, and smoothing. Single looping trail — no secondary segments or
-          distance annotations.
+        comment: 'Shows all aspects: path continuity, sequence-based coloring, start/end
+          distinction, GPS smoothing, geographic context with park and lake features.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulates a hiking GPS track in the Pacific Northwest (Washington
-          state). Realistic coordinates with appropriate trail noise.
+        comment: Hiking trail in Cascade Mountains (lat ~47.82, lon ~-121.75, Stevens
+          Pass area, WA). 200 GPS waypoints with realistic noise. Neutral scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 200 waypoints within spec range (50-1000). Coordinate extent (~0.2°
-          lat × 0.3° lon) realistic for a day hike.
+        comment: Geographic coordinates valid for Pacific Northwest. ~0.22° lat ×
+          0.38° lon extent is realistic for a hiking loop. Progress 0-100% sensible.
     code_quality:
       score: 10
       max: 10
@@ -205,7 +211,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script with no functions or classes.
+        comment: 'Flat sequential structure: imports → tokens → data → plot → save.
+          No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -217,20 +224,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imported plotnine components are used.
+        comment: All 17 plotnine symbols imported are used in the plot construction.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured. Rolling window smoothing adds real value. No fake
-          UI elements.
+        comment: Clean, appropriate complexity. No fake interactivity. Clear variable
+          naming.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using current plotnine API.
+        comment: Saves as plot-{THEME}.png. No bare plot.png. Current plotnine API.
     library_mastery:
       score: 7
       max: 10
@@ -240,25 +247,27 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good grammar-of-graphics usage with proper layer composition, scale
-          functions, and theme() parameters. Above default (3).
+        comment: 'Strong grammar-of-graphics usage: multi-layer geom composition,
+          scale_color_cmap, coord_fixed for geographic data, theme() with element_*
+          components.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: coord_fixed() for geographic aspect ratio and multi-layer geom composition
-          (5 layers) are distinctive plotnine features. Above default (1).
+        comment: coord_fixed() for geographic aspect ratio, geom_polygon() for area
+          features, grammar layering (polygon → path → point) — features distinctive
+          to plotnine's ggplot2 paradigm.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
-  - colorbar
+  - edge-highlighting
   patterns:
   - data-generation
   dataprep:
   - rolling-window
   styling:
-  - alpha-blending
   - custom-colormap
+  - alpha-blending
