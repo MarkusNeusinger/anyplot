@@ -1,158 +1,218 @@
 library: matplotlib
+language: python
 specification_id: skewt-logp-atmospheric
 created: '2026-01-17T09:27:25Z'
-updated: '2026-01-18T22:15:16Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21092078647
+updated: '2026-05-21T00:02:29Z'
+generated_by: claude-sonnet
+workflow_run: 26196028930
 issue: 3802
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of the complex Skew-T Log-P thermodynamic diagram
-  - Proper logarithmic and inverted pressure axis with clear tick formatting
-  - All required reference lines (isotherms, dry adiabats, moist adiabats, mixing
-    ratio) present with appropriate colors and line styles
-  - Clean, readable code structure with good organization
-  - Custom legend using Line2D handles is well-implemented
-  - Temperature and dewpoint profiles clearly distinguishable
+  - 'Correct and complete Skew-T Log-P implementation: logarithmic inverted pressure
+    axis, 45-degree skewed isotherms, dry adiabats, moist adiabats, and mixing ratio
+    reference lines all present'
+  - 'Strong visual hierarchy: bold primary data profiles (2.5pt lines + s=120 markers)
+    stand out clearly over faint background reference lines at appropriate alpha values'
+  - Meteorologically realistic sounding data with Bolton (1980) LCL calculation, correct
+    parcel-trace physics, and plausible mid-latitude temperature/dewpoint profiles
+  - 'Full theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders are readable
+    with all chrome (text, spines, legend, grid) using correct INK/INK_SOFT tokens'
+  - 'Perfect spec compliance: all required features implemented including all four
+    reference line types, temperature (solid) and dewpoint (dashed) profiles, and
+    color-coded reference lines'
+  - Clean, well-structured code with only used imports, explicit font sizes, seed
+    set, and proper KISS structure
   weaknesses:
-  - Reference lines slightly clutter the background; could use more subtle alpha values
-  - The VQ-07 grid styling could be improved - multiple reference line types create
-    visual complexity
-  - Wind barbs could enhance the diagram (though optional per spec)
-  image_description: 'The plot displays a Skew-T Log-P atmospheric diagram with a
-    logarithmic pressure axis (inverted, 1000 hPa at bottom to 100 hPa at top) and
-    temperature on the x-axis ranging from -80°C to about 50°C. Two main data profiles
-    are shown: a solid red temperature line with circular markers and a dashed blue
-    dewpoint line with circular markers. Background reference lines include: dark
-    red isotherms (skewed ~45°), green dashed dry adiabats, blue-gray dash-dot moist
-    adiabats, and purple dotted mixing ratio lines. Pressure level annotations (1000,
-    850, 700, 500, 300, 200 hPa) appear in gray on the left side. A legend in the
-    upper right identifies all line types. The title "skewt-logp-atmospheric · matplotlib
-    · pyplots.ai" appears at the top in bold.'
+  - 'CAPE and CIN shading (fill_betweenx) are barely perceptible in both renders:
+    alpha=0.18 (CIN) and alpha=0.25 (CAPE) produce regions too faint to read clearly
+    against the background reference lines — increase to alpha=0.35–0.45 for both
+    to make them a visible meteorological feature'
+  - 'Reference lines (isotherms, dry adiabats, moist adiabats, mixing ratio) use non-Okabe-Ito
+    custom hex colors (#8B4513, #228B22, #4169E1, #9932CC) — while meteorologically
+    conventional, the CAPE and CIN shading also deviates from canonical Okabe-Ito
+    ordering (uses positions 5 and 3 instead of 3 and 4)'
+  - LCL annotation fontsize=6.5 is the smallest text element on a 2400×2400 canvas
+    (~36px rendered height) — borderline small; consider increasing to 7–8pt to match
+    the tick label size
+  - Lifted parcel trace (gray dotted, alpha=0.65, linewidth=1.0) is difficult to visually
+    separate from the many background reference lines — increase linewidth to 1.5
+    or reduce reference line alpha slightly to improve contrast
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "skewt-logp-atmospheric · python · matplotlib · anyplot.ai" in dark ink, fully readable, spans ~80% of width at fontsize=12. Axis labels "Temperature (°C)" and "Pressure (hPa)" in dark ink at fontsize=10, with units. Tick labels at fontsize=8 in INK_SOFT — all readable. Legend in upper right with frame on ELEVATED_BG (#FFFDF6), 9 entries at fontsize=7, all legible.
+      Data: Temperature profile in #009E73 (Okabe-Ito position 1) as solid line with filled teal markers; clearly the dominant visual element. Dewpoint profile in #D55E00 (Okabe-Ito position 2) as dashed orange line with filled markers. Both span 1000–100 hPa. Reference lines (skewed isotherms, dry/moist adiabats, mixing ratio) visible as faint diagonal texture at very low alpha. CAPE shading (yellow-orange, alpha=0.25) and CIN shading (blue, alpha=0.18) are present but barely perceptible between the temperature and parcel traces. Lifted parcel trace visible as gray dotted line. LCL annotation and 500 hPa horizontal line present.
+      Legibility verdict: PASS — all text elements readable against warm off-white background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, and tick labels all rendered in light INK (#F0EFE8 / #B8B7B0) — fully readable against the dark surface. Legend text in light INK_SOFT, frame using ELEVATED_BG (#242420) with INK_SOFT edge. No dark-on-dark text failures observed.
+      Data: Temperature (#009E73) and Dewpoint (#D55E00) colors are identical to the light render — only chrome flips. Reference lines appear with slightly boosted REF_ALPHA (0.18 vs 0.10) producing marginally better visibility in dark mode. CAPE/CIN shading remains very subtle.
+      Legibility verdict: PASS — all text readable against near-black background; no dark-on-dark failures. Both data profiles stand out clearly. Brand green #009E73 remains well-visible.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and legend are clearly readable. Pressure annotations
-          on left are slightly small but readable.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or elements
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Temperature and dewpoint profiles are clearly visible with good marker
-          size. Background reference lines are appropriately subtle.
+        comment: 'All font sizes explicitly set (title=12, labels=10, ticks=8, legend=7).
+          All readable in both themes. Minor: LCL annotation at 6.5pt is borderline
+          small (~36px rendered).'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap observed. Legend in upper right is well-separated
+          from data — temperature at upper levels curves left in skewed coordinates,
+          leaving upper right clear.
+      - id: VQ-03
+        name: Element Visibility
+        score: 4
+        max: 6
+        passed: true
+        comment: Primary profiles (temperature, dewpoint) with 2.5pt lines and s=120
+          markers are excellent. CAPE/CIN shading at alpha=0.18/0.25 is barely perceptible
+          — too faint to read as a meaningful meteorological feature. Lifted parcel
+          trace hard to distinguish from reference lines.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Red/blue temperature/dewpoint distinction is colorblind-safe. Reference
-          lines use distinct colors and line styles.
+        comment: Temperature (green) vs Dewpoint (orange) distinguished by both color
+          and line style (solid vs dashed). CVD-safe Okabe-Ito colors for primary
+          series. No red-green sole-signal issue.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, plot fills the space well with balanced
-          margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Temperature (°C) and Pressure (hPa) with proper units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: false
-        comment: Grid is present but slightly cluttered with multiple reference line
-          types overlapping; legend is well-placed
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Skew-T Log-P diagram
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Pressure on Y-axis (log, inverted), temperature on X-axis with skew
-          applied
-      - id: SC-03
-        name: Required Features
+        name: Layout & Canvas
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has isotherms, dry adiabats, moist adiabats, mixing ratio lines.
-          Wind barbs are optional per spec and not included.
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: Covers 1000-100 hPa, temperature range appropriate
-      - id: SC-05
-        name: Legend Accuracy
+        comment: Square canvas 2400×2400 correct for symmetric plot. Canvas gate passed.
+          subplots_adjust provides balanced margins. Plot area fills well. No content
+          cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Legend correctly identifies all line types
-      - id: SC-06
-        name: Title Format
+        comment: 'X: ''Temperature (°C)'', Y: ''Pressure (hPa)'' — both descriptive
+          with units. Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
         score: 1
         max: 2
         passed: true
-        comment: Uses correct format but lacks bold styling match to other implementations
-    data_quality:
-      score: 19
+        comment: 'Primary series correct: Temperature=#009E73 (pos 1), Dewpoint=#D55E00
+          (pos 2). CAPE/CIN use Okabe-Ito colors but out of canonical order (pos 5
+          and 3 instead of 3 and 4). Reference lines use non-Okabe-Ito meteorological
+          convention colors. Backgrounds and chrome are theme-correct in both renders.'
+    design_excellence:
+      score: 14
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 7
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
         max: 8
         passed: true
-        comment: Shows typical mid-latitude sounding with temperature decreasing with
-          altitude, dewpoint following realistic pattern. Could show more varied features
-          like temperature inversions.
-      - id: DQ-02
-        name: Realistic Context
-        score: 7
-        max: 7
+        comment: 'Strong design: this specialized meteorological chart requires domain
+          knowledge to implement well. Visual hierarchy between primary profiles and
+          faint reference lines is intentional and correct. Above well-configured
+          defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Realistic radiosonde sounding data with physically plausible temperature
-          and dewpoint profiles
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Top/right spines removed. Subtle dual-axis grid at low alpha. Theme-adaptive
+          legend frame. Good whitespace via subplots_adjust. Some refinement evident
+          above defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: primary profiles dominate over background
+          reference lines. CAPE/CIN shading adds meteorological insight. LCL annotation
+          and 500 hPa reference line provide interpretive context. Viewer is guided
+          from surface to upper troposphere.'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: Temperature and pressure values are realistic for atmospheric sounding
+        comment: 'Correct Skew-T Log-P diagram: logarithmic inverted pressure axis,
+          45-degree skewed temperature isotherms, all reference line types present.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required features: logarithmic inverted pressure axis, skewed
+          isotherms, dry adiabats, moist adiabats, mixing ratio lines, temperature
+          (solid) and dewpoint (dashed) profiles, color-coded reference lines. Wind
+          barbs optional and omitted.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X: Temperature (°C) with 45° skew applied. Y: Pressure (hPa) logarithmic,
+          inverted (1000 at bottom, 100 at top). Data spans full surface-to-upper-troposphere
+          range.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''skewt-logp-atmospheric · python · matplotlib · anyplot.ai''
+          — correct format. Legend entries correctly labelled: Temperature, Dewpoint,
+          Lifted Parcel, CAPE, CIN, Isotherms, Dry Adiabats, Moist Adiabats, Mixing
+          Ratio.'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Shows all aspects: temperature/dewpoint profiles, all four reference
+          line types, CAPE/CIN shading, lifted parcel trace, LCL annotation, 500 hPa
+          synoptic reference level.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Realistic mid-latitude radiosonde sounding. Bolton (1980) LCL formula
+          used. Temperature and dewpoint values physically plausible (25°C surface,
+          -56°C at 100 hPa, appropriate lapse rates). Neutral scientific context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Pressure 1000-100 hPa is standard sounding range. Temperature lapse
+          rate is realistic for mid-latitude standard atmosphere. Dewpoint depression
+          increases with height as expected physically.
     code_quality:
       score: 10
       max: 10
@@ -162,53 +222,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save structure without functions/classes
+        comment: 'Linear: imports → theme tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set. Data is mostly deterministic arrays but seed
+          ensures reproducibility.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: All 6 imports (os, matplotlib.pyplot, numpy, Line2D, Patch, ScalarFormatter)
+          are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Clean Pythonic code. Appropriate complexity for a specialized meteorological
+          diagram. No over-engineering or fake interactivity.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Uses explicit
+          facecolor on savefig. No deprecated API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Axes methods (ax.plot, ax.scatter, ax.fill_betweenx, ax.axhline,
+          ax.text). ScalarFormatter for pressure axis. Custom legend via handles=[Line2D(...),
+          Patch(...)]. subplots_adjust for layout. Above default (3).
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of log scale, ScalarFormatter, Line2D for custom legend,
-          but could use SkewT transform from metpy or custom transforms for more authentic
-          skew behavior
+        comment: fill_betweenx for CAPE/CIN shading is matplotlib-distinctive for
+          meteorological analysis. Manual skew coordinate transform using numpy log
+          operations. Custom legend handles mixing Line2D and Patch types. These are
+          features most other plotting libraries can't replicate cleanly.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - manual-ticks
   - annotations
   - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending

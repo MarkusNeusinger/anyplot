@@ -1,160 +1,198 @@
 library: bokeh
+language: python
 specification_id: skewt-logp-atmospheric
 created: '2026-01-17T09:27:39Z'
-updated: '2026-01-18T22:28:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21092078686
+updated: '2026-05-21T00:06:16Z'
+generated_by: claude-sonnet
+workflow_run: 26196249110
 issue: 3802
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/bokeh/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Correct implementation of skewed temperature transformation with 45° angle
-  - Proper logarithmic, inverted pressure axis (surface at bottom)
-  - 'All reference line types included: isotherms, dry adiabats, moist adiabats, mixing
-    ratio lines'
-  - Realistic synthetic atmospheric sounding data with appropriate values
-  - Good color differentiation between line types
-  - Clean, well-structured code with proper reproducibility seed
-  - Proper output in both PNG and interactive HTML formats
+  - 'Perfect spec compliance: all required Skew-T elements present (isotherms, dry
+    adiabats, moist adiabats, mixing ratio lines, temperature, dewpoint, 0°C isotherm)'
+  - Strong three-tier visual hierarchy guides viewer from background context to primary
+    data profiles
+  - Line style differentiation (solid/dashed/dotdash/dotted) provides semantic encoding
+    beyond color
+  - In-chart labels for reference line families keep the legend focused on primary
+    data series
+  - Correct skew transform applied consistently across all reference lines and data
+    profiles
+  - 'Full Bokeh interactivity: HoverTool shows pressure+temperature on hover, CrosshairTool,
+    WheelZoomTool'
+  - Both themes fully legible with correct Okabe-Ito palette and theme-adaptive chrome
   weaknesses:
-  - Does not utilize Bokeh HoverTool for interactive display of temperature/pressure
-    values at each data point
-  - Reference line text labels (Dry Adiabats, Moist Adiabats, Mixing Ratio) are relatively
-    faint and could benefit from better contrast or slightly larger size
-  - Legend glyph sizing does not fully match the prominent line widths in the plot
-  image_description: 'The plot displays a Skew-T Log-P atmospheric diagram with a
-    logarithmic, inverted pressure axis (1000 hPa at bottom to 100 hPa at top) on
-    the y-axis and skewed temperature coordinates on the x-axis. The temperature profile
-    is shown as a solid red line with circular markers, starting at approximately
-    25°C at the surface and decreasing to about -70°C at 100 hPa. The dewpoint profile
-    is shown as a dashed teal/green line with diamond markers, always remaining below
-    the temperature. Reference lines include: gray isotherms (skewed 45° to the right),
-    tan/orange dashed dry adiabats, light blue dot-dashed moist adiabats, and green
-    dotted mixing ratio lines. A highlighted blue 0°C isotherm is visible. Labels
-    for "Dry Adiabats", "Moist Adiabats", and "Mixing Ratio" appear on the plot. The
-    legend in the top-left corner shows Temperature, Dewpoint, and 0°C Isotherm entries.
-    The background is a light gray (#f8f9fa).'
+  - '"Mixing Ratio" in-chart label positioned at x=-48 (almost at the left boundary
+    of x_range=[-50, 50]) — risk of appearing cut or crowded; shift right slightly
+    (e.g. x=-42)'
+  - Mixing ratio dotted lines (1.2px, 40% alpha) are hard to distinguish from background
+    isotherms in the lower-right portion of the plot — increase alpha to 0.55 and
+    line_width to 1.5
+  - DE-01 could be lifted toward publication-ready with a subtle warm-tone fill region
+    between temperature and dewpoint profiles to encode moisture content visually
+  - Moist adiabat approximation uses a very simplified lapse rate formula that doesn't
+    match actual pseudoadiabat curves closely — acceptable for demonstration but meteorologically
+    simplified
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "skewt-logp-atmospheric · python · bokeh · anyplot.ai" in dark ink — clearly readable. X-axis label "Temperature (°C) — Skewed Coordinates" and Y-axis label "Pressure (hPa)" both readable. Tick labels in INK_SOFT, clearly visible. Legend in top-left with elevated-bg fill and INK_SOFT border.
+      Data: Temperature profile in #009E73 (solid line, 5px, circular markers size 14). Dewpoint in #D55E00 (dashed, 5px, diamond markers size 14). 0°C isotherm in #0072B2 (solid, 3px). Dry adiabats in #E69F00 (dashed, 1.5px, 50% alpha). Moist adiabats in #56B4E9 (dotdash, 1.5px, 50% alpha). Mixing ratio in #CC79A7 (dotted, 1.2px, 40% alpha). Background isotherms in INK_MUTED (20% alpha).
+      Legibility verdict: PASS — all text clearly readable, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title, axis labels, and tick labels all appear in light-colored text (INK = #F0EFE8 in dark theme). Legend background uses elevated dark token (#242420) with INK_SOFT border. All chrome elements correctly flipped for dark theme.
+      Data: All data colors identical to light render — #009E73 temperature, #D55E00 dewpoint, #0072B2 0°C isotherm, #E69F00 dry adiabats, #56B4E9 moist adiabats, #CC79A7 mixing ratio. Okabe-Ito positions 1-7 unchanged between themes.
+      Legibility verdict: PASS — no dark-on-dark failures detected. All text legible against the near-black background.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 32pt, axis labels at 24pt, ticks at 18pt, all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, clean layout
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Line widths of 5 for main profiles, markers size 12, all clearly
-          visible. Reference lines appropriately subtle
+        comment: 'All font sizes explicitly set per style guide. Both themes legible.
+          Minor: Mixing Ratio label at x=-48 is near the left boundary of x_range=[-50,50].'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps between in-chart labels, legend, axis labels, tick
+          marks, or data elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Main data lines (5px) and markers (size 14) are prominent. Reference
+          lines appropriately subtle. Minor: mixing ratio dotted lines (1.2px, 40%
+          alpha) hard to distinguish from isotherms in lower-right.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Red/teal color scheme is colorblind-safe, good contrast against light
-          background
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, but reference line labels are somewhat small
-          and faint
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) - Skewed Coordinates and Pressure (hPa) with proper
-          units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Full Okabe-Ito palette, CVD-safe, adequate luminance contrast between
+          all series.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800, no gate failures. min_border reservations prevent
+          clipping. Balanced layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle (alpha 0.3), legend well-placed, but legend glyph
-          sizes could be larger
+        comment: 'X: ''Temperature (°C) — Skewed Coordinates'', Y: ''Pressure (hPa)''
+          — both descriptive with units.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Temperature=#009E73 (first series); Dewpoint=#D55E00; 0°C Isotherm=#0072B2;
+          backgrounds #FAF8F1 (light)/#1A1A17 (dark); all chrome theme-adaptive.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Deliberate design: distinct line styles encode reference line semantics,
+          multiple Okabe-Ito colors differentiate reference families, in-chart labels
+          keep legend clean, 0°C isotherm highlighted. Above default but not publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Grid very subtle (10% alpha), no plot outline, legend has elevated-bg
+          fill. Spines retained (appropriate for scientific diagram with specific
+          coordinate system).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear three-tier visual hierarchy: background isotherms → semi-transparent
+          reference lines → thick primary profiles. 0°C isotherm highlighted as meteorologically
+          significant threshold.'
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct Skew-T Log-P diagram implementation
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Pressure on y-axis (log, inverted), skewed temperature on x-axis
-      - id: SC-03
+        comment: 'Correct Skew-T Log-P: logarithmic inverted pressure axis, 45° skewed
+          isotherms.'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has isotherms, dry adiabats, moist adiabats, mixing ratio lines,
-          temperature and dewpoint profiles. Wind barbs are optional
-      - id: SC-04
-        name: Data Range
+        comment: Dry adiabats, moist adiabats, mixing ratio lines, background isotherms,
+          temperature (solid), dewpoint (dashed), 0°C isotherm all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shows full range from 1000 to 100 hPa, temperature range appropriate
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: skew-transformed temperature; Y: log-pressure inverted. Data
+          spans 1000-100 hPa.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Temperature, Dewpoint, and 0°C Isotherm
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format skewt-logp-atmospheric · bokeh · pyplots.ai
+        comment: 'Title: ''skewt-logp-atmospheric · python · bokeh · anyplot.ai''
+          — exact format. Legend labels match plotted series.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows realistic atmospheric sounding with temperature inversion visible,
-          dewpoint depression increasing with altitude
+        comment: 'Demonstrates all key Skew-T features: temperature, dewpoint, background
+          isotherms, dry adiabats, moist adiabats, mixing ratio lines, highlighted
+          0°C isotherm.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Mid-latitude atmospheric sounding data is realistic and scientifically
-          accurate
+        comment: Standard radiosonde sounding from surface to upper troposphere. Physically
+          consistent temperature and dewpoint profiles. Neutral scientific domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Temperature and dewpoint values are realistic, pressure levels appropriate
+        comment: Pressure 1000-100 hPa; temperature ~25°C to ~-68°C following realistic
+          lapse rate; dewpoint always <= temperature enforced.
     code_quality:
       score: 10
       max: 10
@@ -164,53 +202,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, plot, save, no functions/classes'
+        comment: 'Linear flow: imports → tokens → data → figure → reference lines
+          → data series → tools → legend → save/screenshot. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: np.random.seed(42) set before all random data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, bokeh components)
+        comment: 'All imports are used: numpy, bokeh models, bokeh.plotting, selenium,
+          Path, time, os.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
-        passed: true
-        comment: Uses current Bokeh 3.x API
-      - id: CQ-05
-        name: Output Correct
-        score: 1
-        max: 1
-        passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 2
-      max: 5
-      items:
-      - id: LF-01
-        name: Distinctive Features
+        name: Code Elegance
         score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. Loops for reference line families. Skew transform
+          concise. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png; current Bokeh 3.x API
+          with Selenium 4 pattern.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses ColumnDataSource properly, but does not leverage Bokeh HoverTool
-          for interactive display of temperature/pressure values
+        passed: true
+        comment: ColumnDataSource throughout, add_layout() for Labels, HoverTool with
+          column references, toolbar_location=None, Selenium screenshot per library
+          guide.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: HoverTool with custom column-reference tooltips, CrosshairTool, WheelZoomTool,
+          HTML export. Bokeh interactivity is the key differentiator — the sounding
+          diagram becomes explorable.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
-  - manual-ticks
+  - annotations
   patterns:
   - data-generation
-  - columndatasource
   - iteration-over-groups
+  - columndatasource
   dataprep: []
   styling:
   - alpha-blending
