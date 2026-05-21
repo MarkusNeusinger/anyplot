@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' barcode-code128: Code 128 Barcode
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 84/100 | Created: 2026-05-21
+#' Quality: 86/100 | Created: 2026-05-21
 
 library(ggplot2)
 library(ragg)
