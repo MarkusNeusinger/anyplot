@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-21
@@ -111,7 +111,7 @@ tile_height = (grid_height - (GRID_ROWS - 1) * GAP) // GRID_ROWS
 TILE_PADDING = 40
 STATUS_BAR_H = 10
 SPARKLINE_W = tile_width - 2 * TILE_PADDING
-SPARKLINE_H = 200
+SPARKLINE_H = 340
 
 # Pygal sparkline style (transparent background)
 sparkline_style = Style(
@@ -130,11 +130,13 @@ try:
     value_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 100)
     name_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 46)
     change_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 52)
+    trend_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
 except OSError:
     title_font = ImageFont.load_default()
     value_font = ImageFont.load_default()
     name_font = ImageFont.load_default()
     change_font = ImageFont.load_default()
+    trend_font = ImageFont.load_default()
 
 # Create canvas
 canvas = Image.new("RGB", (CANVAS_WIDTH, CANVAS_HEIGHT), PAGE_BG)
@@ -176,6 +178,12 @@ for idx, metric in enumerate(metrics):
     arrow = "▲" if change > 0 else "▼"
     draw.text((tx + TILE_PADDING, cy), f"{arrow} {abs(change):.1f}%", fill=change_color, font=change_font)
 
+    # Separator + trend label above sparkline to fill the vertical gap
+    sp_y = ty + tile_height - SPARKLINE_H - TILE_PADDING
+    rule_y = sp_y - 52
+    draw.line([(tx + TILE_PADDING, rule_y), (tx + tile_width - TILE_PADDING, rule_y)], fill=INK_SOFT, width=2)
+    draw.text((tx + TILE_PADDING, rule_y + 10), "7-day trend", fill=INK_SOFT, font=trend_font)
+
     # Sparkline (full tile width, anchored to bottom of tile)
     sp_chart = pygal.Line(
         width=SPARKLINE_W,
@@ -196,7 +204,6 @@ for idx, metric in enumerate(metrics):
     sp_svg = sp_chart.render()
     sp_png = cairosvg.svg2png(bytestring=sp_svg, output_width=SPARKLINE_W, output_height=SPARKLINE_H)
     sp_img = Image.open(BytesIO(sp_png)).convert("RGBA")
-    sp_y = ty + tile_height - SPARKLINE_H - TILE_PADDING
     canvas.paste(sp_img, (tx + TILE_PADDING, sp_y), sp_img)
 
 # Save PNG
@@ -221,10 +228,12 @@ html_parts = [
         .status-bar {{ position: absolute; top: 0; left: 0; right: 0; height: 4px; }}
         .metric-name {{ color: {INK_SOFT}; font-size: 15px; margin-bottom: 8px; }}
         .metric-value {{ color: {INK}; font-size: 38px; font-weight: bold; margin-bottom: 8px; }}
-        .metric-change {{ font-size: 16px; font-weight: 600; margin-bottom: 8px; }}
+        .metric-change {{ font-size: 16px; font-weight: 600; margin-bottom: 12px; }}
         .change-pos {{ color: #009E73; }}
         .change-neg {{ color: #D55E00; }}
-        .sparkline {{ width: 100%; height: 70px; overflow: hidden; margin-top: 8px; }}
+        .trend-separator {{ border: none; border-top: 1px solid {INK_SOFT}; margin: 0 0 6px; }}
+        .trend-label {{ font-size: 12px; color: {INK_SOFT}; margin-bottom: 6px; }}
+        .sparkline {{ width: 100%; height: 70px; overflow: hidden; }}
         .sparkline svg {{ width: 100%; height: 100%; }}
         @media (max-width: 900px) {{ .dashboard {{ grid-template-columns: repeat(2, 1fr); }} }}
         @media (max-width: 600px) {{ .dashboard {{ grid-template-columns: 1fr; }} }}
@@ -264,6 +273,8 @@ for metric in metrics:
             <div class="metric-name">{metric["name"]}</div>
             <div class="metric-value">{metric["value"]:,}{metric["unit"]}</div>
             <div class="metric-change {change_class}">{arrow} {abs(change):.1f}%</div>
+            <hr class="trend-separator">
+            <div class="trend-label">7-day trend</div>
             <div class="sparkline">{sp_svg}</div>
         </div>
 """
