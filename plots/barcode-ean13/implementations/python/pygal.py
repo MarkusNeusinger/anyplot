@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 barcode-ean13: EAN-13 Barcode
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-21
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 86/100 | Created: 2026-05-21
 """
 
 import os
