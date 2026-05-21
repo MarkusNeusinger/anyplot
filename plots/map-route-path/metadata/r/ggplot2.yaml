@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: map-route-path
 created: '2026-05-21T05:52:13Z'
-updated: '2026-05-21T05:58:30Z'
+updated: '2026-05-21T06:08:18Z'
 generated_by: claude-sonnet
 workflow_run: 26207880210
 issue: 3768
@@ -12,48 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 88
+quality_score: 85
 review:
   strengths:
-  - Correct use of geom_path for ordered route visualization with elevation-based
-    viridis color gradient
-  - 'Perfect theme-adaptive chrome: all tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG)
-    correctly flip between light and dark themes, resulting in fully readable plots
-    in both modes'
-  - Realistic Colorado Rockies GPS track with appropriate coordinate range (~0.09
-    degrees) and realistic elevation profile (3100-3700 m)
-  - 'Idiomatic ggplot2 usage: coord_fixed for geographic aspect ratio, separate endpoint
-    data frame, guide_colorbar with custom dimensions, OKABE_ITO endpoint colors with
-    PAGE_BG stroke'
-  - 'Perfect code quality: flat script, set.seed(42), clean imports, correct ggsave
-    with ragg device'
+  - coord_fixed(ratio=1.31) shows geographic awareness and correct latitude correction
+    for Colorado — a non-trivial ggplot2 distinction
+  - Elevation color gradient with viridis is a meaningful added data dimension that
+    enriches the route visualization beyond a simple line map
+  - 'Full theme-adaptive chrome: all ink tokens (INK, INK_SOFT, PAGE_BG, ELEVATED_BG,
+    GRID_COLOR) correctly applied; dark render has no dark-on-dark failures'
+  - geom_path() correctly chosen over geom_line() — preserves waypoint sequence order,
+    critical for route maps
+  - Dual shape+fill mapping for endpoints creates a clear, accessible start/end distinction
   weaknesses:
-  - No geographic basemap — the plot shows bare coordinate axes without spatial context
-    (expected ggplot2 limitation without sf/ggmap, but meaningfully reduces the map
-    feel)
-  - Full 4-sided panel border (panel.border = element_rect) instead of the L-frame
-    style recommended by the style guide; while defensible for a coordinate map, it
-    adds visual weight
-  - No direction arrows along the path to indicate travel direction (spec notes as
-    optional but would add storytelling value)
-  - Grid lines in dark mode use INK_SOFT (#B8B7B0) which produces fairly prominent
-    white-ish horizontal and vertical lines; slightly more muted color or lower linewidth
-    would improve the dark render
+  - End marker (orange square) is positioned very close to the colorbar legend box
+    — increase right plot margin or shift the colorbar guide slightly lower to give
+    breathing room (e.g., plot.margin = margin(10, 30, 10, 10, unit='pt') or guide
+    offset)
+  - No direction arrows or visual cue showing travel direction along the route; spec
+    marks these as optional but they would improve the visualization at low additional
+    complexity
+  - Geographic basemap absent — accepted as ggplot2 limitation (sf/ggmap out of scope)
+    but noted as a spec gap
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct surface color, not pure white.
-      Chrome: Title "Rocky Mountain Trail · map-route-path · r · ggplot2 · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude" and "Latitude" in dark ink at 10pt, tick labels in INK_SOFT at 8pt — all legible. Legend box uses elevated background (#FFFDF6) with INK_SOFT border.
-      Data: Route path colored with viridis (purple→blue→teal→green→yellow-green→yellow) encoding elevation. Start marker is green circle (#009E73, OKABE_ITO[1]) at lower-left, End marker is orange square (#D55E00, OKABE_ITO[2]) at right side. Colorbar "Elevation (m)" shows scale 3100–3800. Grid lines are very subtle (0.15 linewidth).
-      Legibility verdict: PASS — all text readable, no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "Rocky Mountain Trail · map-route-path · r · ggplot2 · anyplot.ai" fully readable in dark ink. Axis labels "Longitude" (x) and "Latitude" (y) clearly visible at 10pt. Tick labels (-105.650 to -105.575, 40.39 to 40.43) readable at 8pt. Grid lines very subtle (linewidth=0.10). Legend box with elevated background shows Start/End markers and Elevation (m) colorbar.
+      Data: Viridis colormap path (purple/blue at ~3100m to yellow-green at ~3700m). Green filled circle (Okabe-Ito #009E73) at Start; orange filled square (Okabe-Ito #D55E00) at End. End marker sits very close to colorbar legend border.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black.
-      Chrome: Title in light ink (#F0EFE8), clearly readable against dark background. Axis labels and tick labels in INK_SOFT (#B8B7B0), readable. Legend box uses elevated dark background (#242420) with border. Grid lines appear slightly more visible than in light mode (INK_SOFT on dark background creates more contrast than intended) but remain non-dominant.
-      Data: Viridis route colors are identical to light render — purple to yellow gradient unchanged. Start and End marker colors identical (#009E73 and #D55E00). No dark-on-dark issues.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, axis labels, and tick labels all correctly flip to light ink (#F0EFE8/#B8B7B0). No dark-on-dark failures detected. Grid lines subtle. Legend background switches to elevated dark (#242420) with light text. All chrome elements properly theme-adapted.
+      Data: Viridis gradient colors are identical to light render. Green Start circle and orange End square unchanged. Data colors correctly theme-invariant.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -61,56 +56,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'Font sizes explicitly set (title=12, axis.title=10, axis.text=8,
-          legend=8/10). All text readable in both themes. Minor: title fills ~80%
-          width as expected for mandated long title.'
+        comment: All text readable in both themes; font sizes correctly set per library
+          guide. Minor deduction for dense geographic tick labels near minimum comfortable
+          size.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text or element overlap. Route path clear of labels. Endpoint
-          markers visible without obscuring annotations.
+        comment: End marker and colorbar legend are visually crowded/nearly touching
+          in both renders. No text-on-text overlap.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Route path linewidth=2.0 with 200 points — appropriate for medium
-          density. Endpoint markers size=6.5 are prominent. Viridis gradient clearly
-          visible along path.
+        comment: Route path (linewidth=2.0) and endpoint markers (size=6.5) clearly
+          visible and well-sized for 200 waypoints.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and CVD-safe. Start/End differentiated
-          by both color AND shape (circle vs square), not color alone.
+        comment: Viridis is perceptually uniform and CVD-safe. Okabe-Ito for categorical
+          markers.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas 3200x1800 (gate passed). coord_fixed(1.31) correct for geographic
-          data. Dual legend (endpoint + colorbar) occupies significant right-side
-          space, compressing route area slightly.
+        comment: Canvas correct 3200x1800. coord_fixed(1.31) gives proper geographic
+          aspect ratio. End marker encroaches on colorbar space.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled 'Longitude' and 'Latitude' — appropriate geographic
-          labels. Title correctly formatted with descriptive prefix.
+        comment: Longitude and Latitude are appropriate geographic labels. Title format
+          correct with descriptive prefix.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Continuous elevation uses viridis — correct. Start marker = #009E73
-          (OKABE_ITO[1]). End marker = #D55E00 (OKABE_ITO[2]). Backgrounds #FAF8F1/#1A1A17
-          correct in both themes.'
+        comment: Start=#009E73, End=#D55E00 (Okabe-Ito 1-2). Continuous elevation
+          uses viridis. Backgrounds correct for both themes.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -118,27 +110,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default (4): intentional viridis elevation gradient, coord_fixed
-          for geographic accuracy, PAGE_BG-colored stroke on endpoint markers shows
-          design awareness. Missing basemap limits geographic context.'
+        comment: Above default. Elevation-as-color is a considered design choice.
+          Dual shape+fill mapping for endpoints is intentional. coord_fixed ratio
+          shows geographic awareness.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): very subtle grid (linewidth=0.15), removed axis.line,
-          appropriate margins. Full 4-sided panel.border instead of L-frame, grid
-          slightly bright in dark mode (INK_SOFT #B8B7B0).'
+        comment: Very subtle grid (linewidth=0.10). No panel border. Clean axis lines.
+          Legend border appropriately subtle. Good whitespace.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): elevation gradient tells coherent mountain terrain
-          story. Start/End markers provide clear navigation context. Route shape communicates
-          trail character. Direction of travel implied by color progression.'
+        comment: Elevation gradient creates clear terrain narrative. Start/end markers
+          define journey boundaries. Route shape communicates mountain trail character.
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -146,57 +136,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Route path map using geom_path (not geom_line — correctly connects
-          in data order) for sequential waypoint visualization.
+        comment: geom_path() correctly implements connected route map with waypoints
+          in sequence order.
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Sequential path connection (geom_path), distinct Start/End markers
-          (circle+square with Okabe-Ito colors), elevation color gradient (viridis).
-          Basemap absent per ggplot2 scope limitations.
+        comment: Sequential path, distinct start/end markers, elevation color gradient
+          present. Basemap absent (ggplot2 out-of-scope limitation). Direction arrows
+          (optional) not implemented.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=longitude, Y=latitude, color=elevation. All 200 waypoints visible.
-          Sequence order preserved via geom_path.
+        comment: lon->x, lat->y, sequence->path order, elevation->color. All axes
+          show full data range.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''Rocky Mountain Trail · map-route-path · r · ggplot2 · anyplot.ai''
-          — correct format. Legend: Start/End with matching visual styles. Colorbar
-          labeled ''Elevation (m)''.'
+        comment: Title format correct with descriptive prefix. Legend labels Start,
+          End, Elevation (m) accurate and complete.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Shows path connectivity, elevation variation, start/end distinction,
-          200-waypoint resolution. All route path features demonstrated.
+        comment: Route path, elevation encoding, start/end markers, coordinate axes
+          present. Slightly missing direction indication.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Colorado Rockies coordinates (-105.65 to -105.55 lon, 40.39 to 40.43
-          lat). Realistic elevation 3100-3700m for the Rockies. Realistic GPS noise
-          added. Neutral mountain hiking topic.
+        comment: Colorado Rockies hiking trail, realistic coordinates (~40.4N, ~105.6W),
+          elevation 3100-3700m authentic for region.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: ~0.09 degree coordinate span (~10km trail), elevation range appropriate
-          for Colorado. 200 waypoints for trail GPS is realistic.
+        comment: 200 waypoints within spec range (50-1000). Elevation range realistic.
+          Coordinate precision appropriate for GPS track.
     code_quality:
       score: 10
       max: 10
@@ -218,46 +206,45 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: library(ggplot2) and library(ragg) — both used. tibble accessed via
-          namespace.
+        comment: Only ggplot2 and ragg loaded. tibble used via namespace (tibble::tibble)
+          without explicit library() — correct pattern.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean organization, no fake UI, appropriate complexity. Separate
-          endpoints tibble is good practice.
+        comment: Appropriate complexity. No fake interactivity. Clean layered grammar-of-graphics
+          composition.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via sprintf. Uses ragg::agg_png device
-          explicitly.
+        comment: sprintf('plot-%s.png', THEME) correctly generates themed filenames.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: geom_path for ordered sequential path, aes(color=elevation) for continuous
-          mapping, guide_colorbar with custom barwidth/barheight, coord_fixed for
-          geographic aspect ratio, scale_color_viridis_c, scale_fill_manual + scale_shape_manual
-          combined for endpoint markers.
+        comment: 'Excellent: geom_path() not geom_line() for route order; coord_fixed()
+          for geographic projection; guide_colorbar() customization; dual scale_fill_manual
+          + scale_shape_manual for endpoint semantics.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: coord_fixed() is the key ggplot2 feature for geographic visualization.
-          Combining geom_path data with geom_point(data=endpoints) for layered overlay
-          is idiomatic. guide_colorbar customization shows library knowledge.
+        comment: coord_fixed(ratio=1.31) calibrated for Colorado latitude (~40N).
+          geom_path vs geom_line is a subtle but critical ggplot2 choice. guide_colorbar()
+          with barwidth/barheight beyond defaults.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - ragg
   techniques:
   - colorbar
   - layer-composition
