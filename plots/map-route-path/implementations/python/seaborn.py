@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-21
@@ -93,12 +93,12 @@ ax_map.scatter(
     label="Start",
 )
 
-# End — Okabe-Ito position 2 (vermillion)
+# End — Okabe-Ito position 2 (vermillion) — larger to distinguish from dense viridis cluster
 ax_map.scatter(
     df["lon"].iloc[-1],
     df["lat"].iloc[-1],
     c="#D55E00",
-    s=300,
+    s=400,
     marker="s",
     edgecolors=PAGE_BG,
     linewidths=2,
@@ -119,7 +119,7 @@ for idx in [50, 100, 150, 200]:
 # Colorbar for elapsed time
 cbar = plt.colorbar(sc, ax=ax_map, pad=0.02, fraction=0.035)
 cbar.set_label("Elapsed Time (min)", fontsize=8, color=INK)
-cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
+cbar.ax.tick_params(labelsize=8, colors=INK_SOFT)
 cbar.outline.set_edgecolor(INK_SOFT)
 
 ax_map.set_xlabel("Longitude (°)", fontsize=10, color=INK)
