@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: map-route-path
 created: '2026-01-19T17:56:21Z'
-updated: '2026-05-21T05:54:59Z'
+updated: '2026-05-21T06:14:26Z'
 generated_by: claude-sonnet
 workflow_run: 26207744905
 issue: 3768
@@ -12,61 +12,58 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 87
 review:
   strengths:
-  - 'Perfect spec compliance — all required features implemented: basemap, route path,
-    start/end markers, color gradient for time, direction arrows, waypoint markers,
-    and interactive HTML export'
-  - 'Excellent data realism: Swiss Alps Zermatt region GPS track with realistic Alpine
-    coordinates, elevation profile (1600–2800m), GPS noise, switchbacks, and 6-hour
-    timestamp encoding'
-  - 'Full Okabe-Ito usage for all point markers: Start=#009E73 (brand green), End=#D55E00
-    (vermillion), waypoints=#E69F00 (orange), direction arrows=#0072B2 (blue)'
-  - 'Strong library mastery: uses Highmaps with Switzerland topology, WebMercator
-    projection, fitToGeometry viewport, mapline/mappoint series, colorAxis, and both
-    static PNG + interactive HTML outputs'
-  - 'Perfect theme adaptation in both renders — correct backgrounds (#FAF8F1 light
-    / #1A1A17 dark), all text uses adaptive tokens, no dark-on-dark failures'
-  - 'Clean code: seed set, flat KISS structure, all imports used, no fake UI elements'
+  - 'Full spec compliance — all required features implemented: viridis gradient encoding
+    time, start/end markers (green circle + vermillion square) with labels, direction
+    arrows at 4 waypoints, Switzerland geographic basemap, 150 GPS waypoints, and
+    interactive HTML with zoom/pan enabled'
+  - Excellent palette compliance — viridis gradient correctly used for continuous
+    time encoding (not Okabe-Ito), while categorical markers (start, end, arrows,
+    waypoints) all use Okabe-Ito positions in correct order
+  - 'Complete dual-theme support — all chrome elements (title, subtitle, legend text/border/background,
+    basemap land/border colors) adapt correctly between #FAF8F1 light and #1A1A17
+    dark; data colors are identical across both renders'
+  - Realistic and evocative data — Swiss Alps hiking trail in the Zermatt region with
+    GPS-like noise via cumulative random walk, switchback pattern via sine wave, and
+    realistic Alpine elevation (1600–2800 m over 6 hours)
+  - Perfect code structure — KISS layout (no functions/classes), reproducible with
+    np.random.seed(42), clean imports, PIL safety-net for canvas rounding, and correct
+    dual-artifact output (plot-{THEME}.png + plot-{THEME}.html)
   weaknesses:
-  - Canvas utilization — the map occupies only the upper ~55% of the 3200×1800 canvas,
-    leaving the lower ~40% as empty space. The colorAxis ('Time elapsed') was intended
-    at verticalAlign:'bottom' but appears to have rendered displaced into the legend
-    area rather than below the map. Expand the mapView bounding box, reduce spacingBottom,
-    or set the chart height to better fit the geographic content, so the map fills
-    more of the available canvas
-  - Route color gradient uses a custom blue-to-red diverging palette (#1a4f9c→#b2182b)
-    for a sequential time variable (0–6 hours). Per the style guide, sequential continuous
-    data should use viridis or cividis. Replace the 10-segment gradient with a viridis/plasma
-    colorAxis so the encoding is perceptually uniform and monotonic
-  - 'Middle segments of the route (~hours 2–4) render in very light colors (#d1e5f0,
-    #fddbc7) that have low contrast against both the light map basemap and the light
-    page background — data elements nearly wash out at the midpoint of the trail.
-    Using a perceptually-uniform sequential colormap (viridis) would fix this automatically'
-  - 'Design excellence: DE-01 and DE-02 are at library-default level. To improve:
-    add a thin elevation sparkline or annotation callout at peak elevation point,
-    increase visual hierarchy by making the route line thicker (lineWidth 16–18 for
-    the PNG), and add a subtle text annotation noting total distance or elevation
-    gain to give the chart a clear focal point'
+  - Map view distribution is unbalanced — bounding box extends 3× the lat range northward
+    (max_lat = max(lats) + _lat_range * 3.0), pushing the route into the bottom ~35%
+    of the map area. The upper ~65% shows empty Switzerland basemap territory above
+    the trail. Reduce the multiplier to 1.0–1.5 to vertically center the route better
+    within the canvas while retaining geographic context.
+  - Legend item font size (40px) is slightly below the recommended highcharts baseline
+    of 44px, and subtitle (38px) is below 40px. Raise legend itemStyle fontSize to
+    '44px' and subtitle style fontSize to '44px' for better proportional balance at
+    3200px canvas.
+  - 'Waypoint marker radius (8px) is somewhat small for 3200px canvas — at full resolution
+    the orange dots are visible but not prominent. Raise to radius: 11–12 for better
+    density-appropriate visibility (150 points is medium density, defaults should
+    be slightly larger).'
+  - 'LM-01: Implementation bypasses highcharts_core Python SDK in favor of raw JS/HTML.
+    While necessary for Highmaps geographic features (and correctly documented in
+    the code comment), it reduces idiomatic Python usage score.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "map-route-path · python · highcharts · anyplot.ai" in bold dark ink, very readable. Subtitle in muted dark gray, readable. Legend ("Markers") in top-right with warm white background, shows Start (0 hrs) / End (6 hrs) entries clearly.
-      Map: Switzerland basemap in warm light gray (#E8E4DC-like), canton borders in slightly darker neutral. Map content occupies the upper ~55% of the canvas; the lower ~40% is empty off-white space.
-      Data: Route path from upper-right (START, green circle #009E73) to lower-left (END, orange-red square #D55E00). Route segments colored blue-to-red gradient: deep blue at start, transitioning through sky blue, very light blue/near-white, light salmon, to deep red at end. Blue triangle direction arrows at 4 points along the trail. Orange (#E69F00) waypoint dots every 10th point. "START" and "END" data labels in matching colors, outlined for readability.
-      Colorbar: A "0" label visible inside/near the legend box suggests the colorAxis rendered in an unexpected position rather than below the map.
-      Legibility verdict: PASS — all text is clearly readable against the light background. No light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct light theme surface. Switzerland basemap rendered in warm beige (#E8E4DC land, #B8B4A8 borders), fitting well with the light surface.
+      Chrome: Title "map-route-path · python · highcharts · anyplot.ai" in dark #1A1A17, bold, 66px — clearly readable. Subtitle "Alpine Hiking Trail · Swiss Alps, Zermatt region · 150 GPS waypoints over 6 hours · route color = time elapsed" in lighter #4A4A44, 38px — readable. Legend upper-right with warm off-white background and warm border, "Markers" title in dark ink, items (Route 0h, Route 6h, Start 0 hrs, End 6 hrs) in #4A4A44 at 40px — readable.
+      Data: Route line runs east→west across southern Switzerland with viridis gradient from dark purple (#440154 at start/east) to bright yellow (#fde725 at end/west). Orange waypoint dots (#E69F00, 8px radius) visible along the route. Blue triangle direction arrows (#0072B2, 14px radius) at 4 intermediate points. Green circle START marker (#009E73, 22px radius) at the east end with "START" label in matching green. Vermillion square END marker (#D55E00, 18px radius) at the west end with "END" label in matching vermillion.
+      Layout: Route occupies bottom ~35% of the map area; upper ~65% is Switzerland basemap above the trail — notable empty space. Canvas 3200×1800 confirmed.
+      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface
-      Chrome: Title in bold near-white text, very readable. Subtitle in muted light gray, readable. Legend has dark elevated background with light text — readable. All chrome correctly flipped for dark theme.
-      Map: Switzerland basemap in dark warm gray (#2A2A25-like) with slightly lighter borders — appropriate dark adaptation.
-      Data: Route colors are IDENTICAL to light render (blue-to-red gradient) — Okabe-Ito data colors maintained as required. Start marker green, End marker orange-red, waypoints orange, arrows blue — all identical. All markers clearly visible against dark background.
-      Legibility verdict: PASS — no dark-on-dark failures. All text uses light adaptive tokens correctly in both renders.
+      Background: Warm near-black #1A1A17 — correct dark theme surface. Switzerland basemap rendered in dark warm tones (#2A2A25 land, #4A4A42 borders), maintaining warmth against the near-black surface.
+      Chrome: Title appears in light #F0EFE8 against dark background — clearly readable. Subtitle in light gray #B8B7B0 — readable. Legend with dark elevated background (#242420) and dark border, items in #B8B7B0 — readable against the legend background. No dark-on-dark text issues detected.
+      Data: Route viridis gradient colors are IDENTICAL to the light render — dark purple to bright yellow progression unchanged. Orange waypoints, blue arrows, green START circle, vermillion END square all render in identical Okabe-Ito colors as the light render. Only chrome (background, basemap, text) has flipped.
+      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures detected. Data colors consistent across themes.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -74,83 +71,90 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (66px title, 38px subtitle, 40px legend/coloraxis).
-          Fully readable in both themes. Minor: colorAxis ''0'' label rendered inside
-          legend area rather than at bottom.'
+        comment: All font sizes explicitly set — title 66px, subtitle 38px, legend
+          40px. All text readable in both themes. Subtitle/legend slightly below recommended
+          44px baseline but within acceptable range.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements. START/END labels clearly separated
-          from route.
+        comment: No overlapping text or data elements. START/END labels well-separated.
+          Direction arrows spaced at 30-point intervals.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Route line (lineWidth 12), markers, direction arrows, and waypoints
-          all clearly visible. Data density (150 points) appropriately handled with
-          segmented route.
+        comment: Route line (16px) is clearly visible with strong viridis gradient.
+          Direction arrows (14px radius triangles) are visible but small at scale.
+          Waypoint dots (8px radius) visible but could be larger for 150-point medium
+          density.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Middle route segments (~hours 2-4) use very light colors (#d1e5f0,
-          #fddbc7) with low contrast against the light map basemap. CVD concern: blue-red
-          hue encoding without shape disambiguation for tritanopia.'
+        passed: true
+        comment: Viridis is perceptually uniform and CVD-safe. Okabe-Ito markers are
+          colorblind-safe. START/END use green and vermillion with sufficient luminance
+          contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Map occupies only upper ~55% of 3200x1800 canvas. Lower ~40% is empty
-          space. colorAxis intended at bottom did not render below the map.
+        passed: true
+        comment: Canvas 3200x1800 correct. Route in bottom ~35% of map area due to
+          3x northward bounding box extension — geographic context is good but creates
+          unbalanced distribution with significant empty Switzerland basemap above
+          the trail.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No conventional axes (map plot). Subtitle provides rich context with
-          location, count, duration, and encoding explanation. colorAxis titled 'Time
-          elapsed' with hour labels.
+        comment: Map chart — no traditional axis labels appropriate. Title correctly
+          formatted. Subtitle provides context including units (hours, GPS waypoints).
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Discrete markers correctly use Okabe-Ito (Start=#009E73, End=#D55E00,
-          waypoints=#E69F00, arrows=#0072B2). Route gradient uses custom RdBu-like
-          diverging palette for a sequential time variable — should use viridis/cividis
-          per style guide. Backgrounds correctly themed.
+        passed: true
+        comment: 'Viridis gradient correctly used for continuous time encoding. Okabe-Ito
+          markers: #009E73 (start), #D55E00 (end), #0072B2 (arrows), #E69F00 (waypoints).
+          Backgrounds #FAF8F1/#1A1A17 correct. Data colors identical across both renders.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Warm earth-tone basemap and cohesive Okabe-Ito markers show design
-          intent. Large empty lower canvas and displaced colorbar hurt overall polish.
+        passed: true
+        comment: 'Above library defaults: viridis gradient is sophisticated continuous
+          encoding, geographic basemap adds meaningful spatial context, direction
+          arrows show directionality, Okabe-Ito markers are well-chosen, theme-adaptive
+          styling throughout. Route''s small proportion of canvas relative to empty
+          basemap space is a minor aesthetic detractor.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: false
-        comment: No grid (appropriate for maps), warm adaptive basemap colors, good
-          marker styling with outlines. Significant empty space below map reduces
-          refinement score.
+        passed: true
+        comment: Clean map styling with no unnecessary elements. Legend styled with
+          warm background and border. Map basemap uses warm-neutral tones appropriate
+          to theme. No traditional spines/grid (correct for map). The unbalanced map
+          view (excessive northern extent) is the main refinement gap.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Time progression via blue-to-red gradient, direction arrows showing
-          movement, START/END with labeled markers, and subtitle explaining encoding
-          all contribute to clear storytelling.
+        comment: 'Strong storytelling: viridis gradient makes time progression immediately
+          readable, START/END markers with labels create a clear journey narrative,
+          direction arrows guide the viewer through the trail, subtitle explicitly
+          states ''route color = time elapsed''. Multiple reinforcing visual cues
+          for the hiking journey.'
     spec_compliance:
       score: 15
       max: 15
@@ -160,30 +164,32 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: geographic map with connected sequential path. Switzerland
-          basemap included.'
+        comment: 'Correct: Highmaps geographic map with mapline route and mappoint
+          markers on basemap.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: sequential path, start/end markers, color
-          gradient for time, direction arrows, geographic basemap, interactive zoom/pan
-          in HTML version.'
+        comment: 'All spec features: sequential path (mapline), distinct start/end
+          markers (circle+square), viridis color gradient for time, direction arrows
+          (4 triangle markers), geographic basemap (Switzerland TopoJSON), interactive
+          HTML with zoom/pan.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly mapped, 150 waypoints, sequence order maintained
-          (blue=early, red=later).
+        comment: Lat/lon correctly mapped. Sequence defines path order. Color encodes
+          time progression. 150 waypoints in spec range (50-1000).
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'map-route-path · python · highcharts · anyplot.ai' — correct
-          format. Legend labels match data.
+        comment: 'Title: ''map-route-path · python · highcharts · anyplot.ai'' — correct
+          format. Legend labels descriptive: ''Route (0 h)'', ''Route (6 h)'', ''Start
+          (0 hrs)'', ''End (6 hrs)''.'
     data_quality:
       score: 15
       max: 15
@@ -193,23 +199,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all route map aspects: path connectivity, start/end distinction,
-          time encoding, direction, waypoint detail, GPS noise, Alpine switchbacks.'
+        comment: 'Shows all route path features: connected path line, color-encoded
+          progression, intermediate waypoints, directional arrows, distinct start/end,
+          geographic basemap context.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Swiss Alps Zermatt hiking trail — highly specific, realistic, and
-          neutral scenario.
+        comment: Swiss Alps hiking trail in Zermatt region — real, comprehensible,
+          neutral scenario. GPS-like noise via cumulative random walk, switchbacks
+          via sine wave, 6-hour duration, coordinates in correct Swiss Alps range.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Zermatt coordinates (~46°N, 7-8°E) accurate for Switzerland. Elevation
-          1600-2800m realistic for Alpine terrain. 150 waypoints over 6 hours reasonable
-          GPS density.
+        comment: Elevation 1600-2800m (realistic Alpine values with summit and descent).
+          Coordinates in Valais/Zermatt region (46°N, 7-8°E). 150 waypoints over 6
+          hours (1 per 2.4 min — plausible GPS logging interval).
     code_quality:
       score: 10
       max: 10
@@ -219,34 +227,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> data generation -> chart config -> Selenium
-          screenshot. No functions or classes.'
+        comment: 'No functions or classes. Procedural: imports → tokens → data generation
+          → HTML construction → screenshot → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set at top.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
         comment: 'All imports used: json, os, tempfile, time, urllib.request, pathlib.Path,
-          numpy, PIL.Image, selenium.'
+          numpy, PIL.Image, selenium webdriver/options.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized, no fake UI elements. Produces both PNG and HTML artifacts
-          correctly.
+        comment: Clean code. Appropriate complexity for a Highmaps implementation.
+          No fake UI. Dual HTML artifacts (inline for screenshot, CDN for web) is
+          a well-structured pattern.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. PIL safety-net
+          for canvas rounding.
     library_mastery:
       score: 8
       max: 10
@@ -256,33 +266,33 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Uses Highmaps-specific series types (map, mapline, mappoint), colorAxis,
-          mapView with fitToGeometry, WebMercator projection, and topology JSON. Direct
-          JS embedding is the correct approach for Highmaps geographic features.
+        comment: 'Correctly uses Highmaps JS directly (justified: highcharts_core
+          Python SDK doesn''t support Highmaps geographic features). Proper mapChart,
+          mapline/mappoint series types, GeoJSON LineString geometry format, fitToGeometry
+          for bounding box control. Slightly penalized for bypassing the Python SDK.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Leverages Highmaps-exclusive capabilities: Switzerland TopoJSON
-          basemap, geographic projection, fitToGeometry viewport, segmented mapline
-          series for gradient encoding, rotated triangle markers as direction arrows.'
-  verdict: REJECTED
+        comment: 'Strong use of Highmaps-specific features: mapChart with WebMercator
+          projection, mapline series with GeoJSON LineString, mappoint markers with
+          custom shapes, fitToGeometry polygon for route-bounded view, TopoJSON Switzerland
+          basemap, mapNavigation for interactive HTML.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - colorbar
   - html-export
-  - hover-tooltips
   - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum
-  - time-series
   styling:
-  - custom-colormap
   - edge-highlighting
+  - gradient-fill
