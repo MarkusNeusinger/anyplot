@@ -1,19 +1,22 @@
-""" pyplots.ai
+""" anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-19
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-21
 """
+
+import os
 
 import pandas as pd
 from lets_plot import (
     LetsPlot,
     aes,
-    element_blank,
+    element_rect,
     geom_rect,
     geom_text,
     ggplot,
     ggsave,
     ggsize,
+    layer_tooltips,
     scale_fill_identity,
     theme,
     theme_void,
@@ -24,10 +27,12 @@ from lets_plot import (
 
 LetsPlot.setup_html()
 
-# Code 128 encoding tables
-# Each character is encoded as 6 alternating bars and spaces with varying widths (1-4 units)
-# Total width per character: 11 units (except stop: 13 units)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
+# Code 128 encoding patterns: each digit is the width of alternating bar/space elements
 CODE128_PATTERNS = {
     0: "212222",
     1: "222122",
@@ -135,111 +140,107 @@ CODE128_PATTERNS = {
     103: "211412",  # Start Code A
     104: "211214",  # Start Code B
     105: "211232",  # Start Code C
-    106: "2331112",  # Stop pattern (7 elements, total 13 units)
+    106: "2331112",  # Stop (7 elements, 13 units)
 }
 
-# Code 128B character to value mapping (ASCII 32-127 printable characters)
+# Code 128B maps ASCII 32–126 (printable chars) to values 0–94
 CODE128B_CHARS = {chr(i + 32): i for i in range(95)}
-CODE128B_CHARS["FNC1"] = 102
-CODE128B_CHARS["FNC2"] = 97
-CODE128B_CHARS["FNC3"] = 96
-CODE128B_CHARS["FNC4"] = 100
 
-
-def encode_code128b(text):
-    """Encode text using Code 128B (ASCII printable characters)."""
-    values = []
-    for char in text:
-        if char in CODE128B_CHARS:
-            values.append(CODE128B_CHARS[char])
-        else:
-            values.append(0)
-    return values
-
-
-def calculate_checksum(values):
-    """Calculate Code 128 check digit using modulo 103."""
-    checksum = 104  # Start code B value
-    for i, value in enumerate(values):
-        checksum += value * (i + 1)
-    return checksum % 103
-
-
-def pattern_to_bars(pattern):
-    """Convert pattern string to list of (is_bar, width) tuples."""
-    bars = []
-    is_bar = True
-    for width in pattern:
-        bars.append((is_bar, int(width)))
-        is_bar = not is_bar
-    return bars
-
-
-def generate_barcode_bars(text, bar_y_min, bar_y_max):
-    """Generate complete barcode bar data."""
-    values = encode_code128b(text)
-    checksum = calculate_checksum(values)
-    sequence = [104] + values + [checksum, 106]
-
-    all_bars = []
-    quiet_zone = 10
-    x_pos = quiet_zone
-
-    for code in sequence:
-        pattern = CODE128_PATTERNS[code]
-        bars = pattern_to_bars(pattern)
-        for is_bar, width in bars:
-            if is_bar:
-                all_bars.append(
-                    {
-                        "xmin": float(x_pos),
-                        "xmax": float(x_pos + width),
-                        "ymin": float(bar_y_min),
-                        "ymax": float(bar_y_max),
-                        "fill": "#000000",
-                    }
-                )
-            x_pos += width
-
-    total_width = x_pos + quiet_zone
-    return all_bars, total_width
-
-
-# Data - Example shipping label content
+# Data — shipping label barcode
 content = "SHIP-2024-ABC123"
 
-# Bar dimensions
-bar_height = 80
-bar_y_min = 20
-bar_y_max = bar_y_min + bar_height
+# Encode each character to its Code 128B symbol value
+char_values = [CODE128B_CHARS.get(c, 0) for c in content]
 
-# Generate barcode bars
-bars_data, total_width = generate_barcode_bars(content, bar_y_min, bar_y_max)
+# Checksum: start-B constant (104) plus each value weighted by position (1-indexed)
+checksum = 104
+for i, v in enumerate(char_values):
+    checksum += v * (i + 1)
+checksum = checksum % 103
 
-# Create DataFrame for bars
-df_bars = pd.DataFrame(bars_data)
+# Full symbol sequence: start-B + data symbols + check digit + stop
+sequence = [104] + char_values + [checksum, 106]
 
-# Create DataFrame for text labels
-df_content = pd.DataFrame({"x": [total_width / 2], "y": [8], "label": [content]})
+# Rasterize symbols into bar rectangles; spaces are implicit gaps
+quiet_zone = 10
+x_pos = quiet_zone
+bar_ymin, bar_ymax = 32.0, 98.0
+bars = []
 
-df_title = pd.DataFrame(
-    {"x": [total_width / 2], "y": [bar_y_max + 15], "label": ["barcode-code128 · letsplot · pyplots.ai"]}
+for sym_idx, code in enumerate(sequence):
+    if sym_idx == 0:
+        sym_label = "Start Code B"
+    elif sym_idx == len(sequence) - 1:
+        sym_label = "Stop"
+    elif sym_idx == len(sequence) - 2:
+        sym_label = f"Check digit: {checksum}"
+    else:
+        char = content[sym_idx - 1]
+        sym_label = f"'{char}'  pos {sym_idx}  Code 128B value {char_values[sym_idx - 1]}"
+    is_bar = True
+    for ch in CODE128_PATTERNS[code]:
+        w = int(ch)
+        if is_bar:
+            bars.append(
+                {
+                    "xmin": float(x_pos),
+                    "xmax": float(x_pos + w),
+                    "ymin": bar_ymin,
+                    "ymax": bar_ymax,
+                    "fill": "#000000",
+                    "symbol": sym_label,
+                }
+            )
+        x_pos += w
+        is_bar = not is_bar
+
+total_width = x_pos + quiet_zone
+cx = total_width / 2
+
+df_bars = pd.DataFrame(bars)
+
+# White background rectangle ensures barcode contrast on both light and dark themes
+df_barcode_bg = pd.DataFrame(
+    {
+        "xmin": [0.0],
+        "xmax": [float(total_width)],
+        "ymin": [bar_ymin - 4.0],
+        "ymax": [bar_ymax + 4.0],
+        "fill": ["#FFFFFF"],
+    }
 )
 
-# Create plot
+df_text = pd.DataFrame({"x": [cx], "y": [18.0], "label": [content]})
+df_annotation = pd.DataFrame(
+    {"x": [cx], "y": [7.0], "label": [f"{len(content)} chars · Code 128B · check digit: {checksum}"]}
+)
+df_subtitle = pd.DataFrame(
+    {"x": [cx], "y": [118.0], "label": [f"Shipping label · Code 128B · {len(content)} characters"]}
+)
+df_title = pd.DataFrame({"x": [cx], "y": [127.0], "label": ["barcode-code128 · python · letsplot · anyplot.ai"]})
+
+# Plot
 plot = (
     ggplot()
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"), data=df_bars)
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"), data=df_barcode_bg, color="#FFFFFF"
+    )
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"),
+        data=df_bars,
+        tooltips=layer_tooltips().line("@{symbol}"),
+    )
     + scale_fill_identity()
-    + geom_text(aes(x="x", y="y", label="label"), data=df_content, size=18)
-    + geom_text(aes(x="x", y="y", label="label"), data=df_title, size=14)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_text, size=14, color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_annotation, size=9, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_subtitle, size=9, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_title, size=11, color=INK_SOFT)
     + xlim(0, total_width)
-    + ylim(0, bar_y_max + 30)
+    + ylim(0, 135)
     + theme_void()
-    + theme(plot_background=element_blank(), panel_background=element_blank())
-    + ggsize(1600, 900)
+    + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG), panel_background=element_rect(fill=PAGE_BG))
+    + ggsize(800, 450)
 )
 
-# Save outputs
-ggsave(plot, "plot.png", scale=3)
-ggsave(plot, "plot.html")
+ggsave(plot, f"plot-{THEME}.png", scale=4, path=".")
+ggsave(plot, f"plot-{THEME}.html", path=".")
