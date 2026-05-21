@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:58:41Z'
-updated: '2026-05-21T01:03:43Z'
+updated: '2026-05-21T01:13:17Z'
 generated_by: claude-sonnet
 workflow_run: 26198713909
 issue: 3809
@@ -15,48 +15,37 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-c
 quality_score: 88
 review:
   strengths:
-  - 'Complete, technically correct Code 128B implementation from scratch: correct
-    start-B symbol (104), character value mapping, modulo-103 checksum, and stop pattern
-    (106) — all per the spec'
-  - White barcode background (df_barcode_bg) ensures the black bars remain scannable
-    in both light and dark themes — a deliberate, non-obvious design decision
-  - 'Perfect canvas dimensions: ggsize(800,450) + scale=4 = 3200×1800 px exactly'
-  - 'All required spec features present: quiet zones, start/check/stop patterns, human-readable
-    text below barcode, high-contrast black bars on white'
-  - Realistic, neutral content ('SHIP-2024-ABC123') fits the shipping label application
-    listed in the spec
-  - 'Correct theme-adaptive chrome throughout: PAGE_BG, INK, and INK_SOFT tokens applied
-    to all text and backgrounds'
+  - 'Correct and complete Code 128B encoding: character mapping, weighted modulo-103
+    checksum, proper symbol sequence (start -> data -> check -> stop), quiet zones'
+  - White barcode background rectangle correctly isolates the barcode from both light
+    and dark page backgrounds — scannable in both themes
+  - Interactive tooltips expose symbol-level detail (character, position, code value)
+    on hover — excellent use of lets-plot's distinctive layer_tooltips() capability
+  - All text elements use theme-adaptive color tokens; perfect light/dark theme handling
+    throughout
+  - Fully deterministic, clean, flat code — easy to audit and verify
   weaknesses:
-  - 'Design Excellence gap (12/20): the layout is functional and well-structured but
-    does not reach publication-ready sophistication. The white barcode box has a visible
-    default geom_rect border that breaks the seamlessness — add `color=PAGE_BG` (or
-    `color=''white''`) on df_barcode_bg to eliminate the outlined-box look and integrate
-    cleanly with the background.'
-  - 'DE-01 limited (5/8): no design differentiation beyond the functional minimum
-    for a barcode. Consider adding a subtle annotation with contextual metadata (e.g.,
-    ''16 chars · Code 128B · check digit: XX'') beneath or beside the barcode to add
-    informational hierarchy and polish.'
-  - 'DE-03 limited (3/6): visual hierarchy exists (title → barcode → human text) but
-    no storytelling layer. A descriptive subtitle such as ''Shipping label · Code
-    128B · 16 characters'' positioned between the title and the barcode would add
-    meaningful context and improve narrative flow without cluttering the design.'
-  - 'LM-02 low (2/5): lets-plot''s HTML export is generated but the interactive potential
-    (e.g., a tooltip showing character-level encoding details on hover) is not explored.
-    Even a static annotation layer using letsplot''s geom_text with a well-designed
-    label panel would better demonstrate the library''s grammar-of-graphics strength.'
+  - 'Design Excellence is functional but modest: the composition is technically correct
+    but there is no creative visual emphasis beyond the barcode itself. Consider adding
+    a subtle rounded border or shadow to the white barcode rectangle, or slightly
+    larger quiet-zone padding for more visual breathing room.'
+  - 'Title rendered with INK_SOFT (#4A4A44 light / #B8B7B0 dark) instead of INK (#1A1A17
+    light / #F0EFE8 dark) — the title should use primary ink for stronger typographic
+    hierarchy over the human-readable text below.'
+  - No visual differentiation between start/stop patterns and data bars — an annotation
+    or subtle bracket marking these structural zones would improve educational value.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot surface, not pure white.
-      Chrome: Title "barcode-code128 · python · letsplot · anyplot.ai" rendered in muted dark gray (INK_SOFT = #4A4A44), clearly readable at the top center. No axis labels, tick labels, or grid (theme_void, appropriate for a barcode).
-      Data: A large white rectangle (quiet zone + barcode area) holds dense black bars occupying roughly 80% of canvas width and 45% of canvas height. All bars are high-contrast black on white — maximum scan fidelity. Human-readable "SHIP-2024-ABC123" in large dark INK text is prominently displayed below the barcode. The white background rect has a thin default border visible against the off-white page — a minor refinement gap (see weaknesses).
-      Legibility verdict: PASS — all text elements are clearly readable against the light background. No light-on-light failures.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "barcode-code128 · python · letsplot · anyplot.ai" in dark ink at top; subtitle "Shipping label · Code 128B · 16 characters" in muted gray below title. Human-readable text "SHIP-2024-ABC123" in large dark ink below barcode; annotation "16 chars · Code 128B · check digit: 31" in small muted gray below that. All text clearly readable against light background.
+      Data: Barcode occupies center of canvas in a white (#FFFFFF) background rectangle with black (#000000) bars of varying widths. Quiet zones visible on both sides. Bar pattern corresponds to Code 128B encoding of SHIP-2024-ABC123 with start code, data, check digit, and stop.
+      Legibility verdict: PASS — all text elements readable, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title in lighter muted gray (INK_SOFT = #B8B7B0 for dark theme), clearly legible against the dark background. Human-readable "SHIP-2024-ABC123" rendered in INK (#F0EFE8) — bright, large, fully readable.
-      Data: The white barcode background rectangle is retained (mandatory for barcode functionality — black bars on white for scanning), appearing as a white label inset on the dark canvas. The barcode bars are identical black-on-white as in the light render. The white rect border becomes a white outline on dark background — also visible as in the light render.
-      Legibility verdict: PASS — no dark-on-dark failures. All text is light-colored against the near-black surface. Data colors (black barcode bars on white background) are functionally unchanged between themes as required — background adapts, barcode scan zone does not.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title and subtitle rendered in light cream/off-white tones (#F0EFE8-ish) against the dark background — fully legible. Human-readable text "SHIP-2024-ABC123" in light tone, clearly visible. Annotation in muted light gray. NO dark-on-dark failures detected.
+      Data: White barcode background rectangle (#FFFFFF) preserved exactly as in light render — black bars on white ensures barcode scannability regardless of page theme. Data colors (black bars on white) identical between light and dark renders; only chrome elements flip.
+      Legibility verdict: PASS — all text elements readable, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
       score: 30
@@ -67,82 +56,71 @@ review:
         score: 8
         max: 8
         passed: true
-        comment: All font sizes explicitly set (size=11 title, size=14 human-readable
-          text). Both text elements clearly readable in light and dark renders at
-          full and mobile scale. Well-proportioned for barcode format.
+        comment: All text clearly readable in both light and dark renders at appropriate
+          sizes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Title, barcode, and human-readable text
-          are cleanly separated.
+        comment: All elements well-spaced with no collisions
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Barcode bars are black on white — maximum contrast. White background
-          ensures visibility in both themes.
+        comment: Barcode bars clearly visible; white background rectangle ensures
+          contrast in both themes
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: 'Black bars on white background: maximum luminance contrast. CVD-safe
-          by design.'
+        comment: Black bars on white provide maximum contrast; chrome uses theme-adaptive
+          tokens
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas (ggsize 800x450 + scale=4). Barcode fills
-          ~80% of width with balanced margins. No clipping.
+        comment: Clean centered layout, nothing clipped, good proportional whitespace
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title follows required format. Human-readable barcode content shown
-          below as required by spec. No axes needed (barcode format).
+        comment: Title follows correct format; descriptive subtitle present
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds correct: #FAF8F1 light, #1A1A17 dark. No categorical
-          series (barcode bars must be black). Chrome (INK/INK_SOFT tokens) theme-correct
-          in both renders.'
+        comment: 'Backgrounds #FAF8F1 / #1A1A17 correct; chrome adaptive; Okabe-Ito
+          N/A (barcode bars must be #000000 per spec)'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above ''well-configured default'' level due to deliberate white
-          barcode background for theme compatibility and good typography hierarchy
-          (smaller title, larger human-readable text). But limited design differentiation:
-          no contextual annotations, no decorative polish beyond the functional minimum.'
+        passed: true
+        comment: Professional, purposeful composition with intentional white barcode
+          bg; not exceptional artistry
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: 'theme_void perfectly removes all chart chrome. Generous whitespace.
-          Refinement gap: default geom_rect border visible on the white barcode background
-          — setting color=PAGE_BG would integrate it cleanly.'
+        passed: true
+        comment: theme_void() clean canvas; good whitespace; limited additional refinement
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: 'Clear visual hierarchy: title at top, barcode center, human-readable
-          text below. The human text confirms what is encoded. But no storytelling
-          layer — no subset annotation, no character count, no contextual metadata
-          that would make this a showcase rather than a functional render.'
+        passed: true
+        comment: 'Clear four-level hierarchy: title -> barcode -> readable text ->
+          metadata'
     spec_compliance:
       score: 15
       max: 15
@@ -152,28 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Code 128 barcode visualization with proper bar/space encoding.
+        comment: Correct Code 128 barcode using geom_rect for bars
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones, Start Code B, check digit (modulo 103), stop pattern,
-          human-readable text, high-contrast black bars on white — all present.
+        comment: Quiet zones, Start Code B, data symbols, modulo-103 check digit,
+          stop pattern, human-readable text all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Content 'SHIP-2024-ABC123' correctly encoded using Code 128B mapping
-          (ASCII 32-126 to values 0-94). Checksum correctly computed.
+        comment: SHIP-2024-ABC123 correctly encoded; bar widths follow Code 128 proportions
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'barcode-code128 · python · letsplot · anyplot.ai'.
-          No legend needed.
+        comment: Title is exactly 'barcode-code128 · python · letsplot · anyplot.ai';
+          no legend needed
     data_quality:
       score: 15
       max: 15
@@ -183,22 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Code 128 features: start pattern, multi-character data
-          encoding, weighted checksum, stop pattern, quiet zones on both sides.'
+        comment: 'Full Code 128B implementation: char mapping, checksum, symbol sequence,
+          quiet zones, rasterized bars, readable text, interactive tooltips'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: '''SHIP-2024-ABC123'' is a plausible, neutral shipping label ID matching
-          the spec''s primary application example exactly.'
+        comment: SHIP-2024-ABC123 is a realistic shipping label barcode; neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 16 characters is well within the spec's 48-char recommendation. Content
-          uses the uppercase alphanumeric range appropriate for Code 128B.
+        comment: Barcode fills canvas width; bar proportions respect Code 128 standard
+          widths
     code_quality:
       score: 10
       max: 10
@@ -208,36 +184,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → constants → encoding tables → data encoding
-          → checksum → rasterization → plot → save. No functions or classes.'
+        comment: Flat procedural code; no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — no random elements; same input always produces
-          identical barcode.
+        comment: 'Fully deterministic: fixed input string, algorithm-derived output'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All lets_plot symbols imported are used. pandas and os are both used.
+        comment: All imported names are used; no dead imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean implementation of Code 128B from first principles. Appropriate
-          complexity for manual barcode generation without over-engineering.
+        comment: Clean loop for rasterizing symbols; well-structured DataFrames
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (with scale=4) and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png (scale=4 -> 3200x1800) and plot-{THEME}.html
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -245,26 +218,25 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct ggplot2-style grammar: geom_rect for bars, geom_text for
-          labels, scale_fill_identity for direct color pass-through, theme_void, ggsize
-          with canonical dimensions. Could use labs() for title instead of geom_text
-          positioning.'
+        comment: 'Proper lets-plot grammar: ggplot + geom_rect + geom_text + scale_fill_identity
+          + theme_void + ggsize'
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses scale_fill_identity (idiomatic for direct color mapping) and
-          generates HTML output (lets-plot distinctive). However, core visualization
-          relies on basic geom_rect/geom_text which would translate directly to ggplot2
-          or plotnine with minimal changes. Interactive HTML capability not leveraged.
-  verdict: REJECTED
+        passed: true
+        comment: Uses layer_tooltips().line() for per-symbol interactive hover; HTML
+          export alongside PNG
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - html-export
-  - layer-composition
+  - hover-tooltips
   patterns:
+  - data-generation
+  - matrix-construction
   - iteration-over-groups
   dataprep: []
   styling:
