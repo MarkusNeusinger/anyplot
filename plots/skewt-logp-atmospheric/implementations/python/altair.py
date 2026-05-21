@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-21
@@ -41,9 +41,10 @@ x_domain = [-48, 60]
 X_MARGIN = 5  # pre-filter margin to exclude vl-convert layout inflation from out-of-range values
 
 # Unified color/dash scheme (single legend covers all 6 element types)
-ALL_LABELS = ["Isotherm", "Dry Adiabat", "Moist Adiabat", "Mixing Ratio", "Temperature", "Dewpoint"]
-ALL_COLORS = ["#888888", "#228B22", "#9932CC", "#4169E1", "#DC143C", "#306998"]
-ALL_DASHES = [[4, 4], [1, 0], [6, 3], [2, 2], [1, 0], [8, 4]]
+# Data series first so Temperature gets Okabe-Ito position 1 (#009E73 brand green)
+ALL_LABELS = ["Temperature", "Dewpoint", "Isotherm", "Dry Adiabat", "Moist Adiabat", "Mixing Ratio"]
+ALL_COLORS = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+ALL_DASHES = [[1, 0], [8, 4], [4, 4], [1, 0], [6, 3], [2, 2]]
 
 full_color_scale = alt.Scale(domain=ALL_LABELS, range=ALL_COLORS)
 full_dash_scale = alt.Scale(type="ordinal", domain=ALL_LABELS, range=ALL_DASHES)
