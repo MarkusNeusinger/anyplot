@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-21
@@ -75,6 +75,7 @@ input_code = "400638133393"
 total = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(input_code))
 check_digit = str((10 - (total % 10)) % 10)
 full_code = input_code + check_digit  # → "4006381333931"
+ean_formatted = f"{full_code[0]} {full_code[1:7]} {full_code[7:]}"  # "4 006381 333931"
 
 # Encode EAN-13 bit pattern
 lg_pattern = FIRST_DIGIT_PATTERN[full_code[0]]
@@ -156,11 +157,20 @@ for i, digit in enumerate(full_code[7:13]):
         color=INK,
     )
 
+# Section labels — barcode anatomy guide below digit row
+# Country (1–3): first digit at x=5.5, digits 2–3 at x=15.5, 22.5 → center=14.0
+# Manufacturer (4–8): left digits 4–7 at x=29.5..50.5, right digit 8 at x=62.5 → center=46.0
+# Product (9–12): right digits 9–12 at x=69.5..90.5 → center=80.0
+# Check (13): right digit 13 at x=97.5
+sections = [("Country (1–3)", 14.0), ("Manufacturer (4–8)", 46.0), ("Product (9–12)", 80.0), ("Check (13)", 97.5)]
+for label, cx in sections:
+    ax.text(cx, digit_y - 2.0, label, fontsize=7, ha="center", va="top", color=INK_SOFT)
+
 # Axis bounds and clean presentation
 x_max = start_x + total_modules + quiet_zone  # 9 + 95 + 9 = 113
 y_max = start_y + guard_height + 5.0
 ax.set_xlim(0, x_max)
-ax.set_ylim(3.5, y_max)  # trim excess blank below digits
+ax.set_ylim(3.5, y_max)
 ax.axis("off")
 
 # Title
@@ -173,6 +183,18 @@ ax.text(
     va="bottom",
     fontweight="medium",
     color=INK,
+)
+
+# EAN-13 grouping format caption
+ax.text(
+    start_x + total_modules / 2,
+    start_y + guard_height + 0.5,
+    ean_formatted,
+    fontsize=9,
+    ha="center",
+    va="bottom",
+    fontfamily="monospace",
+    color=INK_SOFT,
 )
 
 # Save
