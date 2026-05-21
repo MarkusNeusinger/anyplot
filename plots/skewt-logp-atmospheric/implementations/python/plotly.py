@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-20
@@ -19,7 +19,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 BRAND = "#009E73"  # Okabe-Ito pos 1 — temperature profile
-C_DEWPT = "#0072B2"  # Okabe-Ito pos 3 — dewpoint profile
+C_DEWPT = "#D55E00"  # Okabe-Ito pos 2 — dewpoint profile
 
 # Reference line colors: subtle, theme-adaptive
 C_ISO = "rgba(80,80,80,0.22)" if THEME == "light" else "rgba(180,180,180,0.28)"
@@ -43,17 +43,6 @@ Rv = 461.5  # J/(kg·K)
 Rd_Cp = Rd / Cp  # ≈ 0.2854
 
 
-def sat_vp(T_C):
-    """Saturation vapor pressure (hPa) via Tetens formula."""
-    return 6.112 * np.exp(17.67 * T_C / (T_C + 243.5))
-
-
-def sat_mr_scalar(T_C, P_hPa):
-    """Saturation mixing ratio (kg/kg) at a single level."""
-    es = sat_vp(T_C)
-    return 0.622 * es / max(P_hPa - es, 0.001)
-
-
 def moist_adiabat(T0_C, P_start=1000.0, P_end=100.0, n=150):
     """Integrate moist adiabat from P_start to P_end starting at T0_C."""
     P = np.linspace(P_start, P_end, n)
@@ -61,7 +50,8 @@ def moist_adiabat(T0_C, P_start=1000.0, P_end=100.0, n=150):
     T[0] = T0_C
     for i in range(1, n):
         T_K = T[i - 1] + 273.15
-        rs = sat_mr_scalar(T[i - 1], P[i - 1])
+        es = 6.112 * np.exp(17.67 * T[i - 1] / (T[i - 1] + 243.5))
+        rs = 0.622 * es / max(P[i - 1] - es, 0.001)
         num = Rd * T_K + Lv * rs
         den = P[i - 1] * (Cp + Lv**2 * rs / (Rv * T_K**2))
         T[i] = T[i - 1] + (num / den) * (P[i] - P[i - 1])
@@ -122,6 +112,11 @@ dewpoint = np.array(
         -90.0,
     ]
 )
+
+# Lifting Condensation Level (LCL) — surface parcel T=32°C, Td=24°C
+# At DALR=9.8°C/km and dewpoint cooling ~1.8°C/km, they meet at z≈1 km ≈ 900 hPa
+LCL_P = 900.0
+LCL_T = 22.0
 
 # Pressure array for reference lines
 P_ref = np.linspace(100.0, 1000.0, 200)
@@ -282,6 +277,27 @@ fig.update_layout(
         yanchor="top",
     ),
     margin=dict(l=80, r=40, t=80, b=60),
+    annotations=[
+        dict(
+            x=skew_x(LCL_T, LCL_P),
+            y=LCL_P,
+            xref="x",
+            yref="y",
+            text="LCL ≈ 900 hPa",
+            showarrow=True,
+            arrowhead=2,
+            arrowcolor=INK_SOFT,
+            arrowwidth=1.5,
+            ax=55,
+            ay=-30,
+            font=dict(size=10, color=INK),
+            bgcolor=ELEVATED_BG,
+            bordercolor=INK_SOFT,
+            borderwidth=1,
+            borderpad=4,
+            opacity=0.9,
+        )
+    ],
 )
 
 # Save
