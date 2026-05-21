@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:28:42Z'
-updated: '2026-05-21T02:10:53Z'
+updated: '2026-05-21T02:20:18Z'
 generated_by: claude-sonnet
 workflow_run: 26200881016
 issue: 3808
@@ -12,45 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/letsplot/plot-dark.html
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - 'Technically correct EAN-13 implementation: L/G/R encoding tables, parity pattern
-    lookup, and guard-bar geometry are all accurate'
-  - Theme adaptation is well-executed — bar fill inverts correctly between light/dark
-    surfaces using BAR_COLOR token (dark bars on light bg, light bars on dark bg)
-  - Real German retail barcode data (4006381333931) with authentic GS1-Germany prefix
-    — specific and authentic real-world context
-  - Canvas is exactly 3200x1800 (ggsize(800,450) + scale=4) — canonical landscape
-    size per spec
-  - scale_fill_identity() is the correct letsplot idiom for directly-mapped fill aesthetics;
-    xlim/ylim and theme_void used idiomatically
+  - Correct EAN-13 encoding with guard patterns (start 101, center 01010, end 101),
+    quiet zones, and first digit outside left guard
+  - Theme-adaptive bar colors (black on light, white on dark) are the only sensible
+    approach for a functional barcode
+  - 'Full letsplot idiom: ggplot + geom_rect + aes + scale_fill_identity + ggsize(800,450)
+    scale=4 gives exact 3200x1800 PNG'
+  - layer_tooltips() with column-reference syntax (@section, Module @position) is
+    a genuine letsplot-distinctive feature
+  - Clean KISS structure — no functions/classes, deterministic hard-coded EAN-13 data,
+    all imports used
+  - Correct check digit calculation inline; monospace font for digit labels is authentic
+    to barcode style
   weaknesses:
-  - Title font size size=11 produces ~44 source-px at scale=4, filling only ~40% of
-    canvas width; style guide expects 70-85% for the long mandated title — increase
-    title geom_text size to 14-16
-  - Default letsplot canvas border stroke is visible in both renders despite element_rect(color=PAGE_BG)
-    — add panel_border=element_blank() to the theme() call to fully suppress the frame
-  - 'Bottom digit crowding: ylim(0, guard_y_max+45) leaves zero bottom margin causing
-    digit labels at y=20 to appear close to the canvas bottom edge — shift ylim lower
-    bound to -15 or -20'
-  - Three helper functions (calculate_check_digit, encode_ean13, generate_barcode_bars)
-    violate the no-functions KISS structure — inline the encoding logic into the flat
-    script flow
-  - letsplot HTML output has no interactive features — add tooltips to geom_rect showing
-    digit and position info to make the HTML export genuinely distinctive
+  - Bottom of canvas has ~19% empty space below the digit labels (ylim lower bound
+    at -20, digits at y=20 — 40 of 215 y-units unused) — tighten ylim lower bound
+    to ~5 or raise bar_y_min to reduce dead space
+  - Design excellence is limited to a functional barcode diagram — no additional context
+    (e.g. country code annotation, manufacturer segment labels) that would lift DE-03
+    above the default 2/6
+  - 'LM-02 could be stronger: the layer_tooltips usage is correct but minimal — richer
+    tooltip content (full digit value, section name, module index) would better showcase
+    letsplot interactive HTML capabilities'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
-      Chrome: Title "barcode-ean13 · python · letsplot · anyplot.ai" rendered in muted gray (INK_SOFT #4A4A44) at approximately 40% canvas width — readable but slightly undersized per style guide (70-85% expected for long mandated title). Subtle default letsplot rectangular border visible at canvas edges.
-      Data: Near-black (#1A1A17) bars on cream background; guard bars (start/center/end) visibly extend lower than regular bars; 13 monospace digit labels below barcode with "4" correctly placed outside left guard
-      Legibility verdict: PASS — all text readable; title slightly small but not illegible
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "barcode-ean13 · python · letsplot · anyplot.ai" at top in INK_SOFT gray, clearly readable. No axes/grid (theme_void). Subtle canvas border visible.
+      Data: Dark near-black (#1A1A17) vertical bars on light background. Guard bars (start, center, end) extend ~10 units lower than regular bars — clearly visible. Digits 4·0·0·6·3·8·1·[gap]·3·3·3·9·3·1 in monospace INK color below bars. First digit "4" correctly placed outside left guard.
+      Legibility verdict: PASS — all text readable; title ~75% of width (expected for mandated title); digit labels clearly sized; ~19% empty space at canvas bottom below digits (minor space-waste).
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in light muted color (INK_SOFT #B8B7B0) — readable against dark background. Digit labels in light INK color (#F0EFE8). No dark-on-dark failures. Subtle lighter-tone canvas border visible at edges.
-      Data: Near-white (#F0EFE8) bars on near-black background — correctly inverted from light theme; structural elements (guard bars, digit placement) identical to light render
-      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark failures detected
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title in INK_SOFT light gray (#B8B7B0) on dark background — clearly readable. Same theme_void styling.
+      Data: Bar colors correctly inverted to near-white (#F0EFE8) on dark background — bars read as "light bars on dark surface." Data colors are theme-adaptive (not Okabe-Ito, which is correct for a functional barcode). Digit labels in #F0EFE8 — clearly readable, no dark-on-dark failure.
+      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues; guard bar height distinction preserved in dark render.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -61,48 +59,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; title size=11 (~44 source-px at scale=4)
-          fills ~40% canvas width vs 70-85% expected for long mandated title; contextually
-          acceptable but undersized
+        comment: 'Font sizes explicitly set (size=16 digits, size=15 title). All text
+          readable at full and mobile sizes. Minor: ~19% empty space at bottom slightly
+          hurts proportions.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; digit labels and title well-spaced
+        comment: No overlapping elements. Title, bars, and digit labels all well-separated.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Barcode bars perfectly visible in both themes; binary inversion (dark
-          on light / light on dark) correctly implemented
+        comment: Bars clearly visible in both themes. Guard bars visibly taller than
+          regular bars. Digit labels appropriately sized.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Maximum luminance contrast; no CVD concerns for binary barcode
+        comment: High contrast black-on-light and white-on-dark. Inherently accessible
+          barcode design.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good layout; bottom digits slightly crowded due to ylim(0,...) leaving
-          no bottom padding below digit y=20
+        comment: 'Canvas correct 3200x1800. Minor bottom dead-space: ylim lower bound
+          -20 leaves ~19% of vertical height below digit labels unused.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axes required for barcode; title correct format
+        comment: No axis labels needed (barcode). Title format barcode-ean13 · python
+          · letsplot · anyplot.ai correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds #FAF8F1 light / #1A1A17 dark correct; theme-adaptive
-          bar colors using INK token; text uses INK/INK_SOFT correctly'
+        comment: 'Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct. Bar colors
+          use INK tokens (not Okabe-Ito, which is correct for a functional barcode).
+          All chrome theme-adaptive.'
     design_excellence:
       score: 10
       max: 20
@@ -112,23 +113,22 @@ review:
         score: 4
         max: 8
         passed: true
-        comment: Clean purposeful aesthetic; barcode domain limits creative latitude;
-          result is a correct well-configured default
+        comment: Well-configured for a barcode. Clean, professional. Limited design
+          space — the visualization is inherently a functional technical diagram.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void() correct; explicit theme tokens; monospace font is refined
-          choice; residual canvas border stroke visible in both renders
+        comment: theme_void() is the ideal choice for a barcode. Monospace font for
+          digits is authentic. No unnecessary decoration.
       - id: DE-03
         name: Data Storytelling
         score: 2
         max: 6
-        passed: false
-        comment: Functional barcode display; no annotation of structural sections
-          (country/manufacturer/product/check), no visual hierarchy or emphasis beyond
-          raw barcode
+        passed: true
+        comment: Barcode displays correctly. No segment annotations (country/manufacturer/product
+          codes) or visual hierarchy beyond the encoding itself.
     spec_compliance:
       score: 15
       max: 15
@@ -138,27 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EAN-13 with L/G/R encoding and parity patterns
+        comment: Correct EAN-13 barcode with geom_rect rectangles.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones 9 modules each side, start/center/end guards, guard bars
-          extend lower, first digit outside left guard
+        comment: Quiet zones (9 modules each side), start/center/end guard patterns,
+          guard bars extend lower, human-readable digits below with first digit outside
+          left guard, check digit calculated.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 13 digits correctly positioned; coordinate math accurate
+        comment: 4006381333931 correctly encoded. Digit positions match bar sections.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'barcode-ean13 · python · letsplot · anyplot.ai'; no
-          legend needed
+        comment: Title is exactly barcode-ean13 · python · letsplot · anyplot.ai.
+          No legend needed.
     data_quality:
       score: 15
       max: 15
@@ -168,62 +169,62 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All EAN-13 structural elements present: L/G mixed encoding, R encoding,
-          all guard patterns, quiet zones'
+        comment: 'All EAN-13 structural elements: start guard, left digit group (L/G
+          encoding per parity), center guard, right digit group (R encoding), end
+          guard, quiet zones.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real German retail barcode 4006381333931 with authentic GS1-Germany
-          prefix 400
+        comment: 4006381333931 is a real German product EAN-13 barcode (GS1 prefix
+          400-440 = Germany).
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: module_width=3, bar height 80 units, guard extension 10 units — faithful
-          to EAN-13 standard proportions
+        comment: Exactly 13 digits. Check digit correctly calculated. EAN-13 L/G/R
+          encoding tables are accurate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Three helper functions defined (calculate_check_digit, encode_ean13,
-          generate_barcode_bars); violates no-functions KISS rule though encoding
-          complexity provides justification
+        passed: true
+        comment: 'Linear flow: imports → constants → encoding tables → data generation
+          → plot → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic; hardcoded barcode string, no random elements
+        comment: 'Fully deterministic: hard-coded barcode string, no random numbers.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All lets_plot imports used; os and pandas used
+        comment: All imports used. No unused imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean purposeful code; encoding tables well-organized; no fake UI
-          or over-engineering
+        comment: Clean, appropriate complexity for EAN-13 encoding. Bit pattern building
+          is clear.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html correctly;
-          current API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct letsplot ggsave
+          API with scale=4.
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -231,24 +232,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct ggplot grammar; geom_rect for bars, geom_text for labels,
-          scale_fill_identity for direct color mapping, theme_void + explicit theme
-          — all idiomatic letsplot patterns
+        comment: Correct ggplot + geom_rect + aes + scale_fill_identity + ggsize(800,450)
+          + ggsave scale=4. Proper theme layering.
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: HTML export is distinctive letsplot capability; scale_fill_identity
-          is useful; but HTML output has no interactive features (no tooltips) — letsplot
-          interactive layer unused; core logic is essentially portable to plotnine/ggplot2
-          unchanged
-  verdict: REJECTED
+        passed: true
+        comment: layer_tooltips() with @column-reference syntax (letsplot-distinctive
+          JetBrains feature). HTML export. Good use of letsplot's interactive capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
   - html-export
+  - hover-tooltips
+  - layer-composition
   patterns:
   - iteration-over-groups
   dataprep: []
