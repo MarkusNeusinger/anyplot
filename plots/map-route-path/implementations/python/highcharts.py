@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-21
@@ -67,27 +67,27 @@ waypoints = [
 # Path coordinates for mapline series [lon, lat]
 path_data = [[wp["lon"], wp["lat"]] for wp in waypoints]
 
-# Map bounding box with padding
-lat_pad = (max(lats) - min(lats)) * 0.15
-lon_pad = (max(lons) - min(lons)) * 0.15
-min_lat = min(lats) - lat_pad
-max_lat = max(lats) + lat_pad
-min_lon = min(lons) - lon_pad
-max_lon = max(lons) + lon_pad
+# Map bounding box — asymmetric: extend north into Switzerland to fill the 16:9 canvas
+_lat_range = max(lats) - min(lats)
+_lon_range = max(lons) - min(lons)
+min_lat = min(lats) - _lat_range * 0.1
+max_lat = max(lats) + _lat_range * 3.0
+min_lon = min(lons) - _lon_range * 0.7
+max_lon = max(lons) + _lon_range * 0.7
 
-# Route segments colored by time (blue → white → red diverging)
+# Route segments colored by time (viridis — perceptually uniform sequential)
 n_segments = 10
 gradient_colors = [
-    "#1a4f9c",
-    "#2166ac",
-    "#4393c3",
-    "#92c5de",
-    "#d1e5f0",
-    "#fddbc7",
-    "#f4a582",
-    "#d6604d",
-    "#ca3c29",
-    "#b2182b",
+    "#440154",
+    "#482878",
+    "#3e4989",
+    "#31688e",
+    "#26828e",
+    "#1f9e89",
+    "#35b779",
+    "#6ece58",
+    "#b5de2b",
+    "#fde725",
 ]
 segment_size = n_points // n_segments
 route_segments = []
@@ -172,13 +172,13 @@ html_inline = f"""<!DOCTYPE html>
             states: {{ inactive: {{ opacity: 1 }} }}
         }});
 
-        // 2. Route segments — blue→red gradient encodes time elapsed
+        // 2. Route segments — viridis gradient encodes time elapsed
         routeSegments.forEach(function(seg, idx) {{
             series.push({{
                 type: 'mapline',
-                name: idx === 0 ? 'Route' : 'Route ' + (idx + 1),
-                showInLegend: false,
-                lineWidth: 12,
+                name: idx === 0 ? 'Route (0 h)' : (idx === routeSegments.length - 1 ? 'Route (6 h)' : 'Route ' + (idx + 1)),
+                showInLegend: (idx === 0 || idx === routeSegments.length - 1),
+                lineWidth: 16,
                 color: seg.color,
                 zIndex: 10 + idx,
                 enableMouseTracking: false,
@@ -289,10 +289,10 @@ html_inline = f"""<!DOCTYPE html>
                 height: 1800,
                 backgroundColor: '{PAGE_BG}',
                 spacingTop: 80,
-                spacingBottom: 100,
+                spacingBottom: 40,
                 spacingLeft: 60,
                 spacingRight: 60,
-                marginBottom: 160
+                marginBottom: 60
             }},
             title: {{
                 text: 'map-route-path · python · highcharts · anyplot.ai',
@@ -343,32 +343,7 @@ html_inline = f"""<!DOCTYPE html>
                     style: {{ fontSize: '40px', fontWeight: 'bold', color: '{INK}' }}
                 }}
             }},
-            colorAxis: {{
-                min: 0,
-                max: 6,
-                stops: [
-                    [0, '#1a4f9c'],
-                    [0.25, '#4393c3'],
-                    [0.5, '#d1e5f0'],
-                    [0.75, '#d6604d'],
-                    [1, '#b2182b']
-                ],
-                labels: {{
-                    format: '{{value}} h',
-                    style: {{ fontSize: '40px', color: '{INK_SOFT}' }},
-                    step: 2
-                }},
-                title: {{
-                    text: 'Time elapsed',
-                    style: {{ fontSize: '44px', color: '{INK}' }}
-                }},
-                layout: 'horizontal',
-                align: 'center',
-                verticalAlign: 'bottom',
-                y: -20,
-                width: 700,
-                height: 28
-            }},
+            colorAxis: {{ enabled: false }},
             tooltip: {{
                 useHTML: true,
                 headerFormat: '',
@@ -471,12 +446,7 @@ html_cdn = f"""<!DOCTYPE html>
                     }},
                     legend: {{ enabled: true, align: 'right', verticalAlign: 'top',
                                layout: 'vertical', floating: true }},
-                    colorAxis: {{
-                        min: 0, max: 6,
-                        stops: [[0, '#1a4f9c'], [0.5, '#d1e5f0'], [1, '#b2182b']],
-                        labels: {{ format: '{{value}} h', step: 2 }},
-                        title: {{ text: 'Time elapsed' }}
-                    }},
+                    colorAxis: {{ enabled: false }},
                     tooltip: {{ useHTML: true, headerFormat: '',
                                 pointFormat: '<span>Waypoint: <b>{{point.sequence}}</b><br/>' +
                                 'Elevation: <b>{{point.elevation:.0f}} m</b><br/>' +
