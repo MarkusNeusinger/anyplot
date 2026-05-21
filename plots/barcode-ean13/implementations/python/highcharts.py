@@ -1,9 +1,10 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: highcharts unknown | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-21
 """
 
+import json
 import os
 import tempfile
 import time
@@ -15,13 +16,10 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Theme tokens
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-
-# Barcode paper/ink: always high-contrast regardless of page theme
 BARCODE_BG = "#FFFDF6"
 BAR_COLOR = "#1A1A17"
 
@@ -77,8 +75,6 @@ FIRST_DIGIT_PATTERNS = {
 
 # Data — German product code (Bosch drill bit set)
 code_input = "4006381333931"
-
-# Compute/verify check digit
 digits_12 = code_input[:12]
 total = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(digits_12))
 check = str((10 - (total % 10)) % 10)
@@ -94,94 +90,151 @@ for digit in full_code[7:]:
     binary += R_CODES[digit]
 binary += "101"
 
-# Barcode dimensions scaled for 3200×1800 canvas
-bar_width = 17
-bar_height = 700
-guard_height = 820
-bar_baseline = 880
-quiet_zone = 9 * bar_width
-total_barcode_width = quiet_zone * 2 + 95 * bar_width
-svg_height = 1050
+# Axis coordinate system: 1 unit = 1 module, quiet zones on each side
+QZ = 9  # quiet zone modules
+X_TOTAL = QZ * 2 + 95  # 113 total modules on axis
 
-# Build SVG bar elements
-bars_svg = ""
-current_x = quiet_zone
-for i, bit in enumerate(binary):
-    is_guard = i < 3 or (45 <= i < 50) or i >= 92
-    h = guard_height if is_guard else bar_height
-    if bit == "1":
-        bars_svg += (
-            f'<rect x="{current_x}" y="{bar_baseline - h}" width="{bar_width}" height="{h}" fill="{BAR_COLOR}"/>\n'
-        )
-    current_x += bar_width
+# xrange series data: each 1-bit → a bar rectangle (x, x2, y=0, color)
+bars_data = [{"x": QZ + i, "x2": QZ + i + 1, "y": 0, "color": BAR_COLOR} for i, bit in enumerate(binary) if bit == "1"]
+bars_data_json = json.dumps(bars_data)
 
-# Build SVG digit label elements
-digit_font = 80
-digit_y = 970
-digits_svg = ""
+# Guard 1-bit x positions (start/center/end guards) for taller bar overlays
+guard_x_units = [QZ + i for i, bit in enumerate(binary) if bit == "1" and (i < 3 or (45 <= i < 50) or i >= 92)]
+guard_x_units_js = json.dumps(guard_x_units)
 
-# First digit — positioned left of the start guard
-first_x = quiet_zone - 4 * bar_width
-digits_svg += (
-    f'<text x="{first_x}" y="{digit_y}" font-size="{digit_font}" '
-    f'font-family="Arial, sans-serif" font-weight="bold" '
-    f'text-anchor="middle" fill="{BAR_COLOR}">{full_code[0]}</text>\n'
+# Digit label x positions in axis units and the 13 digit characters
+digit_x_units = (
+    [QZ - 4.0]  # first digit: left of start guard
+    + [QZ + 3 + i * 7 + 3.5 for i in range(6)]  # left group digits 1-6
+    + [QZ + 50 + i * 7 + 3.5 for i in range(6)]  # right group digits 7-12
 )
+digit_x_units_js = json.dumps(digit_x_units)
+digits_json = json.dumps(list(full_code))
 
-# Left 6 digits (full_code[1:7])
-left_start = quiet_zone + 3 * bar_width
-for i in range(6):
-    cx = left_start + (i * 7 + 3.5) * bar_width
-    digits_svg += (
-        f'<text x="{cx}" y="{digit_y}" font-size="{digit_font}" '
-        f'font-family="Arial, sans-serif" font-weight="bold" '
-        f'text-anchor="middle" fill="{BAR_COLOR}">{full_code[i + 1]}</text>\n'
-    )
+# Canvas layout
+W, H = 3200, 1800
+MARGIN_T, MARGIN_R, MARGIN_B, MARGIN_L = 220, 200, 280, 200
+BAR_H = 700  # data bar height px (xrange pointWidth)
+GUARD_H = 820  # guard bar height px (extends below data bars)
 
-# Right 6 digits (full_code[7:13])
-right_start = quiet_zone + (3 + 42 + 5) * bar_width
-for i in range(6):
-    cx = right_start + (i * 7 + 3.5) * bar_width
-    digits_svg += (
-        f'<text x="{cx}" y="{digit_y}" font-size="{digit_font}" '
-        f'font-family="Arial, sans-serif" font-weight="bold" '
-        f'text-anchor="middle" fill="{BAR_COLOR}">{full_code[i + 7]}</text>\n'
-    )
+# Download Highcharts core + xrange module (inline embedding for headless Chrome)
+hc_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/12.2.0/highcharts.js"
+hc_xrange_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/12.2.0/modules/xrange.js"
+with urllib.request.urlopen(hc_url, timeout=30) as r:
+    highcharts_js = r.read().decode("utf-8")
+with urllib.request.urlopen(hc_xrange_url, timeout=30) as r:
+    highcharts_xrange_js = r.read().decode("utf-8")
 
-# Download Highcharts JS for inline embedding (required in headless Chrome)
-highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/12.2.0/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
-
-# Build HTML — 3200×1800 flex container with theme-adaptive chrome
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
+    <script>{highcharts_xrange_js}</script>
 </head>
-<body style="margin:0; padding:0; background:{PAGE_BG};">
-    <div style="width:3200px; height:1800px; display:flex; flex-direction:column;
-                align-items:center; justify-content:center; background:{PAGE_BG};">
-        <div style="font-size:66px; font-weight:bold; color:{INK}; margin-bottom:30px;
-                    text-align:center; font-family:Arial, sans-serif;">
-            barcode-ean13 · python · highcharts · anyplot.ai
-        </div>
-        <div style="font-size:48px; color:{INK_SOFT}; margin-bottom:60px;
-                    font-family:Arial, sans-serif;">
-            EAN-13: {full_code}
-        </div>
-        <div style="background:{BARCODE_BG}; padding:60px 80px; border-radius:16px;
-                    box-shadow:0 4px 24px rgba(0,0,0,0.12);">
-            <svg width="{total_barcode_width}" height="{svg_height}"
-                 viewBox="0 0 {total_barcode_width} {svg_height}">
-                <rect x="0" y="0" width="{total_barcode_width}" height="{svg_height}"
-                      fill="{BARCODE_BG}"/>
-                {bars_svg}
-                {digits_svg}
-            </svg>
-        </div>
-    </div>
+<body style="margin:0;padding:0;background:{PAGE_BG};">
+    <div id="container" style="width:{W}px;height:{H}px;"></div>
+    <script>
+    var chart = Highcharts.chart('container', {{
+        chart: {{
+            type: 'xrange',
+            width: {W},
+            height: {H},
+            backgroundColor: '{PAGE_BG}',
+            plotBackgroundColor: '{BARCODE_BG}',
+            plotBorderWidth: 0,
+            margin: [{MARGIN_T}, {MARGIN_R}, {MARGIN_B}, {MARGIN_L}],
+            animation: false,
+            events: {{
+                load: function () {{
+                    var c = this;
+                    var xa = c.xAxis[0];
+                    var plotT = c.plotTop;
+                    var plotH = c.plotHeight;
+
+                    // Data bars (xrange) are centered in the plot area at pointWidth={BAR_H}
+                    var dataBarTop = plotT + plotH / 2 - {BAR_H} / 2;
+                    var dataBarBot = dataBarTop + {BAR_H};
+                    var guardExt = {GUARD_H} - {BAR_H};  // extra 120 px below data bars
+
+                    // Guard bar extensions via Highcharts SVG Renderer
+                    var guardXUnits = {guard_x_units_js};
+                    guardXUnits.forEach(function (xu) {{
+                        var px = xa.toPixels(xu);
+                        var pw = xa.toPixels(xu + 1) - px;
+                        c.renderer.rect(px, dataBarBot, pw, guardExt)
+                            .attr({{'stroke-width': 0, fill: '{BAR_COLOR}', zIndex: 5}})
+                            .add();
+                    }});
+
+                    // Human-readable digit labels below the barcode
+                    var digitY = dataBarBot + guardExt + 100;
+                    var digitXUnits = {digit_x_units_js};
+                    var digits = {digits_json};
+                    digitXUnits.forEach(function (xu, i) {{
+                        var px = xa.toPixels(xu);
+                        c.renderer.text(digits[i], px, digitY)
+                            .attr({{align: 'center', zIndex: 6}})
+                            .css({{
+                                fontSize: '80px',
+                                fontWeight: 'bold',
+                                color: '{BAR_COLOR}',
+                                fontFamily: 'Arial, sans-serif'
+                            }})
+                            .add();
+                    }});
+                }}
+            }}
+        }},
+        title: {{
+            text: 'barcode-ean13 · python · highcharts · anyplot.ai',
+            style: {{
+                fontSize: '66px',
+                fontWeight: 'bold',
+                color: '{INK}',
+                fontFamily: 'Arial, sans-serif'
+            }},
+            y: 70
+        }},
+        subtitle: {{
+            text: 'EAN-13: {full_code}',
+            style: {{
+                fontSize: '48px',
+                color: '{INK_SOFT}',
+                fontFamily: 'Arial, sans-serif'
+            }},
+            y: 155
+        }},
+        tooltip: {{enabled: false}},
+        credits: {{enabled: false}},
+        legend: {{enabled: false}},
+        xAxis: {{
+            min: 0,
+            max: {X_TOTAL},
+            visible: false
+        }},
+        yAxis: {{
+            min: -0.5,
+            max: 0.5,
+            visible: false
+        }},
+        plotOptions: {{
+            xrange: {{
+                pointWidth: {BAR_H},
+                borderWidth: 0,
+                borderRadius: 0,
+                grouping: false,
+                animation: false,
+                states: {{hover: {{enabled: false}}}}
+            }}
+        }},
+        series: [{{
+            type: 'xrange',
+            name: 'EAN-13 Barcode',
+            data: {bars_data_json}
+        }}]
+    }});
+    </script>
 </body>
 </html>"""
 
@@ -189,7 +242,7 @@ html_content = f"""<!DOCTYPE html>
 with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Take PNG screenshot via Selenium with exact viewport control
+# Screenshot via headless Chrome with exact viewport control
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
@@ -200,11 +253,11 @@ chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
 chrome_options.add_argument("--hide-scrollbars")
-chrome_options.add_argument("--window-size=3200,1800")
+chrome_options.add_argument(f"--window-size={W},{H}")
 
 driver = webdriver.Chrome(options=chrome_options)
 driver.execute_cdp_cmd(
-    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
 )
 driver.get(f"file://{temp_path}")
 time.sleep(5)
@@ -213,9 +266,9 @@ driver.quit()
 
 Path(temp_path).unlink()
 
-# Pin to exact 3200×1800 (safety net for ±1-2 px rounding)
+# Pin to exact canvas dimensions (safety net for ±1-2 px rounding)
 img = Image.open(f"plot-{THEME}.png").convert("RGB")
-if img.size != (3200, 1800):
-    norm = Image.new("RGB", (3200, 1800), PAGE_BG)
-    norm.paste(img, ((3200 - img.size[0]) // 2, (1800 - img.size[1]) // 2))
+if img.size != (W, H):
+    norm = Image.new("RGB", (W, H), PAGE_BG)
+    norm.paste(img, ((W - img.size[0]) // 2, (H - img.size[1]) // 2))
     norm.save(f"plot-{THEME}.png")
