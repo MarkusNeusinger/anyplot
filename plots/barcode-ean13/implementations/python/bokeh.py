@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-21
@@ -141,8 +141,8 @@ module_width = int(W * 0.70 / total_modules)
 quiet_zone = quiet_zone_modules * module_width
 
 # Bar heights in data coordinates
-bar_height = 1200
-guard_height = 1400
+bar_height = 1100
+guard_height = 1300
 text_y_pos = 80
 
 # Guard bar module index ranges
@@ -199,13 +199,13 @@ x_offset = (W - total_barcode_width) / 2
 bar_lefts = [left + x_offset for left in bar_lefts]
 bar_rights = [left + w for left, w in zip(bar_lefts, bar_widths_px, strict=True)]
 
-# Figure
+# Figure — y_range extended to accommodate zone annotations above the barcode
 p = figure(
     width=W,
     height=H,
     title="barcode-ean13 · python · bokeh · anyplot.ai",
     x_range=(0, W),
-    y_range=(0, guard_height + 450),
+    y_range=(0, guard_height + 580),
     toolbar_location=None,
     min_border_top=110,
     min_border_bottom=80,
@@ -239,6 +239,11 @@ p.add_tools(hover)
 
 # Human-readable digits: first digit outside left guard
 first_digit_x = x_offset + quiet_zone - module_width * 5
+left_start = x_offset + quiet_zone + 3 * module_width
+left_span = 6 * 7 * module_width
+right_start = left_start + left_span + 5 * module_width
+right_span = 6 * 7 * module_width
+
 p.add_layout(
     Label(
         x=first_digit_x,
@@ -252,8 +257,6 @@ p.add_layout(
     )
 )
 
-left_start = x_offset + quiet_zone + 3 * module_width
-left_span = 6 * 7 * module_width
 p.add_layout(
     Label(
         x=left_start + left_span / 2,
@@ -267,8 +270,6 @@ p.add_layout(
     )
 )
 
-right_start = left_start + left_span + 5 * module_width
-right_span = 6 * 7 * module_width
 p.add_layout(
     Label(
         x=right_start + right_span / 2,
@@ -282,9 +283,88 @@ p.add_layout(
     )
 )
 
+# Zone annotations: bracket lines + labels above the barcode showing structure
+# EAN-13 structure: Country (400) | Manufacturer (6381) | Product (33393) | Check (1)
+zone_line_y = guard_height + 200  # just above guard bar tops
+zone_name_y = zone_line_y + 60  # zone name text y
+zone_val_y = zone_line_y + 160  # zone digit value y
+
+country_x1 = first_digit_x - module_width * 3
+country_x2 = left_start + 2 * 7 * module_width
+mfr_x1 = country_x2
+mfr_x2 = left_start + left_span
+prod_x1 = right_start
+prod_x2 = right_start + 5 * 7 * module_width
+check_x1 = prod_x2
+check_x2 = right_start + right_span
+
+zones = [
+    (country_x1, country_x2, "Country", code[:3]),
+    (mfr_x1, mfr_x2, "Manufacturer", code[3:7]),
+    (prod_x1, prod_x2, "Product", code[7:12]),
+    (check_x1, check_x2, "Check", code[12]),
+]
+
+for x1, x2, zone_name, zone_val in zones:
+    cx = (x1 + x2) / 2
+    pad = module_width
+    # Horizontal bracket line
+    p.segment(x0=[x1 + pad], y0=[zone_line_y], x1=[x2 - pad], y1=[zone_line_y], line_color=INK_SOFT, line_width=2)
+    # Vertical end ticks
+    p.segment(
+        x0=[x1 + pad], y0=[zone_line_y - 22], x1=[x1 + pad], y1=[zone_line_y + 22], line_color=INK_SOFT, line_width=2
+    )
+    p.segment(
+        x0=[x2 - pad], y0=[zone_line_y - 22], x1=[x2 - pad], y1=[zone_line_y + 22], line_color=INK_SOFT, line_width=2
+    )
+    # Zone name
+    p.add_layout(
+        Label(
+            x=cx,
+            y=zone_name_y,
+            text=zone_name,
+            text_align="center",
+            text_baseline="bottom",
+            text_color=INK_SOFT,
+            text_font_size="26pt",
+            text_font="monospace",
+        )
+    )
+    # Zone digit value
+    p.add_layout(
+        Label(
+            x=cx,
+            y=zone_val_y,
+            text=zone_val,
+            text_align="center",
+            text_baseline="bottom",
+            text_color=INK,
+            text_font_size="36pt",
+            text_font="monospace",
+        )
+    )
+
 # Save interactive HTML with inline resources (no CDN dependency)
 html_path = Path(f"plot-{THEME}.html").resolve()
-html_path.write_text(file_html(p, INLINE))
+html_content = file_html(p, INLINE)
+# Inject body background + CSS to eliminate any canvas/border artifacts.
+# The body background fix prevents browser-default white from bleeding through
+# as a thin border in the dark theme; the CSS removes Bokeh canvas box-shadow.
+html_content = html_content.replace("<body>", f'<body style="background-color:{PAGE_BG};margin:0;padding:0;">', 1)
+# Set html element background + remove any canvas/div borders/shadows.
+# html{} is needed because Chrome uses the html element's background to fill
+# the viewport even outside the body, causing 1-px edge artifacts in headless.
+html_content = html_content.replace(
+    "</head>",
+    (
+        f"<style>"
+        f"html{{background-color:{PAGE_BG}!important;margin:0!important;padding:0!important;}}"
+        f"canvas,div.bk-root,div.bk{{border:none!important;box-shadow:none!important;outline:none!important;}}"
+        f"</style></head>"
+    ),
+    1,
+)
+html_path.write_text(html_content)
 
 # Screenshot with headless Chrome via Selenium + CDP for exact W×H dimensions
 opts = Options()
