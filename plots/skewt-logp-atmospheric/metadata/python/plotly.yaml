@@ -2,7 +2,7 @@ library: plotly
 language: python
 specification_id: skewt-logp-atmospheric
 created: '2026-05-20T23:47:12Z'
-updated: '2026-05-20T23:54:45Z'
+updated: '2026-05-21T00:07:37Z'
 generated_by: claude-sonnet
 workflow_run: 26196176895
 issue: 3802
@@ -15,94 +15,109 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-log
 quality_score: 87
 review:
   strengths:
-  - 'Exceptional spec compliance: all required Skew-T elements correctly implemented
-    including numerically integrated moist adiabats'
-  - Physically realistic and meteorologically meaningful sounding data (Great Plains
-    summer, correct lapse rates)
-  - 'Thorough theme adaptation: all chrome tokens correctly applied to both renders
-    with no dark-on-dark failures'
-  - Interactive hover tooltips using Plotly's distinctive customdata/hovertemplate
-    mechanism
-  - Reference lines elegantly alpha-blended to recede behind data profiles creating
-    natural visual hierarchy
-  - Clean imports (only 3), deterministic data, correct canvas dimensions 3200x1800
+  - 'Fully implements all required Skew-T elements: isotherms, dry adiabats (Poisson-correct
+    θ), moist adiabats (numerically integrated SALR), mixing ratio lines, and LCL
+    annotation with arrow'
+  - Proper theme adaptation across both renders — background, title, axis labels,
+    tick labels, legend, and annotation all use correct tokens; data colors are identical
+    between light and dark
+  - 'Excellent code quality: minimal helper functions justified by the mathematics
+    (moist adiabat integration, skew transform), clean imports, deterministic hard-coded
+    sounding data'
+  - 'Idiomatic Plotly usage: legendgroup for reference-line de-duplication in legend,
+    customdata/hovertemplate for rich interactive tooltips, hoverinfo=''skip'' on
+    background reference lines'
+  - LCL annotation with styled arrow callout box adds meteorological storytelling
+    and creates a clear focal point; reference line opacities are tuned to remain
+    background elements without distracting from profiles
   weaknesses:
-  - 'VQ-07 violation: Dewpoint uses Okabe-Ito pos 3 (#0072B2) instead of canonical
-    pos 2 (#D55E00) — change C_DEWPT to #D55E00 to maintain strict Okabe-Ito ordering'
-  - 'DE-01/DE-03 improvement: Add a small annotation at the Lifting Condensation Level
-    (where T and Td profiles nearly converge around 400-450 hPa) to create a focal
-    point and elevate from data display to meteorological storytelling'
-  - 'CQ-01 minor: Four helper functions slightly violate KISS flat-script ideal —
-    inline sat_vp and sat_mr_scalar into moist_adiabat to reduce to one justified
-    function'
+  - Legend contains 6 entries and is positioned inside the plot area at top-left (x=0.02,
+    y=0.98), consuming a large portion of the upper region where high-altitude sounding
+    data lives — moving it outside the plot (x=1.01) or reducing item count would
+    free visual space
+  - 'No explicit spine removal: Plotly default retains all 4 plot borders; removing
+    top and right spines (xaxis/yaxis showline settings) would improve visual refinement
+    per style guide'
+  - Moist adiabat lines (C_MOIST blue dotted) are very subtle in the light render
+    and nearly indistinguishable from isotherms without careful inspection — increasing
+    opacity slightly (e.g. 0.35 → 0.50 in light) would aid readability
+  - Reference line legend entries (Isotherms, Dry Adiabats, Moist Adiabats, Mixing
+    Ratio) have thin, faint line indicators in the legend swatch — at small render
+    sizes (400 px mobile) these may be illegible; a slightly thicker swatch line or
+    increased legend indicator width would help
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "skewt-logp-atmospheric · python · plotly · anyplot.ai" centered, dark text, readable. X-axis label "Temperature (°C)" and Y-axis label "Pressure (hPa)" visible with dark INK color. Tick labels in INK_SOFT visible on both axes.
-      Data: Temperature profile solid green (#009E73, Okabe-Ito pos 1) with markers. Dewpoint profile dashed blue (#0072B2) with markers. Reference lines (isotherms gray, dry adiabats orange, moist adiabats blue dots, mixing ratio green dashes) at low alpha, visually receding behind data profiles.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "skewt-logp-atmospheric · python · plotly · anyplot.ai" centered, dark ink, readable. Y-axis label "Pressure (hPa)" and X-axis label "Temperature (°C)" in dark INK at size 12. Tick labels in INK_SOFT at size 10, clearly readable. Legend box with elevated background (#FFFDF6), bordered, 6 entries.
+      Data: Background reference lines — thin gray isotherms (diagonal, skewed right as expected), faint reddish-orange dry adiabats, blue dotted moist adiabats, green dashed mixing ratio lines — all subtly opaque, remaining as background. Foreground profiles — Temperature (solid bold green #009E73, circular markers, width=3) and Dewpoint (dashed orange #D55E00, markers, width=2.5) — both clearly dominant over reference lines. LCL annotation arrow pointing to ~900 hPa with callout box reading "LCL ≈ 900 hPa". The skewed coordinate system is correct: temperature axis tilts right with altitude.
+      Legibility verdict: PASS — all text visible against warm off-white background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct, not pure black
-      Chrome: Title and all axis labels/ticks rendered in light-colored text (#F0EFE8 and #B8B7B0 tokens), fully readable against dark background. Legend elevated background (#242420) clearly distinct from page background. No dark-on-dark failures observed.
-      Data: Temperature green (#009E73) and Dewpoint blue (#0072B2) are identical to light render — only chrome elements flipped. Reference lines appear slightly more saturated/visible on dark background due to higher dark-theme alpha values (0.28-0.38 vs 0.22-0.28), which is correct behavior.
-      Legibility verdict: PASS — all text clearly readable, no dark-on-dark failures, brand green #009E73 fully visible.
+      Background: Near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title, axis labels, tick labels all rendered in light ink (#F0EFE8 / #B8B7B0) — fully readable against dark surface. Legend box uses elevated dark background (#242420). No dark-on-dark failures observed.
+      Data: Data colors (green temperature, orange dewpoint) are identical to the light render — only chrome flips. Reference lines are slightly more saturated in dark mode (higher opacity values coded for dark), making the dry adiabat orange tint and moist adiabat blue dotting slightly more visible than in light mode — a sensible dark-mode adjustment. Brand green #009E73 is distinctly visible against the dark background.
+      Legibility verdict: PASS — all text elements readable; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title 16px, axes 12px, ticks 10px,
-          legend 10px). Readable in both themes, no overflow or clipping.
+        comment: 'All text readable in both themes at full resolution; style-guide
+          font sizes followed (title=16, labels=12, ticks=10). Slight deduction: at
+          400 px mobile, the 6-entry legend with faint reference-line swatches may
+          be difficult to parse.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text-on-text overlap. Legend box has elevated background fill
-          preventing reference-line interference.
+        comment: No text-on-text or text-on-data overlaps. Legend occupies top-left
+          plot area above the profiles without collision. Slight deduction for legend
+          crowding (6 items) that could obscure high-altitude data region.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Temperature (width=3.0, markers size=7) and dewpoint (width=2.5,
-          markers size=7) clearly visible. Reference lines intentionally subtle with
-          low alpha.
+        comment: Temperature and dewpoint profiles are clearly dominant. Markers (size=7)
+          appropriate for 21 data points. Moist adiabat lines are very subtle in light
+          mode — slight deduction for near-invisibility at casual viewing.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs blue pairing is CVD-safe. Reference lines further differentiated
-          by dash style.
+        comment: Okabe-Ito palette (green + vermillion). Solid vs dashed line styles
+          add redundant encoding beyond color, making the two profiles distinguishable
+          for all CVD types.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Margins (l=80, r=40, t=80, b=60) provide balanced
-          whitespace.
+        comment: Canvas 3200x1800 (800x450 scale=4) correct. Proportions good. Title
+          ~65% of width. Axis labels balanced. No overflow or clipping observed in
+          either render.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: X-axis Temperature (°C) and Y-axis Pressure (hPa) both descriptive
-          with units.
+        comment: Pressure (hPa) and Temperature (°C) with units. Mandated title format
+          correct.
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Temperature correctly uses Okabe-Ito pos 1 (#009E73). Dewpoint uses
-          pos 3 (#0072B2) instead of canonical pos 2 (#D55E00), violating canonical
-          order rule. Backgrounds and chrome are correctly theme-adaptive.
+        passed: true
+        comment: 'Backgrounds correct (#FAF8F1 light / #1A1A17 dark). Temperature
+          uses BRAND #009E73 as primary series. Dewpoint uses Okabe-Ito pos 2 (#D55E00).
+          Both themes render correctly.'
     design_excellence:
       score: 12
       max: 20
@@ -111,25 +126,28 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above generic default: reference lines tastefully alpha-blended.
-          Thorough theme adaptation. But standard Skew-T layout without exceptional
-          typographic hierarchy or visual polish for publication-ready score.'
+        passed: true
+        comment: Theme-adaptive semi-transparent reference lines with per-theme opacity
+          tuning show design intentionality. LCL annotation with styled callout box
+          adds polish. Above default (4) for deliberate opacity layering.
       - id: DE-02
         name: Visual Refinement
-        score: 4
-        max: 6
-        passed: false
-        comment: X-grid suppressed, Y-grid subtly colored with GRID token, theme-adaptive
-          axis line colors. Some plotly default chrome present.
-      - id: DE-03
-        name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Alpha differentiation creates visual hierarchy directing eye to T
-          and Td profiles. Great Plains summer context meaningful. No annotations,
-          no emphasis on key levels (LCL, tropopause), no focal point.
+        passed: true
+        comment: 'Reference line opacities keep background elements subordinate. Y-axis-only
+          grid (x showgrid=False). Legend styled with border. Deduction: no spine
+          removal (Plotly default 4-sided border retained), which per style guide
+          should be removed.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: LCL annotation creates a focal point and guides the viewer to the
+          lifting condensation level. Temperature profile (solid, bolder) visually
+          dominates dewpoint (dashed) — correct meteorological hierarchy. Reference
+          line opacity hierarchy keeps profiles as focus.
     spec_compliance:
       score: 15
       max: 15
@@ -140,30 +158,29 @@ review:
         max: 5
         passed: true
         comment: Correct Skew-T Log-P diagram with logarithmic inverted pressure axis
-          and skewed temperature isotherms.
+          and skewed temperature isotherms (30°/decade skew factor).
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required elements present: log P-axis inverted, isotherms at
-          45 degrees via skew transform, dry adiabats, moist adiabats (numerically
-          integrated), mixing ratio lines, T (solid) and Td (dashed). Wind barbs optional
-          per spec.'
+        comment: Isotherms, dry adiabats (θ-based), moist adiabats (numerically integrated
+          SALR), mixing ratio lines, temperature profile (solid), dewpoint (dashed),
+          LCL annotation all present. Wind barbs correctly omitted as optional.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis correctly maps pressure (logarithmic, 1000 hPa at bottom),
-          X-axis maps skewed temperature. All 21 vertical levels shown.
+        comment: X=skewed temperature, Y=log pressure (inverted, 1000 hPa at bottom).
+          All 21 pressure levels from 1000 to 100 hPa represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly matches skewt-logp-atmospheric · python · plotly ·
-          anyplot.ai. Legend correctly labels all six series.
+        comment: Title is exactly 'skewt-logp-atmospheric · python · plotly · anyplot.ai'.
+          Legend labels match series names.
     data_quality:
       score: 15
       max: 15
@@ -173,64 +190,64 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: dual profiles T and Td, all four reference line
-          types, full vertical extent surface to upper troposphere.'
+        comment: All key Skew-T diagram elements present and correctly implemented
+          including reference line mathematics.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Warm-moist sounding US Great Plains summer — specific, neutral, scientifically
-          meaningful scenario.
+        comment: US Great Plains summer sounding — realistic temperature (32°C surface)
+          and dewpoint values (24°C surface), physically plausible vertical profiles,
+          neutral domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Surface T=32C and Td=24C realistic Great Plains summer values. Temperature
-          lapse rate and tropopause physically correct. Moisture decreases realistically
-          with altitude.
+        comment: Pressure 1000–100 hPa covers surface to stratosphere. Temperature
+          range -73 to +32°C appropriate for atmospheric profile. Dewpoint depression
+          increases with altitude as expected.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Four helper functions present (skew_x, sat_vp, sat_mr_scalar, moist_adiabat).
-          Moist adiabat integration justifies one function but KISS ideal is flat
-          script.
+        passed: true
+        comment: Two helper functions (skew_x, moist_adiabat) are justified — skew
+          transform and SALR integration are non-trivial math that would clutter inline
+          code. No unnecessary abstraction.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded or deterministically computed from physical formulas.
-          No random state needed.
+        comment: 'Fully deterministic: hard-coded sounding arrays, no random generation.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, and plotly.graph_objects imported, all used.
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. Physics constants clearly labeled. Loop patterns
-          for reference lines appropriate. No fake UI elements.
+        comment: Appropriate complexity for the diagram. No fake interactivity. Atmospheric
+          constants documented with units.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png (width=800, height=450, scale=4) and plot-{THEME}.html.
-          Correct plotly API usage.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. write_image with scale=4
+          and autosize=False.
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
@@ -238,27 +255,28 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Good use of go.Figure() with multiple go.Scatter() traces, legendgroup
-          for reference line grouping, customdata + hovertemplate for interactive
-          hover, update_layout() for comprehensive theming.
+        comment: legendgroup for trace grouping is idiomatic Plotly. hoverinfo='skip'
+          on reference lines is correct pattern. autosize=False with explicit dimensions
+          follows plotly.md spec.
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Leverages Plotly interactive hover tooltips showing pressure and
-          temperature values, and exports interactive HTML — features not available
-          in static libraries.
-  verdict: REJECTED
+        comment: 'Leverages Plotly-specific features: customdata+hovertemplate for
+          rich hover, HTML interactive export alongside PNG, legendgroup de-duplication
+          of multiple traces into single legend entries.'
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   - hover-tooltips
   - html-export
   patterns:
-  - data-generation
   - iteration-over-groups
+  - data-generation
   dataprep: []
   styling:
   - alpha-blending
