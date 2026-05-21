@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-05-21
@@ -23,6 +23,7 @@ from lets_plot import (
     ggsave,
     ggsize,
     labs,
+    layer_tooltips,
     scale_y_log10,
     scale_y_reverse,
     theme,
@@ -37,6 +38,13 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito palette — positions 1-6 in order
+C_TEMP = "#009E73"  # position 1: temperature profile (primary series)
+C_DEWPT = "#D55E00"  # position 2: dewpoint profile
+C_DRY = "#E69F00"  # position 5: dry adiabats (background reference)
+C_MOIST = "#CC79A7"  # position 4: moist adiabats (background reference)
+C_MIX = "#56B4E9"  # position 6: mixing ratio lines (background reference)
 
 # Atmospheric sounding data (synthetic radiosonde profile)
 np.random.seed(42)
@@ -53,8 +61,9 @@ log_pressure = np.log10(p0 / pressure)
 temp_skewed = temperature + skew_factor * log_pressure
 dewpoint_skewed = dewpoint + skew_factor * log_pressure
 
-df_temp = pd.DataFrame({"pressure": pressure, "value": temp_skewed})
-df_dewpoint = pd.DataFrame({"pressure": pressure, "value": dewpoint_skewed})
+# Include original values for interactive tooltips
+df_temp = pd.DataFrame({"pressure": pressure, "temp": temperature, "value": temp_skewed})
+df_dewpoint = pd.DataFrame({"pressure": pressure, "dewpt": dewpoint, "value": dewpoint_skewed})
 
 # Generate isotherms (skewed 45-degree temperature reference lines)
 isotherm_temps = np.arange(-80, 50, 10)
@@ -106,15 +115,18 @@ df_mixing = pd.DataFrame(mixing_data)
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
+    panel_border=element_blank(),
     panel_grid_major=element_blank(),
     panel_grid_minor=element_blank(),
     axis_title=element_text(color=INK, size=12),
     axis_text=element_text(color=INK_SOFT, size=10),
     axis_line=element_line(color=INK_SOFT),
-    plot_title=element_text(color=INK, size=14),
+    axis_ticks=element_line(color=INK_SOFT),
+    plot_title=element_text(color=INK, size=16, face="bold"),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_text=element_text(color=INK_SOFT, size=10),
     legend_title=element_text(color=INK),
+    plot_margin=[8, 8, 8, 8],
 )
 
 plot = (
@@ -126,41 +138,70 @@ plot = (
         color=INK_SOFT,
         size=0.4,
         alpha=0.5,
+        tooltips="none",
     )
-    # Dry adiabats - Okabe-Ito vermillion dashed
+    # Dry adiabats — Okabe-Ito orange dashed
     + geom_path(
         aes(x="temp_skewed", y="pressure", group="theta"),
         data=df_dry_adiabats,
-        color="#D55E00",
+        color=C_DRY,
         size=0.7,
         alpha=0.7,
         linetype="dashed",
+        tooltips="none",
     )
-    # Moist adiabats - Okabe-Ito reddish purple dotdash
+    # Moist adiabats — Okabe-Ito reddish purple dotdash
     + geom_path(
         aes(x="temp_skewed", y="pressure", group="theta_e"),
         data=df_moist_adiabats,
-        color="#CC79A7",
+        color=C_MOIST,
         size=0.7,
         alpha=0.7,
         linetype="dotdash",
+        tooltips="none",
     )
-    # Mixing ratio lines - Okabe-Ito green dotted
+    # Mixing ratio lines — Okabe-Ito sky blue dotted
     + geom_path(
         aes(x="temp_skewed", y="pressure", group="ws"),
         data=df_mixing,
-        color="#009E73",
-        size=0.7,
-        alpha=0.7,
+        color=C_MIX,
+        size=0.8,
+        alpha=0.8,
         linetype="dotted",
+        tooltips="none",
     )
-    # Temperature profile - solid red (meteorological convention)
-    + geom_path(aes(x="value", y="pressure"), data=df_temp, color="#DC2626", size=2.0)
-    # Dewpoint profile - dashed sky blue
-    + geom_path(aes(x="value", y="pressure"), data=df_dewpoint, color="#56B4E9", size=2.0, linetype="dashed")
+    # Temperature profile — Okabe-Ito green solid (primary series, position 1)
+    + geom_path(
+        aes(x="value", y="pressure"),
+        data=df_temp,
+        color=C_TEMP,
+        size=2.0,
+        tooltips=layer_tooltips().line("Temperature: @temp°C").line("Pressure: @pressure hPa"),
+    )
+    # Dewpoint profile — Okabe-Ito vermillion dashed (secondary series, position 2)
+    + geom_path(
+        aes(x="value", y="pressure"),
+        data=df_dewpoint,
+        color=C_DEWPT,
+        size=2.0,
+        linetype="dashed",
+        tooltips=layer_tooltips().line("Dewpoint: @dewpt°C").line("Pressure: @pressure hPa"),
+    )
     # Data points on profiles for clarity
-    + geom_point(aes(x="value", y="pressure"), data=df_temp, color="#DC2626", size=3.0)
-    + geom_point(aes(x="value", y="pressure"), data=df_dewpoint, color="#56B4E9", size=3.0)
+    + geom_point(
+        aes(x="value", y="pressure"),
+        data=df_temp,
+        color=C_TEMP,
+        size=3.0,
+        tooltips=layer_tooltips().line("Temperature: @temp°C").line("Pressure: @pressure hPa"),
+    )
+    + geom_point(
+        aes(x="value", y="pressure"),
+        data=df_dewpoint,
+        color=C_DEWPT,
+        size=3.0,
+        tooltips=layer_tooltips().line("Dewpoint: @dewpt°C").line("Pressure: @pressure hPa"),
+    )
     # Logarithmic inverted pressure axis
     + scale_y_log10()
     + scale_y_reverse(limits=[1000, 100])
@@ -174,11 +215,11 @@ legend_x_start = 95
 legend_x_end = 112
 legend_text_x = 114
 legend_entries = [
-    {"label": "Temperature", "color": "#DC2626", "linetype": "solid", "size": 2.0, "y": 125},
-    {"label": "Dewpoint", "color": "#56B4E9", "linetype": "dashed", "size": 2.0, "y": 140},
-    {"label": "Dry Adiabat", "color": "#D55E00", "linetype": "dashed", "size": 1.2, "y": 158},
-    {"label": "Moist Adiabat", "color": "#CC79A7", "linetype": "dotdash", "size": 1.2, "y": 178},
-    {"label": "Mixing Ratio", "color": "#009E73", "linetype": "dotted", "size": 1.2, "y": 200},
+    {"label": "Temperature", "color": C_TEMP, "linetype": "solid", "size": 2.0, "y": 110},
+    {"label": "Dewpoint", "color": C_DEWPT, "linetype": "dashed", "size": 2.0, "y": 145},
+    {"label": "Dry Adiabat", "color": C_DRY, "linetype": "dashed", "size": 1.2, "y": 190},
+    {"label": "Moist Adiabat", "color": C_MOIST, "linetype": "dotdash", "size": 1.2, "y": 250},
+    {"label": "Mixing Ratio", "color": C_MIX, "linetype": "dotted", "size": 1.2, "y": 330},
 ]
 
 for entry in legend_entries:
@@ -188,8 +229,9 @@ for entry in legend_entries:
         color=entry["color"],
         size=entry["size"],
         linetype=entry["linetype"],
+        tooltips="none",
     )
-    plot = plot + geom_text(x=legend_text_x, y=entry["y"], label=entry["label"], color=INK, size=8, hjust=0)
+    plot = plot + geom_text(x=legend_text_x, y=entry["y"], label=entry["label"], color=INK, size=10, hjust=0)
 
 # Save PNG and HTML for both themes
 ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
