@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-21
@@ -65,6 +65,11 @@ end_df = df.iloc[[-1]].copy()
 end_df["label"] = "End: Los Angeles, CA"
 dot_df = df.iloc[::3].reset_index(drop=True)
 
+# City label DataFrames (separate layers needed for different per-label alignment)
+chicago_ldf = pd.DataFrame([{"lon": city_coords[0][1], "lat": city_coords[0][0], "label": "Chicago"}])
+la_ldf = pd.DataFrame([{"lon": city_coords[-1][1], "lat": city_coords[-1][0], "label": "Los Angeles"}])
+flagstaff_ldf = pd.DataFrame([{"lon": city_coords[7][1], "lat": city_coords[7][0], "label": "▲ Flagstaff 2100m"}])
+
 title_str = "Route 66 Road Trip · map-route-path · python · altair · anyplot.ai"
 
 # Basemap: US states (CDN topojson, no local package required)
@@ -76,7 +81,7 @@ background = (
     alt.Chart(states)
     .mark_geoshape(fill=MAP_FILL, stroke=MAP_STROKE, strokeWidth=0.6)
     .project(type="albersUsa")
-    .properties(width=760, height=416)
+    .properties(width=620, height=320)
 )
 
 route_line = (
@@ -97,7 +102,7 @@ route_line = (
 
 elevation_dots = (
     alt.Chart(dot_df)
-    .mark_circle(size=32, opacity=0.9)
+    .mark_circle(size=55, opacity=0.9)
     .encode(
         longitude="lon:Q",
         latitude="lat:Q",
@@ -134,8 +139,32 @@ end_marker = (
     .project(type="albersUsa")
 )
 
+# Chicago: center-aligned above the start marker
+chicago_label = (
+    alt.Chart(chicago_ldf)
+    .mark_text(fontSize=10, fontWeight="bold", dy=-18, baseline="bottom", align="center")
+    .encode(longitude="lon:Q", latitude="lat:Q", text="label:N", color=alt.value(INK))
+    .project(type="albersUsa")
+)
+
+# Los Angeles: right-aligned (text extends west, clear of Flagstaff overlap)
+la_label = (
+    alt.Chart(la_ldf)
+    .mark_text(fontSize=10, fontWeight="bold", dy=-18, baseline="bottom", align="right")
+    .encode(longitude="lon:Q", latitude="lat:Q", text="label:N", color=alt.value(INK))
+    .project(type="albersUsa")
+)
+
+# Flagstaff elevation peak: left-aligned + higher offset, extends east away from LA label
+flagstaff_label = (
+    alt.Chart(flagstaff_ldf)
+    .mark_text(fontSize=9, fontWeight="bold", dy=-32, baseline="bottom", align="left", dx=6)
+    .encode(longitude="lon:Q", latitude="lat:Q", text="label:N", color=alt.value(INK))
+    .project(type="albersUsa")
+)
+
 chart = (
-    (background + route_line + elevation_dots + start_marker + end_marker)
+    (background + route_line + elevation_dots + start_marker + end_marker + chicago_label + la_label + flagstaff_label)
     .properties(background=PAGE_BG, title=alt.Title(text=title_str, fontSize=14, anchor="start", color=INK, offset=8))
     .configure_view(fill=PAGE_BG, strokeWidth=0)
     .configure_title(color=INK)
