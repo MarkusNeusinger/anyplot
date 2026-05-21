@@ -16,6 +16,7 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
                  "#E69F00", "#56B4E9", "#F0E442")
+GRID_COLOR  <- if (THEME == "light") INK_SOFT else "#3A3A36"
 
 # Data: Synthetic GPS track for a mountain trail in Colorado Rockies
 n_points <- 200
@@ -93,10 +94,10 @@ p <- ggplot(df, aes(x = lon, y = lat)) +
   theme(
     plot.background   = element_rect(fill  = PAGE_BG,     color = PAGE_BG),
     panel.background  = element_rect(fill  = PAGE_BG,     color = NA),
-    panel.border      = element_rect(color = INK_SOFT,    fill  = NA,   linewidth = 0.5),
-    panel.grid.major  = element_line(color = INK_SOFT,    linewidth = 0.15),
+    panel.border      = element_blank(),
+    panel.grid.major  = element_line(color = GRID_COLOR,   linewidth = 0.10),
     panel.grid.minor  = element_blank(),
-    axis.line         = element_blank(),
+    axis.line         = element_line(color = INK_SOFT,    linewidth = 0.5),
     axis.title        = element_text(color = INK,         size  = 10),
     axis.text         = element_text(color = INK_SOFT,    size  = 8),
     plot.title        = element_text(color = INK,         size  = 12),
