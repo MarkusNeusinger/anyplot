@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:04:54Z'
-updated: '2026-05-21T03:34:20Z'
+updated: '2026-05-21T03:43:27Z'
 generated_by: claude-sonnet
 workflow_run: 26203482259
 issue: 3791
@@ -12,49 +12,57 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 90
 review:
   strengths:
-  - Clean 3x2 dashboard layout with well-proportioned rounded tiles and semantic status
-    border colors (green/orange/red)
-  - 'Complete spec coverage: each tile displays metric name, prominent value with
-    unit, directional change indicator with arrow, and embedded sparkline'
-  - 'Correct theme adaptation: warm off-white (#FAF8F1) and near-black (#1A1A17) backgrounds,
-    theme-adaptive INK/INK_SOFT tokens applied to all text elements'
-  - 'Excellent data quality: realistic infrastructure metrics (CPU, Memory, Response
-    Time, Requests/sec, Error Rate, Disk I/O) with varied statuses and mixed favorable/unfavorable
-    changes'
-  - Highcharts area sparklines with gradient fill (#009E73 brand green) are visually
-    distinctive and appropriate for compact trend display
+  - Custom HTML/CSS dashboard layout with absolute positioning produces a polished,
+    professional tile-grid appearance
+  - Status accent borders (green/orange/red left stripe), rounded corners, and drop
+    shadows give each tile genuine depth and visual refinement
+  - 'Sparklines are cleanly minimalist — axes, tooltip, and legend all hidden; gradient
+    fill with #009E73 adds elegant trend context'
+  - Six distinct metric types (CPU, Memory, Response Time, Requests/sec, Error Rate,
+    Disk I/O) cover all data fields from the spec including units
+  - Semantic change color logic (lower-is-better set) correctly maps favorable vs
+    unfavorable direction to green/red
+  - 'Full theme adaptation: PAGE_BG, ELEVATED_BG, INK, INK_SOFT all wired to ANYPLOT_THEME;
+    both renders pass theme-readability checks'
+  - Canvas pinned to 3200×1800 via CDP setDeviceMetricsOverride + PIL safety net —
+    no dimensional drift
+  - HTML artifact (plot-{THEME}.html) saved alongside PNG — correct for interactive
+    library
+  - np.random.seed(42) guarantees reproducible sparkline data; cumulative sum produces
+    realistic trending history
   weaknesses:
-  - 'Dark render sparkline gradient fill is nearly invisible — the #009E7355 (upper)
-    and #009E7308 (lower) gradient stops are too transparent for the #1A1A17 dark
-    surface, leaving only the line visible; increase upper stop alpha to ~88 hex (#009E7388)
-    so the fill remains perceptible in dark mode'
-  - Status tile borders use green/orange/red color exclusively with no secondary non-color
-    signal — CVD users cannot distinguish good (green) from critical (red) borders;
-    consider a small status text badge or icon on each tile
-  - Tiles lack visual depth — no box-shadow or elevation effect separates them from
-    the page background; add subtle shadow (e.g. 0 2px 8px rgba(0,0,0,0.12) light
-    / rgba(0,0,0,0.4) dark) for polish
-  - Implementation bypasses the Python highcharts_core library entirely (no highcharts_core.chart.Chart),
-    using raw HTML/JS string generation; LM-01 score limited because the Python library's
-    idiomatic API is not used
+  - 'LM-01 gap: implementation bypasses the highcharts_core Python library entirely,
+    generating raw JavaScript strings instead of using Chart/HighchartsOptions/Series
+    objects — loses idiomatic Python API usage'
+  - 'DE-03 moderate: the dashboard lacks a single stand-out focal point or annotation
+    that directs the viewer''s attention; the critical Error Rate tile could be visually
+    emphasized beyond just the red border (e.g. slightly larger tile or bold text
+    call-out)'
+  - 'LM-02 gap: Highcharts-specific features used (multiple chart instances, linearGradient
+    stops, animation:false) but stops short of more distinctive capabilities like
+    synchronized crosshairs across charts or drilldown events even in static form'
+  - 'DE-01 ceiling: no custom font or typographic refinement applied beyond system-default
+    font stack; the 88px value font is impactful but unstyled'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) page background — correct. Tile backgrounds are slightly elevated (#FFFDF6), clearly distinct from the page.
-      Chrome: Title "dashboard-metrics-tiles · python · highcharts · anyplot.ai" at 52px, bold, dark ink — readable and centered at top. Metric name labels (34px, INK_SOFT) are visible. Large value labels (88px, INK) are highly prominent. Change indicator labels (30px, green/red) are clear.
-      Data: Sparklines use #009E73 (Okabe-Ito position 1 brand green) for the line. Gradient fill uses #009E7355 to #009E7308 — visible as a soft teal fill on light background. Status borders: CPU/Response Time/Requests/Disk (green #059669), Memory (orange #D97706), Error Rate (red #DC2626).
-      Legibility verdict: PASS — all text clearly readable against the light background. No "light-on-light" failures.
+      Background: Warm off-white (#FAF8F1) page background with slightly elevated tile backgrounds (#FFFDF6) — correct.
+      Layout: 3×2 grid of 6 metric tiles. Title "dashboard-metrics-tiles · python · highcharts · anyplot.ai" centered at top (~65% canvas width), 52px, dark ink — well-proportioned and fully visible.
+      Tiles: Each has a colored left-accent border (green for good, amber for warning, red for critical), rounded corners, subtle drop shadow. Top row: CPU Usage (45 %, green), Memory (72 %, orange), Response Time (120 ms, green). Bottom row: Requests/sec (1,250, green), Error Rate (8.7 %, red/critical), Disk I/O (156 MB/s, green).
+      Chrome: Metric names in INK_SOFT (~34px), large bold values in INK (88px), unit labels in INK_SOFT (40px), change% with colored arrows (30px). Status badges (✓ Good / ⚠ Warning / ✕ Critical) in top-right with colored border.
+      Data: Sparklines use #009E73 with gradient fill — clearly visible against elevated tile background. All 6 sparklines render correctly.
+      Legibility verdict: PASS — all text readable against #FAF8F1 surface; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) — correct. Tile backgrounds are dark elevated (#242420), subtly distinct from the page.
-      Chrome: Title uses light text, readable against dark background. Metric name labels (INK_SOFT: #B8B7B0 in dark mode) readable. Value labels (INK: #F0EFE8) are prominent and bright. Change indicator labels readable in green/red. No dark-on-dark text failures observed.
-      Data: Sparkline lines use identical #009E73 brand green — consistent with light render. ISSUE: The gradient fill (#009E7355 to #009E7308) is nearly invisible on the dark #1A1A17 surface — only the line is perceptible; the area fill essentially disappears into the dark tile background. Status border colors are unchanged (semantic colors stay constant across themes).
-      Legibility verdict: PASS for text; PARTIAL for sparkline gradient fill (fill invisible in dark mode, line visible).
+      Background: Warm near-black (#1A1A17) page background; tile backgrounds shift to dark elevated (#242420) — correct.
+      Chrome: Title and all metric labels/values switch to light (#F0EFE8 / #B8B7B0) — confirmed readable. No dark-on-dark failures observed.
+      Data: Sparkline color remains #009E73 — identical to light render as required. Gradient fill slightly more opaque in dark mode (GRAD_TOP uses "88" alpha vs "55" in light), which is a deliberate enhancement for visibility.
+      Legibility verdict: PASS — all text clearly readable against dark surface; status badge text and icons remain legible; change% arrows visible in their semantic colors.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -62,56 +70,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (34px metric name, 88px value, 52px
-          title, 30px change). Readable in both themes. Minor: 34px metric name labels
-          slightly small for 3200px canvas but appropriate for KPI hierarchy.'
+        comment: 'All font sizes explicitly set (52px title, 88px value, 34px label,
+          30px change); fully legible in both themes; well-proportioned hierarchy.
+          Minor: system-default font stack, no explicit weight/family refinement beyond
+          bold.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements. Grid layout keeps all tiles well-separated
-          with explicit gap spacing.
+        comment: Clear tile separation with 50px horizontal and 40px vertical gaps;
+          no text collisions within or between tiles.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Sparkline lines clearly visible in both renders. Gradient fill visible
-          in light mode but nearly invisible in dark mode (too transparent on #1A1A17
-          background).'
+        comment: Sparklines prominently visible with 7px line width and gradient fill;
+          large metric values dominate tiles appropriately; status badges clearly
+          legible.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Arrows (▲▼) provide non-color signal for change direction. Status
-          tile borders use green/orange/red without secondary non-color indicator
-          — CVD concern for border status.
+        comment: Status distinguished by icon (✓/⚠/✕) and text label in addition to
+          color — CVD-safe beyond red/green alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Excellent canvas utilization. 3x2 tile grid fills canvas well with
-          appropriate margins. Title centered at top. No content cut off.
+        comment: 3×2 grid fills canvas well with appropriate padding; title bar at
+          top; no content cut off; balanced whitespace.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted. Each tile displays metric name and unit
-          inline with value. No traditional axes needed for dashboard layout.
+        comment: No traditional axes (dashboard layout); metric labels include units
+          where applicable (%, ms, MB/s); title correct.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Sparklines use #009E73 (Okabe-Ito position 1). Light background
-          #FAF8F1, dark background #1A1A17. Theme-adaptive INK/INK_SOFT tokens applied
-          to all text. Data colors identical across themes.'
+        comment: 'Sparklines use #009E73 (Okabe-Ito #1); status colors are semantic
+          as required by spec; backgrounds #FAF8F1/#1A1A17 correct; theme chrome properly
+          adaptive.'
     design_excellence:
-      score: 14
+      score: 15
       max: 20
       items:
       - id: DE-01
@@ -119,24 +127,28 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: clear KPI hierarchy (metric name → large value →
-          unit → change arrow → sparkline), rounded tiles, semantic status borders,
-          elevated tile backgrounds. Clearly above defaults.'
+        comment: Strong design with custom tile layout, status accent borders, elevated
+          tile backgrounds, drop shadows, and clear typographic hierarchy. Clearly
+          above library defaults, not quite publication-ready (no custom font family,
+          no annotation highlights).
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: 'Sparkline axes hidden for clean compact look. Elevated tile backgrounds.
-          Rounded corners. Missing: tile depth/shadow, additional whitespace refinements.'
+        comment: Sparklines have all chrome removed (no axes, no grid, no tooltip,
+          no legend) — very polished. Tile padding generous. Drop shadows add depth.
+          Status badge styling is clean. Loses one point for no explicit refinement
+          of font family.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Status border colors create immediate visual hierarchy — orange Memory
-          and red Error Rate tiles draw attention. Change arrows with color clearly
-          communicate direction. Good focal point guidance.
+        comment: Color-coded status borders and badges create immediate visual hierarchy;
+          Error Rate critical tile stands out. Change indicators with directional
+          arrows provide context. Good storytelling but no single emphasized focal
+          point or call-out annotation.
     spec_compliance:
       score: 15
       max: 15
@@ -146,29 +158,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct dashboard tile layout with metric tiles in a responsive grid.
+        comment: Dashboard metric tiles with embedded sparklines — exact match. 3×2
+          grid for 6 metrics as specified.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
         comment: 'All spec features present: prominent value display, metric label,
-          mini sparkline, change indicator with arrow, color coding for status, 3x2
-          grid for 6 tiles.'
+          mini sparkline, change indicator with arrow, status color coding, unit display.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'All data fields correctly mapped: metric_name→label, current_value→display,
-          history→sparkline, change_percent→indicator, status→border color.'
+        comment: All 6 metrics correctly mapped with values, history arrays, change%,
+          and status. Units displayed where applicable.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''dashboard-metrics-tiles · python · highcharts · anyplot.ai''
-          — correct format. No legend needed (tiles are self-labeled).'
+        comment: Title is exactly 'dashboard-metrics-tiles · python · highcharts ·
+          anyplot.ai'. No legend needed (single-series sparklines per tile).
     data_quality:
       score: 15
       max: 15
@@ -178,25 +190,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all dashboard features: 6 metrics with varied statuses (good/warning/critical),
-          mixed favorable/unfavorable changes, various value scales and sparkline
-          shapes.'
+        comment: All status types represented (4 good, 1 warning, 1 critical); mix
+          of positive and negative changes; varied metric domains (%, ms, count/sec,
+          MB/s).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Highly realistic infrastructure monitoring scenario (CPU, Memory,
-          Response Time, Requests/sec, Error Rate, Disk I/O) — directly matching spec
-          example data.
+        comment: Operations monitoring scenario (CPU, Memory, Response Time, Requests/sec,
+          Error Rate, Disk I/O) is highly realistic, neutral, and comprehensible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'All values realistic: CPU 45%, Memory 72%, Response Time 120ms,
-          Requests/sec 1250, Error Rate 8.7%, Disk I/O 156 MB/s — all within expected
-          ranges for production systems.'
+        comment: 'All values factually plausible: CPU 45%, Memory 72%, Response Time
+          120ms, 1,250 req/s, Error Rate 8.7% (high enough to be critical), Disk I/O
+          156 MB/s.'
     code_quality:
       score: 10
       max: 10
@@ -206,8 +217,8 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → HTML/JS generation → save → screenshot.
-          No functions or classes.'
+        comment: 'Linear flow: imports → constants → data → HTML generation loop →
+          Selenium export. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -226,14 +237,15 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Loop-based tile generation is appropriate. String formatting for
-          HTML/JS is verbose but necessary for this approach. No fake UI elements.
+        comment: Appropriate complexity for a multi-tile HTML dashboard. f-string
+          HTML generation in loop is verbose but correct. No over-engineering or fake
+          UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required for an interactive
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html as required for interactive
           library.
     library_mastery:
       score: 6
@@ -244,31 +256,31 @@ review:
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts JavaScript API correctly (Highcharts.chart() with
-          area type, linearGradient fills). Does not use the Python highcharts_core
-          library (Chart class) — generates HTML/JS strings directly. Approach is
-          practical for multi-chart dashboard layout.
+        comment: Uses Highcharts JS API correctly (area chart, gradient stops, disabled
+          chrome for sparklines). However bypasses the highcharts_core Python library
+          entirely — generates raw JS strings rather than using Chart/HighchartsOptions/AreaSeries
+          Python objects.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts-specific linearGradient fill stops for sparkline
-          area fills. Multiple independent Highcharts instances in a custom HTML dashboard
-          layout. Disabled axes/tooltips/hover states for compact sparkline appearance
-          — these are distinctive Highcharts configuration patterns.
-  verdict: REJECTED
+        comment: Uses multiple Highcharts instances on one page (6 sparklines), linearGradient
+          fill configuration, animation:false, states.hover disabled — these are Highcharts-specific
+          features. Does not leverage more distinctive capabilities like synchronized
+          crosshairs.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
   - html-export
-  - gradient-fill
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
   - cumulative-sum
   styling:
+  - gradient-fill
   - minimal-chrome

@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: highcharts unknown | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-21
+Quality: 90/100 | Updated: 2026-05-21
 """
 
 import os
