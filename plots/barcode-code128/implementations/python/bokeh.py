@@ -1,16 +1,36 @@
-""" pyplots.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-19
+Library: bokeh | Python 3.13
+Quality: 92/100 | Updated: 2026-05-21
 """
 
-from bokeh.io import export_png, output_file, save
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# Remove this script's own directory from sys.path so the installed
+# bokeh package is found instead of this file (which is also named bokeh.py).
+_own_dir = os.path.dirname(os.path.realpath(__file__))
+sys.path = [p for p in sys.path if os.path.realpath(p or ".") != _own_dir]
+
+import base64
+
+from bokeh.embed import file_html
 from bokeh.models import ColumnDataSource, Label
 from bokeh.plotting import figure
+from bokeh.resources import INLINE
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Code 128 encoding tables
-# Each character is encoded as a sequence of bar widths (6 values summing to 11 modules)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+
+# Code 128 B subset encoding (bar widths per character, 6 elements each)
 CODE128_B = {
     " ": [2, 1, 2, 2, 2, 2],
     "!": [2, 2, 2, 1, 2, 2],
@@ -210,9 +230,9 @@ CODE128_VALUES = {
 
 # Special patterns
 START_B = [2, 1, 1, 2, 1, 4]  # Start Code B (value 104)
-STOP = [2, 3, 3, 1, 1, 1, 2]  # Stop pattern (7 elements, includes termination bar)
+STOP = [2, 3, 3, 1, 1, 1, 2]  # Stop pattern
 
-# Checksum patterns (values 0-105)
+# Checksum character patterns (values 0–102)
 CHECKSUM_PATTERNS = [
     [2, 1, 2, 2, 2, 2],
     [2, 2, 2, 1, 2, 2],
@@ -322,116 +342,118 @@ CHECKSUM_PATTERNS = [
     [2, 1, 1, 2, 3, 2],
 ]
 
-
-# Barcode content
+# Barcode content: shipping label example
 content = "SHIP-2024-ABC123"
 
-# Encode the content using Code 128 subset B
-bar_widths = []
-
-# Add start pattern (Code B)
-bar_widths.extend(START_B)
-
-# Calculate checksum
+# Encode using Code 128 subset B
+bar_widths = list(START_B)
 checksum = 104  # Start B value
-
-# Encode each character
 for i, char in enumerate(content):
-    if char in CODE128_B:
-        bar_widths.extend(CODE128_B[char])
-        checksum += CODE128_VALUES[char] * (i + 1)
-
-# Calculate final checksum
+    bar_widths.extend(CODE128_B[char])
+    checksum += CODE128_VALUES[char] * (i + 1)
 checksum = checksum % 103
 bar_widths.extend(CHECKSUM_PATTERNS[checksum])
-
-# Add stop pattern
 bar_widths.extend(STOP)
 
-# Convert bar widths to pixel positions for rendering
-module_width = 4  # Base width for each module
-quiet_zone = 40  # Quiet zone width in modules
-
-# Build bar positions
-bar_lefts = []
-bar_widths_px = []
-bar_colors = []
-is_bar = True  # Start with a bar (black)
-
-x_pos = quiet_zone * module_width  # Start after quiet zone
-
+# Build bar positions in module units (1 data unit = 1 module)
+quiet_zone = 10  # standard 10-module quiet zones on each side
+x_pos = quiet_zone
+bar_lefts, bar_rights = [], []
+is_bar = True
 for width in bar_widths:
-    pixel_width = width * module_width
     if is_bar:
         bar_lefts.append(x_pos)
-        bar_widths_px.append(pixel_width)
-        bar_colors.append("#000000")
-    x_pos += pixel_width
+        bar_rights.append(x_pos + width)
+    x_pos += width
     is_bar = not is_bar
+total_modules = x_pos + quiet_zone
 
-# Calculate total barcode width
-total_width = x_pos + quiet_zone * module_width
+# Bar layout parameters
+BAR_TOP = 530
+BAR_BOTTOM = 75
 
-# Bar height
-bar_height = 400
-
-# Create figure
+# Create figure — 3200×1800 canonical landscape canvas
+W, H = 3200, 1800
 p = figure(
-    width=4800,
-    height=2700,
-    title="barcode-code128 \u00b7 bokeh \u00b7 pyplots.ai",
-    x_range=(0, total_width),
-    y_range=(0, bar_height + 200),
+    width=W,
+    height=H,
+    title="barcode-code128 · python · bokeh · anyplot.ai",
+    x_range=(0, total_modules),
+    y_range=(0, 600),
     toolbar_location=None,
+    min_border_bottom=80,
+    min_border_left=60,
+    min_border_top=110,
+    min_border_right=60,
 )
 
-# Style the figure
-p.title.text_font_size = "32pt"
+# Typography
+p.title.text_font_size = "50pt"
 p.title.align = "center"
-p.title.text_color = "#333333"
+p.title.text_color = INK
 
-# Remove axes and grid
+# Theme-adaptive canvas background
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = None
+
+# No axes or grid — barcode is a self-contained graphic
 p.xaxis.visible = False
 p.yaxis.visible = False
 p.xgrid.visible = False
 p.ygrid.visible = False
-p.outline_line_color = None
 
-# White background
-p.background_fill_color = "#FFFFFF"
-p.border_fill_color = "#FFFFFF"
+# White label background — spec requires high-contrast black bars on white
+p.quad(left=0, right=total_modules, top=560, bottom=20, fill_color="#FFFFFF", line_color=None)
 
-# Draw the bars using quad
-bar_rights = [left + width for left, width in zip(bar_lefts, bar_widths_px, strict=True)]
-bar_tops = [bar_height + 50] * len(bar_lefts)
-bar_bottoms = [50] * len(bar_lefts)
-
+# Barcode bars (black on white for maximum scan reliability)
 source = ColumnDataSource(
-    data={"left": bar_lefts, "right": bar_rights, "top": bar_tops, "bottom": bar_bottoms, "color": bar_colors}
+    data={
+        "left": bar_lefts,
+        "right": bar_rights,
+        "top": [BAR_TOP] * len(bar_lefts),
+        "bottom": [BAR_BOTTOM] * len(bar_lefts),
+    }
 )
+p.quad(left="left", right="right", top="top", bottom="bottom", fill_color="#000000", line_color=None, source=source)
 
-p.quad(left="left", right="right", top="top", bottom="bottom", color="color", source=source)
-
-# Add human-readable text below the barcode
-text_x = total_width / 2
-text_y = 20
-
-human_text = Label(
-    x=text_x,
-    y=text_y,
+# Human-readable text below barcode
+label = Label(
+    x=total_modules / 2,
+    y=45,
     text=content,
-    text_font_size="28pt",
+    text_font_size="34pt",
     text_align="center",
-    text_baseline="bottom",
+    text_baseline="middle",
     text_color="#000000",
     text_font="monospace",
 )
+p.add_layout(label)
 
-p.add_layout(human_text)
+# Save interactive HTML with inline resources (no CDN dependency for offline rendering)
+html_path = Path(f"plot-{THEME}.html").resolve()
+html_path.write_text(file_html(p, INLINE))
 
-# Save as PNG
-export_png(p, filename="plot.png")
+# Screenshot with headless Chrome via Selenium + CDP for exact dimensions
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{html_path}")
+time.sleep(3)
 
-# Save as HTML for interactive viewing
-output_file("plot.html")
-save(p)
+# CDP captureScreenshot handles browser-chrome offset and captures at exact W×H
+result = driver.execute_cdp_cmd(
+    "Page.captureScreenshot",
+    {"format": "png", "captureBeyondViewport": True, "clip": {"x": 0, "y": 0, "width": W, "height": H, "scale": 1.0}},
+)
+Path(f"plot-{THEME}.png").write_bytes(base64.b64decode(result["data"]))
+driver.quit()
