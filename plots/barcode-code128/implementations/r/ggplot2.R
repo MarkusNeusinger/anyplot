@@ -11,6 +11,7 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
+INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 
 # --- Code 128 Subset B patterns (values 0-106 in order, stop appended) -----
 # Each string: 6 digit widths (bar-space-bar-space-bar-space), 11 modules each
@@ -88,27 +89,36 @@ p <- ggplot() +
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
     fill = "black", color = NA
   ) +
+  # Subtle frame around barcode to anchor it visually
+  geom_rect(
+    data = bg_rect,
+    aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
+    fill = NA, color = INK_SOFT, linewidth = 0.5
+  ) +
   annotate(
     "text",
-    x = total_w / 2, y = -0.30,
+    x = total_w / 2, y = -0.26,
     label    = label_text,
-    size     = 5.5,
+    size     = 6.5,
     family   = "mono",
     color    = INK,
     fontface = "plain"
   ) +
   annotate(
     "text",
-    x = total_w / 2, y = 1.32,
+    x = total_w / 2, y = 1.30,
     label    = "Specimen Label — Healthcare Lab Tracking",
-    size     = 4,
+    size     = 4.5,
     color    = INK_SOFT,
-    fontface = "plain"
+    fontface = "italic"
   ) +
-  labs(title = "barcode-code128 · r · ggplot2 · anyplot.ai") +
+  labs(
+    title   = "barcode-code128 · r · ggplot2 · anyplot.ai",
+    caption = "Code 128 Subset B · Mod-103 check digit · Quiet zones: 10× module width"
+  ) +
   coord_cartesian(
     xlim   = c(-x_pad, total_w + x_pad),
-    ylim   = c(-0.70, 1.55),
+    ylim   = c(-0.55, 1.50),
     expand = FALSE,
     clip   = "off"
   ) +
@@ -120,9 +130,16 @@ p <- ggplot() +
       color  = INK,
       size   = 12,
       hjust  = 0.5,
+      face   = "bold",
       margin = margin(b = 10, t = 8)
     ),
-    plot.margin = margin(30, 80, 40, 80)
+    plot.caption     = element_text(
+      color  = INK_MUTED,
+      size   = 7,
+      hjust  = 0.5,
+      margin = margin(t = 6, b = 4)
+    ),
+    plot.margin = margin(30, 80, 20, 80)
   )
 
 # --- Save -------------------------------------------------------------------
