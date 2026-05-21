@@ -1,200 +1,253 @@
 library: matplotlib
+language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:28:47Z'
-updated: '2026-01-19T12:31:02Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21137406095
+updated: '2026-05-21T02:11:46Z'
+generated_by: claude-sonnet
+workflow_run: 26200365892
 issue: 3808
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Correct EAN-13 encoding implementation with L/G/R code tables and first-digit
-    pattern encoding
-  - Clean visual presentation with proper guard bar extensions and quiet zones
-  - Human-readable digits correctly positioned with first digit outside the left guard
-  - Good use of matplotlib patches for precise bar rendering
-  - Realistic German product code example
+  - Correct EAN-13 encoding implemented from scratch with proper L/G/R code tables
+    and first-digit pattern lookup
+  - Guard patterns (start, center, end) correctly distinguished by taller height
+  - Educational anatomy labels (Country, Manufacturer, Product, Check) add genuine
+    storytelling value
+  - Theme adaptation is correct — INK and INK_SOFT tokens used for all chrome elements,
+    PAGE_BG for backgrounds
+  - Check digit auto-calculation from 12-digit input with standard GS1 algorithm
+  - Correct EAN-13 formatted caption (4 006381 333931) displayed above barcode
+  - No bbox_inches=tight — uses subplots_adjust for clean canvas control
+  - No overlapping text elements; digits well-spaced across full barcode width
   weaknesses:
-  - Code structure uses functions instead of KISS flat script (violates CQ-01)
-  - Could demonstrate check digit auto-calculation feature by using 12-digit input
-  image_description: 'The plot displays a standard EAN-13 barcode rendering for the
-    German product code "4006381333931". The barcode consists of black vertical bars
-    of varying widths on a white background, with proper guard patterns (start, center,
-    and end guards extending slightly below the main bars). The human-readable digits
-    are displayed below the barcode in bold monospace font: the first digit "4" appears
-    outside the left guard, digits "006381" appear under the left half, and digits
-    "333931" appear under the right half. The title "barcode-ean13 · matplotlib ·
-    pyplots.ai" is displayed at the top in bold black text. The barcode is well-centered
-    with adequate quiet zones on both sides.'
+  - Section anatomy labels use fontsize=7 which renders very small (~39 source-px)
+    — barely readable at full resolution and likely illegible at mobile (400 px) scale;
+    consider fontsize=8 or 9
+  - Design Excellence is limited by the inherently monochrome barcode format — no
+    Okabe-Ito data colors apply, so palette creativity is absent; anatomy labels partially
+    offset this but DE ceiling is low
+  - 'DE-02 refinement is functional but minimal: axis is correctly off, but no additional
+    visual polish (e.g. subtle separator lines between barcode sections, braces or
+    brackets to demarcate guard zones)'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white.
+      Chrome: Title "barcode-ean13 · python · matplotlib · anyplot.ai" in dark #1A1A17, centered at fontsize=12 — clearly readable. EAN-13 grouped caption "4 006381 333931" in monospace INK_SOFT below title — readable. Human-readable digits (4, 0, 0, 6, 3, 8, 1, 3, 3, 3, 9, 3, 1) below bars in bold monospace INK at fontsize=10 — clear. Section anatomy labels ("Country (1–3)", "Manufacturer (4–8)", "Product (9–12)", "Check (13)") in INK_SOFT at fontsize=7 — small but legible at full resolution.
+      Data: Black (#1A1A17) bars on warm off-white background. Guard bars (start/end/center) are taller than regular bars — clearly distinguishable. Quiet zones present on both sides. No Okabe-Ito colors (appropriate for monochrome barcode).
+      Legibility verdict: PASS — all text is readable against the light background; fontsize=7 section labels are small but not unreadable at full resolution.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black.
+      Chrome: Title in light cream #F0EFE8 — clearly readable against dark background. EAN-13 caption and digit labels in light INK — readable. Section anatomy labels in INK_SOFT (#B8B7B0, medium-light gray) — still visible on dark background. No dark-on-dark failures observed.
+      Data: Cream/off-white (#F0EFE8) bars on near-black background. The dark theme correctly inverts the bar color (bars become light-on-dark, which is the expected inversion for dark mode). Guard bars remain taller than regular bars. Data colors are the theme-adapted INK token — consistent with the style guide's monochrome use case.
+      Legibility verdict: PASS — all text is readable against the dark background; no near-black text on near-black background failures.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at ~24pt bold, digits at ~28pt monospace bold, all clearly
-          readable
+        comment: Title, digits, and EAN caption readable in both themes. Section labels
+          at fontsize=7 are small — legible at 3200px but borderline at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, digits properly spaced
+        comment: No text overlaps with other text or bars. Digits well-spaced across
+          barcode width.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bar widths are properly sized, guards extend appropriately
+        comment: Bars are fully visible in both themes. Guard bars clearly distinguished
+          by height. Excellent contrast in both renders.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Black on white, maximum contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Barcode centered with balanced quiet zones, good canvas utilization
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for barcode (no axes), axes correctly hidden
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid needed, clean presentation
+        comment: Monochrome barcode — inherently accessible. No CVD issues possible.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas correct. No bbox_inches=tight. subplots_adjust used.
+          Quiet zones present within axis limits.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format. Axis off is appropriate. EAN-13 grouping caption
+          adds useful context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Monochrome barcode — no categorical palette applies. Backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark) correct. INK tokens theme-adaptive throughout.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional presentation. Anatomy labels show design intent
+          beyond functional minimum. Monochrome format limits palette creativity ceiling.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Axis-off is correct. No unnecessary elements. Minimal visual refinement
+          beyond functional requirements.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Anatomy labels (Country/Manufacturer/Product/Check) provide clear
+          educational narrative about EAN-13 structure. Guard bar height distinction
+          tells the encoding story.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct EAN-13 barcode visualization
+        comment: Correct EAN-13 barcode with proper encoding from L/G/R code tables
+          and first-digit pattern.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper L/G/R encoding based on first digit pattern
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Start guard, center guard, end guard, quiet zones, human-readable
-          digits with first digit outside left guard
-      - id: SC-04
-        name: Data Range
+        comment: Quiet zones (9 modules each side), start guard (101), center guard
+          (01010), end guard (101), human-readable digits, first digit outside left
+          guard — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 13 digits displayed correctly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 12-digit input with auto-calculated check digit. Valid German product
+          code 4006381333931. All 13 digits visible below barcode.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (no legend needed for barcode)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: barcode-ean13 · matplotlib · pyplots.ai'
+        comment: Title exactly 'barcode-ean13 · python · matplotlib · anyplot.ai'.
+          No legend needed for monochrome barcode.
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows valid EAN-13 encoding with all structural elements; could demonstrate
-          check digit calculation by using 12-digit input
+        comment: Guard patterns, quiet zones, human-readable digits, anatomy labels
+          all present. Missing explicit legend for L/G/R encoding distinction.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses real German product code (4006381333931), realistic scenario
+        comment: Real-world German product barcode 4006381333931 (country code 400
+          = Germany). Plausible, neutral product code.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Bar dimensions reasonable, module width of 3 units is arbitrary
+        comment: 13-digit EAN-13 standard code. Module widths appropriate for visualization.
+          Encoding tables match GS1 specification.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses functions (calculate_check_digit, encode_ean13) instead of flat
-          script structure
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data (hardcoded barcode)
+        comment: No functions or classes. Linear procedural script.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic hardcoded input. No randomness.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib imports used
+        comment: Only matplotlib.patches, matplotlib.pyplot, os, sys — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern matplotlib API
+        comment: No fake UI. Clean encoding table structure. Coordinate system design
+          elegant (1 unit = 1 module width).
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with correct parameters
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=400. No bbox_inches=tight. Correct
+          API usage.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Good use of matplotlib.patches.Rectangle for bar rendering, ax.text
-          for digits, proper figure/axes management
+        comment: Correct use of ax.add_patch(), ax.text(), patches.Rectangle, axis
+          limits, subplots_adjust. Axes-based API throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative use of patches.Rectangle for barcode bars with module-width
+          coordinate system. Manual coordinate geometry for label placement.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - patches
   - annotations
-  patterns: []
+  patterns:
+  - explicit-figure
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome

@@ -1,148 +1,184 @@
 library: plotly
+language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:28:57Z'
-updated: '2026-01-19T12:31:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21137406152
+updated: '2026-05-21T02:10:38Z'
+generated_by: claude-sonnet
+workflow_run: 26200494655
 issue: 3808
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/plotly/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Correct EAN-13 encoding implementation with L, G, and R code patterns
-  - Proper guard bar heights (taller than data bars)
-  - Clean human-readable digit placement with first digit outside left guard
-  - Good use of Plotly shapes and annotation systems
-  - Deterministic output with real product code example
+  - 'Complete EAN-13 spec compliance: guard patterns, L/G/R encoding, parity lookup,
+    quiet zones, first digit outside guard, segment labels — all present and correct.'
+  - Theme-adaptive bar color via INK token produces correct visual inversion in dark
+    mode without hard-coding colors.
+  - 'Excellent code quality: flat, deterministic, clean imports, necessary sys.path
+    guard, correct canvas dimensions.'
+  - add_shape rect approach is the right plotly primitive for high-fidelity bar rendering.
   weaknesses:
-  - Guard pattern indices may be slightly off (positions 45-50 should be 45-49 for
-    center guard)
-  - HTML output is generated but interactivity does not add value for static barcode
-  image_description: 'The plot displays a properly rendered EAN-13 barcode on a white
-    background. The barcode consists of black vertical bars of varying widths encoding
-    the number "4006381333931" (a German product code). The title "barcode-ean13 ·
-    plotly · pyplots.ai" appears centered at the top in black text. The human-readable
-    digits are displayed below the barcode: the first digit "4" is positioned to the
-    left of the left guard bars, digits "006381" appear below the left half of the
-    barcode, and digits "333931" appear below the right half. The start, center, and
-    end guard patterns are rendered taller than the data bars, which is standard EAN-13
-    formatting. The barcode is centered horizontally on the canvas with adequate quiet
-    zones on both sides.'
+  - Segment labels use font size 9px — increase to at least 11px for minimum readability
+    on the 3200-wide canvas.
+  - 'Large empty whitespace in the bottom ~30% of canvas: adjust yaxis range and/or
+    reduce bottom margin to better fill the frame.'
+  - Country segment label is generic; GS1 prefix 40 identifies Germany — consider
+    labeling it Country (DE) for added educational value.
+  - Interactive HTML could show digit/segment info on hover for each bar group, elevating
+    Library Mastery score.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface color.
+      Chrome: Title "barcode-ean13 · python · plotly · anyplot.ai" in dark ink (#1A1A17), clearly readable at top center. No axis labels (axes hidden, correct for barcode). Digit annotations (18px monospace) and segment labels (9px) visible below bars.
+      Data: Black (#1A1A17) bars on warm off-white background. Guard bars (start, center, end) are visibly taller than data bars. Human-readable digits "4 0 0 6 3 8 1 3 3 3 9 3 1" below barcode; first digit "4" outside left guard. Segment labels: Country, Manufacturer, Product, Check.
+      Legibility verdict: PASS — all text readable; segment labels at 9px are small but legible.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title in light ink (#F0EFE8), clearly readable. Digit annotations in #F0EFE8, segment labels in #B8B7B0 (INK_SOFT). All text readable against dark background. No dark-on-dark failures.
+      Data: Bar color inverts to #F0EFE8 (INK in dark mode) — light bars on dark background. Structural layout identical to light render; only bar/background polarity flips. Guard bars remain taller than data bars.
+      Legibility verdict: PASS — all text and data elements clearly readable; no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and digits are clearly readable with appropriate font sizes
+        comment: Title (16px) and digit labels (18px) clear in both themes. Segment
+          labels (9px) slightly below recommended 10px minimum — borderline but legible.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, all digits properly spaced
+        comment: No text-on-text or text-on-bar collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Bars are well-defined with proper contrast
+        comment: Guard bars visibly taller than data bars. All bars render with clean
+          edges in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Black on white is universally accessible
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good centering, barcode could utilize slightly more vertical space
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for barcode visualization
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean presentation without distracting elements
+        comment: Monochrome barcode yields maximum contrast in both themes. CVD-neutral
+          by definition.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 correct. Bottom ~30% of canvas is empty whitespace
+          below segment labels.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title matches required format. Axes correctly hidden for barcode
+          visualization.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct. Bar color adapts via INK token.
+          No categorical colors needed for monochrome barcode.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional rendering. Guard-bar height differentiation and
+          INK token usage show design awareness. Above default.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Axes hidden, no grid, no spines — intentional and correct for barcode.
+          Quiet zones respected.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Segment labels educate viewer about EAN-13 structure. Guard bars
+          provide visual anchor. Modest above default.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct EAN-13 barcode visualization
+        comment: Correct EAN-13 linear barcode with proper L/G/R encoding, parity
+          patterns, guard structure.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Proper encoding of digits to bar patterns
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Start/center/end guards, quiet zones, human-readable digits all present
-      - id: SC-04
-        name: Data Range
+        comment: Quiet zones, start/center/end guard patterns, human-readable digits,
+          first digit outside guard, segment labels — all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full 13-digit code displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Full 13-digit code correctly encoded. L/G parity from first-digit
+          lookup; R codes for right side. Check digit correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A but digits match encoded data
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: barcode-ean13 · plotly · pyplots.ai'
+        comment: Title matches required format exactly. No legend needed.
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: 'Shows all EAN-13 features: guards, variable bar widths, human-readable
-          text'
+        comment: 'All key EAN-13 elements shown. Minor gap: Country label generic
+          rather than identifying as Germany/DE.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Uses real German product code (4006381333931)
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Barcode is scannable size, module width could be slightly larger
+        comment: 4006381333931 is plausible German product EAN-13 (GS1 prefix 40).
+          Neutral and non-controversial.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Module width 3 produces proportionally correct barcode. Guard height
+          220 vs data height 200 — clear distinction.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -150,48 +186,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data, encoding, rendering, save'
+        comment: Flat script, no functions/classes. sys.path patch is necessary guard
+          against name shadowing.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic encoding, no random elements
+        comment: 'Fully deterministic: fixed EAN code, no random state.'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported
+        comment: Only os, sys, plotly.graph_objects imported; all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clear encoding logic. L/G/R lookup tables readable and accurate.
+          No fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (3200x1800) and plot-{THEME}.html. Correct
+          API usage.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: add_shape(type='rect') is correct plotly idiom for bar rendering.
+          add_annotation for labels. autosize=False with explicit dimensions. Well
+          above default.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses shapes and annotations but does not leverage interactive features
-          significantly
+        comment: Leverages shape primitives, annotation placement, HTML export. Above
+          default but no hover-tooltip enrichment for interactive mode.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
+  - html-export
   patterns: []
   dataprep: []
   styling:
