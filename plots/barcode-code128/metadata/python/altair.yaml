@@ -1,148 +1,195 @@
 library: altair
+language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:59:16Z'
-updated: '2026-01-19T11:01:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21134791885
+updated: '2026-05-21T01:08:26Z'
+generated_by: claude-sonnet
+workflow_run: 26198444628
 issue: 3809
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/altair/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/altair/plot-dark.html
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of Code 128 encoding algorithm with proper start code,
-    check digit calculation, and stop pattern
-  - Clean, readable barcode with proper quiet zones for scan reliability
-  - Human-readable text positioned correctly below barcode
-  - High contrast black/white design suitable for actual scanning
-  - Well-structured code with comprehensive encoding tables
+  - Complete from-scratch Code 128B encoding with start/stop/checksum — all spec-required
+    barcode components correctly implemented
+  - Idiomatic Altair layer composition (mark_rect + mark_text) with explicit scale
+    domain control via alt.Scale(domain=...)
+  - Realistic shipping label context 'SHIP-2024-ABC123' in a logistics scenario with
+    correct bar width proportions
+  - Interactive tooltip reveals encoding metadata; HTML export included alongside
+    PNG
+  - Clean deterministic flat code with no unnecessary abstractions; large lookup tables
+    are unavoidable for Code 128
   weaknesses:
-  - Could demonstrate Code 128 subset switching (A/B/C) for more comprehensive coverage
-  - Library features score could be higher with interactive tooltips or zoom capability
-  image_description: The plot displays a Code 128 barcode visualization on a white
-    background. At the top is the title "barcode-code128 · altair · pyplots.ai" in
-    black text. The main barcode consists of alternating black vertical bars of varying
-    widths arranged horizontally across the center of the image, representing the
-    encoded data "SHIP-2024-ABC123". The barcode includes proper quiet zones (white
-    space) on both left and right sides. Below the barcode, the human-readable text
-    "SHIP-2024-ABC123" is displayed in a bold monospace font, centered under the bars.
-    The overall layout is clean with high contrast black on white, and the barcode
-    occupies a good portion of the canvas area.
+  - configure_view(fill='#FAF8F1') hardcodes the inner chart view fill to the light
+    background regardless of ANYPLOT_THEME — use fill=PAGE_BG instead for theme-adaptive
+    chrome; if barcode scanning requires forced-white inner area, document the intent
+    and use color=INK for bars/text marks
+  - Bar color and text color are hardcoded to '#1A1A17' rather than using the INK
+    token — inconsistent with the theme-adaptive chrome pattern even though the inner
+    view is forced light
+  - 'Design storytelling is limited — add a small text annotation below the human-readable
+    barcode string (e.g., ''Code 128B · 16 chars · Check: modulo 103'') to contextualise
+    the barcode for viewers unfamiliar with the format'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white (#FAF8F1) fills the full 3200x1800 canvas — correct
+      Chrome: title "barcode-code128 · python · altair · anyplot.ai" in dark text at top — clearly readable; no axis labels or tick labels (appropriately hidden for barcode)
+      Data: dense black (#1A1A17) bars on the light background with visible quiet zones on both sides; bold monospace "SHIP-2024-ABC123" below barcode
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: outer canvas is near-black (#1A1A17) — correct; inner chart view area is hardcoded #FAF8F1 (light) creating a white barcode label on dark canvas effect
+      Chrome: title appears in light text on the dark canvas — readable; inner view text and bars use hardcoded #1A1A17 (dark) on the forced-light view background — readable within the view
+      Data: colors are identical to light render (same hardcoded #1A1A17 bars) — no dark-on-dark failure; barcode bars and human-readable text are both readable
+      Legibility verdict: PASS — all text readable in both themes; no dark-on-dark failure; view fill hardcoding is functionally justified for barcode scanning requirements
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and human-readable text are perfectly readable at full size
+        comment: 'fontSize=16 for title and fontSize=20 for barcode text explicitly
+          set; readable in both themes. Minor: bar/text colors hardcoded (#1A1A17)
+          rather than INK token, so inner view is always light in dark mode (readable
+          but not fully theme-adaptive).'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements anywhere
+        comment: No overlapping elements
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Barcode bars are clearly visible with proper widths and spacing
+        comment: Barcode bars and human-readable text are clearly visible with high
+          contrast
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: High contrast black on white, universally accessible
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, barcode fills appropriate canvas area with quiet
-          zones
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for barcode (no axes), appropriate for this visualization type
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean design with no unnecessary elements
+        comment: Black on near-white provides maximum contrast; color not used as
+          sole encoding signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed, gate passed; barcode well-centered with
+          generous margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title format correct; no axis labels needed (appropriately hidden
+          for barcode)
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Outer canvas uses PAGE_BG (theme-adaptive) but configure_view(fill=''#FAF8F1'')
+          hardcodes inner chart fill regardless of theme; bar/text colors hardcoded
+          to #1A1A17 rather than INK token. Functionally justified by spec''s ''high
+          contrast black bars on white'' requirement.'
+    design_excellence:
+      score: 10
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Well-configured functional design; monospace font for barcode text
+          is appropriate; clean professional appearance but inherently limited by
+          barcode domain
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: false
+        comment: Axes fully hidden (appropriate), no grid, explicit quiet zones, generous
+          whitespace — above default for purposeful minimal-chrome execution
+      - id: DE-03
+        name: Data Storytelling
+        score: 2
+        max: 6
+        passed: false
+        comment: Barcode + human-readable text + tooltip provides basic context, but
+          no visual hierarchy or emphasis beyond functional display
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Code 128 barcode visualization
+        comment: Correct Code 128B barcode rendered from scratch using proper encoding
+          tables
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Characters correctly mapped to bar patterns
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Start code, check digit, stop pattern, quiet zones, human-readable
-          text all present
-      - id: SC-04
-        name: Data Range
+        comment: Quiet zones, START_B pattern, check digit via modulo 103, STOP pattern,
+          human-readable text below — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full barcode visible with proper spacing
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Bar widths correctly correspond to Code 128B patterns; x positions
+          accumulate with quiet zone offsets
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Human-readable text matches encoded content
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Uses correct format barcode-code128 · altair · pyplots.ai
+        comment: Title is 'barcode-code128 · python · altair · anyplot.ai'; no legend
+          needed
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows standard Code 128B encoding; could show more character variety
+        comment: 'Complete Code 128B barcode: start, encoded characters, check digit,
+          stop, quiet zones, human-readable text'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Shipping label example is a real-world, neutral application
+        comment: '''SHIP-2024-ABC123'' is a realistic shipping label code in a logistics
+          context'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good character count, within recommended 48-character limit
+        comment: 16 characters well within recommended 48-char limit; bar widths follow
+          Code 128 proportions correctly
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -150,51 +197,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, encoding, plotting, save'
+        comment: 'Flat script: no functions or classes defined'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (hardcoded string), no random elements
+        comment: 'Deterministic: hardcoded content string, no randomness'
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair and pandas imported, both used
+        comment: os, altair, pandas, PIL.Image — all used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Large lookup tables unavoidable for Code 128; remaining logic is
+          clean and idiomatic
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Saves as plot.png but also plot.html (minor: both are correct outputs
-          for altair)'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layer composition with mark_rect + mark_text using + operator; proper
+          alt.X, alt.Y, alt.Scale, alt.Title; configure_view and configure_title applied
+          correctly
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
-        passed: true
-        comment: Uses mark_rect and mark_text with proper encoding, layered composition;
-          could leverage more declarative features or interactivity
+        passed: false
+        comment: Layer composition, explicit domain control via alt.Scale(domain=...),
+          interactive tooltip showing encoded content, .interactive() for pan/zoom
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
-  - matrix-construction
+  - data-generation
   dataprep: []
   styling:
   - minimal-chrome
