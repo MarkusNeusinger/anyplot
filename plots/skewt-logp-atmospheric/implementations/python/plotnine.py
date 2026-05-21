@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-21
@@ -190,12 +190,12 @@ pressure_labels = [str(p) for p in pressure_breaks]
 
 LEGEND_ORDER = ["Temperature", "Dewpoint", "Isotherms (10°C)", "Dry Adiabats", "Moist Adiabats", "Mixing Ratios"]
 LINE_COLORS = {
-    "Temperature": "#CC0000",
-    "Dewpoint": "#0066CC",
-    "Isotherms (10°C)": "#4A90D9",
-    "Dry Adiabats": "#D2691E",
-    "Moist Adiabats": "#228B22",
-    "Mixing Ratios": "#8B008B",
+    "Temperature": "#009E73",
+    "Dewpoint": "#D55E00",
+    "Isotherms (10°C)": "#0072B2",
+    "Dry Adiabats": "#CC79A7",
+    "Moist Adiabats": "#E69F00",
+    "Mixing Ratios": "#56B4E9",
 }
 LINE_STYLES = {
     "Temperature": "solid",
@@ -240,7 +240,7 @@ plot = (
         x=skew_transform(temp_profile[np.argmin(np.abs(pressure_levels - 600))], 600) + 6,
         y=600,
         label="T",
-        color="#CC0000",
+        color="#009E73",
         size=12,
         fontweight="bold",
     )
@@ -249,7 +249,7 @@ plot = (
         x=skew_transform(dewpoint_profile[np.argmin(np.abs(pressure_levels - 600))], 600) - 6,
         y=600,
         label="Td",
-        color="#0066CC",
+        color="#D55E00",
         size=12,
         fontweight="bold",
     )
