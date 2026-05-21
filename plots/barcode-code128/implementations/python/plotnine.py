@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-05-21
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 87/100 | Created: 2026-05-21
 """
 
 import os
