@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: barcode-ean13
 created: '2026-05-21T02:07:45Z'
-updated: '2026-05-21T02:15:10Z'
+updated: '2026-05-21T02:27:03Z'
 generated_by: claude-sonnet
 workflow_run: 26200942322
 issue: 3808
@@ -12,41 +12,36 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 88
 review:
   strengths:
-  - 'Complete and correct EAN-13 implementation: proper L/G/R encoding tables, parity
-    selection based on first digit, all three guard patterns with correct descenders'
-  - Correct placement of first digit outside the left guard bar (as per EAN-13 spec)
-  - 'Both themes work correctly — INK token properly inverts bars and text between
-    light and dark; backgrounds are exactly #FAF8F1 / #1A1A17'
-  - Real German product barcode ('4006381333931') adds authenticity and context
-  - Canvas dimensions correct (3200x1800), gate passed
+  - Complete and factually correct EAN-13 encoding using GS1-standard L/G/R tables
+    and parity selection per first digit
+  - 'Excellent spec compliance: quiet zones, all three guard patterns, descenders,
+    human-readable digits with first digit outside left guard'
+  - Educational bracket annotations that explain the barcode anatomy directly on the
+    plot
+  - Proper theme-adaptive rendering in both light and dark modes with correct INK
+    token usage
+  - Real-world product barcode (Leifheit AG) providing authentic context
+  - Appropriate use of theme_void() for a clean barcode presentation
   weaknesses:
-  - 'No visual hierarchy or storytelling: the barcode is displayed but viewers receive
-    no guidance about its structure (which digits are country code, manufacturer,
-    product, check digit). Adding subtle bracket indicators or a caption subtitle
-    below would create context without disrupting the barcode.'
-  - Digit size (3.5 ggplot units) is slightly small on the 3200x1800 canvas — increase
-    to 4.5-5.0 for better readability when scaled to mobile widths (~400px).
-  - ggplot2 used primarily as a drawing canvas (manual geom_rect coordinates) rather
-    than leveraging its grammar-of-graphics strengths. Consider using annotate() or
-    geom_segment() for region separators or labels that better use ggplot2's layer
-    system.
-  - Helper functions (ean13_check, build_ean13) slightly violate the KISS flat-structure
-    preference; the encoding logic could be inlined or collapsed into a single function.
+  - build_ean13() helper function violates KISS structure (minor; barcode encoding
+    complexity arguably justifies it)
+  - Bracket annotation labels at size=3.0 may be slightly small at mobile viewport
+    widths (~400 px) — increase to 3.5-4.0
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface.
-      Chrome: Title 'barcode-ean13 · r · ggplot2 · anyplot.ai' in dark ink (#1A1A17), centered at top, clearly readable. 13 human-readable digits in dark ink below the barcode: '4' outside left guard, '0 0 6 3 8 1' under left group, '3 3 3 9 3 1' under right group. No axis labels or grid (theme_void — appropriate for barcode).
-      Data: Dark (near-black) vertical bars of varying widths on off-white background. Start guard (101), center guard (01010), end guard (101) all visible. Guard bars correctly extend below the regular bar height. Bars are theme INK color (#1A1A17).
-      Legibility verdict: PASS — all text readable against the light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "barcode-ean13 · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17), centred at top; subtitle in INK_SOFT (#4A4A44); bracket labels in INK_SOFT. All clearly readable.
+      Data: Black bars on warm off-white background forming EAN-13 barcode for 4006381333931. 13 human-readable digits displayed below (4 | 0 0 6 3 8 1 | 3 3 3 9 3 1). Start/centre/end guard bars with descenders visible. Bracket annotations with "Country · Manufacturer" (left) and "Product · Check digit" (right).
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface.
-      Chrome: Title in light text (#F0EFE8), clearly readable. All 13 digits in light text below the barcode, readable. No dark-on-dark failures observed.
-      Data: Light (off-white #F0EFE8) vertical bars on dark background — the INK token correctly inverts for the dark theme, creating the same high-contrast barcode pattern in reversed color. Data bar colors are correctly theme-adapted (not Okabe-Ito categorical, but INK token as appropriate for binary barcode encoding). Guard bars and descenders identical in structure to light render.
-      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and subtitle in light-coloured INK (#F0EFE8) and INK_SOFT (#B8B7B0) respectively. Bracket labels and digit text in INK_SOFT. All readable. No dark-on-dark failures.
+      Data: Bars appear as cream/off-white (#F0EFE8) on dark background — INK token correctly flipped. Barcode colours are identical to light render in intent (theme-adaptive INK token, not Okabe-Ito categorical). This is correct for a monochromatic barcode.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
       score: 29
@@ -57,76 +52,75 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and digits explicitly sized; readable in both themes. Digit
-          size 3.5 ggplot units slightly small for mobile at 400px.
+        comment: 'All font sizes explicitly set (title=12, subtitle=8, digits=4.5,
+          bracket labels=3.0). Minor: bracket labels at 3.0 may be tight at mobile
+          width'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements; digits well-spaced below barcode.
+        comment: All elements cleanly separated — brackets above, barcode centre,
+          digits below
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible in both themes; guard bar descenders visible;
-          appropriate bar widths.
+        comment: Bars clearly visible in both themes with correct module widths
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Maximum contrast (dark INK on off-white / light INK on near-black);
-          CVD-safe by design.
+        comment: High-contrast monochromatic design, no CVD concerns
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Barcode fills ~60% of canvas width, well-centered. Correct 3200x1800
-          canvas. Generous 60pt side margins.
+        comment: Canvas gate passed (3200x1800). Balanced margins. Barcode well-proportioned
+          in canvas.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format. No axis labels needed (theme_void appropriate
-          for barcode). N/A for axis labels.
+        comment: N/A for axis labels (theme_void barcode). Title and subtitle provide
+          full context including encoded number, country, check digit.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds #FAF8F1 (light) and #1A1A17 (dark) correct. INK tokens
-          correctly applied. No categorical series requiring Okabe-Ito; functional
-          black/white barcode convention is correct.'
+        comment: 'Monochromatic barcode uses INK token (not Okabe-Ito). Background
+          #FAF8F1 light / #1A1A17 dark correct. Theme-adaptive chrome correct in both
+          renders.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Correct and clean; theme_void is right choice. No typographic hierarchy
-          beyond mandated title; no contextual grouping or elevated design.
+        passed: true
+        comment: Clean professional presentation with good typographic hierarchy.
+          Constrained by barcode format but executed well.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: theme_void removes all unnecessary chrome; 60pt margins provide breathing
-          room; quiet zones properly sized. Above default for intentional whitespace
-          management.
+        passed: true
+        comment: theme_void ideal for barcode, generous margins, subtle bracket styling
+          with INK_SOFT
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Real product barcode adds authenticity but no visual hierarchy, no
-          labeling of structural regions, no viewer guidance. Default score.
+        passed: true
+        comment: Bracket annotations explain barcode structure directly on plot. Subtitle
+          encodes full metadata.
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +130,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EAN-13 barcode.
+        comment: Correct EAN-13 linear barcode from 95-module bitstream
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All features: quiet zones (9 modules each side), start guard (101),
-          center guard (01010), end guard (101), L/G/R encoding, parity selection,
-          guard bar descenders, human-readable digits with first digit outside left
-          guard.'
+        comment: Quiet zones, start/centre/end guards, L/G/R encoding, parity, human-readable
+          digits, guard descenders — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Correct 13-digit encoding; check digit auto-calculated.
+        comment: Module positions correctly mapped to x coords; guard vs data bar
+          heights correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''barcode-ean13 · r · ggplot2 · anyplot.ai''. No legend needed.'
+        comment: 'Title: ''barcode-ean13 · r · ggplot2 · anyplot.ai'' correct. No
+          legend (N/A).'
     data_quality:
       score: 15
       max: 15
@@ -167,22 +161,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all EAN-13 features: guard patterns with descenders, L/G encoding
-          by parity, center guard, R-encoding, quiet zones, human-readable digits
-          with first digit outside left guard.'
+        comment: 'All EAN-13 features: three guard patterns, dual encoding groups,
+          parity selection, check digit, quiet zones, structural annotations'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real German product EAN-13 barcode (4006381333931). Neutral, real-world,
-          comprehensible.
+        comment: Real-world German product barcode (Leifheit AG, 4006381333931, GS1
+          prefix 400). Neutral consumer product.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correct 95-module EAN-13 encoding. Check digit calculated correctly.
+        comment: Factually correct EAN-13 encoding. L/G/R tables match GS1 standard.
+          Check digit formula correct. Parity table correct for first digit 4.
     code_quality:
       score: 9
       max: 10
@@ -191,36 +185,36 @@ review:
         name: KISS Structure
         score: 2
         max: 3
-        passed: false
-        comment: Uses helper functions (ean13_check, build_ean13) — slight deviation
-          from flat imports→data→plot→save. Functions are justified by encoding complexity.
+        passed: true
+        comment: Defines build_ean13() helper function — minor KISS violation. EAN-13
+          encoding complexity arguably justifies it.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Deterministic: fixed barcode input, no random data.'
+        comment: Deterministic hardcoded input '4006381333931'. No stochastic elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only library(ggplot2) and library(ragg); both used.
+        comment: library(ggplot2) and library(ragg) — both used, no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable; appropriate complexity for EAN-13 encoding. No over-engineering;
-          no fake functionality.
+        comment: Well-structured encoding tables, clean coordinate geometry, no over-engineering,
+          no fake functionality
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png using ragg::agg_png.
+        comment: Saves as plot-{THEME}.png via ragg::agg_png correctly
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -228,24 +222,24 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'ggplot2 grammar correctly applied: geom_rect() for bars, geom_text()
-          for digits, scale_x_continuous with expansion, theme_void(). Above default
-          because theme_void is idiomatic and correct choice.'
+        comment: Good use of geom_rect for bars, geom_text for digits, annotate(segment)
+          for brackets, theme_void() correctly chosen
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: ggplot2 used primarily as drawing canvas (manual geom_rect coordinates).
-          Grammar of graphics (aesthetic mappings, statistical transforms, faceting)
-          not leveraged distinctively. Above default for scale_x_continuous usage.
-  verdict: REJECTED
+        passed: true
+        comment: Building a complete custom barcode from ggplot2 coordinate geometry
+          (geom_rect + annotate segments) with no external barcode library is distinctive
+          grammar-of-graphics usage
+  verdict: APPROVED
 impl_tags:
   dependencies: []
-  techniques: []
+  techniques:
+  - annotations
+  - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
