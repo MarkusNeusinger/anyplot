@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-05-20
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-21
 """
 
 import os
