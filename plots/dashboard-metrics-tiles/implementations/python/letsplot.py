@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-19
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-21
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -20,6 +22,7 @@ from lets_plot import (
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_color_manual,
     scale_fill_manual,
     scale_x_continuous,
@@ -31,9 +34,18 @@ from lets_plot.export import ggsave
 
 LetsPlot.setup_html()
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Status colors: good uses brand green (Okabe-Ito #1), warning amber, critical red
+STATUS_COLORS = {"good": "#009E73", "warning": "#F59E0B", "critical": "#EF4444", "bad": "#EF4444"}
+
 np.random.seed(42)
 
-# Define metrics data
+# Data
 metrics = [
     {"name": "CPU Usage", "value": 45, "unit": "%", "change": -5.2, "status": "good"},
     {"name": "Memory", "value": 72, "unit": "%", "change": 8.3, "status": "warning"},
@@ -43,39 +55,32 @@ metrics = [
     {"name": "Throughput", "value": 847, "unit": "req/s", "change": 3.7, "status": "good"},
 ]
 
-# Generate sparkline history for each metric (20 points)
 all_data = []
 for m in metrics:
     base = m["value"]
-    # Generate trend data ending at current value
     trend = np.cumsum(np.random.randn(20) * (base * 0.08)) + base * 0.85
-    # Normalize to end near current value
     trend = trend - trend[-1] + base
 
-    # Format value display
-    if m["value"] >= 1000:
-        value_str = f"{m['value']:,}"
-    else:
-        value_str = str(m["value"])
+    value_str = f"{m['value']:,}" if m["value"] >= 1000 else str(m["value"])
     value_display = f"{value_str}{m['unit']}"
 
-    # Determine change indicator
     change = m["change"]
     if change >= 0:
         arrow = "▲"
-        # Up is bad for CPU, Memory, Error Rate, Response Time
         change_color = "bad" if m["name"] in ["CPU Usage", "Memory", "Error Rate", "Response Time"] else "good"
     else:
         arrow = "▼"
-        # Down is good for CPU, Memory, Error Rate, Response Time
         change_color = "good" if m["name"] in ["CPU Usage", "Memory", "Error Rate", "Response Time"] else "bad"
 
     change_str = f"{arrow} {abs(change):.1f}%"
 
+    # Prepend warning badge to facet strip label for prominent visual distinction
+    facet_label = f"⚠  {m['name']}" if m["status"] == "warning" else m["name"]
+
     for i, val in enumerate(trend):
         all_data.append(
             {
-                "metric": m["name"],
+                "metric": facet_label,
                 "x": i,
                 "y": val,
                 "status": m["status"],
@@ -87,70 +92,63 @@ for m in metrics:
         )
 
 df = pd.DataFrame(all_data)
-
-# Status colors
-status_colors = {"good": "#22C55E", "warning": "#F59E0B", "critical": "#EF4444"}
-
-# Map status to color in dataframe
-df["fill_color"] = df["status"].map(status_colors)
-df["line_color"] = df["status"].map(status_colors)
-
-# Create the last point markers
 last_points = df[df["is_last"]].copy()
-
-# Create label data at midpoint
 label_data = df[df["value_label"] != ""].copy()
 
-# Get y ranges for positioning labels
 y_stats = df.groupby("metric").agg({"y": ["min", "max"]}).reset_index()
 y_stats.columns = ["metric", "y_min", "y_max"]
 
 label_data = label_data.merge(y_stats, on="metric")
-label_data["y_value"] = label_data["y_max"] + (label_data["y_max"] - label_data["y_min"]) * 0.45
-label_data["y_change"] = label_data["y_min"] - (label_data["y_max"] - label_data["y_min"]) * 0.25
+label_data["y_value"] = label_data["y_max"] + (label_data["y_max"] - label_data["y_min"]) * 0.55
+label_data["y_change"] = label_data["y_min"] - (label_data["y_max"] - label_data["y_min"]) * 0.40
 
-# Build the plot with facets
+# Plot
 plot = (
     ggplot(df, aes("x", "y"))
-    + geom_area(aes(fill="status"), alpha=0.25, show_legend=False)
-    + geom_line(aes(color="status"), size=2, show_legend=False)
-    + geom_point(data=last_points, mapping=aes(color="status"), size=5, show_legend=False)
-    # Value labels
-    + geom_text(
-        data=label_data, mapping=aes(x="x", y="y_value", label="value_label"), size=22, fontface="bold", color="#1F2937"
+    + geom_area(aes(fill="status"), alpha=0.25, show_legend=False, tooltips="none")
+    + geom_line(
+        aes(color="status"), size=2, show_legend=False, tooltips=layer_tooltips().line("@metric").line("value|@y{.1f}")
     )
-    # Change indicator labels
+    + geom_point(
+        data=last_points,
+        mapping=aes(color="status"),
+        size=5,
+        show_legend=False,
+        tooltips=layer_tooltips().line("@metric").line("current|@y{.1f}"),
+    )
+    + geom_text(
+        data=label_data, mapping=aes(x="x", y="y_value", label="value_label"), size=22, fontface="bold", color=INK
+    )
     + geom_text(
         data=label_data,
         mapping=aes(x="x", y="y_change", label="change_label", color="change_color"),
         size=14,
         show_legend=False,
     )
-    + scale_fill_manual(values={"good": "#22C55E", "warning": "#F59E0B", "critical": "#EF4444"})
-    + scale_color_manual(values={"good": "#22C55E", "warning": "#F59E0B", "critical": "#EF4444", "bad": "#EF4444"})
+    + scale_fill_manual(values=STATUS_COLORS)
+    + scale_color_manual(values=STATUS_COLORS)
     + scale_x_continuous(expand=[0.05, 0.05])
-    + scale_y_continuous(expand=[0.4, 0.4])
+    + scale_y_continuous(expand=[0.55, 0.55])
     + facet_wrap("metric", ncol=3, scales="free_y")
-    + labs(title="dashboard-metrics-tiles · letsplot · pyplots.ai")
+    + labs(title="dashboard-metrics-tiles · python · letsplot · anyplot.ai")
     + theme(
-        plot_title=element_text(size=28, face="bold", color="#1F2937", hjust=0.5),
-        strip_text=element_text(size=18, face="bold", color="#4B5563"),
-        strip_background=element_rect(fill="#F3F4F6", color="#E5E7EB"),
+        plot_title=element_text(size=16, face="bold", color=INK, hjust=0.5),
+        strip_text=element_text(size=14, face="bold", color=INK_SOFT),
+        strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         axis_text=element_blank(),
         axis_ticks=element_blank(),
         axis_title=element_blank(),
         axis_line=element_blank(),
         panel_grid=element_blank(),
-        panel_background=element_rect(fill="#FFFFFF", color="#E5E7EB", size=1),
-        plot_background=element_rect(fill="#F9FAFB"),
+        panel_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT, size=1),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         panel_spacing_x=30,
         panel_spacing_y=30,
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG (scale=3 gives 4800x2700)
-ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save HTML for interactivity
-ggsave(plot, "plot.html", path=".")
+# Save
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
