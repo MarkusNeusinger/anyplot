@@ -4,10 +4,15 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
+import IconButton from '@mui/material/IconButton';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import CheckIcon from '@mui/icons-material/Check';
 
 import { DEBUG_API_URL, LIBRARIES, LIB_ABBREV, LIB_TO_LANG } from '../constants';
 import { specPath } from '../utils/paths';
 import { SectionHeader } from '../components/SectionHeader';
+import { useCopyCode } from '../hooks';
+import { buildClaudePrompt } from '../utils/claudePrompt';
 import { typography, colors, semanticColors, fontSize } from '../theme';
 
 // ============================================================================
@@ -937,17 +942,22 @@ export function DebugPage() {
                   </Typography>
                 )}
               </Box>
-              <Box
-                component="select"
-                value={m.status}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
-                  updateFeedbackStatus(m.id, e.target.value as FeedbackStatus)
-                }
-                sx={{ ...nativeControlSx, cursor: 'pointer', alignSelf: 'start' }}
-              >
-                {FEEDBACK_STATUS_OPTIONS.map(s => (
-                  <option key={s} value={s}>{s.replace('_', ' ')}</option>
-                ))}
+              <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'start' }}>
+                {m.message && (
+                  <CopyClaudePromptButton message={m.message} path={m.path} reaction={m.reaction} />
+                )}
+                <Box
+                  component="select"
+                  value={m.status}
+                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                    updateFeedbackStatus(m.id, e.target.value as FeedbackStatus)
+                  }
+                  sx={{ ...nativeControlSx, cursor: 'pointer', alignSelf: 'start' }}
+                >
+                  {FEEDBACK_STATUS_OPTIONS.map(s => (
+                    <option key={s} value={s}>{s.replace('_', ' ')}</option>
+                  ))}
+                </Box>
               </Box>
             </Box>
           ))}
@@ -1253,6 +1263,28 @@ function FeedbackTopList({ title, items, accent }: { title: string; items: Feedb
         </Box>
       )}
     </Box>
+  );
+}
+
+function CopyClaudePromptButton({ message, path, reaction }: { message: string; path: string | null; reaction: string | null }) {
+  const { copied, copyToClipboard } = useCopyCode();
+  return (
+    <Tooltip title={copied ? 'copied — paste into Claude Code' : 'copy prompt for Claude Code'}>
+      <IconButton
+        onClick={() => copyToClipboard(buildClaudePrompt(message, path, reaction))}
+        aria-label="Copy Claude Code prompt"
+        size="small"
+        sx={{
+          alignSelf: 'start',
+          color: copied ? colors.success : 'var(--ink-muted)',
+          border: '1px solid var(--rule)',
+          borderRadius: 1,
+          '&:hover': { bgcolor: 'var(--bg-surface)', color: colors.primary },
+        }}
+      >
+        {copied ? <CheckIcon fontSize="small" /> : <ContentCopyIcon fontSize="small" />}
+      </IconButton>
+    </Tooltip>
   );
 }
 
