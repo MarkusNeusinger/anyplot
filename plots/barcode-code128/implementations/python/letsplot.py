@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-21
@@ -16,6 +16,7 @@ from lets_plot import (
     ggplot,
     ggsave,
     ggsize,
+    layer_tooltips,
     scale_fill_identity,
     theme,
     theme_void,
@@ -166,13 +167,29 @@ x_pos = quiet_zone
 bar_ymin, bar_ymax = 32.0, 98.0
 bars = []
 
-for code in sequence:
+for sym_idx, code in enumerate(sequence):
+    if sym_idx == 0:
+        sym_label = "Start Code B"
+    elif sym_idx == len(sequence) - 1:
+        sym_label = "Stop"
+    elif sym_idx == len(sequence) - 2:
+        sym_label = f"Check digit: {checksum}"
+    else:
+        char = content[sym_idx - 1]
+        sym_label = f"'{char}'  pos {sym_idx}  Code 128B value {char_values[sym_idx - 1]}"
     is_bar = True
     for ch in CODE128_PATTERNS[code]:
         w = int(ch)
         if is_bar:
             bars.append(
-                {"xmin": float(x_pos), "xmax": float(x_pos + w), "ymin": bar_ymin, "ymax": bar_ymax, "fill": "#000000"}
+                {
+                    "xmin": float(x_pos),
+                    "xmax": float(x_pos + w),
+                    "ymin": bar_ymin,
+                    "ymax": bar_ymax,
+                    "fill": "#000000",
+                    "symbol": sym_label,
+                }
             )
         x_pos += w
         is_bar = not is_bar
@@ -193,19 +210,33 @@ df_barcode_bg = pd.DataFrame(
     }
 )
 
-df_text = pd.DataFrame({"x": [cx], "y": [16.0], "label": [content]})
-df_title = pd.DataFrame({"x": [cx], "y": [113.0], "label": ["barcode-code128 · python · letsplot · anyplot.ai"]})
+df_text = pd.DataFrame({"x": [cx], "y": [18.0], "label": [content]})
+df_annotation = pd.DataFrame(
+    {"x": [cx], "y": [7.0], "label": [f"{len(content)} chars · Code 128B · check digit: {checksum}"]}
+)
+df_subtitle = pd.DataFrame(
+    {"x": [cx], "y": [118.0], "label": [f"Shipping label · Code 128B · {len(content)} characters"]}
+)
+df_title = pd.DataFrame({"x": [cx], "y": [127.0], "label": ["barcode-code128 · python · letsplot · anyplot.ai"]})
 
 # Plot
 plot = (
     ggplot()
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"), data=df_barcode_bg)
-    + geom_rect(aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"), data=df_bars)
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"), data=df_barcode_bg, color="#FFFFFF"
+    )
+    + geom_rect(
+        aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="fill"),
+        data=df_bars,
+        tooltips=layer_tooltips().line("@{symbol}"),
+    )
     + scale_fill_identity()
     + geom_text(aes(x="x", y="y", label="label"), data=df_text, size=14, color=INK)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_annotation, size=9, color=INK_SOFT)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_subtitle, size=9, color=INK_SOFT)
     + geom_text(aes(x="x", y="y", label="label"), data=df_title, size=11, color=INK_SOFT)
     + xlim(0, total_width)
-    + ylim(0, 130)
+    + ylim(0, 135)
     + theme_void()
     + theme(plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG), panel_background=element_rect(fill=PAGE_BG))
     + ggsize(800, 450)
