@@ -1,12 +1,19 @@
-""" pyplots.ai
+"""pyplots.ai
 barcode-code128: Code 128 Barcode
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-19
+Library: altair | Python
 """
+
+import os
 
 import altair as alt
 import pandas as pd
+from PIL import Image
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Code 128 encoding tables (subset B - ASCII printable characters)
 # Each pattern is a sequence of bar widths: [bar, space, bar, space, bar, space] in units
@@ -113,7 +120,7 @@ CODE128_VALUES = {chr(i + 32): i for i in range(95)}
 
 # Special patterns
 START_B = [2, 1, 1, 2, 1, 4]  # Start Code B (value 104)
-STOP = [2, 3, 3, 1, 1, 1, 2]  # Stop pattern (7 elements, ends with 2-width bar)
+STOP = [2, 3, 3, 1, 1, 1, 2]  # Stop pattern
 
 # Check digit patterns (values 0-102)
 CHECK_PATTERNS = [
@@ -222,37 +229,32 @@ CHECK_PATTERNS = [
     [4, 1, 1, 1, 3, 1],
 ]
 
-# Data - encode a shipping label example
+# Data — encode a shipping label
 content = "SHIP-2024-ABC123"
 
 # Build the barcode pattern
 pattern = []
-
-# Start code B
 pattern.extend(START_B)
 
-# Calculate checksum and encode characters
 checksum = 104  # Start B value
 for i, char in enumerate(content):
     if char in CODE128_PATTERNS:
         pattern.extend(CODE128_PATTERNS[char])
         checksum += CODE128_VALUES.get(char, 0) * (i + 1)
 
-# Add check digit
 check_value = checksum % 103
 if check_value < len(CHECK_PATTERNS):
     pattern.extend(CHECK_PATTERNS[check_value])
 
-# Stop pattern
 pattern.extend(STOP)
 
 # Convert pattern to bar rectangles
 bars_data = []
 x = 0
-is_bar = True  # Start with bar (black)
+is_bar = True  # Start with bar (dark)
 for width in pattern:
     if is_bar:
-        bars_data.append({"x": x, "x2": x + width, "y": 0, "y2": 1})
+        bars_data.append({"x": x, "x2": x + width, "y": 0, "y2": 1, "encoded": f"Code 128B: {content}"})
     x += width
     is_bar = not is_bar
 
@@ -265,42 +267,57 @@ for bar in bars_data:
     bar["x2"] += quiet_zone
 total_width_with_zones = total_width + 2 * quiet_zone
 
-# Create DataFrame for bars
 df_bars = pd.DataFrame(bars_data)
-
-# Text label data
 df_text = pd.DataFrame([{"x": total_width_with_zones / 2, "y": -0.15, "text": content}])
 
-# Create barcode bars chart
+# Barcode bars — theme-adaptive INK color, tooltip shows encoded content
 bars_chart = (
     alt.Chart(df_bars)
-    .mark_rect(color="black")
+    .mark_rect(color=INK)
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, total_width_with_zones]), axis=None),
         x2="x2:Q",
         y=alt.Y("y:Q", scale=alt.Scale(domain=[-0.3, 1.1]), axis=None),
         y2="y2:Q",
+        tooltip=[alt.Tooltip("encoded:N", title="Encoded")],
     )
 )
 
-# Create human-readable text below barcode
+# Human-readable text below barcode
 text_chart = (
     alt.Chart(df_text)
-    .mark_text(fontSize=48, font="monospace", fontWeight="bold")
+    .mark_text(fontSize=20, font="monospace", fontWeight="bold", color=INK)
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
-# Combine charts
 chart = (
     (bars_chart + text_chart)
     .properties(
-        width=1600,
-        height=900,
-        title=alt.Title("barcode-code128 · altair · pyplots.ai", fontSize=32, anchor="middle", offset=20),
+        width=620,
+        height=320,
+        background=PAGE_BG,
+        padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
+        title=alt.Title("barcode-code128 · altair · pyplots.ai", fontSize=16, anchor="middle", color=INK),
     )
-    .configure_view(strokeWidth=0)
+    .interactive()
+    .configure_view(strokeWidth=0, fill=PAGE_BG, continuousWidth=620, continuousHeight=320)
+    .configure_title(color=INK)
 )
 
-# Save outputs
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+# PAD to canonical 3200×1800 — vl-convert leaves chart undersized; never crop
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
