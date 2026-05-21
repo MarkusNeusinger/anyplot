@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: skewt-logp-atmospheric
 created: '2026-01-17T09:26:00Z'
-updated: '2026-05-20T23:46:05Z'
+updated: '2026-05-21T00:00:26Z'
 generated_by: claude-sonnet
 workflow_run: 26196103802
 issue: 3802
@@ -12,42 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-log
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all required Skew-T features implemented with correct
-    coordinate transform'
-  - 'Perfect data quality: physically realistic tropical sounding with correct atmospheric
-    structure'
-  - 'Perfect code quality: clean flat structure, reproducible, all imports used'
-  - Multi-modal encoding for profiles (color + line style + marker shape) enhances
-    CVD accessibility
-  - Correct theme-adaptive chrome in both renders with no legibility failures
-  - Appropriate transparency hierarchy makes profiles stand out clearly over reference
-    lines
+  - Correct Skew-T coordinate transformation using tan(45°) slope and log(p0/p) offset,
+    applied consistently to sounding data and all reference line sets.
+  - All four reference line categories (isotherms, dry adiabats, moist adiabats, mixing
+    ratio) implemented with distinct colors, line styles, and alpha levels that preserve
+    readability of the primary profiles.
+  - Idiomatic use of seaborn `units=` with `estimator=None` for reference line groups
+    — avoids explicit loops in the plot call and is the library's intended mechanism
+    for this pattern.
+  - CAPE region fill_betweenx between temperature and dewpoint adds meteorological
+    context and a genuine visual focal point.
+  - Flawless theme adaptation in both renders — no dark-on-dark failures, correct
+    background tokens, identical data colors.
   weaknesses:
-  - 'DE-03 LOW: No visual emphasis on key meteorological features — shading the CAPE
-    region (area between temperature and dewpoint where T > Td) with low-alpha fill
-    would guide the viewer to the key stability signal and dramatically improve storytelling'
-  - 'DE-01 MODERATE: Aesthetic ceiling limited by matplotlib-only reference line rendering;
-    adding CAPE/CIN fill using ax.fill_betweenx would add scientific depth and visual
-    sophistication simultaneously'
-  - 'LM-02 LIMITED: Core visualization complexity is matplotlib loops; greater use
-    of seaborn-specific constructs would improve library mastery score'
-  - 'VQ-02 MINOR: Legend in lower-left overlaps visually with mixing ratio reference
-    lines; relocating to upper-left where 100-200 hPa data is sparse would reduce
-    visual crowding'
+  - 'Design Excellence below potential: no pressure-level annotations (text labels
+    at 850, 700, 500 hPa) that would help orient readers unfamiliar with Skew-T diagrams;
+    adding these as ax.text() calls on the right edge is low effort and high meteorological
+    value.'
+  - Moist adiabat formula `(theta_e - 30) * (p/1000)^0.30 - 273.15` is a crude empirical
+    approximation; a more physically accurate parameterization (Bolton's equation
+    or equivalent) would improve meteorological fidelity.
+  - Mixing ratio lines (OKABE_ITO[3] at alpha=0.40, dotted) are borderline-visible
+    in both renders, particularly at upper-troposphere pressure levels — reducing
+    their alpha to 0.30 or restricting them more aggressively to below 600 hPa would
+    reduce visual noise without losing information.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface
-      Chrome: Title "skewt-logp-atmospheric · python · seaborn · anyplot.ai" readable; axis labels "Temperature (°C)" and "Pressure (hPa)" readable; tick labels readable at all pressure levels; all chrome elements clear against light background
-      Data: Temperature profile in teal #009E73 (solid line, circle markers) and Dewpoint profile in orange #D55E00 (dashed line, square markers) clearly visible; isotherms in subtle gray, dry adiabats in yellow-orange, moist adiabats in blue dashed, mixing ratio lines in purple dotted (lower troposphere only); appropriate semi-transparency for reference lines
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, not pure white.
+      Chrome: Title "skewt-logp-atmospheric · python · seaborn · anyplot.ai" in dark ink (#1A1A17), fully readable. Axis labels "Temperature (°C)" and "Pressure (hPa)" in dark ink at 10pt, clearly legible. Tick labels in secondary ink (#4A4A44) at 8pt, readable. Legend box with elevated background (#FFFDF6) and 7 labeled entries, all text readable.
+      Data: Temperature profile in #009E73 (brand green) solid line with circle markers — correct first-series color. Dewpoint in #D55E00 (Okabe-Ito #2) dashed line with square markers. Dry adiabats in #E69F00 (Okabe-Ito #5), moist adiabats in #0072B2 (Okabe-Ito #3) dashed, mixing ratio in #CC79A7 (Okabe-Ito #4) dotted. Isotherms in INK_SOFT (gray). CAPE region shading in #E69F00 at low alpha between profiles. Skewed diagonal pattern of reference lines clearly visible.
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title readable in light text; axis labels readable in light text; tick labels readable in light gray (INK_SOFT=#B8B7B0 in dark mode); no dark-on-dark text issues observed; legend uses elevated dark background (#242420) with appropriate light text
-      Data: Colors identical to light render — Temperature #009E73, Dewpoint #D55E00; reference line colors unchanged; data elements clearly distinguishable from dark background
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8), fully readable against dark background. Axis labels in light ink, clearly legible. Tick labels in secondary dark-mode ink (#B8B7B0), readable. No dark-on-dark failures detected. Legend box uses elevated dark surface (#242420) with light text — all entries readable.
+      Data: Temperature (#009E73) and dewpoint (#D55E00) colors identical to light render — only chrome flipped. Reference line colors (isotherms, dry adiabats, moist adiabats, mixing ratio) also identical. Subtle grid lines visible against dark background. CAPE region shading visible.
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
@@ -59,53 +61,51 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, labels=10, ticks=8, legend=8);
-          well-proportioned; readable in both themes
+        comment: 'Font sizes explicitly set (title=12, labels=10, ticks=8). All text
+          readable in both renders. Minor: pressure tick labels sparse at top.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Legend has near-opaque background preventing true text overlap; minor
-          visual crowding where mixing ratio lines pass through lower-left legend
-          zone
+        comment: No text-on-text or text-on-data collisions. Legend overlaps reference
+          lines but opaque background prevents readability issue.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Profiles clearly visible at linewidth=3; reference lines appropriately
-          subtle at alpha 0.30-0.50; markers could be slightly larger for 19-point
-          sparse dataset
+        comment: Primary profiles prominent; reference lines subtle at appropriate
+          alpha. Mixing ratio lines borderline visible at alpha=0.40.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with multi-modal encoding (color+style+markers),
-          CVD-safe
+        comment: Okabe-Ito palette throughout; CVD-safe; no red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; good proportions; log pressure scale fills canvas
-          well
+        comment: Canvas gate passed. Good proportions, no overflow or clipping. Title
+          ~55% plot width appropriate.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Temperature (°C) and Pressure (hPa) are descriptive with units
+        comment: Temperature (°C) and Pressure (hPa) with units. Title follows required
+          format exactly.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Temperature #009E73 (position 1), Dewpoint #D55E00 (position 2);
-          backgrounds #FAF8F1/#1A1A17; chrome flips correctly in both themes'
+        comment: 'First series #009E73. All Okabe-Ito in order. Light bg #FAF8F1,
+          dark bg #1A1A17. Data colors identical across renders.'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -113,24 +113,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above well-configured default: deliberate Okabe-Ito assignment to
-          reference line types, multi-layered semi-transparency for depth; not publication-level
-          but genuinely thoughtful'
+        comment: CAPE shading, multi-type reference line differentiation, custom legend
+          show design thought. No pressure-level annotations or strong emphasis variation.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top/right spines removed; subtle y-only grid at 10% alpha; semi-transparent
-          reference lines; clean legend with proper framealpha
+        comment: Top/right spines removed, subtle grid alpha=0.10, legend with framealpha=0.92.
+          Adequate but not exceptional.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Physical reference lines provide meteorological context above default;
-          no visual emphasis on CAPE/CIN region; viewer must independently identify
-          the key diagnostic area
+        passed: true
+        comment: CAPE fill creates focal point. Good visual hierarchy (thick profiles
+          vs. thin reference lines). No pressure-level annotations or LCL labeling.
     spec_compliance:
       score: 15
       max: 15
@@ -140,30 +138,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Skew-T Log-P diagram with 45-degree skewed isotherms and
-          logarithmic inverted pressure axis
+        comment: Correct Skew-T Log-P with logarithmic inverted pressure axis and
+          skewed temperature coordinate.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features present: temperature profile (solid), dewpoint
-          (dashed), isotherms (skewed), dry adiabats, moist adiabats, mixing ratio
-          lines; wind barbs omitted (spec optional)'
+        comment: Log inverted axis, 45° isotherms, dry adiabats, moist adiabats, mixing
+          ratio lines, temp solid/dew dashed, color coding.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Pressure on inverted log Y-axis; skew-T transform x=T+tan(45)*ln(p0/p)
-          correctly applied to both profiles
+        comment: 19 levels from 1000 to 50 hPa, full range displayed, skew transform
+          correctly applied.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title skewt-logp-atmospheric · python · seaborn · anyplot.ai correct;
-          legend labels accurately describe all six visual elements
+        comment: Title exact match. Legend labels all 7 chart elements clearly.
     data_quality:
       score: 15
       max: 15
@@ -173,22 +169,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all Skew-T aspects: full profile from surface to stratosphere,
-          all four reference line types, realistic moisture structure'
+        comment: 'All Skew-T elements: sounding profiles, all three reference line
+          types, CAPE shading.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tropical atmospheric sounding; neutral scientific context; physically
-          meaningful scenario
+        comment: Tropical sounding with physically plausible lapse rate, dewpoint
+          depression, stratospheric inversion.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Surface temperature 30°C (realistic tropics), realistic lapse rate,
-          stratospheric warming near 70-50 hPa; physically plausible throughout
+        comment: Surface to 50 hPa, temperature -75 to 30°C, realistic for tropical
+          sounding.
     code_quality:
       score: 10
       max: 10
@@ -198,62 +194,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flat structure: imports → theme → data → plot → save'
+        comment: Flat top-level script, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All seven imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
-          Line2D, ScalarFormatter'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; skew transform as vectorized numpy; no over-engineering
+        comment: Well-structured, seaborn-idiomatic, no fake interactivity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; current seaborn 0.14+ API
+        comment: savefig with f'plot-{THEME}.png', dpi=400, no bbox_inches='tight'.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: sns.lineplot with units= + estimator=None for multi-line groups is
+          idiomatic seaborn. hue+style+markers+dashes on sounding profiles is correct
+          API usage.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sns.lineplot with hue/style/markers/dashes/palette dict arguments
-          is idiomatic; sns.despine and sns.set_theme correct; reference lines require
-          matplotlib
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: dashes={} and markers={} dict params in sns.lineplot are seaborn-specific;
-          bulk of visualization complexity is matplotlib loops limiting distinctive
-          contribution
-  verdict: REJECTED
+        comment: units= grouping mechanism is seaborn-specific. sns.set_theme() with
+          rc= dict for full chrome control is also seaborn-specific.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - manual-ticks
   - custom-legend
+  - patches
   patterns:
   - data-generation
-  - explicit-figure
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
   - alpha-blending
