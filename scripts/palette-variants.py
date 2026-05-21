@@ -757,7 +757,7 @@ def render_variant_page(
 
     legend = render_legend()
 
-    nav = "".join(
+    nav = '<a href="../palette-analysis.html">★ baseline</a>' + "".join(
         f'<a href="{v.key}-{v.slug}.html" class="{"current" if v.key == variant.key else ""}">{v.key} · {v.title}</a>'
         for v in VARIANTS
     )
@@ -834,8 +834,8 @@ def render_variant_page(
 </header>
 
 <nav class="variant-nav">
-    <a href="index.html">← all variants</a>
-    <a href="compare.html">side-by-side compare</a>
+    <a href="index.html">grid</a>
+    <a href="compare.html">compare</a>
     {nav}
 </nav>
 
@@ -1041,8 +1041,15 @@ def render_compare_page(rows: list[tuple[Variant, list[str], float, float]]) -> 
     <button class="theme-toggle">◐ dark</button>
 </header>
 <nav class="variant-nav">
-    <a href="index.html">← grid view</a>
-    <a href="../palette-analysis.html">baseline diagnostic →</a>
+    <a href="index.html">grid</a>
+    <a href="compare.html" class="current">compare</a>
+    <a href="../palette-analysis.html">★ baseline</a>
+    <a href="A-analogous.html">A · analogous</a>
+    <a href="B-triadic.html">B · triadic</a>
+    <a href="C-split-complementary.html">C · split-complementary</a>
+    <a href="D-balanced.html">D · balanced</a>
+    <a href="E-harmonic.html">E · harmonic</a>
+    <a href="F-okabe-anchored.html">F · okabe-anchored</a>
 </nav>
 <main class="domain">
     <p class="lede">all variants side-by-side for decision making. each card shows the full 7-hue + 2-neutral palette (left to right), both palette-derived continuous colormaps (sequential green→dark blue-zone, diverging warmest↔coolest), and a peaks-function preview of each cmap. baseline Okabe-Ito first-4 worst-CVD ΔE = {baseline_first4:.2f} for reference.</p>
@@ -1210,8 +1217,15 @@ def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> st
     <button class="theme-toggle">◐ dark</button>
 </header>
 <nav class="variant-nav">
-    <a href="compare.html">side-by-side compare →</a>
-    <a href="../palette-analysis.html">baseline diagnostic →</a>
+    <a href="index.html" class="current">grid</a>
+    <a href="compare.html">compare</a>
+    <a href="../palette-analysis.html">★ baseline</a>
+    <a href="A-analogous.html">A · analogous</a>
+    <a href="B-triadic.html">B · triadic</a>
+    <a href="C-split-complementary.html">C · split-complementary</a>
+    <a href="D-balanced.html">D · balanced</a>
+    <a href="E-harmonic.html">E · harmonic</a>
+    <a href="F-okabe-anchored.html">F · okabe-anchored</a>
 </nav>
 
 <section class="intro">

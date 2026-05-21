@@ -104,8 +104,15 @@ def render_page() -> str:
     <button class="theme-toggle">◐ dark</button>
 </header>
 <nav class="variant-nav">
-    <a href="palette-variants/index.html">variants grid →</a>
-    <a href="palette-variants/compare.html">side-by-side compare →</a>
+    <a href="palette-variants/index.html">grid</a>
+    <a href="palette-variants/compare.html">compare</a>
+    <a href="palette-analysis.html" class="current">★ baseline</a>
+    <a href="palette-variants/A-analogous.html">A · analogous</a>
+    <a href="palette-variants/B-triadic.html">B · triadic</a>
+    <a href="palette-variants/C-split-complementary.html">C · split-complementary</a>
+    <a href="palette-variants/D-balanced.html">D · balanced</a>
+    <a href="palette-variants/E-harmonic.html">E · harmonic</a>
+    <a href="palette-variants/F-okabe-anchored.html">F · okabe-anchored</a>
 </nav>
 
 <section class="domain">
