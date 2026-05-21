@@ -1,207 +1,276 @@
 library: altair
+language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:16:03Z'
-updated: '2026-01-19T13:18:49Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21138482879
+updated: '2026-05-21T03:37:35Z'
+generated_by: claude-sonnet
+workflow_run: 26203300053
 issue: 3791
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/altair/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/altair/plot-dark.html
+quality_score: 91
 review:
   strengths:
-  - Excellent visual design with professional dashboard appearance
-  - Smart use of Altair declarative composition (vconcat/hconcat) for grid layout
-  - 'Thoughtful change indicator logic (context-aware: green for favorable changes,
-    red for unfavorable)'
-  - Gradient fills on sparklines add visual polish
-  - Consistent tile sizing and spacing throughout
-  - Clean color palette with good accessibility (arrows supplement colors)
+  - 'Excellent Altair compositing: vconcat/hconcat creates a true dashboard grid without
+    any workarounds — idiomatic and clean'
+  - Gradient sparkline fills using alt.Gradient with GradientStop are a genuinely
+    Altair-distinctive feature that adds visual polish
+  - 'Color-coded status tiles (Okabe-Ito #009E73 for good, #E69F00 for warning) create
+    immediate at-a-glance readability'
+  - 'Full theme-adaptive chrome: PAGE_BG, ELEVATED_BG, INK, INK_SOFT are all threaded
+    through title, view, and tile colors — both renders pass readability'
+  - 'Canvas handling is correct: raises SystemExit on overshoot, pads to exact 3200×1800
+    on undershoot — no cropping'
+  - KISS code structure with inline per-tile loop, no helper functions, deterministic
+    seeding per tile for reproducibility
+  - Tile value formatting adapts by magnitude (thousands, fractions, integers) and
+    embeds units — highly realistic dashboard data
+  - Change indicators use favorable/unfavorable logic correctly (down = good for CPU/latency,
+    up = good for Requests/sec)
   weaknesses:
-  - Uses a function create_tile() which violates the KISS principle (should use inline
-    code or list comprehension style)
-  - Missing status color coding from spec (good/warning/critical states)
+  - Dark-render warning tiles (Memory, Error Rate) have amber gradient fills (#E69F0055
+    alpha) that blend into the dark elevated background (#242420) and appear brownish/olive
+    — the stroke line remains readable but the area fill loses color identity; consider
+    using a slightly higher alpha (88 or AA instead of 55) for the gradient top stop
+    in dark mode to retain amber character
+  - No 'critical' status tile is present in the data despite the spec explicitly listing
+    good/warning/critical as categories — adding one critical tile (e.g. 'Queue Depth'
+    or 'Cache Miss Rate') would give full feature coverage for DQ-01
+  - 'DE-02: tile border stroke uses INK_SOFT at strokeWidth=1 which appears as a dark
+    ring in light mode; while not ugly, removing or softening it to strokeOpacity=0.3
+    would give cleaner tiles and improve visual refinement'
   image_description: |-
-    The plot displays a professional 3x2 grid of 6 dashboard metric tiles on a clean white background. The main title "dashboard-metrics-tiles · altair · pyplots.ai" appears at the top in blue (#306998). Each tile contains a large metric value, label, sparkline area chart, and change indicator.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "dashboard-metrics-tiles · python · altair · anyplot.ai" in dark ink at top, clearly readable. Tile value labels (45%, 72%, 120ms, 2,847, 0.8%, 156MB/s) are bold, very large, dark — prominent and readable. Metric subtitles (CPU Usage, Memory, etc.) in dark INK, smaller, readable. Change indicators (▼ 5.2%, ▲ 8.1%, etc.) in green/vermillion, clearly readable.
+      Data: 3×2 grid of metric tiles on elevated off-white (#FFFDF6) backgrounds with rounded corners. Green (#009E73) sparklines with teal gradient fill for "good" tiles (CPU, Response Time, Requests/sec, Disk I/O). Amber (#E69F00) sparklines with warm-amber gradient fill for "warning" tiles (Memory, Error Rate). All sparklines show clear trend lines above filled gradient areas.
+      Legibility verdict: PASS — all text readable, no light-on-light issues, adequate contrast throughout.
 
-    Top row tiles:
-    - CPU Usage: 45% with downward green arrow showing ▼ 5.2% (favorable decrease)
-    - Memory: 72% with upward red arrow showing ▲ 8.1% (unfavorable increase)
-    - Response Time: 120ms with downward green arrow showing ▼ 15.3% (favorable decrease)
-
-    Bottom row tiles:
-    - Requests/sec: 2,847 with upward green arrow showing ▲ 12.4% (favorable increase for throughput)
-    - Error Rate: 0.8% with upward red arrow showing ▲ 0.3% (unfavorable increase)
-    - Disk I/O: 156MB/s with downward green arrow showing ▼ 2.1% (favorable decrease)
-
-    Each tile features a sparkline area chart with blue line (#306998) and gradient fill showing recent trend history. The sparklines use 20 data points and show varied patterns consistent with each metric's change direction. All tiles have consistent sizing with rounded corner borders (#e0e0e0) and proper spacing. The layout is balanced and professional, suitable for an operations monitoring dashboard.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title in light cream text (#F0EFE8 range), clearly readable against dark background. All tile values in light text, very readable. Metric subtitles in light secondary text, readable. Change indicators in green/orange, readable.
+      Data: Colors are identical to light render for data elements — green sparklines for good tiles, amber sparklines for warning tiles (data colors match). Tile elevated backgrounds shift to dark (#242420) correctly. Minor observation: the amber gradient area fill on warning tiles blends slightly brownish/olive against the dark elevated background due to #E69F0055 alpha blending — the sparkline stroke line remains clearly amber and readable.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures. Brand green (#009E73) remains visible and prominent.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: 'All text perfectly readable: large metric values at ~48pt, labels
-          at ~22pt, change indicators at ~22pt'
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements, clean separation between tiles and text
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Sparklines visible and well-sized, slight deduction as sparklines
-          could have more vertical prominence
+        comment: 'All font sizes explicitly set (title=16, values=36, subtitles=16,
+          change=16); readable at full resolution and mobile scale in both themes.
+          Minor: subtitle text is small relative to dominant value display but intentional
+          dashboard hierarchy.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlap anywhere; tile spacing=18 prevents collisions; vconcat/hconcat
+          grid is well-separated.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Sparkline lines at strokeWidth=2 are clearly visible in both themes;
+          gradient fills reinforce the trend direction; all data elements are distinct.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Green/red change indicators supplemented by up/down arrows for accessibility
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Perfect 3x2 grid with consistent spacing, tiles fill canvas well
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for dashboard tiles, but metric labels and units are clear
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Okabe-Ito #009E73 (green) vs #E69F00 (amber) for status — CVD-safe;
+          change indicators use green vs vermillion #D55E00 — not red-green confusion.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. 3×2 grid fills canvas well, balanced whitespace,
+          proper padding around grid. Image padded to exact 3200×1800.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Tiles have subtle borders, sparklines have no reference grid
+        comment: Units embedded in tile values (%, ms, MB/s); metric names serve as
+          descriptive labels; no traditional axes needed for dashboard layout.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light background #FAF8F1, dark background #1A1A17 — correct. Okabe-Ito
+          position 1 (#009E73) for good/primary, position 5 (#E69F00) for warning.
+          Data colors identical across both renders. Theme chrome correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design clearly above defaults: gradient area fills, rounded
+          tile corners, color-coded status system, prominent value hierarchy with
+          subdued labels, theme-adaptive elevated backgrounds. Not quite publication-ready
+          academic level but genuinely impressive dashboard UI design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good refinement: sparklines have no axis chrome (axes=None), no
+          grid within tiles, gradient fills. Slight deduction: tile border strokes
+          appear as dark rings in light mode (stroke=INK_SOFT, strokeWidth=1) — softening
+          these would add polish. Dark amber gradient area looks brownish/olive, minor
+          visual issue.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: color-coded tiles create immediate health status
+          hierarchy; change arrows with percentages show direction and magnitude at
+          a glance; sparklines provide trend context. Viewer immediately sees which
+          metrics need attention.'
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct dashboard tiles with KPI values, sparklines, and change indicators
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Values correctly displayed with units, sparklines show trends
-      - id: SC-03
+        comment: Correct dashboard metrics tile layout — 3×2 grid of KPI tiles, each
+          with value + label + sparkline + change indicator.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has all main features but missing status color coding (good/warning/critical)
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: prominent value display, metric label,
+          mini sparkline, change indicator with arrow and percentage, color coding
+          for status, consistent tile sizing.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All sparklines properly scaled, values clearly visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All 6 metrics displayed with correct values, units, and change percentages.
+          Sparklines correctly reflect positive/negative trend direction.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for dashboard, labels accurately describe metrics
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: dashboard-metrics-tiles · altair · pyplots.ai'
+        comment: 'Title exactly matches required format: ''dashboard-metrics-tiles
+          · python · altair · anyplot.ai''. No legend needed; tile labels are self-describing.'
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows 6 varied metrics with different units and both positive/negative
-          changes
+        comment: 'Shows good/warning status categories, positive and negative changes,
+          varied value ranges and units. Missing: no ''critical'' status tile — spec
+          explicitly lists good/warning/critical as categories.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Operations monitoring scenario with realistic server metrics
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'All values realistic: CPU 45%, Memory 72%, Response Time 120ms,
-          etc.'
+        comment: Real-world server operations monitoring dashboard (CPU, Memory, Response
+          Time, Requests/sec, Error Rate, Disk I/O) — comprehensible, neutral scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All values are factually plausible: CPU 45%, Memory 72%, Response
+          120ms, 2847 req/s, Error 0.8%, Disk 156MB/s — consistent with a mid-load
+          web service.'
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 1
-        max: 3
-        passed: false
-        comment: Uses a function create_tile() which violates KISS principle
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) and deterministic seeds per tile
+        comment: Inline loop, no functions or classes. Imports → Data → Loop building
+          tiles → Compose layout → Save.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) global seed plus per-tile seed (100 + idx*17)
+          for reproducible sparkline history.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only altair, numpy, pandas imported
+        comment: os, altair, numpy, pandas, PIL.Image — all imported and used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code, appropriate complexity. No fake UI elements.
+          Altair compositing used correctly.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Altair API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png and plot.html - html is good but technically extra
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair API.
+          Correct canvas padding logic.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: Declarative vconcat/hconcat for grid, gradient fills, alt.Title for
-          multi-line titles, configure_view for rounded corners
+        comment: 'Expert use of Altair''s declarative compositing system: vconcat/hconcat
+          for layout, alt.Title with text array for value+label hierarchy, alt.Scale(domain=)
+          for sparkline normalization, proper encoding types (Q/N).'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'alt.Gradient with GradientStop for sparkline area fills is distinctively
+          Altair and not easily replicated in matplotlib/seaborn. The vconcat/hconcat
+          compositing for dashboard layout leverages Altair''s grammar-of-graphics
+          compositing model. Minor: could have leveraged Altair selections or layering
+          for even more distinctive usage.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - layer-composition
-  - annotations
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - iteration-over-groups
@@ -209,4 +278,3 @@ impl_tags:
   - normalization
   styling:
   - gradient-fill
-  - edge-highlighting
