@@ -1,163 +1,189 @@
 library: matplotlib
+language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:07:31Z'
-updated: '2026-01-19T13:10:15Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21138482778
+updated: '2026-05-21T03:20:56Z'
+generated_by: claude-sonnet
+workflow_run: 26203050893
 issue: 3791
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/matplotlib/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of a complex dashboard layout using matplotlib inset_axes
-    for sparklines and status bars
-  - Smart color logic that correctly inverts good/bad colors for Error Rate and Response
-    Time metrics
-  - Clean visual hierarchy with status bar, label, value, change indicator, and sparkline
-    in each tile
-  - Good use of transparency (alpha=0.3) for sparkline fill areas
-  - Consistent styling across all tiles with appropriate fonts and spacing
+  - Complete spec compliance — all 5 data fields (name, value, history, change_percent,
+    status) rendered correctly across 6 realistic metrics
+  - Semantic color coding using Okabe-Ito positions 1/5/2 for good/warning/critical
+    — both principled and effective
+  - Excellent dark theme adaptation — INK token correctly threads through all tile
+    text; no dark-on-dark failures
+  - inset_axes used skillfully for embedded status bars and sparklines within each
+    tile axes — distinctive matplotlib technique
+  - np.random.seed(42) ensures reproducibility; no bbox_inches='tight' preserves canvas
+    dimensions
+  - 'Correct canvas: figsize=(8, 4.5), dpi=400 → 3200×1800 px'
   weaknesses:
-  - Change indicator arrows and colors could be slightly larger for better visibility
-    at a glance
-  - Status bar could include a small text label (e.g., CRITICAL) for accessibility
-    alongside the color
-  image_description: 'The plot displays a 3x2 grid of dashboard metric tiles showing
-    6 server monitoring KPIs. Each tile has a colored status bar at the top (green
-    for good, yellow for warning, red for critical), a metric name in bold, a large
-    prominent value with units, a change indicator with up/down triangle arrows and
-    percentage (green for favorable, red for unfavorable), and a mini sparkline chart
-    at the bottom showing the trend. The tiles are: CPU Usage (45%, down 5.2%, green
-    status), Memory (72%, up 8.1%, yellow warning status), Response Time (120ms, down
-    15.3%, green status), Requests/s (2450, up 12.7%, green status), Error Rate (2.3%,
-    up 45.0%, red critical status), and Disk I/O (156MB/s, down 3.8%, green status).
-    The sparklines use the same color as the status bar with semi-transparent fill
-    areas. The overall layout is clean with a light gray tile background and subtle
-    borders.'
+  - Status bar text 'GOOD'/'WARNING'/'CRITICAL' at 7pt may become illegible at small
+    sizes; consider increasing to 8–9pt
+  - 'In dark mode, contrast between page background (#1A1A17) and elevated tile background
+    (#242420) is very subtle; a slightly more distinct elevated color (e.g. #2A2A26)
+    would improve tile definition'
+  - Memory tile shows green ▲8.1% change indicator (positive treated as good) but
+    its status is WARNING — Memory rising is unfavorable, so it should be added to
+    the inverse-polarity list alongside Error Rate and Response Time
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface.
+      Chrome: Title "dashboard-metrics-tiles · python · matplotlib · anyplot.ai" in dark INK #1A1A17 — clearly readable. No axis labels/ticks (dashboard tile layout). Tile borders in INK_SOFT #4A4A44.
+      Data: Six tiles on elevated #FFFDF6 surfaces. Status bars: green #009E73 (GOOD), amber #E69F00 (WARNING), orange-red #D55E00 (CRITICAL). Metric names in dark bold, values prominently at 16pt bold, change indicators in semantic green/red, sparklines with fill_between alpha=0.3. First series color is #009E73 (brand green).
+      Legibility verdict: PASS — all text readable against light backgrounds.
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title in light cream #F0EFE8 (INK dark token) — clearly readable. Tile surfaces use #242420 elevated dark background with INK_SOFT #B8B7B0 borders. Metric names and main values in #F0EFE8 — white-on-dark, fully readable. Status bar labels in white on colored bars — readable.
+      Data: Data colors identical to light render — green/amber/orange-red status colors unchanged. Sparkline fills darken via alpha blend but lines remain clearly visible. No dark-on-dark failures detected.
+      Legibility verdict: PASS — all text readable against dark backgrounds, no dark-on-dark issues.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: 'All text clearly readable: title at 24pt, metric names at 16pt bold,
-          values at 32pt bold, change indicators at 14pt'
+        comment: All text explicitly sized and readable in both themes. Status bar
+          text at 7pt is small but supplementary to color; main value at 16pt and
+          change at 12pt are excellent.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean separation between all components
+        comment: Tiles cleanly separated, no text or element collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Sparklines appropriately sized, status bars visible, all elements
-          well proportioned
+        comment: Sparklines, status bars, values, and arrows all clearly visible in
+          both renders.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good contrast with green/yellow/red status colors, but red-green
-          used together for change indicators
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space, 3x2 grid fills the area well with
-          balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for dashboard tiles but units are included with values (%, ms,
-          MB/s)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Text labels GOOD/WARNING/CRITICAL supplement color coding, mitigating
+          CVD risk. Status colors are Okabe-Ito positions 1, 5, 2.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 landscape canvas correct, no overflow, tile grid well-proportioned.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No grid/legend needed for this format, subtle borders work well
+        comment: Title matches required format. Metric names and units clearly labeled
+          within tiles.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct. Status colors use Okabe-Ito
+          positions 1/5/2. Both renders theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Professional dashboard with intentional hierarchy: status bar →
+          name → value → change → sparkline. Elevated tile backgrounds create depth.
+          Deliberate semantic palette.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: fill_between with alpha=0.3 gives sparklines depth. Tile borders
+          use INK_SOFT. Sparkline axes hidden. Could improve dark tile contrast.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Status color coding enables visual triage. CRITICAL orange-red draws
+          the eye. Directional arrows guide attention. No explicit layout-level focal
+          point.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dashboard tile layout with all required components
+        comment: Correct dashboard tile layout with embedded sparklines and status
+          indicators.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values, history, change percentages all correctly displayed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: metric label, current value, sparkline,
-          change indicator with arrow, status color coding'
-      - id: SC-04
-        name: Data Range
+        comment: 'All required: KPI value, metric label, sparkline (30 points), change
+          indicator with arrow+%, status color coding.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Sparklines show full data range with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: All 5 data fields used. 3x2 grid for 6 tiles as specified.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No explicit legend but tile labels are accurate; could benefit from
-          a status key
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses dashboard-metrics-tiles · matplotlib · pyplots.ai
+        comment: Title exactly 'dashboard-metrics-tiles · python · matplotlib · anyplot.ai'.
+          No legend needed.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all status types (good/warning/critical), both positive and
-          negative changes, various value formats
+        comment: All spec data dimensions shown. Mixed statuses (4 good, 1 warning,
+          1 critical). Positive and negative changes. Varied units.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Server/infrastructure monitoring scenario with realistic metrics
-          (CPU, Memory, Response Time, etc.)
+        comment: CPU 45%, Memory 72%, Response 120ms, 2450 req/s, 2.3% error rate,
+          156 MB/s disk — all highly plausible ops metrics.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Mostly realistic values; 45% error rate increase is quite dramatic
-          but plausible for an alert scenario
+        comment: All values within realistic ranges for infrastructure monitoring.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,55 +191,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → figure setup → tile iteration
-          → save'
+        comment: Flat script, no functions or classes. Clean zip(axes.flat, metrics,
+          strict=True) iteration.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducible random data
+        comment: np.random.seed(42) ensures deterministic sparkline data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib and numpy, both fully used
+        comment: Only os, matplotlib.pyplot, numpy — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: inset_axes used idiomatically for status bars and sparklines. transform=ax.transAxes
+          for layout-relative text. No fake interactivity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current matplotlib APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png (correct filename)
-    library_features:
-      score: 3
-      max: 5
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) with
+          no bbox_inches='tight'. Correct.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Axes methods throughout, inset_axes for embedded sub-axes, fill_between
+          for area sparklines, ax.transAxes transforms for relative text positioning.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of inset_axes for sparklines and status bars, subplot grid,
-          facecolor styling
+        comment: Nested inset_axes for both status bar strip and sparkline within
+          each tile — distinctive matplotlib technique. fill_between with alpha adds
+          polish.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - subplots
   - inset-axes
-  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
+  - explicit-figure
   dataprep:
   - cumulative-sum
   styling:
   - alpha-blending
-  - edge-highlighting
+  - minimal-chrome
