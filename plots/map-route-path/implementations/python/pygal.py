@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-route-path: Route Path Map
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 78/100 | Updated: 2026-05-21
@@ -54,7 +54,8 @@ custom_style = Style(
 )
 
 # Chart — XY chart maps longitude/latitude as Cartesian coordinates;
-# per-point label dicts expose pygal's interactive tooltip metadata in HTML output
+# truncate_label=-1 prevents pygal from auto-truncating axis tick labels,
+# x_label_rotation=45 gives each label room to render in full
 chart = pygal.XY(
     width=3200,
     height=1800,
@@ -69,31 +70,39 @@ chart = pygal.XY(
     legend_at_bottom=True,
     legend_box_size=32,
     truncate_legend=-1,
+    truncate_label=-1,
+    x_label_rotation=45,
     value_formatter=lambda v: f"Lon {v[0]:.4f}°, Lat {v[1]:.4f}°" if isinstance(v, (tuple, list)) else str(v),
 )
 
-# START marker — Okabe-Ito position 1 (brand green), large dot, tooltip via label
+# Explicit sparse x-axis tick positions — 7 values avoids density-driven truncation
+chart.x_labels = np.linspace(lon.min(), lon.max(), 7).tolist()
+
+# START marker — brand green (Okabe-Ito pos 1), oversized dot for visual prominence
 chart.add(
     "START",
     [{"value": (float(lon[0]), float(lat[0])), "label": f"Trail head — {timestamps[0]}"}],
-    dots_size=18,
+    dots_size=22,
     stroke=False,
     show_dots=True,
 )
 
-# FINISH marker — Okabe-Ito position 2 (vermillion, distinct from green), tooltip via label
+# FINISH marker — vermillion (Okabe-Ito pos 2), medium dot clearly smaller than START
 chart.add(
     "FINISH",
     [{"value": (float(lon[-1]), float(lat[-1])), "label": f"Trail end — {timestamps[-1]}"}],
-    dots_size=18,
+    dots_size=14,
     stroke=False,
     show_dots=True,
 )
 
-# Route segments with time-progression labels (Okabe-Ito positions 3-7)
+# Route segments — time-progression color (Okabe-Ito positions 3–7)
+# Stroke width follows a bell curve to suggest pace variation: slower at start/end,
+# peak effort in the middle third of the hike
 n_segments = 5
 segment_size = n_points // n_segments
 seg_labels = ["0–9 min", "9–18 min", "18–27 min", "27–36 min", "36–45 min"]
+seg_widths = [5, 6, 8, 6, 5]
 
 for i in range(n_segments):
     start_idx = i * segment_size
@@ -102,7 +111,9 @@ for i in range(n_segments):
         {"value": (float(lon[j]), float(lat[j])), "label": f"Waypoint {j + 1} at {timestamps[j]}"}
         for j in range(start_idx, end_idx)
     ]
-    chart.add(seg_labels[i], segment_data, stroke_style={"width": 6})
+    chart.add(
+        seg_labels[i], segment_data, stroke_style={"width": seg_widths[i], "linecap": "round", "linejoin": "round"}
+    )
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
