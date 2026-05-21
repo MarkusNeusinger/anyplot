@@ -112,6 +112,7 @@ PER_VARIANT_C_RANGE: dict[str, tuple[float, float]] = {
     "split-comp":     (26.0, 42.0),
     "balanced":       (22.0, 36.0),
     "harmonic":       (22.0, 60.0),  # F: relaxed paper-ink — wider C headroom for more harmonious hue picks
+    "okabe-anchored": (22.0, 42.0),  # room for both brand-green (C=25) and vermillion (C=34) + 5 fillers
 }
 
 
@@ -126,6 +127,7 @@ PER_VARIANT_HUE_SPREAD: dict[str, float] = {
     "split-comp":     45.0,
     "balanced":       50.0,  # 360/7 ≈ 51°, the ideal even spacing
     "harmonic":       50.0,
+    "okabe-anchored": 45.0,  # two anchors already at 166° and 51° → 115° apart, 5 fillers to spread
 }
 
 
@@ -310,12 +312,19 @@ def hue_gap_mask(
 
 
 def select_palette(
-    strategy: str, pool: CandidatePool, n_hues: int = 7
+    strategy: str,
+    pool: CandidatePool,
+    n_hues: int = 7,
+    extra_seeds: tuple[str, ...] = (),
 ) -> list[str]:
     """Pick 7 hues for a variant. Greedy max-min ΔE selection under all 4
     CVD conditions, with per-position hue bands and the per-variant chroma
     corridor as candidate masks. If no candidate matches the strictest band,
     the band half-width is widened in 10° steps until something fits.
+
+    ``extra_seeds`` are pinned hex strings that follow brand-green in the
+    output. Used by okabe-anchored to keep #D55E00 (vermillion) in the
+    palette regardless of where greedy max-min would put it.
     """
 
     brand_rgb = hex_to_rgb1(OK_GREEN)
@@ -335,7 +344,13 @@ def select_palette(
 
     selected_rgb: list[np.ndarray] = [brand_rgb]
     selected_hues: list[float] = [brand_H]
-    for i in range(1, n_hues):
+    for seed_hex in extra_seeds:
+        seed_rgb = hex_to_rgb1(seed_hex)
+        _, _, seed_H = jab_to_lch(to_jab(seed_rgb.reshape(1, 3))[0])
+        selected_rgb.append(seed_rgb)
+        selected_hues.append(seed_H)
+    start = len(selected_rgb)
+    for i in range(start, n_hues):
         sel_jabs = selected_jabs(selected_rgb)
         scores = score_candidates(pool, sel_jabs)
         scores = scores - hue_diversity_penalty(pool, selected_hues, diversity_target_deg)
@@ -387,7 +402,12 @@ def _strategy_bands(
     end up with three purples; positions 0-2 carry the scheme's primary
     anchors and 3-6 fill the gaps between them.
     """
-    bw = 22  # half-width of each per-position band, in degrees
+    # Default band half-width. Tighter for triadic/split-comp (12°) where the
+    # primary anchors differ by only 30° between the two strategies — wider
+    # bands would overlap and let both strategies converge on the same hue
+    # picks. Analogous keeps 22° because its strategy is intrinsically "stay
+    # near brand", not "hit a specific anchor".
+    bw = 22
 
     if strategy == "analogous":
         # ±90° around brand, spread the 7 picks across the band rather than
@@ -407,6 +427,9 @@ def _strategy_bands(
         # 3 primary anchors at positions 0-2 + 3 midpoints at 3-5 (filling the
         # gaps between primaries) + one extra fill at +30°. Reads as triadic
         # because the first three are the bones; the rest are harmonic infill.
+        # Very tight 4° bands at primaries (positions 1-2) so the algorithm
+        # cannot drift to ≈305° where split-comp and balanced both land — at
+        # H_STEP=5° this snaps to ±1 grid hue. Filler bands stay at 12°.
         targets = [
             brand_hue,
             (brand_hue + 120) % 360,
@@ -416,11 +439,15 @@ def _strategy_bands(
             (brand_hue + 300) % 360,
             (brand_hue + 30) % 360,
         ]
-        return [[(t, bw)] for t in targets][:n_hues]
+        widths = [12, 4, 4, 12, 12, 12, 12]
+        return [[(t, w)] for t, w in zip(targets, widths)][:n_hues]
 
     if strategy == "split-comp":
         # brand + two split anchors (±150°/210°) at positions 0-2; positions
-        # 3-6 fill the four non-anchor quadrants so each hue is unique.
+        # 3-6 fill the four non-anchor quadrants so each hue is unique. Very
+        # tight 4° bands at primaries to keep them clearly magenta + red
+        # rather than the purple+orange-red that triadic and balanced also
+        # converge on.
         targets = [
             brand_hue,
             (brand_hue + 150) % 360,
@@ -430,7 +457,8 @@ def _strategy_bands(
             (brand_hue + 60) % 360,
             (brand_hue + 300) % 360,
         ]
-        return [[(t, bw)] for t in targets][:n_hues]
+        widths = [12, 4, 4, 12, 12, 12, 12]
+        return [[(t, w)] for t, w in zip(targets, widths)][:n_hues]
 
     if strategy == "balanced":
         # No hue rule at any position; the hue-diversity penalty at score time
@@ -442,6 +470,11 @@ def _strategy_bands(
         # whether more chroma headroom yields more pleasing hue choices.
         return [None for _ in range(n_hues)]
 
+    if strategy == "okabe-anchored":
+        # Brand-green (pos 0) and vermillion (pos 1) are pinned via
+        # extra_seeds; positions 2-6 fill freely under chroma + gap masks.
+        return [None for _ in range(n_hues)]
+
     raise ValueError(f"unknown strategy: {strategy}")
 
 
@@ -450,13 +483,17 @@ def _strategy_bands(
 # -----------------------------------------------------------------------------
 
 
-def reorder_first_4(hexes: list[str]) -> list[str]:
-    """Position 0 (brand green) stays. Among {1..6}, find the 3-tuple whose
+def reorder_first_4(
+    hexes: list[str], pinned: tuple[int, ...] = ()
+) -> list[str]:
+    """Position 0 (brand green) stays. ``pinned`` positions (e.g. (1, 2) for
+    triadic/split-comp where pos 1-2 are the strategy primaries) also stay
+    in their slots; the function only searches the remaining indices for the
+    best 4th member. Otherwise: among {1..6}, find the 3-tuple whose
     inclusion in the first-4 maximises the min worst-CVD ΔE inside that
-    4-set, subject to a min-pairwise-hue-gap constraint that keeps the four
-    visible families distinct (green×lime, blue×azure are otherwise legal
-    under pure max-min ΔE but read as duplicates). Positions 5–7 follow in
-    order of decreasing min-distance-to-the-first-4."""
+    4-set, subject to a ≥60° pairwise hue-gap constraint (degrades 5° at a
+    time if the pool can't satisfy it). Positions 5–7 follow in order of
+    decreasing min-distance-to-the-first-4."""
     n = len(hexes)
     assert n == 7
 
@@ -474,13 +511,23 @@ def reorder_first_4(hexes: list[str]) -> list[str]:
         np.fill_diagonal(circ, 360.0)
         return bool(circ.min() >= gap_deg)
 
+    # Strategy-anchor preservation: the pinned indices stay; we only search
+    # the non-pinned-non-zero positions for the 4th slot. The triple length
+    # is still 3 (pinned + 4th slot fillers as needed).
+    pinned_set = set(pinned)
+    search_pool = [i for i in range(1, n) if i not in pinned_set]
+    fill_count = 3 - len(pinned)
+    if fill_count < 0:
+        raise ValueError(f"too many pinned positions: {pinned}")
+
     # Try 60° first; if the 7-hue pool can't satisfy that (analogous wedge
     # geometry, mostly), step down in 5° increments. Below 30° we'd be back
     # to the no-clash threshold from select_palette — no improvement.
     best_triple: tuple[int, ...] | None = None
     best_score = -1.0
     for gap in (60.0, 55.0, 50.0, 45.0, 40.0, 35.0, 30.0):
-        for triple in itertools.combinations(range(1, n), 3):
+        for extras in itertools.combinations(search_pool, fill_count):
+            triple = tuple(pinned) + extras
             if not triple_meets_hue_gap(triple, gap):
                 continue
             sub = (0, *triple)
@@ -591,6 +638,11 @@ def build_continuous(strategy: str, palette: list[str], n: int = 256) -> np.ndar
     if strategy == "harmonic":
         # green → blue → magenta with relaxed C so it sings against the muted siblings
         return _interp_three(brand_jab, lch_to_jab(48, 55, 245), lch_to_jab(30, 55, 320), n)
+    if strategy == "okabe-anchored":
+        # green → near-neutral → vermillion (diverging, anchored at the two Okabe pillars)
+        vermillion_jab = to_jab(hex_to_rgb1("#D55E00").reshape(1, 3))[0]
+        mid = lch_to_jab(70, 6, 0)
+        return _interp_three(brand_jab, mid, vermillion_jab, n)
     raise ValueError(strategy)
 
 
@@ -639,6 +691,12 @@ VARIANTS = [
         "harmonic",
         "same max-min ΔE selection as balanced, but with the paper-ink chroma corridor widened (C∈[22,60]) for more harmonic headroom",
         "green→blue→magenta",
+    ),
+    Variant(
+        "F", "okabe-anchored", "okabe-anchored",
+        "okabe-anchored",
+        "both brand-green (#009E73) and Okabe-Ito's vermillion (#D55E00) pinned — both already paper-ink-compliant — then max-min ΔE fills positions 2-6",
+        "green→neutral→vermillion diverging",
     ),
 ]
 
@@ -1019,10 +1077,27 @@ def main() -> int:
 
     rows: list[tuple[Variant, list[str], float, float]] = []
 
+    # Strategies whose pos 1 and 2 ARE the strategy signature — pinning these
+    # keeps triadic visibly different from split-comp (otherwise the reorder
+    # picks max-min ΔE positions that happen to coincide). Okabe-anchored
+    # additionally pins pos 1 to vermillion.
+    PINNED: dict[str, tuple[int, ...]] = {
+        "triadic":         (1, 2),
+        "split-comp":      (1, 2),
+        "okabe-anchored":  (1,),
+    }
+
+    EXTRA_SEEDS: dict[str, tuple[str, ...]] = {
+        "okabe-anchored": ("#D55E00",),  # vermillion — Okabe-Ito's warm pillar
+    }
+
     for variant in VARIANTS:
         log.info("generating variant %s. %s …", variant.key, variant.title)
-        hues = select_palette(variant.strategy, pool, n_hues=7)
-        hues = reorder_first_4(hues)
+        hues = select_palette(
+            variant.strategy, pool, n_hues=7,
+            extra_seeds=EXTRA_SEEDS.get(variant.strategy, ()),
+        )
+        hues = reorder_first_4(hues, pinned=PINNED.get(variant.strategy, ()))
 
         first_4 = measure_first_4(hues)
         normal_min = measure_all_normal_min(hues)
