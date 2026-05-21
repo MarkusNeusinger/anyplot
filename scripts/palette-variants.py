@@ -22,7 +22,6 @@ Variants differ in their hue-selection strategy:
   B — triadic              (three hue anchors 120° apart)
   C — split-complementary  (green plus two flanking complements)
   D — balanced             (Petroff-style max-min, paper-ink chroma)
-  E — okabe-spread         (Wong-Okabe-Ito bones, snapped to even 7-slot hue lattice)
   F — harmonic             (balanced rule but relaxed C corridor)
 
 For each, the script:
@@ -112,7 +111,6 @@ PER_VARIANT_C_RANGE: dict[str, tuple[float, float]] = {
     "triadic":        (26.0, 42.0),
     "split-comp":     (26.0, 42.0),
     "balanced":       (22.0, 36.0),
-    "okabe-spread":   (28.0, 48.0),
     "harmonic":       (22.0, 60.0),  # F: relaxed paper-ink — wider C headroom for more harmonious hue picks
 }
 
@@ -127,7 +125,6 @@ PER_VARIANT_HUE_SPREAD: dict[str, float] = {
     "triadic":        45.0,
     "split-comp":     45.0,
     "balanced":       50.0,  # 360/7 ≈ 51°, the ideal even spacing
-    "okabe-spread":   45.0,
     "harmonic":       50.0,
 }
 
@@ -428,38 +425,6 @@ def _strategy_bands(
         # whether more chroma headroom yields more pleasing hue choices.
         return [None for _ in range(n_hues)]
 
-    if strategy == "okabe-spread":
-        # Take Okabe-Ito's hue family as a *prior* but spread the cluster: the
-        # native palette stacks blue/sky/purple within 60°, which is exactly
-        # what made the old "okabe-tuned" land on two blues. We sort Okabe's
-        # hues, then nudge each onto the nearest 360/7 ≈ 51° lattice anchored
-        # at brand green. The chroma corridor + diversity penalty then refine.
-        okabe_hues = sorted(
-            jab_to_lch(to_jab(hex_to_rgb1(hx).reshape(1, 3))[0])[2]
-            for hx in OKABE_PALETTE
-        )
-        spacing = 360.0 / n_hues
-        # Lattice anchored at brand_hue; choose for each Okabe slot the lattice
-        # bin closest to its native hue.
-        lattice = [(brand_hue + k * spacing) % 360 for k in range(n_hues)]
-        used = set()
-        targets: list[float] = []
-        for h in okabe_hues:
-            best_k, best_d = 0, 360.0
-            for k in range(n_hues):
-                if k in used:
-                    continue
-                d = abs(((lattice[k] - h + 180) % 360) - 180)
-                if d < best_d:
-                    best_d, best_k = d, k
-            used.add(best_k)
-            targets.append(lattice[best_k])
-        # Position 0 is brand green (lattice[0]); reorder so it leads.
-        targets = sorted(targets, key=lambda t: abs(((t - brand_hue + 180) % 360) - 180))
-        # Slightly wider bands than other strategies so the algorithm can still
-        # shift each Okabe hue ±28° to find the chroma/lightness sweet spot.
-        return [[(t, 28)] for t in targets][:n_hues]
-
     raise ValueError(f"unknown strategy: {strategy}")
 
 
@@ -588,9 +553,6 @@ def build_continuous(strategy: str, palette: list[str], n: int = 256) -> np.ndar
     if strategy == "harmonic":
         # green → blue → magenta with relaxed C so it sings against the muted siblings
         return _interp_three(brand_jab, lch_to_jab(48, 55, 245), lch_to_jab(30, 55, 320), n)
-    if strategy == "okabe-spread":
-        # green → light yellow (Okabe pos-7-flavoured sequential)
-        return _interp_two(brand_jab, lch_to_jab(92, 60, 95), n)
     raise ValueError(strategy)
 
 
@@ -635,13 +597,7 @@ VARIANTS = [
         "green→blue→purple",
     ),
     Variant(
-        "E", "okabe-spread", "okabe-spread",
-        "okabe-spread",
-        "take Okabe-Ito's hue family, snap each onto an even 7-slot lattice (~51° apart), reorder for max first-4 CVD distance",
-        "green→yellow sequential",
-    ),
-    Variant(
-        "F", "harmonic", "harmonic",
+        "E", "harmonic", "harmonic",
         "harmonic",
         "same max-min ΔE selection as balanced, but with the paper-ink chroma corridor widened (C∈[22,60]) for more harmonic headroom",
         "green→blue→magenta",
@@ -665,7 +621,7 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
     swatches = render_swatch_table(full_hexes, full_labels)
     full_rgb = np.array([hex_to_rgb1(hx) for hx in full_hexes])
     matrix = render_matrix_block(full_rgb, full_labels)
-    sample_charts = render_sample_charts(hues, n_series=3)
+    sample_charts = render_sample_charts(hues, n_series=4)
     first_n = render_first_n_summary(hues, names)
     cmap_row = render_colormap_row(variant.continuous_label, samples_rgb=cmap_rgb)
     hero_pair = render_hero_mockup_pair(hues[0])
@@ -778,7 +734,7 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
 
 <section class="domain">
     <h2>sample &amp; first-n</h2>
-    <p class="lede">3-series chart on both production bg-page surfaces. the first-n table reads as "if you only use the first n positions, what's the weakest pair under normal vision vs. worst CVD".</p>
+    <p class="lede">first-4 chart on both production bg-page surfaces. the first-n table reads as "if you only use the first n positions, what's the weakest pair under normal vision vs. worst CVD".</p>
     {sample_charts}
     {first_n}
 </section>
@@ -1028,9 +984,6 @@ def main() -> int:
     for variant in VARIANTS:
         log.info("generating variant %s. %s …", variant.key, variant.title)
         hues = select_palette(variant.strategy, pool, n_hues=7)
-        # Every variant now reorders for max first-4 worst-CVD ΔE — including
-        # okabe-spread, which prizes lattice-even hue distribution over the
-        # native Okabe-Ito order.
         hues = reorder_first_4(hues)
 
         first_4 = measure_first_4(hues)

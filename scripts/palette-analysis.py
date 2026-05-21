@@ -74,7 +74,7 @@ def render_page() -> str:
     cat_rgb = np.array([hex_to_rgb1(hx) for hx in CATEGORICAL_HEX])
     cat_swatches = render_swatch_table(CATEGORICAL_HEX, CATEGORICAL_LABELS)
     cat_matrix = render_matrix_block(cat_rgb, CATEGORICAL_LABELS)
-    sample_charts = render_sample_charts(OKABE_PALETTE, n_series=3)
+    sample_charts = render_sample_charts(OKABE_PALETTE, n_series=4)
     first_n = render_first_n_summary(OKABE_PALETTE, OKABE_NAMES)
 
     cmap_rows = "\n".join(render_colormap_row(name) for name in COLORMAPS)
@@ -101,7 +101,7 @@ def render_page() -> str:
 <section class="domain">
     <h2>A. categorical plot palette</h2>
     <p class="lede">okabe-ito (positions 1–7) plus the two adaptive neutrals.
-    sample charts render the typical 3-series case on the production bg-page surfaces.
+    sample charts render the first-4 case on the production bg-page surfaces.
     matrices side-by-side: <em>normal vision</em> left, <em>worst of the 3 cvd
     conditions</em> right. the "first-n" table below answers the practical question —
     at what palette size does the weakest pair drop below comfortable distinguishability?</p>
