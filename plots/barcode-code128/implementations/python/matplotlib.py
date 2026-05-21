@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-21
@@ -20,6 +20,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Code 128B encoding: each character → 6 bar/space widths (alternating)
 CODE128_B = {
@@ -269,6 +270,25 @@ full_pattern = [0] * quiet_zone + binary_pattern + [0] * quiet_zone
 barcode_width = len(full_pattern)
 barcode_array = np.array([full_pattern] * barcode_height)
 
+# Zone boundaries for structural annotations
+# Code 128 standard: every symbol (except STOP) = 11 modules; STOP = 13 modules
+_sw = 11
+_stop_w = sum(STOP)  # 13
+_qz0_end = quiet_zone
+_start_end = _qz0_end + _sw
+_data_end = _start_end + len(content) * _sw
+_check_end = _data_end + _sw
+_stop_end = _check_end + _stop_w
+
+zones = [
+    (_qz0_end - quiet_zone, _qz0_end, "Quiet Zone"),
+    (_qz0_end, _start_end, "Start"),
+    (_start_end, _data_end, f"Data · Code B ({len(content)} chars)"),
+    (_data_end, _check_end, "Check"),
+    (_check_end, _stop_end, "Stop"),
+    (_stop_end, barcode_width, "Quiet Zone"),
+]
+
 # Plot — landscape canvas: figsize=(8, 4.5) × dpi=400 → 3200×1800 px
 fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
@@ -279,6 +299,18 @@ ax.imshow(barcode_array, cmap=bar_cmap, aspect="auto", interpolation="nearest", 
 
 ax.set_xticks([])
 ax.set_yticks([])
+
+# Structural zone annotations above the barcode
+y_tick_top = 0  # tick mark at barcode top edge
+y_bracket = -9  # horizontal bracket line
+y_label = -20  # zone label center
+
+for x0, x1, label in zones:
+    cx = (x0 + x1) / 2
+    ax.plot([x0, x1], [y_bracket, y_bracket], color=INK_MUTED, lw=0.6, solid_capstyle="butt")
+    ax.plot([x0, x0], [y_tick_top, y_bracket], color=INK_MUTED, lw=0.6)
+    ax.plot([x1, x1], [y_tick_top, y_bracket], color=INK_MUTED, lw=0.6)
+    ax.text(cx, y_label, label, fontsize=6, ha="center", va="center", color=INK_MUTED, fontfamily="monospace")
 
 # Human-readable text below barcode
 ax.text(
@@ -294,16 +326,16 @@ ax.text(
 )
 
 ax.set_xlim(-10, barcode_width + 10)
-ax.set_ylim(barcode_height + 75, -35)
+ax.set_ylim(barcode_height + 75, -38)
 
 for spine in ax.spines.values():
     spine.set_visible(False)
 
 # Style
-ax.set_title("barcode-code128 · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=10)
+ax.set_title("barcode-code128 · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=8)
 ax.tick_params(colors=INK_SOFT)
 
-fig.subplots_adjust(left=0.02, right=0.98, top=0.90, bottom=0.04)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.93, bottom=0.04)
 
 # Save
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
