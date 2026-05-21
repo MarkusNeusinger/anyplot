@@ -1,15 +1,29 @@
-""" pyplots.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-19
+Library: seaborn | Python 3.13
+Quality: pending | Updated: 2026-05-21
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
+from matplotlib.colors import LinearSegmentedColormap
 
 
-# Code 128 encoding tables
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+sns.set_theme(
+    style="white",
+    rc={"figure.facecolor": PAGE_BG, "axes.facecolor": PAGE_BG, "axes.edgecolor": INK_SOFT, "text.color": INK},
+)
+
+# Code 128 encoding tables (subset B — full printable ASCII)
 CODE128_B_PATTERNS = {
     " ": "11011001100",
     "!": "11001101100",
@@ -206,7 +220,7 @@ CODE128_VALUES = {
     "~": 94,
 }
 
-# Check digit patterns (values 95-105)
+# Patterns for check digit values 95–105 (no ASCII mapping)
 CHECK_PATTERNS = [
     "11110101000",
     "11110100010",
@@ -221,20 +235,19 @@ CHECK_PATTERNS = [
     "11000111010",
 ]
 
-START_B = "11010010000"  # Start Code B (value 104)
-STOP = "1100011101011"  # Stop pattern
+START_B = "11010010000"
+STOP = "1100011101011"
 
 # Data
 content = "SHIP-2024-ABC123"
 
-# Encode content using Code 128 subset B
+# Encode using Code 128 subset B with modulo-103 check digit
 barcode_binary = START_B
-checksum = 104  # Start B value
+checksum = 104
 for i, char in enumerate(content):
     barcode_binary += CODE128_B_PATTERNS[char]
     checksum += CODE128_VALUES[char] * (i + 1)
 
-# Add check digit
 check_value = checksum % 103
 if check_value < 95:
     for char, val in CODE128_VALUES.items():
@@ -246,61 +259,32 @@ else:
 
 barcode_binary += STOP
 
-# Add quiet zones (10 modules of white space on each side)
 quiet_zone = "0" * 10
 barcode_with_quiet = quiet_zone + barcode_binary + quiet_zone
 
-# Convert binary string to numpy array for seaborn heatmap
-# Create a 2D array where each row is the same barcode pattern
+# Build 2D array: repeat rows to give bars proper height
 barcode_array = np.array([[int(bit) for bit in barcode_with_quiet]])
-# Repeat rows to create proper bar height (aspect ratio for barcode)
-barcode_data = np.repeat(barcode_array, 60, axis=0)
+barcode_data = np.repeat(barcode_array, 40, axis=0)
 
-# Set seaborn style
-sns.set_theme(style="white")
+# Plot
+cmap = LinearSegmentedColormap.from_list("barcode", [PAGE_BG, INK])
 
-# Create figure with proper aspect ratio
-fig, ax = plt.subplots(figsize=(16, 9))
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Use seaborn heatmap to render the barcode
-# Binary colormap: white (0) and blue (1)
-cmap = sns.color_palette(["white", "#306998"], as_cmap=True)
-sns.heatmap(
-    barcode_data, cmap=cmap, cbar=False, xticklabels=False, yticklabels=False, linewidths=0, linecolor="none", ax=ax
-)
+sns.heatmap(barcode_data, cmap=cmap, cbar=False, xticklabels=False, yticklabels=False, linewidths=0, ax=ax)
 
-# Remove axis spines for clean look
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-# Add human-readable text below barcode
-ax.text(
-    len(barcode_with_quiet) / 2,
-    barcode_data.shape[0] + 12,
-    content,
-    fontsize=32,
-    fontfamily="monospace",
-    fontweight="bold",
-    ha="center",
-    va="top",
-    color="#306998",
+# Style
+ax.set_title("barcode-code128 · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=12)
+
+fig.text(
+    0.5, 0.07, content, ha="center", va="center", fontsize=10, fontfamily="monospace", fontweight="bold", color=INK
 )
 
-# Add title above the barcode
-ax.text(
-    len(barcode_with_quiet) / 2,
-    -8,
-    "barcode-code128 · seaborn · pyplots.ai",
-    fontsize=28,
-    fontweight="bold",
-    ha="center",
-    va="bottom",
-    color="#333333",
-)
+fig.subplots_adjust(top=0.88, bottom=0.16, left=0.02, right=0.98)
 
-# Adjust plot limits to show text and provide balanced margins
-ax.set_xlim(-5, len(barcode_with_quiet) + 5)
-ax.set_ylim(barcode_data.shape[0] + 25, -15)
-
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
