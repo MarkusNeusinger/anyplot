@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: plotly | Python 3.13
-Quality: 91/100 | Created: 2026-01-19
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-21
 """
 
 import os
