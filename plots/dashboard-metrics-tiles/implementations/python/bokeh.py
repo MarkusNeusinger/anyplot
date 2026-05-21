@@ -1,17 +1,47 @@
-""" pyplots.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-19
+Library: bokeh | Python 3.13
+Quality: 92/100 | Updated: 2026-05-21
 """
 
+import os
+import sys
+import time
+from pathlib import Path
+
+
+# bokeh.py shadows the installed bokeh package when Python adds this file's
+# directory to sys.path[0]; remove it so imports resolve to the package.
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path[:] = [p for p in sys.path if os.path.abspath(p or ".") != _here]
+del _here
+
 import numpy as np
-from bokeh.io import export_png
+from bokeh.io import output_file, save
 from bokeh.layouts import column, gridplot
 from bokeh.models import ColumnDataSource, Label
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - 6 metric tiles for a 3x2 grid
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Okabe-Ito semantic colors for status and change indicators
+STATUS_COLORS = {"good": "#009E73", "warning": "#E69F00", "critical": "#D55E00"}
+SPARKLINE_COLOR = "#0072B2"  # Okabe-Ito position 3
+FAVORABLE_COLOR = "#009E73"  # Okabe-Ito position 1
+UNFAVORABLE_COLOR = "#D55E00"  # Okabe-Ito position 2
+
+# Metrics where a positive change is unfavorable
+UNFAVORABLE_WHEN_UP = {"Error Rate", "Response Time"}
+
+# Data - 6 ops monitoring metric tiles
 np.random.seed(42)
 
 metrics = [
@@ -65,136 +95,159 @@ metrics = [
     },
 ]
 
-# Colors
-STATUS_COLORS = {"good": "#28a745", "warning": "#ffc107", "critical": "#dc3545"}
-SPARKLINE_COLOR = "#306998"
-TILE_BG = "#f8f9fa"
+# Canvas: 3200x1800 total
+# title_fig=160h, gridplot=2x820h rows × 3x1066w cols → 1640h + 160h = 1800h; 3198w ≈ 3200w
+TILE_WIDTH = 1066
+TILE_HEIGHT = 820
 
-# Metrics where positive change is unfavorable
-UNFAVORABLE_WHEN_UP = ["Error Rate", "Response Time"]
-
-# Tile dimensions (total canvas: ~4500x2700, grid: 3x2)
-TILE_WIDTH = 1500
-TILE_HEIGHT = 1200
-
-# Create all tiles
 tiles = []
 
 for metric in metrics:
-    # Determine change direction and favorability
     is_positive_change = metric["change"] > 0
     is_favorable = not is_positive_change if metric["name"] in UNFAVORABLE_WHEN_UP else is_positive_change
-    change_color = "#28a745" if is_favorable else "#dc3545"
+    change_color = FAVORABLE_COLOR if is_favorable else UNFAVORABLE_COLOR
     arrow = "▲" if is_positive_change else "▼"
     status_color = STATUS_COLORS[metric["status"]]
 
-    # Create figure for tile
     p = figure(
-        width=TILE_WIDTH, height=TILE_HEIGHT, toolbar_location=None, tools="", x_range=(-0.1, 1.1), y_range=(-0.1, 1.1)
+        width=TILE_WIDTH, height=TILE_HEIGHT, toolbar_location=None, tools="", x_range=(0, 1), y_range=(-0.02, 1.12)
     )
 
-    # Hide axes and grid
+    # Hide axes and grid; apply tile chrome
     p.xaxis.visible = False
     p.yaxis.visible = False
     p.xgrid.visible = False
     p.ygrid.visible = False
-    p.outline_line_color = None
-    p.background_fill_color = TILE_BG
-    p.border_fill_color = TILE_BG
+    p.outline_line_color = INK_SOFT
+    p.background_fill_color = ELEVATED_BG
+    p.border_fill_color = PAGE_BG
 
-    # Add status indicator bar at top
-    p.quad(left=0, right=1, top=1.05, bottom=1.0, fill_color=status_color, line_color=None)
+    # Status bar across top of tile
+    p.quad(left=0, right=1, top=1.08, bottom=1.0, fill_color=status_color, line_color=None)
 
-    # Metric name label
-    name_label = Label(
-        x=0.5,
-        y=0.88,
-        text=metric["name"],
-        text_font_size="28pt",
-        text_font_style="bold",
-        text_color="#333333",
-        text_align="center",
-        text_baseline="middle",
+    # Metric name
+    p.add_layout(
+        Label(
+            x=0.5,
+            y=0.85,
+            text=metric["name"],
+            text_font_size="20pt",
+            text_font_style="bold",
+            text_color=INK,
+            text_align="center",
+            text_baseline="middle",
+        )
     )
-    p.add_layout(name_label)
 
-    # Current value
+    # Prominent current value
     value_text = f"{metric['value']}{metric['unit']}"
-    value_label = Label(
-        x=0.5,
-        y=0.65,
-        text=value_text,
-        text_font_size="56pt",
-        text_font_style="bold",
-        text_color="#1a1a1a",
-        text_align="center",
-        text_baseline="middle",
+    p.add_layout(
+        Label(
+            x=0.5,
+            y=0.63,
+            text=value_text,
+            text_font_size="42pt",
+            text_font_style="bold",
+            text_color=INK,
+            text_align="center",
+            text_baseline="middle",
+        )
     )
-    p.add_layout(value_label)
 
-    # Change indicator
+    # Change indicator with directional arrow
     change_text = f"{arrow} {abs(metric['change']):.1f}%"
-    change_label = Label(
-        x=0.5,
-        y=0.45,
-        text=change_text,
-        text_font_size="32pt",
-        text_font_style="bold",
-        text_color=change_color,
-        text_align="center",
-        text_baseline="middle",
+    p.add_layout(
+        Label(
+            x=0.5,
+            y=0.43,
+            text=change_text,
+            text_font_size="22pt",
+            text_font_style="bold",
+            text_color=change_color,
+            text_align="center",
+            text_baseline="middle",
+        )
     )
-    p.add_layout(change_label)
 
-    # Sparkline - normalize history data
+    # Sparkline — normalize history to [0.05, 0.33]
     history = np.array(metric["history"])
     hist_min, hist_max = history.min(), history.max()
-    hist_range = hist_max - hist_min if hist_max != hist_min else 1
-    y_norm = 0.08 + (history - hist_min) / hist_range * 0.22  # Scale to [0.08, 0.30]
-    x_norm = np.linspace(0.1, 0.9, len(history))
+    hist_range = hist_max - hist_min if hist_max != hist_min else 1.0
+    y_norm = 0.05 + (history - hist_min) / hist_range * 0.28
+    x_norm = np.linspace(0.08, 0.92, len(history))
 
-    source = ColumnDataSource(data={"x": x_norm, "y": y_norm})
-
-    # Fill area under sparkline
-    y_fill = np.concatenate([y_norm, [0.08, 0.08]])
+    # Filled area under sparkline
+    y_fill = np.concatenate([y_norm, [0.05, 0.05]])
     x_fill = np.concatenate([x_norm, [x_norm[-1], x_norm[0]]])
-    p.patch(x_fill, y_fill, fill_color=SPARKLINE_COLOR, fill_alpha=0.2, line_color=None)
+    p.patch(x_fill, y_fill, fill_color=SPARKLINE_COLOR, fill_alpha=0.25, line_color=None)
 
-    # Sparkline
-    p.line("x", "y", source=source, line_width=4, line_color=SPARKLINE_COLOR)
+    # Sparkline line (thicker for visibility)
+    source = ColumnDataSource(data={"x": x_norm, "y": y_norm})
+    p.line("x", "y", source=source, line_width=5, line_color=SPARKLINE_COLOR)
 
-    # Current point on sparkline
-    p.scatter(x=[x_norm[-1]], y=[y_norm[-1]], size=12, fill_color=SPARKLINE_COLOR, line_color="white", line_width=2)
+    # Endpoint dot marking the current value
+    p.scatter(
+        x=[x_norm[-1]], y=[y_norm[-1]], size=14, fill_color=SPARKLINE_COLOR, line_color=ELEVATED_BG, line_width=2.5
+    )
 
     tiles.append(p)
 
-# Arrange in 3x2 grid
-grid = gridplot([[tiles[0], tiles[1], tiles[2]], [tiles[3], tiles[4], tiles[5]]], merge_tools=False)
+# 3x2 grid of tiles — toolbar_location=None is critical: gridplot default toolbar
+# adds ~139px above the canvas, shrinking the screenshot height below 1800
+grid = gridplot(
+    [[tiles[0], tiles[1], tiles[2]], [tiles[3], tiles[4], tiles[5]]], merge_tools=False, toolbar_location=None
+)
 
-# Create title as a figure with text annotation
-title_fig = figure(width=4500, height=120, toolbar_location=None, tools="", x_range=(0, 1), y_range=(0, 1))
+# Title figure (full canvas width, 160px tall)
+title_fig = figure(width=3200, height=160, toolbar_location=None, tools="", x_range=(0, 1), y_range=(0, 1))
 title_fig.xaxis.visible = False
 title_fig.yaxis.visible = False
 title_fig.xgrid.visible = False
 title_fig.ygrid.visible = False
 title_fig.outline_line_color = None
-title_fig.background_fill_color = "white"
-title_fig.border_fill_color = "white"
+title_fig.background_fill_color = PAGE_BG
+title_fig.border_fill_color = PAGE_BG
 
-title_label = Label(
-    x=0.5,
-    y=0.5,
-    text="dashboard-metrics-tiles · bokeh · pyplots.ai",
-    text_font_size="36pt",
-    text_font_style="bold",
-    text_color="#333333",
-    text_align="center",
-    text_baseline="middle",
+title_fig.add_layout(
+    Label(
+        x=0.5,
+        y=0.5,
+        text="dashboard-metrics-tiles · python · bokeh · anyplot.ai",
+        text_font_size="28pt",
+        text_font_style="bold",
+        text_color=INK,
+        text_align="center",
+        text_baseline="middle",
+    )
 )
-title_fig.add_layout(title_label)
 
-# Create final layout with title
 final_layout = column(title_fig, grid)
 
-# Save
-export_png(final_layout, filename="plot.png")
+# Save interactive HTML
+output_file(f"plot-{THEME}.html")
+save(final_layout)
+
+# Screenshot to PNG via headless Chrome (Selenium 4 / Selenium Manager)
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+# --window-size includes browser chrome; use CDP to set exact viewport
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+driver.execute_script(
+    f"document.body.style.margin='0'; document.body.style.padding='0';document.body.style.backgroundColor='{PAGE_BG}';"
+)
+driver.save_screenshot(f"plot-{THEME}.png")
+driver.quit()
