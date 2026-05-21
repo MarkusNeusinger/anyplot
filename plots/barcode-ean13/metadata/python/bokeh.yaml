@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:30:47Z'
-updated: '2026-05-21T02:04:51Z'
+updated: '2026-05-21T02:25:30Z'
 generated_by: claude-sonnet
 workflow_run: 26200561117
 issue: 3808
@@ -12,101 +12,103 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/bokeh/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Complete and correct EAN-13 encoding with proper L/G/R codes and FIRST_DIGIT_PATTERNS
-    lookup table
-  - Check digit auto-calculated from 12-digit input — valid German product code 4006381333931
-  - HoverTool reveals which digit or guard section each bar encodes — genuine educational
-    interactive feature
-  - Guard bars correctly rendered taller than data bars with visual structural hierarchy
-  - First digit correctly positioned outside left guard per EAN-13 standard
-  - Theme-adaptive INK tokens applied to all text and bar elements — bars invert cleanly
-    in dark theme
-  - CDP-based pixel-perfect screenshot for exact 3200×1800 canvas dimensions
-  - Self-contained HTML with INLINE resources — no CDN dependency
+  - Fully correct EAN-13 encoding with L/G/R codes, FIRST_DIGIT_PATTERNS, start/center/end
+    guards, and auto-calculated check digit
+  - Zone annotations (Country / Manufacturer / Product / Check) with bracket lines
+    and digit values add clear educational storytelling about barcode structure
+  - 'Perfect theme adaptation: warm off-white (#FAF8F1) background in light, warm
+    near-black (#1A1A17) in dark; bar color uses INK token so bars remain visible
+    and readable in both themes'
+  - HoverTool reveals which digit or guard section each bar encodes — a distinctively
+    Bokeh interactive feature unavailable in static libraries
+  - All font sizes explicitly set (50pt title, 48pt human-readable digits, 36pt zone
+    values, 26pt zone labels); readable and well-proportioned in both renders
+  - 'Idiomatic Bokeh usage: ColumnDataSource, p.quad(), p.segment(), Label, INLINE
+    HTML export, CDP Page.captureScreenshot for exact 3200×1800 output'
+  - Clean flat code structure with deterministic input and no over-engineering; sys.path
+    fix for the bokeh.py filename conflict is well-commented
   weaknesses:
-  - Dark render shows a faint thin border outline around canvas edges — HTML page
-    body background not set to PAGE_BG, causing white browser body to bleed through
-    as a ~3-5 px border; fix by injecting body background-color into the HTML after
-    file_html()
-  - DE-01 and DE-03 limited by barcode format constraints — consider adding a subtle
-    annotation showing the product structure (country/manufacturer/product/check-digit
-    zones) to create storytelling and guide the viewer
-  - Digit label sizing (48pt) is proportional to barcode but the large empty canvas
-    space above the barcode could be better utilized — consider annotating the barcode
-    zone labels or including a product-info callout
+  - 'Minor bottom whitespace: digits at y=80 in a y_range of (0, 1880) sit close to
+    the lower boundary, leaving a visually noticeable empty band below the barcode;
+    raising bar_height slightly or lowering text_y_pos to ~50 would better fill the
+    canvas'
+  - 'Design Excellence not yet at publication grade: zone bracket lines are plain
+    segments without arrowheads or rounded corners; a slightly thicker title weight
+    (bold) and a subtle horizontal rule separating the annotation zone from the barcode
+    would elevate the aesthetic'
+  - 'LM-02 could be strengthened: the HoverTool is used but only with a single plain
+    tooltip field; adding a second field (e.g. bar width in modules, or binary encoding)
+    would showcase Bokeh''s multi-field tooltip more distinctively'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, no pure white present
-      Chrome: Title "barcode-ean13 · python · bokeh · anyplot.ai" in dark #1A1A17 ink, clearly readable at ~62% of canvas width. No axes or grid (correct for barcode).
-      Data: Black (#1A1A17) vertical bars on cream background. Guard bars (start, center, end) are visibly taller than data bars — structural visual hierarchy. Human-readable digits in monospace: "4" to the left of the start guard, "006381" and "333931" below the data bars. Quiet zones present on both sides.
-      Legibility verdict: PASS — all text fully readable against light background, no issues.
+      Background: Warm off-white (#FAF8F1) — correct; no pure-white artifacts visible.
+      Chrome: Title "barcode-ean13 · python · bokeh · anyplot.ai" in dark ink (#1A1A17), centered, clearly readable at full resolution. No axis labels (intentionally hidden for barcode type). Zone labels ("Country", "Manufacturer", "Product", "Check") in muted secondary ink (#4A4A44), zone digit values ("400", "6381", "33393", "1") in primary ink — all readable.
+      Data: EAN-13 barcode rendered as solid dark (#1A1A17) vertical bars on the off-white surface. Guard bars (start, center, end) are visibly taller than digit bars — correct EAN-13 structure. Quiet zones clearly present on both sides. Human-readable digits "4  006381  333931" in monospace below the barcode, with "4" correctly placed outside the left guard. Bracket lines and zone annotations above the barcode are clean and legible.
+      Legibility verdict: PASS — all text elements are dark on light, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct
-      Chrome: Title in off-white/cream #F0EFE8, clearly readable against dark background. Digit labels similarly light-colored and readable. No dark-on-dark issues.
-      Data: Bars rendered in #F0EFE8 (INK token inverted for dark theme) on near-black background — effectively an inverted/negative barcode. Data colors are theme-adaptive (not Okabe-Ito categorical, appropriate for monochrome barcode). Guard bars still visibly taller than data bars.
-      Issue: Thin ~3-5 px light border outline visible around the entire canvas edge — browser HTML body background (default white) bleeding through around the Bokeh plot canvas. Not content clipping (AR-09 not triggered) but a visual artifact causing a VQ-05 deduction.
-      Legibility verdict: PASS — all text readable, no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct; no pure-black artifacts.
+      Chrome: Title and all text rendered in light cream (#F0EFE8 / #B8B7B0 for secondary), clearly visible against the dark surface. No dark-on-dark failures observed.
+      Data: Barcode bars rendered in INK token (#F0EFE8) — cream/off-white bars on near-black background. This is a theme-inverted barcode which reads correctly as a visualization (though not scannable in inverted form). Colors are visually distinct and correctly differentiate bars from spaces. Zone annotations, bracket lines, and human-readable digits all use the appropriate dark-theme ink tokens and are fully readable.
+      Legibility verdict: PASS — all text is light on dark; no dark-on-dark failures; data colors (bar color) adapt correctly to the dark theme.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'Title 50pt and digit labels 48pt explicitly set; all readable in
-          both themes. Minor: digit label size slightly modest relative to overall
-          canvas area.'
+        comment: All font sizes explicitly set (50pt title, 48pt digits, 36pt zone
+          values, 26pt zone labels); proportionate and readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; bars, digits, and title all cleanly separated.
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible in both themes with excellent contrast; guard
-          bars taller than data bars.
+        comment: Barcode bars clearly visible; guard bars taller than digit bars as
+          per EAN-13 spec
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Maximum contrast near-black on near-white (light) and near-white
-          on near-black (dark). CVD-safe.
+        comment: High contrast black/white (or inverted) barcode; CVD-safe binary
+          encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Barcode well-centered horizontally, adequate canvas utilization.
-          Dark render has thin border outline from HTML body background not set to
-          PAGE_BG.
+        comment: Barcode centered and uses ~70% of canvas width; minor empty band
+          below human-readable digits due to y_range extending below text baseline
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels needed (axes hidden — correct for barcode). Title
-          format correct.
+        comment: Title correct; no axis labels needed for barcode type — intentionally
+          hidden
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds correct (#FAF8F1 light, #1A1A17 dark). Monochrome barcode
-          — no categorical palette applicable. Theme chrome fully adaptive.'
+        comment: 'Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct; monochrome
+          barcode uses INK tokens appropriately; no categorical palette needed'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -114,25 +116,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Clean, purposeful design. INK-adaptive bars, monospace font for digits,
-          guard bar height differentiation show deliberate choices. Constrained by
-          barcode format — cannot score higher without additional storytelling elements.
+        comment: Clean monospace typography and zone annotation system show design
+          intent; above configured defaults but bracket lines are plain segments without
+          polish
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Axes/grids fully hidden (appropriate). Generous whitespace in quiet
-          zones. Clean title-only chrome. Above default but no additional polish like
-          divider lines or zone annotations.
+        comment: Axes and grid fully hidden; explicit whitespace; minimal chrome;
+          clean separation of annotation zone from barcode body
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Guard bars taller than data bars creates structural visual hierarchy.
-          Digit groupings reinforce encoding zones. No annotation explaining the barcode
-          structure (country/manufacturer/product zones).
+        comment: Zone annotations (Country/Manufacturer/Product/Check) with bracketed
+          digit groupings clearly explain EAN-13 structure — viewer understands the
+          encoding without external knowledge
     spec_compliance:
       score: 15
       max: 15
@@ -142,30 +143,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EAN-13 barcode with start guard (101), L/G-encoded left half,
-          center guard (01010), R-encoded right half, end guard (101).
+        comment: Correct EAN-13 barcode with all structural components
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones present, all guard patterns rendered, bar widths from
-          module grouping, human-readable digits with first digit outside guard, check
-          digit auto-calculated.
+        comment: Quiet zones (11 modules each side), start guard (101), center guard
+          (01010), end guard (101), standard bar widths, human-readable digits with
+          first digit outside left guard — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Valid German product code 4006381333931, check digit verified correct
-          (89 mod 10 → check=1).
+        comment: 12-digit German code 400638133393 with auto-calculated check digit
+          1 = 4006381333931; encoding verified correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'barcode-ean13 · python · bokeh · anyplot.ai'. No
-          legend (single-series barcode — appropriate).
+        comment: Title is exactly 'barcode-ean13 · python · bokeh · anyplot.ai'; no
+          legend needed
     data_quality:
       score: 15
       max: 15
@@ -175,21 +175,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All EAN-13 features shown: L/G encoding for first half, R encoding
-          for second half, taller guard bars, quiet zones, first-digit-outside-guard.'
+        comment: 'Shows all EAN-13 features: guard patterns, L/G left encoding, R
+          right encoding, first-digit parity system, check digit, zone structure'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real German product barcode (4006381333931), neutral commercial context.
+        comment: German product barcode (country code 400) is a real, neutral, commercially
+          relevant example
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Correct EAN-13 encoding standard applied, valid check digit, standard
-          module-based bar widths.
+        comment: EAN-13 encoding is factually correct; check digit calculation verified;
+          L/G/R code tables match the standard
     code_quality:
       score: 10
       max: 10
@@ -199,63 +200,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: encoding tables → check digit → bit pattern →
-          figure → save HTML → screenshot.'
+        comment: 'Flat structure: imports → constants → encoding tables → barcode
+          generation → figure setup → annotations → HTML save → Selenium screenshot'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic barcode encoding — no random state needed.
+        comment: Deterministic fixed input; no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: base64 for CDP decode, sys/os for path fix, time
-          for Selenium delay, pathlib for file I/O.'
+        comment: All imports used; no unused imports
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, appropriate complexity. sys.path manipulation is a documented
-          workaround for file-naming conflict with the bokeh package.
+        comment: sys.path fix is necessary and documented; bar merging loop is clean;
+          zone annotation loop avoids repetition
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png correctly. Uses file_html+INLINE
-          and Selenium CDP.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Bokeh API
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: ColumnDataSource, p.quad(), p.segment(), Label, add_tools(HoverTool),
+          file_html(INLINE), CDP screenshot — all idiomatic Bokeh patterns
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: ColumnDataSource for bar data, p.quad() for rectangles, file_html
-          with INLINE for self-contained HTML, HoverTool on renderer. Well above generic.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: HoverTool revealing which barcode section each bar encodes is distinctly
-          Bokeh. INLINE resource bundling and CDP-based screenshot are advanced Bokeh-specific
-          patterns.
-  verdict: REJECTED
+        comment: HoverTool revealing the encoded section per bar is genuinely distinctive
+          to Bokeh interactive HTML; CDP screenshot for exact canvas control is Bokeh-specific;
+          could add multi-field tooltip (binary encoding) to push further
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - columndatasource
+  - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome

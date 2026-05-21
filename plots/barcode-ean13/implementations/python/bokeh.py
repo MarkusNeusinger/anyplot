@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-21
+Quality: 91/100 | Updated: 2026-05-21
 """
 
 import base64
