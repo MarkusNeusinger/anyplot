@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 85/100 | Created: 2026-05-21
 
 library(ggplot2)
 library(ragg)
@@ -75,15 +74,15 @@ sounding <- data.frame(
 p_ref <- exp(seq(log(1050), log(95), length.out = 400))
 y_ref <- lp(p_ref)
 
-# Temperature isotherms (every 10°C — diagonal lines in the skewed frame)
+# Temperature isotherms — mapped to series for legend
 iso_df <- do.call(rbind, lapply(seq(-80, 60, by = 10), function(T0) {
-  data.frame(group = T0, y = y_ref, x = skewx(T0, p_ref))
+  data.frame(group = T0, y = y_ref, x = skewx(T0, p_ref), series = "Isotherms")
 }))
 
 # Dry adiabats (Poisson: T_K = theta * (P/1000)^0.286)
 dry_df <- do.call(rbind, lapply(seq(265, 390, by = 10), function(th_K) {
   T_c <- th_K * (p_ref / 1000)^0.286 - 273.15
-  data.frame(group = th_K, y = y_ref, x = skewx(T_c, p_ref))
+  data.frame(group = th_K, y = y_ref, x = skewx(T_c, p_ref), series = "Dry Adiabats")
 }))
 
 # Moist pseudo-adiabats starting from the surface
@@ -92,6 +91,7 @@ moist_df <- do.call(rbind, lapply(c(4, 10, 16, 22, 28, 34), function(T0) {
   df$group <- T0
   df$y     <- lp(df$P)
   df$x     <- skewx(df$T_c, df$P)
+  df$series <- "Moist Adiabats"
   df
 }))
 
@@ -101,7 +101,8 @@ mix_df <- do.call(rbind, lapply(c(1, 2, 4, 8, 16), function(w_gpkg) {
   w_kg <- w_gpkg / 1000
   es   <- w_kg * p_mix / (0.622 + w_kg)
   T_c  <- 243.5 * log(es / 6.112) / (17.67 - log(es / 6.112))
-  data.frame(group = w_gpkg, y = lp(p_mix), x = skewx(T_c, p_mix))
+  data.frame(group = w_gpkg, y = lp(p_mix), x = skewx(T_c, p_mix),
+             series = "Mixing Ratios")
 }))
 
 # --- Y-axis Setup (log-pressure labels) -------------------------------------
@@ -122,6 +123,28 @@ snd_long <- rbind(
   data.frame(y = sounding$y, x = sounding$xTd, series = "Dewpoint")
 )
 
+# --- Combined scale values (order controls legend display) ------------------
+series_order <- c("Temperature", "Dewpoint", "Isotherms",
+                  "Dry Adiabats", "Moist Adiabats", "Mixing Ratios")
+
+color_values <- c(
+  "Temperature"   = OKABE_ITO[1],   # #009E73 green
+  "Dewpoint"      = OKABE_ITO[2],   # #D55E00 orange-red
+  "Isotherms"     = INK_MUTED,      # gray, theme-adaptive
+  "Dry Adiabats"  = OKABE_ITO[5],   # #E69F00 amber
+  "Moist Adiabats"= OKABE_ITO[4],   # #CC79A7 purple (distinct from sky blue)
+  "Mixing Ratios" = OKABE_ITO[6]    # #56B4E9 sky blue
+)
+
+linetype_values <- c(
+  "Temperature"   = "solid",
+  "Dewpoint"      = "dashed",
+  "Isotherms"     = "solid",
+  "Dry Adiabats"  = "dashed",
+  "Moist Adiabats"= "dotted",
+  "Mixing Ratios" = "longdash"
+)
+
 # --- Plot -------------------------------------------------------------------
 p <- ggplot() +
   # Horizontal isobars at standard levels
@@ -129,25 +152,26 @@ p <- ggplot() +
     yintercept = y_isobars,
     color = INK_MUTED, linewidth = 0.2, alpha = 0.40
   ) +
-  # Temperature isotherms (diagonal in skewed frame)
+  # Reference lines — mapped to series aesthetic for unified legend
   geom_path(
-    data = iso_df, aes(x = x, y = y, group = group),
-    color = INK_MUTED, linewidth = 0.28, alpha = 0.55
+    data = iso_df,
+    aes(x = x, y = y, group = group, color = series, linetype = series),
+    linewidth = 0.28, alpha = 0.55
   ) +
-  # Dry adiabats
   geom_path(
-    data = dry_df, aes(x = x, y = y, group = group),
-    color = OKABE_ITO[5], linewidth = 0.28, alpha = 0.55, linetype = "dashed"
+    data = dry_df,
+    aes(x = x, y = y, group = group, color = series, linetype = series),
+    linewidth = 0.28, alpha = 0.55
   ) +
-  # Moist pseudo-adiabats
   geom_path(
-    data = moist_df, aes(x = x, y = y, group = group),
-    color = OKABE_ITO[3], linewidth = 0.28, alpha = 0.55, linetype = "dotted"
+    data = moist_df,
+    aes(x = x, y = y, group = group, color = series, linetype = series),
+    linewidth = 0.28, alpha = 0.55
   ) +
-  # Saturation mixing ratio lines
   geom_path(
-    data = mix_df, aes(x = x, y = y, group = group),
-    color = OKABE_ITO[6], linewidth = 0.28, alpha = 0.55, linetype = "longdash"
+    data = mix_df,
+    aes(x = x, y = y, group = group, color = series, linetype = series),
+    linewidth = 0.28, alpha = 0.55
   ) +
   # Main sounding profiles with legend (Temperature = first/brand colour)
   geom_path(
@@ -156,12 +180,14 @@ p <- ggplot() +
     linewidth = 1.5
   ) +
   scale_color_manual(
-    values = c("Temperature" = OKABE_ITO[1], "Dewpoint" = OKABE_ITO[2]),
-    name   = NULL
+    name   = NULL,
+    values = color_values,
+    breaks = series_order
   ) +
   scale_linetype_manual(
-    values = c("Temperature" = "solid", "Dewpoint" = "dashed"),
-    name   = NULL
+    name   = NULL,
+    values = linetype_values,
+    breaks = series_order
   ) +
   scale_y_continuous(
     breaks = y_breaks,
@@ -191,12 +217,17 @@ p <- ggplot() +
     legend.background = element_rect(fill = ELEVATED_BG, color = INK_SOFT,
                                      linewidth = 0.3),
     legend.text       = element_text(color = INK_SOFT, size = 8),
-    legend.position.inside = c(0.88, 0.20),
+    legend.position.inside = c(0.88, 0.05),
     legend.justification   = c(1, 0),
     plot.margin       = margin(20, 30, 15, 20)
   ) +
   guides(
-    color    = guide_legend(override.aes = list(linewidth = 1.5)),
+    color = guide_legend(
+      override.aes = list(
+        linewidth = c(1.5, 1.5, 0.5, 0.5, 0.5, 0.5),
+        alpha     = c(1.0, 1.0, 0.8, 0.8, 0.8, 0.8)
+      )
+    ),
     linetype = "none"
   )
 
