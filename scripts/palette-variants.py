@@ -769,31 +769,6 @@ def render_variant_page(
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>variant {variant.key}. {variant.title} — anyplot palette</title>
 <style>{PAGE_CSS}
-.variant-nav {{
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 24px;
-}}
-.variant-nav a {{
-    font-size: 11px;
-    padding: 5px 10px;
-    border-radius: 4px;
-    border: 1px solid var(--rule);
-    background: var(--bg-surface);
-    color: var(--ink-soft);
-    text-decoration: none;
-}}
-.variant-nav a.current {{
-    background: var(--ok-green);
-    color: #ffffff;
-    border-color: var(--ok-green);
-    font-weight: 600;
-}}
-.variant-nav a:hover:not(.current) {{
-    color: var(--ok-green);
-    border-color: var(--ok-green);
-}}
 .variant-summary {{
     background: var(--bg-elevated);
     border: 1px solid var(--rule);
