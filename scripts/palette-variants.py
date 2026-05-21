@@ -671,14 +671,14 @@ VARIANTS = [
     Variant(
         "B", "triadic", "triadic",
         "triadic",
-        "three hue anchors 120° apart (green · magenta · azure), then warm fillers",
-        "green ↔ magenta diverging",
+        "three primaries 120° apart (green · purple · amber-red), plus four harmonic fillers (azure, magenta, lime, cyan)",
+        "green ↔ purple diverging",
     ),
     Variant(
         "C", "split-complementary", "split-complementary",
         "split-comp",
-        "green plus the two flanking complements (~150°, ~210°)",
-        "green ↔ vermillion diverging",
+        "green + the two flanking complements at +150° (magenta) and +210° (red), then four-quadrant fillers",
+        "green ↔ red diverging",
     ),
     Variant(
         "D", "balanced", "balanced",
@@ -695,7 +695,7 @@ VARIANTS = [
     Variant(
         "F", "okabe-anchored", "okabe-anchored",
         "okabe-anchored",
-        "both brand-green (#009E73) and Okabe-Ito's vermillion (#D55E00) pinned — both already paper-ink-compliant — then max-min ΔE fills positions 2-6",
+        "Okabe-Ito's vermillion (#D55E00) seeded into the 7-hue pool alongside brand-green — both already paper-ink-compliant. reorder_first_4 then chooses top-4 freely; vermillion stays in if it earns the spot.",
         "green→neutral→vermillion diverging",
     ),
 ]
@@ -710,6 +710,8 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
     names = names_for_palette(hues)
     full_hexes = [*hues, NEUTRAL_LIGHT, NEUTRAL_DARK]
     full_labels = [*names, "neutral·light", "neutral·dark"]
+
+    c_min_v, c_max_v = PER_VARIANT_C_RANGE[variant.strategy]
 
     first_4_score = measure_first_4(hues)
     normal_min = measure_all_normal_min(hues)
@@ -813,8 +815,8 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
 
 <div class="variant-summary">
     <strong>strategy:</strong> {variant.one_liner}.<br>
-    paper-ink corridor: J' ∈ [{J_MIN:.0f}, {J_MAX:.0f}], C ∈ [{C_MIN:.0f}, {C_MAX:.0f}].
-    first-4 reordered to maximise min worst-CVD ΔE within {{1..4}}.
+    paper-ink corridor: J' ∈ [{J_MIN:.0f}, {J_MAX:.0f}], C ∈ [{c_min_v:.0f}, {c_max_v:.0f}].
+    first-4 reordered to maximise min worst-CVD ΔE within {{1..4}}, pairwise hue gap ≥60°.
     <div class="score-row">
         <span class="score"><em>first-4 worst-CVD min ΔE</em>{first_4_score:.2f}
         <span class="{ 'delta-pos' if delta_vs_baseline >= 0 else 'delta-neg'}">({delta_sign}{delta_vs_baseline:.2f} vs Okabe-Ito {baseline_4:.2f})</span></span>
@@ -1084,7 +1086,9 @@ def main() -> int:
     PINNED: dict[str, tuple[int, ...]] = {
         "triadic":         (1, 2),
         "split-comp":      (1, 2),
-        "okabe-anchored":  (1,),
+        # okabe-anchored: vermillion is seeded into the 7-hue pool but NOT
+        # pinned — reorder_first_4 may move it out of top-4 if a different
+        # pick gives more CVD distance to brand-green.
     }
 
     EXTRA_SEEDS: dict[str, tuple[str, ...]] = {

@@ -543,9 +543,9 @@ section.surface h3 {
 </nav>
 
 <div class="variant-summary">
-    <strong>strategy:</strong> both brand-green (#009E73) and Okabe-Ito's vermillion (#D55E00) pinned — both already paper-ink-compliant — then max-min ΔE fills positions 2-6.<br>
-    paper-ink corridor: J' ∈ [45, 72], C ∈ [22, 50].
-    first-4 reordered to maximise min worst-CVD ΔE within {1..4}.
+    <strong>strategy:</strong> Okabe-Ito's vermillion (#D55E00) seeded into the 7-hue pool alongside brand-green — both already paper-ink-compliant. reorder_first_4 then chooses top-4 freely; vermillion stays in if it earns the spot..<br>
+    paper-ink corridor: J' ∈ [45, 72], C ∈ [22, 42].
+    first-4 reordered to maximise min worst-CVD ΔE within {1..4}, pairwise hue gap ≥60°.
     <div class="score-row">
         <span class="score"><em>first-4 worst-CVD min ΔE</em>15.61
         <span class="delta-pos">(+3.88 vs Okabe-Ito 11.73)</span></span>
