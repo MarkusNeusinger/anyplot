@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:29:23Z'
-updated: '2026-05-21T02:08:29Z'
+updated: '2026-05-21T02:29:11Z'
 generated_by: claude-sonnet
 workflow_run: 26200816322
 issue: 3808
@@ -12,33 +12,35 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/highcharts/plot-dark.html
-quality_score: 83
+quality_score: 88
 review:
   strengths:
-  - 'Perfect EAN-13 spec compliance: L/G/R encoding, guard patterns, quiet zones,
-    first-digit positioning all correct'
-  - Theme adaptation handled correctly — barcode card stays white in dark theme for
-    scan reliability while page chrome flips properly
-  - Clean professional card layout with rounded corners and shadow
-  - 'Full 10/10 code quality: reproducible, clean imports, idiomatic Selenium/CDP
-    export with PIL safety-net'
+  - 'Perfect spec compliance: all EAN-13 structural requirements met (guards, encoding,
+    quiet zones, digit display)'
+  - Technically correct barcode encoding with L/G/R tables and first-digit pattern
+    selection
+  - 'Excellent VQ scores: explicit font sizing, no overlap, crisp bar visibility'
+  - Clean code structure with correct Highcharts patterns (SVG Renderer, xrange, load
+    events)
+  - Smart design decision to keep barcode panel light in both themes for scannability
+  - Real-world product code (German Bosch product) adds authenticity
   weaknesses:
-  - Highcharts JS downloaded and embedded inline but never invoked — no Highcharts.chart()
-    call exists; the library is unused in practice
-  - Title rendered as raw HTML div rather than via Highcharts title API, making it
-    independent of Highcharts theme tokens
+  - 'Minor bottom whitespace: MARGIN_B=280px leaves ~15% empty space below digit labels
+    — could reduce to 180-200px to improve canvas utilization'
+  - Design Excellence is limited by the technical format; slight improvement possible
+    by reducing bottom margin and letting the barcode fill more of the canvas proportionally
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct
-      Chrome: title "barcode-ean13 · python · highcharts · anyplot.ai" in bold dark text (#1A1A17), subtitle "EAN-13: 4006381333931" in muted gray (#4A4A44) — both clearly readable
-      Data: black bars (#1A1A17) on elevated white card (#FFFDF6) with rounded corners and drop shadow; guard bars visibly taller than data bars; 13 digit labels in bold black below barcode, leading "4" correctly left of start guard
-      Legibility verdict: PASS — all text and data elements readable against light background
+      Background: Warm off-white #FAF8F1 page background; elevated barcode panel #FFFDF6 spanning ~87% of canvas width
+      Chrome: Title "barcode-ean13 · python · highcharts · anyplot.ai" in bold dark ink at 66px (~65% canvas width); subtitle "EAN-13: 4006381333931" in muted dark; axes hidden (correct for barcode)
+      Data: Near-black (#1A1A17) barcode bars on the light panel; guard bars (start/center/end) extend visibly lower than data bars; 13 digits displayed below in large bold font; first digit "4" positioned left of start guard
+      Legibility verdict: PASS — all text clearly readable; digit labels large and crisp
 
     Dark render (plot-dark.png):
-      Background: near-black #1A1A17 — correct
-      Chrome: title flips to light text (#F0EFE8), subtitle to light-gray (#B8B7B0) — both clearly readable on dark surface; no dark-on-dark failures observed
-      Data: barcode card retains #FFFDF6 fill (correct — barcodes must be high-contrast regardless of page theme); black bars on white card surface unchanged from light render; digit labels remain black on white card (appropriate)
-      Legibility verdict: PASS — all chrome adapts correctly; barcode bars and digits fully visible
+      Background: Warm near-black #1A1A17 page background; barcode panel stays light #FFFDF6 (correct — barcodes require light substrate for scannability)
+      Chrome: Title and subtitle flip to light colors on dark page background — both clearly readable; no dark-on-dark failures
+      Data: Barcode bars and digit labels remain dark (#1A1A17) against the light panel — identical to light render, correct behavior
+      Legibility verdict: PASS — excellent contrast throughout; deliberate decision to keep barcode panel light in dark theme is the right design choice
   criteria_checklist:
     visual_quality:
       score: 29
@@ -46,75 +48,76 @@ review:
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: Title, subtitle, and digit labels readable in both themes; -1 for
-          limited text elements inherent to barcode format
+        comment: All font sizes explicitly set (title 66px, subtitle 48px, digits
+          80px); readable in both themes
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Digits properly spaced, no overlaps with bars or each other
+        comment: No overlapping elements; digit spacing generous
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: High-contrast black bars on white card; guard bars correctly taller
-          than data bars
+        comment: Bars crisp and well-defined; guard extensions visible; digits large
+          and prominent
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Maximum contrast black-on-white for barcode; no CVD concerns
+        comment: High contrast black-on-white; no CVD issues
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Centered card layout, 3200x1800 canvas confirmed, generous whitespace
+        comment: Minor excess whitespace at bottom (MARGIN_B=280px); canvas utilization
+          ~63%
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct; subtitle shows encoded number; no axes needed for
-          barcode
+        comment: Title correct format; axes hidden (appropriate); subtitle provides
+          code context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Page backgrounds correct (#FAF8F1 light / #1A1A17 dark); barcode
-          uses fixed high-contrast black (appropriate for non-categorical data)'
+        comment: Correct page backgrounds; barcode bars black (required for scanning,
+          not a categorical series); theme-adaptive chrome
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Card with rounded corners and box-shadow is intentional polish; two-level
-          title hierarchy shows typographic thought; above default 4
+        comment: Clean professional rendering; warm panel contrast intentional; constrained
+          by technical format
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Clean layout, no chartjunk, generous card padding; above default
-          2
+        comment: Axes hidden, no grid, no unnecessary chrome; guard bar extension
+          is refined detail
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Guard bars visually taller communicates EAN-13 structure; subtitle
-          makes encoded number legible; above default 2
+        comment: Subtitle shows encoded number; digit labels aid interpretation; real
+          product code adds context
     spec_compliance:
       score: 15
       max: 15
@@ -124,27 +127,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EAN-13 barcode with proper binary encoding
+        comment: Correct EAN-13 barcode with full encoding (L/G/R tables, first-digit
+          pattern)
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones (9x bar_width), start/center/end guards, human-readable
-          digits, first digit outside left guard — all present
+        comment: Quiet zones 9 modules, start/center/end guards, guard descent, first
+          digit outside guard
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: German product code 4006381333931; check digit verified in code
+        comment: Module-based axis hidden correctly; all 13 digits displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'barcode-ean13 · python · highcharts · anyplot.ai';
-          no legend needed
+        comment: Title exact format; no legend (appropriate for single encoding)
     data_quality:
       score: 15
       max: 15
@@ -154,22 +157,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Full EAN-13: FIRST_DIGIT_PATTERNS, L/G left group encoding, R right
-          group encoding, all guard patterns'
+        comment: 'All EAN-13 components: guards, L/G/R encoding, guard descent, quiet
+          zones, 13-digit display'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Bosch drill bit set (4006381333931) — real German product code, neutral
-          and plausible
+        comment: German product code (Bosch drill bit set); real-world retail scenario;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: bar_width=17px, guard_height=820px, proportions correct for 3200x1800
-          canvas
+        comment: Country code 40 (Germany) correct; check digit verified; 9-module
+          quiet zones meet spec
     code_quality:
       score: 10
       max: 10
@@ -179,52 +182,51 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural code, no functions or classes
+        comment: 'Flat: constants → encoding → HTML → Selenium → PIL; no functions
+          or classes'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — fixed barcode input, no random elements
+        comment: Fully deterministic; fixed code, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports (PIL, selenium, os, tempfile, time, urllib.request, pathlib)
-          are used
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean f-string SVG generation; no fake UI; PIL safety-net follows
-          canonical pattern
+        comment: Clean encoding tables; xrange approach elegant; SVG Renderer usage
+          well-organized
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html for both themes
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html; PIL safety net for exact
+          canvas dims
     library_mastery:
-      score: 3
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 2
+        score: 4
         max: 5
-        passed: false
-        comment: Selenium/CDP/PIL export pattern is correct; but Highcharts charting
-          API (Chart, HighchartsOptions, series) never invoked — highcharts.js downloaded
-          but unused
+        passed: true
+        comment: xrange series, SVG Renderer, chart load events — correct Highcharts
+          patterns; bypasses highcharts_core Python wrapper
       - id: LM-02
         name: Distinctive Features
-        score: 1
+        score: 4
         max: 5
-        passed: false
-        comment: No Highcharts-specific features used; no series, axes, plotOptions,
-          or Renderer API calls
+        passed: true
+        comment: xrange series, SVG Renderer API, load events — genuinely Highcharts-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies:
@@ -232,8 +234,8 @@ impl_tags:
   - pillow
   techniques:
   - html-export
-  patterns:
-  - data-generation
+  - annotations
+  patterns: []
   dataprep: []
   styling:
   - minimal-chrome
