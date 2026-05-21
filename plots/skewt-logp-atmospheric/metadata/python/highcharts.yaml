@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: skewt-logp-atmospheric
 created: '2026-01-17T09:29:54Z'
-updated: '2026-05-21T00:09:32Z'
+updated: '2026-05-21T00:41:17Z'
 generated_by: claude-sonnet
 workflow_run: 26196534923
 issue: 3802
@@ -12,43 +12,51 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-log
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/python/highcharts/plot-dark.html
-quality_score: 78
+quality_score: 82
 review:
   strengths:
-  - Excellent spec compliance — all Skew-T Log-P diagnostic features present (dry
-    adiabats, moist adiabats, mixing ratio lines, skewed isotherms, logarithmic pressure
-    axis)
-  - 'Strong visual hierarchy: thick profile lines dominate while reference lines are
-    appropriately subdued with opacity'
-  - Both light and dark themes render correctly with proper INK/INK_SOFT token threading
-    throughout all SVG text elements
-  - 'Physically correct formulas: Poisson equation for dry adiabats, saturated adiabatic
-    lapse rate for moist adiabats, vapor pressure formula for mixing ratio lines'
-  - Clean layout with proper canvas dimensions (3200x1800), clipping, and legend design
+  - 'Complete Skew-T meteorological framework: isotherms, dry adiabats, moist adiabats,
+    and mixing ratio lines all correctly computed using standard thermodynamic equations
+    (Poisson lapse, Clausius-Clapeyron)'
+  - Excellent use of Highcharts linkedTo/id pattern to cleanly group many reference
+    line series under single legend entries without cluttering
+  - Full, correct theme adaptation across light and dark renders — chrome tokens (background,
+    INK, INK_SOFT) applied consistently to every chart element
+  - Meteorologically realistic sounding data with physically plausible temperature
+    and dewpoint profiles
+  - PIL normalization guard ensures exact 3200x1800 output dimensions even if CDP
+    rounding occurs
   weaknesses:
-  - Highcharts library is not used at all — the implementation uses raw SVG string
-    construction without any highcharts_core imports. Should use Chart, HighchartsOptions,
-    and appropriate series types, or use SVGRenderer within Highcharts framework.
-  - 'First data series (temperature) uses #D55E00 instead of required #009E73 (first
-    Okabe-Ito position). Reassign: temperature=#009E73, dewpoint=#D55E00, dry adiabat=#0072B2,
-    moist adiabat=#CC79A7, mixing ratio=#E69F00.'
-  - Isobar and isotherm tick labels at font-size 32 px are slightly small on a 3200
-    px canvas; increase to ~40 px for better mobile readability.
+  - Font sizes are slightly below the Highcharts recommended values (title 56px vs
+    66px recommended, axis labels 48px vs 56px, tick labels 40px vs 44px) — bump each
+    up to the recommended sizes for better mobile-scaled readability
+  - The temperature isotherms are skewed using x = T - (1-yfrac)*SKEW_FACTOR, which
+    produces a left-skew (non-standard) rather than the meteorological convention
+    of right-skew (x = T + (1-yfrac)*SKEW_FACTOR). The spec specifies 'skewed to the
+    right.' Flip the sign to conform to the standard Skew-T convention
+  - Reference line types (dry adiabats in blue, moist adiabats in pink, mixing ratios
+    in orange dotted) have opacity values (0.35-0.60) that at render scale cause them
+    to appear visually similar to the gray isotherms. Consider slightly higher opacity
+    (0.55-0.75) or slightly thicker lineWidth for the colored adiabats/mixing ratios
+    to make them more distinguishable from the plain isotherms
+  - LineSeries imported from highcharts_core.options.series.area — should be from
+    highcharts_core.options.series.line import LineSeries for canonically correct
+    import
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) with elevated plot area (#FFFDF6) — correct
-      Chrome: Title "skewt-logp-atmospheric · python · highcharts · anyplot.ai" in bold dark (#1A1A17) — readable. Y-axis label "Pressure (hPa)" rotated, dark secondary (#4A4A44) — readable. X-axis label "Temperature (°C)" — readable. Isobar tick labels (100–1000 hPa) at 32 px — readable but slightly small. Isotherm tick labels (-80 to 50°C) at 32 px — readable.
-      Data: Temperature profile solid orange (#D55E00) thick line with circle markers — dominant and clear. Dewpoint profile dashed blue (#0072B2) — clearly differentiated. Dry adiabats orange (#E69F00) 35% opacity — visible background reference. Moist adiabats green (#009E73) dashed 55% opacity — visible. Mixing ratio sky-blue (#56B4E9) dotted 60% opacity — visible. Isotherms gray dashed 35% opacity — visible at ~45° skew angle.
-      Legibility verdict: PASS
+      Background: Warm off-white (#FAF8F1) — correct theme background with elevated plot area (#FFFDF6)
+      Chrome: Title "skewt-logp-atmospheric · python · highcharts · anyplot.ai" in dark ink at top — readable. X-axis label "Temperature (°C)" and Y-axis label "Pressure (hPa)" both visible in INK_SOFT (#4A4A44). Tick labels present at standard pressure/temperature intervals. Legend upper-right with all 6 series labeled.
+      Data: Temperature profile in #009E73 (first Okabe-Ito, solid thick line with circular markers). Dewpoint profile in #D55E00 (dashed thick with markers). Background reference lines in blue (dry adiabats), pink (moist adiabats), orange dotted (mixing ratios), gray dashed (isotherms) — all semi-transparent.
+      Legibility verdict: PASS — all text elements are readable against the warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) with elevated plot area (#242420) — correct
-      Chrome: Title and all axis labels in light tokens (#F0EFE8 / #B8B7B0) — all readable against dark background. No dark-on-dark failures observed. INK/INK_SOFT tokens correctly applied to all SVG text elements.
-      Data: Colors identical to light render — orange temperature, blue dewpoint, orange dry adiabats, green moist adiabats, sky-blue mixing ratios, gray isotherms. Legend box adapts to elevated dark background (#242420).
-      Legibility verdict: PASS
+      Background: Warm near-black (#1A1A17) — correct dark theme background with elevated plot area (#242420)
+      Chrome: Title, axis labels, and tick labels rendered in light text (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failure detected. Legend background uses #242420 (elevated dark) with visible text.
+      Data: Temperature profile #009E73 and dewpoint profile #D55E00 are identical in color to the light render — only chrome has adapted. Reference lines faintly visible against dark elevated background.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark text failure observed
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -56,47 +64,49 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: Both renders readable; isobar/isotherm tick labels at 32px slightly
-          small on 3200px canvas
+        comment: Font sizes set explicitly but slightly below recommended (56px title
+          vs 66px, 48px axis labels vs 56px, 40px ticks vs 44px); readable in both
+          themes at full resolution
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text or data collisions in either render
+        comment: Legend well-positioned; no hard overlaps; reference line density
+          creates minor visual noise
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Primary profile lines (stroke-width=8, r=14 circles) dominant; reference
-          lines appropriately subdued
+        comment: Primary profiles clearly visible; reference lines (dry adiabats,
+          moist adiabats, mixing ratios) present but have limited visual distinction
+          from isotherms at render scale due to low opacity
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe
+        comment: Okabe-Ito palette; temperature vs dewpoint distinguished by color
+          AND dash style
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; 3200x1800; good proportions; legend placement
-          clean
+        comment: Canvas gate passed; 3200x1800 confirmed; good proportions; no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Pressure (hPa) and Temperature (°C) labels with units
+        comment: Temperature (°C) and Pressure (hPa) with units; correct title format
       - id: VQ-07
         name: Palette Compliance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Backgrounds correct (#FAF8F1/#1A1A17). First series (temperature)
-          uses #D55E00 not #009E73'
+        passed: true
+        comment: 'First series #009E73; Okabe-Ito order; correct backgrounds #FAF8F1/#1A1A17'
     design_excellence:
       score: 11
       max: 20
@@ -106,78 +116,80 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom visual hierarchy; opacity differentiation; semantically appropriate
-          meteorological colors
+        comment: z_index hierarchy; Okabe-Ito palette; styled legend with elevation;
+          marker border rings; above generic defaults
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Legend has background panel; reference line opacities graded; elevated
-          plot area
+        comment: Opacity de-emphasis on reference lines; grid lines on isobars; elevated
+          legend; lacks spine removal
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Clear focal point on temperature/dewpoint profiles; reference lines
-          properly subordinate
+        comment: Clear primary/secondary hierarchy; reference lines provide meteorological
+          context
     spec_compliance:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct Skew-T Log-P diagram with all diagnostic elements
+        comment: Skew-T Log-P with log inverted pressure axis and ~45-degree isotherms;
+          skew direction is left-skew (non-standard) rather than meteorological right-skew
+          convention
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Logarithmic inverted pressure axis, 45° isotherms, temp solid/dewpoint
-          dashed, dry adiabats, moist adiabats, mixing ratio lines
+        comment: Temperature solid, dewpoint dashed, isotherms, dry adiabats, moist
+          adiabats, mixing ratios all present; wind barbs optional and omitted
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Pressure axis correctly inverted; temperature and dewpoint correctly
-          mapped with skew transform
+        comment: X=temperature (skewed), Y=log pressure (inverted); full 1000-100
+          hPa range
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''skewt-logp-atmospheric · python · highcharts · anyplot.ai''
-          — exact correct format'
+        comment: Title format correct; legend labels match all series
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All Skew-T features: temperature profile, dewpoint, dry adiabats,
-          moist adiabats, mixing ratio lines, isotherms, isobars'
+        comment: All major Skew-T features; no CAPE/CIN shading or LCL/LFC markers
+          (advanced, not required)
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Standard atmospheric sounding; realistic temperature and dewpoint
-          profiles; neutral educational context
+        comment: Meteorologically realistic standard sounding; dewpoint depression
+          increases with altitude; plausible tropical/subtropical profile; neutral
+          scientific data
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 1000-100 hPa pressure range; -80 to 50°C temperature axis; meteorologically
-          realistic values
+        comment: Pressure 100-1000 hPa; temperature -80 to +50°C; mixing ratios 1-32
+          g/kg are standard meteorological values
     code_quality:
       score: 10
       max: 10
@@ -187,61 +199,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; all inline procedural code
+        comment: Flat script, no unnecessary functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, tempfile, time, Path, numpy, PIL.Image, selenium'
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity; correct physics formulas; no fake UI
+        comment: Appropriate complexity; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
         comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
-    library_features:
-      score: 0
+    library_mastery:
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 0
+        score: 4
         max: 5
-        passed: false
-        comment: 'Critical: Highcharts library not imported or used at all. Pure SVG
-          string construction bypasses highcharts_core entirely.'
+        passed: true
+        comment: 'Chart(container=''container''), HighchartsOptions, LineSeries, add_series()
+          correctly used; CDP override; minor: LineSeries imported from area module
+          instead of line module'
       - id: LM-02
         name: Distinctive Features
-        score: 0
+        score: 4
         max: 5
-        passed: false
-        comment: No Highcharts-specific features used since library is not imported.
+        passed: true
+        comment: 'Highcharts linkedTo/id pattern for legend grouping; z_index layering;
+          gridLineOpacity; dashStyle variants; enableMouseTracking: False'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
-  - html-export
-  - custom-legend
   - manual-ticks
+  - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting

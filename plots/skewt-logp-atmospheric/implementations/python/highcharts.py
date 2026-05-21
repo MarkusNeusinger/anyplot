@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 skewt-logp-atmospheric: Skew-T Log-P Atmospheric Diagram
 Library: highcharts unknown | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-21
+Quality: 82/100 | Updated: 2026-05-21
 """
 
 import os
