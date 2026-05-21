@@ -1,212 +1,270 @@
 library: highcharts
+language: python
 specification_id: barcode-code128
 created: '2026-01-19T11:00:21Z'
-updated: '2026-01-19T11:02:54Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21134791893
+updated: '2026-05-21T01:33:05Z'
+generated_by: claude-sonnet
+workflow_run: 26198647696
 issue: 3809
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/highcharts/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent implementation of Code 128B encoding with proper check digit calculation
-  - Proper quiet zones on left and right sides for scanner compatibility
-  - Human-readable text in monospace font below barcode as per spec
-  - Good use of Highcharts renderer API for custom bar drawing
-  - Clean visual presentation with high contrast black-on-white design
-  - Title follows the correct format
+  - Technically correct Code 128B encoding with proper character table, check digit
+    (mod 103), start/stop patterns, and quiet zones
+  - Creative use of Highcharts xrange series to render barcode bars with per-bar color
+    control
+  - Thoughtful structural annotation system (zone dividers, zone labels, human-readable
+    text, technical footer) that educates viewers about barcode anatomy
+  - 'Correct theme-adaptive chrome: outer page background and title/footer text correctly
+    flip between light (#FAF8F1) and dark (#1A1A17) themes'
+  - Realistic shipping-label content ('SHIP-2024-ABC123') with neutral, real-world
+    context
+  - 'Complete spec feature coverage: quiet zones, START B, DATA, CHK, STOP all labeled
+    and present'
+  - Effective use of Highcharts renderer API (renderer.text, renderer.rect) for custom
+    SVG annotations inside chart events.load callback
+  - PIL normalization step ensures exact 3200x1800 canvas dimensions
   weaknesses:
-  - Code uses helper functions (encode_code128, values_to_bars) instead of pure linear
-    KISS structure
-  - Could demonstrate Code 128 subset switching (A/B/C) for more comprehensive example
-  image_description: The plot displays a Code 128 barcode visualization on a white
-    background. At the top, the title "barcode-code128 · highcharts · pyplots.ai"
-    is displayed in bold dark gray text (approximately 48px), followed by a subtitle
-    "Code 128 Barcode Visualization" in lighter gray (approximately 32px). The main
-    element is a properly formatted Code 128 barcode consisting of alternating black
-    vertical bars of varying widths on a white background. The barcode spans approximately
-    80% of the horizontal canvas width with appropriate quiet zones (white space)
-    on both the left and right sides as required by the specification. The bars vary
-    in width from thin (1-unit) to thick (4-unit) following the Code 128 encoding
-    pattern. Below the barcode, the human-readable text "SHIP-2024-ABC123" is displayed
-    in a bold monospace font (Courier New) at 72px with letter spacing, centered horizontally
-    beneath the barcode. The overall layout is clean and professional with good use
-    of the 4800x2700 canvas space, presenting a realistic shipping label barcode that
-    would be scannable in a real-world application.
+  - 'plotBackgroundColor is hardcoded ''#FFFFFF'' (pure white) — violates the ''never
+    pure #FFFFFF'' palette rule. For a barcode this is domain-justified, but consider
+    using ''#FEFEFE'' or wrapping it in a white rect on top of the themed background
+    instead'
+  - Zone label font size (28px) is below the recommended 44px for tick-equivalent
+    labels; at mobile scale (~400px) these labels may be hard to read — increase to
+    at least 36px
+  - One helper function `bx_to_px` is defined, violating the KISS/flat-structure rule;
+    inline the single formula `MARGIN_L + (bx_units / x_total) * PLOT_W` where used
+  - 'Zone label colors are hardcoded dark greys (#555550, #444440, #999990) instead
+    of using INK/INK_SOFT tokens; while they''re inside the white inner area so readability
+    is fine, using tokens would be more consistent'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white outer page (#FAF8F1) surrounds a white inner barcode area (plotBackgroundColor=#FFFFFF). The contrast between the warm outer and the crisp white inner is clean and intentional.
+      Chrome: Title "barcode-code128 · python · highcharts · anyplot.ai" in bold dark text (#1A1A17) at top — fully readable, ~70% width. Footer "Code 128B · Subset B encodes ASCII 32–126..." in muted grey at bottom, readable.
+      Data: Dense black vertical bars of varying widths fill the barcode area, rendered correctly as a Code 128B pattern. Below the barcode: zone divider ticks, then zone labels (← Quiet Zone, START B, DATA (16 chars · Subset B), CHK, STOP, Quiet Zone →) in dark grey at 28px. Human-readable "SHIP-2024-ABC123" in bold Courier New at 54px — prominent and clear.
+      Legibility verdict: PASS — all text readable, no "light on light" issues.
+
+    Dark render (plot-dark.png):
+      Background: Near-black outer page (#1A1A17) surrounds the same white inner barcode area. The white barcode card stands out as a bright rectangle against the dark surface.
+      Chrome: Title rendered in near-white (#F0EFE8/INK) against the dark outer background — clearly readable. Footer rendered in light grey (#B8B7B0/INK_SOFT) — readable.
+      Data: Barcode bars are identically rendered (black on white inner area). Zone labels and human-readable text inside the white area remain dark text on white — no dark-on-dark issues since all barcode content is inside the white inner card. Data colors (black bars) are identical between light and dark renders.
+      Legibility verdict: PASS — no dark-on-dark failures. All text elements readable in both theme zones (outer dark background with light chrome; inner white area with dark labels).
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title at 48px, subtitle at 32px, human-readable text at 72px - all
-          perfectly readable
+        comment: Title (66px) and human-readable text (54px) well-sized; zone labels
+          at 28px are below recommended 44px and may be small at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements; barcode, title, and text are well separated
+        comment: All elements in distinct vertical bands; no overlapping text
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Barcode bars are clearly visible with proper width scaling and high
-          contrast
+        comment: Barcode bars clearly visible at full width; varied widths correctly
+          represent Code 128B encoding
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Pure black on white provides maximum contrast and is universally
-          accessible
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas; barcode fills horizontal space well with proper
-          quiet zones; slight excess whitespace at bottom
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for barcode visualization (no axes needed)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: N/A but handled correctly (axes hidden, no unnecessary elements)
+        comment: Black bars on white background = maximum contrast (21:1); no CVD
+          concerns
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Barcode fills ~60% of canvas width; well-balanced margins; information
+          layers organized top-to-bottom
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Axes intentionally hidden; structural annotations serve as informational
+          labels; title correctly formatted
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'Outer page background correctly theme-adaptive (#FAF8F1/#1A1A17);
+          title/footer use INK/INK_SOFT tokens correctly. Deduction: plotBackgroundColor
+          hardcoded ''#FFFFFF'' (pure white) violates palette rule; zone label colors
+          are hardcoded dark greys rather than theme tokens'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above-average for technical visualization: zone annotation system
+          with dividers, styled labels, and information hierarchy shows real design
+          thought. Limited by inherent barcode aesthetic constraints. Above ''configured
+          default'' (4) but not ''publication-ready'' (8)'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, no grid, clean border around barcode area, zone divider
+          ticks, whitespace generous. Good attention to structural detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy guides viewer through barcode anatomy: barcode
+          → zone labels → human-readable text → technical footer. Educational story
+          about Code 128 structure, though no single focal point or insight is emphasized'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Code 128 barcode visualization with proper encoding
+        comment: Correctly implements linear barcode using Highcharts xrange series;
+          bars represent Code 128B encoding
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Content correctly encoded to bar patterns using Code 128B
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
         comment: 'All spec features present: quiet zones, start/stop patterns, check
-          digit, human-readable text'
-      - id: SC-04
-        name: Data Range
+          digit, human-readable text, high-contrast black on white, correct bar proportions,
+          Code 128B subset'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full barcode visible with proper scaling
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X-axis spans barcode width; Y-axis hidden (single-row barcode); data
+          mapping correct and complete
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A (no legend needed for barcode)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: barcode-code128 · highcharts · pyplots.ai'
+        comment: 'Title: ''barcode-code128 · python · highcharts · anyplot.ai'' correct
+          format; no legend needed (single-color barcode)'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows Code 128B encoding; could demonstrate subset switching for
-          bonus
+        comment: 'Shows all Code 128 aspects: quiet zones, all zone types (start/data/check/stop),
+          variable-width bars, human-readable text, technical encoding explanation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: SHIP-2024-ABC123 is a realistic shipping label format
+        comment: Content 'SHIP-2024-ABC123' is a realistic shipping label tracking
+          code — neutral, real-world logistics context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good proportions; bar widths properly scaled
+        comment: Implements actual Code 128B specification with correct character
+          table, checksum mod 103 algorithm, and standard bar proportions
     code_quality:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
-        max: 3
-        passed: true
-        comment: 'Linear flow: imports → encoding tables → data → plot → save'
-      - id: CQ-02
-        name: Reproducibility
-        score: 1
+        score: 2
         max: 3
         passed: false
-        comment: No random seed needed (deterministic encoding), but code uses helper
-          functions which slightly deviates from KISS
+        comment: One helper function `bx_to_px` defined — minor KISS violation; could
+          be inlined
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Deterministic barcode content; encoding algorithm fully deterministic;
+          no random data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: json, os, tempfile, time, urllib.request, pathlib.Path,
+          PIL.Image, selenium'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized encoding table; correct Code 128 implementation; no
+          over-engineering; HTML generation clean
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png (correct) but also saves plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Selenium
+          API with CDP metrics override
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses Highcharts renderer API for custom rectangle drawing and text
-          positioning; demonstrates low-level SVG capabilities
+        comment: 'Good Highcharts patterns: inline JS for headless Chrome, events.load
+          callback for renderer elements, xrange pointWidth control, hover states
+          disabled. Doesn''t use highcharts_core Python API (uses raw JS) which is
+          valid for this use case'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses Highcharts xrange series type (Highcharts-specific) for barcode
+          bars, SVG renderer API (renderer.text, renderer.rect) for custom annotations
+          — features not easily replicated in other charting libraries
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - html-export
-  - patches
-  patterns:
-  - data-generation
-  - iteration-over-groups
+  - annotations
+  patterns: []
   dataprep: []
   styling:
   - minimal-chrome

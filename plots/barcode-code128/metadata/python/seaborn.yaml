@@ -1,148 +1,183 @@
 library: seaborn
+language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:59:02Z'
-updated: '2026-01-19T11:07:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21134791901
+updated: '2026-05-21T01:11:18Z'
+generated_by: claude-sonnet
+workflow_run: 26198245943
 issue: 3809
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 84
 review:
   strengths:
-  - Implements full Code 128B encoding with correct start pattern, check digit calculation
-    (modulo 103), and stop pattern
-  - Creative use of seaborn heatmap to render binary barcode data
-  - Clean white background with high-contrast blue bars for scan reliability
-  - Proper quiet zones on both sides as required by spec
-  - Human-readable text below barcode for visual verification
-  - Correct title format following pyplots.ai conventions
+  - 'Perfect spec compliance: all required Code 128 structural elements (quiet zones,
+    start, data, check digit with modulo-103, stop, human-readable text) correctly
+    implemented.'
+  - Creative zone annotation strip using Okabe-Ito colors in canonical order explains
+    barcode structure, turning a raw barcode into an educational visualization.
+  - seaborn-distinctive sns.blend_palette(as_cmap=True) creates a theme-adaptive colormap
+    that adapts perfectly to both light and dark themes.
+  - 'Both renders pass legibility checks with no dark-on-dark failures; correct backgrounds
+    (#FAF8F1 light / #1A1A17 dark).'
+  - 'Perfect code quality and data quality: realistic shipping label scenario (SHIP-2024-ABC123),
+    deterministic, clean KISS structure.'
   weaknesses:
-  - The encoding tables are extensive (200+ lines) which adds complexity, though necessary
-    for proper Code 128 implementation
-  - Could leverage seaborn color palette features more distinctively
-  image_description: The plot displays a Code 128 barcode rendered using seaborn's
-    heatmap function. The barcode consists of blue (#306998) vertical bars on a white
-    background, representing the encoded string "SHIP-2024-ABC123". The title "barcode-code128
-    · seaborn · pyplots.ai" appears at the top in dark gray text. The human-readable
-    text "SHIP-2024-ABC123" is displayed below the barcode in blue monospace font.
-    The barcode includes proper quiet zones (white space) on both sides. The overall
-    layout is clean with the barcode well-centered and taking up appropriate canvas
-    space.
+  - Zone annotation labels for Start (11-bit zone) and Check digit (11-bit zone) are
+    not rendered because both fall below the 'width > 12' threshold — only colored
+    patches visible. Increase the threshold or widen zones so 'Start 128B' and 'Check
+    mod 103' labels display.
+  - Zone annotation text at 5.5pt may be borderline small when scaled to mobile widths
+    (~400px); consider increasing to 7pt.
+  - Most zone visualization logic (Rectangle patches, ax.text) is matplotlib-level
+    rather than seaborn-native, limiting Library Mastery score.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface.
+      Chrome: Title "barcode-code128 · python · seaborn · anyplot.ai" in dark ink, clearly readable. No axis tick labels (appropriate for barcode). "SHIP-2024-ABC123" in bold monospace below, clearly readable in dark text.
+      Data: Black bars on near-white background (theme-adaptive blend_palette maps 0→PAGE_BG, 1→INK). Zone annotation strip below with Okabe-Ito colors: gray quiet zones, green start, blue data region (labeled "Data region · 16 chars"), orange check digit, pink/purple stop (labeled "Stop").
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface.
+      Chrome: Title in light cream text, clearly readable. "SHIP-2024-ABC123" in light text, fully readable. No dark-on-dark failures.
+      Data: Barcode bars appear as warm cream/white on near-black background (theme-adaptive inversion via blend_palette). Zone annotation strip uses identical Okabe-Ito colors as light render — data colors consistent across themes. Zone labels in white text readable in blue data region.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and human-readable text are large and clearly readable
+        comment: All font sizes explicitly set (title 12pt, human-readable 10pt, zone
+          labels 5.5pt). Zone labels borderline small at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No text overlaps in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Barcode bars are clearly visible with proper contrast
+        comment: Barcode bars clearly visible in both themes; zone annotation strip
+          prominent.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue on white provides excellent contrast, colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout but barcode could use slightly more vertical presence
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for barcode (no axes needed, appropriately hidden)
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: High contrast barcode; Okabe-Ito zone colors are CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Good proportions, balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: N/A for barcode type
+        comment: No traditional axes needed; mandated title format correct; zone annotation
+          strip and human-readable text serve as informative labels.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Backgrounds correct (#FAF8F1/#1A1A17). Zone colors follow Okabe-Ito
+          canonical order. Both renders theme-correct.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: intentional multi-panel layout, seaborn blend_palette
+          for theme-adaptive colormap, Okabe-Ito for structural zones. Not publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines removed from both panels; no grid; fig.subplots_adjust
+          for fine layout control; generous whitespace.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Zone annotation strip creates visual narrative of barcode structure;
+          human-readable text connects abstract pattern to encoded content.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Code 128 barcode visualization
+        comment: Correct Code 128 barcode with all structural elements.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Alphanumeric content correctly encoded to binary pattern
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes quiet zones, start/stop patterns, check digit, human-readable
-          text
-      - id: SC-04
-        name: Data Range
+        comment: Quiet zones, start pattern, modulo-103 check digit, stop pattern,
+          human-readable text all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full barcode visible with proper margins
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: SHIP-2024-ABC123 correctly encoded via Code 128 subset B.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for barcode
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: barcode-code128 · seaborn · pyplots.ai'
+        comment: Title is exactly 'barcode-code128 · python · seaborn · anyplot.ai'.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows Code 128B encoding with realistic shipping label example
+        comment: All barcode zones represented with annotation labels.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: SHIP-2024-ABC123 is a realistic shipping label identifier
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Barcode proportions are acceptable but aspect ratio is slightly non-standard
+        comment: SHIP-2024-ABC123 is a highly realistic shipping label barcode matching
+          spec use-case.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 16-char content well within 48-char spec limit; correct Code 128
+          proportions.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -150,53 +185,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Linear script with imports, data, encoding, plot, save
+        comment: No functions/classes; linear imports→encoding→data→plot→save flow.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic encoding (no random data needed)
+        comment: Deterministic — hardcoded content string, no random state.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (matplotlib, numpy, seaborn)
+        comment: All four imports (os, matplotlib, numpy, seaborn) used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Large encoding dictionaries are necessary; algorithm clean; no fake
+          UI elements.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current seaborn API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: saves correctly but score reflects overall code assessment'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.heatmap, sns.set_theme, sns.despine, sns.blend_palette.
+          Zone annotation falls back to matplotlib level.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses seaborn heatmap creatively for barcode rendering with custom
-          binary colormap
+        comment: sns.blend_palette([PAGE_BG, INK], as_cmap=True) is seaborn-distinctive.
+          Most zone logic is matplotlib-level.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - subplots
   - annotations
+  - patches
   - custom-legend
   patterns:
-  - data-generation
   - matrix-construction
   - iteration-over-groups
+  - explicit-figure
   dataprep: []
   styling:
-  - minimal-chrome
   - custom-colormap
+  - minimal-chrome
+  - alpha-blending
