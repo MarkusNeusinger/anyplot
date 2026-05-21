@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-21
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-21
 """
 
 import os
