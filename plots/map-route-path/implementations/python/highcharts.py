@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-route-path: Route Path Map
-Library: highcharts | Python 3.13
-Quality: 90/100 | Updated: 2026-05-21
+Library: highcharts unknown | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-21
 """
 
 import json
