@@ -1,13 +1,22 @@
-""" pyplots.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
-Library: plotly 6.5.2 | Python 3.13.11
-Quality: 93/100 | Created: 2026-01-19
+Library: plotly | Python 3.13
+Quality: 93/100 | Updated: 2026-05-21
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 # Data - 6 metric tiles for a 3x2 dashboard layout
 np.random.seed(42)
@@ -74,15 +83,13 @@ for m in metrics:
     hist = np.array(m["history"])
     m["history_norm"] = (hist - hist.min()) / (hist.max() - hist.min() + 1e-6)
 
-# Colors
+# Status colors (semantic indicator colors for good/warning/critical)
 status_colors = {"good": "#22c55e", "warning": "#f59e0b", "critical": "#ef4444"}
-tile_bg = "#f8fafc"
-text_color = "#1e293b"
 
 # Grid layout: 3 columns x 2 rows
 n_cols, n_rows = 3, 2
 
-# Create subplots - use domain type for indicators (no axes)
+# Create subplots - indicator type for metric tiles
 fig = make_subplots(
     rows=n_rows,
     cols=n_cols,
@@ -96,22 +103,19 @@ for idx, metric in enumerate(metrics):
     row = idx // n_cols + 1
     col = idx % n_cols + 1
 
-    # Determine delta color - for "higher is bad" metrics, decreasing is green
+    # Delta colors respect direction semantics (decrease is good for CPU, bad for throughput)
     if metric["higher_is_bad"]:
-        delta_increasing_color = "#ef4444"  # Red when increasing
-        delta_decreasing_color = "#22c55e"  # Green when decreasing
+        delta_increasing_color = "#ef4444"
+        delta_decreasing_color = "#22c55e"
     else:
-        delta_increasing_color = "#22c55e"  # Green when increasing
-        delta_decreasing_color = "#ef4444"  # Red when decreasing
-
-    # Format value text
-    value_suffix = metric["unit"]
+        delta_increasing_color = "#22c55e"
+        delta_decreasing_color = "#ef4444"
 
     fig.add_trace(
         go.Indicator(
             mode="number+delta",
             value=metric["value"],
-            number=dict(font=dict(size=48, color=status_colors[metric["status"]]), suffix=value_suffix),
+            number=dict(font=dict(size=48, color=status_colors[metric["status"]]), suffix=metric["unit"]),
             delta=dict(
                 reference=metric["value"] / (1 + metric["change"] / 100),
                 relative=True,
@@ -120,19 +124,17 @@ for idx, metric in enumerate(metrics):
                 increasing=dict(color=delta_increasing_color, symbol="▲"),
                 decreasing=dict(color=delta_decreasing_color, symbol="▼"),
             ),
-            title=dict(text=metric["name"], font=dict(size=24, color=text_color)),
+            title=dict(text=metric["name"], font=dict(size=24, color=INK)),
         ),
         row=row,
         col=col,
     )
 
-# Add sparklines as scatter traces in background
-# First, update layout to add regular axes for sparklines
+# Add sparklines as scatter traces with custom axes
 for idx, metric in enumerate(metrics):
     row = idx // n_cols + 1
     col = idx % n_cols + 1
 
-    # Get the domain for this subplot
     if row == 1:
         y_domain = [0.55, 0.95]
     else:
@@ -145,23 +147,24 @@ for idx, metric in enumerate(metrics):
     else:
         x_domain = [0.72, 1.0]
 
-    # Add a new axis for the sparkline
-    axis_num = idx + 2  # Start from axis 2
+    axis_num = idx + 2
     x_axis = f"x{axis_num}"
     y_axis = f"y{axis_num}"
 
-    # Sparkline trace
     x_spark = list(range(len(metric["history_norm"])))
     y_spark = metric["history_norm"].tolist()
+
+    hex_color = status_colors[metric["status"]]
+    r, g, b = int(hex_color[1:3], 16), int(hex_color[3:5], 16), int(hex_color[5:7], 16)
 
     fig.add_trace(
         go.Scatter(
             x=x_spark,
             y=y_spark,
             mode="lines",
-            line=dict(color=status_colors[metric["status"]], width=2),
+            line=dict(color=hex_color, width=3),
             fill="tozeroy",
-            fillcolor=f"rgba{tuple([int(status_colors[metric['status']][i:i+2], 16) for i in (1, 3, 5)] + [0.15])}",
+            fillcolor=f"rgba({r}, {g}, {b}, 0.15)",
             showlegend=False,
             hoverinfo="skip",
             xaxis=x_axis,
@@ -169,7 +172,6 @@ for idx, metric in enumerate(metrics):
         )
     )
 
-    # Configure the axis
     sparkline_height = 0.12
     fig.update_layout(
         **{
@@ -194,7 +196,7 @@ for idx, metric in enumerate(metrics):
         }
     )
 
-# Add tile backgrounds
+# Add tile backgrounds as paper-referenced shapes
 for idx in range(len(metrics)):
     row = idx // n_cols + 1
     col = idx % n_cols + 1
@@ -219,27 +221,27 @@ for idx in range(len(metrics)):
         y0=y_domain[0],
         x1=x_domain[1],
         y1=y_domain[1],
-        fillcolor=tile_bg,
-        line=dict(color="#e2e8f0", width=2),
+        fillcolor=ELEVATED_BG,
+        line=dict(color=INK_SOFT, width=1),
         layer="below",
     )
 
-# Add title as annotation to ensure proper positioning
+# Title annotation
 fig.add_annotation(
-    text="dashboard-metrics-tiles · plotly · pyplots.ai",
+    text="dashboard-metrics-tiles · python · plotly · anyplot.ai",
     x=0.5,
-    y=1.08,
+    y=1.06,
     xref="paper",
     yref="paper",
     showarrow=False,
-    font=dict(size=28, color=text_color, family="Arial"),
+    font=dict(size=16, color=INK, family="Arial"),
     xanchor="center",
     yanchor="top",
 )
 
-# Update layout
-fig.update_layout(paper_bgcolor="white", margin=dict(l=40, r=40, t=100, b=40), showlegend=False)
+# Layout
+fig.update_layout(autosize=False, paper_bgcolor=PAGE_BG, margin=dict(l=40, r=40, t=80, b=40), showlegend=False)
 
 # Save
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
