@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-21
@@ -17,6 +17,9 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Sparkline fill alpha: brighter in dark mode to compensate for blending
+FILL_ALPHA = 0.15 if THEME == "light" else 0.28
 
 # Data - 6 metric tiles for a 3x2 dashboard layout
 np.random.seed(42)
@@ -83,8 +86,12 @@ for m in metrics:
     hist = np.array(m["history"])
     m["history_norm"] = (hist - hist.min()) / (hist.max() - hist.min() + 1e-6)
 
-# Status colors (semantic indicator colors for good/warning/critical)
+# Status config: color + shape symbol (CVD-safe: shape encodes status independently of color)
 status_colors = {"good": "#22c55e", "warning": "#f59e0b", "critical": "#ef4444"}
+# Shape symbols provide non-color differentiation for CVD viewers
+status_symbols = {"good": "✓", "warning": "⚠", "critical": "✕"}
+# Border thickness further reinforces status via shape/size cue
+status_border_widths = {"good": 1, "warning": 2, "critical": 3}
 
 # Grid layout: 3 columns x 2 rows
 n_cols, n_rows = 3, 2
@@ -111,6 +118,9 @@ for idx, metric in enumerate(metrics):
         delta_increasing_color = "#22c55e"
         delta_decreasing_color = "#ef4444"
 
+    # Include status symbol in label — provides shape cue independent of color for CVD viewers
+    label_with_symbol = f"{status_symbols[metric['status']]}  {metric['name']}"
+
     fig.add_trace(
         go.Indicator(
             mode="number+delta",
@@ -124,7 +134,7 @@ for idx, metric in enumerate(metrics):
                 increasing=dict(color=delta_increasing_color, symbol="▲"),
                 decreasing=dict(color=delta_decreasing_color, symbol="▼"),
             ),
-            title=dict(text=metric["name"], font=dict(size=24, color=INK)),
+            title=dict(text=label_with_symbol, font=dict(size=22, color=INK)),
         ),
         row=row,
         col=col,
@@ -164,7 +174,7 @@ for idx, metric in enumerate(metrics):
             mode="lines",
             line=dict(color=hex_color, width=3),
             fill="tozeroy",
-            fillcolor=f"rgba({r}, {g}, {b}, 0.15)",
+            fillcolor=f"rgba({r}, {g}, {b}, {FILL_ALPHA})",
             showlegend=False,
             hoverinfo="skip",
             xaxis=x_axis,
@@ -196,8 +206,8 @@ for idx, metric in enumerate(metrics):
         }
     )
 
-# Add tile backgrounds as paper-referenced shapes
-for idx in range(len(metrics)):
+# Add tile backgrounds with status-aware borders (thickness = additional shape cue for CVD)
+for idx, metric in enumerate(metrics):
     row = idx // n_cols + 1
     col = idx % n_cols + 1
 
@@ -213,6 +223,10 @@ for idx in range(len(metrics)):
     else:
         x_domain = [0.70, 1.0]
 
+    border_width = status_border_widths[metric["status"]]
+    status_color = status_colors[metric["status"]]
+
+    # Tile fill
     fig.add_shape(
         type="rect",
         xref="paper",
@@ -222,8 +236,23 @@ for idx in range(len(metrics)):
         x1=x_domain[1],
         y1=y_domain[1],
         fillcolor=ELEVATED_BG,
-        line=dict(color=INK_SOFT, width=1),
+        line=dict(color=status_color, width=border_width),
         layer="below",
+    )
+
+    # Status accent bar along the top edge of each tile (position cue + color cue)
+    bar_height = 0.012
+    fig.add_shape(
+        type="rect",
+        xref="paper",
+        yref="paper",
+        x0=x_domain[0],
+        y0=y_domain[1] - bar_height,
+        x1=x_domain[1],
+        y1=y_domain[1],
+        fillcolor=status_color,
+        line=dict(width=0),
+        layer="above",
     )
 
 # Title annotation
@@ -234,7 +263,7 @@ fig.add_annotation(
     xref="paper",
     yref="paper",
     showarrow=False,
-    font=dict(size=16, color=INK, family="Arial"),
+    font=dict(size=18, color=INK, family="Arial"),
     xanchor="center",
     yanchor="top",
 )
