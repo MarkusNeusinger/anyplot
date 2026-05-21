@@ -1,16 +1,22 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Created: 2026-05-21
 """
 
 import os
+import sys
+
+
+# Prevent this script from shadowing the installed 'plotnine' package
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if not (p and os.path.abspath(p) == _here)]
+os.chdir(_here)
 
 import pandas as pd
 from plotnine import (
     aes,
     annotate,
-    element_blank,
     element_rect,
     element_text,
     geom_rect,
@@ -19,7 +25,7 @@ from plotnine import (
     scale_x_continuous,
     scale_y_continuous,
     theme,
-    theme_minimal,
+    theme_void,
 )
 
 
@@ -27,6 +33,7 @@ THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+ACCENT = "#009E73"  # Okabe-Ito green for label header accent
 
 # Code 128 Subset B patterns (binary: 1=bar, 0=space), 11 modules each, symbols 0-102
 CODE128 = [
@@ -150,7 +157,7 @@ binary = START_B + "".join(CODE128[v] for v in symbol_vals) + CODE128[check] + S
 
 # Convert binary string to bar segments (group consecutive 1-runs)
 QUIET = 10
-BAR_Y1, BAR_Y2 = 0.28, 0.82
+BAR_Y1, BAR_Y2 = 0.31, 0.79
 
 bar_rows = []
 i = 0
@@ -169,32 +176,45 @@ while i < len(binary):
 total_w = float(x + QUIET)
 df_bars = pd.DataFrame(bar_rows)
 
-# White label background (barcode always black-on-white for contrast)
-df_bg = pd.DataFrame({"xmin": [2.0], "xmax": [total_w - 2.0], "ymin": [0.06], "ymax": [0.93]})
+LABEL_X1 = 2.0
+LABEL_X2 = total_w - 2.0
+LABEL_MID = total_w / 2
+
+# White label card (barcode always black-on-white for scan reliability)
+df_label = pd.DataFrame({"xmin": [LABEL_X1], "xmax": [LABEL_X2], "ymin": [0.05], "ymax": [0.95]})
+# Accent header strip for visual hierarchy
+df_header = pd.DataFrame({"xmin": [LABEL_X1], "xmax": [LABEL_X2], "ymin": [0.81], "ymax": [0.95]})
 
 plot = (
     ggplot()
     + geom_rect(
-        data=df_bg, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill="#FFFFFF", colour="none"
+        data=df_label, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill="#FFFFFF", colour="none"
     )
+    + geom_rect(
+        data=df_header, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill=ACCENT, colour="none"
+    )
+    + annotate("text", x=LABEL_MID, y=0.875, label="CODE 128 · SUBSET B", colour="#FFFFFF", size=7, family="monospace")
+    + annotate("segment", x=LABEL_X1, xend=LABEL_X2, y=0.81, yend=0.81, colour=INK_SOFT, size=0.4)
     + geom_rect(
         data=df_bars, mapping=aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax"), fill="#1A1A17", colour="none"
     )
-    + annotate("text", x=total_w / 2, y=0.15, label=text, colour="#1A1A17", size=9, family="monospace")
+    + annotate("text", x=LABEL_MID, y=0.20, label=text, colour="#1A1A17", size=9, family="monospace")
+    + annotate(
+        "text",
+        x=LABEL_MID,
+        y=0.10,
+        label="Code 128B · 18 characters · Mod-103 check digit",
+        colour=INK_SOFT,
+        size=6,
+        family="monospace",
+    )
     + scale_x_continuous(limits=(0, total_w), expand=(0, 0))
     + scale_y_continuous(limits=(0, 1), expand=(0, 0))
     + labs(title="Specimen Label · barcode-code128 · python · plotnine · anyplot.ai")
-    + theme_minimal()
+    + theme_void()
     + theme(
         figure_size=(8, 4.5),
         plot_background=element_rect(fill=PAGE_BG, colour=PAGE_BG),
-        panel_background=element_rect(fill=PAGE_BG),
-        panel_border=element_blank(),
-        panel_grid_major=element_blank(),
-        panel_grid_minor=element_blank(),
-        axis_text=element_blank(),
-        axis_ticks=element_blank(),
-        axis_title=element_blank(),
         plot_title=element_text(colour=INK, size=12, hjust=0.5),
     )
 )
