@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-21
@@ -274,7 +274,7 @@ df_text = pd.DataFrame([{"x": total_width_with_zones / 2, "y": -0.15, "text": co
 # Barcode bars — theme-adaptive INK color, tooltip shows encoded content
 bars_chart = (
     alt.Chart(df_bars)
-    .mark_rect(color=INK)
+    .mark_rect(color="#1A1A17")
     .encode(
         x=alt.X("x:Q", scale=alt.Scale(domain=[0, total_width_with_zones]), axis=None),
         x2="x2:Q",
@@ -287,7 +287,7 @@ bars_chart = (
 # Human-readable text below barcode
 text_chart = (
     alt.Chart(df_text)
-    .mark_text(fontSize=20, font="monospace", fontWeight="bold", color=INK)
+    .mark_text(fontSize=20, font="monospace", fontWeight="bold", color="#1A1A17")
     .encode(x="x:Q", y="y:Q", text="text:N")
 )
 
@@ -298,10 +298,10 @@ chart = (
         height=320,
         background=PAGE_BG,
         padding={"left": 0, "right": 0, "top": 0, "bottom": 0},
-        title=alt.Title("barcode-code128 · altair · pyplots.ai", fontSize=16, anchor="middle", color=INK),
+        title=alt.Title("barcode-code128 · python · altair · anyplot.ai", fontSize=16, anchor="middle", color=INK),
     )
     .interactive()
-    .configure_view(strokeWidth=0, fill=PAGE_BG, continuousWidth=620, continuousHeight=320)
+    .configure_view(strokeWidth=0, fill="#FAF8F1", continuousWidth=620, continuousHeight=320)
     .configure_title(color=INK)
 )
 
