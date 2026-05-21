@@ -1,23 +1,28 @@
-""" pyplots.ai
+"""anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-19
+Library: highcharts | Python 3.13
+Quality: pending | Created: 2026-05-21
 """
 
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Code 128 encoding tables
-# Each character is represented by a pattern of bar widths (alternating black/white)
-# Pattern format: 6 elements representing bar widths (1-4 units each)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Code 128 encoding tables (value: (pattern, Code A, Code B, Code C))
 CODE128_PATTERNS = {
-    # value: (pattern, Code A char, Code B char, Code C value)
     0: ("212222", " ", " ", "00"),
     1: ("222122", "!", "!", "01"),
     2: ("222221", '"', '"', "02"),
@@ -124,185 +129,144 @@ CODE128_PATTERNS = {
     103: ("211412", "START_A", "START_A", "START_A"),
     104: ("211214", "START_B", "START_B", "START_B"),
     105: ("211232", "START_C", "START_C", "START_C"),
-    106: ("2331112", "STOP", "STOP", "STOP"),  # Stop pattern is 7 elements
+    106: ("2331112", "STOP", "STOP", "STOP"),
 }
 
-# Build reverse lookup for Code B characters
-CODE_B_LOOKUP = {}
-for value, (_pattern, _char_a, char_b, _char_c) in CODE128_PATTERNS.items():
-    if value < 103:  # Exclude special codes
-        CODE_B_LOOKUP[char_b] = value
+# Reverse lookup: Code B character → value
+CODE_B_LOOKUP = {data[2]: val for val, data in CODE128_PATTERNS.items() if val < 103}
 
-
-def encode_code128(content):
-    """Encode a string to Code 128B barcode pattern."""
-    # Use Code 128B (standard ASCII printable characters)
-    values = [104]  # Start with Code B start character
-
-    # Encode each character
-    for char in content:
-        if char in CODE_B_LOOKUP:
-            values.append(CODE_B_LOOKUP[char])
-        else:
-            # For characters not in lookup, use space
-            values.append(0)
-
-    # Calculate check digit (modulo 103)
-    checksum = values[0]  # Start character
-    for i, value in enumerate(values[1:], start=1):
-        checksum += i * value
-    check_digit = checksum % 103
-    values.append(check_digit)
-
-    # Add stop character
-    values.append(106)
-
-    return values
-
-
-def values_to_bars(values):
-    """Convert Code 128 values to bar widths."""
-    bars = []
-    for value in values:
-        pattern = CODE128_PATTERNS[value][0]
-        for width in pattern:
-            bars.append(int(width))
-    return bars
-
-
-# Data - Code 128 barcode content
+# Data
 content = "SHIP-2024-ABC123"
 
-# Encode the content
-encoded_values = encode_code128(content)
-bar_widths = values_to_bars(encoded_values)
+# Encode to Code 128B: Start B → data chars → check digit → Stop
+values = [104]
+for char in content:
+    values.append(CODE_B_LOOKUP.get(char, 0))
+checksum = values[0]
+for i, v in enumerate(values[1:], 1):
+    checksum += i * v
+values.append(checksum % 103)
+values.append(106)
 
-# Convert bar widths to actual bar data for rendering
-# Each bar alternates between black and white, starting with black
+# Convert values to black bar positions (alternating black/white, start black)
 bars = []
 x_pos = 0
 is_black = True
-
-for width in bar_widths:
-    if is_black:
-        bars.append({"x": x_pos, "width": width, "color": "#000000"})
-    x_pos += width
-    is_black = not is_black
-
+for v in values:
+    for ch in CODE128_PATTERNS[v][0]:
+        width = int(ch)
+        if is_black:
+            bars.append({"x": x_pos, "width": width})
+        x_pos += width
+        is_black = not is_black
 total_barcode_width = x_pos
 
-# Chart dimensions
-chart_width = 4800
-chart_height = 2700
-
-# Calculate scaling to fit barcode nicely in chart
-quiet_zone = 400  # Quiet zones on each side
-available_width = chart_width - (2 * quiet_zone)
-scale_factor = available_width / total_barcode_width
-
-# Barcode dimensions on chart
-bar_height = 1400
-bar_top = 500  # Y position for top of bars
-
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+# Download Highcharts JS (must be inline for headless Chrome)
+highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/12.2.0/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Build JavaScript to render barcode bars as rectangles
-bars_js = ""
+# Canvas and layout constants
+W, H = 3200, 1800
+quiet_zone = 300
+available_width = W - 2 * quiet_zone
+scale = available_width / total_barcode_width
+
+bar_height = 820
+bar_top = 380
+bg_pad = 50
+text_y = bar_top + bar_height + 100
+
+# Build JavaScript rect calls for each black bar
+rect_calls = []
 for bar in bars:
-    scaled_x = quiet_zone + (bar["x"] * scale_factor)
-    scaled_width = max(bar["width"] * scale_factor, 3)  # Minimum 3px for visibility
-    bars_js += f"""
-    chart.renderer.rect({scaled_x}, {bar_top}, {scaled_width}, {bar_height}, 0)
-        .attr({{fill: '{bar["color"]}', 'stroke-width': 0}})
-        .add();
-    """
+    x = quiet_zone + bar["x"] * scale
+    w = max(bar["width"] * scale, 2.0)
+    rect_calls.append(
+        f"chart.renderer.rect({x:.1f},{bar_top},{w:.1f},{bar_height},0)"
+        f".attr({{fill:'#000000','stroke-width':0}}).add();"
+    )
+bars_js = "\n                        ".join(rect_calls)
 
-# Human-readable text position
-text_y = bar_top + bar_height + 120
-text_x = chart_width / 2
-
-# Generate HTML with Highcharts
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
-    <style>
-        body {{ margin: 0; padding: 0; background: #ffffff; }}
-        #container {{ width: 4800px; height: 2700px; }}
-    </style>
 </head>
-<body>
-    <div id="container"></div>
+<body style="margin:0;padding:0;background:{PAGE_BG};">
+    <div id="container" style="width:{W}px;height:{H}px;"></div>
     <script>
         var chart = Highcharts.chart('container', {{
             chart: {{
-                width: 4800,
-                height: 2700,
-                backgroundColor: '#ffffff',
+                width: {W},
+                height: {H},
+                backgroundColor: '{PAGE_BG}',
+                margin: [160, 0, 80, 0],
                 events: {{
                     load: function() {{
                         var chart = this;
-                        // Render barcode bars as rectangles
+                        chart.renderer.rect({quiet_zone - bg_pad},{bar_top - bg_pad},{available_width + 2 * bg_pad},{bar_height + 2 * bg_pad + 120},6)
+                            .attr({{fill:'#FFFFFF','stroke-width':1,stroke:'#DDDDCC'}})
+                            .add();
                         {bars_js}
-                        // Add human-readable text
-                        chart.renderer.text('{content}', {text_x}, {text_y})
-                            .attr({{align: 'center'}})
-                            .css({{
-                                fontSize: '72px',
-                                fontFamily: '"Courier New", Courier, monospace',
-                                fontWeight: 'bold',
-                                color: '#000000',
-                                letterSpacing: '8px'
-                            }})
+                        chart.renderer.text('{content}', {W // 2}, {text_y})
+                            .attr({{align:'center'}})
+                            .css({{fontSize:'52px',fontFamily:'"Courier New",Courier,monospace',fontWeight:'bold',color:'#000000',letterSpacing:'6px'}})
+                            .add();
+                        chart.renderer.text('Code 128B · Shipping Label · Check digit: mod 103', {W // 2}, {H - 80})
+                            .attr({{align:'center'}})
+                            .css({{fontSize:'38px',color:'{INK_SOFT}'}})
                             .add();
                     }}
                 }}
             }},
             title: {{
-                text: 'barcode-code128 \\u00b7 highcharts \\u00b7 pyplots.ai',
-                style: {{fontSize: '48px', fontWeight: 'bold', color: '#333333'}},
-                y: 100
-            }},
-            subtitle: {{
-                text: 'Code 128 Barcode Visualization',
-                style: {{fontSize: '32px', color: '#666666'}},
-                y: 160
+                text: 'barcode-code128 · python · highcharts · anyplot.ai',
+                style: {{fontSize:'56px',fontWeight:'bold',color:'{INK}'}},
+                margin: 40
             }},
             credits: {{enabled: false}},
             legend: {{enabled: false}},
             xAxis: {{visible: false}},
-            yAxis: {{visible: false}}
+            yAxis: {{visible: false}},
+            series: []
         }});
     </script>
 </body>
 </html>"""
 
-# Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Write temp HTML for screenshot
+# Screenshot via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Take screenshot with Selenium
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument(f"--window-size={W},{H}")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Clean up temp file
 Path(temp_path).unlink()
+
+# Normalize to exact canvas dimensions
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.size != (W, H):
+    norm = Image.new("RGB", (W, H), PAGE_BG)
+    norm.paste(img, ((W - img.size[0]) // 2, (H - img.size[1]) // 2))
+    norm.save(f"plot-{THEME}.png")
