@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:29:08Z'
-updated: '2026-05-21T02:04:59Z'
+updated: '2026-05-21T02:16:05Z'
 generated_by: claude-sonnet
 workflow_run: 26200624632
 issue: 3808
@@ -12,45 +12,38 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-e
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/altair/plot-dark.html
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - Technically correct EAN-13 encoding from scratch — L-codes, G-codes, R-codes,
-    and first-digit parity patterns all match the standard; guard pattern height differentiation
-    (y2=1.1 vs 1.0) is faithful to spec
-  - 'Perfect theme adaptation: bars, background, title, and digit labels all use proper
-    INK tokens; dark render correctly inverts chrome with bars using off-white INK
-    on near-black surface'
-  - Clean flat code with well-organized encoding tables; no unnecessary abstraction;
-    deterministic and reproducible
-  - mark_rect with x2/y2 encoding is the idiomatic Altair approach for variable-width
-    bar shapes; layer composition (bars_chart + text_chart) is idiomatic Altair
+  - Correct and complete EAN-13 encoding with all structural elements (guard bars,
+    L/G/R codes, first-digit pattern table, quiet zones)
+  - Excellent monospace font choice for digit labels and zone annotations — contextually
+    authentic
+  - Zone annotations above barcode actively teach EAN-13 anatomy (Country/Mfr vs Product/Check),
+    elevating from raw barcode to educational visualization
+  - Full theme-adaptive chrome in both renders; no dark-on-dark failures
+  - Canvas padding block correctly implemented inline per library rules
   weaknesses:
-  - 'Vertical composition is slightly top-heavy: approximately 25-30% of the 1800px
-    canvas height is blank below the digit labels; centering the barcode+digits block
-    vertically on the canvas would improve balance (adjust y scale domain or add bottom
-    padding offset)'
-  - No visual annotation of EAN-13 structural zones (country code, manufacturer code,
-    product code, check digit) — even a small text callout per zone would significantly
-    improve data storytelling (DE-03)
-  - Digit fontSize=16 (64 source-px at scale=4) is adequate but on the smaller end
-    given the 3200px canvas width — consider 18-20 for slightly better mobile readability
-    at 400px scaled width
+  - Notable empty space in bottom ~30% of 16:9 canvas below digit labels — barcode
+    floats in upper 70% leaving a visible gap; consider adding a footer annotation
+    or better vertical balance
+  - Zone annotation font size (12px Altair units) renders at ~6px at mobile width
+    (~400px) — increase fontSize from 12 to 14 for improved mobile legibility
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface, not pure white
-      Chrome: Title "barcode-ean13 · python · altair · anyplot.ai" in dark #1A1A17 ink, clearly readable at top; digit labels "4", "006381", "333931" in bold monospace #1A1A17, clearly readable below barcode; no axis labels or tick labels (appropriate)
-      Data: Barcode bars rendered in #1A1A17 (near-black) on off-white background; guard patterns (start/center/end) are taller than data bars; bars contrast sharply with background
-      Legibility verdict: PASS — all text clearly readable against light background; no light-on-light failures
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "barcode-ean13 · python · altair · anyplot.ai" centered in dark bold text — fully readable. Zone annotations "Country · Mfr (006381)" and "Product · Check (333931)" in muted INK_SOFT monospace — readable. Digit labels "4", "006381", "333931" in bold monospace dark text — clearly readable.
+      Data: Dark (#1A1A17) vertical bars of varying widths on off-white background. Guard bars (start/center/end) rendered taller than data bars. Quiet zones on both sides. First digit "4" positioned outside the left guard.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
-      Chrome: Title in #F0EFE8 (off-white) ink, clearly readable; digit labels in same off-white, bold and legible; no dark-on-dark failures observed
-      Data: Barcode bars rendered in #F0EFE8 (cream/off-white) — visually "inverted" appearance on dark background; bar widths and positions identical to light render; only chrome flips, data structure preserved
-      Legibility verdict: PASS — all text clearly readable against dark background; no dark-on-dark text failures
+      Background: Warm near-black #1A1A17 — correct theme surface
+      Chrome: Title in light off-white text (#F0EFE8) — fully readable. Zone annotations in lighter muted INK_SOFT dark-mode value — readable. Digit labels in light bold monospace text — clearly readable. No dark-on-dark failures detected.
+      Data: Colors correctly inverted — bars render in light off-white (#F0EFE8) on dark background, maintaining barcode structure. Data colors adapt with INK theme token as designed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -58,51 +51,53 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title and digit labels clear in both themes; digit fontSize=16 (64
-          source-px at scale=4) is adequate but could be marginally larger for sub-400px
-          mobile scaling
+        comment: Font sizes explicitly set (title=16, digits=18, zones=12). All readable
+          at full resolution in both themes. Zone annotation text (12px) is slightly
+          small at mobile scale (~6px at 400px width).
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No collisions between digit labels, title, or barcode elements
+        comment: No overlapping elements. Digit labels, zone annotations, and title
+          are well-spaced.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Bars clearly visible at maximum contrast; guard patterns taller than
-          data bars correctly distinguished
+        comment: Barcode bars clearly visible in both themes. Guard bars taller than
+          data bars as intended.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Binary black/white barcode maximizes contrast; CVD-safe by design
+        comment: High contrast monochrome barcode. INK/background pairs well above
+          WCAG AA. CVD-safe (monochrome).
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 2
         max: 4
         passed: true
-        comment: 3200x1800 canvas correct; ~25-30% blank canvas below digit row creates
-          slightly top-heavy vertical composition
+        comment: Barcode content covers ~42% of canvas area. Notable empty whitespace
+          in bottom ~30% below digit labels.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels (appropriate for barcode); title matches mandated
-          format exactly
+        comment: No axes (appropriate for barcode). Title correctly formatted. Zone
+          annotations serve as structural labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Background #FAF8F1/#1A1A17 correct; bars use INK token theme-adaptively;
-          Okabe-Ito N/A for binary functional encoding'
+        comment: 'Monochrome barcode uses INK theme token. Background #FAF8F1 (light)
+          / #1A1A17 (dark). Chrome tokens correctly theme-adaptive in both renders.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -110,24 +105,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Warm background (not pure white/black) is deliberate and correct;
-          clean minimal layout; no color-coding of structural zones that would add
-          sophistication
+        comment: Monospace font choice is intentional and contextually appropriate.
+          INK vs INK_SOFT hierarchy between primary digits and zone labels shows design
+          thought. Professional appearance.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Axes suppressed (axis=None) appropriate; guard-bar height differentiation
-          (y2=1.1 vs 1.0) shows attention to spec anatomy; quiet zones properly implemented
+        comment: 'Clean: no axes, no grid, no spines. Guard bar height differentiation
+          is a refined structural detail. Quiet zone whitespace respected.'
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Functional barcode rendered correctly but no visual annotation of
-          structural zones or encoding explanation; first digit outside guard is the
-          only nod to EAN-13 anatomy
+        passed: true
+        comment: Zone annotations educate viewer on EAN-13 anatomy. First digit outside
+          guard mirrors real barcode presentation. Guard bars taller than data bars
+          communicates structure.
     spec_compliance:
       score: 15
       max: 15
@@ -137,28 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct EAN-13 linear barcode with all required structural elements
+        comment: Correct EAN-13 with start guard, L/G encoding, center guard, R-code
+          encoding, end guard.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Quiet zones (9 modules each side), start guard (101), center guard
-          (01010), end guard (101), L/G/R code encoding, check digit handling
+        comment: Quiet zones (9 modules), start/center/end guards, bar width ratios
+          1-4, human-readable digits, first digit outside guard.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 4006381333931 correctly split; LGLLGG pattern for first digit 4;
-          L/G/R encoding tables verified against EAN-13 standard
+        comment: German product code 4006381333931 correctly encoded. All 13 digits
+          represented.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: barcode-ean13 · python · altair · anyplot.ai — correct; no legend
-          needed
+        comment: Title is exactly 'barcode-ean13 · python · altair · anyplot.ai'.
+          No legend needed.
     data_quality:
       score: 15
       max: 15
@@ -168,23 +164,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All EAN-13 structural elements: start/center/end guards, L-codes,
-          G-codes, R-codes, first-digit pattern table, human-readable digit display,
-          quiet zones'
+        comment: 'Shows all EAN-13 structural elements: guard patterns, L/G encoding,
+          R-code, first-digit pattern table, height differentiation.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 4006381333931 is a real German-origin GS1 EAN-13 barcode (country
-          prefix 4); neutral and plausible retail context
+        comment: Real German product EAN-13 barcode. Neutral commercial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Module-unit sizing; correct 7-module-per-digit encoding with standard
-          1-4 module width ratios
+        comment: EAN-13 structure is factually correct. First digit '4' = GS1 Germany
+          prefix. Check digit validation logic correct.
     code_quality:
       score: 10
       max: 10
@@ -194,35 +188,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes; encoding logic implemented
-          inline using dictionaries
+        comment: 'Linear structure: imports -> data -> plot -> save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Hardcoded deterministic barcode string; no randomness
+        comment: Deterministic hardcoded EAN-13 code. No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, pandas, PIL.Image — all used
+        comment: 'All imports used: os/sys (theme + path fix), altair, pandas, PIL.Image
+          (canvas padding).'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Encoding tables clearly organized; alternating bar/space via is_bar
-          flag is idiomatic; guard pattern construction uses indexed modulo correctly
+        comment: sys.path manipulation justified. EAN-13 encoding via lookup tables
+          is clean. No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html; PIL canvas padding
-          to exact 3200x1800; current Altair API
-    library_features:
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
+          API. Canvas padding inline.
+    library_mastery:
       score: 7
       max: 10
       items:
@@ -231,23 +226,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: mark_rect with x2/y2 encoding is correct Altair approach for custom
-          rectangles; layer composition is idiomatic; proper :Q/:N typing; axis=None
-          for no-axis display
+        comment: mark_rect with x/x2/y/y2 encodings for precise bars. Layer composition
+          via + operator. alt.Scale(domain=) for axis control.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: mark_rect with dual x/x2 and y/y2 encodings is a distinctive Altair
-          strength; alt.Scale(domain=...) for alignment; alt.Title with offset; limited
-          broader use of Altair's grammar-of-graphics expressiveness
+        comment: Layer composition (+ operator) combining bars + digit labels + zone
+          annotations. HTML output alongside PNG. Rect-with-x2y2 pattern for precise
+          barcode bars.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - layer-composition
+  - annotations
   - html-export
   patterns:
   - iteration-over-groups
