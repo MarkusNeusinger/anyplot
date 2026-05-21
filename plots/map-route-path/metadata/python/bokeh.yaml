@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: map-route-path
 created: '2026-01-19T17:53:54Z'
-updated: '2026-05-21T05:48:36Z'
+updated: '2026-05-21T06:03:36Z'
 generated_by: claude-sonnet
 workflow_run: 26207466934
 issue: 3768
@@ -12,49 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/bokeh/plot-dark.html
-quality_score: 82
+quality_score: 90
 review:
   strengths:
-  - Bokeh tile map integration via add_tile() with theme-appropriate CartoDB Positron
-    (light) and Dark Matter (dark) basemaps — a genuinely distinctive bokeh geo feature
-  - Correct Web Mercator projection conversion (lat/lon → x/y) enabling accurate basemap
-    alignment
-  - Full theme-adaptive chrome with all text, tick, grid, and legend elements mapped
-    to INK/INK_SOFT tokens — both renders are clean
-  - Good use of ColumnDataSource with explicit color arrays, proper min_border reservations
-    preventing label clipping
-  - Viridis gradient on waypoints combined with green route line and distinct Okabe-Ito
-    start/end markers creates visual interest
-  - CaptureScreenshot with captureBeyondViewport:true correctly handles the Selenium
-    viewport gap for this canvas size
+  - Theme-aware CartoDB basemap switching (Positron for light, Dark Matter for dark)
+    is elegant and fully automatic based on ANYPLOT_THEME
+  - Dual encoding — green route line for connectivity + viridis gradient dots for
+    progression — is intentional and effective
+  - 'Full chrome token coverage: title, axis labels, ticks, legend, colorbar all use
+    INK/INK_SOFT tokens throughout both themes'
+  - Geographically accurate RMNP coordinates with plausible trail meander and realistic
+    scale
+  - 'captureBeyondViewport: True CDP approach correctly captures the full 3200x1800
+    canvas'
   weaknesses:
-  - Viridis waypoint gradient has no colorbar — viewers cannot decode what purple-to-yellow
-    encodes (distance? time? elevation?). Add a ColorBar mapped to waypoint index
-    or timestamp.
-  - Simulated route self-intersects multiple times due to np.sin(10*pi*t) and np.sin(7*pi*t)
-    creating Lissajous-like loops — no real GPS hiking trail crosses its own path
-    3+ times. Use a monotonically-offset meander (e.g. sin amplitude decays or use
-    a single-frequency meander that stays within a corridor).
-  - 'DE-03 storytelling is incomplete without the colorbar: the gradient tells no
-    decipherable story and viewers must guess the progression direction beyond the
-    Start/End labels.'
-  - Grid alpha=0.06 is very low for a basemap overlay — slightly increasing to 0.08-0.10
-    for the dark theme would improve grid visibility on the near-black tile.
+  - Colorbar major labels at 28pt are slightly smaller than the main tick labels at
+    34pt — a minor chrome hierarchy inconsistency; unify to 34pt for perfect balance
+  - The green route line (#009E73) is visually overridden by the viridis dots stacked
+    on top; consider drawing the dots first (or reducing dot alpha slightly) so the
+    green line remains visible as a separate layer
+  - 'DE-01 held back (5/8): no directional arrows along the trail path and no distance
+    markers — adding even optional direction glyphs would elevate the storytelling'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) visible at the canvas borders; CartoDB Positron basemap (light teal/mint) fills the chart area with muted road and terrain detail.
-      Chrome: Title "Rocky Mountain Trail · map-route-path · python · bokeh · anyplot.ai" renders in near-black (INK) and spans ~85% of the plot width — expected for the long mandated format. X-axis label "Longitude" and Y-axis label "Latitude" are clearly visible in dark INK. Tick labels (geographic coordinates ~−105.7 to ~−105.63 on X; ~40.345 to ~40.37 on Y) render in INK_SOFT and are readable. Legend in top-right corner shows "Start" (green circle) and "End" (orange square) with small but legible text.
-      Data: Green (#009E73) route line (5px width) traces the full 200-waypoint path. Viridis256-colored waypoint dots (size=12) overlay the line, progressing purple→teal→green→yellow from start to end. Large green circle marks the trail start (lower-left); large orange square marks the end (upper-right). Route exhibits multiple self-intersecting loops due to the oscillating meander function.
-      Legibility verdict: PASS — all chrome and data elements are readable against the light background.
+      Background: Warm off-white border (#FAF8F1) surrounding CartoDB Positron basemap tile (cream/light-grey terrain)
+      Chrome: Title "Rocky Mountain Trail · map-route-path · python · bokeh · anyplot.ai" in dark ink at top — fully readable. Axis labels "Longitude" (x) and "Latitude" (y) in dark ink, tick labels in INK_SOFT. Colorbar "Trail Progress (%)" with 28pt labels, legend "Start"/"End" entries both readable.
+      Data: Green route line (#009E73) tracing SW→NE path. 200 viridis-gradient dots (deep purple at start → teal → yellow-green at end). Large green circle start marker (lower-left, lat≈40.343, lon≈-105.683), large orange square end marker (upper-right, lat≈40.370, lon≈-105.645). Viridis colorbar 0–100% on right.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Near-black (#1A1A17) at the canvas borders; CartoDB Dark Matter basemap (very dark, almost pure black) fills the chart area with faint gray road/terrain lines.
-      Chrome: Title renders in light (#F0EFE8) text — clearly readable. Axis labels "Longitude" and "Latitude" appear in light INK. Tick labels appear in INK_SOFT (#B8B7B0 gray) — readable against the dark background. No dark-on-dark text failures detected. Legend renders with ELEVATED_BG (#242420) fill and INK_SOFT label text — legible.
-      Data: Route line, waypoint dots, and start/end markers are visually identical in color to the light render (#009E73 green, Viridis256 gradient, #D55E00 orange square). The darker basemap provides better contrast for the bright yellow/green viridis portion of the gradient.
-      Legibility verdict: PASS — both themes render all elements legibly with no dark-on-dark failures.
+      Background: Near-black border (#1A1A17) surrounding CartoDB Dark Matter basemap tile (near-black terrain with light grey road/water features)
+      Chrome: Title, axis labels, tick labels all render in light-ink tokens (#F0EFE8 / #B8B7B0) — clearly readable against dark background. Legend and colorbar labels in INK_SOFT light tokens. No dark-on-dark text failures detected.
+      Data: Data colors are pixel-for-pixel identical to light render — green route line, viridis gradient dots, green start circle, orange-red end square all unchanged. Theme-switch from Positron to Dark Matter basemap is smooth.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -63,53 +56,49 @@ review:
         max: 8
         passed: true
         comment: 'All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks/legend). Readable in both themes. Minor: legend text appears compact
-          in top-right corner.'
+          ticks, 34pt legend). Minor: colorbar labels at 28pt slightly undersized
+          vs 34pt tick labels.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps. Route line and waypoints don't interfere with labels.
+        comment: No overlapping text. Legend and colorbar don't conflict.
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Route line and markers clearly visible. Viridis dots (size=12) are
-          adequate for 200 waypoints. Dark purple viridis dots near trail start blend
-          slightly with the light basemap tiles.
+        comment: Route line width 5, waypoint dots size 12, terminal markers size
+          32 — well-adapted to 200 waypoints.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis is perceptually uniform and colorblind-safe. Okabe-Ito for
-          start/end markers provides good contrast.
+        comment: Okabe-Ito categorical, Viridis continuous. Colorblind-safe.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Proper min_border reservations prevent
-          label clipping. Basemap fills chart area well.
+        comment: Plot fills ~75% of canvas. Balanced margins. Colorbar and legend
+          well-placed.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude and Latitude are descriptive geographic labels. Title format
-          correct with descriptive prefix.
+        comment: Longitude and Latitude are descriptive for geographic coordinates.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Route line #009E73 (Okabe-Ito #1). End marker #D55E00 (Okabe-Ito
-          #2). Viridis256 for continuous gradient. Backgrounds #FAF8F1/#1A1A17. Both
-          theme chromes correct.'
+        comment: 'Route line #009E73 (pos 1), end marker #D55E00 (pos 2). Viridis
+          for continuous. Backgrounds #FAF8F1 light / #1A1A17 dark. Both themes correct.'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -117,30 +106,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Theme-appropriate basemap selection (CartoDB Positron/Dark Matter)
-          is a deliberate aesthetic choice that adds significant visual context. Viridis
-          gradient combined with green route line and Okabe-Ito start/end markers
-          shows intentional design layering. Above default (4) but missing colorbar
-          reduces sophistication.
+        comment: 'CartoDB theme-aware basemap switching is elegant. Dual encoding
+          (line + gradient dots) shows intentional design. Not quite publication-ready:
+          green route line hidden by dots, no directional cues.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Minimal grid (alpha=0.06) over basemap is appropriately restrained.
-          Carefully set min_border values. Legend styled with ELEVATED_BG and INK_SOFT.
-          Moderate refinement above default.
+        comment: Very subtle grid (alpha 0.06-0.09). Full chrome theming. Spines retained
+          (appropriate for map frame). Solid refinement.
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: Start/end markers communicate journey direction. Viridis gradient
-          implies progression but without a colorbar cannot communicate the actual
-          progression story. Self-intersecting route loops undermine the visual narrative
-          of a coherent hiking journey.
+        passed: true
+        comment: Viridis progression (purple→yellow) communicates trail direction.
+          Start/end markers create focal anchors. Route shape suggests terrain-following
+          path.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -148,56 +133,53 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct geographic route path map with basemap and connected waypoints.
+        comment: 'Correct: route path map with connected waypoints on geographic basemap.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Route line connecting waypoints ✓, distinct start/end markers ✓,
-          color gradient along path ✓, geographic basemap ✓. Missing: no colorbar
-          to make the gradient interpretable as ''time progression''.'
+        comment: Sequential connection, start/end markers with different shapes, viridis
+          gradient, CartoDB basemap, HTML output all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly mapped via Web Mercator projection. All 200 waypoints
-          shown.
+        comment: Longitude→X (Mercator), Latitude→Y (Mercator). All 200 waypoints
+          visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Rocky Mountain Trail · map-route-path · python · bokeh · anyplot.ai'
-          matches required format. Legend shows Start/End correctly.
+        comment: Title matches {Descriptive} · {spec-id} · python · bokeh · anyplot.ai
+          format. Legend Start/End correct.
     data_quality:
-      score: 12
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows route path, start/end markers, gradient progression, basemap
-          geographic context. Missing colorbar prevents full demonstration of the
-          time/progression feature.
+        comment: 'Shows all features: path connectivity, progression gradient, terminal
+          markers, basemap context, colorbar scale.'
       - id: DQ-02
         name: Realistic Context
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Rocky Mountain National Park context is plausible. However, the trail
-          self-intersects 3+ times due to np.sin(10*pi*t) oscillations — no real GPS
-          hiking track crosses its own path repeatedly like this.
+        comment: Rocky Mountain NP hiking trail — real, neutral, geographically accurate
+          coordinates.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Coordinates (40.343N, 105.683W) are accurate for Rocky Mountain National
-          Park. 200 waypoints is appropriate for a smooth GPS track.
+        comment: Trail ~4km east, ~2.7km north — plausible hiking segment. RMNP lat/lon
+          range correct.
     code_quality:
       score: 10
       max: 10
@@ -207,34 +189,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential script: imports → data → figure → render → save.'
+        comment: 'Flat: sys.path fix → tokens → data → figure → layers → save.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: base64, os, time, pathlib, numpy, bokeh modules,
-          selenium.'
+        comment: All imports used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. CDP captureBeyondViewport is a valid workaround
-          for the Selenium viewport gap.
+        comment: sys.path fix documented. captureBeyondViewport CDP approach elegant.
+          Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png using current bokeh
-          API.
+        comment: Saves plot-{THEME}.html and plot-{THEME}.png for both themes.
     library_mastery:
       score: 8
       max: 10
@@ -244,23 +224,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'ColumnDataSource, figure(), add_tile(), add_layout() for title,
-          mercator axis types — idiomatic bokeh geo patterns. Minor: Title object
-          via add_layout is slightly less idiomatic than figure(title=...) for simple
-          titles.'
+        comment: ColumnDataSource, LinearColorMapper, ColorBar, Title layout, add_tile
+          — all idiomatic Bokeh for geo visualization.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: add_tile() with CartoDB tile providers and x_axis_type/y_axis_type='mercator'
-          are genuinely distinctive bokeh features for geographic visualization not
-          available in matplotlib/seaborn/plotnine.
-  verdict: REJECTED
+        comment: Theme-aware tile switching (Positron vs Dark Matter) is distinctively
+          Bokeh. LinearColorMapper+ColorBar with full chrome theming. CDP captureBeyondViewport
+          demonstrates deep ecosystem knowledge.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
+  - colorbar
   - html-export
   patterns:
   - data-generation
