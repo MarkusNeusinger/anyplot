@@ -425,8 +425,10 @@ def _strategy_bands(
 
     if strategy == "triadic":
         # 3 primary anchors at positions 0-2 + 3 midpoints at 3-5 (filling the
-        # gaps between primaries) + one extra fill at +30°. Reads as triadic
-        # because the first three are the bones; the rest are harmonic infill.
+        # gaps between primaries). Position 6 is left unconstrained so the
+        # algorithm picks the biggest remaining hue gap under the ≥60% diversity
+        # mask — the old hardcoded brand+30° filler landed at H=196° (cyan)
+        # which was only 29° from brand-green and 35° from the brand+60° azure.
         # Very tight 4° bands at primaries (positions 1-2) so the algorithm
         # cannot drift to ≈305° where split-comp and balanced both land — at
         # H_STEP=5° this snaps to ±1 grid hue. Filler bands stay at 12°.
@@ -437,17 +439,22 @@ def _strategy_bands(
             (brand_hue + 60) % 360,
             (brand_hue + 180) % 360,
             (brand_hue + 300) % 360,
-            (brand_hue + 30) % 360,
         ]
-        widths = [12, 4, 4, 12, 12, 12, 12]
-        return [[(t, w)] for t, w in zip(targets, widths)][:n_hues]
+        widths = [12, 4, 4, 12, 12, 12]
+        bands: list[list[tuple[float, float]] | None] = [
+            [(t, w)] for t, w in zip(targets, widths)
+        ]
+        bands.append(None)  # position 6: free pick
+        return bands[:n_hues]
 
     if strategy == "split-comp":
         # brand + two split anchors (±150°/210°) at positions 0-2; positions
-        # 3-6 fill the four non-anchor quadrants so each hue is unique. Very
-        # tight 4° bands at primaries to keep them clearly magenta + red
-        # rather than the purple+orange-red that triadic and balanced also
-        # converge on.
+        # 3-5 fill three of the four non-anchor quadrants. Position 6 is
+        # left free for the algorithm to fill the largest remaining hue gap
+        # (otherwise the hardcoded brand+300° would land at H=106° = lime,
+        # close to brand-green). Very tight 4° bands at primaries to keep
+        # them clearly magenta + red rather than the purple+orange-red that
+        # triadic and balanced also converge on.
         targets = [
             brand_hue,
             (brand_hue + 150) % 360,
@@ -455,10 +462,13 @@ def _strategy_bands(
             (brand_hue + 90) % 360,
             (brand_hue + 270) % 360,
             (brand_hue + 60) % 360,
-            (brand_hue + 300) % 360,
         ]
-        widths = [12, 4, 4, 12, 12, 12, 12]
-        return [[(t, w)] for t, w in zip(targets, widths)][:n_hues]
+        widths = [12, 4, 4, 12, 12, 12]
+        bands: list[list[tuple[float, float]] | None] = [
+            [(t, w)] for t, w in zip(targets, widths)
+        ]
+        bands.append(None)  # position 6: free pick
+        return bands[:n_hues]
 
     if strategy == "balanced":
         # No hue rule at any position; the hue-diversity penalty at score time
