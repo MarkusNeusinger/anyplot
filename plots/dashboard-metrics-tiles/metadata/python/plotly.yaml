@@ -1,212 +1,272 @@
 library: plotly
+language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:12:33Z'
-updated: '2026-01-19T13:15:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21138482791
+updated: '2026-05-21T03:36:38Z'
+generated_by: claude-sonnet
+workflow_run: 26203175032
 issue: 3791
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/plotly/plot.html
-quality_score: 93
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/plotly/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent use of Plotly go.Indicator for displaying metrics with built-in delta
-    formatting
-  - Smart handling of higher_is_bad logic for delta colors (e.g., CPU decrease is
-    green, but Disk I/O decrease is red)
-  - Clean tile backgrounds using paper-referenced shapes
-  - Sparklines implemented as separate scatter traces with area fill, properly positioned
-    within each tile
-  - Correct title format positioned as annotation
-  - Generates both PNG and HTML output for interactivity
+  - 'Full spec compliance: all 6 metric tiles include KPI value, sparkline, change
+    indicator with directional arrows, and status symbols'
+  - 'CVD-safe multi-cue status encoding: color + shape symbol (✓/⚠/✕) + border thickness
+    independently encode status for colorblind viewers'
+  - Correct canvas dimensions (3200×1800, width=800 height=450 scale=4) and both PNG
+    and HTML outputs
+  - 'Theme-adaptive chrome: INK/PAGE_BG/ELEVATED_BG tokens properly applied so text
+    is readable in both light and dark renders without dark-on-dark failure'
+  - 'Elevated tile backgrounds (#FFFDF6 light / #242420 dark) with status-colored
+    accent bars at tile tops add visual hierarchy'
+  - Realistic server monitoring data (CPU, Memory, Response Time, Requests/sec, Error
+    Rate, Disk I/O) with plausible values and directional semantics (higher_is_bad
+    logic)
+  - 'Clean, reproducible code: np.random.seed(42), no functions/classes, only used
+    imports'
   weaknesses:
-  - Sparkline line width (2px) could be slightly thicker for better visibility at
-    full resolution
+  - 'Palette deviates from Okabe-Ito: status colors (#22c55e good, #f59e0b warning,
+    #ef4444 critical) override the brand green (#009E73) — justified by spec semantic
+    requirements but still a deviation'
+  - Sparklines are quite small in height within each tile (sparkline_height=0.12 domain
+    fraction at scale=4 renders as ~32px tall) — slightly hard to read trend at smaller
+    display sizes
+  - Title uses fig.add_annotation at y=1.06 with fontsize=18 rather than layout title
+    — annotation approach means it may not be reliably positioned if margins change;
+    fontsize=18 → 72 source-px is borderline small for a 3200px-wide canvas
+  - 'DE-02: minimal visual refinement beyond the status coloring — no subtle grid,
+    no sophisticated typography hierarchy beyond size variation'
+  - 'LM-02: sparkline overlay via custom xaxis/yaxis domain is clever but the axis
+    domain math is manual and brittle; Plotly''s native inset-axes or shape-based
+    sparklines would be more maintainable'
   image_description: |-
-    The plot displays a 3x2 grid of dashboard metric tiles on a clean white background. Each tile has a light gray background (#f8fafc) with a subtle border. The title "dashboard-metrics-tiles · plotly · pyplots.ai" appears centered at the top in dark text.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — matches the required surface exactly; not pure white.
+      Chrome: Title "dashboard-metrics-tiles · python · plotly · anyplot.ai" centered at top in dark ink (#1A1A17), clearly readable. Tile metric names (e.g. "✓  CPU Usage", "⚠  Memory") in dark text, easily legible against the elevated tile background (#FFFDF6). Delta values (▼-5.2%, ▲8.3%, etc.) in red/green, readable.
+      Data: 6 tiles in 3×2 grid. CPU Usage 45% in green (#22c55e), Memory 72% in amber (#f59e0b), Response Time 120ms in green, Requests/sec 1250 in green, Error Rate 2.3% in red (#ef4444), Disk I/O 85MB/s in green. Sparklines visible at bottom of each tile with matching fill colors. Status accent bars at tile tops, borders color-coded by status (thickness varies: good=1px, warning=2px, critical=3px).
+      Legibility verdict: PASS — all metric values, labels, delta indicators, and sparklines clearly visible against the warm off-white background. No light-on-light failures.
 
-    Top row (left to right):
-    - CPU Usage: Large green "45%" value, with "▼-5.2%" delta indicator in green below, and a green area sparkline showing a downward trend
-    - Memory: Large yellow/orange "72%" value, with "▲8.3%" delta in red below, and an orange area sparkline with fluctuating trend
-    - Response Time: Large green "120ms" value, with "▼-15.4%" delta in green, and a green area sparkline showing variation
-
-    Bottom row (left to right):
-    - Requests/sec: Large green "1250" value, with "▲12.7%" delta in green, and a green area sparkline
-    - Error Rate: Large red "2.3%" value (critical status), with "▲45.0%" delta in red, and a red area sparkline showing spiky pattern
-    - Disk I/O: Large green "85MB/s" value, with "▼-2.1%" delta in red (since decrease is unfavorable for throughput), and a green area sparkline
-
-    Color coding is correctly applied: green for good status, yellow/orange for warning (Memory), red for critical (Error Rate). Delta arrows and colors correctly reflect whether the change is favorable based on the metric type.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — matches required dark surface; not pure black.
+      Chrome: Title text appears in light ink (#F0EFE8), clearly readable against the dark background. Tile metric names readable in light text against the elevated tile background (#242420). Delta values retain their color coding (green/red) and are clearly legible. No dark-on-dark text failures detected.
+      Data: Identical status colors to the light render — green (#22c55e), amber (#f59e0b), red (#ef4444) — only chrome (background, text, tile fill) has flipped. Sparkline fills appear slightly more opaque (FILL_ALPHA=0.28 in dark vs 0.15 in light) to compensate for blending on the dark surface. Both renders show the same trend shapes per sparkline.
+      Legibility verdict: PASS — all elements legible, no dark-on-dark failure, data colors unchanged between themes.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All metric names, values, and deltas are clearly readable with appropriate
-          font sizes
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements, clean tile layout
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Sparklines visible and clear, though slightly thin for the canvas
-          size
+        comment: 'Good hierarchy: 48px values, 22px labels, 20px delta. Both themes
+          readable. Annotation title at 18px (72 source-px) is borderline small for
+          3200px canvas width.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements. Tile layout is compact but
+          values, labels, sparklines occupy non-overlapping zones within each tile.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Sparklines visible but small in height (sparkline_height=0.12 domain
+          fraction). Status colors and delta indicators clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Good contrast, status colors are distinguishable (green/yellow/red)
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent 3x2 grid layout with balanced spacing and margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for dashboard tiles (no traditional axes), metric names serve
-          as labels
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid or legend needed for this format
+        comment: 'CVD-safe multi-cue encoding: status symbol (✓/⚠/✕) + border thickness
+          + color all independently encode status. Red-green used but not as sole
+          distinguishing signal.'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Correct 3200×1800 canvas. 3×2 grid layout clean and consistent.
+          Minor: tile spacing slightly tight, sparklines positioned low within tiles.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Tile labels descriptive with units where applicable (%,ms,MB/s).
+          Title follows correct format: dashboard-metrics-tiles · python · plotly
+          · anyplot.ai.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: true
+        comment: 'Plot backgrounds correct (#FAF8F1 light / #1A1A17 dark). Status
+          colors (#22c55e, #f59e0b, #ef4444) deviate from Okabe-Ito but are justified
+          by spec semantic requirements. Brand green #009E73 not used.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional dashboard aesthetic with status accent bars, elevated
+          tile fills, multi-cue status encoding, status symbol labels, and adaptive
+          fill opacity for dark mode. Above default but not at highest tier.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Sparklines have no ticks/grid/borders (minimal chrome). Tile backgrounds
+          add visual layering. Could be more refined with subtle grid or typography
+          weight variation.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear visual hierarchy: status color immediately communicates health,
+          large value is primary focal point, delta shows trend direction, sparkline
+          shows trend shape. Error Rate tile''s red border + thick frame draws appropriate
+          attention.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dashboard tiles layout with metrics, sparklines, and change
-          indicators
+        comment: Correct dashboard metric tiles with go.Indicator + sparkline overlays.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values, history (sparklines), and change percentages correctly displayed
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: KPI value, label, sparkline, change indicator
-          with arrow'
-      - id: SC-04
-        name: Data Range
+        comment: 'All required features: prominent value display, metric label, mini
+          sparkline, change indicator with directional arrows and percentage. Status
+          color coding (green/warning/red) and symbols present.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible and appropriately scaled
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 6 metrics in 3×2 grid as specified. Historical data (30 points each)
+          drives sparklines. Realistic server monitoring metrics.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A, but metric labels are accurate
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: dashboard-metrics-tiles · plotly · pyplots.ai'
+        comment: 'Title: ''dashboard-metrics-tiles · python · plotly · anyplot.ai''
+          — correct format.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows good/warning/critical statuses, positive/negative changes,
-          different metric types
+        comment: 'Full coverage: KPI value with unit, label, sparkline, delta %, status
+          color, status symbol, status border. Directional semantics (higher_is_bad)
+          correctly applied.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Operations monitoring scenario with realistic server metrics
+        comment: Server/ops monitoring metrics are realistic and neutral. CPU 45%,
+          Memory 72%, Response 120ms, 1250 req/s, 2.3% error rate, 85 MB/s — all plausible
+          values for a healthy-ish system.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic (45% CPU, 72% Memory, 120ms response time, 2.3%
-          error rate)
+        comment: All values in realistic domain ranges. Cumulative random walk histories
+          produce plausible trend shapes.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear flow, uses loop for tile creation (acceptable for 6
-          tiles)
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: No functions or classes. Flat procedural structure with clear section
+          comments.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) present.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports
+        comment: Only os, numpy, plotly.graph_objects, plotly.subplots.make_subplots
+          — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Appropriate complexity for the task. No fake UI elements.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. autosize=False with
+          explicit width/height. Current Plotly API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Plotly Indicator with number+delta mode, make_subplots,
-          custom shapes for tile backgrounds, and HTML export
+        comment: Uses go.Indicator with mode='number+delta', make_subplots, add_shape
+          for tile backgrounds, add_annotation for title. Idiomatic but the annotation-based
+          title is less standard than layout.title.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: go.Indicator is distinctively Plotly. Custom domain-based sparkline
+          axes overlaid on indicator subplots is a Plotly-specific technique. Paper-coord
+          shapes for tile backgrounds leverage Plotly's layout system. Manual domain
+          math is brittle but shows library depth.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
-  - patches
   - html-export
   patterns:
   - data-generation
