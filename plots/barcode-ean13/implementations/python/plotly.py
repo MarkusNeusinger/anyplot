@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-21
@@ -128,7 +128,7 @@ total_width = quiet_zone * 2 + len(binary_pattern) * module_width
 
 # Human-readable digits
 digit_y = -35
-font_size = 24
+font_size = 18
 
 # First digit (outside left guard)
 fig.add_annotation(
@@ -155,6 +155,16 @@ for i, digit in enumerate(code[7:13]):
         x=x, y=digit_y, text=digit, showarrow=False, font={"size": font_size, "family": "monospace", "color": INK}
     )
 
+# Segment labels: Country (GS1 prefix), Manufacturer, Product, Check
+segment_y = -65
+x_first = quiet_zone - module_width * 4
+x_country = (x_first + left_start + 0.5 * 7 * module_width + left_start + 1.5 * 7 * module_width) / 3
+x_manuf = left_start + 4.0 * 7 * module_width
+x_product = right_start + 2.5 * 7 * module_width
+x_check = right_start + 5.5 * 7 * module_width
+for x, label in [(x_country, "Country"), (x_manuf, "Manufacturer"), (x_product, "Product"), (x_check, "Check")]:
+    fig.add_annotation(x=x, y=segment_y, text=label, showarrow=False, font={"size": 9, "color": INK_SOFT})
+
 fig.update_layout(
     autosize=False,
     title={
@@ -163,8 +173,8 @@ fig.update_layout(
         "x": 0.5,
         "xanchor": "center",
     },
-    xaxis={"visible": False, "range": [-20, total_width + 20], "scaleanchor": "y", "scaleratio": 1},
-    yaxis={"visible": False, "range": [-80, guard_height + 40]},
+    xaxis={"visible": False, "range": [-20, total_width + 20]},
+    yaxis={"visible": False, "range": [-100, guard_height + 20]},
     plot_bgcolor=PAGE_BG,
     paper_bgcolor=PAGE_BG,
     margin={"l": 80, "r": 40, "t": 80, "b": 60},
