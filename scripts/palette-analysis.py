@@ -50,7 +50,9 @@ from _palette_common import (  # noqa: E402
     NEUTRAL_LIGHT,
     PAGE_CSS,
     PAGE_JS,
+    cmap_samples,
     hex_to_rgb1,
+    render_cmap_demo,
     render_colormap_row,
     render_first_n_summary,
     render_hero_mockup_pair,
@@ -77,7 +79,11 @@ def render_page() -> str:
     sample_charts = render_sample_charts(OKABE_PALETTE, n_series=4)
     first_n = render_first_n_summary(OKABE_PALETTE, OKABE_NAMES)
 
-    cmap_rows = "\n".join(render_colormap_row(name) for name in COLORMAPS)
+    cmap_blocks = []
+    for name in COLORMAPS:
+        cmap_blocks.append(render_colormap_row(name))
+        cmap_blocks.append(render_cmap_demo(cmap_samples(name, 256), label=f"{name} on peaks"))
+    cmap_rows = "\n".join(cmap_blocks)
 
     hero_pair = render_hero_mockup_pair(OK_GREEN)
     surface_light = render_surface_section(LIGHT_THEME_FULL, "light theme")

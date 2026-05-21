@@ -405,6 +405,51 @@ def render_colormap_row(name: str, samples_rgb: np.ndarray | None = None) -> str
     )
 
 
+def render_cmap_demo(samples_rgb: np.ndarray, label: str = "") -> str:
+    """Apply the 256-step colormap to a 2D sample function (peaks-style
+    bivariate surface) and return an HTML ``<img>`` with the rendered PNG
+    inlined as a data URI. Lets the eye check whether the cmap reads as
+    monotonic in lightness — banding, hue swerves, and lightness inversions
+    all jump out on real 2D data in a way that a 1D gradient strip hides.
+    """
+    import base64
+    import io
+
+    from PIL import Image
+
+    # 2D resolution. 240×144 keeps the PNG under 6 kB while still showing
+    # smooth gradients across both axes (PNG palette-mode would be smaller
+    # still but loses the cmap's perceptual uniformity if dithered).
+    w, h_px = 240, 144
+    x = np.linspace(-2.2, 2.2, w)
+    y = np.linspace(-1.3, 1.3, h_px)
+    X, Y = np.meshgrid(x, y)
+    # Classic "peaks" function (truncated): a positive Gaussian, a tilted
+    # ridge, and a negative depression — exercises low/mid/high cmap
+    # regions across the frame.
+    Z = (
+        3 * (1 - X) ** 2 * np.exp(-X ** 2 - (Y + 1) ** 2)
+        - 10 * (X / 5 - X ** 3 - Y ** 5) * np.exp(-X ** 2 - Y ** 2)
+        - (1.0 / 3) * np.exp(-(X + 1) ** 2 - Y ** 2)
+    )
+    Zn = (Z - Z.min()) / (Z.max() - Z.min())
+    idx = np.clip((Zn * (len(samples_rgb) - 1)).round().astype(int), 0, len(samples_rgb) - 1)
+    rgb = (samples_rgb[idx] * 255).astype(np.uint8)
+    img = Image.fromarray(rgb, mode="RGB")
+    buf = io.BytesIO()
+    img.save(buf, format="PNG", optimize=True)
+    b64 = base64.b64encode(buf.getvalue()).decode("ascii")
+    caption = f'<figcaption>{h(label)}</figcaption>' if label else ""
+    return (
+        '<figure class="cmap-demo">'
+        f'<img src="data:image/png;base64,{b64}" '
+        'alt="continuous palette applied to the peaks bivariate function" '
+        'style="width:100%;height:auto;display:block;border-radius:6px;image-rendering:auto">'
+        f"{caption}"
+        "</figure>"
+    )
+
+
 def _wcag_badge(fg_hex: str, bg_hex: str, large: bool = False) -> str:
     ratio = wcag_contrast(hex_to_rgb1(fg_hex), hex_to_rgb1(bg_hex))
     aa = 3.0 if large else 4.5
@@ -822,6 +867,18 @@ body.theme-dark .matrix table.delta td {
     border-bottom: 1px solid var(--rule);
 }
 .cmap-row:last-child { border-bottom: none; }
+
+/* 2D cmap demo: peaks function rendered with the variant's colormap */
+.cmap-demo {
+    margin: 14px 0 4px;
+    padding: 0;
+}
+.cmap-demo figcaption {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-style: italic;
+}
 .cmap-name {
     font-size: 12px;
     font-weight: 600;

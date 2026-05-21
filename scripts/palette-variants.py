@@ -74,6 +74,7 @@ from _palette_common import (  # noqa: E402
     cell_class,
     hex_to_rgb1,
     pairwise_delta_e,
+    render_cmap_demo,
     render_colormap_row,
     render_first_n_summary,
     render_hero_mockup_pair,
@@ -732,6 +733,10 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
     sample_charts = render_sample_charts(hues, n_series=4)
     first_n = render_first_n_summary(hues, names)
     cmap_row = render_colormap_row(variant.continuous_label, samples_rgb=cmap_rgb)
+    cmap_demo = render_cmap_demo(
+        cmap_rgb,
+        label="peaks function — exercises low/mid/high cmap regions in one frame",
+    )
     hero_pair = render_hero_mockup_pair(hues[0])
 
     # Methodology summary block
@@ -856,8 +861,9 @@ def render_variant_page(variant: Variant, hues: list[str], cmap_rgb: np.ndarray)
 
 <section class="domain">
     <h2>continuous colormap</h2>
-    <p class="lede">perceptually-uniform interpolation in CAM02-UCS, anchored at brand green. badge reports worst adjacent-sample ΔE across normal + 3 cvd (a value above ~2.5 indicates visible banding under at least one condition).</p>
+    <p class="lede">perceptually-uniform interpolation in CAM02-UCS, anchored at brand green. badge reports worst adjacent-sample ΔE across normal + 3 cvd (a value above ~2.5 indicates visible banding under at least one condition). below: the same cmap applied to MATLAB's <code>peaks</code> surface so you can see how it reads on real 2D data.</p>
     {cmap_row}
+    {cmap_demo}
 </section>
 
 <section class="domain">
