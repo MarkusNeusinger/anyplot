@@ -1,0 +1,271 @@
+library: ggplot2
+language: r
+specification_id: skewt-logp-atmospheric
+created: '2026-05-21T00:05:23Z'
+updated: '2026-05-21T00:26:11Z'
+generated_by: claude-sonnet
+workflow_run: 26196676091
+issue: 3802
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
+review:
+  strengths:
+  - 'Perfect coordinate transformation: log-pressure Y-axis and 45°-skewed temperature
+    X-axis implemented entirely within ggplot2''s standard x/y aesthetics without
+    requiring specialized packages'
+  - All four required reference line types (isotherms, dry adiabats, moist pseudo-adiabats,
+    mixing ratios) computed from real atmospheric physics (Bolton 1980 approximations)
+    — scientifically authentic
+  - Excellent visual hierarchy through linewidth and alpha contrast (1.5 vs 0.28,
+    full vs 0.55 alpha) puts primary data above reference elements — correct meteorological
+    design practice
+  - Fully theme-adaptive chrome with correct token usage; both light (#FAF8F1) and
+    dark (#1A1A17) renders pass all readability checks with no dark-on-dark failures
+  - 'Palette compliance: Temperature = brand green #009E73 as first series, Dewpoint
+    = OI-2, reference lines follow OI order — data colors identical between themes'
+  - Idiomatic ggplot2 with combined color+linetype unified legend, legend.position.inside,
+    and guides(override.aes) for refined key sizing
+  weaknesses:
+  - Moist adiabat (dotted, linewidth=0.28, alpha=0.55) and mixing ratio (longdash,
+    same size/alpha) lines are very faint — at smaller display sizes these may be
+    hard to distinguish; consider increasing linewidth slightly to 0.35 for moist
+    adiabats
+  - Legend suppresses the linetype guide (linetype='none') while relying on the color
+    guide to implicitly show linetypes — works in-plot but linetype distinction is
+    subtle in the legend keys (minor)
+  - Wind barbs (optional per spec) not included; omission is spec-compliant but would
+    enhance meteorological utility
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 as required.
+      Chrome: Title "Tropical Radiosonde Sounding · skewt-logp-atmospheric · r · ggplot2 · anyplot.ai" in bold dark ink, spans ~95% width (expected for long mandated title). Y-axis label "Pressure (hPa)" and X-axis label "Temperature (°C)" in dark ink at 10pt. Tick labels in INK_SOFT at 8pt — all readable. Panel border visible in INK_SOFT. Legend in bottom-right interior with ELEVATED_BG background and INK_SOFT border.
+      Data: Temperature profile = thick solid green (#009E73) line. Dewpoint = thick orange-red (#D55E00) dashed line. Isotherms = gray diagonal lines skewed at 45°. Dry Adiabats = amber (#E69F00) thin dashed curves. Moist Adiabats = pink/purple (#CC79A7) thin dotted curves. Mixing Ratios = sky blue (#56B4E9) thin longdash lines (lower troposphere only). Horizontal isobar lines at standard levels.
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 as required.
+      Chrome: Title, axis labels, tick labels, and legend text all in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. No dark-on-dark failures observed. Panel border and legend frame visible.
+      Data: All data colors identical to light render — green Temperature, orange Dewpoint, gray isotherms, amber dry adiabats, pink moist adiabats, sky blue mixing ratios. Only chrome flipped between themes.
+      Legibility verdict: PASS — all text clearly readable against warm near-black background.
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: 'All font sizes explicitly set (title=11, axis=10, ticks=8, legend=8).
+          Readable in both themes. Minor: base_size=8 is at the low end for mobile
+          scaling.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Legend inside the plot at (88%, 5%) positioned in data-free zone.
+          Diagonal isotherms pass near the legend but framed background prevents readability
+          issues.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Primary profiles (linewidth=1.5) bold and dominant. Reference lines
+          (linewidth=0.28, alpha=0.55) intentionally subordinate — correct for Skew-T.
+          Minor: moist adiabats and mixing ratios very faint at smaller sizes.'
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Okabe-Ito palette is CVD-safe. Double-encoding via both color and
+          linetype ensures accessibility beyond color alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Title spans ~95% width as expected
+          for long mandated title. Margins balanced. No clipping or overflow.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Temperature (°C) and Pressure (hPa) are descriptive with units. Title
+          follows correct format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Temperature = #009E73 (OI-1) as first series. Dewpoint = #D55E00
+          (OI-2). Reference lines follow OI order. Backgrounds #FAF8F1 light / #1A1A17
+          dark. Data colors identical between themes.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Goes beyond generic defaults: custom visual hierarchy, intentional
+          alpha management, panel border framing, interior legend with elevated background,
+          domain-appropriate design.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Standard grid removed and replaced with domain-specific reference
+          elements. Legend styled with ELEVATED_BG and INK_SOFT border. Generous margins.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy from primary profiles to reference lines.
+          Descriptive title sets meteorological context. Tropical pre-storm profile
+          creates realistic narrative.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Skew-T Log-P diagram with logarithmic inverted pressure axis
+          and 45°-skewed temperature coordinate.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All required elements: temperature profile, dewpoint, dry adiabats,
+          moist pseudo-adiabats, mixing ratio lines, isotherms. Wind barbs optional
+          per spec — omission acceptable.'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: 'X-axis: skewed temperature. Y-axis: log-pressure (inverted). All
+          sounding levels 1000-100 hPa covered. Smooth log-P interpolation.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches {Descriptive} · skewt-logp-atmospheric · r · ggplot2
+          · anyplot.ai. All 6 series named correctly in legend.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'All aspects demonstrated: skewed isotherms, dry adiabats (Poisson),
+          moist pseudo-adiabats (numerical integration), mixing ratios, sounding profiles.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tropical pre-storm radiosonde sounding with meteorologically plausible
+          values (30°C surface to -70°C at 100 hPa, appropriate moisture profile).
+          Neutral, educational context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Pressure range 100-1000 hPa covers full troposphere. Temperature
+          and dewpoint values meteorologically realistic. Mixing ratio lines (1-16
+          g/kg) appropriate for lower troposphere.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions (lp, skewx, es_hpa, ws_kgkg, moist_adiabat) genuinely
+          necessary for coordinate transformations and atmospheric physics. Well-sectioned.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42). Sounding data fully deterministic (hardcoded observations
+          + deterministic log-P interpolation).
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only library(ggplot2) and library(ragg), both actively used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for specialized diagram. No fake UI. Physics
+          calculations genuine (Bolton 1980).
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) correct. Uses linewidth= (modern ggplot2
+          >=3.4). No bare plot.png.
+    library_mastery:
+      score: 9
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Fully idiomatic: combined scale_color_manual + scale_linetype_manual
+          for unified legend, coord_cartesian, scale_y_continuous with custom breaks/labels,
+          legend.position.inside, guides() with override.aes.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Skew-T coordinate transformation using only standard ggplot2 aesthetics
+          (no specialized extension package). Combined color+linetype encoding via
+          suppressed duplicate guide. legend.position.inside for interior placement.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - manual-ticks
+  - layer-composition
+  - custom-legend
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - interpolation
+  styling:
+  - alpha-blending
