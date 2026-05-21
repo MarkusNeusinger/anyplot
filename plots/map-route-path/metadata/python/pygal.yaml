@@ -1,164 +1,187 @@
 library: pygal
+language: python
 specification_id: map-route-path
 created: '2026-01-19T17:54:50Z'
-updated: '2026-01-19T18:13:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21147013674
+updated: '2026-05-21T06:07:05Z'
+generated_by: claude-sonnet
+workflow_run: 26207677224
 issue: 3768
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-route-path/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-route-path/pygal/plot.html
-quality_score: 78
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/pygal/plot-dark.html
+quality_score: 81
 review:
   strengths:
-  - Good implementation of color-coded time progression segments showing the route
-    journey
-  - Clean code structure following KISS principles with proper random seed
-  - Appropriate use of custom Style for font sizes and colors at the target resolution
-  - Realistic GPS track data with added noise for authenticity
-  - Distinct start and finish markers with contrasting colors (green/magenta)
-  - Correct title format and descriptive axis labels with units
+  - Variable stroke widths (5/6/8/6/5 px bell curve) create a sophisticated visual
+    suggestion of pace variation — goes beyond basic line drawing
+  - 5 time-segmented route segments with descriptive labels (0-9 min etc.) provide
+    clear temporal narrative
+  - START marker (#009E73, Okabe-Ito pos 1) and FINISH (vermillion, pos 2) follow
+    exact palette order
+  - GPS noise simulation (np.random.normal) makes the route look like real-world GPS
+    track data
+  - 'Proper theme adaptation: correct #FAF8F1 light / #1A1A17 dark backgrounds with
+    full INK token threading'
+  - Interactive HTML export with value_formatter providing coordinate tooltips on
+    hover
   weaknesses:
-  - Legend symbols (▶ START, ◼ FINISH) do not render in the output - they appear as
-    regular colored squares
-  - No geographic basemap for spatial context (pygal limitation - XY chart is best
-    approximation available)
-  - Color palette includes green and cyan adjacent segments that may be difficult
-    to distinguish for colorblind users
-  - Some empty whitespace in lower-left area due to the loop shape of the route
-  image_description: 'The plot displays a Route Path Map visualization showing a hiking
-    trail GPS track in Central Park rendered as an XY line chart. The route forms
-    an elongated loop shape with coordinates showing Longitude (degrees) on the X-axis
-    ranging from approximately -73.986 to -73.956, and Latitude (degrees) on the Y-axis
-    ranging from approximately 40.75 to 40.795. The path is divided into 5 color-coded
-    segments showing time progression: dark blue (1: Start), cyan (2: Morning), green
-    (3: Midday), yellow (4: Afternoon), and red/orange (5: End). A green circular
-    marker indicates the START position near the top of the route, and a magenta/red
-    circular marker indicates the FINISH position, both located close together at
-    approximately (-73.97, 40.795). The legend is positioned at the bottom with all
-    series clearly labeled. The title follows the correct format "map-route-path ·
-    pygal · pyplots.ai". Grid lines are visible with subtle styling.'
+  - 'FINISH marker (vermillion, dots_size=14) is invisible in both renders — closed-loop
+    trail places start and end at nearly identical coordinates (t=0 and t=2pi converge);
+    START dot (22px) completely covers FINISH. Fix: offset FINISH with a small coordinate
+    nudge (~0.0015 deg lat) or replace with an annotated label/arrow.'
+  - 'Yellow (#F0E442) 36-45 min segment is a thin line on light surface (#FAF8F1)
+    — style guide warns Okabe-Ito position 7 should not be used for thin lines on
+    light backgrounds due to low luminance contrast. Fix: cap to 4 segments (drop
+    position 7) or swap to a stronger color.'
+  - 'X-axis tick labels display 8-decimal coordinate precision (e.g., -73.98630798)
+    — unnecessarily verbose for geographic readability. Fix: format as 3-decimal degrees
+    (e.g., -73.986) for cleaner display.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "map-route-path · python · pygal · anyplot.ai" readable at top. Axis labels "Longitude (degrees)" and "Latitude (degrees)" clearly readable. X-axis tick labels show 8-decimal precision coordinates (e.g., -73.98630798) rotated 45°, verbose but readable. Legend at bottom with 7 labeled entries in light text — readable.
+      Data: Closed loop route in 5 Okabe-Ito color segments — sky blue (0-9 min, top-right), reddish purple (9-18 min, right), gold (18-27 min, bottom), sky blue (27-36 min, left), yellow (36-45 min, lower-left). START green circle (#009E73) at top-center clearly visible. FINISH vermillion dot invisible (overlapped by START — same coordinates on closed loop). Yellow (#F0E442) thin line has lower luminance contrast on light surface.
+      Legibility verdict: PASS (all text readable; FINISH marker invisible is data/element issue, not text legibility)
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title readable in light cream/off-white text. Axis labels and tick labels rendered in light text — clearly readable. No dark-on-dark failures observed. Legend text in light tone, readable.
+      Data: Route colors identical to light render — Okabe-Ito positions 3-7 in same order. START green (#009E73) marker visible. FINISH marker still invisible (same overlap issue). Yellow segment slightly more visible on dark surface. Grid lines very faint on both axes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 31
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and axis labels are readable but could be slightly larger for
-          optimal viewing at 4800x2700
+        comment: All text readable in both themes; X-axis tick labels show 8-decimal
+          coordinate precision which is verbose
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements; legend items well-spaced at bottom
+        comment: START/FINISH markers overlap at same coordinate (closed loop); all
+          text non-overlapping
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
-        passed: true
-        comment: Route lines are visible with good stroke width; markers for start/end
-          visible but could be slightly larger
+        score: 4
+        max: 6
+        passed: false
+        comment: 'FINISH marker (vermillion, 14px) completely hidden behind START
+          (green, 22px) at same coordinate; yellow #F0E442 thin line has low luminance
+          on light surface'
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
-        passed: true
-        comment: Good color progression from blue to red, but green/cyan segments
-          could be confused by some colorblind viewers
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Plot uses good portion of canvas but there is some wasted whitespace;
-          the loop shape means lower left quadrant is empty
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Axis labels include units: Longitude (degrees) and Latitude (degrees)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito palette, colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 3200x1800 correct, canvas gate passed, clean layout, legend at bottom
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle and appropriate; legend at bottom is clear but takes
-          up significant space
+        comment: Correct axis labels with units, title follows required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series START = #009E73, Okabe-Ito order followed, correct
+          background colors'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Variable stroke widths (5/6/8/6/5px) bell curve suggesting pace variation
+          is clever; no geographic basemap and invisible FINISH reduce score
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Stroke width variation adds refinement; raw 8-decimal tick labels
+          undermine polish
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: 5-segment time progression is clear narrative; invisible FINISH breaks
+          journey endpoint story
     spec_compliance:
-      score: 20
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 6
-        max: 8
-        passed: true
-        comment: Uses XY chart for connected path which is appropriate for pygal;
-          however, pygal lacks true geographic map capabilities
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Longitude/Latitude correctly mapped to X/Y axes
-      - id: SC-03
+        comment: Correct XY chart connecting waypoints in sequence as continuous path
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has distinct start/end markers, color gradient for time progression;
-          missing basemap and direction arrows (pygal limitations)
-      - id: SC-04
-        name: Data Range
+        comment: Sequential connected path, time-progression color, interactive HTML
+          export present; FINISH invisible, no geographic basemap
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data points appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: Legend shows segment labels but missing the unicode symbols for START/FINISH
-          that were defined in code
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: X=longitude, Y=latitude, 100 waypoints (within spec range), sequence
+          order maintained
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: map-route-path · pygal · pyplots.ai'
+        comment: Correct title format, all 7 legend entries present and labeled
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows sequential waypoints, time progression via color segments,
-          start/end markers; demonstrates the core route path concept well
+        comment: Connected route, time segmentation, START/FINISH markers, GPS noise;
+          FINISH invisible reduces demonstration
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Realistic hiking trail GPS track in Central Park with plausible coordinates
-          and GPS noise
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Coordinate values are realistic for Central Park area; 100 points
-          is reasonable for a hiking trail
+        comment: Central Park loop NYC — plausible, neutral, GPS noise adds realism
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 100 waypoints, correct coordinate range, realistic 45-minute hike
+          timing
     code_quality:
       score: 10
       max: 10
@@ -168,51 +191,58 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple sequential code: imports, data, plot, save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'Only necessary imports: numpy, pygal, Style'
+        comment: os, numpy, pygal, Style — all used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean loop, per-series stroke and dot settings, variable width list
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 0
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 0
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: pygal is fundamentally a charting library, not a mapping library;
-          using XY chart for geographic data is a workaround but does not leverage
-          distinctive pygal features
+        passed: true
+        comment: pygal.XY for coordinates, Style for theming, truncate_label=-1, per-series
+          stroke=False/show_dots=True
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Interactive HTML export, value_formatter for coordinate tooltip,
+          per-series dots_size and stroke_style override
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
