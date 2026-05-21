@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-21
@@ -161,7 +161,7 @@ plot = (
     + facet_wrap("~metric_name", ncol=3)
     + scale_x_continuous(limits=(0, 20), expand=(0.02, 0.02))
     + scale_y_continuous(limits=(0, 1), expand=(0.02, 0.02))
-    + labs(title="dashboard-metrics-tiles · plotnine · pyplots.ai")
+    + labs(title="dashboard-metrics-tiles · python · plotnine · anyplot.ai")
     + theme_void()
     + theme(
         figure_size=(8, 4.5),
