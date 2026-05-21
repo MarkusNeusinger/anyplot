@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dashboard-metrics-tiles: Real-Time Dashboard Tiles
-Library: altair | Python 3.13
-Quality: 93/100 | Updated: 2026-05-21
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-21
 """
 
 import os
