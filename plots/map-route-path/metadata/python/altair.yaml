@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: map-route-path
 created: '2026-05-21T05:47:37Z'
-updated: '2026-05-21T05:54:33Z'
+updated: '2026-05-21T06:07:36Z'
 generated_by: claude-sonnet
 workflow_run: 26207536990
 issue: 3768
@@ -12,50 +12,40 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-route
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-route-path/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Accurate Route 66 geography with real city coordinates (Chicago → LA) and geographically
-    plausible elevation data
-  - 'Expert use of Altair geographic API: alt.topo_feature() for TopoJSON basemap,
-    albersUsa projection, and layer composition via + operator'
-  - 'Full spec compliance: sequential route line, viridis elevation dots, distinct
-    start/end markers (green circle + orange square), interactive tooltips, HTML output'
-  - 'Thorough theme adaptation: MAP_FILL/MAP_STROKE tokens for map background, ELEVATED_BG/INK/INK_SOFT
-    tokens applied to legend fill, stroke, and text in both renders'
-  - 'Clean canvas management: raises on overshoot, PIL padding to exact 3200×1800
-    target — canvas gate passed'
+  - Route 66 Chicago→LA with real city coordinates and plausible elevation data is
+    an ideal narrative for a route map
+  - Multi-layer geographic composition using albersUsa projection + CDN topojson (no
+    extra geo packages) — idiomatic and elegant
+  - Viridis colormap correctly applied to continuous elevation data; start/end markers
+    use Okabe-Ito positions 1 and 2 with shape differentiation for CVD safety
+  - 'Complete theme-adaptive implementation: map fill/stroke colors, legend, title,
+    and city labels all flip correctly between light and dark'
+  - Canvas sizing correct (620x320 inner view, scale=4, padded to 3200x1800) — no
+    clipping, no overflow
+  - HTML + PNG output with interactive tooltips on route and elevation dots
   weaknesses:
-  - 'DE-01 below publication quality: the composition is a well-configured geographic
-    default (gray basemap, green route, viridis dots). Consider adding an elevation
-    profile inset chart or annotating the highest-elevation segment (Flagstaff area
-    ~2100 m) to elevate it beyond a plain map.'
-  - 'DE-03 data storytelling is minimal: the route is displayed but the viewer has
-    no guided focal point. Annotate the start and end cities with visible text labels
-    (e.g. ''Chicago'' and ''Los Angeles'') alongside their markers, and optionally
-    mark the elevation peak — these small additions turn the map into a narrative.'
-  - 'DE-02 refinement opportunity: inner-view width=760/height=416 is larger than
-    the altair.md recommended 620×320. While the canvas gate passed, reducing to the
-    recommended inner-view dimensions would allow more generous padding around the
-    map and improve the visual breathing room.'
-  - Elevation dots (size=32 Altair area units) are small at full 3200×1800 resolution.
-    Increasing to size=50-60 would make the individual waypoints more prominent without
-    cluttering the route.
+  - City labels at fontSize=9-10 (->36-40px final) are at minimum legible size; increasing
+    to 11-12pt would improve readability on 400px mobile renderings
+  - Elevation dots (size=55, every 3rd point) appear slightly undersized in the compressed
+    eastern segment of the route — size=70-80 would make individual points more distinguishable
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "Route 66 Road Trip · map-route-path · python · altair · anyplot.ai" in dark near-black ink, left-aligned at top — clearly readable. Legend "Elevation (m)" title and tick labels (89, 2,016) in muted dark gray — readable but small. No axis tick labels (geographic map, appropriate).
-      Data: US state boundaries in light gray (#DEDAD4 fill, #B0AAA0 stroke). Route line in brand green #009E73, strokeWidth=3.5, running diagonally from Chicago (northeast) to Los Angeles (southwest). Elevation dots sampled every 3rd waypoint colored with viridis colormap: dark purple/blue at low elevations (Chicago, St. Louis areas) transitioning through teal to yellow-green at high elevations (Flagstaff/Albuquerque ~2000m). Start marker: filled green circle with white stroke at Chicago. End marker: filled orange square (#D55E00) with white stroke at Los Angeles. Legend colorbar (viridis, bottom-right corner) with "Elevation (m)" label.
-      Legibility verdict: PASS — all text clearly readable against warm off-white background, no light-on-light issues
+      Background: Warm off-white #FAF8F1 confirmed — not pure white
+      Chrome: Title "Route 66 Road Trip · map-route-path · python · altair · anyplot.ai" in dark #1A1A17 ink, left-anchored, clearly readable. City labels "Chicago", "Los Angeles", "▲ Flagstaff 2100m" in dark ink at fontSize 9-10, readable. Legend title "Elevation (m)" and tick labels in #4A4A44 INK_SOFT, readable.
+      Data: Route line in #009E73 (brand green), elevation dots colored via viridis (purple at low elevation ~89m near Chicago/LA, yellow-green at high ~2016m near Flagstaff). Start marker: large filled green circle with white stroke. End marker: filled orange #D55E00 square with white stroke.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in off-white/light cream — clearly readable against dark background. Legend "Elevation (m)" title and tick labels in muted light gray — readable. No dark-on-dark issues observed.
-      Data: US state boundaries in dark gray (#2C2C28 fill, #4A4A42 stroke) — appropriate contrast against near-black background. Route line still brand green #009E73 (identical to light render). Elevation dots same viridis colors as light render — purple/blue at low elevations, yellow-green at high. Start/end markers same colors (green circle, orange square) — data colors unchanged. Legend fill is dark elevated (#242420) with muted gray text.
-      Legibility verdict: PASS — all text clearly readable against near-black background, data colors identical to light render, no dark-on-dark failures
+      Background: Warm near-black #1A1A17 confirmed — not pure black
+      Chrome: Title in light #F0EFE8 ink, clearly readable. City labels in #F0EFE8 INK, readable. Legend labels in #B8B7B0 INK_SOFT, readable. No dark-on-dark failures detected.
+      Data: Route line (#009E73), elevation dots (viridis), start/end markers — all colors pixel-identical to light render. Only map fill and text chrome flip between themes.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -63,85 +53,71 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (titleFontSize=14, legend titleFontSize=12,
-          labelFontSize=10). Title and legend text readable in both renders. Legend
-          values slightly small but legible.
+        comment: Title at fontSize=14 readable in both themes; city labels at 9-10pt
+          are borderline for mobile
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or labels. Legend positioned bottom-right without
-          overlapping route data. Start/end markers intentionally overlap route endpoints.
+        comment: Careful per-label dx/dy/align offsets avoid all collisions
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Route line (strokeWidth=3.5) and markers (size=320) clearly visible.
-          Elevation dots (size=32) are slightly small at full resolution but color
-          variation is clear.
+        comment: Route and markers prominent; elevation dots slightly small in dense
+          eastern segment
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Viridis colormap is CVD-safe for continuous data. Brand green and
-          vermillion for markers are Okabe-Ito compliant. Good luminance contrast
-          throughout.
+        comment: Viridis is CVD-safe; start/end differentiated by color AND shape
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed. Map fills ~65% of canvas. Minor asymmetric padding
-          from PIL centering on larger inner-view (760x416 vs recommended 620x320),
-          but layout is balanced.
+        comment: Canvas gate passed; landscape format suits east-west route; no overflow
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No traditional axis labels needed (geographic map). Legend has 'Elevation
-          (m)' with correct units. Title is descriptive.
+        comment: Title descriptive; elevation legend includes units; no traditional
+          axes needed for map
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Route line uses brand green #009E73. End marker uses Okabe-Ito #D55E00.
-          Continuous elevation uses viridis (correct). Backgrounds are #FAF8F1 (light)
-          and #1A1A17 (dark). Chrome is theme-correct in both renders.'
+        comment: 'Route uses #009E73; end marker #D55E00; viridis for continuous elevation;
+          correct backgrounds'
     design_excellence:
-      score: 12
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above default (4): theme-adaptive map fill/stroke colors, brand
-          green route, viridis for elevation, white-stroked markers. Looks like a
-          polished geographic visualization but not publication-level. No standout
-          annotation or hierarchy element.'
+        comment: Multi-layer geographic composition with theme-adaptive map colors
+          shows deliberate design
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Above default (2): clean map with no unnecessary chart chrome, white
-          strokes on markers for definition, theme-adaptive legend styling. No traditional
-          spines (inappropriate for geo map). Map state borders are subtle.'
+        comment: No view border, clean legend styling, subtle map palette
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'Slightly above default (2): Route 66 narrative provides context.
-          Start/end markers create journey anchors. Elevation color gradient adds
-          a data layer. But no city annotations, no peak highlight, and no visual
-          emphasis to guide the viewer to an insight.'
+        comment: Route 66 narrative with elevation color gradient and Flagstaff apex
+          annotation
     spec_compliance:
       score: 15
       max: 15
@@ -151,60 +127,51 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct route path map with geographic basemap, connected sequential
-          waypoints, and layered data elements.
+        comment: 'Correct: geographic map with connected sequential waypoints'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All spec features present: sequential route line (order encoding),
-          distinct start/end markers (green circle + orange square), elevation color
-          gradient (viridis), geographic basemap (US TopoJSON), interactive tooltips,
-          HTML output.'
+        comment: Sequential path, distinct start/end markers, elevation color gradient,
+          basemap, interactive tooltips
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon correctly mapped to geographic encoding channels. sequence:O
-          used for route ordering. elevation_m mapped to viridis color scale.
+        comment: lat/lon -> geographic encodings, sequence -> order, elevation_m ->
+          viridis color
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'Route 66 Road Trip · map-route-path · python · altair · anyplot.ai'
-          follows correct format with descriptive prefix. Legend 'Elevation (m)' with
-          units.
+        comment: Title format correct; legend with units; city markers labeled
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows route path, elevation encoding, start/end markers, basemap
-          context. Missing optional direction arrows along path as suggested in spec
-          notes.
+        comment: 'All aspects demonstrated: path, elevation, start/end, annotations,
+          basemap, tooltips'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Route 66 (Chicago to Los Angeles) is a real, culturally significant,
-          neutral scenario. City coordinates are geographically accurate. No controversial
-          content.
+        comment: Route 66 with real cities, plausible GPS noise, accurate elevation
+          benchmarks
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 161 waypoints (within 50-1000 spec range). Coordinates are geographically
-          correct for continental US. Elevation values (89-2100m) are plausible for
-          Route 66 cities — Chicago ~180m, Flagstaff ~2100m are accurate.
+        comment: ~160 waypoints, elevation range 89-2016m consistent with real terrain
     code_quality:
       score: 10
       max: 10
@@ -214,35 +181,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: theme tokens → data generation → layer definitions
-          → chart composition → save. No functions or classes.'
+        comment: No functions or classes; top-to-bottom imperative structure
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before data generation.
+        comment: np.random.seed(42) ensures deterministic output
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os (theme env), sys (path fix), alt, np, pd, PIL.Image
-          (canvas padding).'
+        comment: All imports used; sys for path-pop workaround
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic Altair code. Layer composition is clean. No fake
-          UI elements or over-engineering.
+        comment: Clean layer composition with + operator, no fake interactivity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses current Altair
-          API. scale_factor=4.0 correct for target canvas.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html, current Altair 6.1.0
+          API
     library_mastery:
       score: 9
       max: 10
@@ -252,20 +216,16 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use of Altair''s high-level geographic API: longitude/latitude
-          encoding channels, alt.topo_feature() for topojson, albersUsa projection,
-          layer composition via +, configure_* for theming, alt.Scale/alt.Legend/alt.Title
-          with detailed configuration.'
+        comment: topo_feature, albersUsa projection, order encoding, configure_* methods,
+          + layer composition
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Uses Altair-distinctive features: alt.topo_feature() with CDN TopoJSON
-          (no local geo package needed), albersUsa geographic projection, declarative
-          layer composition, order:O encoding for route sequencing, HTML export of
-          interactive Vega-Lite spec.'
-  verdict: REJECTED
+        comment: Geographic projections with CDN topojson, HTML export, gradient legend
+          config; direction arrows absent
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -279,5 +239,4 @@ impl_tags:
   - interpolation
   styling:
   - custom-colormap
-  - alpha-blending
   - edge-highlighting
