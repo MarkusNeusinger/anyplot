@@ -1,17 +1,29 @@
-""" pyplots.ai
+"""anyplot.ai
 barcode-ean13: EAN-13 Barcode
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-19
+Library: highcharts | Python 3.13
+Quality: 91/100 | Updated: 2026-05-21
 """
 
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Barcode paper/ink: always high-contrast regardless of page theme
+BARCODE_BG = "#FFFDF6"
+BAR_COLOR = "#1A1A17"
 
 # EAN-13 encoding tables
 L_CODES = {
@@ -26,7 +38,6 @@ L_CODES = {
     "8": "0110111",
     "9": "0001011",
 }
-
 G_CODES = {
     "0": "0100111",
     "1": "0110011",
@@ -39,7 +50,6 @@ G_CODES = {
     "8": "0001001",
     "9": "0010111",
 }
-
 R_CODES = {
     "0": "1110010",
     "1": "1100110",
@@ -52,7 +62,6 @@ R_CODES = {
     "8": "1001000",
     "9": "1110100",
 }
-
 FIRST_DIGIT_PATTERNS = {
     "0": "LLLLLL",
     "1": "LLGLGG",
@@ -66,195 +75,147 @@ FIRST_DIGIT_PATTERNS = {
     "9": "LGGLGL",
 }
 
-
-def calculate_check_digit(code_12):
-    """Calculate EAN-13 check digit"""
-    total = 0
-    for i, digit in enumerate(code_12):
-        weight = 1 if i % 2 == 0 else 3
-        total += int(digit) * weight
-    return str((10 - (total % 10)) % 10)
-
-
-def encode_ean13(code):
-    """Encode EAN-13 barcode to binary string"""
-    if len(code) == 12:
-        code = code + calculate_check_digit(code)
-    elif len(code) != 13:
-        raise ValueError("Code must be 12 or 13 digits")
-
-    binary = "101"  # Start guard
-    pattern = FIRST_DIGIT_PATTERNS[code[0]]
-
-    for i, digit in enumerate(code[1:7]):
-        if pattern[i] == "L":
-            binary += L_CODES[digit]
-        else:
-            binary += G_CODES[digit]
-
-    binary += "01010"  # Center guard
-
-    for digit in code[7:]:
-        binary += R_CODES[digit]
-
-    binary += "101"  # End guard
-
-    return binary, code
-
-
-# Data - Example EAN-13 code (German product)
+# Data — German product code (Bosch drill bit set)
 code_input = "4006381333931"
-binary_pattern, full_code = encode_ean13(code_input)
 
-# Build bar data for Highcharts
-# We'll use xrange series type for precise bar positioning
-bar_width = 8  # Width of each module in pixels
-bar_height = 1200  # Height of regular bars
-guard_height = 1350  # Guard bars extend lower
+# Compute/verify check digit
+digits_12 = code_input[:12]
+total = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(digits_12))
+check = str((10 - (total % 10)) % 10)
+full_code = digits_12 + check
 
-# Create series data - each bar as a separate data point
-bars_data = []
-current_x = 0
+# Encode EAN-13: start guard → left group → center guard → right group → end guard
+binary = "101"
+pattern = FIRST_DIGIT_PATTERNS[full_code[0]]
+for i, digit in enumerate(full_code[1:7]):
+    binary += L_CODES[digit] if pattern[i] == "L" else G_CODES[digit]
+binary += "01010"
+for digit in full_code[7:]:
+    binary += R_CODES[digit]
+binary += "101"
 
-# Quiet zone (9 modules)
+# Barcode dimensions scaled for 3200×1800 canvas
+bar_width = 17
+bar_height = 700
+guard_height = 820
+bar_baseline = 880
 quiet_zone = 9 * bar_width
+total_barcode_width = quiet_zone * 2 + 95 * bar_width
+svg_height = 1050
+
+# Build SVG bar elements
+bars_svg = ""
 current_x = quiet_zone
-
-# Process binary pattern and create bars
-for i, bit in enumerate(binary_pattern):
-    # Determine if this is a guard bar (extends lower)
-    is_guard = False
-    if i < 3:  # Start guard
-        is_guard = True
-    elif i >= 45 and i < 50:  # Center guard
-        is_guard = True
-    elif i >= 92:  # End guard
-        is_guard = True
-
+for i, bit in enumerate(binary):
+    is_guard = i < 3 or (45 <= i < 50) or i >= 92
+    h = guard_height if is_guard else bar_height
     if bit == "1":
-        bars_data.append({"x": current_x, "y": guard_height if is_guard else bar_height, "color": "#000000"})
+        bars_svg += (
+            f'<rect x="{current_x}" y="{bar_baseline - h}" width="{bar_width}" height="{h}" fill="{BAR_COLOR}"/>\n'
+        )
     current_x += bar_width
 
-# Calculate positions for digit labels
-digit_positions = []
-module_start = quiet_zone
+# Build SVG digit label elements
+digit_font = 80
+digit_y = 970
+digits_svg = ""
 
-# First digit - left of barcode
-digit_positions.append({"digit": full_code[0], "x": quiet_zone - 60})
+# First digit — positioned left of the start guard
+first_x = quiet_zone - 4 * bar_width
+digits_svg += (
+    f'<text x="{first_x}" y="{digit_y}" font-size="{digit_font}" '
+    f'font-family="Arial, sans-serif" font-weight="bold" '
+    f'text-anchor="middle" fill="{BAR_COLOR}">{full_code[0]}</text>\n'
+)
 
-# Left side digits (positions 1-6)
-left_start = quiet_zone + 3 * bar_width  # After start guard
+# Left 6 digits (full_code[1:7])
+left_start = quiet_zone + 3 * bar_width
 for i in range(6):
-    center = left_start + (i * 7 + 3.5) * bar_width
-    digit_positions.append({"digit": full_code[i + 1], "x": center})
+    cx = left_start + (i * 7 + 3.5) * bar_width
+    digits_svg += (
+        f'<text x="{cx}" y="{digit_y}" font-size="{digit_font}" '
+        f'font-family="Arial, sans-serif" font-weight="bold" '
+        f'text-anchor="middle" fill="{BAR_COLOR}">{full_code[i + 1]}</text>\n'
+    )
 
-# Right side digits (positions 7-12)
-right_start = quiet_zone + (3 + 42 + 5) * bar_width  # After start guard + left + center guard
+# Right 6 digits (full_code[7:13])
+right_start = quiet_zone + (3 + 42 + 5) * bar_width
 for i in range(6):
-    center = right_start + (i * 7 + 3.5) * bar_width
-    digit_positions.append({"digit": full_code[i + 7], "x": center})
+    cx = right_start + (i * 7 + 3.5) * bar_width
+    digits_svg += (
+        f'<text x="{cx}" y="{digit_y}" font-size="{digit_font}" '
+        f'font-family="Arial, sans-serif" font-weight="bold" '
+        f'text-anchor="middle" fill="{BAR_COLOR}">{full_code[i + 7]}</text>\n'
+    )
 
-# Total width
-total_width = quiet_zone * 2 + 95 * bar_width
-
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+# Download Highcharts JS for inline embedding (required in headless Chrome)
+highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/12.2.0/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
-# Build SVG rectangles for bars (more precise than column chart)
-svg_bars = ""
-for bar in bars_data:
-    svg_bars += (
-        f'<rect x="{bar["x"]}" y="{1500 - bar["y"]}" width="{bar_width}" height="{bar["y"]}" fill="{bar["color"]}"/>\n'
-    )
-
-# Build text elements for digits
-svg_digits = ""
-for dp in digit_positions:
-    svg_digits += f'<text x="{dp["x"]}" y="1580" font-size="80" font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle">{dp["digit"]}</text>\n'
-
-# Create custom HTML with SVG barcode and Highcharts styling
+# Build HTML — 3200×1800 flex container with theme-adaptive chrome
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
-    <style>
-        body {{
-            margin: 0;
-            padding: 0;
-            background-color: #FFFFFF;
-            font-family: Arial, sans-serif;
-        }}
-        .container {{
-            width: 4800px;
-            height: 2700px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #FFFFFF;
-        }}
-        .title {{
-            font-size: 64px;
-            font-weight: bold;
-            color: #306998;
-            margin-bottom: 20px;
-        }}
-        .subtitle {{
-            font-size: 48px;
-            color: #666666;
-            margin-bottom: 80px;
-        }}
-        .barcode-container {{
-            background-color: #FFFFFF;
-            padding: 60px 120px;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }}
-    </style>
 </head>
-<body>
-    <div class="container">
-        <div class="title">barcode-ean13 · highcharts · pyplots.ai</div>
-        <div class="subtitle">EAN-13: {full_code}</div>
-        <div class="barcode-container">
-            <svg width="{total_width}" height="1700" viewBox="0 0 {total_width} 1700">
-                <!-- White background -->
-                <rect x="0" y="0" width="{total_width}" height="1700" fill="#FFFFFF"/>
-
-                <!-- Barcode bars -->
-                {svg_bars}
-
-                <!-- Human-readable digits -->
-                {svg_digits}
+<body style="margin:0; padding:0; background:{PAGE_BG};">
+    <div style="width:3200px; height:1800px; display:flex; flex-direction:column;
+                align-items:center; justify-content:center; background:{PAGE_BG};">
+        <div style="font-size:66px; font-weight:bold; color:{INK}; margin-bottom:30px;
+                    text-align:center; font-family:Arial, sans-serif;">
+            barcode-ean13 · python · highcharts · anyplot.ai
+        </div>
+        <div style="font-size:48px; color:{INK_SOFT}; margin-bottom:60px;
+                    font-family:Arial, sans-serif;">
+            EAN-13: {full_code}
+        </div>
+        <div style="background:{BARCODE_BG}; padding:60px 80px; border-radius:16px;
+                    box-shadow:0 4px 24px rgba(0,0,0,0.12);">
+            <svg width="{total_barcode_width}" height="{svg_height}"
+                 viewBox="0 0 {total_barcode_width} {svg_height}">
+                <rect x="0" y="0" width="{total_barcode_width}" height="{svg_height}"
+                      fill="{BARCODE_BG}"/>
+                {bars_svg}
+                {digits_svg}
             </svg>
         </div>
     </div>
 </body>
 </html>"""
 
-# Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Take screenshot with Selenium
+# Take PNG screenshot via Selenium with exact viewport control
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(3)
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact 3200×1800 (safety net for ±1-2 px rounding)
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.size != (3200, 1800):
+    norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    norm.paste(img, ((3200 - img.size[0]) // 2, (1800 - img.size[1]) // 2))
+    norm.save(f"plot-{THEME}.png")
