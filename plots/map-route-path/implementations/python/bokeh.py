@@ -1,115 +1,169 @@
-""" pyplots.ai
+"""anyplot.ai
 map-route-path: Route Path Map
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-19
+Library: bokeh | Python 3.13
+Quality: 91/100 | Updated: 2026-05-21
 """
 
+import base64
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, output_file, save
+from bokeh.io import output_file, save
 from bokeh.models import ColumnDataSource, Title
+from bokeh.palettes import Viridis256
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Simulated hiking trail GPS track (approximately 200 waypoints)
+# Theme
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Data - Simulated hiking trail GPS track (Rocky Mountain National Park)
 np.random.seed(42)
 
-# Base coordinates (Central Park, New York area)
-center_lon = -73.968
-center_lat = 40.785
+start_lon = -105.683
+start_lat = 40.343
 
-# Generate a realistic hiking trail path with sequential waypoints
 n_points = 200
-t = np.linspace(0, 4 * np.pi, n_points)
+t = np.linspace(0, 1, n_points)
 
-# Create a winding path with some randomness (simulating trail GPS data)
-lat_offset = 0.015 * np.sin(t) + 0.008 * np.sin(2.5 * t) + 0.002 * np.cumsum(np.random.randn(n_points)) / n_points
-lon_offset = 0.012 * np.cos(t) + 0.006 * np.cos(3 * t) + 0.002 * np.cumsum(np.random.randn(n_points)) / n_points
+# Linear trail trending northeast with natural meanders (no self-intersections)
+lon_progress = 0.038 * t
+lat_progress = 0.027 * t
+lon_meander = 0.005 * np.sin(10 * np.pi * t) + 0.002 * np.sin(4 * np.pi * t)
+lat_meander = 0.004 * np.sin(7 * np.pi * t) + 0.0015 * np.cos(5 * np.pi * t)
 
-lats = center_lat + lat_offset
-lons = center_lon + lon_offset
+lats = start_lat + lat_progress + lat_meander
+lons = start_lon + lon_progress + lon_meander
 
-# Convert lat/lon to Web Mercator coordinates (required for tile providers)
+# Convert lat/lon to Web Mercator for tile compatibility
 k = 20037508.34 / 180
 x_coords = lons * k
 y_coords = np.log(np.tan((90 + lats) * np.pi / 360)) / (np.pi / 180) * k
 
-# Sequence and color gradient for time progression
-sequence = np.arange(n_points)
-colors = [
-    f"#{int(50 + 150 * i / n_points):02x}{int(105 - 80 * i / n_points):02x}{int(152 - 100 * i / n_points):02x}"
-    for i in range(n_points)
-]
+# Viridis gradient along waypoints to show trail progression
+waypoint_colors = [Viridis256[int(255 * i / (n_points - 1))] for i in range(n_points)]
 
-# Create ColumnDataSource for the path
-source = ColumnDataSource(data={"x": x_coords, "y": y_coords, "sequence": sequence, "color": colors})
+source = ColumnDataSource(data={"x": x_coords, "y": y_coords, "color": waypoint_colors})
 
-# Create figure with tile background
+# Figure
+W, H = 3200, 1800
 p = figure(
-    width=4800,
-    height=2700,
+    width=W,
+    height=H,
     x_axis_type="mercator",
     y_axis_type="mercator",
     x_axis_label="Longitude",
     y_axis_label="Latitude",
-    tools="pan,wheel_zoom,box_zoom,reset",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Add title separately for better control
-p.add_layout(Title(text="map-route-path · bokeh · pyplots.ai", text_font_size="28pt"), "above")
+# Title
+title_obj = Title(
+    text="Rocky Mountain Trail · map-route-path · python · bokeh · anyplot.ai", text_font_size="50pt", text_color=INK
+)
+p.add_layout(title_obj, "above")
 
-# Add basemap tiles (Bokeh 3.x uses add_tile with string provider name)
-p.add_tile("CartoDB Positron")
+# Theme-appropriate basemap tile
+tile_provider = "CartoDB Positron" if THEME == "light" else "CartoDB Dark Matter"
+p.add_tile(tile_provider)
 
-# Draw the route path as connected line
-p.line(x="x", y="y", source=source, line_width=4, line_color="#306998", line_alpha=0.8)
+# Route line — Okabe-Ito position 1 (#009E73)
+p.line(x="x", y="y", source=source, line_width=5, line_color="#009E73", line_alpha=0.9)
 
-# Add points along the path with color gradient showing progression
-p.scatter(x="x", y="y", source=source, size=8, fill_color="color", line_color="#306998", line_width=1, alpha=0.7)
+# Waypoints with viridis gradient showing progression
+p.scatter(x="x", y="y", source=source, size=12, fill_color="color", line_color=PAGE_BG, line_width=1.5, alpha=0.85)
 
-# Mark start point (green circle)
-start_source = ColumnDataSource(data={"x": [x_coords[0]], "y": [y_coords[0]]})
+# Start marker — Okabe-Ito #009E73 (large circle)
+start_src = ColumnDataSource(data={"x": [x_coords[0]], "y": [y_coords[0]]})
 p.scatter(
     x="x",
     y="y",
-    source=start_source,
-    size=25,
-    fill_color="#2ecc71",
-    line_color="white",
+    source=start_src,
+    size=32,
+    fill_color="#009E73",
+    line_color=PAGE_BG,
     line_width=3,
     legend_label="Start",
 )
 
-# Mark end point (red square)
-end_source = ColumnDataSource(data={"x": [x_coords[-1]], "y": [y_coords[-1]]})
+# End marker — Okabe-Ito #D55E00 (large square)
+end_src = ColumnDataSource(data={"x": [x_coords[-1]], "y": [y_coords[-1]]})
 p.scatter(
     x="x",
     y="y",
-    source=end_source,
-    size=25,
-    fill_color="#e74c3c",
-    line_color="white",
+    source=end_src,
+    size=32,
+    fill_color="#D55E00",
+    line_color=PAGE_BG,
     line_width=3,
     marker="square",
     legend_label="End",
 )
 
-# Styling
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
+# Theme-adaptive chrome
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
 
-# Legend styling
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+
+# Minimal grid over basemap
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.06
+p.ygrid.grid_line_alpha = 0.06
+
+# Legend
 p.legend.location = "top_right"
-p.legend.label_text_font_size = "18pt"
-p.legend.background_fill_alpha = 0.8
+p.legend.label_text_font_size = "34pt"
+p.legend.background_fill_color = ELEVATED_BG
+p.legend.border_line_color = INK_SOFT
+p.legend.label_text_color = INK_SOFT
 
-# Grid styling
-p.grid.grid_line_alpha = 0.3
-
-# Save outputs
-export_png(p, filename="plot.png")
-
-# Save interactive HTML for bokeh
-output_file("plot.html")
+# Save HTML
+output_file(f"plot-{THEME}.html")
 save(p)
+
+# Screenshot with headless Chrome (Selenium 4 / Selenium Manager)
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+# Capture full page (beyond visible viewport) to handle the ~139px viewport gap
+result = driver.execute_cdp_cmd("Page.captureScreenshot", {"format": "png", "captureBeyondViewport": True})
+with open(f"plot-{THEME}.png", "wb") as fh:
+    fh.write(base64.b64decode(result["data"]))
+driver.quit()
