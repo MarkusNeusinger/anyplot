@@ -1,17 +1,27 @@
-""" pyplots.ai
+""" anyplot.ai
 barcode-ean13: EAN-13 Barcode
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-19
+Library: highcharts unknown | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-21
 """
 
+import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+BARCODE_BG = "#FFFDF6"
+BAR_COLOR = "#1A1A17"
 
 # EAN-13 encoding tables
 L_CODES = {
@@ -26,7 +36,6 @@ L_CODES = {
     "8": "0110111",
     "9": "0001011",
 }
-
 G_CODES = {
     "0": "0100111",
     "1": "0110011",
@@ -39,7 +48,6 @@ G_CODES = {
     "8": "0001001",
     "9": "0010111",
 }
-
 R_CODES = {
     "0": "1110010",
     "1": "1100110",
@@ -52,7 +60,6 @@ R_CODES = {
     "8": "1001000",
     "9": "1110100",
 }
-
 FIRST_DIGIT_PATTERNS = {
     "0": "LLLLLL",
     "1": "LLGLGG",
@@ -66,195 +73,202 @@ FIRST_DIGIT_PATTERNS = {
     "9": "LGGLGL",
 }
 
-
-def calculate_check_digit(code_12):
-    """Calculate EAN-13 check digit"""
-    total = 0
-    for i, digit in enumerate(code_12):
-        weight = 1 if i % 2 == 0 else 3
-        total += int(digit) * weight
-    return str((10 - (total % 10)) % 10)
-
-
-def encode_ean13(code):
-    """Encode EAN-13 barcode to binary string"""
-    if len(code) == 12:
-        code = code + calculate_check_digit(code)
-    elif len(code) != 13:
-        raise ValueError("Code must be 12 or 13 digits")
-
-    binary = "101"  # Start guard
-    pattern = FIRST_DIGIT_PATTERNS[code[0]]
-
-    for i, digit in enumerate(code[1:7]):
-        if pattern[i] == "L":
-            binary += L_CODES[digit]
-        else:
-            binary += G_CODES[digit]
-
-    binary += "01010"  # Center guard
-
-    for digit in code[7:]:
-        binary += R_CODES[digit]
-
-    binary += "101"  # End guard
-
-    return binary, code
-
-
-# Data - Example EAN-13 code (German product)
+# Data — German product code (Bosch drill bit set)
 code_input = "4006381333931"
-binary_pattern, full_code = encode_ean13(code_input)
+digits_12 = code_input[:12]
+total = sum(int(d) * (1 if i % 2 == 0 else 3) for i, d in enumerate(digits_12))
+check = str((10 - (total % 10)) % 10)
+full_code = digits_12 + check
 
-# Build bar data for Highcharts
-# We'll use xrange series type for precise bar positioning
-bar_width = 8  # Width of each module in pixels
-bar_height = 1200  # Height of regular bars
-guard_height = 1350  # Guard bars extend lower
+# Encode EAN-13: start guard → left group → center guard → right group → end guard
+binary = "101"
+pattern = FIRST_DIGIT_PATTERNS[full_code[0]]
+for i, digit in enumerate(full_code[1:7]):
+    binary += L_CODES[digit] if pattern[i] == "L" else G_CODES[digit]
+binary += "01010"
+for digit in full_code[7:]:
+    binary += R_CODES[digit]
+binary += "101"
 
-# Create series data - each bar as a separate data point
-bars_data = []
-current_x = 0
+# Axis coordinate system: 1 unit = 1 module, quiet zones on each side
+QZ = 9  # quiet zone modules
+X_TOTAL = QZ * 2 + 95  # 113 total modules on axis
 
-# Quiet zone (9 modules)
-quiet_zone = 9 * bar_width
-current_x = quiet_zone
+# xrange series data: each 1-bit → a bar rectangle (x, x2, y=0, color)
+bars_data = [{"x": QZ + i, "x2": QZ + i + 1, "y": 0, "color": BAR_COLOR} for i, bit in enumerate(binary) if bit == "1"]
+bars_data_json = json.dumps(bars_data)
 
-# Process binary pattern and create bars
-for i, bit in enumerate(binary_pattern):
-    # Determine if this is a guard bar (extends lower)
-    is_guard = False
-    if i < 3:  # Start guard
-        is_guard = True
-    elif i >= 45 and i < 50:  # Center guard
-        is_guard = True
-    elif i >= 92:  # End guard
-        is_guard = True
+# Guard 1-bit x positions (start/center/end guards) for taller bar overlays
+guard_x_units = [QZ + i for i, bit in enumerate(binary) if bit == "1" and (i < 3 or (45 <= i < 50) or i >= 92)]
+guard_x_units_js = json.dumps(guard_x_units)
 
-    if bit == "1":
-        bars_data.append({"x": current_x, "y": guard_height if is_guard else bar_height, "color": "#000000"})
-    current_x += bar_width
+# Digit label x positions in axis units and the 13 digit characters
+digit_x_units = (
+    [QZ - 4.0]  # first digit: left of start guard
+    + [QZ + 3 + i * 7 + 3.5 for i in range(6)]  # left group digits 1-6
+    + [QZ + 50 + i * 7 + 3.5 for i in range(6)]  # right group digits 7-12
+)
+digit_x_units_js = json.dumps(digit_x_units)
+digits_json = json.dumps(list(full_code))
 
-# Calculate positions for digit labels
-digit_positions = []
-module_start = quiet_zone
+# Canvas layout
+W, H = 3200, 1800
+MARGIN_T, MARGIN_R, MARGIN_B, MARGIN_L = 220, 200, 280, 200
+BAR_H = 700  # data bar height px (xrange pointWidth)
+GUARD_H = 820  # guard bar height px (extends below data bars)
 
-# First digit - left of barcode
-digit_positions.append({"digit": full_code[0], "x": quiet_zone - 60})
+# Download Highcharts core + xrange module (inline embedding for headless Chrome)
+hc_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/12.2.0/highcharts.js"
+hc_xrange_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/12.2.0/modules/xrange.js"
+with urllib.request.urlopen(hc_url, timeout=30) as r:
+    highcharts_js = r.read().decode("utf-8")
+with urllib.request.urlopen(hc_xrange_url, timeout=30) as r:
+    highcharts_xrange_js = r.read().decode("utf-8")
 
-# Left side digits (positions 1-6)
-left_start = quiet_zone + 3 * bar_width  # After start guard
-for i in range(6):
-    center = left_start + (i * 7 + 3.5) * bar_width
-    digit_positions.append({"digit": full_code[i + 1], "x": center})
-
-# Right side digits (positions 7-12)
-right_start = quiet_zone + (3 + 42 + 5) * bar_width  # After start guard + left + center guard
-for i in range(6):
-    center = right_start + (i * 7 + 3.5) * bar_width
-    digit_positions.append({"digit": full_code[i + 7], "x": center})
-
-# Total width
-total_width = quiet_zone * 2 + 95 * bar_width
-
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
-
-# Build SVG rectangles for bars (more precise than column chart)
-svg_bars = ""
-for bar in bars_data:
-    svg_bars += (
-        f'<rect x="{bar["x"]}" y="{1500 - bar["y"]}" width="{bar_width}" height="{bar["y"]}" fill="{bar["color"]}"/>\n'
-    )
-
-# Build text elements for digits
-svg_digits = ""
-for dp in digit_positions:
-    svg_digits += f'<text x="{dp["x"]}" y="1580" font-size="80" font-family="Arial, sans-serif" font-weight="bold" text-anchor="middle">{dp["digit"]}</text>\n'
-
-# Create custom HTML with SVG barcode and Highcharts styling
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
-    <style>
-        body {{
-            margin: 0;
-            padding: 0;
-            background-color: #FFFFFF;
-            font-family: Arial, sans-serif;
-        }}
-        .container {{
-            width: 4800px;
-            height: 2700px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background-color: #FFFFFF;
-        }}
-        .title {{
-            font-size: 64px;
-            font-weight: bold;
-            color: #306998;
-            margin-bottom: 20px;
-        }}
-        .subtitle {{
-            font-size: 48px;
-            color: #666666;
-            margin-bottom: 80px;
-        }}
-        .barcode-container {{
-            background-color: #FFFFFF;
-            padding: 60px 120px;
-            border-radius: 20px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-        }}
-    </style>
+    <script>{highcharts_xrange_js}</script>
 </head>
-<body>
-    <div class="container">
-        <div class="title">barcode-ean13 · highcharts · pyplots.ai</div>
-        <div class="subtitle">EAN-13: {full_code}</div>
-        <div class="barcode-container">
-            <svg width="{total_width}" height="1700" viewBox="0 0 {total_width} 1700">
-                <!-- White background -->
-                <rect x="0" y="0" width="{total_width}" height="1700" fill="#FFFFFF"/>
+<body style="margin:0;padding:0;background:{PAGE_BG};">
+    <div id="container" style="width:{W}px;height:{H}px;"></div>
+    <script>
+    var chart = Highcharts.chart('container', {{
+        chart: {{
+            type: 'xrange',
+            width: {W},
+            height: {H},
+            backgroundColor: '{PAGE_BG}',
+            plotBackgroundColor: '{BARCODE_BG}',
+            plotBorderWidth: 0,
+            margin: [{MARGIN_T}, {MARGIN_R}, {MARGIN_B}, {MARGIN_L}],
+            animation: false,
+            events: {{
+                load: function () {{
+                    var c = this;
+                    var xa = c.xAxis[0];
+                    var plotT = c.plotTop;
+                    var plotH = c.plotHeight;
 
-                <!-- Barcode bars -->
-                {svg_bars}
+                    // Data bars (xrange) are centered in the plot area at pointWidth={BAR_H}
+                    var dataBarTop = plotT + plotH / 2 - {BAR_H} / 2;
+                    var dataBarBot = dataBarTop + {BAR_H};
+                    var guardExt = {GUARD_H} - {BAR_H};  // extra 120 px below data bars
 
-                <!-- Human-readable digits -->
-                {svg_digits}
-            </svg>
-        </div>
-    </div>
+                    // Guard bar extensions via Highcharts SVG Renderer
+                    var guardXUnits = {guard_x_units_js};
+                    guardXUnits.forEach(function (xu) {{
+                        var px = xa.toPixels(xu);
+                        var pw = xa.toPixels(xu + 1) - px;
+                        c.renderer.rect(px, dataBarBot, pw, guardExt)
+                            .attr({{'stroke-width': 0, fill: '{BAR_COLOR}', zIndex: 5}})
+                            .add();
+                    }});
+
+                    // Human-readable digit labels below the barcode
+                    var digitY = dataBarBot + guardExt + 100;
+                    var digitXUnits = {digit_x_units_js};
+                    var digits = {digits_json};
+                    digitXUnits.forEach(function (xu, i) {{
+                        var px = xa.toPixels(xu);
+                        c.renderer.text(digits[i], px, digitY)
+                            .attr({{align: 'center', zIndex: 6}})
+                            .css({{
+                                fontSize: '80px',
+                                fontWeight: 'bold',
+                                color: '{BAR_COLOR}',
+                                fontFamily: 'Arial, sans-serif'
+                            }})
+                            .add();
+                    }});
+                }}
+            }}
+        }},
+        title: {{
+            text: 'barcode-ean13 · python · highcharts · anyplot.ai',
+            style: {{
+                fontSize: '66px',
+                fontWeight: 'bold',
+                color: '{INK}',
+                fontFamily: 'Arial, sans-serif'
+            }},
+            y: 70
+        }},
+        subtitle: {{
+            text: 'EAN-13: {full_code}',
+            style: {{
+                fontSize: '48px',
+                color: '{INK_SOFT}',
+                fontFamily: 'Arial, sans-serif'
+            }},
+            y: 155
+        }},
+        tooltip: {{enabled: false}},
+        credits: {{enabled: false}},
+        legend: {{enabled: false}},
+        xAxis: {{
+            min: 0,
+            max: {X_TOTAL},
+            visible: false
+        }},
+        yAxis: {{
+            min: -0.5,
+            max: 0.5,
+            visible: false
+        }},
+        plotOptions: {{
+            xrange: {{
+                pointWidth: {BAR_H},
+                borderWidth: 0,
+                borderRadius: 0,
+                grouping: false,
+                animation: false,
+                states: {{hover: {{enabled: false}}}}
+            }}
+        }},
+        series: [{{
+            type: 'xrange',
+            name: 'EAN-13 Barcode',
+            data: {bars_data_json}
+        }}]
+    }});
+    </script>
 </body>
 </html>"""
 
-# Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Take screenshot with Selenium
+# Screenshot via headless Chrome with exact viewport control
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument(f"--window-size={W},{H}")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(3)
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# Pin to exact canvas dimensions (safety net for ±1-2 px rounding)
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.size != (W, H):
+    norm = Image.new("RGB", (W, H), PAGE_BG)
+    norm.paste(img, ((W - img.size[0]) // 2, (H - img.size[1]) // 2))
+    norm.save(f"plot-{THEME}.png")
