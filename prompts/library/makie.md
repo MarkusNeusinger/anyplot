@@ -21,8 +21,10 @@ Out of native CairoMakie scope:
 - True interactivity (hover, zoom, brush, animation) — needs `GLMakie` /
   `WGLMakie`
 - WebGL-only effects
-- Embedded D3-style network layouts (NetworkLayout.jl is allowed; use it
-  judiciously)
+- Embedded D3-style network layouts — `NetworkLayout.jl` is **not**
+  installed in the CI runtime, so do not `using NetworkLayout`. Network /
+  graph specs whose primary value is the layout itself should return
+  `NOT_FEASIBLE` rather than improvise.
 
 ## Interactive Spec Handling
 

@@ -42,7 +42,11 @@ runs:
       # `Pkg.instantiate()` restores the exact versions pinned in
       # Manifest.toml. If Manifest.toml is absent (first run before the
       # lockfile is committed), `Pkg.add(...)` falls back to fresh resolution
-      # of the packages we need so impl runs don't hard-fail.
+      # of the packages we need so impl runs don't hard-fail. The fallback
+      # list intentionally excludes Julia stdlibs (`Random`, `Statistics`):
+      # they ship with Julia itself, are not in the General registry, and
+      # `Pkg.add("Random")` would error before precompile. Stdlibs stay in
+      # Project.toml `[deps]` for the post-Manifest path.
       shell: bash
       run: |
         julia --project=. -e '
@@ -53,7 +57,7 @@ runs:
               Pkg.add([
                   "CairoMakie", "Makie", "DataFrames", "CSV",
                   "Colors", "ColorSchemes", "RDatasets",
-                  "PalmerPenguins", "Random", "Statistics"
+                  "PalmerPenguins"
               ])
               Pkg.precompile()
           end

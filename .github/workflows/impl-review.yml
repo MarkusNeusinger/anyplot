@@ -678,10 +678,17 @@ jobs:
                   f"# Library: {library} {lib_version} | {RUNTIME_LABEL} {lang_version}\n"
                   f"# Quality: {score}/100 | {date_info}"
               )
-              # Match a leading run of `#`-prefixed lines (the existing header).
-              # Anchored to start of file. If no header exists we fall back to
-              # prepending one. We must NOT match `#=` block-comment openers as
-              # part of the header — restrict to lines starting with `# ` or `#$`.
+              # Match a leading run of `#`-prefixed Julia line-comments (the
+              # existing header). Anchored to start of file. If no header
+              # exists we fall back to prepending one. The character class
+              # after `#` is intentionally narrow: either `[ \t]` (a space or
+              # tab — the canonical header style `# anyplot.ai`) or empty
+              # (i.e. a bare `#` immediately followed by `\n`). This excludes:
+              # `#=` (block-comment openers, which would otherwise swallow the
+              # block-comment body) and `#!` (shebangs — Julia ignores them
+              # but they're not part of the header we own). If either ever
+              # appears as the first non-blank line of a file, the regex
+              # falls through and the canonical header is prepended above it.
               pattern = r"\A(?:#(?:[ \t][^\n]*|)\n)+"
               if re.match(pattern, content):
                   new_content = re.sub(pattern, new_header + "\n", content, count=1)
