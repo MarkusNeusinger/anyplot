@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: skewt-logp-atmospheric
 created: '2026-05-22T21:51:33Z'
-updated: '2026-05-22T21:59:16Z'
+updated: '2026-05-22T22:26:43Z'
 generated_by: claude-sonnet
 workflow_run: 26312661516
 issue: 3802
@@ -12,145 +12,121 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/skewt-log
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/skewt-logp-atmospheric/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 85
 review:
   strengths:
-  - Flawless implementation of all Skew-T thermodynamic reference lines (isotherms,
-    dry adiabats, moist adiabats, mixing ratio) with correct Bolton-1980 thermodynamic
-    formulas
-  - Accurate 45-degree skewed temperature coordinate transform applied consistently
-    across all reference lines and sounding profiles
-  - 'Perfect spec compliance: logarithmic inverted pressure Y-axis, correct skewed
-    isotherms, both temperature and dewpoint sounding profiles with distinct line
-    styles'
-  - 'Full theme-adaptive chrome: correct #FAF8F1/#1A1A17 backgrounds, INK/INK_SOFT
-    token usage throughout, reference line colors adjusted per theme, both renders
-    pass readability check'
-  - 'Correct Okabe-Ito order: temperature profile as OKABE_ITO[1] (#009E73), dewpoint
-    as OKABE_ITO[2] (#D55E00), data colors identical across both renders'
-  - Realistic tropical convective radiosonde sounding with meteorologically correct
-    temperature values (28.4°C surface to -72.6°C at 100 hPa) and accurate dewpoint
-    depression increase with altitude
+  - Mathematically correct Skew-T coordinate transformation (45° skew + log10 pressure
+    y-axis) implemented from first principles
+  - 'Complete feature set: dry adiabats, moist adiabats, mixing ratio lines, CAPE
+    region, lifted parcel trace, LCL marker — all from thermodynamic equations'
+  - 'Theme adaptation is flawless: all chrome tokens (PAGE_BG, ELEVATED_BG, INK, INK_SOFT,
+    isobar_col, reference line colors) flip correctly between light and dark; data
+    colors stay identical'
+  - 'First series (Temperature) correctly uses Okabe-Ito brand green #009E73; Dewpoint
+    uses position 2 (#D55E00)'
+  - Reference lines are intentionally alpha-blended to stay subordinate to the main
+    data profiles — appropriate visual hierarchy for a complex scientific diagram
+  - Uses poly! with Point2f polygon construction for CAPE area — idiomatic Makie for
+    filled region
   weaknesses:
-  - Missing explicit xticklabelsize and yticklabelsize — tick labels inherit figure
-    fontsize=14, making them the same size as axis labels (both 14pt) rather than
-    the recommended smaller 12pt; this reduces typographic hierarchy slightly
-  - Helper functions (skew_x, y_p, isotherm_line, dry_adiabat_line, mixing_ratio_line,
-    moist_adiabat_line) break the KISS flat-script convention — though justified for
-    thermodynamic complexity, the criterion expects no functions/classes
-  - 'Design Excellence ceiling: no CAPE/CIN region shading between the lifted parcel
-    path and the environmental temperature — this is the single most informative meteorological
-    annotation on a Skew-T and would substantially elevate storytelling (DE-03)'
-  - No explicit LCL, LFC, or EL level markers or annotations to guide the reader's
-    interpretation of atmospheric stability; reference lines alone require expert
-    meteorological knowledge to interpret
-  - 'LM-02: no distinctively Makie-specific feature used (e.g. Observable-driven parameter,
-    custom recipe via @recipe macro, or Colorbar with custom ticks tied to a colormap-mapped
-    sounding profile)'
+  - CAPE fill uses alpha=0.22 with OKABE_ITO[5] (#E69F00 orange) — on the warm off-white
+    light background this is nearly invisible; increase alpha to 0.40–0.50 so the
+    CAPE region is clearly distinguishable from the background
+  - Isotherm axis labels use fontsize=9 and mixing ratio labels use fontsize=8 — too
+    small to read when chart is scaled to ~400 px mobile width; increase both to fontsize=10
+  - Lifted parcel trace uses linewidth=2.0 which is noticeably thinner than the main
+    profiles (3.5) — increase to 2.5 for better visibility in regions where it runs
+    close to the environment temperature line
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct, not pure white. Figure and axis backgrounds unified.
-      Chrome: Title "skewt-logp-atmospheric · julia · makie · anyplot.ai" fully visible in dark ink at top center (~75% width, expected for long mandated title). Y-axis label "Pressure (hPa)" and X-axis label "Temperature (°C)" clearly readable in dark ink. Tick labels (1000/925/850/700/500/400/300/200/100 hPa on Y; -40°/-30°/…/40° on X) readable in INK_SOFT (#4A4A44). Small isotherm labels at bottom of chart (fontsize 9pt) and mixing ratio labels (fontsize 8pt) are legible at full canvas resolution.
-      Data: Temperature sounding as solid teal (#009E73, OKABE_ITO[1]) line with markersize-7 scatter points. Dewpoint sounding as dashed orange (#D55E00, OKABE_ITO[2]) line with matching scatter points. Reference lines visible as subtle diagonals: gray isotherms (α=0.28), orange-brown dashed dry adiabats (α=0.40), blue dash-dot moist adiabats (α=0.42), green dotted mixing ratio lines (α=0.48). Horizontal isobars at 0.08 alpha serve as grid substitute. Legend in top-right with ELEVATED_BG (#FFFDF6) background showing all 5 series.
-      Legibility verdict: PASS — all text readable, no overlap, reference lines subtle and background-appropriate.
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "skewt-logp-atmospheric · julia · makie · anyplot.ai" in dark ink, clearly readable. Y-axis label "Pressure (hPa)" and X-axis label "Temperature (°C)" both readable with units. Tick labels (pressure levels and temperature degrees) visible in INK_SOFT color.
+      Data: Temperature profile in brand green #009E73 (linewidth 3.5, solid) — prominent and clearly visible. Dewpoint profile in #D55E00 orange-vermillion (linewidth 3.5, dashed) — clearly visible. Reference lines (isotherms, dry adiabats, moist adiabats, mixing ratio) rendered at low alpha as background context. Lifted parcel trace in #CC79A7 (linewidth 2.0, dashdotdot). CAPE fill in orange (#E69F00 alpha=0.22) — very subtle, nearly invisible on light background. LCL diamond marker visible near 800 hPa with small "LCL" label.
+      Legibility verdict: PASS (all primary text readable; small annotation labels fontsize 8-9 are a minor concern at mobile scale)
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black. Unified figure/axis background.
-      Chrome: Title, axis labels, and tick labels rendered in light INK (#F0EFE8) / INK_SOFT (#B8B7B0) — fully readable against dark background. No dark-on-dark failures observed. Legend background uses ELEVATED_BG (#242420), slightly lighter than canvas, with light label text. Reference line colors adjusted for dark theme (slightly lighter alphas, higher RGB base values).
-      Data: Temperature sounding (#009E73) and dewpoint sounding (#D55E00) colors are identical to the light render — only chrome flips. Both profiles clearly visible against the darker reference line background.
-      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark issues, data colors preserved across themes.
+      Background: Near-black (#1A1A17) — correct
+      Chrome: All chrome tokens adapt to dark theme — title, axis labels, tick labels shown in light-colored INK (#F0EFE8) and INK_SOFT (#B8B7B0). Legend box uses ELEVATED_BG (#242420). No dark-on-dark failures detected. Isobar lines adapt to light-on-dark alpha.
+      Data: Data colors identical to light render — green temperature line, orange dashed dewpoint, reddish-purple lifted parcel trace. CAPE fill remains subtle at alpha=0.22. Reference lines visible against dark background.
+      Legibility verdict: PASS (all text readable against dark background; no dark-on-dark failures)
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 24
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All major font sizes explicitly set (titlesize=20, xlabelsize=14,
-          ylabelsize=14, legend labelsize=12, annotation fontsizes 8-9), but xticklabelsize
-          and yticklabelsize are not explicitly set — they inherit figure fontsize=14
-          making ticks the same size as axis labels, reducing typographic hierarchy
+        comment: Title, axis labels, tick labels readable in both themes. Isotherm
+          labels (fontsize=9) and mixing ratio labels (fontsize=8) are very small
+          at mobile scale
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping text or data elements; reference lines use semi-transparency
-          to remain background; small isotherm and mixing ratio labels placed without
-          collision
+        comment: No significant overlaps; small annotation labels placed carefully
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 4
         max: 6
         passed: true
-        comment: Data profiles (linewidth 3.5, markersize 7) stand out clearly against
-          subtle reference lines (linewidth 0.7-0.8, alpha 0.28-0.48); well-adapted
-          to data density (20 obs levels)
+        comment: Main profiles clearly visible. CAPE fill (alpha=0.22) nearly invisible
+          on light background. Lifted parcel trace thinner than main profiles
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette; reference line types distinguished by both color
-          and linestyle (solid/dashed/dashdot/dotted) providing redundant encoding
-          beyond hue
+        comment: Okabe-Ito palette CVD-safe; good contrast between temperature and
+          dewpoint
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Chart area fills 70%+ of 3200x1800 canvas; balanced margins; legend
-          in top-right does not crowd data area; pressure axis spans full 1000-100
-          hPa range
+        comment: Canvas 3200x1800 confirmed. Good proportions. Legend slightly dense
+          with 7 entries
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Temperature (°C)'', Y: ''Pressure (hPa)'' — both descriptive
-          with units'
+        comment: Temperature (°C) and Pressure (hPa) with units; title format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Temperature: OKABE_ITO[1]=#009E73, Dewpoint: OKABE_ITO[2]=#D55E00.
-          Backgrounds: #FAF8F1 light / #1A1A17 dark. Data colors identical across
-          both renders. Chrome correctly flips.'
+        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
+          all chrome adapts correctly'
     design_excellence:
-      score: 13
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above average: carefully tuned alpha values for each reference line
-          type, theme-specific color adjustments for reference lines, intentional
-          visual hierarchy between reference lines and data profiles. Not yet FiveThirtyEight-level
-          — no CAPE shading or altitude-encoded coloring would push this higher'
+        comment: Impressive thermodynamic implementation; intentional alpha transparency
+          hierarchy; professional scientific aesthetics
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: standard grid replaced with custom isobar lines
-          (hlines at 0.08 alpha), top/right spines removed, all alpha values explicitly
-          calibrated per theme, elevated legend background. Whitespace is generous.'
+        comment: L-shaped spine; isobars replace grid appropriately; multiple linestyles
+          create visual hierarchy
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Visual hierarchy exists: subtle reference lines as thermodynamic
-          context, prominent data profiles as foreground story. Tropical convective
-          sounding creates a clear meteorological narrative. Missing CAPE/CIN shading
-          or parcel trace which would make the stability story immediately apparent
-          without meteorological expertise.'
+        comment: Temperature profile as focal point; CAPE region adds interpretation;
+          LCL marker annotates key derived quantity
     spec_compliance:
       score: 15
       max: 15
@@ -160,33 +136,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct Skew-T Log-P diagram: logarithmic pressure Y-axis, inverted
-          (1000 at bottom), skewed isotherms at 45 degrees, all reference line types
-          present'
+        comment: Correct Skew-T Log-P with logarithmic inverted pressure axis and
+          45-degree skewed isotherms
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: pressure log axis, 45-degree isotherms, dry
-          adiabats, moist adiabats, mixing ratio lines, temperature profile (solid),
-          dewpoint profile (dashed). Wind barbs optional and noted.'
+        comment: Dry adiabats, moist adiabats, mixing ratio lines, temperature (solid),
+          dewpoint (dashed), CAPE, lifted parcel, LCL all present; wind barbs omitted
+          (optional)
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Skewed X coordinate correctly maps temperature, Y axis correctly
-          shows log10(pressure) with hPa labels. All data visible from 1000 to 100
-          hPa.
+        comment: Pressure logarithmic and inverted; temperature coordinate correctly
+          skewed 45 degrees
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''skewt-logp-atmospheric · julia · makie · anyplot.ai'' —
-          correct format. Legend: ''Dry adiabat'', ''Moist adiabat'', ''Mixing ratio'',
-          ''Temperature'', ''Dewpoint'' — all descriptive and correct.'
+        comment: Title format correct; legend labels all 7 series
     data_quality:
       score: 15
       max: 15
@@ -196,23 +168,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Complete coverage: 20 pressure levels (1000-100 hPa), all reference
-          line types shown, temperature and dewpoint profiles across full troposphere'
+        comment: 'All major Skew-T features: temperature/dewpoint profiles, three
+          reference line types, CAPE, lifted parcel, LCL'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Tropical convective sounding — real-world meteorological scenario,
-          neutral scientific context, no controversial topics
+        comment: Tropical convective sounding — physically plausible temperatures,
+          realistic lapse rate, appropriate surface conditions
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Surface temperature 28.4°C, stratospheric temperature -72.6°C — meteorologically
-          correct for tropical sounding. Bolton (1980) thermodynamic formulas used
-          correctly. Dewpoint depression increases realistically with altitude.
+        comment: Pressure 100-1000 hPa; temperature -72°C to +28°C — appropriate for
+          complete tropospheric sounding
     code_quality:
       score: 9
       max: 10
@@ -222,69 +193,61 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: 4 helper functions defined (isotherm_line, dry_adiabat_line, mixing_ratio_line,
-          moist_adiabat_line) plus 2 coordinate helpers (skew_x, y_p). Breaks the
-          flat-script convention but arguably necessary for thermodynamic complexity.
+        comment: Helper functions are genuinely necessary for thermodynamic calculations;
+          no gratuitous abstraction
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) present; sounding data is hardcoded constants so
-          fully deterministic
+        comment: Random.seed!(42); sounding data hardcoded — fully deterministic
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all imported and used, none superfluous
+        comment: CairoMakie, Colors, Random all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-structured thermodynamic calculation code, no over-engineering,
-          no fake functionality, consistent const naming convention
+        comment: Well-organized with clear section comments; correct NaN handling
+          for mixing ratio
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save("plot-$(THEME).png", fig; px_per_unit=2) — correct output format
-          and API
+        comment: save("plot-$(THEME).png", fig; px_per_unit = 2); modern Makie size=
+          API
     library_mastery:
       score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Correct use of lines!, scatter!, hlines!, text!, axislegend; RGBAf
-          for transparent colors; ax.yticks tuple assignment; Makie attribute API
-          used throughout
+        comment: Correct CairoMakie primitives (lines!, scatter!, poly!, hlines!,
+          text!, axislegend); RGBAf for alpha; Point2f for polygon
       - id: LM-02
         name: Distinctive Features
-        score: 3
+        score: 4
         max: 5
         passed: true
-        comment: Custom tick label mapping (log10 pressure → hPa strings), RGBAf transparent
-          color construction from INK tokens, axislegend with elevated background.
-          Missing a distinctly Makie-exclusive feature (e.g., @recipe macro, Observable-linked
-          plot, Colorbar with colormap-encoded sounding profile).
-  verdict: REJECTED
+        comment: poly! for CAPE fill; custom log10 y-axis tick mapping; axislegend
+          with styled frame; diamond marker for LCL
+  verdict: APPROVED
 impl_tags:
-  dependencies:
-  - colors-jl
+  dependencies: []
   techniques:
-  - manual-ticks
   - annotations
-  - custom-legend
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
-  dataprep:
-  - interpolation
+  dataprep: []
   styling:
   - alpha-blending
