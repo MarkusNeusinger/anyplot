@@ -35,7 +35,7 @@ const mockDebugData = {
       updated: '2025-01-01',
       avg_score: 92,
       altair: 90, bokeh: 91, ggplot2: null, highcharts: null, letsplot: null,
-      matplotlib: 95, plotly: 88, plotnine: null, pygal: null, seaborn: 94,
+      makie: null, matplotlib: 95, plotly: 88, plotnine: null, pygal: null, seaborn: 94,
     },
   ],
 };

@@ -32,6 +32,10 @@ vi.mock('react-syntax-highlighter/dist/esm/languages/prism/r', () => ({
   default: {},
 }));
 
+vi.mock('react-syntax-highlighter/dist/esm/languages/prism/julia', () => ({
+  default: {},
+}));
+
 import CodeHighlighter from './CodeHighlighter';
 
 describe('CodeHighlighter', () => {
@@ -61,6 +65,14 @@ describe('CodeHighlighter', () => {
     expect(screen.getByTestId('syntax-highlighter')).toHaveAttribute(
       'data-language',
       'r'
+    );
+  });
+
+  it('uses julia grammar when language is "julia"', () => {
+    render(<CodeHighlighter code='using CairoMakie' language="julia" />);
+    expect(screen.getByTestId('syntax-highlighter')).toHaveAttribute(
+      'data-language',
+      'julia'
     );
   });
 

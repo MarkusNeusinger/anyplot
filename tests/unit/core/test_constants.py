@@ -30,13 +30,14 @@ class TestSupportedLibraries:
     """Tests for SUPPORTED_LIBRARIES constant."""
 
     def test_contains_expected_libraries(self) -> None:
-        """Should contain exactly the expected catalog of library IDs (9 Python + ggplot2)."""
+        """Should contain exactly the expected catalog of library IDs (9 Python + ggplot2 + makie)."""
         expected = {
             "altair",
             "bokeh",
             "ggplot2",
             "highcharts",
             "letsplot",
+            "makie",
             "matplotlib",
             "plotly",
             "plotnine",
@@ -74,6 +75,11 @@ class TestLibrariesMetadata:
         """ggplot2 is the catalog's first non-Python entry."""
         ggplot2 = next(lib for lib in LIBRARIES_METADATA if lib["id"] == "ggplot2")
         assert ggplot2["language_id"] == "r"
+
+    def test_makie_is_julia_language(self) -> None:
+        """Makie is the catalog's first Julia entry (Phase 5)."""
+        makie = next(lib for lib in LIBRARIES_METADATA if lib["id"] == "makie")
+        assert makie["language_id"] == "julia"
 
 
 class TestInteractiveLibraries:
@@ -217,9 +223,9 @@ class TestIsInteractiveLibrary:
 class TestSupportedLanguages:
     """Tests for SUPPORTED_LANGUAGES + LANGUAGES_METADATA."""
 
-    def test_contains_python_and_r(self) -> None:
-        """Catalog currently supports Python and R."""
-        assert SUPPORTED_LANGUAGES == {"python", "r"}
+    def test_contains_python_r_and_julia(self) -> None:
+        """Catalog currently supports Python, R, and Julia."""
+        assert SUPPORTED_LANGUAGES == {"python", "r", "julia"}
 
     def test_metadata_ids_match_supported(self) -> None:
         """Every LANGUAGES_METADATA entry must appear in SUPPORTED_LANGUAGES."""
@@ -236,6 +242,7 @@ class TestSupportedLanguages:
         """LANGUAGE_FILE_EXTENSIONS exposes the same data as a mapping."""
         assert LANGUAGE_FILE_EXTENSIONS["python"] == ".py"
         assert LANGUAGE_FILE_EXTENSIONS["r"] == ".R"
+        assert LANGUAGE_FILE_EXTENSIONS["julia"] == ".jl"
 
     def test_every_library_references_known_language(self) -> None:
         """No library may point at a language we don't list in LANGUAGES_METADATA."""

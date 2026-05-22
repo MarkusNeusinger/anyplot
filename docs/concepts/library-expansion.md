@@ -14,20 +14,24 @@ priority order.
 
 ## 1. Current state
 
-anyplot currently ships **9 Python libraries** and **1 R library** (ggplot2 —
-the first non-Python entry; landed as Phase 3 of the rollout below).
+anyplot currently ships **9 Python libraries**, **1 R library** (ggplot2 —
+the first non-Python entry; landed as Phase 3 of the rollout below), and
+**1 Julia library** (Makie.jl via CairoMakie; landed as Phase 5 ahead of the
+original roadmap order — see §8).
 
-| # | Library    | Native     | In anyplot as | Most-used variant | Notes                                       |
-|---|------------|------------|---------------|-------------------|---------------------------------------------|
-| 1 | Matplotlib | Python     | Python        | Python            | Native = most-used.                         |
-| 2 | Seaborn    | Python     | Python        | Python            | Built on matplotlib.                        |
-| 3 | Plotly     | JavaScript | Python        | **Python**        | PyPI ~18 M / wk vs `plotly.js` ~0.8 M / wk. |
-| 4 | Bokeh      | Python     | Python        | Python            | Native = most-used.                         |
-| 5 | Altair     | Python     | Python        | Python            | Python interface to Vega-Lite (JSON spec).  |
-| 6 | plotnine   | Python     | Python        | Python            | Sister library to ggplot2, not a wrapper.   |
-| 7 | Pygal      | Python     | Python        | Python            | Native = most-used.                         |
-| 8 | Highcharts | JavaScript | Python        | **JavaScript**    | npm ~1 M / wk vs `highcharts-core` ~5 k / wk.|
-| 9 | lets-plot  | Kotlin     | Python        | Python            | Python frontend has the most users today.   |
+| #  | Library    | Native     | In anyplot as | Most-used variant | Notes                                       |
+|----|------------|------------|---------------|-------------------|---------------------------------------------|
+| 1  | Matplotlib | Python     | Python        | Python            | Native = most-used.                         |
+| 2  | Seaborn    | Python     | Python        | Python            | Built on matplotlib.                        |
+| 3  | Plotly     | JavaScript | Python        | **Python**        | PyPI ~18 M / wk vs `plotly.js` ~0.8 M / wk. |
+| 4  | Bokeh      | Python     | Python        | Python            | Native = most-used.                         |
+| 5  | Altair     | Python     | Python        | Python            | Python interface to Vega-Lite (JSON spec).  |
+| 6  | plotnine   | Python     | Python        | Python            | Sister library to ggplot2, not a wrapper.   |
+| 7  | Pygal      | Python     | Python        | Python            | Native = most-used.                         |
+| 8  | Highcharts | JavaScript | Python        | **JavaScript**    | npm ~1 M / wk vs `highcharts-core` ~5 k / wk.|
+| 9  | lets-plot  | Kotlin     | Python        | Python            | Python frontend has the most users today.   |
+| 10 | ggplot2    | R          | R             | R                 | First non-Python entry; landed in Phase 3.  |
+| 11 | Makie.jl   | Julia      | Julia         | Julia             | CairoMakie backend (static PNG). Phase 5.   |
 
 **Implication:** under the most-used rule (see §6), only **Highcharts** is
 filed under the wrong language and should move to JavaScript. Plotly and
@@ -302,9 +306,9 @@ Ranked by `reach × ease-of-integration ÷ duplication-risk`.
 | 0     | —                                   | Python        |  9                       | shipped  |
 | 1     | Chart.js, D3.js, ECharts            | + JavaScript  | 12                       | planned  |
 | 2     | Highcharts (replaces Python entry)  | —             | 12                       | planned  |
-| 3     | **ggplot2**                         | **+ R**       | **10**                   | **shipped** (Phase 3 was implemented before Phases 1+2; net total is 10 not 13 until JS lands) |
+| 3     | **ggplot2**                         | **+ R**       | **10**                   | **shipped** (Phase 3 was implemented before Phases 1+2; net total was 10 until Phase 5 landed Julia) |
 | 4     | Recharts, Observable Plot           | —             | TBD                      | planned  |
-| 5     | Makie.jl, ApexCharts                | + Julia       | TBD                      | planned  |
+| 5     | **Makie.jl** (ApexCharts deferred)  | **+ Julia**   | **11**                   | **shipped** (Phase 5 was implemented before Phases 1+2+4 to validate the multi-language pipeline on a second non-Python runtime; ApexCharts split to a later phase) |
 
 > **Why Phase 2 ≠ Tier 2 #4 from §7.** §7 ranks ggplot2 (Tier 2 #4) above
 > Highcharts (Tier 2 #5) by reach; §8 still ships Highcharts first because
@@ -348,6 +352,22 @@ entries.
   commercial-with-free-tier model) at ~18× lower download volume, and a
   second commercial entry would weaken the FOSS-first stance. Revisit only
   if Plausible data shows unmet demand for amCharts-specific examples.
+- **Phase 5 (Julia / Makie.jl) shipped before Phases 1+2 (JavaScript).**
+  The original roadmap order was Phase 1 (Chart.js / D3 / ECharts) →
+  Phase 2 (Highcharts JS) → Phase 3 (ggplot2) → Phase 4 (Recharts /
+  Observable Plot) → Phase 5 (Makie.jl). After Phase 3 landed and the
+  multi-language pipeline proved stable on R, shipping Julia next provided
+  a cheap second non-Python validation that surfaces multi-language gaps
+  the JS work would otherwise hit cold. The JavaScript phases remain
+  planned; their relative ordering is unchanged.
+- **Makie.jl over Plots.jl.** Makie is a distinct scientific stack, not a
+  wrapper, and it earns its own entry under the "most-used variant" rule
+  in §6. Plots.jl is the alternative; we ship Makie unless Plausible data
+  later shows the audience flips. `PlotlyJS.jl` is a wrapper around
+  plotly.js and is already covered via the Python Plotly entry.
+- **CairoMakie backend only.** GLMakie / WGLMakie are interactive backends
+  out of scope for the static gallery; `INTERACTIVE_LIBRARIES` intentionally
+  excludes Makie.
 
 ## 10. Open questions for the team
 

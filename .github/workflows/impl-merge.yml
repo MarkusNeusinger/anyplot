@@ -109,6 +109,10 @@ jobs:
               LANGUAGE="r"
               EXT=".R"
               ;;
+            makie)
+              LANGUAGE="julia"
+              EXT=".jl"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"
@@ -331,8 +335,9 @@ jobs:
           ISSUE: ${{ steps.issue.outputs.number }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
         run: |
-          # All 9 supported libraries
-          LIBRARIES="matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot"
+          # All supported libraries (mirrors core/constants.py SUPPORTED_LIBRARIES).
+          # ggplot2 (R) and makie (Julia) are non-Python entries; everything else is Python.
+          LIBRARIES="matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot ggplot2 makie"
 
           # Get current labels on the issue
           LABELS=$(gh issue view "$ISSUE" --json labels -q '.labels[].name' 2>/dev/null || echo "")
@@ -353,11 +358,12 @@ jobs:
             fi
           done
 
+          TOTAL_LIBS=$(echo "$LIBRARIES" | wc -w | tr -d ' ')
           TOTAL=$((DONE_COUNT + FAILED_COUNT))
-          echo "::notice::Libraries: $DONE_COUNT done, $FAILED_COUNT failed, $TOTAL/9 total"
+          echo "::notice::Libraries: $DONE_COUNT done, $FAILED_COUNT failed, $TOTAL/$TOTAL_LIBS total"
 
-          # Close issue if all 9 libraries are done OR done+failed=9
-          if [ "$TOTAL" -eq 9 ]; then
+          # Close issue if all supported libraries are done OR done+failed=TOTAL_LIBS
+          if [ "$TOTAL" -eq "$TOTAL_LIBS" ]; then
             # Build status table
             TABLE="| Library | Status |\n|---------|--------|"
             for lib in $LIBRARIES; do
@@ -370,10 +376,10 @@ jobs:
 
             if [ "$FAILED_COUNT" -eq 0 ]; then
               TITLE=":tada: All Implementations Complete!"
-              SUMMARY="All 9 library implementations for \`${SPEC_ID}\` have been successfully merged."
+              SUMMARY="All ${TOTAL_LIBS} library implementations for \`${SPEC_ID}\` have been successfully merged."
             else
               TITLE=":white_check_mark: Implementations Complete"
-              SUMMARY="${DONE_COUNT}/9 implementations merged, ${FAILED_COUNT} libraries could not implement this plot type."
+              SUMMARY="${DONE_COUNT}/${TOTAL_LIBS} implementations merged, ${FAILED_COUNT} libraries could not implement this plot type."
             fi
 
             gh issue comment "$ISSUE" --body "## ${TITLE}

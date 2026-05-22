@@ -42,7 +42,7 @@ anyplot is different: **AI curates and maintains, humans discover and choose.**
 
 ### What Makes It Different
 
-- **Library Agnostic**: Compare libraries side-by-side. Ten ecosystems across two languages today — Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot) and R (ggplot2); the architecture is designed to welcome more
+- **Library Agnostic**: Compare libraries side-by-side. Eleven ecosystems across three languages today — Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot), R (ggplot2), and Julia (Makie.jl); the architecture is designed to welcome more
 - **Always Current**: AI agents keep examples updated and optimized
 - **Multi-Dimensional Discovery**: Find plots by domain (finance, research), type (scatter, bar), or specific use case (
   ROC curve, Sankey diagram)

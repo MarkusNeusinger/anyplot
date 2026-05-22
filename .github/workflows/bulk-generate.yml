@@ -29,6 +29,7 @@ on:
           - highcharts
           - letsplot
           - ggplot2
+          - makie
       dry_run:
         description: "List what would be generated without executing"
         type: boolean
@@ -53,7 +54,7 @@ on:
         default: '{}'
 
 env:
-  ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot ggplot2"
+  ALL_LIBRARIES: "matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot ggplot2 makie"
 
 # Serialise bulk-generate runs. Each run paces its own dispatches with
 # `pace_seconds`; letting two runs overlap would interleave their

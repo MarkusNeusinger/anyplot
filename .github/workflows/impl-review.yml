@@ -105,6 +105,10 @@ jobs:
               LANGUAGE="r"
               EXT=".R"
               ;;
+            makie)
+              LANGUAGE="julia"
+              EXT=".jl"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"
@@ -263,6 +267,7 @@ jobs:
               "plotnine":   "Check `ggsave(width=…, height=…, units='in', dpi=400)` and `theme(figure_size=…)`; do not pass `bbox_inches='tight'`.",
               "letsplot":   "Check `ggsize(W, H)` and `ggsave(..., scale=4)` pair — only the two canonical pairs land on target.",
               "ggplot2":    "Check `ggsave(width=…, height=…, units='in', dpi=400)` with `ragg::agg_png`.",
+              "makie":      "Check `Figure(resolution=(1600, 900))` + `save(..., px_per_unit=2)` (landscape) or `resolution=(1200, 1200)` + `px_per_unit=2` (square) — those are the only two canonical pairs.",
           }
           cause = causes.get(LIBRARY, f"Review `prompts/library/{LIBRARY}.md` 'Canvas — hard rule' section.")
 
@@ -640,7 +645,7 @@ jobs:
 
           # Human-readable runtime label for the header. Extend this map when a new
           # language joins the catalog.
-          RUNTIME_LABEL = {"python": "Python", "r": "R"}.get(language, language.capitalize())
+          RUNTIME_LABEL = {"python": "Python", "r": "R", "julia": "Julia"}.get(language, language.capitalize())
 
           with open(impl_file, "r") as f:
               content = f.read()
@@ -658,6 +663,33 @@ jobs:
               # Match a leading run of #' lines (the existing roxygen header). Anchored to
               # start of file. If no header exists we fall back to prepending one.
               pattern = r"\A(?:#'[^\n]*\n)+"
+              if re.match(pattern, content):
+                  new_content = re.sub(pattern, new_header + "\n", content, count=1)
+              else:
+                  new_content = new_header + "\n" + content
+          elif language == "julia":
+              # Julia has no docstring syntax; anyplot uses a leading `#` comment
+              # block, mirroring the Python/R conventions. Newlines in the title
+              # would break the comment block, so sanitize them.
+              title_safe = title.replace("\n", " ")
+              new_header = (
+                  "# anyplot.ai\n"
+                  f"# {spec_id}: {title_safe}\n"
+                  f"# Library: {library} {lib_version} | {RUNTIME_LABEL} {lang_version}\n"
+                  f"# Quality: {score}/100 | {date_info}"
+              )
+              # Match a leading run of `#`-prefixed Julia line-comments (the
+              # existing header). Anchored to start of file. If no header
+              # exists we fall back to prepending one. The character class
+              # after `#` is intentionally narrow: either `[ \t]` (a space or
+              # tab — the canonical header style `# anyplot.ai`) or empty
+              # (i.e. a bare `#` immediately followed by `\n`). This excludes:
+              # `#=` (block-comment openers, which would otherwise swallow the
+              # block-comment body) and `#!` (shebangs — Julia ignores them
+              # but they're not part of the header we own). If either ever
+              # appears as the first non-blank line of a file, the regex
+              # falls through and the canonical header is prepended above it.
+              pattern = r"\A(?:#(?:[ \t][^\n]*|)\n)+"
               if re.match(pattern, content):
                   new_content = re.sub(pattern, new_header + "\n", content, count=1)
               else:

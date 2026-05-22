@@ -51,7 +51,7 @@ export function AboutPage() {
         <title>about | anyplot.ai</title>
         <meta
           name="description"
-          content="a catalogue of python plotting examples across nine libraries. plot ideas come from humans; ai drafts the spec, generates code for every library, and reviews each implementation."
+          content="a catalogue of plotting examples across eleven libraries in python, r, and julia. plot ideas come from humans; ai drafts the spec, generates code for every library, and reviews each implementation."
         />
         <meta property="og:title" content="about | anyplot.ai" />
         <meta

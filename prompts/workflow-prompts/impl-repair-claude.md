@@ -53,7 +53,7 @@ Adjust the canvas-controlling knobs of the relevant library family:
 ## Step 3: Read current implementation
 
 `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` — `{EXT}` is `.py`
-for python libraries and `.R` for ggplot2.
+for python libraries, `.R` for ggplot2, and `.jl` for makie.
 
 **Do NOT read sibling-library implementations under
 `plots/{SPEC_ID}/implementations/`** (other libraries' source or `.yaml`).
@@ -86,6 +86,13 @@ ANYPLOT_THEME=light Rscript {LIBRARY}.R
 ANYPLOT_THEME=dark  Rscript {LIBRARY}.R
 ```
 
+**Julia (`LANGUAGE=julia`)**:
+```bash
+cd plots/{SPEC_ID}/implementations/{LANGUAGE}
+ANYPLOT_THEME=light julia --project=. {LIBRARY}.jl
+ANYPLOT_THEME=dark  julia --project=. {LIBRARY}.jl
+```
+
 Both renders must succeed.
 
 ## Step 6: Visual self-check
@@ -103,6 +110,10 @@ ruff check --fix plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}.py
 
 **R (`LANGUAGE=r`)**: no formatter is required by CI. Keep idiomatic ggplot2
 style (4-space indent, `<-` for assignment).
+
+**Julia (`LANGUAGE=julia`)**: no formatter is required by CI. Keep idiomatic
+Julia style (4-space indent, `lowercase_with_underscores` variables / functions,
+`CamelCase` types/modules).
 
 ## Step 8: Commit and push
 
