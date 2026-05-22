@@ -1,9 +1,9 @@
-name = "anyplot"
-uuid = "5f9c7e1d-8b3d-4c1a-9f6e-1a2b3c4d5e6f"
-authors = ["anyplot contributors"]
-version = "0.1.0"
-
 # Julia runtime stack for the CairoMakie implementations.
+#
+# This is an *environment-only* project — no `name`/`uuid`/`version`. anyplot
+# is not a Julia package; it just consumes packages. Adding `name`/`uuid`
+# would make Julia try to precompile `anyplot` itself and fail because no
+# `src/anyplot.jl` exists.
 #
 # Reproducibility model — sibling of `renv.lock` for R:
 # - Project.toml lists the packages we depend on (this file).
