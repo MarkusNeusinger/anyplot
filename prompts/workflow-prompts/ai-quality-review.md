@@ -17,7 +17,7 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 - Note all required features
 
 ### 2. Read the Implementation
-`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}` — `${EXT}` is `.py` for python libraries (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot) and `.R` for ggplot2
+`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}` — `${EXT}` is `.py` for python libraries (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot), `.R` for ggplot2, and `.jl` for makie
 
 ### 3. Read Library-Specific Rules
 `prompts/library/${LIBRARY}.md`
@@ -106,7 +106,7 @@ Visually estimate from each PNG — no pixel measurement needed. These are soft 
 
 ### 6. Check for Auto-Reject (AR-08, AR-09)
 
-**AR-08 — Fake interactivity (static libraries only — matplotlib, seaborn, plotnine, ggplot2):**
+**AR-08 — Fake interactivity (static libraries only — matplotlib, seaborn, plotnine, ggplot2, makie):**
 
 Before scoring, check if the implementation fakes interactive features:
 - Simulated tooltips (annotation boxes styled as hover tooltips)
@@ -167,7 +167,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | SC-01 | Plot Type | 5 | Correct chart type? |
 | SC-02 | Required Features | 4 | All features from spec? |
 | SC-03 | Data Mapping | 3 | X/Y correct? Axes show all data? |
-| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r}). Legend labels match? |
+| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia}). Legend labels match? |
 
 #### Data Quality (15 pts)
 | ID | Criterion | Max | Check |

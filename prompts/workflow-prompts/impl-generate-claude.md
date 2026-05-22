@@ -12,6 +12,7 @@ The `{EXT}` value depends on `{LANGUAGE}`:
 |----------|------|-----------------------|
 | `python` | `.py` | `python` (in `.venv`) |
 | `r`      | `.R`  | `Rscript`             |
+| `julia`  | `.jl` | `julia --project=.`   |
 
 ---
 
@@ -50,7 +51,7 @@ Read these files to understand the requirements:
 When regenerating an existing implementation, you MUST read these BEFORE writing any code:
 
 1. `/tmp/anyplot-prev-review.md` — structured review from the previous attempt (image description, strengths, weaknesses, failed criteria checklist). The workflow extracts this automatically from the previous `metadata/{LANGUAGE}/{LIBRARY}.yaml`.
-2. `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` — the previous implementation (`.py` for python, `.R` for r).
+2. `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` — the previous implementation (`.py` for python, `.R` for r, `.jl` for julia).
 
 **Default regen mindset: incremental improvement, not rewrite.**
 
@@ -107,7 +108,7 @@ entirely — there is nothing to apply.
 
 ### Feasibility Check (Static Libraries Only)
 
-If LIBRARY is **matplotlib**, **seaborn**, **plotnine**, or **ggplot2**, AND the specification mentions interactive features (hover, zoom, click, brush, animation, streaming):
+If LIBRARY is **matplotlib**, **seaborn**, **plotnine**, **ggplot2**, or **makie**, AND the specification mentions interactive features (hover, zoom, click, brush, animation, streaming):
 
 1. Is the spec's PRIMARY value its interactivity?
 2. If YES → Do NOT generate. Report: `NOT_FEASIBLE: {LIBRARY} cannot provide {required_feature} as static PNG.`
@@ -121,15 +122,16 @@ If LIBRARY is **matplotlib**, **seaborn**, **plotnine**, or **ggplot2**, AND the
 plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}
 ```
 
-where `{EXT}` is `.py` for `python` and `.R` for `r`.
+where `{EXT}` is `.py` for `python`, `.R` for `r`, and `.jl` for `julia`.
 
 The script MUST:
 - Follow the KISS structure: imports → data → plot → save
 - Read `ANYPLOT_THEME` from the environment (`"light"` or `"dark"`, default `"light"`) and render accordingly. The same single script file handles both themes.
   - Python: `os.getenv("ANYPLOT_THEME", "light")`
   - R: `Sys.getenv("ANYPLOT_THEME", "light")`
+  - Julia: `get(ENV, "ANYPLOT_THEME", "light")`
 - Save output as `plot-{THEME}.png` (theme-suffixed, based on the env var).
-- For interactive libraries (plotly, bokeh, altair, highcharts, pygal, letsplot): also save `plot-{THEME}.html`. ggplot2 is PNG-only, no HTML variant.
+- For interactive libraries (plotly, bokeh, altair, highcharts, pygal, letsplot): also save `plot-{THEME}.html`. ggplot2 and makie are PNG-only, no HTML variant.
 - Use `#009E73` (Okabe-Ito position 1) as the **first categorical series**, always. Multi-series follows the canonical order: `#D55E00`, `#0072B2`, `#CC79A7`, `#E69F00`, `#56B4E9`, `#F0E442`.
 - For continuous data: `viridis`/`cividis` (sequential) or `BrBG` (diverging). Never `jet`/`hsv`/`rainbow`.
 - Plot backgrounds: `#FAF8F1` (light) / `#1A1A17` (dark). Never pure `#FFFFFF` or `#000000`.
@@ -156,7 +158,14 @@ ANYPLOT_THEME=light Rscript {LIBRARY}.R
 ANYPLOT_THEME=dark  Rscript {LIBRARY}.R
 ```
 
-Both runs must succeed and produce `plot-light.png` / `plot-dark.png` (plus `plot-light.html` / `plot-dark.html` for interactive libs). If either fails, fix and try again (max 3 attempts).
+**Julia (`LANGUAGE=julia`)**:
+```bash
+cd plots/{SPEC_ID}/implementations/{LANGUAGE}
+ANYPLOT_THEME=light julia --project=. {LIBRARY}.jl
+ANYPLOT_THEME=dark  julia --project=. {LIBRARY}.jl
+```
+
+Both runs must succeed and produce `plot-light.png` / `plot-dark.png` (plus `plot-light.html` / `plot-dark.html` for interactive libs — ggplot2 and makie are PNG-only). If either fails, fix and try again (max 3 attempts).
 
 ### Step 3b: Canvas dimension self-check (Step 0 contract verification)
 
@@ -202,6 +211,13 @@ ggplot2 style (4-space indent, `<-` for assignment, `=` only in arguments). If
 `Rscript -e 'styler::style_file("plots/{SPEC_ID}/implementations/r/{LIBRARY}.R")'`
 — but a missing styler is not a failure.
 
+**Julia (`LANGUAGE=julia`)**: no formatter is required by CI. Follow idiomatic
+Julia style (4-space indent, no trailing whitespace, `lowercase_with_underscores`
+for variables and functions, `CamelCase` for types/modules). If `JuliaFormatter`
+is available, you may run
+`julia --project=. -e 'using JuliaFormatter; format_file("plots/{SPEC_ID}/implementations/julia/{LIBRARY}.jl")'`
+— but a missing formatter is not a failure.
+
 ## Step 6: Verify file exists (CRITICAL)
 
 Before committing, verify the implementation file exists:
@@ -210,7 +226,7 @@ Before committing, verify the implementation file exists:
 ls -la plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}
 ```
 
-`{EXT}` is `.py` for python, `.R` for r.
+`{EXT}` is `.py` for python, `.R` for r, `.jl` for julia.
 
 **If the file does NOT exist, you MUST go back to Step 2 and create it!**
 
@@ -239,8 +255,8 @@ Pass the multi-line message via `-F -` or a heredoc so git preserves the body.
 ## Final Check
 
 Before finishing, confirm:
-1. ✅ `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` exists (`.py` for python, `.R` for r)
-2. ✅ `plot-light.png` AND `plot-dark.png` were generated successfully (plus `plot-light.html` / `plot-dark.html` for interactive libs — ggplot2 is PNG-only)
+1. ✅ `plots/{SPEC_ID}/implementations/{LANGUAGE}/{LIBRARY}{EXT}` exists (`.py` for python, `.R` for r, `.jl` for julia)
+2. ✅ `plot-light.png` AND `plot-dark.png` were generated successfully (plus `plot-light.html` / `plot-dark.html` for interactive libs — ggplot2 and makie are PNG-only)
 3. ✅ First categorical series renders in `#009E73` in both themes
 4. ✅ Changes were committed and pushed
 5. ✅ If regenerating: `/tmp/anyplot-prev-review.md` and the previous source file were read, and each weakness / failed criterion was either addressed or consciously kept (explained in the commit body)

@@ -173,7 +173,7 @@ export function PlotsPage() {
     <Box onClick={handleContainerClick}>
       <Helmet>
         <title>plots | anyplot.ai</title>
-        <meta name="description" content="Browse and filter 2,600+ Python visualization examples across 9 libraries. Search by plot type, domain, features, and more." />
+        <meta name="description" content="Browse and filter 2,600+ visualization examples across 11 libraries in Python, R, and Julia. Search by plot type, domain, features, and more." />
         <link rel="canonical" href="https://anyplot.ai/plots" />
       </Helmet>
 

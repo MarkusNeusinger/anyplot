@@ -13,7 +13,7 @@ Git history shows all changes (`git log -p prompts/plot-generator.md`).
 |------|-------|------|
 | `plot-generator.md` | Plot Generator | Base rules for all plot implementations |
 | `default-style-guide.md` | Plot Generator | Default visual style (colors, typography, layout) |
-| `library/*.md` | Plot Generator | Library-specific rules (10 files: 9 Python + ggplot2) |
+| `library/*.md` | Plot Generator | Library-specific rules (11 files: 9 Python + ggplot2 + makie) |
 | `quality-criteria.md` | All | Definition of what "good code" means |
 | `quality-evaluator.md` | Quality Checker | AI quality evaluation |
 | `spec-id-generator.md` | Spec ID Generator | Assigns unique spec IDs |

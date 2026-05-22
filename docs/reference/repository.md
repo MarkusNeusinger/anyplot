@@ -67,7 +67,7 @@ anyplot/
 │   ├── quality-evaluator.md           # AI quality evaluation prompt
 │   ├── spec-id-generator.md           # Assigns spec IDs
 │   ├── default-style-guide.md         # Default visual style rules
-│   ├── library/                       # Library-specific rules (10 files: 9 Python + ggplot2)
+│   ├── library/                       # Library-specific rules (11 files: 9 Python + ggplot2 + makie)
 │   │   ├── matplotlib.md
 │   │   ├── seaborn.md
 │   │   └── ...
@@ -340,9 +340,19 @@ gs://anyplot-images/
 
 ### `plots/{spec-id}/implementations/`
 
-**Purpose**: Library-specific Python implementations
+**Purpose**: Library-specific implementations, organized by language
 
-**File Naming**: `{library}.py`
+**Layout**:
+```
+plots/{spec-id}/implementations/
+├── python/   # 9 Python libraries (.py)
+├── r/        # ggplot2 (.R)
+└── julia/    # Makie.jl (.jl)
+```
+
+**File Naming** (by language):
+
+Python (`python/`, `.py`):
 - `matplotlib.py`
 - `seaborn.py`
 - `plotly.py`
@@ -352,6 +362,12 @@ gs://anyplot-images/
 - `pygal.py`
 - `highcharts.py`
 - `letsplot.py`
+
+R (`r/`, `.R`):
+- `ggplot2.R`
+
+Julia (`julia/`, `.jl`):
+- `makie.jl`
 
 **Code Style** (KISS):
 ```python
@@ -396,7 +412,7 @@ plt.savefig('plot.png', dpi=300)
 **Purpose**: AI agent prompts for code generation and quality evaluation
 
 **Subdirectories**:
-- `library/` - Library-specific rules (9 files: matplotlib, seaborn, plotly, etc.)
+- `library/` - Library-specific rules (11 files: 9 Python + ggplot2 + makie)
 - `templates/` - Templates for new specs (`specification.md`, `specification.yaml`)
 - `workflow-prompts/` - Workflow-specific prompt templates
 

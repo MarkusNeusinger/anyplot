@@ -1,0 +1,75 @@
+name: "Setup Julia + Makie.jl"
+description: >-
+  Installs Julia, the system libraries needed for headless plot rendering with
+  CairoMakie, and the package set used by anyplot's Julia implementations
+  (Makie + CairoMakie + DataFrames + dataset packages). Packages are restored
+  from the committed top-level Project.toml / Manifest.toml for reproducibility.
+inputs:
+  julia-version:
+    description: "Julia version to install"
+    required: false
+    default: "1.11"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install Julia
+      # julia-actions/setup-julia ships every sub-action from one repo and
+      # tags them together; `@v2` is the maintained moving tag. Dependabot
+      # will pin to a SHA on first run.
+      uses: julia-actions/setup-julia@v2
+      with:
+        version: ${{ inputs.julia-version }}
+
+    # CairoMakie bundles Cairo via Cairo_jll, so apt installs are not strictly
+    # required; keep the fallback in place so the action is robust against
+    # future runner-image changes that affect font rendering.
+    - name: Install system dependencies for CairoMakie
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends \
+          libfontconfig1-dev \
+          libfreetype6-dev \
+          libpng-dev
+
+    # Speed up subsequent runs — Julia precompilation is slow on cold start.
+    # `julia-actions/cache@v2` keys on Project.toml + Manifest.toml.
+    - name: Cache Julia depot
+      uses: julia-actions/cache@v2
+
+    - name: Install Julia packages
+      # `Pkg.instantiate()` restores the exact versions pinned in
+      # Manifest.toml. If Manifest.toml is absent (first run before the
+      # lockfile is committed), `Pkg.add(...)` falls back to fresh resolution
+      # of the packages we need so impl runs don't hard-fail.
+      shell: bash
+      run: |
+        julia --project=. -e '
+          using Pkg
+          if isfile("Manifest.toml")
+              Pkg.instantiate()
+          else
+              Pkg.add([
+                  "CairoMakie", "Makie", "DataFrames", "CSV",
+                  "Colors", "ColorSchemes", "RDatasets",
+                  "PalmerPenguins", "Random", "Statistics"
+              ])
+              Pkg.precompile()
+          end
+        '
+
+    - name: Smoke-test CairoMakie renders a PNG
+      shell: bash
+      run: |
+        julia --project=. -e '
+          using CairoMakie
+          tmp = tempname() * ".png"
+          fig = Figure(resolution = (400, 300))
+          ax  = Axis(fig[1, 1])
+          scatter!(ax, 1:10, rand(10))
+          save(tmp, fig)
+          @assert isfile(tmp) "smoke-test PNG was not created"
+          @assert filesize(tmp) > 0 "smoke-test PNG is empty"
+          println("ok: ", tmp, " (", filesize(tmp), " bytes)")
+        '

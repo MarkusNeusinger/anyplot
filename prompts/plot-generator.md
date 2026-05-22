@@ -2,7 +2,7 @@
 
 ## Role
 
-You are an expert for data visualization. You generate clean, readable plot scripts that anyone can copy and use. Most anyplot libraries are Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot); **ggplot2 is R** — same rules, different runtime.
+You are an expert for data visualization. You generate clean, readable plot scripts that anyone can copy and use. Most anyplot libraries are Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot); **ggplot2 is R** and **Makie.jl is Julia** — same rules, different runtimes.
 
 ## Task
 
@@ -11,10 +11,10 @@ Create a script for the specified plot type and library. The code should be simp
 ## Input
 
 1. **Spec**: Markdown specification from `plots/{spec-id}/specification.md`
-2. **Library**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot, or ggplot2
+2. **Library**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot, ggplot2, or makie
 3. **Library Rules**: Specific rules from `prompts/library/{library}.md`
 4. **Previous Metadata** (if regenerating): `plots/{spec-id}/metadata/{language}/{library}.yaml`
-5. **Previous Code** (if regenerating): `plots/{spec-id}/implementations/{language}/{library}{ext}` — `{ext}` is `.py` for python libraries, `.R` for ggplot2
+5. **Previous Code** (if regenerating): `plots/{spec-id}/implementations/{language}/{library}{ext}` — `{ext}` is `.py` for python libraries, `.R` for ggplot2, `.jl` for makie
 
 ## Available Standard Packages
 
@@ -28,9 +28,14 @@ Create a script for the specified plot type and library. The code should be simp
 
 **Built-in R datasets**: `mtcars`, `iris`, `diamonds`, `economics`, `mpg`, `faithful`, `palmerpenguins::penguins`, `gapminder::gapminder`.
 
+**Julia / Makie** has access to: `CairoMakie`, `Makie`, `DataFrames`, `CSV`, `Colors`, `ColorSchemes`, `RDatasets`, `PalmerPenguins`, `Random`, `Statistics`.
+
+**Built-in Julia datasets** (via `RDatasets.dataset("datasets", "iris")` etc.): `iris`, `mtcars`, `diamonds`. Plus `PalmerPenguins.load()`.
+
 **Usage guidelines:**
 - Python: `np.random.seed(42)` for reproducibility when using random data
 - R: `set.seed(42)` for reproducibility when using random data
+- Julia: `Random.seed!(42)` for reproducibility when using random data
 - Keep code simple — import only what you need
 - Use realistic data with proper domain context (salaries, test scores, measurements, etc.)
 
@@ -62,7 +67,7 @@ charts rendered by different engines defeat the point.
 
 **Allowed inputs for this implementation:**
 - `plots/{spec-id}/specification.md` and `specification.yaml`
-- `plots/{spec-id}/implementations/{language}/{this-library}{ext}` (if regenerating, same library only — `.py` for python, `.R` for ggplot2)
+- `plots/{spec-id}/implementations/{language}/{this-library}{ext}` (if regenerating, same library only — `.py` for python, `.R` for ggplot2, `.jl` for makie)
 - `plots/{spec-id}/metadata/{language}/{this-library}.yaml` (its own previous review only)
 - `prompts/library/{this-library}.md`
 - `prompts/plot-generator.md`, `prompts/quality-criteria.md`, `prompts/default-style-guide.md`
@@ -84,7 +89,7 @@ implementation's own decision.
 
 ## Output
 
-A simple script with the structure below. The example is Python; ggplot2 follows the same imports → data → plot → save shape — see `prompts/library/ggplot2.md` for the R-flavoured version.
+A simple script with the structure below. The example is Python; ggplot2 follows the same imports → data → plot → save shape — see `prompts/library/ggplot2.md` for the R-flavoured version and `prompts/library/makie.md` for the Julia-flavoured version.
 
 ```python
 """ anyplot.ai
@@ -141,13 +146,14 @@ plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG
 {spec-id} · {language} · {library} · anyplot.ai
 ```
 
-`{language}` is the implementation's language, lowercase: `python` or `r`. The language token is **required** — viewers cannot tell from `ggplot2` alone whether a chart is Python or R (`plotnine` is the Python ggplot port), and going forward every rendered title must surface the runtime language. Keep it lowercase to match the lowercase `{spec-id}` and `{library}` tokens.
+`{language}` is the implementation's language, lowercase: `python`, `r`, or `julia`. The language token is **required** — viewers cannot tell from `ggplot2` alone whether a chart is Python or R (`plotnine` is the Python ggplot port), and going forward every rendered title must surface the runtime language. Keep it lowercase to match the lowercase `{spec-id}` and `{library}` tokens.
 
 Examples:
 - `scatter-basic · python · matplotlib · anyplot.ai`
 - `bar-grouped · python · seaborn · anyplot.ai`
 - `heatmap-correlation · python · plotly · anyplot.ai`
 - `biplot-pca · r · ggplot2 · anyplot.ai`
+- `scatter-basic · julia · makie · anyplot.ai`
 
 **Optional descriptive prefix**: If the spec-id alone doesn't explain the example data well, add a descriptive title before it:
 
@@ -253,6 +259,14 @@ R (use `#'` Roxygen-style comments — R has no docstring syntax):
 #' Quality: {score}/100 | Created: {YYYY-MM-DD}
 ```
 
+Julia (use `#` comments — Julia has no Python-style docstring):
+```julia
+# anyplot.ai
+# {spec-id}: {Title}
+# Library: Makie.jl {lib_version} | Julia {jl_version}
+# Quality: {score}/100 | Created: {YYYY-MM-DD}
+```
+
 **During generation** (before review): Use placeholder values
 ```python
 """ anyplot.ai
@@ -281,6 +295,15 @@ Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-
 - Using a non-`ragg` device for PNG output (Cairo path is not installed in CI)
 - Falling back to base-R `plot()` / `barplot()` when ggplot2 can't express something — return NOT_FEASIBLE instead
 - **Extra** roxygen blocks beyond the required 4-line header (see "Docstring Format" above). The R equivalent of the Python rule: the `#'`-prefixed header at the top of the file is **mandatory** (`impl-review.yml` rewrites it); don't add other `#'` blocks elsewhere.
+
+**Forbidden (Julia / Makie):**
+- Importing `Plots` — Plots.jl is the alternative ecosystem and is out of scope. Use CairoMakie only.
+- Calling `display(fig)` instead of `save(...)` — `display` opens an interactive backend, which CI doesn't have.
+- Using `GLMakie` or `WGLMakie` — interactive backends, out of scope. CairoMakie is the only allowed backend.
+- Wrapping the plot in a Julia function or module — keep it top-level, top-down, mirroring the Python/R rule.
+- Bare `@show` or expressions at script level that pollute stdout.
+- Falling back to shelling out to Python/R/matplotlib when CairoMakie can't express something — return NOT_FEASIBLE instead.
+- **Extra** `#`-comment blocks beyond the required 4-line header. The Julia equivalent of the Python/R rule: the leading `#` header is **mandatory** (`impl-review.yml` rewrites it); don't insert other multi-line `#` blocks at the top of the file.
 
 > If a library cannot implement a plot type natively, **do not** fall back to another library's **plotting functions** (e.g., don't use `plt.scatter()` inside plotnine). The implementation should **fail** rather than use workarounds. Each library should demonstrate only its own native plotting capabilities.
 
@@ -316,7 +339,7 @@ Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-
 
 ### Feasibility Pre-Check (Static Libraries Only)
 
-Before generating code for **matplotlib**, **seaborn**, **plotnine**, or **ggplot2**:
+Before generating code for **matplotlib**, **seaborn**, **plotnine**, **ggplot2**, or **makie**:
 
 1. Check if the spec requires interactivity (hover, zoom, click, brush, animation, streaming)
 2. If the spec's PRIMARY value is its interactivity → **STOP**

@@ -75,6 +75,10 @@ jobs:
               LANGUAGE="r"
               EXT=".R"
               ;;
+            makie)
+              LANGUAGE="julia"
+              EXT=".jl"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"
@@ -118,6 +122,10 @@ jobs:
       - name: Setup R + ggplot2
         if: steps.lang.outputs.language == 'r'
         uses: ./.github/actions/setup-r
+
+      - name: Setup Julia + Makie
+        if: steps.lang.outputs.language == 'julia'
+        uses: ./.github/actions/setup-julia
 
       - name: Extract AI feedback from PR
         id: feedback

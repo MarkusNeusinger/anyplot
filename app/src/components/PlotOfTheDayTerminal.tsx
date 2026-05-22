@@ -42,10 +42,12 @@ export function PlotOfTheDayTerminal({
   const previewUrl = selectPreviewUrl(potd, isDark);
   if (!potd || !previewUrl) return null;
 
-  // File extension + runner command follow the implementation language;
-  // ggplot2 (R) ships as .R + Rscript, every Python library as .py + python.
-  const ext = potd.language === 'r' ? '.R' : '.py';
-  const runner = potd.language === 'r' ? 'Rscript' : 'python';
+  // File extension + runner command follow the implementation language:
+  // - ggplot2 (R) ships as .R + Rscript
+  // - makie (Julia) ships as .jl + `julia --project=.`
+  // - every Python library as .py + python
+  const ext = potd.language === 'r' ? '.R' : potd.language === 'julia' ? '.jl' : '.py';
+  const runner = potd.language === 'r' ? 'Rscript' : potd.language === 'julia' ? 'julia --project=.' : 'python';
   const displayFilename = `plots/${potd.spec_id}/${potd.library_id}${ext}`;
   const implPath = specPath(potd.spec_id, potd.language, potd.library_id);
   const githubFileUrl = `${GITHUB_URL}/blob/main/plots/${potd.spec_id}/implementations/${potd.language}/${potd.library_id}${ext}`;

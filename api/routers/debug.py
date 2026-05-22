@@ -117,6 +117,7 @@ class SpecStatusItem(BaseModel):
     ggplot2: float | None = None
     highcharts: float | None = None
     letsplot: float | None = None
+    makie: float | None = None
     matplotlib: float | None = None
     plotly: float | None = None
     plotnine: float | None = None
@@ -315,6 +316,7 @@ async def get_debug_status(request: Request, db: AsyncSession = Depends(require_
                 ggplot2=spec_scores.get("ggplot2"),
                 highcharts=spec_scores.get("highcharts"),
                 letsplot=spec_scores.get("letsplot"),
+                makie=spec_scores.get("makie"),
                 matplotlib=spec_scores.get("matplotlib"),
                 plotly=spec_scores.get("plotly"),
                 plotnine=spec_scores.get("plotnine"),
@@ -336,6 +338,7 @@ async def get_debug_status(request: Request, db: AsyncSession = Depends(require_
         "ggplot2": "ggplot2",
         "highcharts": "Highcharts",
         "letsplot": "lets-plot",
+        "makie": "Makie.jl",
         "matplotlib": "Matplotlib",
         "plotly": "Plotly",
         "plotnine": "plotnine",
