@@ -25,7 +25,7 @@ const OKABE_ITO   = [
 ]
 
 # Skew-T parameters and thermodynamic constants
-const SKEW    = 45.0
+const SKEW     = 45.0
 const Lv_CONST = 2.501e6
 const Rd_CONST = 287.0
 const Rv_CONST = 461.5
@@ -97,6 +97,44 @@ function moist_adiabat_line(T0_C, P0_hPa, p_arr)
     return xs, ys
 end
 
+# Compute lifted parcel temperatures (Bolton 1980) and return LCL metadata.
+# p_arr must be sorted descending (1000 → 100 hPa).
+function lifted_parcel_temps(T_surf_C, Td_surf_C, P_surf_hPa, p_arr)
+    T_K  = T_surf_C + 273.15
+    Td_K = Td_surf_C + 273.15
+    Rcp  = Rd_CONST / Cp_CONST
+
+    # LCL temperature and pressure (Bolton 1980)
+    T_LCL_K = 56.0 + 1.0 / (1.0 / (Td_K - 56.0) + log(T_K / Td_K) / 800.0)
+    P_LCL   = P_surf_hPa * (T_LCL_K / T_K)^(Cp_CONST / Rd_CONST)
+
+    T_moist = T_LCL_K
+    prev_P  = P_LCL
+    T_out   = Float64[]
+
+    for P in p_arr
+        if P >= P_LCL
+            # Dry adiabatic lifting
+            push!(T_out, T_K * (P / P_surf_hPa)^Rcp - 273.15)
+        else
+            # Moist adiabatic lifting — one Euler step from prev level
+            ws      = max(0.0, ws_sat(T_moist - 273.15, prev_P) / 1000.0)
+            dT_dp   = (Rd_CONST * T_moist + Lv_CONST * ws) /
+                      (prev_P * (Cp_CONST + Lv_CONST^2 * ws / (Rv_CONST * T_moist^2)))
+            T_moist = T_moist + dT_dp * (P - prev_P)
+            prev_P  = P
+            push!(T_out, T_moist - 273.15)
+        end
+    end
+    return T_out, T_LCL_K - 273.15, P_LCL
+end
+
+# Parcel path at both resolutions
+parcel_Ts_obs, T_LCL_C, P_LCL_hPa = lifted_parcel_temps(
+    T_OBS[1], TD_OBS[1], P_OBS[1], P_OBS)
+parcel_Ts_fine, _, _ = lifted_parcel_temps(
+    T_OBS[1], TD_OBS[1], P_OBS[1], P_FINE)
+
 # Figure
 fig = Figure(
     size            = (1600, 900),
@@ -113,6 +151,8 @@ ax = Axis(
     ylabel             = "Pressure (hPa)",
     xlabelsize         = 14,
     ylabelsize         = 14,
+    xticklabelsize     = 12,
+    yticklabelsize     = 12,
     xlabelcolor        = INK,
     ylabelcolor        = INK,
     xticklabelcolor    = INK_SOFT,
@@ -222,6 +262,39 @@ for (i, ws_gkg) in enumerate([2.0, 4.0, 8.0, 12.0, 20.0])
         end
     end
 end
+
+# CAPE region — poly! fills the closed polygon between parcel and environment.
+# This uses Makie's native polygon primitive for efficient filled-area rendering.
+cape_mask = parcel_Ts_obs .> T_OBS
+if any(cape_mask)
+    ci          = findall(cape_mask)
+    env_xs_c    = [skew_x(T_OBS[i],        P_OBS[i]) for i in ci]
+    par_xs_c    = [skew_x(parcel_Ts_obs[i], P_OBS[i]) for i in ci]
+    ys_c        = y_p.(P_OBS[ci])
+    cape_pts    = Point2f.(
+        vcat(par_xs_c, reverse(env_xs_c)),
+        vcat(ys_c,     reverse(ys_c)),
+    )
+    cape_fill = RGBAf(OKABE_ITO[5].r, OKABE_ITO[5].g, OKABE_ITO[5].b, 0.22f0)
+    poly!(ax, cape_pts; color = cape_fill, strokewidth = 0, label = "CAPE")
+end
+
+# Lifted parcel trace (smooth, fine resolution)
+parcel_xs_fine = [skew_x(T, P) for (T, P) in zip(parcel_Ts_fine, P_FINE)]
+lines!(ax, parcel_xs_fine, y_p.(P_FINE);
+       color = OKABE_ITO[4], linewidth = 2.0, linestyle = :dashdotdot,
+       label = "Lifted parcel")
+
+# LCL marker
+lcl_x = skew_x(T_LCL_C, P_LCL_hPa)
+lcl_y = y_p(P_LCL_hPa)
+scatter!(ax, [lcl_x], [lcl_y];
+         color = OKABE_ITO[4], markersize = 10, marker = :diamond, strokewidth = 0)
+text!(ax, lcl_x + 1.5, lcl_y;
+      text    = "LCL",
+      fontsize = 9,
+      color   = OKABE_ITO[4],
+      align   = (:left, :center))
 
 # Sounding profiles
 T_xs   = [skew_x(T, P) for (T, P) in zip(T_OBS, P_OBS)]
