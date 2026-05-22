@@ -302,7 +302,7 @@ To see event properties in Plausible dashboard, you **MUST** register them as cu
 | Property | Description | Used By Events |
 |----------|-------------|----------------|
 | `spec` | Plot specification ID | `copy_code`, `download_image`, `plot_rotate`, `external_link`, `internal_link`, `open_interactive`, `report_issue`, `tag_click`, `og_image_view` |
-| `language` | Language slug (`python`, future: `julia`, `r`, `matlab`) | `og_image_view` |
+| `language` | Language slug (`python`, `r`, `julia`; future: `matlab`) | `og_image_view` |
 | `library` | Library name (matplotlib, seaborn, etc.) | `copy_code`, `download_image`, `external_link`, `internal_link`, `open_interactive`, `tab_toggle`, `og_image_view` |
 | `method` | Action method (card, image, tab, click, space, doubletap) | `copy_code`, `random_filter` |
 | `page` | Page context (home, plots, spec_overview, spec_detail) | `copy_code`, `download_image`, `og_image_view` |

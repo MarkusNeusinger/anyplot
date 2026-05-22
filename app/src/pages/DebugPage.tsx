@@ -29,6 +29,7 @@ interface SpecStatus {
   ggplot2: number | null;
   highcharts: number | null;
   letsplot: number | null;
+  makie: number | null;
   matplotlib: number | null;
   plotly: number | null;
   plotnine: number | null;

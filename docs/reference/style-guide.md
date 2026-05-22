@@ -20,7 +20,7 @@ anyplot.ai is a considered reference work styled like a code editor over a paper
 |-------|------|--------|
 | **Brand** | Identity, voice, logo, tone of communication | Lowercase default; `any.plot()` wordmark with green dot |
 | **Frontend** | Website visual language: typography, layout, components | Editorial-scientific paper × terminal/code-editor overlay |
-| **Plots** | Color palette for every visualization across all 10 libraries (9 Python + R/ggplot2) | Okabe-Ito 8-color categorical, brand `#009E73` first |
+| **Plots** | Color palette for every visualization across all 11 libraries (9 Python + R/ggplot2 + Julia/Makie) | Okabe-Ito 8-color categorical, brand `#009E73` first |
 
 **Aesthetic direction:** `arXiv paper` × `tmux/lazygit` rather than `SaaS dashboard` or `AI startup`. The reader should feel they're browsing a curated journal that happens to live inside a terminal — section headers carry shell prompts (`❯`, `$`, `~/plots/`), hero text types itself with a blinking cursor, action buttons read as method calls (`.copy()`, `.open()`, `.download()`).
 
@@ -266,7 +266,7 @@ The lowercase default matches the code-forward aesthetic and keeps the site feel
 
 > Instead of: `🚀 Supercharge your data viz workflow with AI-powered plot generation! Unlock 1000+ beautifully crafted charts across multiple libraries. Ship faster, iterate smarter, and empower your team to create stunning visualizations!`
 >
-> Write: `A catalogue of 1,000+ plotting examples across ten libraries in two languages (Python + R). Plot ideas come from humans; AI drafts the spec, generates code for every library, and reviews each implementation. Humans approve specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
+> Write: `A catalogue of 1,000+ plotting examples across eleven libraries in three languages (Python + R + Julia). Plot ideas come from humans; AI drafts the spec, generates code for every library, and reviews each implementation. Humans approve specs and tune the rules when something repeatedly fails. Every example uses the same colorblind-safe palette, so switching libraries never breaks your color grammar.`
 
 The second version is shorter, says what's actually happening (humans submit ideas + approve + tune; AI does the drafting/generating/reviewing), and reads as if written by someone who cares about what they're building.
 
@@ -299,7 +299,7 @@ Narrative hooks for talking about anyplot — adapt to context, don't recite ver
 
 **The library-agnostic story:** A "Gentoo penguin" is always blue, whether you draw it in matplotlib, plotly, or bokeh. The palette travels with you across libraries. Switching tools doesn't mean re-learning your color grammar.
 
-**The catalogue story:** A thousand examples across ten libraries in two languages, each reproducible and copy-pasteable. No ads. No affiliate links. No "suggested tutorials you might like." Just the plots and the code that made them.
+**The catalogue story:** A thousand examples across eleven libraries in three languages, each reproducible and copy-pasteable. No ads. No affiliate links. No "suggested tutorials you might like." Just the plots and the code that made them.
 
 **The origin story:** It started as pyplots.ai, a small Python-only catalogue I built in a weekend. It grew when I realized people wanted the same examples across different libraries, and the same safe palette everywhere. anyplot is the grown-up version.
 

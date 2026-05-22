@@ -201,9 +201,9 @@ async def get_impl_code(spec_id: str, library: str, language: str = "python", db
 
     Code field is deferred in the main `/specs/{id}` query so it must be
     fetched here on-demand. `language` disambiguates when the same library_id
-    could exist for multiple languages (today only ggplot2 is R; everything
-    else is Python). Defaults to python for backwards compat with older
-    clients that don't send the param.
+    could exist for multiple languages (today ggplot2 is R and makie is Julia;
+    everything else is Python). Defaults to python for backwards compat with
+    older clients that don't send the param.
     """
 
     async def _fetch() -> dict:

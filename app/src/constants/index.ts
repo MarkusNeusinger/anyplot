@@ -6,7 +6,7 @@ export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 // sent with fetch. Falls back to API_URL locally where there's no Worker.
 export const DEBUG_API_URL = import.meta.env.VITE_DEBUG_API_URL || API_URL;
 export const GITHUB_URL = 'https://github.com/MarkusNeusinger/anyplot';
-export const LIBRARIES = ['altair', 'bokeh', 'ggplot2', 'highcharts', 'letsplot', 'matplotlib', 'plotly', 'plotnine', 'pygal', 'seaborn'];
+export const LIBRARIES = ['altair', 'bokeh', 'ggplot2', 'highcharts', 'letsplot', 'makie', 'matplotlib', 'plotly', 'plotnine', 'pygal', 'seaborn'];
 export const BATCH_SIZE = 36;
 
 // Image size: 'normal' or 'compact' (half size)
@@ -24,6 +24,7 @@ export const LIB_ABBREV: Record<string, string> = {
   highcharts: 'hc',
   letsplot: 'lp',
   ggplot2: 'gg',
+  makie: 'mk',
 };
 
 // Static library → language map, mirroring core/constants.py LIBRARIES_METADATA.
@@ -38,6 +39,7 @@ export const LIB_TO_LANG: Record<string, string> = {
   ggplot2: 'r',
   highcharts: 'python',
   letsplot: 'python',
+  makie: 'julia',
   matplotlib: 'python',
   plotly: 'python',
   plotnine: 'python',
@@ -49,13 +51,15 @@ export const LIB_TO_LANG: Record<string, string> = {
 export const LANG_DISPLAY: Record<string, string> = {
   python: 'Python',
   r: 'R',
+  julia: 'Julia',
 };
 
 // File-extension token for a language id (e.g. used as the suffix in compact
-// plot cards: "mpl.py", "ggplot2.r"). The .R extension is uppercase on disk
-// for R scripts, but the suffix here mirrors the language id for symmetry
-// with "py" — display only, not a filesystem reference.
+// plot cards: "mpl.py", "ggplot2.r", "makie.jl"). The .R extension is uppercase
+// on disk for R scripts, but the suffix here mirrors the language id for
+// symmetry with "py" — display only, not a filesystem reference.
 export const LANG_EXT: Record<string, string> = {
   python: 'py',
   r: 'r',
+  julia: 'jl',
 };
