@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: letsplot | Python 3.13
+Quality: 91/100 | Updated: 2026-05-23
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -24,15 +26,22 @@ from lets_plot import (
     theme,
     theme_void,
 )
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot.export import ggsave
 
 
 LetsPlot.setup_html()
 
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+CONTINENT_FILL = "#E0DDD6" if THEME == "light" else "#2E2E2A"
+CONTINENT_BORDER = "#C4C0B8" if THEME == "light" else "#4A4A44"
+
 np.random.seed(42)
 
 # Country data with hierarchical sales (Country > State/Province > City)
-# Only countries shown at this level; children lists indicate drill-down availability
 countries = [
     {"id": "usa", "name": "United States", "value": 4850000, "lat": 39.8, "lon": -98.5, "has_children": True},
     {"id": "canada", "name": "Canada", "value": 1420000, "lat": 56.1, "lon": -106.3, "has_children": True},
@@ -44,7 +53,7 @@ countries = [
     {"id": "australia", "name": "Australia", "value": 1280000, "lat": -25.3, "lon": 133.8, "has_children": False},
 ]
 
-# Simplified continent outlines for background context
+# Simplified continent outlines for geographic context
 continent_rows = []
 
 # North America outline
@@ -213,9 +222,9 @@ label_offsets = {
     "canada": (18, 3),
     "mexico": (0, -9),
     "brazil": (0, -11),
-    "uk": (-20, 5),  # Far left above bubble
-    "germany": (18, 10),  # Far right and up
-    "france": (-22, -12),  # Far left and below
+    "uk": (-20, 5),
+    "germany": (18, 10),
+    "france": (-22, -12),
     "australia": (-38, 0),
 }
 
@@ -232,7 +241,6 @@ for c in countries:
             "value_millions": c["value"] / 1_000_000,
             "has_children": c["has_children"],
             "drillable": "▼ Drillable" if c["has_children"] else "Leaf node",
-            "stroke_color": "#FF6B35" if c["has_children"] else "#1a3d5c",
             "label_lon": c["lon"] + nudge_x,
             "label_lat": c["lat"] + nudge_y,
             "sales_formatted": f"${c['value'] / 1_000_000:.2f}M",
@@ -243,35 +251,37 @@ df = pd.DataFrame(countries_data)
 df_drillable = df[df["has_children"]]
 df_leaf = df[~df["has_children"]]
 
-# Create static bubble map with visual drill-down indicators
-# Orange stroke = drillable (has children), dark blue stroke = leaf node
+# anyplot palette position 2 marks drillable regions; neutral ink for leaf nodes
+STROKE_DRILLABLE = "#9418DB"
+STROKE_LEAF = INK_SOFT
+
 plot = (
     ggplot()
     # Continent outlines for geographic context
     + geom_polygon(
         data=continents,
         mapping=aes(x="lon", y="lat", group="continent"),
-        fill="#E8E8E8",
-        color="#CCCCCC",
+        fill=CONTINENT_FILL,
+        color=CONTINENT_BORDER,
         alpha=0.7,
         size=0.5,
         tooltips="none",
     )
-    # Leaf node bubbles (non-drillable) - dark blue stroke
+    # Leaf node bubbles (non-drillable)
     + geom_point(
         data=df_leaf,
         mapping=aes(x="lon", y="lat", size="value_millions", fill="value_millions"),
-        color="#1a3d5c",
+        color=STROKE_LEAF,
         alpha=0.85,
         shape=21,
         stroke=1.5,
         tooltips=layer_tooltips().title("@name").line("Sales|@sales_formatted").line("@drillable"),
     )
-    # Drillable bubbles - orange stroke to indicate drill-down capability
+    # Drillable bubbles — purple stroke indicates drill-down capability
     + geom_point(
         data=df_drillable,
         mapping=aes(x="lon", y="lat", size="value_millions", fill="value_millions"),
-        color="#FF6B35",
+        color=STROKE_DRILLABLE,
         alpha=0.85,
         shape=21,
         stroke=2.5,
@@ -281,34 +291,32 @@ plot = (
     + geom_text(
         data=df,
         mapping=aes(x="label_lon", y="label_lat", label="name"),
-        size=10,
-        color="#333333",
+        size=11,
+        color=INK,
         fontface="bold",
         tooltips="none",
     )
-    # Scales - hide size legend, only show color gradient
+    # Hide size legend; show only color gradient
     + scale_size(range=[10, 28], guide="none")
-    + scale_fill_gradient(low="#FFD43B", high="#306998", name="Sales (Millions $)")
-    # Coordinate and labels - extend xlim to prevent Australia cutoff
+    + scale_fill_gradient(low="#009E73", high="#003D94", name="Sales (M $)")
+    # Extend xlim to prevent Australia cutoff
     + coord_fixed(ratio=1.3, xlim=[-180, 200], ylim=[-60, 75])
     + labs(
-        title="map-drilldown-geographic · letsplot · pyplots.ai",
-        subtitle="Global Sales by Country · Orange border = drill-down available",
+        title="map-drilldown-geographic · python · letsplot · anyplot.ai",
+        subtitle="Global Sales by Country · Purple border = drill-down available",
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
     + theme_void()
     + theme(
-        plot_title=element_text(size=28, face="bold", hjust=0.5),
-        plot_subtitle=element_text(size=18, hjust=0.5, color="#666666"),
-        legend_title=element_text(size=16),
-        legend_text=element_text(size=14),
+        plot_title=element_text(size=16, face="bold", hjust=0.5, color=INK),
+        plot_subtitle=element_text(size=12, hjust=0.5, color=INK_SOFT),
+        legend_title=element_text(size=12, color=INK),
+        legend_text=element_text(size=11, color=INK_SOFT),
         legend_position=[0.88, 0.18],
-        plot_background=element_rect(fill="#f0f4f8"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     )
 )
 
-# Save static PNG (scale 3x for 4800 × 2700 px)
-export_ggsave(plot, "plot.png", path=".", scale=3)
-
-# Save interactive HTML using lets-plot native export
-export_ggsave(plot, "plot.html", path=".", iframe=False)
+ggsave(plot, f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, f"plot-{THEME}.html", path=".")
