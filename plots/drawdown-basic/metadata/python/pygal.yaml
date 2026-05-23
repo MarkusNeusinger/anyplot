@@ -1,153 +1,195 @@
 library: pygal
+language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:56:12Z'
-updated: '2026-01-20T11:58:45Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21170482467
+updated: '2026-05-23T20:13:25Z'
+generated_by: claude-sonnet
+workflow_run: 26330719379
 issue: 3752
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/pygal/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent use of pygal custom Style class for consistent typography at high resolution
-  - Clean filled area visualization that clearly shows drawdown depth and duration
-  - Smart legend that includes maximum drawdown value and date
-  - Proper drawdown calculation using running maximum formula
-  - Good x-axis label handling with rotation and sparse labeling for readability
-  - Correct title format following specification
+  - Semantic color assignment matches financial conventions perfectly (red=drawdown/loss,
+    green=recovery, purple=max drawdown marker — all from anyplot palette via semantic
+    exception)
+  - 'Full spec compliance: filled drawdown area, max drawdown marker, recovery point
+    indicators, and key statistics all present'
+  - 'Perfect code quality: seed set for reproducibility, clean imports, proper plot-{THEME}.png
+    + .html output format'
+  - Good library mastery with per-series fill, dots, and dot_size overrides — idiomatic
+    pygal usage
   weaknesses:
-  - Grid lines are too subtle (nearly invisible on y-axis guides)
-  - Missing explicit visual annotation/marker highlighting the maximum drawdown point
-    on the chart
-  - Recovery points (where drawdown returns to zero) could be marked for better clarity
-  image_description: 'The plot displays a drawdown chart visualizing portfolio drawdown
-    percentages over time from January 2022 to April 2023. The chart uses a red (#cc3333)
-    filled area extending from the zero baseline down to negative drawdown values.
-    The y-axis shows "Drawdown (%)" ranging from approximately +4% to -28%, with the
-    x-axis showing dates in YYYY-MM format at 45-degree rotation. The title reads
-    "drawdown-basic · pygal · pyplots.ai" at the top center. A legend at the bottom
-    left displays "Drawdown (Max: -26.5% on 2022-04-15)" indicating the maximum drawdown
-    event. The filled area clearly shows multiple drawdown periods with varying depths,
-    including a significant ~26% drawdown in early 2022, recovery points where the
-    line returns to zero, and subsequent smaller drawdowns throughout the period.'
+  - 'Color accessibility for CVD users: red (#B71D27) drawdown fill and green (#009E73)
+    recovery dots form a red-green pair that may be indistinguishable for deuteranopia/protanopia
+    users — they are differentiated by shape (area vs. dot) but adding a third visual
+    cue (e.g. different dot shape or size contrast) would help'
+  - Design sophistication is limited — no secondary price/value series shown despite
+    spec suggesting it; the visual hierarchy relies solely on color differentiation
+    without size or stroke-weight variation for emphasis
+  - Legend text for Max Drawdown entry is long and may appear compressed in the legend
+    row — splitting duration and recovery stats into a subtitle annotation rather
+    than legend label would improve readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) - correct anyplot light surface, not pure white.
+      Chrome: Title "drawdown-basic · python · pygal · anyplot.ai" in dark ink at top, clearly readable, spans ~55-60% of canvas width. Y-axis label "Drawdown (%)" in dark text, X-axis label "Date" in dark text — both clearly visible. X-axis tick labels rotated 45° (2022-01, 2022-03, etc.) readable. Y-axis tick labels (0, -4, -8, -12, -16, -20, -24) readable. Dotted y-guide lines at each tick level, subtle. Bottom legend shows three entries with swatch colors — all legible.
+      Data: Filled red area (#B71D27) representing drawdown below zero baseline fills the entire chart area — very prominent. Purple dot (#9418DB) marks the maximum drawdown trough around 2022-04. Teal/green dots (#009E73) mark recovery points at the zero line. First series is the drawdown area (red — semantic exception for loss), third series is green for recovery (canonical brand color in semantic role).
+      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Near-black (#1A1A17) - correct anyplot dark surface, not pure black.
+      Chrome: Title, axis labels, and tick labels all appear in light ink on dark background — fully readable. No dark-on-dark failure detected. Y-axis and X-axis labels maintain same proportions as light render. Grid lines subtle against dark background.
+      Data: Drawdown fill color (#B71D27 red), max drawdown marker (#9418DB purple), and recovery point dots (#009E73 green) are all visually identical to light render — only chrome (text, background) flipped to dark. The dark background makes the crimson drawdown area highly contrastive and dramatic. Brand green (#009E73) recovery dots remain clearly visible on dark surface.
+      Legibility verdict: PASS — all text readable, no dark-on-dark failures, data colors identical to light render.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at the
-          high resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements. X-axis labels are rotated 45 degrees
-          and well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Filled area is clearly visible. Line edge could be slightly more
-          distinct
+        comment: 'All text readable in both themes; font sizes follow pygal guide
+          (title=66, label=56, major_label=44, legend=44). Minor: legend row with
+          long Max Drawdown entry is compact but readable.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Rotated x-axis tick labels don't overlap. Minor crowding in bottom
+          legend row with three long labels.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Filled area clearly visible, purple marker dot prominent (dots_size=18),
+          green recovery dots visible (dots_size=14). Data density is high (500 points)
+          and fill makes the chart readable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Single red color for drawdown is appropriate and accessible
+        score: 1
+        max: 2
+        passed: false
+        comment: Red/green pair for drawdown vs recovery is a CVD risk (deuteranopia/protanopia).
+          Shape differentiation (area vs dot) partially mitigates this but not fully.
       - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Good use of canvas space with appropriate margins
+        comment: Canvas 3200x1800 correct. Proportions good. Title spans ~55-60% of
+          width. Generous y-range (min*1.1, 5) gives breathing room above zero baseline.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has Drawdown (%) with units, X-axis has Date
+        comment: Title in correct format. Y-axis 'Drawdown (%)' descriptive with units.
+          X-axis 'Date' clear.
       - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis guides are too subtle, nearly invisible
+        passed: true
+        comment: 'Semantic exception correctly applied: red for drawdown/loss, green
+          for recovery/gain are finance conventions. All colors from anyplot palette.
+          Backgrounds #FAF8F1 (light) / #1A1A17 (dark) correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): intentional semantic color hierarchy, area fill
+          creates strong visual impact, three distinct series with different visual
+          treatments.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default (2): show_dots=False on main series, opacity=''.65''
+          on area, y-only grid, bottom legend. Limited by pygal''s SVG rendering constraints.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): maximum drawdown annotated via marker + legend
+          statistics, recovery points highlighted, clear focal point at trough. Missing
+          underlying price series annotation (optional).'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct filled line chart for drawdown visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Dates on X-axis, drawdown percentage on Y-axis correctly assigned
-      - id: SC-03
+        comment: 'Correct drawdown chart: filled area below zero baseline.'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Shows drawdown, filled area, max in legend. Missing explicit recovery
-          markers
-      - id: SC-04
-        name: Data Range
+        comment: 'All required: drawdown calculation, area fill to zero, max drawdown
+          marker, recovery points, key statistics in legend. Secondary price axis
+          is optional (''Consider'') — not penalized.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: dates, Y: drawdown percentage. Full date range displayed. Range
+          (min*1.1, 5) shows all data correctly.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows series with max drawdown info
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Follows exact format: drawdown-basic · pygal · pyplots.ai'
+        comment: Title 'drawdown-basic · python · pygal · anyplot.ai' correct. Legend
+          labels descriptive with statistics.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple drawdowns, varying depths, and recovery points
+        comment: Shows drawdown fill, max drawdown marker, recovery markers, statistics.
+          Missing optional underlying price overlay.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Portfolio drawdown over 1.5 years is realistic financial scenario
+        comment: 500 days of synthetic portfolio returns, starting at 100, normally
+          distributed daily returns. Plausible, neutral, non-controversial.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values realistic for portfolio drawdowns (-26.5% max is plausible)
+        comment: Max drawdown ~-26.5% realistic for a portfolio. 500 points within
+          spec range (250-1500). Values make sense for the domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,51 +197,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Simple linear structure: imports → data → calculation → chart →
-          save'
+        comment: No functions or classes, linear structure.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) ensures reproducible results
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports are used: numpy, pandas, pygal, Style'
+        comment: 'All imports used: os, numpy, pandas, pygal, pygal.style.Style.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean list comprehensions, appropriate complexity, no fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Saves both plot.html and plot.png (minor: should focus on png)'
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.html (render_to_file) and plot-{THEME}.png (render_to_png).
+          Correct for pygal interactive library.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal custom Style, fill=True, x_label_rotation, legend_at_bottom,
-          dynamic range
+        comment: 'Above default (3): pygal.Line with fill, Style object with all theme
+          tokens, series-level overrides (show_dots, dots_size), x_labels, legend_at_bottom,
+          truncate_legend — idiomatic pygal patterns.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: 'Above default (1): per-series fill control, per-series dot visibility
+          and size, stroke_style, opacity parameter — several pygal-specific features
+          leveraged.'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - html-export
+  - manual-ticks
   patterns:
   - data-generation
   dataprep:
   - time-series
-  - cumulative-sum
-  styling: []
+  styling:
+  - alpha-blending
