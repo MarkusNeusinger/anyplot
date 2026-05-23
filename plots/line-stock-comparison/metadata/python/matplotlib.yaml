@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:21:30Z'
-updated: '2026-05-23T09:51:59Z'
+updated: '2026-05-23T10:00:49Z'
 generated_by: claude-sonnet
 workflow_run: 26329458237
 issue: 3748
@@ -15,91 +15,99 @@ preview_html_dark: null
 quality_score: 89
 review:
   strengths:
-  - 'Perfect palette compliance: canonical anyplot order 1-4, correct backgrounds
-    (#FAF8F1/#1A1A17), full theme-adaptive chrome in both renders.'
-  - Clean KISS structure with deterministic seed (np.random.seed(42)) — exemplary
-    code quality for a 252-day 4-series simulation.
-  - Full spec coverage including the optional reference line at 100 and y-axis grid
-    for performance tracking.
-  - 'Correct matplotlib idiom for time series: mdates locators (MonthLocator + WeekdayLocator),
-    DateFormatter, autofmt_xdate.'
+  - Correct anyplot palette in canonical order for all 4 series (AAPL=#009E73, GOOGL=#9418DB,
+    MSFT=#B71D27, SPY=#16B8F3)
+  - 'Full theme-adaptive chrome: backgrounds, text, grid, legend frame, and annotation
+    all flip correctly between light and dark renders'
+  - 'Intentional visual hierarchy: SPY benchmark line is thicker (3.0) and carries
+    a ''Benchmark'' annotation, guiding the viewer immediately'
+  - Horizontal reference line at 100 adds interpretive context for normalized comparison
+  - 'Idiomatic matplotlib date handling: MonthLocator + WeekdayLocator for dual-level
+    tick granularity, autofmt_xdate for rotation'
+  - Clean KISS code structure with np.random.seed(42) for reproducibility and correct
+    sys.path workaround for filename conflict
+  - Subtle y-only grid (alpha=0.15) and L-shaped spines create a polished, minimal
+    frame without distracting from data
+  - 'Realistic financial data: 4 well-known stocks with plausible drift/volatility
+    parameters over a full trading year'
   weaknesses:
-  - Grid alpha=0.10 is below the recommended 0.15-0.20 for line charts where users
-    track relative values; increase to 0.15 for better horizontal reference without
-    competing with data.
-  - All 4 series have equal visual weight — no emphasis on the benchmark (SPY) vs.
-    individual stocks. Consider linewidth=3.0 for SPY and linewidth=2.0 for others,
-    or a subtle fill_between highlighting outperformance above the 100 baseline.
-  - 'DE-03 storytelling gap: no focal point or visual hierarchy guides the viewer
-    to the key narrative (benchmark comparison). A single annotation or size differentiation
-    would create emphasis without clutter.'
+  - The 'Benchmark' annotation uses fontsize=7 which renders at ~39px on the 3200px
+    canvas — readable on desktop but borderline on mobile (~5px at 400px viewport);
+    consider fontsize=8 or 9 to match tick label sizing
+  - 'DE-01 could reach 6/8 with stronger aesthetic decisions: consider adding a subtle
+    end-point marker (dot) at the final data point for each series rather than just
+    the annotation for SPY, and ensure the legend frame uses no visible border or
+    a hairline (linewidth=0.3) for a more polished finish'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
-      Chrome: Title "line-stock-comparison · python · matplotlib · anyplot.ai" in dark ink (#1A1A17), clearly readable. Y-axis label "Rebased Value (Start = 100)" and X-axis label "Date" in dark ink (fontsize=10). Tick labels in INK_SOFT (#4A4A44) at fontsize=8, readable. Monthly date ticks rotated 30° for readability. Legend in upper-left with elevated background frame (#FFFDF6) and styled edge/text.
-      Data: AAPL=#009E73 (brand green), GOOGL=#9418DB (purple), MSFT=#B71D27 (red), SPY=#16B8F3 (sky blue) — canonical anyplot palette positions 1-4. linewidth=2.5. Dashed reference line at y=100 in INK_MUTED. Very subtle y-axis-only grid (alpha=0.10).
-      Legibility verdict: PASS — all text clearly readable against warm off-white background.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface. Clean, cream-toned.
+      Chrome: Title "line-stock-comparison · python · matplotlib · anyplot.ai" in dark near-black text at fontsize=12, clearly readable and spans ~70% of canvas width as expected. Axis labels "Date" (x) and "Rebased Value (Start = 100)" (y) in dark text at fontsize=10, both readable. Monthly tick labels ("Jan '24" … "Jan '25") rotated 30° at fontsize=8, all readable. Legend upper-left with warm elevated-bg (#FFFDF6) frame and soft gray text showing AAPL/GOOGL/MSFT/SPY symbol names. "Benchmark" annotation in sky blue at far right, fontsize=7 — readable on desktop, slightly small.
+      Data: AAPL in brand green (#009E73), GOOGL in purple (#9418DB), MSFT in red (#B71D27), SPY in sky blue (#16B8F3). SPY is thicker (linewidth=3.0) and dominant at top (~155-160 range). MSFT declines from 100 to ~85. Horizontal dashed reference line at 100 is subtle but visible in muted gray. Y-axis grid lines are subtle horizontal rules (alpha=0.15).
+      Legibility verdict: PASS — all text readable against light background. No light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
-      Chrome: Title in light #F0EFE8, clearly visible. Axis labels in light ink. Tick labels in secondary light token #B8B7B0, readable. Legend frame uses elevated dark bg #242420 with light text. No dark-on-dark failures detected.
-      Data: Colors identical to light render — AAPL green, GOOGL purple, MSFT red, SPY cyan — data colors do not flip between themes. Only chrome (background, text, legend, grid) adapts.
-      Legibility verdict: PASS — all text clearly readable against warm near-black background; no dark-on-dark issues.
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface. All plot areas flipped appropriately.
+      Chrome: Title in light cream (#F0EFE8) — clearly readable against dark bg. Axis labels in same light cream. Tick labels in light secondary tone (#B8B7B0). Legend frame switches to elevated dark bg (#242420) with light text. "Benchmark" annotation in sky blue — still visible on dark surface.
+      Data: Data colors are IDENTICAL to light render — green, purple, red, sky blue all unchanged. Only chrome elements flipped. SPY still dominant at top, MSFT still declining.
+      Legibility verdict: PASS — no dark-on-dark failures. All text readable against dark background. Brand green #009E73 (AAPL) is clearly visible on the near-black surface.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axis=10, ticks=8). Well-proportioned
-          in both renders. Rotated date labels aid readability.
+        comment: 'All font sizes explicitly set; title/axis/tick/legend all readable
+          in both themes. Minor deduction: ''Benchmark'' annotation at fontsize=7
+          (~39px) is borderline on mobile viewports.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: Legend in upper-left without overlapping data lines. No text collision.
+        comment: No text-on-text overlap; legend upper-left avoids data in early period;
+          annotation placed outside data area with offset points.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: linewidth=2.5 appropriate for 252-point daily series; 4 lines clearly
-          distinguishable.
+        comment: 4 lines clearly visible with distinct anyplot palette colors; linewidth
+          2.0-3.0 appropriate for 252 trading days; reference line at 100 visible.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is CVD-optimised; 4 distinct hues, no red-green as
-          sole signal.
+        comment: anyplot palette is CVD-optimized; 4 series distinguishable by hue,
+          luminance, and trajectory — not relying on red-green alone.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas correct; subplots_adjust provides clean margins;
-          no clipping.
+        comment: 3200x1800px canvas confirmed; subplots_adjust margins well-balanced
+          (left=0.09, right=0.93, top=0.92, bottom=0.14); no content cut off.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Rebased Value (Start = 100)' descriptive with units; X-axis
-          'Date' appropriate.
+        comment: Y-axis 'Rebased Value (Start = 100)' is descriptive with context;
+          X-axis 'Date' appropriate; title in correct spec format.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series AAPL=#009E73; canonical order 1-4; backgrounds #FAF8F1/#1A1A17;
-          full theme-adaptive chrome.'
+        comment: 'First series AAPL=#009E73; positions 2-4 in canonical anyplot order;
+          light bg #FAF8F1, dark bg #1A1A17; data colors identical across themes;
+          chrome fully adaptive.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -107,24 +115,27 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above 4-point default: L-shaped spines, themed legend with elevated-bg,
-          reference line, minor ticks. No truly distinctive design choice.'
+        comment: 'Above default 4: intentional visual hierarchy with SPY thicker line
+          + annotation creates focal point; correct palette; clean composition. Not
+          yet ''strong design'' (6) — lacks endpoint markers, legend border slightly
+          heavy.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Visible refinements: spines removed, subtle grid (alpha=0.10), themed
-          legend, date rotation, subplots_adjust. Grid slightly below recommended
-          0.15-0.20 alpha.'
+        comment: 'Genuine refinement: L-shaped spines, y-only subtle grid (alpha=0.15),
+          ax.set_axisbelow, elevated legend bg, theme-aware tick colors, careful subplots_adjust
+          margins. Above library defaults.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Reference line at 100 is storytelling; SPY as benchmark creates narrative.
-          But all lines equal visual weight — no focal point or emphasis on benchmark
-          vs. individual stocks.
+        passed: true
+        comment: 'Clear story: SPY benchmark outperforms all three tech stocks. Visual
+          hierarchy (thicker SPY line + annotation) guides viewer to the focal insight.
+          Reference line at 100 contextualizes relative performance. Mixed outcomes
+          (MSFT declining) show realistic spread.'
     spec_compliance:
       score: 15
       max: 15
@@ -134,27 +145,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line chart with rebased normalization.
+        comment: Multi-line chart with 4 normalized series — correct chart type for
+          stock comparison.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Rebasing to 100, distinct-color legend, rebased Y-axis, reference
-          line at 100, y-axis grid — all present.
+        comment: Normalization to 100, distinct colors + legend, y-axis showing rebased
+          values, horizontal reference line at 100, y-axis grid lines — all spec features
+          present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=date, Y=rebased value, all 252 trading days for 4 series plotted
-          correctly.
+        comment: X=trading dates (Jan 2024 - Jan 2025, 252 days), Y=rebased values
+          (100 start); all 4 series fully visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exact format; legend labels AAPL/GOOGL/MSFT/SPY match data.
+        comment: Title 'line-stock-comparison · python · matplotlib · anyplot.ai'
+          matches exact required format. Legend labels are stock symbols (AAPL, GOOGL,
+          MSFT, SPY).
     data_quality:
       score: 15
       max: 15
@@ -164,23 +179,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Four performance trajectories: strong outperformer (SPY ~+60%),
-          mid-range (GOOGL peaks ~+45%), modest gainer (AAPL ~+15%), underperformer
-          (MSFT ~-15%).'
+        comment: 'Shows all aspects: multiple series with varied performance (outperformer
+          SPY, underperformer MSFT), normalization, reference point, ~1 year of daily
+          trading data within 200-300 point spec range.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real-world tickers (AAPL, GOOGL, MSFT, SPY), neutral financial domain,
-          2024 calendar year.
+        comment: Real ticker symbols (AAPL, GOOGL, MSFT, SPY), realistic starting
+          prices and drift/volatility parameters, Jan 2024 timeframe, neutral business/finance
+          domain.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 252 trading days correct; plausible drift/volatility params; realistic
-          rebased range 78-165.
+        comment: Rebased values range ~80-160, realistic for 1-year equity performance.
+          SPY outperformance ~60% in simulation is generous but plausible for synthetic
+          data.
     code_quality:
       score: 10
       max: 10
@@ -190,32 +207,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat: imports → data → plot → save. No functions or classes.'
+        comment: 'Linear flow: imports → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys path fix necessary due to matplotlib.py filename
-          shadow.
+        comment: 'All imports used: matplotlib.dates, matplotlib.pyplot, numpy, pandas,
+          os, sys.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic; dict loop over stocks; no fake UI.
+        comment: Clean Pythonic code; zip with strict=False appropriate; sys.path
+          workaround is necessary given filename conflict; no fake functionality.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; no bbox_inches=tight; current API.
+        comment: Saves as plot-{THEME}.png; no bbox_inches='tight'; current matplotlib
+          3.10 API.
     library_mastery:
       score: 7
       max: 10
@@ -225,19 +244,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes methods; mdates MonthLocator+DateFormatter+autofmt_xdate; plt.setp
-          for legend; subplots_adjust. Above default 3.
+        comment: Uses Axes methods throughout; mdates.MonthLocator + DateFormatter
+          + WeekdayLocator for proper date axis; fig.autofmt_xdate; ax.set_axisbelow;
+          plt.setp for legend text — all idiomatic matplotlib patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: mdates.WeekdayLocator for minor biweekly ticks; autofmt_xdate; setp
-          — distinctly matplotlib features for time series.
-  verdict: REJECTED
+        comment: mdates dual-tick system (MonthLocator for major + WeekdayLocator(interval=2)
+          for minor), DateFormatter with custom strftime, annotate with textcoords='offset
+          points' — distinctively matplotlib date/annotation API.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - manual-ticks
   patterns:
   - data-generation
@@ -246,5 +268,5 @@ impl_tags:
   - time-series
   - normalization
   styling:
-  - grid-styling
   - alpha-blending
+  - grid-styling
