@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:57:08Z'
-updated: '2026-05-23T11:02:32Z'
+updated: '2026-05-23T11:11:53Z'
 generated_by: claude-sonnet
 workflow_run: 26330642218
 issue: 3752
@@ -12,99 +12,92 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/altair/plot-dark.html
-quality_score: 87
+quality_score: 91
 review:
   strengths:
-  - Semantically correct color choice (red for drawdown/loss, green for recovery/new
-    high) as a palette semantic exception
-  - Informative subtitle with Max Drawdown %, Duration, and Recovery time — adds analytical
-    value without cluttering the chart
-  - 'Well-layered composition: area fill + outline line + dashed zero rule + event
-    markers + annotation work together to tell the full drawdown story'
-  - 'Full spec compliance: all required features present (filled area, max DD highlight,
-    recovery markers, statistics, zero baseline)'
-  - Clean idiomatic Altair code with proper encoding types (T, Q, N), layer composition,
-    and configure_* API usage
+  - 'Semantic color assignment for financial data (loss=red #B71D27, recovery=green
+    #009E73) is perfectly justified by the semantic exception rule and creates immediate
+    visual clarity'
+  - 'Complete spec compliance: all six required features implemented correctly (filled
+    area, zero baseline, max DD annotation, recovery markers, key statistics, running-maximum
+    drawdown calculation)'
+  - 'Perfect theme adaptation: every chrome element uses theme-adaptive tokens; dark
+    render has zero dark-on-dark failures'
+  - Informative subtitle with three key financial metrics (Max DD %, Duration, Recovery)
+    answers the viewer's questions at a glance
   weaknesses:
-  - 'Full box frame (configure_view stroke=INK_SOFT) instead of L-shaped spines —
-    remove the outer border to reduce visual noise and match style-guide spine conventions
-    (style guide default: remove top and right spines)'
-  - Grid rendered on both X and Y axes — financial time-series charts benefit from
-    Y-axis-only grid to reduce clutter; the dual grid adds visual noise against the
-    red filled area
-  - Subtitle font at 11px is at the lower boundary of readable; could be raised to
-    12px to match the axis title sizing without disrupting layout
+  - 'LM-02 (3/5): Altair''s distinctive grammar-of-graphics features (brush-based
+    zoom/pan selection, parameter-driven interactivity, linked multi-view charts)
+    are not utilized — only tooltips on recovery markers'
+  - 'DE-01 (5/8): The max drawdown annotation label uses a simple offset (dx=12) from
+    the marker without a visual leader line, making the spatial association slightly
+    less clear than it could be'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
-      Chrome: Title "drawdown-basic · python · altair · anyplot.ai" is bold dark text, clearly readable. Subtitle "Max Drawdown: 41.7% · Duration: 56d · Recovery: 105d" in secondary gray (INK_SOFT) is readable. Y-axis label "Drawdown (%)" and X-axis label "Date" are clearly visible in dark text. Tick labels are readable at all months. "Max DD: 41.7%" annotation text is clearly readable in dark ink next to the purple max-drawdown marker.
-      Data: Red filled area (#B71D27 at 0.45 opacity) fills the entire drawdown space below the zero line. Red outline line at full opacity traces the drawdown curve. Dashed horizontal rule at zero serves as the clear baseline reference. Green triangle markers (#009E73) appear at new-high recovery points along the zero line. Purple circle (#9418DB, size=250) marks the maximum drawdown point at approximately -41.7%.
-      Legibility verdict: PASS — all text elements readable against light background, no light-on-light issues.
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Bold dark title "drawdown-basic · python · altair · anyplot.ai" at top-left; secondary subtitle "Max Drawdown: 41.7% · Duration: 56d · Recovery: 105d" in softer gray; Y-axis label "Drawdown (%)" rotated vertically; X-axis label "Date"; tick labels from +5 to -50 on Y and Jan 2022 to May 2023 on X — all clearly readable
+      Data: Red filled area (#B71D27 at 45% opacity) below zero baseline across multiple drawdown cycles; dashed gray zero reference rule; green triangle markers (#009E73) at recovery/new-high points; purple circle (#9418DB) at max drawdown (~-41.7%) with bold "Max DD: 41.7%" annotation; "New High" legend in elevated box top-right
+      Legibility verdict: PASS — all text readable against warm off-white background; no light-on-light issues
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title in light text (#F0EFE8) is clearly readable against dark background. Subtitle in lighter secondary text (#B8B7B0) is readable. Both axis labels and tick labels render in light/secondary tones against dark background. "Max DD: 41.7%" annotation appears in light text, readable. Legend box uses elevated dark (#242420) fill with light text.
-      Data: Data colors are identical to the light render — red area and line (#B71D27) and green triangles (#009E73) are the same. The red at 0.45 opacity on the dark background produces a somewhat darker red fill, but the outline line at full opacity keeps the shape well-defined. No dark-on-dark failures detected.
-      Legibility verdict: PASS — all text elements readable against dark background, no dark-on-dark issues found.
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black
+      Chrome: Title text is light (#F0EFE8) and clearly visible; axis labels and tick labels render in soft light color (#B8B7B0); "Max DD: 41.7%" annotation text is light and readable against the dark background; legend box switches to elevated dark surface (#242420) with light stroke and light text
+      Data: Colors are identical to light render — red filled area (#B71D27), green triangle markers (#009E73), purple circle (#9418DB) all unchanged as required (only chrome flips between themes)
+      Legibility verdict: PASS — no dark-on-dark failures detected; all elements clearly visible against near-black surface; #009E73 green markers remain visible on dark background
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, axis title=12, ticks=10,
-          subtitle=11). All text readable in both themes. Minor deduction: subtitle
-          at 11px is at the lower boundary.'
+        comment: All font sizes explicitly set (title 16pt, axis titles 12pt, tick
+          labels 10pt, annotation 11pt, legend 10pt); well-proportioned in both themes
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No significant overlap. Recovery triangles are close in some areas
-          near the zero line but do not overlap each other. Max DD annotation is properly
-          positioned.
+        comment: No overlapping elements; annotation offset avoids purple marker;
+          recovery markers at zero line do not collide
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: 'All elements clearly visible: red fill area (0.45 opacity), outline
-          line (strokeWidth=2), green triangles (size=150), purple max DD point (size=250),
-          dashed zero rule.'
+        comment: 500-point time series rendered as continuous line+area; max DD marker
+          (size=250) prominent; recovery markers (size=150) clearly visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette is CVD-optimized. Shape distinction (triangles vs
-          area fill) provides additional discrimination beyond hue.
+        comment: Anyplot palette throughout; distinct luminance separation between
+          red area, green markers, and purple circle; CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas correctly 3200x1800. Layout well-proportioned. Chart fills
-          appropriate portion of canvas with good margins.
+        comment: Correct 3200x1800 canvas via PAD-only approach; chart fills canvas
+          well with balanced margins
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Y-axis 'Drawdown (%)' has units. X-axis 'Date' is descriptive. Title
-          matches required format.
+        comment: Y-axis 'Drawdown (%)' includes units; X-axis 'Date' descriptive
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception applied: red (#B71D27, pos 3) for drawdown/loss
-          and green (#009E73, pos 1) for recovery/gain — finance semantic exception.
-          Purple (#9418DB, pos 2) for max DD marker. Backgrounds #FAF8F1/#1A1A17.
-          Theme chrome correct in both renders.'
+        comment: 'Semantic exception correctly applied: loss=red #B71D27 (pos 3),
+          recovery=green #009E73 (pos 1); backgrounds #FAF8F1/#1A1A17 correct; chrome
+          adapts properly'
     design_excellence:
       score: 13
       max: 20
@@ -114,25 +107,23 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above 'well-configured default' (4). Intentional semantic color choices,
-          subtitle with statistics, layered composition show design intent. Not quite
-          'strongly above defaults' (6) — box frame and dual grid hold it back.
+        comment: Semantic color assignment, multi-layer composition, informative subtitle
+          with financial KPIs — above defaults but not exceptional
       - id: DE-02
         name: Visual Refinement
-        score: 3
-        max: 6
-        passed: false
-        comment: Full box frame (configure_view stroke=INK_SOFT) instead of L-shaped
-          spines. Grid on both X and Y axes rather than Y-only. Dashed zero rule and
-          subtle grid opacity are nice refinements.
-      - id: DE-03
-        name: Data Storytelling
-        score: 5
+        score: 4
         max: 6
         passed: true
-        comment: 'Strong storytelling: red fill communicates loss, green triangles
-          mark recoveries, purple dot + annotation identifies worst drawdown, statistics
-          in subtitle. The combination creates a clear narrative about market drawdowns.'
+        comment: X-grid off, Y-grid at 10% opacity, no view frame (stroke=None), elevated
+          legend background — good refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle immediately answers key questions; purple circle focal point
+          at worst event; green markers provide positive contrast; viewer grasps risk
+          story without hunting
     spec_compliance:
       score: 15
       max: 15
@@ -142,55 +133,54 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct drawdown chart with filled area below zero baseline, percentage
-          decline from peak.
+        comment: 'Correct drawdown chart: filled area from drawdown line to zero baseline,
+          computed as (price-running_max)/running_max*100'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: 'All required features: drawdown calculation from running max, filled
-          area to zero, max DD highlighted with marker+annotation, recovery points
-          marked with triangles, key statistics in subtitle, visible zero line.'
+        comment: 'All features present: semi-transparent red area, dashed zero baseline,
+          max DD marker+annotation, recovery markers, key statistics in subtitle'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=dates, Y=drawdown percentage, all 500 data points visible.
+        comment: Date on X (temporal), Drawdown (%) on Y (quantitative); scale domain
+          shows all 500 data points
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''drawdown-basic · python · altair · anyplot.ai''. Legend:
-          ''New High'' for recovery markers.'
+        comment: Title is exact required format 'drawdown-basic · python · altair
+          · anyplot.ai'; legend label 'New High' correct
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Shows multiple drawdown episodes with varying depths (15%-41%),
-          multiple recovery points. Minor deduction: no underlying price series (though
-          ''consider'' not required by spec).'
+        comment: Multiple drawdown events of varying depths; multiple recovery cycles;
+          max DD highlighted; shallow (~15%) and deep (~41%) troughs both present
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated stock market data over ~2 years with realistic volatility.
-          Neutral financial domain.
+        comment: Simulated asset price over 2022-2023 with engineered drawdown/recovery
+          cycles mimicking real equity market dynamics; neutral financial scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 500 daily points (within 250-1500 range), drawdown up to ~42% (realistic
-          for volatile stock), dates 2022-2023.
+        comment: Max drawdown of 41.7% realistic for volatile stock; 500 daily data
+          points over ~1.5 years appropriate; drawdown magnitudes plausible
     code_quality:
       score: 10
       max: 10
@@ -200,54 +190,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat procedural code, no unnecessary functions/classes.
+        comment: 'No functions/classes; clean linear flow: imports -> theme tokens
+          -> data generation -> drawdown calculation -> layer definitions -> chart
+          config -> save+pad'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, altair, numpy, pandas, PIL.'
+        comment: All five imports (os, altair, numpy, pandas, PIL.Image) are used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic. List-based layer assembly is a nice pattern.
+        comment: Clean Altair idioms; alt.layer(*layers) composition is correct pattern;
+          no fake interactivity; appropriate complexity for 7-layer chart
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct scale_factor=4.0
-          with pad-to-target block.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Altair
+          6.1.0 API; PAD-only approach matches library guidance
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct encoding types (T, Q, N), alt.layer(), configure_* API, alt.Title
-          with subtitle, alt.Axis format. Good idiomatic Altair above 'correct but
-          not best patterns' (3).
+        comment: Expert use of alt.layer() composition; correct Vega-Lite encoding
+          types (:T, :Q, :N); alt.Title() with subtitle; configure_view/axis/legend
+          for theming; alt.Scale(domain=) for Y-axis range
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses alt.Title with subtitle (distinctly Altair), tooltip encoding
-          for hover interactivity, HTML export for interactive use. Above generic
-          (1) but not using selections or interactive filtering that would be truly
-          distinctive.
-  verdict: REJECTED
+        comment: alt.layer() composition and mark_rule() for reference lines showcase
+          Altair grammar-of-graphics; tooltips on recovery markers; HTML export included.
+          Interactive selections/brush/linked views not utilized
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
@@ -260,6 +252,5 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
-  - cumulative-sum
   styling:
   - alpha-blending
