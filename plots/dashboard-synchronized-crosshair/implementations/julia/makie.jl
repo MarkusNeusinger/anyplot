@@ -51,15 +51,20 @@ end
 rsi = 100.0 .- 100.0 ./ (1.0 .+ avg_gain ./ (avg_loss .+ 1e-10))
 rsi[1:period] .= NaN
 
-# Crosshair anchored at day 120 (static demonstration of the crosshair layout)
-cx = 120
+valid_idx = findall(!isnan, rsi)
+rsi_days  = days[valid_idx]
+rsi_vals  = rsi[valid_idx]
+
+# Crosshair at RSI overbought peak — narrative snapshot of when RSI peaked above 70
+overbought = filter(i -> !isnan(rsi[i]) && rsi[i] > 70, 1:n)
+cx = isempty(overbought) ? valid_idx[argmax(rsi_vals)] : overbought[argmax(rsi[overbought])]
 cx_price  = price[cx]
 cx_volume = volume[cx]
 cx_rsi    = rsi[cx]
 
-valid_idx = findall(!isnan, rsi)
-rsi_days  = days[valid_idx]
-rsi_vals  = rsi[valid_idx]
+# Price / volume bounds for panel label positioning
+price_lo, price_hi = extrema(price)
+vol_hi = maximum(volume)
 
 # Shared grid color (10% opacity INK)
 grid_col = RGBAf(INK.r, INK.g, INK.b, 0.10)
@@ -75,7 +80,7 @@ fig = Figure(
 ax1 = Axis(
     fig[1, 1];
     title              = "dashboard-synchronized-crosshair · julia · makie · anyplot.ai",
-    titlesize          = 16,
+    titlesize          = 19,
     titlecolor         = INK,
     ylabel             = "Price (USD)",
     ylabelsize         = 13,
@@ -146,14 +151,14 @@ ax3 = Axis(
 
 linkxaxes!(ax1, ax2, ax3)
 
-# Price line
+# Price line — palette position 1
 lines!(ax1, days, price; color = ANYPLOT_PALETTE[1], linewidth = 2.0)
 
-# Volume bars
-barplot!(ax2, days, volume; color = ANYPLOT_PALETTE[4], strokewidth = 0, width = 0.9)
+# Volume bars — palette position 2 (canonical order)
+barplot!(ax2, days, volume; color = ANYPLOT_PALETTE[2], strokewidth = 0, width = 0.9)
 
-# RSI line
-lines!(ax3, rsi_days, rsi_vals; color = ANYPLOT_PALETTE[2], linewidth = 2.0)
+# RSI line — palette position 3 (canonical order)
+lines!(ax3, rsi_days, rsi_vals; color = ANYPLOT_PALETTE[3], linewidth = 2.0)
 
 # RSI overbought / oversold reference lines
 hlines!(ax3, [30.0, 70.0];
@@ -162,7 +167,21 @@ hlines!(ax3, [30.0, 70.0];
     linestyle = :dash,
 )
 
-# Synchronized crosshair at day 120 — vertical line spans all three panels
+# Panel labels in top-left corner of each axis for quick scannability
+text!(ax1, 5.0, price_lo + 0.93 * (price_hi - price_lo);
+    text = "PRICE", color = INK_MUTED, fontsize = 12, font = :bold, align = (:left, :top))
+text!(ax2, 5.0, 0.93 * vol_hi;
+    text = "VOLUME", color = INK_MUTED, fontsize = 12, font = :bold, align = (:left, :top))
+text!(ax3, 5.0, 95.0;
+    text = "RSI", color = INK_MUTED, fontsize = 12, font = :bold, align = (:left, :top))
+
+# RSI zone labels near reference lines
+text!(ax3, 195.0, 72.0;
+    text = "Overbought", color = INK_MUTED, fontsize = 10, align = (:right, :bottom))
+text!(ax3, 195.0, 28.0;
+    text = "Oversold", color = INK_MUTED, fontsize = 10, align = (:right, :top))
+
+# Synchronized crosshair at RSI overbought peak — vertical line spans all three panels
 cx_line_col = RGBAf(INK.r, INK.g, INK.b, 0.45)
 vlines!(ax1, [Float64(cx)]; color = cx_line_col, linewidth = 1.5, linestyle = :dash)
 vlines!(ax2, [Float64(cx)]; color = cx_line_col, linewidth = 1.5, linestyle = :dash)
@@ -173,10 +192,10 @@ scatter!(ax1, [Float64(cx)], [cx_price];
     color = ANYPLOT_PALETTE[1], markersize = 10,
     strokewidth = 1.5, strokecolor = PAGE_BG)
 scatter!(ax2, [Float64(cx)], [cx_volume];
-    color = ANYPLOT_PALETTE[4], markersize = 10,
+    color = ANYPLOT_PALETTE[2], markersize = 10,
     strokewidth = 1.5, strokecolor = PAGE_BG)
 scatter!(ax3, [Float64(cx)], [cx_rsi];
-    color = ANYPLOT_PALETTE[2], markersize = 10,
+    color = ANYPLOT_PALETTE[3], markersize = 10,
     strokewidth = 1.5, strokecolor = PAGE_BG)
 
 # Value annotations at the crosshair
