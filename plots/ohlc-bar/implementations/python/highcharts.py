@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 22/100 | Updated: 2026-05-23
@@ -138,8 +138,8 @@ chart_options = {
 
 # Download Highcharts JS (try primary CDN, then fallback)
 urls_to_try = [
-    "https://code.highcharts.com/highcharts.js",
-    "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.3.0/highcharts.js",
+    "https://code.highcharts.com/stock/highstock.js",
+    "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.3.0/highstock.js",
 ]
 
 highstock_js = None
