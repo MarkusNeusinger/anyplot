@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: map-drilldown-geographic
 created: '2026-01-20T07:45:57Z'
-updated: '2026-05-23T09:14:43Z'
+updated: '2026-05-23T18:39:04Z'
 generated_by: claude-sonnet
 workflow_run: 26328800084
 issue: 3770
@@ -12,97 +12,99 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/letsplot/plot-dark.html
-quality_score: 77
+quality_score: 81
 review:
   strengths:
-  - 'Perfect code quality: flat KISS structure, seed set, all imports used, correct
-    output format'
-  - 'Correct anyplot_seq sequential colormap (#009E73 to #003D94) with fully theme-adaptive
-    chrome in both renders'
-  - Clever purple-stroke visual indicator distinguishes drillable vs. non-drillable
+  - Correct anyplot_seq gradient (#009E73→#003D94) applied consistently across both
+    panels and both themes
+  - Theme-adaptive chrome implemented correctly — both light and dark renders pass
+    legibility checks with no dark-on-dark failures
+  - Purple border stroke (#9418DB) is an elegant visual signal for drillable vs. leaf-node
     regions
-  - Idiomatic use of layer_tooltips() and HTML export leveraging letsplot interactive
-    strengths
-  - Both light and dark themes render cleanly with no dark-on-dark failures
-  - Strong data storytelling through double-encoding (size + color) with USA dominance
-    immediately obvious
+  - Two-panel gggrid layout effectively communicates the world→state drill-down hierarchy
+    with consistent color scale
+  - layer_tooltips() provides genuine interactivity (title + line format) in the HTML
+    export
+  - Breadcrumb subtitle follows spec requirement; drillable/non-drillable distinction
+    is explicit
+  - Clean KISS code structure with correct reproducibility (np.random.seed(42)) and
+    plausible neutral business data
   weaknesses:
-  - 'Bubble overlap is significant: USA+Canada cluster merges, UK+Germany+France European
-    cluster overlaps — reduce scale_size range to [5,18] or widen European offsets
-    to prevent visual merging'
-  - 'Missing hierarchical multi-level data: the spec core feature (country to state
-    to city) is entirely absent; add state-level data for USA and Canada as a second
-    static map panel or inset to demonstrate the drill-down concept'
-  - Only 8 countries at a single level; expand to 15-20 countries for better geographic
-    distribution including Asian and African representation
-  - Europe bubble cluster (UK/Germany/France) needs separation — larger coordinate
-    offsets or a regional inset panel would resolve crowding
+  - US state drill-down panel title 'USA → State Level (drill-down)' does not follow
+    required format — should be 'map-drilldown-geographic · python · letsplot · anyplot.ai'
+    (breadcrumb can move to subtitle)
+  - Third administrative level (city) mentioned in spec is absent; inclusion would
+    improve DQ-01 feature coverage
+  - European country labels (UK, France, Germany, Italy, Spain) are geographically
+    compressed; increase label_offset distances to reduce crowding risk
+  - US drill-down panel is visually narrow at 1/3 canvas width; increase geom_text
+    size from 10→12 and US panel title size from 13→15 to improve mobile readability
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 confirmed — not pure white, not dark
-      Chrome: Title "map-drilldown-geographic · python · letsplot · anyplot.ai" (bold, dark #1A1A17, size 16) clearly readable. Subtitle (size 12, INK_SOFT gray) readable. Legend title "Sales (M $)" and tick labels are dark and legible. Country labels bold dark text.
-      Data: Bubbles range green (#009E73, low) to dark navy (#003D94, high) along anyplot_seq. First/lowest series is brand green #009E73. 8 country bubbles of varying size on simplified continent outlines (muted gray). Two notable overlapping clusters: USA+Canada (North America) and UK+Germany+France (Europe). Australia bubble at right edge.
-      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title 'map-drilldown-geographic · python · letsplot · anyplot.ai' visible in dark INK at size=16; subtitle in INK_SOFT below. Country name labels (dark text) with custom offsets. State abbreviations in dark text. Legend 'Sales (M $)' readable. All text elements clearly readable against light background.
+      Data: Sequential green (#009E73) to dark-blue (#003D94) gradient encodes sales value on bubble fills. USA and Canada have purple (#9418DB) border stroke indicating drillability. Continent outlines in muted taupe. 16 country bubbles on world panel; 10 US state bubbles on right panel. Bubble sizes scaled by value (5-18px world, 5-16px states).
+      Legibility verdict: PASS — no light-on-light failures, all text readable
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 confirmed — not pure black, not light
-      Chrome: Title renders in near-white (#F0EFE8), clearly readable. Subtitle in #B8B7B0 secondary ink, readable. Legend text light. Country labels in white bold, all legible. No dark-on-dark failures.
-      Data: Bubble colors identical to light render — green (#009E73) for low values, dark navy for high values. Continent fills flip to dark gray (#2E2E2A). Purple stroke (#9418DB) on drillable regions (USA, Canada) remains visible. Data color identity preserved across both themes.
-      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures observed
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title, country labels, state abbreviations all shift to light text (#F0EFE8 / #B8B7B0). Continent fills darken to #2E2E2A; border colors adapt. Legend background uses ELEVATED_BG #242420. All text readable against dark background — no dark-on-dark failures observed.
+      Data: Bubble fill gradient colors are visually identical to light render (#009E73→#003D94). Purple drillability strokes (#9418DB) remain visible. Data encoding consistent across themes.
+      Legibility verdict: PASS — no dark-on-dark failures, brand green clearly visible on dark surface
   criteria_checklist:
     visual_quality:
-      score: 24
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, subtitle=12, legend=11-12,
-          labels=11). All text readable in both themes.
+        comment: All font sizes explicitly set; readable in both themes. US panel
+          text slightly undersized due to narrow panel width.
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: 'Significant bubble overlap: USA+Canada cluster and UK+Germany+France
-          European cluster both show bubbles merging.'
+        passed: true
+        comment: Custom label offsets prevent collisions. European labels are dense
+          but individually readable.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Bubble size range [10,28] clearly visible. Green-to-navy gradient
-          well-distinguishable.
+        comment: Bubble sizes 5-18px well-adapted to data range. Small leaf countries
+          visible but small.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot_seq gradient CVD-safe. Purple stroke on drillable regions
-          sufficiently distinct.
+        comment: anyplot_seq gradient is colorblind-safe. Purple drillability indicator
+          has adequate contrast.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Canvas 3200x1800 correct. Legend well-positioned. Europe cramped.
-          Large empty area in Asia/Africa region.
+        comment: 2:1 gggrid appropriate. Canvas ~65-70% utilized. Some whitespace
+          due to map aspect ratio constraints.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: No axis labels (correct for map). Title format correct. Subtitle
-          describes encoding.
+        comment: theme_void appropriate for maps; legend title has units 'Sales (M
+          $)'.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'anyplot_seq: low=#009E73 / high=#003D94. Backgrounds #FAF8F1/#1A1A17.
-          Data colors identical between themes, chrome adapts.'
+        comment: 'anyplot_seq (#009E73→#003D94). Backgrounds #FAF8F1/#1A1A17. Chrome
+          tokens correct in both renders.'
     design_excellence:
       score: 13
       max: 20
@@ -112,80 +114,78 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Purple-stroke drillable indicator is thoughtful. Geographic context
-          adds polish. Rough hand-crafted continent polygons slightly undermine cartographic
-          credibility.
+        comment: Custom continent outlines, purple drillability accent, theme_void,
+          two-panel hierarchy. Strong design above defaults.
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: theme_void() correct for maps. Muted continent fills recede appropriately.
-          Legend has elevated background. alpha=0.85 adds depth.
+        comment: theme_void removes chart chrome; custom legend positioning; elevated
+          legend background; deliberate text hierarchy.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: USA dominance immediately apparent. Double-encoding (size+color)
-          reinforces hierarchy. Purple stroke creates focal point on drillable regions.
+        comment: Purple border signals drillability; two-panel hierarchy explicit;
+          breadcrumb subtitle; consistent cross-level color scale.
     spec_compliance:
-      score: 11
+      score: 12
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 4
         max: 5
-        passed: false
-        comment: Only top-level (country) view. No actual drill-down, no sub-level
-          data (state/city). Visual indicator for drill-down exists but is not functional.
+        passed: true
+        comment: Correct hierarchical bubble-choropleth map at two levels. Third level
+          (city) absent. Valid adaptation for semi-interactive library.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Present: color legend, hover tooltips, drillable visual distinction.
-          Missing: drill-down on click, breadcrumb navigation, zoom transitions, multi-level
-          data.'
+        passed: true
+        comment: Breadcrumb, color legend, tooltips, drillable distinction, consistent
+          color scale all present. True click drill-down and city level absent.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Countries at correct geographic coordinates. Value mapped to both
-          bubble size and fill color.
+        comment: Lat/lon correct; fill and size both encode value; all data visible.
       - id: SC-04
         name: Title & Legend
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Title: ''map-drilldown-geographic · python · letsplot · anyplot.ai''.
-          Color bar ''Sales (M $)'' present.'
+        comment: World panel title format correct. US panel title 'USA → State Level
+          (drill-down)' does not follow required format.
     data_quality:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Only 8 countries at single level. No state/province/city data. Hierarchical
-          multi-level structure entirely absent.
+        passed: true
+        comment: Two hierarchical levels shown; drillable vs. leaf distinction; value
+          variation across regions. Missing optional third level.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Global sales by major countries is clear, neutral, business-realistic.
+        comment: Sales performance by country/state — neutral business scenario with
+          real geographic names and plausible magnitudes.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values $0.98M-$4.85M are plausible. USA highest is factually
-          reasonable.
+        comment: Country and state sales values reflect plausible relative economic
+          scale; state totals approximately match US total.
     code_quality:
       score: 10
       max: 10
@@ -195,31 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports to tokens to data to plot to save.'
+        comment: 'Linear flow: imports → tokens → data → world plot → US plot → gggrid
+          → save. No functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set; data manually specified (deterministic).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used.
+        comment: All imported symbols are used; no extraneous imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI, well-structured. Label offset dict is practical.
+        comment: Clean layered ggplot composition. Label offset dict is idiomatic.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html with correct naming.
     library_mastery:
       score: 7
       max: 10
@@ -229,23 +231,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Excellent ggplot grammar usage. layer_tooltips() chained API, coord_fixed(),
-          theme_void(), scale_size(guide='none') all idiomatic.
+        comment: ggplot layering, gggrid, coord_fixed, layer_tooltips chaining — all
+          idiomatic letsplot patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() is letsplot's signature feature. HTML export enables
-          web interactivity. shape=21 with fill+color separation is idiomatic letsplot
-          bubble styling.
-  verdict: REJECTED
+        comment: layer_tooltips() with .title().line() chaining and simultaneous PNG+HTML
+          export leverage letsplot-specific capabilities.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - layer-composition
   - hover-tooltips
   - html-export
-  - layer-composition
+  - subplots
   patterns:
   - data-generation
   dataprep: []
@@ -253,3 +255,4 @@ impl_tags:
   - minimal-chrome
   - alpha-blending
   - edge-highlighting
+  - custom-colormap
