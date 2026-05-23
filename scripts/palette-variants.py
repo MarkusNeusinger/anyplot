@@ -62,7 +62,11 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
-from core.images import OK_GREEN, OKABE_PALETTE  # noqa: E402
+# Okabe-Ito hex constants — kept inline so this variant-search script
+# continues to compare new variants against the original Okabe-Ito palette
+# even after core.images was migrated to the anyplot palette (variant D).
+OK_GREEN = "#009E73"
+OKABE_PALETTE = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442"]
 from _palette_common import (  # noqa: E402
     CVD_ORDER,
     DARK_THEME_FULL,

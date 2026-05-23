@@ -94,13 +94,16 @@ geom_density()     # Density
 ## Scales
 
 ```python
-# Categorical — use Okabe-Ito (see Colors section below)
-+ scale_color_manual(values=OKABE_ITO)
-+ scale_fill_manual(values=OKABE_ITO)
+# Categorical — use anyplot palette (see Colors section below)
++ scale_color_manual(values=ANYPLOT_PALETTE)
++ scale_fill_manual(values=ANYPLOT_PALETTE)
 
-# Continuous — NOT Okabe-Ito:
-+ scale_color_viridis()                        # sequential
-+ scale_fill_gradient2(low='#A6611A', mid='#F5F5F5', high='#018571')  # BrBG-style diverging
+# Continuous — only the two anyplot palette-derived cmaps are allowed:
++ scale_color_gradient(low='#009E73', high='#003D94')                              # sequential
++ scale_fill_gradient(low='#009E73',  high='#003D94')
++ scale_color_gradient2(low='#BB0D22', mid='#A2A598', high='#007AD9', midpoint=0)  # diverging
++ scale_fill_gradient2(low='#BB0D22',  mid='#A2A598', high='#007AD9', midpoint=0)
+# Forbidden: scale_color_viridis / scale_fill_viridis or any non-anyplot stops.
 
 # Axis scales
 + scale_x_continuous()
@@ -131,18 +134,18 @@ geom_density()     # Density
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-OKABE_ITO = ['#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442']
+ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E']
 
 # Single-series
-+ geom_point(color=OKABE_ITO[0])
++ geom_point(color=ANYPLOT_PALETTE[0])
 
 # Multi-series
-+ scale_color_manual(values=OKABE_ITO)
-+ scale_fill_manual(values=OKABE_ITO)
++ scale_color_manual(values=ANYPLOT_PALETTE)
++ scale_fill_manual(values=ANYPLOT_PALETTE)
 ```
 
 ## Theme-adaptive Chrome (lets-plot mapping)
@@ -171,7 +174,7 @@ anyplot_theme = theme(
     legend_title=element_text(color=INK),
 )
 
-plot = (ggplot(df, aes('x', 'y')) + geom_point(color=OKABE_ITO[0]) + anyplot_theme)
+plot = (ggplot(df, aes('x', 'y')) + geom_point(color=ANYPLOT_PALETTE[0]) + anyplot_theme)
 ```
 
 ## Output Files

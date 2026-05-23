@@ -120,26 +120,30 @@ chart = chart.interactive()
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-OKABE_ITO = ['#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442']
+ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E']
 
 # Single-series
-alt.Chart(df).mark_circle(color=OKABE_ITO[0]).encode(x='x', y='y')
+alt.Chart(df).mark_circle(color=ANYPLOT_PALETTE[0]).encode(x='x', y='y')
 
 # Multi-series
 alt.Chart(df).mark_circle().encode(
     x='x', y='y',
-    color=alt.Color('category:N', scale=alt.Scale(range=OKABE_ITO)),
+    color=alt.Color('category:N', scale=alt.Scale(range=ANYPLOT_PALETTE)),
 )
 
-# Continuous — NOT Okabe-Ito:
-#   Sequential: scheme='viridis' or 'cividis'
-#   Diverging:  scheme='brownbluegreen' (BrBG in altair naming)
-alt.Color('value:Q', scale=alt.Scale(scheme='viridis'))
-alt.Color('delta:Q', scale=alt.Scale(scheme='brownbluegreen'))
+# Continuous — only the two anyplot palette-derived cmaps are allowed:
+# Sequential: two-stop range
+alt.Color('value:Q', scale=alt.Scale(range=['#009E73', '#003D94']))
+# Diverging: three-stop range with domainMid at 0
+alt.Color('delta:Q', scale=alt.Scale(
+    range=['#BB0D22', '#A2A598', '#007AD9'],
+    domainMid=0,
+))
+# Forbidden: scheme='viridis'/'cividis'/'brownbluegreen' and any other named scheme for continuous data.
 ```
 
 ## Theme-adaptive Chrome (altair mapping)

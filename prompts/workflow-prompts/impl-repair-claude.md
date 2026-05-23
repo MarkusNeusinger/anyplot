@@ -25,7 +25,7 @@ Read both sources to understand what needs to be fixed:
 ## Step 2: Read reference files
 
 1. `prompts/library/{LIBRARY}.md` - Library-specific rules + theme-adaptive chrome mapping
-2. `prompts/default-style-guide.md` - Canonical Okabe-Ito palette + theme tokens (re-read if VQ-07 or VQ-04 failed), plus "Visual Sizing Defaults" and "Proportional Sizing" sections (re-read if VQ-01 / VQ-02 / VQ-05 failed)
+2. `prompts/default-style-guide.md` - Canonical anyplot palette + theme tokens (re-read if VQ-07 or VQ-04 failed), plus "Visual Sizing Defaults" and "Proportional Sizing" sections (re-read if VQ-01 / VQ-02 / VQ-05 failed)
 3. `plots/{SPEC_ID}/specification.md` - The specification
 
 **Visual-sizing fixes (when VQ-01 / VQ-02 / VQ-05 failed):**
@@ -44,9 +44,9 @@ Adjust the canvas-controlling knobs of the relevant library family:
 **Do NOT re-read `prompts/quality-criteria.md`** — the review already distilled all criteria into `review.criteria_checklist` in the metadata YAML (Step 1). Use that checklist directly: items with `passed: false` are the ones to fix.
 
 **Common VQ-07 failures and fixes:**
-- Legacy `#306998` still in code → replace with `#009E73` (Okabe-Ito position 1).
+- Legacy `#306998` still in code → replace with `#009E73` (anyplot palette position 1).
 - First series not brand green → rewrite so the primary category renders in `#009E73`.
-- `jet`/`hsv`/`rainbow` cmap for continuous → switch to `viridis`/`cividis` or `BrBG`.
+- Any non-anyplot cmap (jet/hsv/rainbow/viridis/cividis/BrBG/Reds/Blues/Greens) → switch to `anyplot_seq` (single-polarity) or `anyplot_div` (diverging) — see `prompts/default-style-guide.md` "Continuous Data".
 - Pure `#FFFFFF` / `#000000` background → use `#FAF8F1` / `#1A1A17` via the `ANYPLOT_THEME` token block.
 - Chrome wrong-theme (dark text on dark bg) → wire up all title/axis/tick/grid/legend colors to the `INK`/`INK_SOFT` tokens.
 

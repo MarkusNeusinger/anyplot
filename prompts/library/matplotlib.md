@@ -104,29 +104,31 @@ ax.boxplot(data, tick_labels=group_names)  # Right
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette" for the canonical list). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette" for the canonical list). First series is **always** `#009E73`.
 
 ```python
-# Okabe-Ito palette — use positions 1→N in canonical order
-OKABE_ITO = ['#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442']
+# anyplot palette — use positions 1→N in canonical order
+ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E']
 
 # Single-series: always position 1 (brand green)
-color = OKABE_ITO[0]  # '#009E73'
+color = ANYPLOT_PALETTE[0]  # '#009E73'
 
 # Multi-series: take the first N colors in order, don't cherry-pick
-ax.set_prop_cycle(color=OKABE_ITO[:N])
+ax.set_prop_cycle(color=ANYPLOT_PALETTE[:N])
 
-# Continuous data — Okabe-Ito is NOT used (causes banding):
-#   Sequential: cmap='viridis' or 'cividis'
-#   Diverging:  cmap='BrBG'
-#   Heatmaps:   cmap='viridis' or single-polarity 'Reds'/'Blues'
-#   Forbidden:  'jet', 'hsv', 'rainbow'
+# Continuous data — only the two anyplot palette-derived cmaps are allowed
+# (no viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow):
+from matplotlib.colors import LinearSegmentedColormap
+anyplot_seq = LinearSegmentedColormap.from_list("anyplot_seq", ["#009E73", "#003D94"])
+anyplot_div = LinearSegmentedColormap.from_list("anyplot_div", ["#BB0D22", "#A2A598", "#007AD9"])
+# Sequential / single-polarity heatmaps: cmap=anyplot_seq
+# Diverging (signed deviations, residuals, correlations):    cmap=anyplot_div
 ```
 
 ## Theme-adaptive Chrome (matplotlib mapping)
 
-The pipeline runs each implementation twice: `ANYPLOT_THEME=light` → `plot-light.png`, `ANYPLOT_THEME=dark` → `plot-dark.png`. Backgrounds, text, grid, spines, legend frames, and annotation boxes all flip; only the Okabe-Ito data colors stay constant.
+The pipeline runs each implementation twice: `ANYPLOT_THEME=light` → `plot-light.png`, `ANYPLOT_THEME=dark` → `plot-dark.png`. Backgrounds, text, grid, spines, legend frames, and annotation boxes all flip; only the anyplot palette data colors stay constant.
 
 ```python
 import os
