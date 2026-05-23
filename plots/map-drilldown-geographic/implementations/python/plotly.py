@@ -1,17 +1,33 @@
-""" pyplots.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
-Library: plotly 6.5.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: plotly | Python 3.13
+Quality: pending | Updated: 2026-05-23
 """
+
+import os
 
 import numpy as np
 import plotly.graph_objects as go
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+ANYPLOT_SEQ = [[0.0, "#009E73"], [1.0, "#003D94"]]
+
+# Geo background colors per theme
+LAND_COLOR = "rgb(228, 224, 210)" if THEME == "light" else "rgb(40, 38, 33)"
+LAKE_COLOR = "rgb(197, 220, 245)" if THEME == "light" else "rgb(20, 40, 65)"
+OCEAN_COLOR = "rgb(210, 228, 248)" if THEME == "light" else "rgb(15, 30, 55)"
+BORDER_COLOR = "rgb(180, 175, 160)" if THEME == "light" else "rgb(70, 68, 60)"
+
+# Data — US states with cities, sales values ($K)
 np.random.seed(42)
 
-# Hierarchical geographic data - US states with cities
-# Structure: state -> cities with sales values
 us_states_data = {
     "California": {
         "abbrev": "CA",
@@ -65,12 +81,11 @@ us_states_data = {
     },
 }
 
-# Calculate state totals (aggregated from cities)
 states = list(us_states_data.keys())
 state_abbrevs = [us_states_data[s]["abbrev"] for s in states]
 state_values = [sum(us_states_data[s]["city_values"]) for s in states]
 
-# City coordinates (approximate) for scatter overlay
+# City coordinates (approximate lat/lon)
 city_coords = {
     "Los Angeles": (-118.24, 34.05),
     "San Francisco": (-122.42, 37.77),
@@ -123,39 +138,12 @@ city_coords = {
     "Flint": (-83.69, 43.01),
 }
 
-# Create state-level choropleth (initial view)
-fig = go.Figure()
-
-# Add choropleth for US states
-fig.add_trace(
-    go.Choropleth(
-        locations=state_abbrevs,
-        z=state_values,
-        locationmode="USA-states",
-        colorscale=[
-            [0, "#FFD43B"],  # Python Yellow (low)
-            [0.5, "#4B8BBE"],  # Python Blue (mid)
-            [1, "#306998"],  # Dark Python Blue (high)
-        ],
-        colorbar=dict(
-            title=dict(text="Sales ($K)", font=dict(size=20)), tickfont=dict(size=16), len=0.6, thickness=25, x=1.02
-        ),
-        marker=dict(line=dict(color="white", width=2)),
-        hovertemplate="<b>%{text}</b><br>Total Sales: $%{z:,.0f}K<extra></extra>",
-        text=states,
-        name="States",
-    )
-)
-
-# Add city markers as a second layer
-all_city_lons = []
-all_city_lats = []
-all_city_names = []
-all_city_values = []
-all_city_states = []
+# Flatten city data for scattergeo layer
+all_city_lons, all_city_lats = [], []
+all_city_names, all_city_values, all_city_states = [], [], []
 
 for state, data in us_states_data.items():
-    for city, value in zip(data["cities"], data["city_values"]):
+    for city, value in zip(data["cities"], data["city_values"], strict=False):
         if city in city_coords:
             lon, lat = city_coords[city]
             all_city_lons.append(lon)
@@ -164,72 +152,92 @@ for state, data in us_states_data.items():
             all_city_values.append(value)
             all_city_states.append(state)
 
-# Add city scatter layer (visible when zoomed in)
+# Plot — state choropleth (top level) + city scatter (drill-down layer)
+fig = go.Figure()
+
+fig.add_trace(
+    go.Choropleth(
+        locations=state_abbrevs,
+        z=state_values,
+        locationmode="USA-states",
+        colorscale=ANYPLOT_SEQ,
+        colorbar={
+            "title": {"text": "Sales ($K)", "font": {"size": 12, "color": INK}},
+            "tickfont": {"size": 10, "color": INK_SOFT},
+            "len": 0.6,
+            "thickness": 18,
+            "x": 1.01,
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 1,
+        },
+        marker={"line": {"color": BORDER_COLOR, "width": 1.5}},
+        hovertemplate="<b>%{text}</b><br>Total Sales: $%{z:,.0f}K<extra></extra>",
+        text=states,
+        name="States",
+    )
+)
+
 fig.add_trace(
     go.Scattergeo(
         lon=all_city_lons,
         lat=all_city_lats,
         mode="markers+text",
-        marker=dict(
-            size=[v / 30 for v in all_city_values],
-            color=all_city_values,
-            colorscale=[[0, "#FFD43B"], [0.5, "#4B8BBE"], [1, "#306998"]],
-            line=dict(color="white", width=1.5),
-            sizemin=8,
-        ),
+        marker={
+            "size": [max(v / 40, 8) for v in all_city_values],
+            "color": all_city_values,
+            "colorscale": ANYPLOT_SEQ,
+            "line": {"color": PAGE_BG, "width": 1.5},
+            "sizemin": 8,
+            "showscale": False,
+        },
         text=all_city_names,
         textposition="top center",
-        textfont=dict(size=12, color="#333333"),
-        hovertemplate="<b>%{text}</b><br>%{customdata}<br>Sales: $%{marker.color:,.0f}K<extra></extra>",
+        textfont={"size": 10, "color": INK},
+        hovertemplate=("<b>%{text}</b><br>%{customdata}<br>Sales: $%{marker.color:,.0f}K<extra></extra>"),
         customdata=all_city_states,
         name="Cities",
-        visible=False,  # Hidden initially, shown when drilled down
+        visible=False,
     )
 )
 
-# Create dropdown buttons for drill-down navigation
+# Dropdown buttons for hierarchical navigation
+geo_base = {
+    "scope": "usa",
+    "showlakes": True,
+    "lakecolor": LAKE_COLOR,
+    "landcolor": LAND_COLOR,
+    "showland": True,
+    "showcountries": False,
+    "showcoastlines": True,
+    "coastlinecolor": BORDER_COLOR,
+    "bgcolor": PAGE_BG,
+}
+
+title_base = "map-drilldown-geographic · python · plotly · anyplot.ai"
+
 buttons = [
-    dict(
-        label="🌎 All States (Click to drill down)",
-        method="update",
-        args=[
+    {
+        "label": "All States",
+        "method": "update",
+        "args": [
             {"visible": [True, False]},
             {
-                "geo": {
-                    "scope": "usa",
-                    "showlakes": True,
-                    "lakecolor": "rgb(220, 235, 250)",
-                    "landcolor": "rgb(245, 245, 245)",
-                    "showland": True,
-                    "showcountries": False,
-                    "bgcolor": "rgba(0,0,0,0)",
-                },
-                "title.text": "map-drilldown-geographic · plotly · pyplots.ai<br><sub>📍 United States Sales by State | Click dropdown to explore cities</sub>",
+                "geo": {**geo_base},
+                "title.text": f"{title_base}<br><sub>US Sales by State — use dropdown to drill into cities</sub>",
             },
         ],
-    ),
-    dict(
-        label="🏙️ All Cities (Detailed view)",
-        method="update",
-        args=[
+    },
+    {
+        "label": "All Cities",
+        "method": "update",
+        "args": [
             {"visible": [True, True]},
-            {
-                "geo": {
-                    "scope": "usa",
-                    "showlakes": True,
-                    "lakecolor": "rgb(220, 235, 250)",
-                    "landcolor": "rgb(245, 245, 245)",
-                    "showland": True,
-                    "showcountries": False,
-                    "bgcolor": "rgba(0,0,0,0)",
-                },
-                "title.text": "map-drilldown-geographic · plotly · pyplots.ai<br><sub>📍 United States > All Cities | Sales Distribution</sub>",
-            },
+            {"geo": {**geo_base}, "title.text": f"{title_base}<br><sub>US Sales — All Cities Overlay</sub>"},
         ],
-    ),
+    },
 ]
 
-# Add state-specific drill-down buttons
 state_centers = {
     "California": {"lon": -119.5, "lat": 37.0, "zoom": 4.5},
     "Texas": {"lon": -99.0, "lat": 31.5, "zoom": 4.5},
@@ -247,78 +255,57 @@ for state in states:
     center = state_centers[state]
     state_total = sum(us_states_data[state]["city_values"])
     buttons.append(
-        dict(
-            label=f"📍 {state} (${state_total}K)",
-            method="update",
-            args=[
+        {
+            "label": f"{state} (${state_total}K)",
+            "method": "update",
+            "args": [
                 {"visible": [True, True]},
                 {
                     "geo": {
-                        "scope": "usa",
+                        **geo_base,
                         "center": {"lon": center["lon"], "lat": center["lat"]},
                         "projection": {"scale": center["zoom"]},
-                        "showlakes": True,
-                        "lakecolor": "rgb(220, 235, 250)",
-                        "landcolor": "rgb(245, 245, 245)",
-                        "showland": True,
-                        "showcountries": False,
-                        "bgcolor": "rgba(0,0,0,0)",
                     },
-                    "title.text": f"map-drilldown-geographic · plotly · pyplots.ai<br><sub>📍 United States > {state} | City-level Sales</sub>",
+                    "title.text": f"{title_base}<br><sub>United States > {state} | City-Level Sales</sub>",
                 },
             ],
-        )
+        }
     )
 
-# Update layout
+# Style
 fig.update_layout(
-    title=dict(
-        text="map-drilldown-geographic · plotly · pyplots.ai<br><sub>📍 United States Sales by State | Click dropdown to explore cities</sub>",
-        font=dict(size=28, color="#333333"),
-        x=0.5,
-        xanchor="center",
-    ),
-    geo=dict(
-        scope="usa",
-        showlakes=True,
-        lakecolor="rgb(220, 235, 250)",
-        landcolor="rgb(245, 245, 245)",
-        showland=True,
-        bgcolor="rgba(0,0,0,0)",
-    ),
+    autosize=False,
+    title={
+        "text": f"{title_base}<br><sub>US Sales by State — use dropdown to drill into cities</sub>",
+        "font": {"size": 16, "color": INK},
+        "x": 0.5,
+        "xanchor": "center",
+    },
+    geo=dict(**geo_base),
     updatemenus=[
-        dict(
-            type="dropdown",
-            direction="down",
-            active=0,
-            x=0.02,
-            y=0.98,
-            xanchor="left",
-            yanchor="top",
-            buttons=buttons,
-            font=dict(size=14),
-            bgcolor="white",
-            bordercolor="#306998",
-            borderwidth=2,
-            showactive=True,
-        )
+        {
+            "type": "dropdown",
+            "direction": "down",
+            "active": 0,
+            "x": 0.01,
+            "y": 0.99,
+            "xanchor": "left",
+            "yanchor": "top",
+            "buttons": buttons,
+            "font": {"size": 12, "color": INK},
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 1,
+            "showactive": True,
+        }
     ],
-    paper_bgcolor="white",
-    margin=dict(l=20, r=20, t=100, b=20),
-    annotations=[
-        dict(
-            text="<b>Navigation:</b> Use dropdown menu to drill down into states and cities",
-            x=0.5,
-            y=-0.02,
-            xref="paper",
-            yref="paper",
-            showarrow=False,
-            font=dict(size=14, color="#666666"),
-            align="center",
-        )
-    ],
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
+    legend={"bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "borderwidth": 1, "font": {"color": INK_SOFT}},
+    margin={"l": 40, "r": 60, "t": 80, "b": 40},
 )
 
-# Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
