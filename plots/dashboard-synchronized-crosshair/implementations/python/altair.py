@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-23
@@ -40,26 +40,32 @@ indicator = np.clip(raw_momentum, 0, 100)
 
 df = pd.DataFrame({"date": dates, "price": price, "volume": volume, "indicator": indicator})
 
-# Synchronized hover selection — shared across all vconcat views via same parameter name
+# Shared selections
 nearest = alt.selection_point(nearest=True, on="pointerover", fields=["date"], empty=False)
+# Synchronized zoom/pan — same parameter name across all views links them in Vega-Lite
+zoom = alt.selection_interval(bind="scales", encodings=["x"])
 
 # X encodings: axis hidden on top charts, labeled on bottom chart only
 x_hidden = alt.X("date:T", axis=alt.Axis(labels=False, ticks=False, domain=False, title=None))
 x_labeled = alt.X("date:T", title="Trading Date", axis=alt.Axis(format="%b %Y", labelFontSize=10, titleFontSize=12))
 
-# Price chart (top) — green line with synchronized crosshair
+# Price chart (top) — green line, zero=False so actual range fills the height
 base_p = alt.Chart(df).encode(x=x_hidden)
 
 price_chart = alt.layer(
-    base_p.mark_line(color=COLOR_PRICE, strokeWidth=2).encode(
-        y=alt.Y("price:Q", title="Price ($)", axis=alt.Axis(labelFontSize=10, titleFontSize=12)),
+    base_p.mark_line(color=COLOR_PRICE, strokeWidth=2)
+    .encode(
+        y=alt.Y(
+            "price:Q", title="Price ($)", scale=alt.Scale(zero=False), axis=alt.Axis(labelFontSize=10, titleFontSize=12)
+        ),
         tooltip=[
             alt.Tooltip("date:T", format="%Y-%m-%d", title="Date"),
             alt.Tooltip("price:Q", format="$.2f", title="Price"),
         ],
-    ),
+    )
+    .add_params(zoom),
     base_p.mark_point(color=COLOR_PRICE, size=80, filled=True).encode(
-        y=alt.Y("price:Q"), opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+        y=alt.Y("price:Q", scale=alt.Scale(zero=False)), opacity=alt.condition(nearest, alt.value(1), alt.value(0))
     ),
     base_p.mark_rule(color=INK_SOFT, strokeWidth=1.5)
     .encode(opacity=alt.condition(nearest, alt.value(0.7), alt.value(0)))
@@ -70,20 +76,28 @@ price_chart = alt.layer(
 base_v = alt.Chart(df).encode(x=x_hidden)
 
 volume_chart = alt.layer(
-    base_v.mark_bar(color=COLOR_VOLUME, opacity=0.7).encode(
+    base_v.mark_bar(color=COLOR_VOLUME, opacity=0.7)
+    .encode(
         y=alt.Y("volume:Q", title="Volume", axis=alt.Axis(labelFontSize=10, titleFontSize=12, format="~s")),
         tooltip=[
             alt.Tooltip("date:T", format="%Y-%m-%d", title="Date"),
             alt.Tooltip("volume:Q", format=",.0f", title="Volume"),
         ],
-    ),
+    )
+    .add_params(zoom),
     base_v.mark_rule(color=INK_SOFT, strokeWidth=1.5)
     .encode(opacity=alt.condition(nearest, alt.value(0.7), alt.value(0)))
     .add_params(nearest),
 ).properties(width=620, height=70, title=alt.Title("Volume", anchor="start", fontSize=12))
 
-# Momentum indicator chart (bottom) — red line with labeled x-axis and reference levels
+# Momentum indicator chart (bottom) — red line with reference zones and labeled x-axis
 base_i = alt.Chart(df).encode(x=x_labeled)
+
+# Semi-transparent zone shading: oversold (<30) and overbought (>70) bands for storytelling
+zone_df = pd.DataFrame({"x1": [dates[0], dates[0]], "x2": [dates[-1], dates[-1]], "y1": [0, 70], "y2": [30, 100]})
+zone_bg = (
+    alt.Chart(zone_df).mark_rect(color=COLOR_INDICATOR, opacity=0.08).encode(x="x1:T", x2="x2:T", y="y1:Q", y2="y2:Q")
+)
 
 overbought_line = (
     alt.Chart(pd.DataFrame({"y": [70]})).mark_rule(color=INK_SOFT, strokeDash=[4, 4], strokeWidth=1.0).encode(y="y:Q")
@@ -93,7 +107,9 @@ oversold_line = (
 )
 
 indicator_chart = alt.layer(
-    base_i.mark_line(color=COLOR_INDICATOR, strokeWidth=2).encode(
+    zone_bg,
+    base_i.mark_line(color=COLOR_INDICATOR, strokeWidth=2)
+    .encode(
         y=alt.Y(
             "indicator:Q",
             title="Momentum",
@@ -104,7 +120,8 @@ indicator_chart = alt.layer(
             alt.Tooltip("date:T", format="%Y-%m-%d", title="Date"),
             alt.Tooltip("indicator:Q", format=".1f", title="Momentum"),
         ],
-    ),
+    )
+    .add_params(zoom),
     base_i.mark_point(color=COLOR_INDICATOR, size=80, filled=True).encode(
         y=alt.Y("indicator:Q"), opacity=alt.condition(nearest, alt.value(1), alt.value(0))
     ),
@@ -131,6 +148,7 @@ chart = (
         titleColor=INK,
         grid=True,
     )
+    .configure_axisX(grid=False)
     .configure_title(color=INK)
     .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
