@@ -167,6 +167,26 @@ Examples:
 
 Only add the descriptive prefix when it adds value - most basic plots don't need it.
 
+**Title fontsize must scale with title length**: The style-guide default fontsize (see `prompts/default-style-guide.md` "Visual Sizing Defaults") is tuned for the ~67-char mandated title (`{spec-id} · {language} · {library} · anyplot.ai`). Adding a `{Descriptive Title} · ` prefix makes the title longer, and long `{spec-id}` values (e.g. `network-bipartite-weighted`) eat into the budget even without a prefix. Don't guess — you know the exact title string at codegen time, so **compute its length and scale fontsize linearly off the 67-char baseline**:
+
+```
+n = len(title)                             # exact character count of the rendered title
+ratio = 67 / n if n > 67 else 1.0          # only shrink when title is longer than baseline
+title_fontsize = round(default * ratio)    # default = library-specific value from sizing table
+```
+
+Library defaults (from the sizing table) and reasonable floors so the title stays legible:
+
+| Library family | Default | Floor | Example (n=100) |
+|---|---|---|---|
+| matplotlib / seaborn / plotnine | `12` pt | `8` pt | `round(12 × 67/100) = 8` pt |
+| plotly / altair / lets-plot | `16` px | `11` px | `round(16 × 67/100) = 11` px |
+| bokeh | `'50pt'` | `'34pt'` | `f'{round(50 × 67/100)}pt'` = `'34pt'` |
+| highcharts | `'66px'` | `'44px'` | `f'{round(66 × 67/100)}px'` = `'44px'` |
+| pygal | `66` | `44` | `round(66 × 67/100) = 44` |
+
+The same formula applies to every library family because all of them render to the same 3200×1800 (or 2400×2400) source canvas. Never let the title overflow past ~90% of plot width.
+
 The middot (·) separator is required. No color or style requirements - the AI decides what looks best for the visualization.
 
 ### Structure
