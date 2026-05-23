@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 76/100 | Updated: 2026-05-23
@@ -266,7 +266,8 @@ df_bottom3 = df_states[df_states["state"].isin(bottom_3)].copy()
 # Nudge centroids for crowded northeastern states to reduce label overlap
 centroid_nudge = {
     "New York": (-76.0, 43.3),
-    "Tennessee": (-86.3, 35.7),
+    "Tennessee": (-86.3, 36.4),  # push north — TN polygon is a thin strip
+    "Virginia": (-78.5, 38.4),  # push north to separate from NC
     "Illinois": (-89.5, 40.2),
     "Wisconsin": (-89.7, 44.8),
     "Michigan": (-85.5, 44.3),
@@ -305,7 +306,7 @@ plot = (
     + geom_text(
         aes(x="lon", y="lat", label="label"),
         data=df_labels,
-        size=5,
+        size=4,
         color="white",
         fontweight="bold",
         va="center",
@@ -326,6 +327,8 @@ plot = (
     )
     + coord_fixed(ratio=1.3)
     + annotate("text", x=-125, y=50, label=breadcrumb_text, size=9, color=INK, fontweight="bold", ha="left")
+    + annotate("text", x=-74, y=25.5, label="▲ Top 3", size=8, color="#99B314", ha="right", fontweight="bold")
+    + annotate("text", x=-74, y=23.5, label="▼ Bottom 3", size=8, color="#B71D27", ha="right", fontweight="bold")
     + labs(title="map-drilldown-geographic · python · plotnine · anyplot.ai", x="Longitude", y="Latitude")
     + theme(
         figure_size=(8, 4.5),
@@ -337,7 +340,7 @@ plot = (
         plot_title=element_text(size=12, weight="bold", color=INK, ha="center"),
         axis_title=element_text(size=10, color=INK),
         axis_text=element_text(size=8, color=INK_SOFT),
-        axis_line=element_line(color=INK_SOFT),
+        axis_line=element_blank(),
         axis_ticks=element_line(color=INK_SOFT, size=0.5),
         legend_title=element_text(size=8, weight="bold", color=INK),
         legend_text=element_text(size=8, color=INK_SOFT),
