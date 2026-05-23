@@ -65,8 +65,8 @@ for i, (name, proj) in enumerate(projections):
         gl.top_labels = False
         gl.right_labels = False
         gl.bottom_labels = not is_top_row
-        gl.xlabel_style = {"size": 6.5, "color": INK_MUTED}
-        gl.ylabel_style = {"size": 6.5, "color": INK_MUTED}
+        gl.xlabel_style = {"size": 7, "color": INK_MUTED}
+        gl.ylabel_style = {"size": 7, "color": INK_MUTED}
     except Exception:
         gl = ax.gridlines(draw_labels=False, linewidth=0.5, color=INK_SOFT, alpha=0.4, linestyle="--")
     gl.xlocator = plt.FixedLocator(np.arange(-180, 181, 30))
@@ -92,5 +92,5 @@ for i, (name, proj) in enumerate(projections):
 
     ax.set_title(name, fontsize=10, fontweight="bold", color=INK, pad=6)
 
-fig.subplots_adjust(left=0.02, right=0.98, top=0.86, bottom=0.03, hspace=0.28, wspace=0.04)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.86, bottom=0.03, hspace=0.30, wspace=0.04)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
