@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 82/100 | Updated: 2026-05-23
@@ -55,6 +55,9 @@ for city, (lat, lon, count) in cities.items():
         store_id += 1
 
 df = pd.DataFrame({"lat": lats, "lon": lons, "label": labels, "category": cats})
+total_stores = len(df)
+city_counts = {city: count for city, (_, _, count) in cities.items()}
+densest_city = max(city_counts, key=city_counts.get)
 
 # Plot
 map_style = "carto-positron" if THEME == "light" else "carto-darkmatter"
@@ -71,7 +74,10 @@ for category in categories:
             marker={"size": 14, "color": category_colors[category], "opacity": 0.8},
             text=cat_df["label"],
             hovertemplate=(
-                "<b>%{text}</b><br>Category: " + category + "<br>Lat: %{lat:.4f}<br>Lon: %{lon:.4f}<extra></extra>"
+                "<b>%{text}</b><br>"
+                + f"Category: {category}<br>"
+                + "Lat: %{lat:.4f}<br>Lon: %{lon:.4f}"
+                + "<extra></extra>"
             ),
             name=category,
             cluster={
@@ -80,7 +86,7 @@ for category in categories:
                 "size": 40,
                 "step": 1,
                 "color": category_colors[category],
-                "opacity": 0.9,
+                "opacity": 0.75,
             },
         )
     )
@@ -94,9 +100,10 @@ fig.update_layout(
         "x": 0.5,
         "xanchor": "center",
     },
-    map={"style": map_style, "center": {"lat": 39.0, "lon": -98.0}, "zoom": 3.5},
+    # lon=-100 shifts viewport ~2° west to keep Boston within the canvas (review feedback)
+    map={"style": map_style, "center": {"lat": 39.0, "lon": -100.0}, "zoom": 3.5},
     legend={
-        "title": {"text": "Store Category", "font": {"size": 12, "color": INK}},
+        "title": {"text": f"Store Category  (n={total_stores})", "font": {"size": 12, "color": INK}},
         "font": {"size": 10, "color": INK_SOFT},
         "bgcolor": ELEVATED_BG,
         "bordercolor": INK_SOFT,
@@ -106,7 +113,29 @@ fig.update_layout(
         "xanchor": "left",
         "yanchor": "top",
     },
-    margin={"l": 20, "r": 20, "t": 80, "b": 20},
+    margin={"l": 80, "r": 60, "t": 80, "b": 60},
+)
+
+# Data-context annotation: focal point summarising the dataset
+fig.add_annotation(
+    x=0.97,
+    y=0.04,
+    xref="paper",
+    yref="paper",
+    text=(
+        f"<b>{total_stores} retail locations</b> across 10 US cities<br>"
+        f"Densest cluster: <b>{densest_city}</b> ({city_counts[densest_city]} stores)"
+        "  ·  zoom in to expand clusters"
+    ),
+    showarrow=False,
+    font={"size": 10, "color": INK_SOFT},
+    bgcolor=ELEVATED_BG,
+    bordercolor=INK_SOFT,
+    borderwidth=1,
+    borderpad=6,
+    align="right",
+    xanchor="right",
+    yanchor="bottom",
 )
 
 # Save
