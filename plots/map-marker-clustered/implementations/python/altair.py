@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-23
@@ -48,14 +48,15 @@ n_points = 500
 lats, lons, store_labels, cats = [], [], [], []
 for i in range(n_points):
     city = cities[i % len(cities)]
-    lats.append(city[0] + np.random.normal(0, 1.5))
-    lons.append(city[1] + np.random.normal(0, 1.5))
+    # Tighter noise (std=0.8) + clamp to CONUS bounds keeps all points within the US basemap
+    lats.append(float(np.clip(city[0] + np.random.normal(0, 0.8), 24.0, 49.0)))
+    lons.append(float(np.clip(city[1] + np.random.normal(0, 0.8), -125.0, -66.0)))
     store_labels.append(f"Store {i + 1}")
     cats.append(city[3])
 
 df = pd.DataFrame({"lat": lats, "lon": lons, "label": store_labels, "category": cats})
 
-# Grid-based clustering — no external dependencies beyond numpy/pandas
+# Grid-based clustering — no external geo-dependencies
 grid_size = 2.5  # degrees
 df["lat_bin"] = (df["lat"] / grid_size).round() * grid_size
 df["lon_bin"] = (df["lon"] / grid_size).round() * grid_size
@@ -72,6 +73,29 @@ cluster_summary = (
 )
 cluster_summary["marker_size"] = np.log1p(cluster_summary["count"]) * 150 + 100
 
+# Spider-line data: for each individual point, one segment to its cluster centroid
+# Used in HTML to reveal member locations on cluster hover
+cluster_centers = cluster_summary[["lat_bin", "lon_bin", "lat", "lon"]].rename(columns={"lat": "clat", "lon": "clon"})
+df_linked = df.merge(cluster_centers, on=["lat_bin", "lon_bin"])
+
+lines_rows = []
+for idx, row in df_linked.iterrows():
+    link_id = f"lk{idx}"
+    lines_rows.append(
+        {
+            "lon": row["clon"],
+            "lat": row["clat"],
+            "lat_bin": row["lat_bin"],
+            "lon_bin": row["lon_bin"],
+            "link_id": link_id,
+        }
+    )
+    lines_rows.append(
+        {"lon": row["lon"], "lat": row["lat"], "lat_bin": row["lat_bin"], "lon_bin": row["lon_bin"], "link_id": link_id}
+    )
+
+df_lines = pd.DataFrame(lines_rows)
+
 # US states basemap (Vega CDN)
 us_10m_url = "https://cdn.jsdelivr.net/npm/vega-datasets@2/data/us-10m.json"
 states = alt.topo_feature(us_10m_url, "states")
@@ -85,6 +109,37 @@ background = (
 
 category_colors = alt.Scale(
     domain=["retail", "food", "services"], range=[ANYPLOT_PALETTE[0], ANYPLOT_PALETTE[1], ANYPLOT_PALETTE[2]]
+)
+
+# Hover selection on cluster circles — gates spider lines and member-point reveal
+cluster_hover = alt.selection_point(fields=["lat_bin", "lon_bin"], on="mouseover", empty=False)
+
+# Spider lines from cluster centroid to each member point (HTML interactive layer)
+spider_lines = (
+    alt.Chart(df_lines)
+    .mark_line(strokeWidth=0.8, opacity=0.5, color=INK_SOFT)
+    .encode(longitude="lon:Q", latitude="lat:Q", detail="link_id:N")
+    .transform_filter(cluster_hover)
+    .project(type="albersUsa")
+)
+
+# Individual member points revealed when their parent cluster is hovered
+hover_points = (
+    alt.Chart(df_linked)
+    .mark_circle(size=25, opacity=0.75, stroke=PAGE_BG, strokeWidth=0.5)
+    .encode(
+        longitude="lon:Q",
+        latitude="lat:Q",
+        color=alt.Color("category:N", scale=category_colors),
+        tooltip=[
+            alt.Tooltip("label:N", title="Store"),
+            alt.Tooltip("category:N", title="Type"),
+            alt.Tooltip("lat:Q", title="Lat", format=".3f"),
+            alt.Tooltip("lon:Q", title="Lon", format=".3f"),
+        ],
+    )
+    .transform_filter(cluster_hover)
+    .project(type="albersUsa")
 )
 
 clusters = (
@@ -102,6 +157,7 @@ clusters = (
             alt.Tooltip("lon:Q", title="Longitude", format=".2f"),
         ],
     )
+    .add_params(cluster_hover)
     .project(type="albersUsa")
 )
 
@@ -116,12 +172,12 @@ count_labels = (
 TITLE = "map-marker-clustered · python · altair · anyplot.ai"
 
 chart = (
-    (background + clusters + count_labels)
+    (background + spider_lines + hover_points + clusters + count_labels)
     .properties(
         background=PAGE_BG,
         title=alt.Title(
             text=TITLE,
-            subtitle="500 US store locations clustered by proximity (size = count)",
+            subtitle="500 US store locations · hover cluster to reveal members via spider lines (size = count)",
             fontSize=16,
             subtitleFontSize=12,
             color=INK,
@@ -158,5 +214,5 @@ if _w < TW or _h < TH:
     _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
     _canvas.save(f"plot-{THEME}.png")
 
-# Save HTML
+# Save HTML — interactive: hover cluster circles to reveal spider lines + member points
 chart.save(f"plot-{THEME}.html")
