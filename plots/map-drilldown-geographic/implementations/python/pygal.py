@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 79/100 | Updated: 2026-05-23
@@ -42,7 +42,8 @@ def _lerp_hex(c0, c1, t):
 
 def seq_color(val, lo, hi):
     t = (val - lo) / (hi - lo) if hi > lo else 0.5
-    return _lerp_hex("#009E73", "#003D94", t)
+    # Dark end capped at #0A5AC4 (not #003D94) so tiles remain distinguishable on #1A1A17
+    return _lerp_hex("#009E73", "#0A5AC4", t)
 
 
 # Hierarchical regional sales data (millions USD): World -> Country -> State -> City
@@ -218,15 +219,16 @@ png_style = Style(
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
+    foreground_subtle=INK_SOFT,
     colors=choropleth_palette,
     title_font_size=title_font_size,
     label_font_size=56,
     legend_font_size=44,
     major_label_font_size=44,
-    value_font_size=40,
+    value_font_size=36,
     tooltip_font_size=40,
     no_data_font_size=44,
+    stroke_style={"width": 2, "linecap": "round", "linejoin": "round"},
 )
 
 png_chart = pygal.Treemap(
@@ -238,7 +240,8 @@ png_chart = pygal.Treemap(
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
     legend_box_size=50,
-    print_values=False,
+    print_values=True,
+    print_values_position="center",
     margin=40,
     margin_bottom=160,
     explicit_size=True,
@@ -424,7 +427,7 @@ html_content = f"""<!DOCTYPE html>
             width: 180px;
             height: 12px;
             border-radius: 6px;
-            background: linear-gradient(to right, #009E73, #003D94);
+            background: linear-gradient(to right, #009E73, #0A5AC4);
             border: 1px solid rgba(128,128,128,0.2);
         }}
         .level-info {{
