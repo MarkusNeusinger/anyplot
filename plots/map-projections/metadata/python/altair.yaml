@@ -1,0 +1,259 @@
+library: altair
+language: python
+specification_id: map-projections
+created: '2026-05-23T08:10:18Z'
+updated: '2026-05-23T08:33:37Z'
+generated_by: claude-sonnet
+workflow_run: 26327513619
+issue: 3771
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/altair/plot-dark.html
+quality_score: 84
+review:
+  strengths:
+  - Idiomatic Altair geo primitives (alt.sphere(), alt.graticule(), alt.topo_feature())
+    used correctly
+  - Layer composition (sphere + graticule + countries) is clean and Altair-native
+  - Informative projection subtitles explain distortion characteristics — educational
+    storytelling
+  - Correct brand green (#009E73) applied consistently across both themes
+  - Theme-adaptive chrome works correctly in both light and dark renders
+  - Canvas padding follows canonical pattern; gate passed
+  - HTML output saved alongside PNG
+  weaknesses:
+  - Subtitle fontSize=9 (36px in output) is borderline small for mobile widths — consider
+    increasing to 10–11
+  - Mercator panel height=110 creates visual imbalance in row 1 (Natural Earth beside
+    it at height=130 is taller, leaving whitespace below Mercator) — align row heights
+    or increase Mercator height
+  - make_panel() helper function technically violates KISS (CQ-01) — repeated blocks
+    with inline hconcat/vconcat is preferred
+  - Spec requests neutral land color when not encoding data values; brand green (#009E73)
+    is used instead — acceptable for anyplot branding but minor spec deviation
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface.
+      Chrome: Main title "map-projections · python · altair · anyplot.ai" in dark ink, readable. Panel titles (Mercator, Natural Earth, Equal Earth, Orthographic) in bold dark text at ~12px. Subtitles explaining each projection's characteristics in smaller (~9px) ink-soft text — readable at canvas size but borderline at mobile widths.
+      Data: Country landmasses filled with brand green (#009E73) at 0.88 opacity. Country borders in white (PAGE_BG) for definition. Graticule lines (30° intervals) in soft ink-soft color at 0.35 opacity — subtle but visible. Sphere background uses elevated-bg (#FFFDF6) to distinguish map surface from page.
+      Layout: 2×2 grid — row 1: Mercator (wider-shorter) + Natural Earth; row 2: Equal Earth + Orthographic (more square). Mercator panel notably shorter (height=110) creating slight vertical imbalance in row 1.
+      Legibility verdict: PASS — all text readable; subtitles small but distinguishable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface.
+      Chrome: Main title and panel titles render in light cream (#F0EFE8) against the dark background — clearly readable. Subtitles in secondary ink-soft (#B8B7B0) — readable. No dark-on-dark failures observed.
+      Data: Country landmasses identical brand green (#009E73) — data colors unchanged from light render, confirming correct theme separation. Country borders visible in PAGE_BG (dark near-black, creating subtle but visible outlines). Sphere background shifts to elevated-bg (#242420). Graticule lines remain subtle.
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements correctly inverted; data colors identical to light render.
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 5
+        max: 8
+        passed: true
+        comment: Sizes explicitly set (title=16, panel=12, subtitle=9). Readable at
+          canvas size. Subtitle at 9px (36px output) borderline at mobile width (~4px
+          visual). Proportions mostly good; Mercator row has height imbalance.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data elements across either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Countries clearly visible in brand green against sphere backgrounds.
+          Graticule subtle but present. Borders well-defined with white stroke.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Single-hue (brand green) on warm backgrounds — high contrast. CVD-safe.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Canvas gate passed. 2x2 grid fills canvas well. Minor: Mercator
+          height=110 is shorter than Natural Earth height=130 in same row, leaving
+          unbalanced whitespace in row 1.'
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Main title in correct format. Panel titles with informative subtitles.
+          No traditional axes needed for geographic plots.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Brand green (#009E73) for land. Backgrounds #FAF8F1 (light) / #1A1A17
+          (dark). Chrome correctly theme-adaptive. Data colors identical across renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Clean professional map design with brand palette. Sphere + graticule
+          + country layers well-composed. Not exceptional but above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Good attention to opacity (fillOpacity=0.88, graticule strokeOpacity=0.35,
+          sphere strokeOpacity=0.6). Panel spacing controlled. configure_view stroke
+          removed. Some refinement evident.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Educational subtitles ('conformal · cylindrical · distorts area near
+          poles', etc.) provide meaningful context for each projection. The four-projection
+          comparison tells a clear cartographic story. Good focal clarity.
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct world map with multiple projections shown side-by-side. Graticule
+          included.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: '4 projections, 30° graticule, country borders all present. Minor:
+          spec requests ''neutral color scheme for land masses when not showing data
+          values'' — brand green used instead (acceptable for anyplot branding but
+          technical deviation).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: World boundaries loaded from vega-datasets. Full world shown in all
+          4 projections.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'map-projections · python · altair · anyplot.ai' correct. No
+          legend needed (single color). Panel labels clearly identify each projection.
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 4 projections covering conformal cylindrical (Mercator), compromise
+          (Natural Earth), equal-area (Equal Earth), and azimuthal (Orthographic).
+          Key projection families represented.
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Real world boundary data from Natural Earth / vega-datasets. Educational
+          cartographic comparison is a legitimate and neutral context.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Geographically correct world map. Mercator appropriately height-limited
+          to avoid infinite polar distortion. Projections factually correct.
+    code_quality:
+      score: 9
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 2
+        max: 3
+        passed: true
+        comment: Has make_panel() helper function — technically violates no-functions
+          rule but reduces significant repetition (4 near-identical panels). Minor
+          deduction.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic — loads from fixed URL, no random data.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'All imports used: os (theme), sys (path fix), altair, PIL.'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable code. Canvas padding follows canonical pattern. Layer
+          composition with + operator is elegant.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.x
+          API.
+    library_mastery:
+      score: 10
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Uses Altair''s geographic API idiomatically: alt.sphere(), alt.graticule(),
+          alt.topo_feature(), .project(), layer composition, hconcat/vconcat for grid
+          layout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: alt.sphere() and alt.graticule() are Vega-Lite/Altair-specific geographic
+          primitives not available in other charting libraries. The .project() method
+          with named projections is a distinctive Altair geographic feature.
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - pillow
+  techniques:
+  - layer-composition
+  - html-export
+  patterns: []
+  dataprep: []
+  styling:
+  - alpha-blending

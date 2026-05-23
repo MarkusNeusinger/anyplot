@@ -1,14 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 map-projections: World Map with Different Projections
-Library: plotly 6.5.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-20
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-23
 """
+
+import os
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-# Define projections to showcase
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Map geographic colors
+LAND_COLOR = "#009E73"  # anyplot palette position 1 — consistent across themes
+OCEAN_COLOR = "#C8E0F0" if THEME == "light" else "#192632"
+COAST_COLOR = "#006B4F" if THEME == "light" else "#00C990"
+GRATICULE = "rgba(26,26,23,0.20)" if THEME == "light" else "rgba(240,239,232,0.20)"
+
+# Projections to showcase
 projections = [
     {"name": "Mercator", "type": "mercator"},
     {"name": "Robinson", "type": "robinson"},
@@ -18,97 +32,69 @@ projections = [
     {"name": "Natural Earth", "type": "natural earth"},
 ]
 
-# Create subplot figure with 2 rows, 3 columns
+# Create 2×3 subplot grid of geo maps
 fig = make_subplots(
     rows=2,
     cols=3,
     subplot_titles=[p["name"] for p in projections],
     specs=[[{"type": "geo"}, {"type": "geo"}, {"type": "geo"}], [{"type": "geo"}, {"type": "geo"}, {"type": "geo"}]],
     horizontal_spacing=0.02,
-    vertical_spacing=0.08,
+    vertical_spacing=0.10,
 )
 
-# Add each projection as a separate geo subplot
+# Add each projection as a geo subplot
 for idx, proj in enumerate(projections):
     row = idx // 3 + 1
     col = idx % 3 + 1
     geo_key = f"geo{idx + 1}" if idx > 0 else "geo"
 
-    # Add an empty scattergeo trace to create the map
     fig.add_trace(go.Scattergeo(lon=[], lat=[], mode="markers", showlegend=False, geo=geo_key), row=row, col=col)
 
-    # Configure the geo layout for this subplot
-    fig.update_geos(
-        selector={"geo": geo_key} if idx > 0 else None,
-        projection_type=proj["type"],
-        showland=True,
-        landcolor="#306998",
-        showocean=True,
-        oceancolor="#E8F4F8",
-        showcoastlines=True,
-        coastlinecolor="#1A3D5C",
-        coastlinewidth=1.5,
-        showcountries=True,
-        countrycolor="#1A3D5C",
-        countrywidth=0.8,
-        showlakes=True,
-        lakecolor="#E8F4F8",
-        showframe=True,
-        framecolor="#333333",
-        framewidth=1,
-        lataxis={"showgrid": True, "gridcolor": "#FFD43B", "gridwidth": 1, "dtick": 30},
-        lonaxis={"showgrid": True, "gridcolor": "#FFD43B", "gridwidth": 1, "dtick": 30},
-        bgcolor="rgba(0,0,0,0)",
+    fig.update_layout(
+        **{
+            geo_key: {
+                "projection_type": proj["type"],
+                "showland": True,
+                "landcolor": LAND_COLOR,
+                "showocean": True,
+                "oceancolor": OCEAN_COLOR,
+                "showcoastlines": True,
+                "coastlinecolor": COAST_COLOR,
+                "coastlinewidth": 1.2,
+                "showcountries": True,
+                "countrycolor": COAST_COLOR,
+                "countrywidth": 0.6,
+                "showlakes": True,
+                "lakecolor": OCEAN_COLOR,
+                "showframe": True,
+                "framecolor": INK_SOFT,
+                "framewidth": 1,
+                "lataxis": {"showgrid": True, "gridcolor": GRATICULE, "gridwidth": 0.8, "dtick": 30},
+                "lonaxis": {"showgrid": True, "gridcolor": GRATICULE, "gridwidth": 0.8, "dtick": 30},
+                "bgcolor": PAGE_BG,
+            }
+        }
     )
 
-# Update each geo individually
-for idx, proj in enumerate(projections):
-    geo_key = f"geo{idx + 1}" if idx > 0 else "geo"
-    update_dict = {
-        geo_key: {
-            "projection_type": proj["type"],
-            "showland": True,
-            "landcolor": "#306998",
-            "showocean": True,
-            "oceancolor": "#E8F4F8",
-            "showcoastlines": True,
-            "coastlinecolor": "#1A3D5C",
-            "coastlinewidth": 1.5,
-            "showcountries": True,
-            "countrycolor": "#1A3D5C",
-            "countrywidth": 0.8,
-            "showlakes": True,
-            "lakecolor": "#E8F4F8",
-            "showframe": True,
-            "framecolor": "#333333",
-            "framewidth": 1,
-            "lataxis": {"showgrid": True, "gridcolor": "#FFD43B", "gridwidth": 1, "dtick": 30},
-            "lonaxis": {"showgrid": True, "gridcolor": "#FFD43B", "gridwidth": 1, "dtick": 30},
-            "bgcolor": "rgba(0,0,0,0)",
-        }
-    }
-    fig.update_layout(**update_dict)
-
-# Update overall layout
+# Overall layout
 fig.update_layout(
+    autosize=False,
     title={
-        "text": "map-projections · plotly · pyplots.ai",
-        "font": {"size": 32, "color": "#333333"},
+        "text": "map-projections · python · plotly · anyplot.ai",
+        "font": {"size": 16, "color": INK},
         "x": 0.5,
         "xanchor": "center",
-        "y": 0.98,
+        "y": 0.99,
     },
     showlegend=False,
-    paper_bgcolor="white",
-    plot_bgcolor="white",
-    margin={"l": 20, "r": 20, "t": 100, "b": 40},
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
 
-# Update subplot titles font size
-fig.update_annotations(font={"size": 22, "color": "#333333"})
+# Subplot title styling
+fig.update_annotations(font={"size": 12, "color": INK_SOFT})
 
-# Save as PNG
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-
-# Save as HTML for interactivity
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
