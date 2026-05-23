@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-23
@@ -221,7 +221,7 @@ buttons = [
         "label": "All States",
         "method": "update",
         "args": [
-            {"visible": [True, False]},
+            {"visible": [True, False, True]},
             {
                 "geo": {**geo_base},
                 "title.text": f"{title_base}<br><sub>US Sales by State — use dropdown to drill into cities</sub>",
@@ -232,7 +232,7 @@ buttons = [
         "label": "All Cities",
         "method": "update",
         "args": [
-            {"visible": [True, True]},
+            {"visible": [True, True, True]},
             {"geo": {**geo_base}, "title.text": f"{title_base}<br><sub>US Sales — All Cities Overlay</sub>"},
         ],
     },
@@ -251,6 +251,54 @@ state_centers = {
     "Michigan": {"lon": -85.0, "lat": 44.0, "zoom": 5.0},
 }
 
+# Spotlight annotations — top/bottom performers create a data story focal point
+state_totals = {s: sum(us_states_data[s]["city_values"]) for s in states}
+sorted_by_total = sorted(states, key=lambda s: state_totals[s], reverse=True)
+spotlight = [
+    (
+        sorted_by_total[0],
+        "#99B314",
+        "star",
+        15,
+        f"★ Top: {us_states_data[sorted_by_total[0]]['abbrev']} ${state_totals[sorted_by_total[0]]:,}K",
+    ),
+    (
+        sorted_by_total[1],
+        "#99B314",
+        "star",
+        12,
+        f"★ 2nd: {us_states_data[sorted_by_total[1]]['abbrev']} ${state_totals[sorted_by_total[1]]:,}K",
+    ),
+    (
+        sorted_by_total[-1],
+        "#B71D27",
+        "triangle-down",
+        12,
+        f"▼ Low: {us_states_data[sorted_by_total[-1]]['abbrev']} ${state_totals[sorted_by_total[-1]]:,}K",
+    ),
+]
+
+fig.add_trace(
+    go.Scattergeo(
+        lon=[state_centers[s[0]]["lon"] for s in spotlight],
+        lat=[state_centers[s[0]]["lat"] for s in spotlight],
+        mode="markers+text",
+        marker={
+            "symbol": [s[2] for s in spotlight],
+            "size": [s[3] for s in spotlight],
+            "color": [s[1] for s in spotlight],
+            "line": {"color": PAGE_BG, "width": 1.5},
+        },
+        text=[s[4] for s in spotlight],
+        textposition="bottom center",
+        textfont={"size": 9, "color": INK},
+        hovertemplate="<b>%{text}</b><extra></extra>",
+        name="",
+        showlegend=False,
+        visible=True,
+    )
+)
+
 for state in states:
     center = state_centers[state]
     state_total = sum(us_states_data[state]["city_values"])
@@ -259,7 +307,7 @@ for state in states:
             "label": f"{state} (${state_total}K)",
             "method": "update",
             "args": [
-                {"visible": [True, True]},
+                {"visible": [True, True, False]},
                 {
                     "geo": {
                         **geo_base,
