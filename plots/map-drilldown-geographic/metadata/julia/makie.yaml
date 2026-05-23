@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: map-drilldown-geographic
 created: '2026-05-23T09:27:14Z'
-updated: '2026-05-23T09:33:02Z'
+updated: '2026-05-23T09:53:25Z'
 generated_by: claude-sonnet
 workflow_run: 26328880462
 issue: 3770
@@ -12,40 +12,54 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 82
+quality_score: 84
 review:
   strengths:
-  - 'Full theme-adaptive chrome: all INK/INK_SOFT tokens correctly applied to every
-    axis element in both light and dark renders.'
-  - Effective use of Makie's grid layout to create a 3-level drill-down story in a
-    single static figure.
-  - Consistent anyplot_seq colormap across all three panels enables direct visual
-    comparison across levels.
-  - Clean code structure with no over-engineering; all font sizes explicitly set.
+  - Elegant three-panel drill-down design shows all three geographic hierarchy levels
+    simultaneously — a well-reasoned static alternative to interactive drill-down
+    for CairoMakie
+  - Highlighted drill path with thick INK ring on selected bubbles (N. America, CA)
+    creates clear visual hierarchy communicating which region is currently drilled
+    into
+  - Breadcrumb navigation strip 'World ▶ N. America ▶ California' effectively communicates
+    the current drill state as a static label
+  - ANYPLOT_SEQ colormap (green→blue) correctly applied as a continuous sequential
+    colormap for choropleth-style bubble coloring across all three levels
+  - Theme-adaptive chrome fully implemented — all INK/INK_SOFT/INK_MUTED tokens wired
+    through every Axis attribute; dark render shows no dark-on-dark text failures
+  - Geographic bounding boxes with subtle semi-transparent fills (alpha=0.06 fill,
+    0.22 border) add spatial context without cluttering the map panels
+  - 'Clean KISS code structure: Imports → Data → Plot → Save, no functions or classes,
+    seed(42) for reproducibility'
+  - Shared colorbar spanning all three panels with descriptive label 'Relative Sales
+    Volume (within each level)' efficiently unifies the color scale explanation
   weaknesses:
-  - Bubble maps show lon/lat scatter points rather than actual choropleth polygon
-    fills — geographic shapes (country/state borders) are absent, making the geographic
-    map aspect less convincing.
-  - No explicit breadcrumb navigation element (e.g., a text label reading 'World >
-    N. America > California' somewhere in the figure).
-  - NY and MA labels in Panel 2 are crowded (near-identical lat/lon); offset tuning
-    or label repositioning would improve clarity.
-  - US state values sum to ~$2.92B while the parent N. America node shows $2.80B —
-    small factual inconsistency for an aggregation-focused spec.
-  - Small bubble text labels (fontsize=8) at world-region level may be challenging
-    at mobile viewport scales.
+  - California city values sum ($0.03+$0.07+$0.09+$0.19+$0.24 = $0.62B) slightly exceeds
+    the parent California state total ($0.60B) — minor data hierarchy inconsistency,
+    cities should sum to ≤ state value
+  - 'World Regions panel: geographic bounding boxes for Middle East, Africa, and Asia-Pacific
+    overlap and create a visually cluttered center zone; consider using lighter stroke
+    or removing overlapping boxes'
+  - Region bubble labels in World Regions panel use fontsize=8 — very small; 'Africa\n$0.7B'
+    and 'Middle East\n$1.1B' may be unreadable at mobile widths (~400px); increase
+    to fontsize=9-10 or increase bubble markersize slightly to give more room
+  - Panel 2 (US States) Y-axis label is empty (ylabel='') — while Panel 1 has 'Latitude',
+    the middle panel's unlabeled Y-axis creates a minor inconsistency; could add 'Latitude'
+    for completeness or use linked axes
+  - Minor crowding of NY/MA abbreviations in Panel 2 — the pixel offset approach works
+    but the labels are close together; small fontsize=9 helps but they remain tight
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct
-      Chrome: Title "Sales Drill-Down · map-drilldown-geographic · julia · makie · anyplot.ai" in dark bold text — readable. Panel subtitles (numbered ①②③) in dark INK. Axis labels "Longitude"/"Latitude"/"Sales ($B)" in INK. Tick labels in INK_SOFT. All readable.
-      Data: Three-panel layout. Panels 1-2 show bubble scatter maps with circles colored via anyplot_seq (green #009E73 for low → blue #003D94 for high). Panel 3 shows horizontal bars with same sequential colormap. Colorbar at bottom labeled Low/Mid/High.
-      Legibility verdict: PASS — all text readable; small 8pt bubble labels borderline at mobile scale but acceptable at canvas size.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "Sales Drill-Down · map-drilldown-geographic · julia · makie · anyplot.ai" in dark bold text, fully readable. Breadcrumb "World ▶ N. America ▶ California" in INK_SOFT. All three panel titles (① World Regions, ② N. America → US States, ③ California → Cities) readable in dark text. Axis labels "Longitude", "Latitude", "Sales ($B)" visible. Tick labels in INK_SOFT, readable. Colorbar label "Relative Sales Volume (within each level)" visible at bottom.
+      Data: Three-panel layout. Panel 1: six colored bubbles on a schematic world map with semi-transparent geographic bounding boxes; N. America bubble has thick bold ring indicating it is the drilled-into region. Colors range from brand green (#009E73) for low values to deep blue (#003D94) for high values via ANYPLOT_SEQ. Panel 2: eight US state bubbles positioned by geographic coordinates with a polygon outline of the US; CA bubble has thick ring. Panel 3: horizontal bar chart for five California cities with bars colored via ANYPLOT_SEQ from green (Sacramento lowest) to dark blue (San Francisco highest). Value labels ($0.03B–$0.24B) alongside each bar.
+      Legibility verdict: PASS — all text readable; minor concern on fontsize=8 world region labels but visible at full resolution
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct
-      Chrome: Title and all labels render in light colors (near-white F0EFE8 / soft gray B8B7B0). No dark-on-dark failures. Colorbar correctly themed with light label text.
-      Data: Colors identical to light render — same green-to-blue sequential gradient on bubbles and bars. Only chrome (background, text, spines) flipped.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues detected.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light cream text (#F0EFE8 equivalent via INK token), fully readable against dark background. Breadcrumb in INK_SOFT light gray. All panel titles visible in light text. Axis labels and tick labels in light INK_SOFT color. Colorbar label readable. No dark-on-dark failures observed — all chrome elements are light-colored on dark background.
+      Data: Data colors are identical to light render — same green-to-blue ANYPLOT_SEQ gradient used for all bubble and bar coloring. Geographic bounding boxes have very subtle dark fills. CA and N. America highlighted bubbles retain thick INK (now light cream) rings.
+      Legibility verdict: PASS — all text clearly readable against dark background; data colors identical to light render confirming only chrome flipped
   criteria_checklist:
     visual_quality:
       score: 27
@@ -56,70 +70,84 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; small bubble labels (8pt) borderline
-          at mobile scale
+        comment: 'All font sizes explicitly set; title, labels, tick labels all readable
+          in both themes. Minor concern: world region bubble labels at fontsize=8
+          are very small; readable at full resolution but borderline at mobile width.'
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: NY and MA labels in Panel 2 crowded but not fully overlapping
+        comment: No major overlaps. NY and MA abbreviations are adjacent in Panel
+          2 but managed with pixel offsets. Minor crowding but content readable.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: All markers and bars clearly visible at appropriate sizes
+        comment: Bubbles (markersize=28, 24) and bar chart bars are clearly visible
+          and well-sized for the data density. Colorbar gradient clearly shows range.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot_seq is CVD-safe; stroke outlines aid distinction
+        comment: ANYPLOT_SEQ (green→blue) is a perceptually uniform sequential colormap,
+          CVD-safe. Thick rings on highlighted bubbles provide additional shape-based
+          encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Three-panel layout well-distributed; minor redundant Latitude label
-          on Panel 2
+        comment: 'Three panels fill the canvas well with shared colorbar. Minor: overlapping
+          geographic bounding boxes in world map panel look slightly cluttered. Overall
+          good use of canvas.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units where appropriate
+        comment: Longitude/Latitude for map panels, Sales ($B) with units for bar
+          chart. Colorbar labeled with descriptive text.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: anyplot_seq used correctly; correct backgrounds; full theme-adaptive
-          chrome
+        comment: 'ANYPLOT_SEQ correctly used for continuous choropleth coloring. Backgrounds
+          #FAF8F1/#1A1A17. All chrome tokens properly theme-adaptive. Data colors
+          identical between light and dark renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Well-configured with numbered panels and consistent visual language;
-          not exceptional
+        comment: 'Above average: the three-panel drill-down concept with highlighted
+          selected regions is a thoughtful static design. Custom colormap, semi-transparent
+          geographic boxes, and ring-highlighting show design intent. Not publication-ready
+          but clearly above defaults.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid hidden, spines removed, custom strokes; good but not fully polished
+        comment: Grid removed on all panels, top/right spines removed, generous whitespace
+          via rowgap/colgap, semi-transparent box fills are refined. Good refinement
+          visible above library defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Numbered panels guide viewer; consistent color scale; chart-type
-          transition at city level is intentional
+        comment: 'Clear visual hierarchy: left-to-right panel flow communicates the
+          drill-down path, highlighted bubbles (thick ring) show the selected region
+          at each level, breadcrumb strip confirms the navigation state. Viewer immediately
+          understands the geographic drill-down structure.'
     spec_compliance:
       score: 13
       max: 15
@@ -129,51 +157,64 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct drill-down hierarchy as small multiples; bubble scatter instead
-          of true choropleth polygons
+        comment: Three-panel static layout correctly represents hierarchical geographic
+          drill-down for CairoMakie. Choropleth-style bubble coloring at each level
+          is correct. Cannot score 5 because the interactive click/zoom-transition
+          core of the spec is inherently absent in a static library.
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: 3-level hierarchy, color scale, legend present; missing explicit
-          breadcrumb navigation strip
+        comment: Hierarchical levels (World→State→City) ✓, choropleth coloring ✓,
+          breadcrumb navigation ✓, color legend ✓, aggregated values ✓. Interactive
+          drill-down/zoom inherently absent for static library. One minor point deducted
+          for missing hover tooltips (explicitly requested in spec even for interactive
+          libraries).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lon/lat and bar values correctly mapped
+        comment: Geographic coordinates correctly mapped to bubble positions. Bar
+          chart correctly shows cities at leaf level. Color encoding reflects relative
+          value within each level.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; colorbar with Low/Mid/High labels appropriate
+        comment: Title 'Sales Drill-Down · map-drilldown-geographic · julia · makie
+          · anyplot.ai' matches the allowed format with optional descriptive prefix.
+          Colorbar legend is descriptive.
     data_quality:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Three drill-down levels with variation; missing: leaf node with
-          no sub-data for graceful handling demo'
+        comment: Shows all three levels of geographic hierarchy with meaningful value
+          variation at each level. Color encoding, value labels, and highlighted drill
+          path all demonstrate the full feature set.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real geographic regions with neutral, plausible sales data
+        comment: Regional sales performance ($B) is a realistic, neutral, comprehensible
+          business scenario. All geographic regions and city names are real and appropriately
+          placed.
       - id: DQ-03
         name: Appropriate Scale
         score: 3
         max: 4
         passed: true
-        comment: 'Plausible values; minor: US states sum to ~$2.92B vs N. America''s
-          $2.80B shown'
+        comment: 'Geographic coordinates are approximately correct. State sales values
+          are plausible. Minor: California cities sum ($0.62B) slightly exceeds California
+          state total ($0.60B) — a small hierarchy inconsistency.'
     code_quality:
       score: 10
       max: 10
@@ -183,31 +224,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean Imports → Data → Plot → Save structure
+        comment: Clean Imports → Data → Plot → Save structure. No functions or classes
+          defined.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set
+        comment: Random.seed!(42) set at top of file.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only CairoMakie, Colors, Random — all used
+        comment: CairoMakie, Colors, Random — all three are used throughout.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean loops, no over-engineering, no fake UI
+        comment: Clean, idiomatic Julia/Makie code. No fake UI elements or simulated
+          interactivity. Thoughtful label offset array for adjacent states.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-$(THEME).png; uses size= (current Makie API)
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Correct format.
     library_mastery:
       score: 7
       max: 10
@@ -217,23 +260,26 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct grid layout, scatter!, text!, barplot!, Colorbar, Label,
-          rowgap!/colgap!, cgrad
+        comment: Figure/Axis/Label/Colorbar layout API used correctly. scatter!, barplot!,
+          poly!, text! are idiomatic primitives. rowgap!/colgap! for layout control.
+          cgrad for colormap construction. Good above-default usage.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Spanning Label in fig[0,1:3], Colorbar spanning fig[2,1:3], grid
-          layout system; could use Axis linking
-  verdict: REJECTED
+        comment: Uses poly! for geographic polygon bounding boxes (distinctly Makie),
+          cgrad for two-stop continuous colormap, fig[row, col] spanning (1:3) for
+          shared colorbar across all columns, Point2f for polygon vertices. These
+          are Makie-specific features not easily replicated in matplotlib syntax.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - colorbar
   - annotations
-  - manual-ticks
+  - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
@@ -241,4 +287,5 @@ impl_tags:
   - normalization
   styling:
   - custom-colormap
+  - alpha-blending
   - edge-highlighting
