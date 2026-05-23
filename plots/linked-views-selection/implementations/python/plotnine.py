@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
-Library: plotnine | Python 3.13
-Quality: pending | Created: 2026-05-23
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 86/100 | Created: 2026-05-23
 """
 
 import os
