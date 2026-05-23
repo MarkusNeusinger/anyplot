@@ -59,7 +59,10 @@ plt.savefig(f'plot-{THEME}.png', dpi=400)  # bbox_inches MUST stay default (None
 ```python
 # Text sizes — title kept compact because the mandated "{spec-id} · python · matplotlib · anyplot.ai"
 # title is ~67 chars and would overflow at 16+pt on the 3200px-wide canvas.
-ax.set_title(title, fontsize=12, fontweight='medium')
+# Title fontsize scales linearly with title length so a "{Descriptive Title} · " prefix or a
+# long {spec-id} doesn't overflow — compute from the exact title string at codegen time:
+#   title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+ax.set_title(title, fontsize=title_fontsize, fontweight='medium')
 ax.set_xlabel(x_label, fontsize=10)
 ax.set_ylabel(y_label, fontsize=10)
 ax.tick_params(axis='both', labelsize=8)
