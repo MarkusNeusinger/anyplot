@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-projections: World Map with Different Projections
-Library: altair | Python 3.13
-Quality: pending | Created: 2026-05-23
+Library: altair 6.1.0 | Python 3.13.13
+Quality: 84/100 | Created: 2026-05-23
 """
 
 import os
