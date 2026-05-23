@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 81/100 | Updated: 2026-05-23
@@ -93,17 +93,29 @@ for name, data in countries_data.items():
         b[3] - b[2],
         facecolor=anyplot_seq(norm(data["value"])),
         edgecolor=ACCENT if name == "Germany" else INK_SOFT,
-        linewidth=2.2 if name == "Germany" else 0.8,
-        alpha=0.9,
+        linewidth=3.5 if name == "Germany" else 0.8,
+        alpha=0.92 if name == "Germany" else 0.72,
     )
     ax1.add_patch(rect)
-    ax1.text(data["lon"], data["lat"] + 0.8, name, fontsize=6, ha="center", fontweight="bold", color=INK)
-    ax1.text(data["lon"], data["lat"] - 1.6, f"€{data['value']}M", fontsize=5, ha="center", color=INK_SOFT)
+    ax1.text(data["lon"], data["lat"] + 0.8, name, fontsize=6.5, ha="center", fontweight="bold", color=INK)
+    ax1.text(data["lon"], data["lat"] - 1.6, f"€{data['value']}M", fontsize=6, ha="center", color=INK_SOFT)
 
-# Centroid scatter via seaborn — adds seaborn's role to this panel
+# Centroid scatter via seaborn — visible size+hue encoding
 country_df = pd.DataFrame([{"lon": v["lon"], "lat": v["lat"], "value": v["value"]} for v in countries_data.values()])
 sns.scatterplot(
-    data=country_df, x="lon", y="lat", size="value", sizes=(15, 60), color=INK_SOFT, alpha=0.35, ax=ax1, legend=False
+    data=country_df,
+    x="lon",
+    y="lat",
+    size="value",
+    sizes=(40, 120),
+    hue="value",
+    palette=anyplot_seq,
+    hue_norm=(vmin, vmax),
+    edgecolors=PAGE_BG,
+    linewidth=0.5,
+    alpha=0.6,
+    ax=ax1,
+    legend=False,
 )
 
 ax1.set_xlim(-11, 23)
@@ -140,17 +152,29 @@ for name, data in germany_states_data.items():
         b[3] - b[2],
         facecolor=anyplot_seq(norm(data["value"])),
         edgecolor=ACCENT if name == "Bavaria" else INK_SOFT,
-        linewidth=2.2 if name == "Bavaria" else 0.8,
-        alpha=0.9,
+        linewidth=3.5 if name == "Bavaria" else 0.8,
+        alpha=0.92 if name == "Bavaria" else 0.72,
     )
     ax2.add_patch(rect)
-    ax2.text(data["lon"], data["lat"] + 0.35, name, fontsize=5.5, ha="center", fontweight="bold", color=INK)
-    ax2.text(data["lon"], data["lat"] - 0.65, f"€{data['value']}M", fontsize=5, ha="center", color=INK_SOFT)
+    ax2.text(data["lon"], data["lat"] + 0.35, name, fontsize=6.5, ha="center", fontweight="bold", color=INK)
+    ax2.text(data["lon"], data["lat"] - 0.65, f"€{data['value']}M", fontsize=6, ha="center", color=INK_SOFT)
 
-# Centroid scatter via seaborn
+# Centroid scatter via seaborn — visible size+hue encoding
 state_df = pd.DataFrame([{"lon": v["lon"], "lat": v["lat"], "value": v["value"]} for v in germany_states_data.values()])
 sns.scatterplot(
-    data=state_df, x="lon", y="lat", size="value", sizes=(15, 60), color=INK_SOFT, alpha=0.35, ax=ax2, legend=False
+    data=state_df,
+    x="lon",
+    y="lat",
+    size="value",
+    sizes=(40, 120),
+    hue="value",
+    palette=anyplot_seq,
+    hue_norm=(vmin, vmax),
+    edgecolors=PAGE_BG,
+    linewidth=0.5,
+    alpha=0.6,
+    ax=ax2,
+    legend=False,
 )
 
 ax2.set_xlim(5.0, 16.0)
@@ -286,10 +310,10 @@ fig.suptitle(
 )
 
 # Layout — reserve bottom for colorbar, place it via add_axes to avoid overlap
-fig.subplots_adjust(left=0.08, right=0.94, top=0.88, bottom=0.22, wspace=0.33)
+fig.subplots_adjust(left=0.08, right=0.94, top=0.88, bottom=0.25, wspace=0.33)
 
 sm = plt.cm.ScalarMappable(cmap=anyplot_seq, norm=norm)
-cbar_ax = fig.add_axes([0.10, 0.07, 0.82, 0.038])
+cbar_ax = fig.add_axes([0.10, 0.10, 0.82, 0.038])
 cbar = fig.colorbar(sm, cax=cbar_ax, orientation="horizontal")
 cbar.set_label("Sales Revenue (€M)", fontsize=8, color=INK)
 cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
