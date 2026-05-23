@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
-Library: plotly 6.5.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-20
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 94/100 | Updated: 2026-05-23
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -10,125 +12,166 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 
-# Data - Stock-like data with price, volume, and RSI indicator
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# anyplot palette
+PRICE_COLOR = "#009E73"  # position 1 - green
+VOLUME_COLOR = "#9418DB"  # position 2 - purple
+RSI_COLOR = "#16B8F3"  # position 4 - sky blue
+
+# Data - Stock data: price, volume, and 14-period RSI over 200 trading days
 np.random.seed(42)
 n_points = 200
 dates = pd.date_range("2024-01-01", periods=n_points, freq="B")
 
-# Price series (random walk)
 price_returns = np.random.normal(0.0005, 0.015, n_points)
 price = 100 * np.cumprod(1 + price_returns)
 
-# Volume series (correlated with absolute returns)
 base_volume = 1_000_000
-volume = base_volume * (1 + 2 * np.abs(price_returns) + np.random.uniform(0, 0.5, n_points))
-volume = volume.astype(int)
+volume = (base_volume * (1 + 2 * np.abs(price_returns) + np.random.uniform(0, 0.5, n_points))).astype(int)
 
-# RSI-like indicator (oscillating between 30-70 mostly)
-rsi = 50 + 20 * np.sin(np.linspace(0, 8 * np.pi, n_points)) + np.random.normal(0, 5, n_points)
-rsi = np.clip(rsi, 0, 100)
+# Standard 14-period RSI using Wilder's smoothing method
+period = 14
+price_changes = np.diff(price, prepend=np.nan)
+gains = np.where(price_changes > 0, price_changes, 0.0)
+losses = np.where(price_changes < 0, -price_changes, 0.0)
+
+avg_gain = np.full(n_points, np.nan)
+avg_loss = np.full(n_points, np.nan)
+avg_gain[period] = np.mean(gains[1 : period + 1])
+avg_loss[period] = np.mean(losses[1 : period + 1])
+for i in range(period + 1, n_points):
+    avg_gain[i] = (avg_gain[i - 1] * (period - 1) + gains[i]) / period
+    avg_loss[i] = (avg_loss[i - 1] * (period - 1) + losses[i]) / period
+
+rs = np.where(avg_loss == 0, np.inf, avg_gain / avg_loss)
+rsi = np.where(np.isinf(rs), 100.0, 100.0 - 100.0 / (1 + rs))
 
 df = pd.DataFrame({"date": dates, "price": price, "volume": volume, "rsi": rsi})
 
-# Create subplots with shared x-axis
+# Plot - 3 vertically stacked panels with shared x-axis
 fig = make_subplots(
     rows=3,
     cols=1,
     shared_xaxes=True,
     vertical_spacing=0.08,
     row_heights=[0.5, 0.25, 0.25],
-    subplot_titles=("Price", "Volume", "RSI Indicator"),
+    subplot_titles=("Price (USD)", "Volume", "RSI (14-period)"),
 )
 
-# Price chart (top)
 fig.add_trace(
     go.Scatter(
         x=df["date"],
         y=df["price"],
         mode="lines",
         name="Price",
-        line=dict(color="#306998", width=2.5),
-        hovertemplate="%{y:.2f}<extra></extra>",
+        line=dict(color=PRICE_COLOR, width=2.5),
+        hovertemplate="$%{y:.2f}<extra>Price</extra>",
     ),
     row=1,
     col=1,
 )
 
-# Volume chart (middle)
 fig.add_trace(
     go.Bar(
         x=df["date"],
         y=df["volume"],
         name="Volume",
-        marker=dict(color="#FFD43B", opacity=0.8),
-        hovertemplate="%{y:,.0f}<extra></extra>",
+        marker=dict(color=VOLUME_COLOR, opacity=0.8),
+        hovertemplate="%{y:,.0f}<extra>Volume</extra>",
     ),
     row=2,
     col=1,
 )
 
-# RSI chart (bottom)
 fig.add_trace(
     go.Scatter(
         x=df["date"],
         y=df["rsi"],
         mode="lines",
         name="RSI",
-        line=dict(color="#306998", width=2.5),
-        hovertemplate="%{y:.1f}<extra></extra>",
+        line=dict(color=RSI_COLOR, width=2.5),
+        hovertemplate="%{y:.1f}<extra>RSI</extra>",
     ),
     row=3,
     col=1,
 )
 
-# Add RSI reference lines (overbought/oversold)
-fig.add_hline(y=70, line_dash="dash", line_color="#E74C3C", line_width=1.5, row=3, col=1)
-fig.add_hline(y=30, line_dash="dash", line_color="#27AE60", line_width=1.5, row=3, col=1)
+# RSI reference lines — distinct dash patterns for colorblind accessibility
+fig.add_hline(y=70, line_dash="dash", line_color="#B71D27", line_width=1.5, row=3, col=1)
+fig.add_hline(y=30, line_dash="dot", line_color="#009E73", line_width=1.5, row=3, col=1)
 
-# Layout with synchronized crosshair
+# Style
 fig.update_layout(
-    title=dict(
-        text="dashboard-synchronized-crosshair · plotly · pyplots.ai", font=dict(size=32), x=0.5, xanchor="center"
-    ),
+    autosize=False,
     template="plotly_white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    title=dict(
+        text="dashboard-synchronized-crosshair · python · plotly · anyplot.ai",
+        font=dict(size=16, color=INK),
+        x=0.5,
+        xanchor="center",
+    ),
     hovermode="x unified",
-    hoverlabel=dict(font_size=16),
+    hoverlabel=dict(font_size=10, bgcolor=ELEVATED_BG, bordercolor=INK_SOFT, font=dict(color=INK)),
     showlegend=False,
-    margin=dict(l=100, r=60, t=120, b=80),
+    margin=dict(l=100, r=40, t=80, b=60),
+    font=dict(color=INK),
 )
 
-# Subplot title styling
 for annotation in fig["layout"]["annotations"]:
-    annotation["font"] = dict(size=22)
+    annotation["font"] = dict(size=12, color=INK_SOFT)
 
-# Y-axis styling for each subplot
 fig.update_yaxes(
-    title_text="Price ($)", title_font=dict(size=20), tickfont=dict(size=16), gridcolor="rgba(0,0,0,0.1)", row=1, col=1
+    title_text="Price (USD)",
+    title_font=dict(size=12, color=INK),
+    tickfont=dict(size=10, color=INK_SOFT),
+    gridcolor=GRID,
+    linecolor=INK_SOFT,
+    zerolinecolor=GRID,
+    row=1,
+    col=1,
 )
 fig.update_yaxes(
-    title_text="Volume", title_font=dict(size=20), tickfont=dict(size=16), gridcolor="rgba(0,0,0,0.1)", row=2, col=1
+    title_text="Volume",
+    title_font=dict(size=12, color=INK),
+    tickfont=dict(size=10, color=INK_SOFT),
+    gridcolor=GRID,
+    linecolor=INK_SOFT,
+    zerolinecolor=GRID,
+    row=2,
+    col=1,
 )
 fig.update_yaxes(
     title_text="RSI",
-    title_font=dict(size=20),
-    tickfont=dict(size=16),
-    gridcolor="rgba(0,0,0,0.1)",
+    title_font=dict(size=12, color=INK),
+    tickfont=dict(size=10, color=INK_SOFT),
+    gridcolor=GRID,
+    linecolor=INK_SOFT,
+    zerolinecolor=GRID,
     range=[0, 100],
     row=3,
     col=1,
 )
 
-# X-axis styling (only visible on bottom chart)
+fig.update_xaxes(gridcolor=GRID, linecolor=INK_SOFT)
 fig.update_xaxes(
-    title_text="Date", title_font=dict(size=20), tickfont=dict(size=16), gridcolor="rgba(0,0,0,0.1)", row=3, col=1
+    title_text="Date", title_font=dict(size=12, color=INK), tickfont=dict(size=10, color=INK_SOFT), row=3, col=1
 )
 
-# Enable spike lines for synchronized crosshair effect
+# Spike lines for synchronized crosshair across all panels
 fig.update_xaxes(
-    showspikes=True, spikemode="across", spikesnap="cursor", spikethickness=1.5, spikecolor="#666666", spikedash="solid"
+    showspikes=True, spikemode="across", spikesnap="cursor", spikethickness=1.5, spikecolor=INK_SOFT, spikedash="solid"
 )
-fig.update_yaxes(showspikes=True, spikethickness=1, spikecolor="#999999", spikedash="dot")
+fig.update_yaxes(showspikes=True, spikethickness=1, spikecolor=INK_SOFT, spikedash="dot")
 
-# Save outputs
-fig.write_image("plot.png", width=1600, height=900, scale=3)
-fig.write_html("plot.html", include_plotlyjs="cdn")
+# Save
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
+fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn")
