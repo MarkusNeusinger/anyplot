@@ -1,8 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: pygal 3.1.0 | Python 3.13.13
-Quality: 74/100 | Updated: 2026-05-23
-Note: pygal_maps_world package unavailable; choropleth treemap used instead.
+Quality: 79/100 | Updated: 2026-05-23
 """
 
 import json
