@@ -1,0 +1,255 @@
+library: highcharts
+language: python
+specification_id: line-stock-comparison
+created: '2026-05-23T10:01:06Z'
+updated: '2026-05-23T20:12:28Z'
+generated_by: claude-sonnet
+workflow_run: 26329715224
+issue: 3748
+language_version: 3.13.13
+library_version: unknown
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/highcharts/plot-dark.html
+quality_score: 82
+review:
+  strengths:
+  - 'Perfect spec compliance: all required features implemented (normalization, baseline
+    reference, legend, datetime axis, multiple series)'
+  - 'Excellent data quality: realistic semiconductor sector vs SPY context with plausible
+    2024 trajectories; NVDA, AMD, INTC, SPY are ideal choices'
+  - 'Full anyplot palette compliance: first series #009E73, correct backgrounds, chrome
+    flips correctly between themes'
+  - Good use of Highcharts-specific plotLines for both the NVDA peak vertical marker
+    and the baseline horizontal reference — idiomatic library feature
+  - PIL post-render normalization guard ensures exact 3200×1800 canvas even if Selenium
+    drifts
+  weaknesses:
+  - 'Legend overlaps X-axis date tick labels at bottom-center of the chart; default
+    legend placement without explicit y positioning causes it to land on top of the
+    monthly date labels (May-Jul ''24 region); fix by moving legend below the X-axis
+    with verticalAlign: bottom, y: 30 or increase marginBottom to 180px'
+  - 'Red (INTC, #B71D27) and green (NVDA, #009E73) are used as the primary pair in
+    a stock comparison where gain/loss semantics amplify CVD risk; consider adding
+    dashStyle or lineWidth differentiation to distinguish them for colorblind viewers'
+  - 'Legend borderWidth: 0 deviates from style-guide recommendation of borderWidth:
+    1; adds slight inconsistency with other highcharts implementations'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "Tech Sector 2024 · line-stock-comparison · python · highcharts · anyplot.ai" in dark ink, readable. Y-axis label "Rebased Performance (Start = 100)" rotated, visible. X-axis date labels (Jan '24 through Dec '24) readable. "NVDA Peak" green label at top-right readable. "Baseline (100)" label on right readable. Tick labels in INK_SOFT.
+      Data: NVDA (green #009E73, first series correct), AMD (purple #9418DB), INTC (red #B71D27), SPY (sky blue #16B8F3). Lines clearly distinguishable. NVDA peak dashed green vertical line. Baseline dashed horizontal at Y=100.
+      Issue: Legend (NVDA, AMD, INTC, SPY) at bottom-center overlaps X-axis date tick labels in approximately May-Jul '24 range.
+      Legibility verdict: PASS (all elements readable; overlap noted as layout issue, not legibility failure)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title, axis labels, tick labels, annotations all rendered in light ink (#F0EFE8 / #B8B7B0), clearly readable against dark background. No dark-on-dark failures observed. Grid lines subtle but visible.
+      Data: All four series retain identical colors to light render — NVDA green, AMD purple, INTC red, SPY sky blue. Data colors unchanged between themes as required.
+      Issue: Same legend/axis label overlap present as in light render.
+      Legibility verdict: PASS (no dark-on-dark failures; all text visible)
+  criteria_checklist:
+    visual_quality:
+      score: 22
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Font sizes explicitly set (title 66px, axis 56px, ticks 44px); readable
+          in both themes; minor deduction for legend crowding bottom area
+      - id: VQ-02
+        name: No Overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Legend positioned at bottom-center overlaps X-axis date tick labels
+          in May-Jul 24 range in both renders
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All four lines clearly distinguishable; 3.5px lineWidth appropriate
+          for 252-point series; markers correctly disabled
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: false
+        comment: NVDA (green) and INTC (red) pair amplifies CVD risk in a gain/loss
+          context without alternate differentiator
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 2
+        max: 4
+        passed: false
+        comment: Canvas 3200x1800 correct; legend/axis overlap is a layout failure;
+          Date axis title crowded below legend
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis descriptive with units; title follows prescribed format with
+          descriptive prefix
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series NVDA = #009E73; anyplot palette canonical order; backgrounds
+          #FAF8F1/#1A1A17; chrome flips correctly'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Professional multi-series stock chart with custom palette, NVDA Peak
+          plotLine annotation, baseline reference
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (opacity 0.10), no plotBorderWidth, clean look; minor
+          deduction for missing legend borderWidth:1
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Baseline at 100 anchors comparison; NVDA peak annotation creates
+          focal point; four distinct trajectories show relative performance
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-line chart correct for stock comparison
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Normalization to 100, distinct colors, legend, rebased Y-axis, horizontal
+          reference line at 100, NVDA peak annotation bonus
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=trading dates, Y=rebased prices; 252 business days; all 4 series
+          visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches {Descriptive} · {spec-id} · {language} · {library}
+          · anyplot.ai format; legend labels match series names
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Multi-line, rebasing, reference line, annotation, full year of daily
+          data
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Semiconductor sector (NVDA, AMD, INTC) vs S&P 500 (SPY) for 2024
+          — real-world plausible and portfolio-neutral
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 252 trading days; NVDA ~175, INTC ~45 — realistic 2024 performance;
+          SPY flat ~100-115
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: No functions or classes; clean procedural flow
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; LineSeries from .area module is non-standard but
+          functional
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity, no fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves plot-{THEME}.png and .html; current API
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Chart/HighchartsOptions/LineSeries/add_series pattern; Selenium
+          with CDP viewport override; inline JS embedding
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: plotLines for NVDA peak and baseline reference, datetime axis type,
+          dashStyle options — good Highcharts-native usage
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - selenium
+  - pillow
+  techniques:
+  - annotations
+  - html-export
+  patterns:
+  - data-generation
+  - iteration-over-groups
+  dataprep:
+  - time-series
+  - normalization
+  styling:
+  - grid-styling

@@ -1,158 +1,196 @@
 library: plotly
+language: python
 specification_id: dashboard-synchronized-crosshair
 created: '2026-01-20T19:38:13Z'
-updated: '2026-01-20T19:41:18Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21184663647
+updated: '2026-05-23T12:44:31Z'
+generated_by: claude-sonnet
+workflow_run: 26332710883
 issue: 3784
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Excellent implementation of synchronized crosshair using Plotly native hovermode=x
-    unified and spike lines
-  - Clean three-panel layout with appropriate row heights (50%/25%/25%)
-  - RSI reference lines at 70/30 add meaningful context to the technical indicator
-  - Proper use of make_subplots with shared_xaxes for true synchronization
-  - Good font sizing throughout for readability at target resolution
-  - HTML export enables interactive exploration
+  - 'Perfect spec compliance: synchronized crosshair via spike lines (spikemode=''across''),
+    unified hover tooltip (hovermode=''x unified''), shared x-axis zoom/pan, and full
+    interactive HTML export'
+  - Accurate RSI implementation using Wilder's exponential smoothing with overbought/oversold
+    reference bands distinguished by dash pattern for colorblind accessibility
+  - Proportional panel layout (50/25/25 row heights) creates clear visual hierarchy
+    that reflects analytical importance of each financial metric
+  - 'Full theme-adaptive chrome: INK/INK_SOFT/GRID tokens applied consistently to
+    all text, axis titles, tick labels, grid lines, and hover labels in both light
+    and dark themes'
+  - Both renders are fully readable with no dark-on-dark or light-on-light issues;
+    data colors identical between themes (only chrome flips)
   weaknesses:
-  - Red/green reference lines for RSI overbought/oversold may be problematic for colorblind
-    users - consider using different dash patterns or labels
-  - Legend disabled entirely - could benefit from trace names in the unified tooltip
-  image_description: The plot displays a synchronized multi-chart dashboard with three
-    vertically stacked panels sharing a common x-axis (Date from Jan 2024 to Oct 2024).
-    The top panel shows a blue line chart of Price ($) ranging from ~85 to ~107, displaying
-    a stock-like random walk pattern. The middle panel shows yellow/gold bar chart
-    for Volume ranging from 0 to ~1.5M with consistent density throughout. The bottom
-    panel shows an RSI Indicator as a blue line oscillating between 0-100, with dashed
-    horizontal reference lines at 70 (red, overbought) and 30 (green, oversold). The
-    title "dashboard-synchronized-crosshair · plotly · pyplots.ai" is centered at
-    the top. All charts share aligned x-axis ticks and have subtle gray grid lines.
-    The layout proportions are 50%/25%/25% for the three rows.
+  - Design could be elevated with a subtle area fill (fill='tozeroy', fillcolor with
+    low alpha) under the price line to add visual depth to the primary panel
+  - RSI panel uses palette position 4 (#16B8F3 sky blue) instead of canonical position
+    3 (#B71D27 red) — the skip is defensible to avoid confusion with the red overbought
+    reference line, but deviates from canonical order
+  - 'No explicit spine removal: top/right axis lines are handled by the plotly_white
+    template rather than being explicitly removed; minor concern for template portability'
+  - Subplot annotation titles use INK_SOFT coloring rather than INK, making the panel
+    headers slightly less visually dominant as navigation anchors in a multi-panel
+    layout
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface. Canvas 3200×1800.
+      Chrome: Main title "dashboard-synchronized-crosshair · python · plotly · anyplot.ai" centered at top in #1A1A17 at size 16. Subplot titles "Price (USD)", "Volume", "RSI (14-period)" in INK_SOFT above each panel. Y-axis labels "Price (USD)", "Volume", "RSI" in dark INK on left. X-axis label "Date" at bottom. Tick labels in INK_SOFT, clearly readable. Grid lines subtle with rgba(26,26,23,0.10) opacity. All text is readable against the light background.
+      Data: Price line in #009E73 (position 1, correct first series). Volume bars in #9418DB (position 2). RSI line in #16B8F3 (position 4 — skips position 3 to avoid confusion with the red overbought reference line). Red dashed line at RSI=70 using #B71D27. Green dotted line at RSI=30 using #009E73.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface. Canvas 3200×1800.
+      Chrome: Title and all text elements flip to light — title in #F0EFE8, subplot titles and secondary text in #B8B7B0 (INK_SOFT dark). Grid lines use rgba(240,239,232,0.10) — subtle on dark. Hover label uses ELEVATED_BG #242420. All axis labels, tick labels, and panel titles are clearly visible against the dark background. No dark-on-dark failures detected.
+      Data: Data colors are identical to the light render — #009E73 price, #9418DB volume, #16B8F3 RSI. Reference lines unchanged. Only chrome (background, text, grid) flipped.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title is large (32pt), subplot titles at 22pt, axis labels at 20pt,
-          tick labels at 16pt - all clearly readable
+        comment: All font sizes explicitly set (title=16, axes=12, ticks=10). All
+          text readable in both light and dark themes. No legibility failures.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: No overlapping text or data elements in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line width of 2.5 is appropriate, bars are visible with good opacity
-          (0.8)
+        comment: All lines, bars, and reference lines clearly visible. line width=2.5
+          appropriate for 200-point time series.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
-        passed: false
-        comment: Blue and yellow are distinguishable, but red/green reference lines
-          could be problematic for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions with 50%/25%/25% row heights, balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Price ($), Volume, RSI, Date'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Anyplot palette used (colorblind-safe). RSI reference lines distinguished
+          by dash pattern (dashed vs dotted) in addition to color.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 confirmed. Proportional panels (50/25/25), good
+          margins (l=100, r=40, t=80, b=60). Nothing cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle (alpha 0.1), but legend is disabled which is appropriate
-          for this layout
+        passed: true
+        comment: Title correct format. Y-axes labeled with units where relevant. X-axis
+          labeled 'Date'.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series = #009E73. Multi-series uses anyplot palette. Plot
+          backgrounds #FAF8F1/#1A1A17. Both themes correct. RSI position 4 skip justified
+          to avoid confusion with red reference line.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: Intentional 50/25/25 panel proportions, RSI reference bands with
+          accessibility-conscious dash patterns, custom spike lines, custom hover
+          templates. Professional financial dashboard aesthetic above defaults.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle GRID opacity (rgba with 0.10), INK/INK_SOFT text hierarchy,
+          volume bar opacity=0.8, custom hoverlabel styling with ELEVATED_BG. Could
+          be elevated with explicit spine removal.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three panels tell a complete financial analysis story. RSI bands
+          provide analytical context. Panel sizing reflects metric importance. Could
+          be elevated with area fill under price or callouts for notable patterns.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct multi-chart dashboard with line charts and bar chart
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on x-axis, appropriate values on y-axes for each chart
-      - id: SC-03
+        comment: Multi-chart dashboard with synchronized crosshair, exactly as specified.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
-        passed: false
-        comment: Synchronized crosshair via hovermode=x unified and spike lines implemented;
-          shared x-axis; independent y-scales
-      - id: SC-04
-        name: Data Range
+        max: 4
+        passed: true
+        comment: Synchronized crosshair (spikemode='across'), unified hover tooltip,
+          shared x-axis zoom/pan, independent y-scales, HTML export for interactivity.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, RSI properly constrained to 0-100
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: Legend disabled, which is appropriate but no trace identification
-          visible
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: Price/volume/RSI correctly mapped to panels 1/2/3. Shared date axis.
+          200 business day data points within 100-500 range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: dashboard-synchronized-crosshair · plotly · pyplots.ai'
+        comment: Title 'dashboard-synchronized-crosshair · python · plotly · anyplot.ai'
+          correct. showlegend=False appropriate as each panel has subplot title.
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows price volatility, volume correlation with price moves, RSI
-          oscillation including overbought/oversold zones
+        comment: Three chart types across panels (line, bar, line with bands). Spike
+          lines demonstrate crosshair synchronization. HTML export enables full interactivity.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock trading data with price, volume, and technical indicator is
-          a realistic and neutral financial scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Price ~$85-107 is realistic, volume 1M+ is realistic, RSI 0-100 is
-          correct
+        comment: 'Financial data (price/volume/RSI) is real-world plausible and neutral.
+          Realistic values: price ~85-110 USD, volume ~1M, RSI bounded 0-100.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 200 business days appropriate for financial analysis. Proper random
+          walk price model. Volume correlated with price volatility. Wilder's RSI
+          correctly bounded 0-100.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -160,42 +198,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports, data, plot, save'
+        comment: Flat imperative code, no functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: All imports used, but pandas could potentially be avoided
+        passed: true
+        comment: 'All imports used: os, numpy, pandas, plotly.graph_objects, plotly.subplots.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean organization. RSI calculation using Wilder's method is correct.
+          No fake UI elements.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png and plot.html which is correct
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. autosize=False with
+          explicit width=800, height=450, scale=4.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: make_subplots with shared_xaxes=True, row_heights, hovermode='x unified',
+          fig.update_yaxes(row=N, col=1) pattern — all idiomatic Plotly.
+      - id: LM-02
         name: Distinctive Features
         score: 5
         max: 5
         passed: true
-        comment: 'Excellent use of Plotly-specific features: make_subplots, hovermode=x
-          unified, spike lines, add_hline, HTML export'
+        comment: Spike lines (showspikes, spikemode='across', spikesnap='cursor')
+          for synchronized crosshair. Custom hovertemplate per trace. HTML export
+          for full interactivity. These are distinctively Plotly features used correctly.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -207,6 +255,6 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
+  - rolling-window
   styling:
   - alpha-blending
-  - grid-styling
