@@ -1,157 +1,209 @@
 library: plotly
+language: python
 specification_id: map-drilldown-geographic
 created: '2026-01-20T07:41:27Z'
-updated: '2026-01-20T07:44:14Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21163297440
+updated: '2026-05-23T09:16:56Z'
+generated_by: claude-sonnet
+workflow_run: 26328545263
 issue: 3770
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Plotly updatemenus for simulating drill-down navigation
-  - Clean hierarchical data structure with realistic US sales data
-  - Good visual design with Python-themed color palette and white state borders
-  - Proper choropleth implementation with Scattergeo overlay for city-level detail
-  - Comprehensive hover tooltips with state names and formatted values
-  - Well-organized dropdown with state-specific zoom presets
+  - 'Correct anyplot_seq colorscale for choropleth and city scatter with #009E73→#003D94
+    gradient'
+  - 'Proper theme-adaptive chrome: warm off-white (#FAF8F1) light / near-black (#1A1A17)
+    dark backgrounds with all INK/INK_SOFT tokens threaded through title, colorbar,
+    dropdown, and spotlight labels'
+  - 'Clever spotlight annotation layer using a third Scattergeo trace with semantic
+    palette colors (#99B314 lime for top performers, #B71D27 red for lowest) — creates
+    an immediate data story focal point'
+  - 'Interactive drill-down via updatemenus dropdown: trace visibility toggling, geo.center
+    + geo.projection.scale for per-state zoom, and title updates mimicking breadcrumb
+    context'
+  - 'Idiomatic Plotly geo stack: go.Choropleth with locationmode=''USA-states'' +
+    go.Scattergeo city overlay + styled colorbar with bordered ELEVATED_BG fill'
+  - 'Clean flat code: imports → data → traces → layout → save — no functions or classes'
+  - 'Canvas dimensions correct: 3200×1800 via width=800, height=450, scale=4 with
+    autosize=False'
+  - Both HTML and PNG outputs generated correctly
   weaknesses:
-  - Uses dropdown menu for navigation instead of true click-to-drill-down functionality
-    as specified
-  - Breadcrumb navigation in subtitle is static text, not clickable segments
-  - City layer visibility toggle is binary rather than progressive drill-down
-  image_description: The plot displays a choropleth map of the United States showing
-    sales data by state. Ten states are colored (California, Texas, Florida, New York,
-    Illinois, Pennsylvania, Ohio, Georgia, North Carolina, and Michigan) while other
-    states appear in light gray. The color scale ranges from yellow (Python Yellow,
-    ~$1400K) through greenish-blue to dark blue (Python Blue, ~$2850K), with California
-    and Texas showing the highest values (darkest blue), Illinois in bright yellow
-    (lower values), and other states in various intermediate shades. A dropdown menu
-    labeled "All States (Click to drill down)" appears in the top-left corner. The
-    title follows the required format "map-drilldown-geographic · plotly · pyplots.ai"
-    with a subtitle. A color legend labeled "Sales ($K)" is positioned on the right
-    side. A navigation instruction appears at the bottom.
+  - 'Breadcrumb navigation (spec requirement): spec asks for clickable breadcrumb
+    segments (e.g. ''World > United States > California''). Implementation uses title
+    text updates (''United States > {State} | City-Level Sales'') and a dropdown —
+    close equivalent, but not true clickable breadcrumbs. A Plotly workaround is to
+    add a secondary updatemenus row styled as a breadcrumb bar with ''Back to All
+    States'' button.'
+  - Spotlight annotation text is small (textfont size=9, 36 source-px at scale=4).
+    For a 3200×1800 canvas this is borderline readable. Increasing to size=10 or 11
+    would improve legibility without crowding the map.
+  - 'DQ-01: only two interactive levels (all-states choropleth → individual state
+    with city dots). Spec envisions three levels (world → country → state). Consider
+    adding a top-level global choropleth view with US highlighted as the first level
+    before the US-states view.'
+  - 'DE-01: design is above-average but not publication-quality. The map would benefit
+    from a subtle annotation box or summary stat (e.g. total US sales or regional
+    percentage) to elevate storytelling beyond the spotlight markers.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct; geo land area rendered in a warm tan (rgb(228,224,210)), lakes in pale blue (rgb(197,220,245)), confirming all theme tokens applied
+      Chrome: Title "map-drilldown-geographic · python · plotly · anyplot.ai" at font=16 clearly readable in dark ink (#1A1A17). Subtitle "US Sales by State — use dropdown to drill into cities" readable. Colorbar "Sales ($K)" title and tick labels (1500/2000/2500) visible with INK_SOFT color. Dropdown button "All States" clearly readable.
+      Data: 10 US states colored by total sales via anyplot_seq (#009E73 green at low end → #003D94 dark blue at high end). California and Texas appear in dark blue (high sales), Michigan in green (lowest). Spotlight markers: lime star for "★ Top: CA $2,850K" and "★ 2nd: TX $2,790K"; red triangle for "▼ Low: Mi $1,340K" — all clearly visible.
+      Legibility verdict: PASS — all text elements are readable against the warm off-white background. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct; geo land area in dark warm tone (rgb(40,38,33)), lakes in dark navy (rgb(20,40,65)) — all theming applied.
+      Chrome: Title and subtitle rendered in cream/off-white (#F0EFE8 INK token) — clearly readable against dark background. Colorbar tick labels and title visible in light color. Dropdown button "All States" styled with ELEVATED_BG (#242420) fill — text readable.
+      Data: Choropleth colors are identical to light render — same anyplot_seq green-to-blue gradient confirms data palette stability across themes. Spotlight marker colors (#99B314 lime stars, #B71D27 red triangle) visually identical. Annotation text in light ink.
+      Legibility verdict: PASS — no dark-on-dark failures observed. All title, subtitle, colorbar, dropdown, and spotlight annotation text clearly readable on dark background.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 28pt, colorbar labels at 16pt, all text clearly readable
-          at full size
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels clearly separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: States are clearly visible with good color differentiation; white
-          borders help distinguish regions
+        comment: All font sizes explicitly set (title=16, colorbar title=12, ticks=10,
+          spotlight=9). Readable in both themes. Spotlight annotation text at size=9
+          (36 source-px) is borderline small for the canvas but not a failure.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Spotlight markers on different states (CA, TX, MI) — no text collision.
+          No city text visible in default view (cities hidden initially).
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Choropleth states clearly colored. Spotlight markers prominent. Colorbar
+          visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Python-themed blue-yellow scale is reasonably accessible but not
-          a standard colorblind-safe palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills appropriate canvas area, balanced margins, colorbar well-positioned
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for map visualization - no traditional axes
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Colorbar legend is well-placed and properly formatted with title
-          and tick labels
+        comment: anyplot_seq is colorblind-safe. Spotlight uses both shape (star vs
+          triangle) and color for distinction.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200×1800 correct. Map fills canvas well. Colorbar on right. Dropdown
+          top-left. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format. Colorbar labeled 'Sales ($K)' with units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'anyplot_seq colorscale. Background #FAF8F1 light / #1A1A17 dark.
+          INK/INK_SOFT tokens applied throughout. Spotlight markers use anyplot palette
+          colors (#99B314, #B71D27).'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: themed geo backgrounds (land/lakes/ocean), semantic
+          spotlight markers with palette colors, styled colorbar and dropdown. Not
+          publication-quality but clearly above generic defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Geographic map has no spines to remove. Colorbar has styled borders
+          (ELEVATED_BG fill, INK_SOFT border). Dropdown themed. Explicit margins set.
+          Above minimal customization.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Spotlight markers for top-2 and lowest performers create clear focal
+          point. Drill-down hierarchy tells progressive story. Top: CA $2,850K / 2nd:
+          TX $2,790K / Low: MI $1,340K immediately visible.'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct choropleth map with drill-down capability via dropdown
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: States correctly mapped with aggregated city values
-      - id: SC-03
+        comment: Geographic choropleth map with drill-down interaction. Correct type.
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has drill-down via dropdown, city markers layer, state zooming; breadcrumb
-          shown in subtitle but not clickable
-      - id: SC-04
-        name: Data Range
+        comment: 'Choropleth coloring ✓, drill-down navigation ✓, color legend ✓,
+          tooltips ✓. Missing: true clickable breadcrumb navigation — title text updates
+          used instead.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data values properly displayed within color scale range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: State values → choropleth color. City values → scatter size + color.
+          Geographic coordinates accurate.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Color legend accurately represents sales values in $K
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Format correct with spec-id · library · pyplots.ai
+        comment: 'Title: ''map-drilldown-geographic · python · plotly · anyplot.ai''.
+          Colorbar labeled ''Sales ($K)''.'
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows hierarchical data (state→city), aggregation, geographic distribution;
-          limited to 2-level hierarchy
+        comment: Shows state choropleth + city scatter + spotlight annotations. Two
+          interactive levels (all-states → individual state zoom). Spec envisions
+          three levels.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sales by region is a classic business intelligence use case
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Sales values ($130K-$950K per city, $1340K-$2850K per state) are
-          realistic
+        comment: US regional sales data by state and city. Neutral, realistic, business
+          scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: City sales $130K-$950K, state totals $1.3M-$2.85M. Realistic range
+          for regional sales data.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,42 +211,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat structure: imports → data → figure → save'
+        comment: 'Flat code: imports → tokens → data → traces → layout → save.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present; all data values are hardcoded and deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported, both used
+        comment: Only os, numpy, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Plotly code. Real interactive features via updatemenus — no
+          fake UI.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves both plot.png and plot.html - correct for interactive library
-    library_features:
-      score: 4
-      max: 5
+        comment: plot-{THEME}.png and plot-{THEME}.html correctly saved. autosize=False
+          with explicit dimensions.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: go.Choropleth with locationmode='USA-states', go.Scattergeo overlay,
+          updatemenus for interaction, geo dict for projection control. All idiomatic
+          geo patterns.
+      - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Good use of Plotly interactive features: dropdown menus, Choropleth,
-          Scattergeo, hover templates, updatemenus'
+        comment: updatemenus with multi-trace visibility toggling. geo.center + geo.projection.scale
+          for state-level zoom. Three Scattergeo layers with conditional visibility.
+          Themed geo backgrounds (land/lake/ocean/border colors).
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -202,9 +265,7 @@ impl_tags:
   - colorbar
   - hover-tooltips
   - html-export
-  - annotations
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
