@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 drawdown-basic: Drawdown Chart
-Library: plotly | Python 3.13
-Quality: 91/100 | Updated: 2026-05-23
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 90/100 | Updated: 2026-05-23
 """
 
 import os
