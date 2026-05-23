@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-23
@@ -36,18 +36,27 @@ INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 DRAWDOWN_COLOR = "#B71D27"  # anyplot red — semantic: losses / drawdown
 RECOVERY_COLOR = "#009E73"  # anyplot green — semantic: recovery / new high
+# Higher alpha in dark mode so ribbon remains visible over near-black background
+RIBBON_ALPHA = 0.30 if THEME == "light" else 0.55
 
-# Data — synthetic portfolio with realistic drawdown patterns
+# Data — synthetic portfolio with realistic drawdown patterns including one full recovery
 np.random.seed(42)
 n_days = 500
 dates = pd.date_range(start="2022-01-01", periods=n_days, freq="D")
 
-returns = np.random.normal(0.0005, 0.011, n_days)
-returns[60:85] = np.random.normal(-0.004, 0.015, 25)
-returns[180:230] = np.random.normal(-0.006, 0.016, 50)
-returns[230:300] = np.random.normal(0.002, 0.012, 70)
-returns[300:320] = np.random.normal(-0.003, 0.012, 20)
-returns[400:500] = np.random.normal(0.001, 0.010, 100)
+returns = np.random.normal(0.0008, 0.009, n_days)
+# First moderate drawdown (~15% peak-to-trough)
+returns[40:80] = np.random.normal(-0.004, 0.010, 40)
+# Strong recovery to new all-time high — ensures at least one full recovery cycle
+returns[80:160] = np.random.normal(0.005, 0.008, 80)
+# Second major drawdown — becomes the maximum drawdown
+returns[180:250] = np.random.normal(-0.007, 0.015, 70)
+# Partial recovery — does not reach new ATH
+returns[250:350] = np.random.normal(0.002, 0.012, 100)
+# Secondary dip
+returns[350:420] = np.random.normal(-0.003, 0.012, 70)
+# Slow tail
+returns[420:500] = np.random.normal(0.001, 0.010, 80)
 
 price = 100 * np.cumprod(1 + returns)
 
@@ -73,15 +82,37 @@ prev_drawdown = df["drawdown"].shift(1, fill_value=0.0)
 recovery_mask = (df["drawdown"] >= -0.01) & (prev_drawdown < -1.0)
 recovery_df = df[recovery_mask].copy()
 
+# Recovery time: days from first drawdown entry to first complete recovery
+recovery_time = None
+drawdown_start_idx = None
+for i in range(len(df)):
+    if df["drawdown"].iloc[i] < -1.0 and drawdown_start_idx is None:
+        drawdown_start_idx = i
+    elif drawdown_start_idx is not None and df["drawdown"].iloc[i] >= -0.01:
+        recovery_time = (df["date"].iloc[i] - df["date"].iloc[drawdown_start_idx]).days
+        break
+
 # Single-row DataFrame for max drawdown marker
 max_dd_df = df.iloc[[max_dd_idx]].copy()
 
-stats_label = f"Max Drawdown: {max_drawdown:.1f}%  |  Max Duration: {max_duration} days"
+# Caption with all three spec-required statistics
+if recovery_time is not None:
+    stats_label = (
+        f"Max Drawdown: {max_drawdown:.1f}%  |  "
+        f"Max Duration: {max_duration} days  |  "
+        f"Recovery Time: {recovery_time} days"
+    )
+else:
+    stats_label = f"Max Drawdown: {max_drawdown:.1f}%  |  Max Duration: {max_duration} days"
+
+# Dynamic y-axis range to fit the data
+y_min = int(np.floor(max_drawdown / 5) * 5) - 5
+y_breaks = list(range(y_min, 5, 5))
 
 # Plot
 plot = (
     ggplot(df, aes(x="date", y="drawdown"))
-    + geom_ribbon(aes(ymin="drawdown", ymax="zero"), fill=DRAWDOWN_COLOR, alpha=0.30)
+    + geom_ribbon(aes(ymin="drawdown", ymax="zero"), fill=DRAWDOWN_COLOR, alpha=RIBBON_ALPHA)
     + geom_line(color=DRAWDOWN_COLOR, size=1.0)
     + geom_hline(yintercept=0, linetype="dashed", color=INK_SOFT, size=0.7)
     + geom_point(
@@ -98,7 +129,7 @@ plot = (
     )
     + labs(x="Date", y="Drawdown (%)", title="drawdown-basic · python · plotnine · anyplot.ai", caption=stats_label)
     + scale_x_datetime(date_breaks="3 months", date_labels="%b %Y")
-    + scale_y_continuous(breaks=list(range(-50, 5, 5)))
+    + scale_y_continuous(breaks=y_breaks)
     + theme_minimal()
     + theme(
         figure_size=(8, 4.5),
