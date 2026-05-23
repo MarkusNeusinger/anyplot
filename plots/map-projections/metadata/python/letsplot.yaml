@@ -1,163 +1,194 @@
 library: letsplot
+language: python
 specification_id: map-projections
 created: '2026-01-20T02:51:40Z'
-updated: '2026-01-20T03:10:05Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21157678735
+updated: '2026-05-23T08:39:24Z'
+generated_by: claude-sonnet
+workflow_run: 26327679005
 issue: 3771
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-projections/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-projections/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/letsplot/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent use of lets-plot coord_map() for map projections
-  - Clear visualization of Tissot indicatrices showing Mercator distortion at different
-    latitudes
-  - Well-designed color scheme with good accessibility (blue/yellow contrast)
-  - Proper graticule at standard intervals (30° lat, 60° lon)
-  - Clean manual legend implementation using geom_point + geom_text
-  - Informative caption explaining the Tissot indicatrices concept
-  - High-quality export with 3x scaling for final resolution
+  - Tissot indicatrices effectively communicate Mercator distortion — the growing
+    circles toward the poles are immediately readable as the story
+  - 'Caption explicitly names the educational takeaway: ''equal-area circles grow
+    toward the poles in Mercator projection'''
+  - Correct anyplot palette usage (land=#009E73 first, Tissot=#9418DB second) with
+    perfect theme-adaptive chrome in both renders
+  - PIL transparent-margin compositing is a clean, correct fix for letsplot's export
+    behavior
+  - Graticule implemented as dashed semi-transparent paths — appropriate cartographic
+    styling
   weaknesses:
-  - Only shows single projection (Mercator) rather than multiple projections side-by-side
-    for comparison as suggested in spec
-  - Grid is completely removed (element_blank) but map projections benefit from graticule
-    visibility which is achieved through geom_path
-  image_description: The plot displays a world map using a Mercator-style projection
-    with all major continents rendered in blue (#306998). The continents shown include
-    North America, South America, Europe, Africa, Asia, Australia, and Antarctica
-    at the bottom. Graticule lines (dashed gray) are displayed at 30° latitude intervals
-    and 60° longitude intervals. Yellow (#FFD43B) Tissot indicatrices are distributed
-    across the map at 5 latitude bands (-60°, -30°, 0°, 30°, 60°) showing how equal-area
-    circles appear distorted at different latitudes - circles at higher latitudes
-    appear larger due to Mercator distortion. A manual legend in the bottom-left identifies
-    "Land Masses" (blue) and "Tissot Indicatrices" (yellow). The title correctly follows
-    the format "map-projections · letsplot · pyplots.ai". Axis labels show "Longitude
-    (°)" and "Latitude (°)" with degree units. A caption at the bottom explains the
-    Tissot indicatrices concept. The background is light gray with a light blue panel
-    representing water/ocean.
+  - Only one map projection shown; the spec's core educational value ('world map with
+    different projections') calls for at least 2-3 projections compared — consider
+    facet_wrap over a projection column
+  - Continent boundaries are coarse hand-drawn polygons; Africa, South America, and
+    Asia shapes deviate significantly from real geography
+  - Inline legend (geom_point + geom_text inside data area at lat=-43/-51) is awkward
+    — placed where Tissot circles also appear; a dedicated legend position outside
+    the map frame would be cleaner
+  - Legend text size=8 and caption size=9 are on the small side; bumping to size=10
+    for both would improve mobile readability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "map-projections · python · letsplot · anyplot.ai" bold centered in dark ink (#1A1A17), clearly readable. Axis labels "Longitude (°)" / "Latitude (°)" in dark ink, tick labels in #4A4A44, caption in #4A4A44 — all readable. Inline manual legend shows green and purple squares with labels "Land Masses" / "Tissot Indicatrices".
+      Data: Land masses in #009E73 (brand green, first series); Tissot indicatrices in #9418DB (purple, second palette color); dashed graticule lines at 30° intervals in #4A4A44 alpha=0.4.
+      Legibility verdict: PASS — all text readable against warm off-white background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title and axis labels in light-colored text (#F0EFE8), tick labels in #B8B7B0 — all clearly readable against dark background. No dark-on-dark failures detected. Caption and inline legend labels also readable.
+      Data: Land masses remain #009E73 (identical to light render ✓); Tissot indicatrices remain #9418DB (identical ✓). Graticule lines adapt to lighter tone for visibility on dark background.
+      Legibility verdict: PASS — all text readable against warm near-black background, chrome correctly inverted.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is bold and large (~28pt), axis labels (~20pt) and tick labels
-          (~16pt) all clearly readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: No overlapping text elements, legend placed in ocean area without
-          obscuring data
+        comment: All font sizes explicitly set; readable in both themes. Inline legend
+          (size=8) and caption (size=9) slightly small but legible.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor overlap risk between manual inline legend and nearby Tissot
+          circles in lower-left; not severe.
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Continents and Tissot circles are clearly visible, though some Tissot
-          circles at edges are partially clipped
+        comment: Tissot indicatrices large and prominent; continents clearly visible;
+          graticule intentionally subtle.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue (#306998) and yellow (#FFD43B) provide excellent contrast and
-          are colorblind-friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills the canvas well, balanced margins, legend integrated within
-          the plot area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Labels include units: Longitude (°) and Latitude (°)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Green and purple are well-separated in hue and luminance; CVD-safe
+          anyplot palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas exactly 3200x1800 (gate passed); map fills canvas well with
+          balanced margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Panel grid removed via element_blank, graticule achieved through
-          geom_path instead
+        passed: true
+        comment: Longitude (°) and Latitude (°) with units; informative caption.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Land=#009E73 (first series), Tissot=#9418DB (second); backgrounds
+          #FAF8F1/#1A1A17; INK/INK_SOFT tokens flip correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above configured-default: thoughtful layer composition, alpha blending,
+          educational caption. Not publication-ready: crude inline legend, single
+          projection limits visual ambition.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid panels removed; dashed graticule as cartographic reference;
+          alpha blending on both polygon layers. Manual legend placement inside data
+          area slightly awkward.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Tissot indicatrices directly illustrate distortion; caption explicitly
+          states the story. Effective and clear.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct world map projection visualization
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Longitude/Latitude correctly mapped to X/Y
-      - id: SC-03
-        name: Required Features
         score: 4
         max: 5
         passed: true
-        comment: Has graticule, Tissot indicatrices, continents; but spec suggests
-          multiple projections side-by-side
-      - id: SC-04
-        name: Data Range
+        comment: World map with geographic projection and graticule. Single projection
+          shown (Mercator); spec allows this but primary emphasis is multiple projections.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Graticule at 30° intervals, Tissot indicatrices, continent outlines,
+          distortion caption all present. Missing: multiple projections or explicit
+          projection name in title.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shows full world extent (-180 to 180 longitude, -85 to 85 latitude)
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: lon→x, lat→y; coord_map() applied; full lon/lat range shown.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies Land Masses and Tissot Indicatrices
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Title format is correct with middot separator
+        comment: Title format correct; manual inline legend correctly labels both
+          data series.
     data_quality:
-      score: 18
-      max: 20
+      score: 12
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: Shows continents, graticule, and Tissot indicatrices demonstrating
-          Mercator distortion, but only shows one projection
+        comment: Graticule, continent outlines, and Tissot indicatrices present. Multi-projection
+          comparison (spec's central goal) missing. Continent polygons are highly
+          simplified.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Realistic geographic data with recognizable continents and proper
-          lat/lon coordinates
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: All values are geographically accurate
+        comment: Educational cartography illustrating Mercator distortion is a genuine
+          neutral real-world scenario. Tissot indicatrices is the standard cartographic
+          method.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Geographic coordinates correct; base_radius=8° for Tissot is reasonable.
+          Continent shapes are coarse approximations, limiting geographic accuracy.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,50 +196,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Follows imports → data → plot → save pattern without functions/classes
+        comment: 'Clean linear flow: imports → constants → data → plot → save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set; data is largely deterministic anyway.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; PIL for compositing; no extraneous imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Verbose continent lists appropriate for no-external-data approach.
+          PIL compositing for transparent margin fix is clean and documented.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current lets_plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also generates plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current letsplot 4.10.1
+          API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses coord_map() for projection, ggplot grammar, geom_polygon, geom_path,
-          geom_point, geom_text, scale_color_identity, theme_minimal with customization,
-          ggsize, and export_ggsave with scale parameter
+        comment: Uses ggplot grammar correctly with layered geoms; coord_map() for
+          geographic projection; theme_minimal() with overrides; scale_color_identity()
+          for manual color control.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: coord_map() is letsplot's geographic projection capability; multi-layer
+          composition showcases grammar composability. Could use facet_wrap for multi-projection
+          comparison.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
-  - layer-composition
-  - annotations
   - custom-legend
+  - layer-composition
   - html-export
   patterns:
   - data-generation
@@ -216,4 +258,3 @@ impl_tags:
   dataprep: []
   styling:
   - alpha-blending
-  - edge-highlighting

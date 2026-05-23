@@ -1,153 +1,195 @@
 library: plotnine
+language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:21:24Z'
-updated: '2026-01-20T10:24:01Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21167798322
+updated: '2026-05-23T10:15:21Z'
+generated_by: claude-sonnet
+workflow_run: 26329643421
 issue: 3748
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/plotnine/plot.png
-preview_html: null
-quality_score: 92
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent text sizing with all labels clearly readable at full resolution
-  - Correct title format following pyplots.ai convention
-  - Good use of plotnine grammar of graphics with clean layered syntax
-  - Horizontal reference line at 100 as suggested in spec
-  - Appropriate color palette with distinct hues for each series
-  - Clean KISS code structure with reproducible random seed
+  - Correct anyplot palette order (AAPL=green, GOOGL=purple, MSFT=red, SPY=sky-blue)
+    with perfect theme-adaptive chrome in both light and dark renders
+  - 'Intentional visual hierarchy: SPY benchmark rendered at 1.6 line weight vs 0.9
+    for others, clearly distinguishing the reference series'
+  - SPY outperformance ribbon (geom_ribbon with alpha=0.08) adds meaningful contextual
+    shading without cluttering the chart
+  - Reference dashed line at 100 grounds the rebased comparison and gives viewers
+    an instant anchor
+  - End-of-line value labels (geom_text + geom_point) allow readers to immediately
+    read final portfolio values without consulting the y-axis
+  - 'Fully idiomatic plotnine grammar: separate data= per geom layer, inherit_aes=False
+    on the ribbon, scale_x_date with date_labels/date_breaks'
+  - All font sizes explicitly set (title=12, axis_title=10, axis_text=8, legend=8)
+    with correct theme tokens throughout both renders
+  - 'Spec fully met: normalized series, reference line at 100, distinct colors, legend,
+    realistic stock tickers and dates'
   weaknesses:
-  - Legend overlaps the plot area; could be positioned outside with legend_position
-  - Red-green color combination may not be ideal for colorblind accessibility
-  image_description: 'The plot shows a multi-line chart comparing four stock price
-    series (AAPL, GOOGL, MSFT, SPY) normalized to a starting value of 100 over one
-    year of trading data (Jan 2024 - Dec 2024). The chart uses four distinct colors:
-    blue for AAPL, yellow/gold for GOOGL, red for MSFT, and green for SPY. A gray
-    dashed horizontal reference line at 100 marks the starting point. The x-axis shows
-    dates with labels rotated at 45 degrees (Feb 2024, Apr 2024, Jun 2024, Aug 2024,
-    Oct 2024, Dec 2024). The y-axis shows "Rebased Price (Starting = 100)" ranging
-    from about 80 to 200. SPY shows the strongest performance reaching ~200, GOOGL
-    moderate performance around 120, AAPL fluctuates around 100, and MSFT underperforms
-    ending around 80. The legend is positioned on the right side of the plot. The
-    layout has good proportions with a minimal theme and subtle gray grid lines.'
+  - End-of-line value labels (size=7pt) are on the small side; consider bumping to
+    8pt for better mobile readability
+  - Secondary series line weight of 0.9 is slightly thin for medium-density daily
+    data; 1.1-1.2 would improve visibility without losing the SPY distinction
+  - End-of-line labels show only bare numbers (e.g. '149', '112') without stock symbol
+    — readers must cross-reference legend color to map number to stock; annotating
+    with symbol name or color-matching would improve clarity
+  - Panel border is removed but axis_line is kept, creating an L-shaped frame — this
+    is correct, but top and right axis lines could also be removed for a cleaner minimal
+    look (remove axis_line_x for top spine, etc.)
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Title "line-stock-comparison · python · plotnine · anyplot.ai" in bold dark ink, fully visible; axis labels "Date" (x) and "Rebased Price (Start = 100)" (y) in dark INK at 10pt; tick labels in INK_SOFT at 8pt rotated 45° on x-axis; legend "Symbol" with AAPL/GOOGL/MSFT/SPY entries on right — all text clearly readable against light background
+      Data: AAPL=#009E73 (green, thin), GOOGL=#9418DB (purple, thin), MSFT=#B71D27 (red, thin), SPY=#16B8F3 (sky blue, thick benchmark); light blue ribbon shading where SPY > 100; dashed gray reference line at rebased=100; end-of-line dots and numeric labels (149, 119, 112, 92)
+      Legibility verdict: PASS — all text elements readable, no "light on light" failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title in light F0EFE8 ink, fully visible against dark background; axis labels and tick labels in B8B7B0 (INK_SOFT) — all readable; legend box uses elevated dark (#242420) with light text; no dark-on-dark failures detected
+      Data: Colors identical to light render — AAPL=#009E73, GOOGL=#9418DB, MSFT=#B71D27, SPY=#16B8F3; ribbon appears as darker teal shading; dashed reference line visible in muted ink; end labels visible in light ink
+      Legibility verdict: PASS — all text elements readable against dark background, no dark-on-dark issues
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: 'All font sizes explicitly set; all text readable in both themes.
+          Minor: geom_text end labels at size=7pt are small for mobile'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text; x-axis labels are rotated to prevent collision
+        comment: No overlapping text; end labels separate by line endpoint positions;
+          rotated x-axis tick labels clean
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line width of 1.5 is appropriate for multi-series comparison
+        comment: Lines clearly visible; SPY at 1.6 distinguished from 0.9 secondaries.
+          Secondary lines slightly thin for medium-density data
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Four distinct colors work reasonably well, though red-green combination
-          could be problematic for some colorblind viewers
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good use of 16:9 canvas, balanced margins, legend well positioned
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with context, X-axis labeled Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: anyplot palette is CVD-safe by design; 4 series with distinct hue+luminance
+          separation
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; plot fills canvas well; legend positioned beside
+          plot; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend overlaps the plot area slightly; could be better positioned
-          outside
+        passed: true
+        comment: Y-axis 'Rebased Price (Start = 100)' is descriptive with context;
+          X-axis 'Date' is clear
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series AAPL=#009E73; palette order correct; backgrounds #FAF8F1/#1A1A17;
+          all chrome tokens theme-adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: line weight hierarchy (SPY=1.6 vs 0.9), ribbon for
+          context, end-value labels. Stops short of publication-ready due to bare
+          numeric labels without symbol mapping'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: panel_border removed, minor grid suppressed, major grid at 10% alpha,
+          axis lines kept for L-frame. Clean but not fully minimal
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: SPY benchmark emphasized via line weight + ribbon; reference line
+          at 100 anchors comparison; end values show outcomes. Clear visual hierarchy
+          guides reader to SPY's performance
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-line chart for stock comparison
+        comment: Multi-line normalized chart rebased to 100 — correct type
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, rebased price on Y-axis, color for symbol - all correct
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Rebasing to 100, distinct colors, legend, horizontal reference line
-          at 100, grid lines - all present
-      - id: SC-04
-        name: Data Range
+        comment: Normalization, distinct colors, legend, reference line at 100, grid
+          lines — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, Y-axis shows full range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on x-axis, rebased price on y-axis, color mapped to symbol
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all four stock symbols
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: line-stock-comparison · plotnine · pyplots.ai'
+        comment: 'Title: ''line-stock-comparison · python · plotnine · anyplot.ai''
+          exact format; legend labels AAPL/GOOGL/MSFT/SPY correct'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows variety in performance (outperformer, underperformer, stable),
-          but patterns are somewhat random-walk similar
+        comment: Shows outperformer (SPY), underperformer (MSFT<100), mid-performers
+          (AAPL, GOOGL) — full range of outcomes
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock price comparison is a real, neutral, business scenario with
-          realistic tickers
+        comment: Real stock tickers (AAPL, GOOGL, MSFT, SPY), realistic 2024 date
+          range, plausible GBM drift/vol parameters
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible (80-200 range over a year) though some volatility
-          patterns could be more realistic
+        comment: Values 92-149 rebased from 100 — realistic 1-year equity returns;
+          SPY reaching 149 (+49%) is high but not impossible
     code_quality:
       score: 10
       max: 10
@@ -157,53 +199,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Simple imports → data → plot → save structure, no functions/classes
+        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set for reproducibility
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used, no extraneous imports
+        comment: All 16 plotnine imports are used in the plot construction
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean, readable code with appropriate complexity for multi-series
+          chart with annotations
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
+          — correct
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Expert grammar of graphics usage: per-geom data=, inherit_aes=False,
+          scale_x_date, aes() mapping, theme() layering'
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of plotnine grammar of graphics (aes, geom_line, geom_hline,
-          scale_color_manual, scale_x_date, theme_minimal), but could have used faceting
-          or additional ggplot2-style features
+        comment: geom_ribbon (ggplot-specific), scale_x_date with date_labels/date_breaks,
+          multi-dataset geom composition — distinctly plotnine/ggplot2 patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - layer-composition
   patterns:
   - data-generation
-  - iteration-over-groups
+  - groupby-aggregation
   dataprep:
+  - cumulative-sum
   - time-series
-  - normalization
   styling:
-  - grid-styling
+  - alpha-blending

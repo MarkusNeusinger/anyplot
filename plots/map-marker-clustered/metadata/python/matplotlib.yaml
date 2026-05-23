@@ -1,163 +1,180 @@
 library: matplotlib
+language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:50:50Z'
-updated: '2026-01-20T19:04:03Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21183369718
+updated: '2026-05-23T12:08:55Z'
+generated_by: claude-sonnet
+workflow_run: 26331588742
 issue: 3766
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/matplotlib/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of grid-based clustering algorithm without external dependencies
-  - Creative solution for basemap context using polygon fill instead of requiring
-    cartopy/basemap
-  - Clean color scheme with Python-themed blue/yellow plus complementary green
-  - Good use of alpha blending to show both clusters and underlying data simultaneously
-  - Informative summary annotation showing total locations and cluster count
-  - Geographic reference labels add professional cartographic context
+  - 'Excellent static adaptation of the interactive clustering concept: grid-based
+    clustering with an inset axes showing the zoomed London view is the right solution
+    for a static library'
+  - Theme-adaptive geographic colors (ocean/land) using the same INK/PAGE_BG token
+    system as the rest of the chrome — cohesive design across map and chrome
+  - 'Perfect code quality: KISS structure, seed set, clean imports, idiomatic Axes
+    methods, correct savefig without bbox_inches=''tight'''
+  - Multi-layer information hierarchy (faint backdrop → prominent clusters → inset
+    → London annotation) creates clear visual depth and guides the reader
   weaknesses:
-  - Grid lines are slightly too prominent (alpha=0.3 with linewidth=0.8) - should
-    be more subtle
-  - Some cluster markers with counts of 1 or 2 seem overly large relative to their
-    content
-  - The simplified coastline polygon creates some geographic inaccuracies (e.g., Italy
-    shape not recognizable)
-  image_description: 'The plot displays a clustered marker map of Europe showing store
-    locations across 8 major cities. The background uses light blue (#d4e6f1) for
-    ocean and beige (#f5f5dc) for a simplified land polygon representing the European
-    coastline. Cluster markers are shown as large circles with white edge highlights,
-    colored by dominant store type: blue (Python Blue #306998) for Retail, green (#2E7D32)
-    for Grocery, and yellow (#FFD43B) for Electronics. Each cluster circle displays
-    a white count number in the center. Semi-transparent individual points (alpha=0.25)
-    are visible behind the clusters showing the raw data distribution. The legend
-    in the upper left identifies the three store types. Geographic reference labels
-    ("Atlantic Ocean", "Mediterranean Sea") appear in italic blue text. A summary
-    annotation in the lower right states "Total: 280 locations in 27 clusters". Axis
-    labels show Longitude and Latitude in degrees with appropriate font sizes. The
-    title follows the correct format. Simplified country boundary lines (gray, dashed)
-    provide geographic context.'
+  - London annotation box (xytext=(lc_lon+6, lc_lat+0.5)) is positioned too close
+    to the inset axes left boundary, causing visual overlap at the inset border —
+    shift xytext to avoid overlap with inset
+  - Inset tick labels at 4.5pt (approx 25 source px) are borderline-readable at mobile
+    scale; increase to at least 5.5pt for both inset title and ticks
+  - The dashed zoom box and inset panel could be connected more explicitly (e.g.,
+    ax.indicate_inset_zoom() or connector lines from box corners to inset corners)
+    to make the spatial relationship immediately obvious and improve LM-02
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) figure background with light blue ocean (#C4D9E8) and warm beige land (#EDE8D4)
+      Chrome: Title "map-marker-clustered · python · matplotlib · anyplot.ai" in dark ink, clearly readable; axis labels "Longitude (°)" / "Latitude (°)" at 10pt in dark ink; tick labels at 8pt legible; legend with Store Type title and category labels readable; annotation "London hub · 19 stores" visible; geographic labels in muted italic readable
+      Data: Retail=#009E73 (green), Grocery=#9418DB (purple), Electronics=#B71D27 (red); cluster markers prominent with count annotations; individual backdrop points at alpha=0.20 intentionally faint; inset shows London expanded view with correctly colored points
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) figure background with dark blue ocean (#192633) and dark warm land (#2A2820)
+      Chrome: Title text in light cream, clearly readable against dark background; axis labels and tick labels flip to light text — all readable; no dark-on-dark failures observed; legend frame uses elevated dark background (#242420); annotation callout uses elevated dark background; geographic labels in muted light tones visible
+      Data: Colors identical to light render — Retail=#009E73, Grocery=#9418DB, Electronics=#B71D27; cluster marker colors unchanged; inset correctly colored
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt, cluster
-          counts clearly readable in white bold text
-      - id: VQ-02
-        name: No Overlap
         score: 7
         max: 8
         passed: true
-        comment: Minor overlap between some cluster markers and underlying data points,
-          but counts remain readable
+        comment: All font sizes explicitly set; main text well-proportioned; inset
+          tick labels at 4.5pt are borderline for mobile scale
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: London annotation box sits at edge of inset axes boundary, minor
+          visual overlap at border
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Cluster markers well-sized with scaling based on count, individual
-          points appropriately small and semi-transparent
+        comment: Cluster markers prominent; backdrop points at alpha=0.20 intentionally
+          faint as density context
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue/Green/Yellow palette is colorblind-friendly, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, slight imbalance with more empty space in ocean
-          area
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Longitude (degrees) and Latitude (degrees) are descriptive with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Three anyplot palette colors well-separated and CVD-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; balanced layout with subplots_adjust
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is slightly too prominent (alpha=0.3 with linewidth=0.8), and
-          geographic annotation text overlaps with the grid
+        passed: true
+        comment: Longitude (°) and Latitude (°) are descriptive with units
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical palette order; light #FAF8F1 / dark
+          #1A1A17 backgrounds; all chrome theme-correct'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: theme-adaptive geographic colors, multi-layer hierarchy,
+          north arrow, geographic labels — clearly above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 5
+        max: 6
+        passed: true
+        comment: Top/right spines removed; subtle dashed coordinate grid alpha=0.10;
+          refined legend; logarithmic cluster-marker sizing; careful z-ordering
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: London hub annotation with arrow creates focal point; zoom box +
+          inset demonstrates clustering concept; dual-scale narrative guides viewer
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements clustered marker map concept
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/Lon correctly mapped to Y/X axes
-      - id: SC-03
+        comment: Geographic map with grid-based clustering; inset shows expanded state
+          — valid static adaptation
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Clusters display count, categories color-coded, basemap context
-          provided. Missing: interactive zoom/click behavior (not feasible in static
-          matplotlib)'
-      - id: SC-04
-        name: Data Range
+        comment: Cluster markers with counts, category coloring with dominant-category,
+          basemap, individual markers in inset; interactive features correctly omitted
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis limits
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Longitude on X, Latitude on Y; geographically correct coordinates
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies store types
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format with unicode middle dot
+        comment: Exact title format; Store Type legend with correct category labels
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows clustering across multiple cities, varying cluster sizes, category
-          distribution. Could show more edge cases like single-point clusters
+        comment: 'Shows all aspects: clustered overview, backdrop density, expanded
+          inset, multi-category coloring'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Store locator for retail chains across Europe is a realistic, neutral
-          business scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Coordinates are realistic for European cities, point counts are reasonable
+        comment: Real European cities with neutral business scenario
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Geographically correct coordinates; plausible urban spread; realistic
+          store counts
     code_quality:
       score: 10
       max: 10
@@ -167,50 +184,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports, data generation, clustering, plotting,
-          save'
+        comment: Linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib.pyplot and numpy imported, both used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Clean, Pythonic; strict=True in zip; defensive leg guard; appropriate
+          complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; ax.* methods; no deprecated APIs
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Expertly uses ax.inset_axes, ax.fill, ax.annotate with arrowprops,
+          ax.add_patch, fig.subplots_adjust
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of ax.scatter(), ax.annotate(), ax.fill() for basemap, custom
-          legend handles. Could leverage more advanced features like PathCollection
-          or custom markers
+        comment: inset_axes for mini-map, FancyArrowPatch for north arrow, Rectangle
+          patch for zoom indicator — above generic but not uniquely unreplicable
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - inset-axes
   - patches
   patterns:
   - data-generation

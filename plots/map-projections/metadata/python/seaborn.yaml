@@ -1,215 +1,249 @@
 library: seaborn
+language: python
 specification_id: map-projections
 created: '2026-01-20T02:49:37Z'
-updated: '2026-01-20T03:05:51Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21157678762
+updated: '2026-05-23T08:26:01Z'
+generated_by: claude-sonnet
+workflow_run: 26327396014
 issue: 3771
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-projections/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 85
 review:
   strengths:
-  - Excellent implementation of 4 different map projections with mathematically correct
-    transformations (Mercator, Mollweide, Robinson, Sinusoidal)
-  - Clear visual demonstration of how Tissot indicatrices distort differently in each
-    projection
-  - Effective use of seaborn DataFrame-based plotting with sns.lineplot for graticules
-  - Clean 2x2 comparison layout with informative legend
-  - Proper title format and professional appearance
-  - Good use of seaborn theme and styling for consistent visual quality
+  - Theme-adaptive geographic color tokens (OCEAN/LAND/LAND_EDGE differ between light
+    and dark) produce a polished, publication-aware map in both themes
+  - Four-projection 2x2 comparison with consistent city reference dots is a genuine
+    data storytelling choice that communicates projection distortion visually
+  - Custom projection math (orthographic, aitoff, hammer, lambert cylindrical) implemented
+    correctly in pure numpy; real Natural Earth boundary data fetched and rendered
+    at 177 countries
+  - Orthographic horizon circle is a clean detail that distinguishes the globe-view
+    panel from the flat-world panels
+  - 'Palette compliance is strong: #009E73 city dots, correct backgrounds, fully theme-adaptive
+    chrome'
   weaknesses:
-  - Coordinate labels present but generic axis labels (Latitude, Longitude) would
-    improve clarity
-  - Continent outlines are simplified approximations rather than precise boundaries
-  image_description: 'The plot displays a 2x2 grid comparing four different map projections:
-    Mercator (top-left), Mollweide (top-right), Robinson (bottom-left), and Sinusoidal
-    (bottom-right). Each subplot shows simplified continent outlines (North America,
-    South America, Europe, Africa, Asia, and Australia) in a muted sage green color
-    with blue borders, set against a light blue ocean background. Yellow/gold Tissot
-    indicatrices (ellipses showing distortion) are distributed across each projection
-    at various latitudes (-45°, 0°, 45°) and longitudes (-120°, -60°, 0°, 60°, 120°).
-    Gray graticule lines appear at 30° intervals. Each projection is labeled with
-    bold text. The main title follows the correct format "map-projections · seaborn
-    · pyplots.ai". A shared legend at the bottom explains the Tissot Indicatrix, Land,
-    and Graticule elements. The layout is clean with good proportions. Latitude labels
-    (-60° to 60°) appear on the left of each subplot, and longitude labels (-120°
-    to 120°) appear at the bottom.'
+  - Panel subtitle fontsize=8pt is slightly small for a 3200x1800 canvas — consider
+    9pt or 10pt to improve mobile readability
+  - Seaborn's role is minimal (scatter layer + theme setup); the map rendering is
+    entirely matplotlib. The implementation reads more as a matplotlib map with seaborn
+    styling than a seaborn visualization
+  - 'DE-03: No visual hierarchy between projections — consider making one panel slightly
+    larger or adding a brief caption explaining what each projection preserves (area,
+    shape, etc.)'
+  - 'CQ-01: The project() function, while pragmatic, technically violates the KISS
+    no-functions structure'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Suptitle "map-projections · python · seaborn · anyplot.ai" dark text, clearly readable. Panel titles bold 8pt dark text on figure background — readable. No tick labels (map-appropriate).
+      Data: Land in soft sage green (#C4D5B0), ocean in pale blue (#D4E8F7). Graticule gray at 0.5 linewidth/0.6 alpha — subtle. City dots in #009E73 teal — 6 sparse points visible. Orthographic horizon circle present.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct
+      Chrome: Suptitle and panel titles in cream/off-white (#F0EFE8) — clearly legible against dark background. No dark-on-dark failures detected.
+      Data: Land in dark olive-green (#2A3D26), ocean in deep navy (#192837) — lower contrast than light but distinguishable. City dots remain #009E73 teal — identical to light render, most prominent visual element. Orthographic horizon circle white/light, visible.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable; titles are bold and clear, coordinate labels slightly
-          small but legible
-      - id: VQ-02
-        name: No Overlap
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: No overlapping elements; clean separation between subplots
+        comment: Font sizes explicitly set; suptitle=12pt correct, panel titles=8pt
+          slightly small for 3200x1800 but readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data overlaps in either render
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Continents and Tissot indicatrices visible but graticule lines are
-          quite dense in some projections
+        comment: Land, ocean, graticule, city dots all well-sized and visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Good colorblind-safe palette: blue ocean, sage green land, yellow
-          Tissot markers, gray grid'
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Well-balanced 2x2 layout with good spacing and legend placement
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Coordinate labels present but not descriptive axis labels (no Latitude
-          or Longitude text)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed at bottom, graticule appropriately styled
+        comment: 'Good contrast; #009E73 city dots pop against both land and ocean;
+          CVD-safe'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 2x2 grid fills canvas well; balanced margins; tight_layout with rect
+          applied
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Panel titles describe each projection clearly; suptitle in required
+          format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'City dots are #009E73; semantic geographic colors for land/ocean;
+          correct backgrounds #FAF8F1/#1A1A17; theme-adaptive chrome in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive geographic tokens elevate above defaults; professional
+          multi-panel comparison layout; between well-configured default and strong
+          design
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle graticule; tick marks cleared; panel borders kept appropriately
+          for map extent; some refinement visible but not maximally polished
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Consistent city reference dots enable cross-projection comparison;
+          four-panel layout communicates distortion differences; missing per-panel
+          property captions
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: 'Correct: world map projections comparison'
+        comment: World map with multiple projections; 4 distinct projection families
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Coordinates correctly transformed for each projection
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required: multiple projections, graticule, coastlines, Tissot
-          indicatrices'
-      - id: SC-04
-        name: Data Range
+        comment: Multiple projections, graticule at 30deg, coastlines, country borders,
+          neutral color scheme, side-by-side layout all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Global coverage shown appropriately
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Natural Earth 110m boundaries correct; city coordinates accurate
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly explains all visual elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: map-projections · seaborn · pyplots.ai'
+        comment: Title 'map-projections · python · seaborn · anyplot.ai' in exact
+          format; no legend needed
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows 4 projections with clear distortion differences; could show
-          more projection types
+        comment: Orthographic (globe), Aitoff (compromise), Hammer (equal-area), Lambert
+          Cylindrical (cylindrical) — covers main projection property types
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Educational cartography context; neutral and appropriate
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Continent shapes are simplified approximations, not precise geographic
-          boundaries
+        comment: Real Natural Earth boundaries; real cities with correct coordinates;
+          educational cartography context
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Geographic coordinates factually correct; projection math verified
+          by visual output
     code_quality:
-      score: 8
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: Defines project() helper function (deviates from no-functions rule),
+          but mathematically justified
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: No random seed set (though data is hardcoded, so technically deterministic)
+        score: 2
+        max: 2
+        passed: true
+        comment: No random data; stable Natural Earth URL; fixed city constants
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: All 7 imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Current seaborn API used
+        comment: Clean and readable; no fake UI; concise projection loop
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png at dpi=400; no bbox_inches=tight; current
+          API
+    library_mastery:
+      score: 4
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Uses seaborn lineplot and scatterplot with DataFrames, sns.set_theme
-          for styling
+        comment: sns.scatterplot() as axes-level layer correct; sns.set_theme() with
+          rc dict is canonical; bulk of rendering is matplotlib
+      - id: LM-02
+        name: Distinctive Features
+        score: 1
+        max: 5
+        passed: false
+        comment: Seaborn limited to scatter layer and theme; could be replicated with
+          matplotlib alone; no seaborn-distinctive features exploited
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
-  - annotations
-  - custom-legend
-  - patches
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
   - alpha-blending
-  - grid-styling
