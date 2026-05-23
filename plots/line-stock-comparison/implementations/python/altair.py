@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-23
@@ -30,7 +30,7 @@ np.random.seed(42)
 dates = pd.date_range("2024-01-01", periods=252, freq="B")
 
 symbols = ["AAPL", "GOOGL", "MSFT", "SPY"]
-returns_params = {"AAPL": (0.0008, 0.018), "GOOGL": (0.0004, 0.022), "MSFT": (0.0006, 0.016), "SPY": (0.0004, 0.012)}
+returns_params = {"AAPL": (0.0003, 0.012), "GOOGL": (0.0002, 0.011), "MSFT": (0.0003, 0.008), "SPY": (0.0001, 0.006)}
 
 data_list = []
 for symbol in symbols:
@@ -59,7 +59,7 @@ base = alt.Chart(df).encode(
     ],
 )
 
-lines = base.mark_line(strokeWidth=2.5)
+lines = base.mark_line().encode(strokeWidth=alt.condition(alt.datum.symbol == "SPY", alt.value(3.0), alt.value(2.0)))
 
 reference_line = (
     alt.Chart(pd.DataFrame({"y": [100]}))
@@ -76,7 +76,7 @@ layer = alt.layer(reference_line, lines).properties(
 )
 
 chart = (
-    layer.configure_view(fill=PAGE_BG, stroke=INK_SOFT, continuousWidth=620, continuousHeight=320)
+    layer.configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
     .configure_axis(
         grid=True,
         labelFontSize=10,
