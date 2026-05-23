@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-projections: World Map with Different Projections
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 76/100 | Updated: 2026-05-23
+Quality: 85/100 | Updated: 2026-05-23
 """
 
 import json
