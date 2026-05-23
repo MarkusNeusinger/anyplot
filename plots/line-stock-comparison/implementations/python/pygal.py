@@ -1,123 +1,166 @@
-""" pyplots.ai
+""" anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-23
 """
 
 import datetime
-
-import numpy as np
-import pygal
-from pygal.style import Style
+import os
+import sys
 
 
-# Data - Simulated daily stock prices for ~1 year (252 trading days)
+# Remove script dir from sys.path to avoid shadowing the pygal package
+_script_dir = sys.path[0] if sys.path else ""
+if _script_dir in sys.path:
+    sys.path.remove(_script_dir)
+
+import numpy as np  # noqa: E402
+import pygal  # noqa: E402
+from pygal.style import Style  # noqa: E402
+
+
+if _script_dir:
+    sys.path.insert(0, _script_dir)
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+ANYPLOT_PALETTE = ("#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E")
+
+# Extended palette: data series use positions 1-4, INK_MUTED reserved for the reference line
+PALETTE_WITH_REF = ANYPLOT_PALETTE[:4] + (INK_MUTED,)
+
+# Data
 np.random.seed(42)
 n_days = 252
 
-# Generate business days using numpy/datetime (no pandas needed)
 start_date = datetime.date(2024, 1, 2)
 dates = []
 current_date = start_date
 while len(dates) < n_days:
-    if current_date.weekday() < 5:  # Monday=0 to Friday=4
+    if current_date.weekday() < 5:
         dates.append(current_date)
     current_date += datetime.timedelta(days=1)
 
-# Simulate cumulative returns with different trends
-# Individual stocks should generally outperform the broad market benchmark (SPY)
-returns_aapl = np.random.normal(0.0012, 0.018, n_days)  # Strong growth (tech leader)
-returns_googl = np.random.normal(0.0015, 0.022, n_days)  # Highest growth (volatile tech)
-returns_msft = np.random.normal(-0.0002, 0.016, n_days)  # Underperformer this period
-returns_spy = np.random.normal(0.0004, 0.010, n_days)  # Broad market (lower vol, moderate return)
+returns_aapl = np.random.normal(0.0012, 0.018, n_days)
+returns_googl = np.random.normal(0.0015, 0.022, n_days)
+returns_msft = np.random.normal(-0.0002, 0.016, n_days)
+returns_spy = np.random.normal(0.0004, 0.010, n_days)
 
-# Convert to price series (starting at arbitrary prices, then rebase to 100)
 price_aapl = 100 * np.cumprod(1 + returns_aapl)
 price_googl = 100 * np.cumprod(1 + returns_googl)
 price_msft = 100 * np.cumprod(1 + returns_msft)
 price_spy = 100 * np.cumprod(1 + returns_spy)
 
-# Rebase all series to 100 at start (already done since we start at 100)
 rebased_aapl = price_aapl / price_aapl[0] * 100
 rebased_googl = price_googl / price_googl[0] * 100
 rebased_msft = price_msft / price_msft[0] * 100
 rebased_spy = price_spy / price_spy[0] * 100
 
-# Create custom style with colorblind-friendly palette
+# Year-end returns for legend labels (data storytelling)
+final_returns = {
+    "AAPL": rebased_aapl[-1] - 100,
+    "GOOGL": rebased_googl[-1] - 100,
+    "MSFT": rebased_msft[-1] - 100,
+    "SPY": rebased_spy[-1] - 100,
+}
+
+
+def fmt_ret(r):
+    sign = "+" if r >= 0 else ""
+    return f"{sign}{r:.1f}%"
+
+
+# Best performer gets a thicker stroke for visual emphasis
+best = max(final_returns, key=final_returns.get)
+
+
+def series_stroke(name):
+    return {"width": 6} if name == best else {"width": 3}
+
+
+# Style
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#0072B2", "#E69F00", "#CC79A7", "#009E73"),  # 4 colors for 4 stock series
-    title_font_size=56,
-    label_font_size=40,
-    major_label_font_size=36,
-    legend_font_size=42,
-    value_font_size=28,
-    value_label_font_size=28,
-    tooltip_font_size=32,
-    stroke_width=5,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=PALETTE_WITH_REF,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=4,
     font_family="sans-serif",
 )
 
-# Create x-axis labels - select monthly labels as major labels
+# X-axis labels — monthly markers only
 x_labels_all = [d.strftime("%b %Y") if i == 0 or d.month != dates[i - 1].month else "" for i, d in enumerate(dates)]
 x_labels_major = [label for label in x_labels_all if label]
 
-# Create line chart with interactive features
+# Chart
 chart = pygal.Line(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     style=custom_style,
-    title="line-stock-comparison · pygal · pyplots.ai",
+    title="line-stock-comparison · python · pygal · anyplot.ai",
     x_title="Date",
     y_title="Rebased Price (Start = 100)",
     show_x_guides=False,
     show_y_guides=True,
-    dots_size=3,
+    dots_size=2,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,  # 4 columns for 4 stock series (reference line hidden from legend)
-    legend_box_size=32,
+    legend_at_bottom_columns=5,
     x_label_rotation=45,
-    truncate_label=-1,
     show_minor_x_labels=False,
     x_labels_major=x_labels_major,
-    range=(70, 180),
     margin_bottom=120,
 )
 
-# Set x-axis labels
 chart.x_labels = x_labels_all
 
-# Create data with custom tooltips for interactivity
-data_aapl = [
-    {"value": val, "label": f"AAPL | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
-    for i, val in enumerate(rebased_aapl.tolist())
-]
-data_googl = [
-    {"value": val, "label": f"GOOGL | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
-    for i, val in enumerate(rebased_googl.tolist())
-]
-data_msft = [
-    {"value": val, "label": f"MSFT | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
-    for i, val in enumerate(rebased_msft.tolist())
-]
-data_spy = [
-    {"value": val, "label": f"SPY | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
-    for i, val in enumerate(rebased_spy.tolist())
-]
+chart.add(
+    f"AAPL ({fmt_ret(final_returns['AAPL'])})",
+    [
+        {"value": val, "label": f"AAPL | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
+        for i, val in enumerate(rebased_aapl.tolist())
+    ],
+    stroke_style=series_stroke("AAPL"),
+)
+chart.add(
+    f"GOOGL ({fmt_ret(final_returns['GOOGL'])})",
+    [
+        {"value": val, "label": f"GOOGL | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
+        for i, val in enumerate(rebased_googl.tolist())
+    ],
+    stroke_style=series_stroke("GOOGL"),
+)
+chart.add(
+    f"MSFT ({fmt_ret(final_returns['MSFT'])})",
+    [
+        {"value": val, "label": f"MSFT | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
+        for i, val in enumerate(rebased_msft.tolist())
+    ],
+    stroke_style=series_stroke("MSFT"),
+)
+chart.add(
+    f"SPY ({fmt_ret(final_returns['SPY'])})",
+    [
+        {"value": val, "label": f"SPY | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
+        for i, val in enumerate(rebased_spy.tolist())
+    ],
+    stroke_style=series_stroke("SPY"),
+)
 
-# Add data series with custom tooltips
-chart.add("AAPL", data_aapl)
-chart.add("GOOGL", data_googl)
-chart.add("MSFT", data_msft)
-chart.add("SPY (Benchmark)", data_spy)
+# Horizontal reference line at y=100 anchors the starting baseline visually
+chart.add("Baseline (100)", [100.0] * n_days, show_dots=False, stroke_style={"width": 2, "dasharray": "6,4"})
 
-# Note: Reference line at 100 is indicated by the horizontal grid line passing through y=100
-# This is cleaner than adding a separate series that would clutter the legend
-
-# Save outputs
-chart.render_to_png("plot.png")
-chart.render_to_file("plot.html")
+# Save
+chart.render_to_png(f"plot-{THEME}.png")
+with open(f"plot-{THEME}.html", "wb") as f:
+    f.write(chart.render())
