@@ -1,0 +1,263 @@
+library: makie
+language: julia
+specification_id: dashboard-synchronized-crosshair
+created: '2026-05-23T12:57:24Z'
+updated: '2026-05-23T20:28:13Z'
+generated_by: claude-sonnet
+workflow_run: 26333070350
+issue: 3784
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Excellent use of linkxaxes! and stacked Axis layout to correctly implement the
+    synchronized dashboard pattern for a static library
+  - RSI overbought/oversold zone fills via band! with very low alpha (0.10) add meaningful
+    context without obscuring data
+  - 'Comprehensive theme adaptation: all chrome elements (title, labels, ticks, spines,
+    grid, zone fills) properly respond to ANYPLOT_THEME'
+  - Custom ytickformat callback for K-notation volume labels is a clean Makie-idiomatic
+    detail
+  - Row proportions (42/30/28%) and markers with white strokes show genuine attention
+    to visual polish
+  weaknesses:
+  - Tick label sizes (xticklabelsize, yticklabelsize) not explicitly set on any of
+    the three Axis objects — add xticklabelsize = 12, yticklabelsize = 12 to each
+    Axis to match style-guide defaults
+  - 'Palette ordering concern: volume bars render as bright sky blue and RSI line
+    as purple in both renders, but ANYPLOT_PALETTE[2]=#9418DB (purple) and ANYPLOT_PALETTE[3]=#B71D27
+    (red) are assigned respectively — rendered colors do not match code assignments;
+    consider using ANYPLOT_PALETTE[4]=#16B8F3 for volume and ANYPLOT_PALETTE[2]=#9418DB
+    for RSI to match what is actually rendered, and avoid red RSI line clashing with
+    red overbought zone fill'
+  - Crosshair RSI value is 51.7 (neutral territory), contradicting the intended RSI
+    overbought peak narrative — if the rolling-mean RSI with seed 42 never produces
+    RSI > 70, increase mean return from 0.0008 to ~0.003 for a more volatile series,
+    or relabel the crosshair as 'RSI maximum' rather than implying overbought context
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "dashboard-synchronized-crosshair · julia · makie · anyplot.ai" in dark INK text, clearly readable. Axis labels (Price (USD), Volume, RSI (14), Trading Day) in dark INK. Tick labels in INK_SOFT dark color. Panel labels (PRICE, VOLUME, RSI) in top-left of each panel. All text clearly readable against light background.
+      Data: Price line in #009E73 green (palette position 1, correct). Volume bars in bright sky blue/teal color. RSI line in purple/violet. Zone fills at 10% alpha (light red tint in overbought zone 70-100, light green tint in oversold zone 0-30). Dashed crosshair at day ~120 spanning all panels. Value markers (circle dots) on each series at crosshair. Annotations: "100.1" (price), "276K" (volume), "51.7 <- peak" (RSI).
+      Legibility verdict: PASS — all text readable at full resolution in light theme
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels, panel labels all render in light-colored text (INK flips to #F0EFE8, INK_SOFT to #B8B7B0). No dark-on-dark failures detected. Grid lines remain subtle. Spines (left, bottom) in INK_SOFT light color.
+      Data: Price line in #009E73 green — identical to light render (correct, data colors unchanged). Volume bars in same bright sky blue/teal as light render. RSI line in same purple/violet. Zone fills, crosshair, markers, and annotations all consistent with light render. Data palette is theme-independent as required.
+      Legibility verdict: PASS — all text readable at full resolution in dark theme, no dark-on-dark failures
+  criteria_checklist:
+    visual_quality:
+      score: 27
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 6
+        max: 8
+        passed: true
+        comment: Title, axis labels, chrome explicitly sized. Missing xticklabelsize/yticklabelsize
+          on all three Axis objects; relies on Figure fontsize=14 default for ticks.
+          Readable in both themes.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Panel labels, zone labels, and value annotations well-separated.
+          No collisions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Lines at linewidth=2.0 (4 effective px), bars filled, scatter markers
+          at markersize=10 (20 effective px). All elements clearly visible at 3200x1800.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Three series use distinct palette colors, CVD-safe. Zone fills at
+          10% alpha do not obscure data.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Three panels at 42/30/28% row proportions fill
+          the canvas well. Aligned grids and shared x-axis create clear visual connection.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Price (USD), Volume (K-formatted), RSI (14), Trading Day all descriptive
+          with units or context. Title correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 1
+        max: 2
+        passed: false
+        comment: 'First series correctly uses #009E73. Volume bars appear as bright
+          sky blue and RSI as purple/violet in both renders, not matching ANYPLOT_PALETTE[2]=#9418DB
+          (purple) for volume and ANYPLOT_PALETTE[3]=#B71D27 (red) for RSI per code.
+          Background and chrome are theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: theme-adaptive chrome, zone fills, crosshair
+          with value markers, panel labels, K-formatted volume ticks, markers with
+          white strokes. Not quite publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, y-only grid at 10% opacity, row gap of
+          5, zone fills at 10% alpha, dashed reference lines at 50% opacity. Good
+          refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: false
+        comment: Zone fills and reference lines are good. However, crosshair at RSI=51.7
+          (neutral territory) fails the overbought peak narrative. The <- peak annotation
+          is misleading.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct stacked multi-panel dashboard with three linked panels. Static
+          crosshair via vlines! is appropriate for static library.
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Synchronized crosshair, shared x-axis, independent y-axes, value
+          annotations, three data series. All spec features implemented.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Trading Day on shared X; Price (USD), Volume, RSI (14) on independent
+          Y axes. Correct.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title format exact match. No standalone legend needed; panel labels
+          serve orientation role.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Demonstrates all dashboard aspects: line chart, bar chart, oscillator
+          with zones, synchronized crosshair, value read-out, overbought/oversold
+          zones.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Stock trading dashboard with price, volume, RSI is canonical and
+          neutral.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price ~100 +/-15%, volume in hundreds of thousands, RSI 0-100. All
+          scales realistic.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean linear flow, no functions or classes.
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random, Statistics all used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: No fake UI elements. RSI for-loop is deliberate inline computation.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses current Makie
+          size API.
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses linkxaxes!, band!, rowsize!/rowgap!, hidexdecorations!, ytickformat
+          callback, grid layout indexing — all idiomatic Makie patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: linkxaxes! for panel synchronization, band! for zone fills, rowsize!(fig.layout,...)
+          for panel proportions are genuinely Makie-distinctive features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - rolling-window
+  styling:
+  - alpha-blending
+  - edge-highlighting

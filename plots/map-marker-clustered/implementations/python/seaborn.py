@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 map-marker-clustered: Clustered Marker Map
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 89/100 | Updated: 2026-05-23
 """
+
+import os
 
 import matplotlib.patches as mpatches
 import matplotlib.pyplot as plt
@@ -13,22 +15,32 @@ from matplotlib.lines import Line2D
 from sklearn.cluster import AgglomerativeClustering
 
 
-# Generate sample geographic data - business locations across NYC region
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# anyplot palette — canonical order, 4 categories
+ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+category_names = ["Coffee Shop", "Restaurant", "Bookstore", "Gym"]
+category_palette = dict(zip(category_names, ANYPLOT_PALETTE, strict=True))
+
+# Data — business locations across NYC region
 np.random.seed(42)
 n_points = 500
 
-# Create clustered geographic data (simulating city with neighborhoods)
 n_neighborhoods = 8
 neighborhood_centers = np.random.uniform(-0.5, 0.5, (n_neighborhoods, 2))
 points_per_neighborhood = n_points // n_neighborhoods
 
 lats, lons, categories = [], [], []
-category_names = ["Coffee Shop", "Restaurant", "Bookstore", "Gym"]
-
 for i, center in enumerate(neighborhood_centers):
     n_pts = points_per_neighborhood + (n_points % n_neighborhoods if i == 0 else 0)
-    lat = np.random.normal(center[0], 0.08, n_pts) + 40.7  # NYC-like latitude
-    lon = np.random.normal(center[1], 0.08, n_pts) - 74.0  # NYC-like longitude
+    lat = np.random.normal(center[0], 0.08, n_pts) + 40.7
+    lon = np.random.normal(center[1], 0.08, n_pts) - 74.0
     lats.extend(lat)
     lons.extend(lon)
     categories.extend(np.random.choice(category_names, n_pts))
@@ -37,10 +49,10 @@ df = pd.DataFrame({"lat": lats, "lon": lons, "category": categories})
 
 # Apply hierarchical clustering to group nearby markers
 coords = df[["lat", "lon"]].values
-clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=0.05, linkage="ward")
+clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=0.18, linkage="ward")
 df["cluster"] = clustering.fit_predict(coords)
 
-# Calculate cluster centers and sizes
+# Cluster centers, sizes and dominant category
 cluster_stats = (
     df.groupby("cluster")
     .agg(
@@ -52,45 +64,62 @@ cluster_stats = (
     .reset_index()
 )
 
-# Set seaborn context and style for the entire plot
-sns.set_theme(style="whitegrid", context="talk", font_scale=1.2)
+# Compute actual cluster size thresholds for accurate legend labels
+count_min = int(cluster_stats["count"].min())
+count_p33 = int(cluster_stats["count"].quantile(0.33))
+count_p66 = int(cluster_stats["count"].quantile(0.66))
+count_max = int(cluster_stats["count"].max())
 
-# Use colorblind-friendly palette from seaborn
-palette = sns.color_palette("colorblind", n_colors=4)
-category_palette = dict(zip(category_names, palette, strict=True))
-
-# Create the plot
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Add simplified geographic context - stylized NYC region boundaries
-# Hudson River approximation (western boundary)
-hudson_river = [[(-74.05, 40.70), (-74.02, 40.85), (-73.95, 41.00), (-73.90, 41.15)]]
-# Long Island Sound approximation (eastern boundary)
-li_sound = [[(-73.80, 40.85), (-73.70, 40.95), (-73.55, 41.05)]]
-# Atlantic coast approximation (southern boundary)
-coast = [[(-74.20, 40.55), (-74.00, 40.50), (-73.80, 40.58), (-73.60, 40.62)]]
-
-# Draw water boundaries as light blue lines for geographic context
-for boundary in [hudson_river, li_sound, coast]:
-    for segment in boundary:
-        xs, ys = zip(*segment, strict=True)
-        ax.plot(xs, ys, color="#a8d4e6", linewidth=8, alpha=0.4, zorder=0, solid_capstyle="round")
-
-# Add a subtle land area fill
-land_coords = [(-74.45, 40.0), (-74.45, 41.25), (-73.35, 41.25), (-73.35, 40.0)]
-land_patch = mpatches.Polygon(land_coords, facecolor="#f5f5dc", edgecolor="none", alpha=0.3, zorder=-1)
-ax.add_patch(land_patch)
-
-# Plot individual points as background layer using seaborn scatterplot
-sns.scatterplot(
-    data=df, x="lon", y="lat", hue="category", palette=category_palette, s=40, alpha=0.3, ax=ax, legend=False
+# Set seaborn theme with theme-adaptive chrome
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
 )
 
-# Create cluster dataframe for seaborn visualization
-cluster_stats["size_scaled"] = cluster_stats["count"] * 20
-cluster_stats["color"] = cluster_stats["dominant_category"].map(category_palette)
+# Plot
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Plot cluster markers using seaborn scatterplot with size encoding
+# Geographic context — stylized NYC region water boundaries
+hudson_river = [(-74.05, 40.70), (-74.02, 40.85), (-73.95, 41.00), (-73.90, 41.15)]
+li_sound = [(-73.80, 40.85), (-73.70, 40.95), (-73.55, 41.05)]
+coast = [(-74.20, 40.55), (-74.00, 40.50), (-73.80, 40.58), (-73.60, 40.62)]
+
+for segment in [hudson_river, li_sound, coast]:
+    xs, ys = zip(*segment, strict=True)
+    ax.plot(xs, ys, color="#a8d4e6", linewidth=1.5, alpha=0.4, zorder=0, solid_capstyle="round")
+
+land_fill = "#f5f5dc" if THEME == "light" else "#2a2a20"
+land_patch = mpatches.Polygon(
+    [(-74.45, 40.0), (-74.45, 41.25), (-73.35, 41.25), (-73.35, 40.0)],
+    facecolor=land_fill,
+    edgecolor="none",
+    alpha=0.3,
+    zorder=-1,
+)
+ax.add_patch(land_patch)
+
+# KDE density contours — seaborn-distinctive statistical overlay showing point density
+sns.kdeplot(data=df, x="lon", y="lat", levels=6, color=INK_MUTED, alpha=0.35, linewidths=0.9, ax=ax, zorder=1)
+
+# Background layer — individual points at minimal alpha
+sns.scatterplot(
+    data=df, x="lon", y="lat", hue="category", palette=category_palette, s=6, alpha=0.08, ax=ax, legend=False
+)
+
+# Foreground layer — cluster markers sized by count
 sns.scatterplot(
     data=cluster_stats,
     x="lon_center",
@@ -98,85 +127,96 @@ sns.scatterplot(
     size="count",
     hue="dominant_category",
     palette=category_palette,
-    sizes=(100, 800),
+    sizes=(50, 500),
     alpha=0.85,
-    edgecolor="white",
-    linewidth=2,
+    edgecolor=PAGE_BG,
+    linewidth=0.8,
     ax=ax,
     legend=False,
 )
 
-# Add count labels to larger clusters
+# Count labels on clusters
 for _, row in cluster_stats.iterrows():
-    if row["count"] > 4:
+    if row["count"] > 1:
         ax.annotate(
             str(int(row["count"])),
             (row["lon_center"], row["lat_center"]),
             ha="center",
             va="center",
-            fontsize=11,
+            fontsize=8,
             fontweight="bold",
             color="white",
             zorder=10,
         )
 
-# Create custom legend using matplotlib patches to avoid seaborn override
-handles = [
-    mpatches.Patch(facecolor=category_palette[cat], edgecolor="white", linewidth=1.5, label=cat)
+# Category legend
+cat_handles = [
+    mpatches.Patch(facecolor=category_palette[cat], edgecolor=PAGE_BG, linewidth=0.5, label=cat)
     for cat in category_names
 ]
-legend = ax.legend(
-    handles=handles,
+cat_legend = ax.legend(
+    handles=cat_handles,
     title="Business Type",
     loc="upper left",
-    fontsize=14,
-    title_fontsize=16,
+    fontsize=8,
+    title_fontsize=9,
     framealpha=0.95,
-    edgecolor="gray",
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
-legend.get_frame().set_linewidth(1.5)
+cat_legend.get_title().set_color(INK)
+for text in cat_legend.get_texts():
+    text.set_color(INK_SOFT)
 
-# Add size legend for cluster markers
+# Size legend — labels derived from actual computed cluster size ranges
+small_label = f"{count_min} pt" if count_min == count_p33 else f"{count_min}–{count_p33} pts"
+medium_label = f"{count_p33 + 1} pt" if count_p33 + 1 == count_p66 else f"{count_p33 + 1}–{count_p66} pts"
+large_label = f"{count_p66 + 1}–{count_max} pts" if count_p66 + 1 < count_max else f"{count_max}+ pts"
+
 size_handles = [
-    Line2D([0], [0], marker="o", color="w", markerfacecolor="gray", markersize=8, alpha=0.7, label="2-5 points"),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor="gray", markersize=14, alpha=0.7, label="6-15 points"),
-    Line2D([0], [0], marker="o", color="w", markerfacecolor="gray", markersize=20, alpha=0.7, label="16+ points"),
+    Line2D([0], [0], marker="o", color="w", markerfacecolor=INK_SOFT, markersize=5, alpha=0.7, label=small_label),
+    Line2D([0], [0], marker="o", color="w", markerfacecolor=INK_SOFT, markersize=9, alpha=0.7, label=medium_label),
+    Line2D([0], [0], marker="o", color="w", markerfacecolor=INK_SOFT, markersize=13, alpha=0.7, label=large_label),
 ]
 size_legend = ax.legend(
     handles=size_handles,
     title="Cluster Size",
     loc="lower left",
-    fontsize=12,
-    title_fontsize=14,
+    fontsize=8,
+    title_fontsize=9,
     framealpha=0.95,
-    edgecolor="gray",
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
 )
-size_legend.get_frame().set_linewidth(1.5)
-ax.add_artist(legend)  # Re-add the first legend
+size_legend.get_title().set_color(INK)
+for text in size_legend.get_texts():
+    text.set_color(INK_SOFT)
+ax.add_artist(cat_legend)
 
-# Styling with seaborn-friendly axis formatting
-ax.set_xlabel("Longitude (°)", fontsize=20)
-ax.set_ylabel("Latitude (°)", fontsize=20)
-ax.set_title("map-marker-clustered · seaborn · pyplots.ai", fontsize=24, fontweight="bold", pad=15)
-ax.tick_params(axis="both", labelsize=16)
+# Style
+ax.set_xlabel("Longitude (°)", fontsize=10, color=INK)
+ax.set_ylabel("Latitude (°)", fontsize=10, color=INK)
+ax.set_title("map-marker-clustered · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Customize grid using seaborn despine and grid settings
 sns.despine(ax=ax, left=False, bottom=False)
-ax.grid(True, alpha=0.15, linestyle="-", color="lightgray")
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+ax.grid(True, alpha=0.10, linestyle="-", linewidth=0.6, color=INK)
 
-# Add annotation about clustering
+# Summary annotation (lower right, away from size legend)
 ax.text(
-    0.02,
+    0.98,
     0.02,
     f"{n_points} locations · {len(cluster_stats)} clusters",
     transform=ax.transAxes,
-    fontsize=13,
-    ha="left",
+    fontsize=7,
+    ha="right",
     va="bottom",
     style="italic",
-    color="dimgray",
-    bbox={"boxstyle": "round,pad=0.3", "facecolor": "white", "alpha": 0.8, "edgecolor": "lightgray"},
+    color=INK_MUTED,
+    bbox={"boxstyle": "round,pad=0.3", "facecolor": ELEVATED_BG, "alpha": 0.85, "edgecolor": INK_SOFT},
 )
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
