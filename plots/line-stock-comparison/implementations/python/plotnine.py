@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-23
@@ -21,6 +21,9 @@ from plotnine import (
     element_text,
     geom_hline,
     geom_line,
+    geom_point,
+    geom_ribbon,
+    geom_text,
     ggplot,
     labs,
     scale_color_manual,
@@ -54,13 +57,37 @@ for symbol, (drift, vol) in zip(symbols, params, strict=True):
 
 df = pd.concat(dfs, ignore_index=True)
 
+# End-of-line annotation data
+last_df = df.groupby("symbol").apply(lambda g: g.iloc[-1]).reset_index(drop=True)
+last_df["label"] = last_df["rebased"].apply(lambda x: f"{x:.0f}")
+last_df["label_date"] = last_df["date"] + pd.Timedelta(days=7)
+
+# SPY outperformance ribbon: shades the region where SPY beats the 100 baseline
+spy_df = df[df["symbol"] == "SPY"].copy()
+others_df = df[df["symbol"] != "SPY"].copy()
+spy_ribbon_df = spy_df[["date", "rebased"]].rename(columns={"rebased": "ymax"}).copy()
+spy_ribbon_df["ymin"] = 100.0
+spy_ribbon_df = spy_ribbon_df[spy_ribbon_df["ymax"] > 100]
+
+x_max = dates[-1] + pd.Timedelta(days=30)
+
 # Plot
 plot = (
     ggplot(df, aes(x="date", y="rebased", color="symbol"))
+    + geom_ribbon(
+        data=spy_ribbon_df,
+        mapping=aes(x="date", ymin="ymin", ymax="ymax"),
+        fill=ANYPLOT_PALETTE[3],
+        alpha=0.08,
+        inherit_aes=False,
+    )
     + geom_hline(yintercept=100, linetype="dashed", color=INK_SOFT, size=0.6)
-    + geom_line(size=1.0)
+    + geom_line(data=others_df, size=0.9)
+    + geom_line(data=spy_df, size=1.6)
+    + geom_point(data=last_df, size=2.5, show_legend=False)
+    + geom_text(data=last_df, mapping=aes(x="label_date", label="label"), size=7, ha="left", show_legend=False)
     + scale_color_manual(values=ANYPLOT_PALETTE)
-    + scale_x_date(date_labels="%b '%y", date_breaks="2 months")
+    + scale_x_date(date_labels="%b '%y", date_breaks="2 months", limits=[dates[0], x_max])
     + labs(
         x="Date",
         y="Rebased Price (Start = 100)",
@@ -79,7 +106,7 @@ plot = (
         axis_title=element_text(color=INK, size=10),
         axis_text=element_text(color=INK_SOFT, size=8),
         axis_text_x=element_text(angle=45, ha="right"),
-        plot_title=element_text(color=INK, size=12),
+        plot_title=element_text(color=INK, size=12, fontweight="bold"),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_text=element_text(color=INK_SOFT, size=8),
         legend_title=element_text(color=INK, size=9),
