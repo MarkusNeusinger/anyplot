@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-23
@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from matplotlib.gridspec import GridSpec
 
 
 # Theme tokens
@@ -35,7 +36,7 @@ sns.set_theme(
         "xtick.color": INK_SOFT,
         "ytick.color": INK_SOFT,
         "grid.color": INK,
-        "grid.alpha": 0.10,
+        "grid.alpha": 0.13,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },
@@ -67,7 +68,12 @@ max_dd_idx = df["Drawdown"].idxmin()
 max_dd_value = df["Drawdown"].min()
 max_dd_date = df.loc[max_dd_idx, "Date"]
 
-# Recovery time from max drawdown to first new high
+# Max drawdown duration: days from most recent peak to the trough
+peak_idx = df.loc[:max_dd_idx, "Price"].idxmax()
+peak_date = df.loc[peak_idx, "Date"]
+max_dd_duration = (max_dd_date - peak_date).days
+
+# Recovery time from max drawdown trough to first new high
 df_after_max = df.loc[max_dd_idx + 1 :]
 first_new_high = df_after_max[df_after_max["Drawdown"] >= 0]
 recovery_days = None
@@ -79,8 +85,11 @@ if len(first_new_high) > 0:
 recovery_mask = (df["Drawdown"] >= 0) & (df["Drawdown"].shift(1) < 0)
 recovery_dates = df.loc[recovery_mask, "Date"]
 
-# Plot
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+# Layout: main drawdown chart (wide) + seaborn KDE marginal strip (narrow)
+fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+gs = GridSpec(1, 2, figure=fig, width_ratios=[5, 1], wspace=0.03)
+ax = fig.add_subplot(gs[0])
+ax_kde = fig.add_subplot(gs[1], sharey=ax)
 
 # Filled drawdown area
 ax.fill_between(df["Date"], df["Drawdown"], 0, color=DRAWDOWN_COLOR, alpha=0.30)
@@ -94,25 +103,25 @@ ax.scatter(
     [max_dd_date], [max_dd_value], color=MAX_DD_COLOR, s=120, zorder=5, marker="v", label=f"Max DD: {max_dd_value:.1f}%"
 )
 
-# Recovery (new high) markers
+# Recovery (new high) markers — reduced size to limit clutter near zero line
 if len(recovery_dates) > 0:
     ax.scatter(
-        recovery_dates, [0.0] * len(recovery_dates), color=RECOVERY_COLOR, s=90, zorder=5, marker="^", label="New High"
+        recovery_dates, [0.0] * len(recovery_dates), color=RECOVERY_COLOR, s=60, zorder=5, marker="^", label="New High"
     )
 
-# Annotate recovery duration from max drawdown to first new high
+# Dual annotation: recovery time + max drawdown duration (both required by spec)
 if recovery_days is not None:
     ax.annotate(
-        f"Recovery: {recovery_days}d",
+        f"Recovery: {recovery_days}d\nDuration: {max_dd_duration}d",
         xy=(max_dd_date, max_dd_value),
-        xytext=(28, 28),
+        xytext=(28, 32),
         textcoords="offset points",
         fontsize=7.5,
         color=INK_SOFT,
         arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 0.8},
     )
 
-# Style
+# Style main axes
 ax.set_xlabel("Trading Date", fontsize=10, color=INK)
 ax.set_ylabel("Drawdown (%)", fontsize=10, color=INK)
 ax.set_title("drawdown-basic · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
@@ -124,7 +133,33 @@ ax.spines["right"].set_visible(False)
 for s in ("left", "bottom"):
     ax.spines[s].set_color(INK_SOFT)
 
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8)
+ax.yaxis.grid(True, alpha=0.13, linewidth=0.8)
+ax.xaxis.grid(True, alpha=0.08, linewidth=0.6)
 ax.legend(loc="lower right", fontsize=7)
+
+# Seaborn KDE marginal: distribution of drawdown depth values (seaborn-distinctive feature)
+sns.kdeplot(
+    y=df["Drawdown"],
+    ax=ax_kde,
+    fill=True,
+    color=DRAWDOWN_COLOR,
+    alpha=0.40,
+    linewidth=1.2,
+    clip=(df["Drawdown"].min() * 1.05, 0.5),
+)
+ax_kde.axhline(y=0, color=INK_SOFT, linewidth=0.8, linestyle="--", alpha=0.6)
+ax_kde.axhline(y=max_dd_value, color=MAX_DD_COLOR, linewidth=0.8, linestyle="--", alpha=0.7)
+
+ax_kde.set_xlabel("Density", fontsize=7, color=INK_SOFT)
+ax_kde.set_ylabel("")
+ax_kde.set_title("Dist.", fontsize=8, color=INK_SOFT)
+ax_kde.tick_params(labelleft=False, labelsize=6)
+ax_kde.tick_params(axis="x", labelsize=6)
+ax_kde.set_xlim(left=0)
+ax_kde.spines["top"].set_visible(False)
+ax_kde.spines["right"].set_visible(False)
+for s in ("left", "bottom"):
+    ax_kde.spines[s].set_color(INK_SOFT)
+ax_kde.yaxis.grid(True, alpha=0.10, linewidth=0.6)
 
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
