@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-23
@@ -81,13 +81,21 @@ if len(first_new_high) > 0:
     recovery_date = df.loc[first_new_high.index[0], "Date"]
     recovery_days = (recovery_date - max_dd_date).days
 
-# All recovery points (new all-time highs)
-recovery_mask = (df["Drawdown"] >= 0) & (df["Drawdown"].shift(1) < 0)
-recovery_dates = df.loc[recovery_mask, "Date"]
+# Recovery markers: one per distinct drawdown period (not per crossing)
+# Find end of each contiguous negative-drawdown block, then first date where DD >= 0
+in_dd = df["Drawdown"] < 0
+period_end_mask = in_dd & (~in_dd.shift(-1).fillna(False))
+period_end_indices = df.index[period_end_mask].tolist()
+distinct_recovery_dates = []
+for end_idx in period_end_indices:
+    after = df.loc[end_idx + 1 :]
+    recovery_after = after[after["Drawdown"] >= 0]
+    if len(recovery_after) > 0:
+        distinct_recovery_dates.append(df.loc[recovery_after.index[0], "Date"])
 
-# Layout: main drawdown chart (wide) + seaborn KDE marginal strip (narrow)
+# Layout: main drawdown chart (wide) + seaborn KDE marginal strip (wider than before)
 fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
-gs = GridSpec(1, 2, figure=fig, width_ratios=[5, 1], wspace=0.03)
+gs = GridSpec(1, 2, figure=fig, width_ratios=[4, 1], wspace=0.03)
 ax = fig.add_subplot(gs[0])
 ax_kde = fig.add_subplot(gs[1], sharey=ax)
 
@@ -103,10 +111,16 @@ ax.scatter(
     [max_dd_date], [max_dd_value], color=MAX_DD_COLOR, s=120, zorder=5, marker="v", label=f"Max DD: {max_dd_value:.1f}%"
 )
 
-# Recovery (new high) markers — reduced size to limit clutter near zero line
-if len(recovery_dates) > 0:
+# Recovery (new high) markers — one per distinct drawdown period to avoid clutter
+if len(distinct_recovery_dates) > 0:
     ax.scatter(
-        recovery_dates, [0.0] * len(recovery_dates), color=RECOVERY_COLOR, s=60, zorder=5, marker="^", label="New High"
+        distinct_recovery_dates,
+        [0.0] * len(distinct_recovery_dates),
+        color=RECOVERY_COLOR,
+        s=80,
+        zorder=5,
+        marker="^",
+        label="New High",
     )
 
 # Dual annotation: recovery time + max drawdown duration (both required by spec)
@@ -116,7 +130,7 @@ if recovery_days is not None:
         xy=(max_dd_date, max_dd_value),
         xytext=(28, 32),
         textcoords="offset points",
-        fontsize=7.5,
+        fontsize=9.5,
         color=INK_SOFT,
         arrowprops={"arrowstyle": "->", "color": INK_SOFT, "lw": 0.8},
     )
