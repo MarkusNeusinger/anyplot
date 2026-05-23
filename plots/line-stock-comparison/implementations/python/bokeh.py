@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
-Library: bokeh | Python 3.13
-Quality: pending | Created: 2026-05-23
+Library: bokeh 3.9.0 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-23
 """
 
 import base64
