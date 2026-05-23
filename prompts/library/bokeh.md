@@ -191,8 +191,8 @@ p.yaxis.major_tick_line_color = INK_SOFT
 
 p.xgrid.grid_line_color = INK
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
-p.ygrid.grid_line_alpha = 0.10
+p.xgrid.grid_line_alpha = 0.15
+p.ygrid.grid_line_alpha = 0.15
 
 if p.legend:
     p.legend.background_fill_color = ELEVATED_BG

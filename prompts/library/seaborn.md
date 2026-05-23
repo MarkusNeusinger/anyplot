@@ -160,7 +160,7 @@ sns.set_theme(
         "xtick.color":      INK_SOFT,
         "ytick.color":      INK_SOFT,
         "grid.color":       INK,
-        "grid.alpha":       0.10,
+        "grid.alpha":       0.15,
         "legend.facecolor": ELEVATED_BG,
         "legend.edgecolor": INK_SOFT,
     },

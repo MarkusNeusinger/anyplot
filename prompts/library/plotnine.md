@@ -137,7 +137,7 @@ INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
 anyplot_theme = theme(
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
     panel_background=element_rect(fill=PAGE_BG),
-    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+    panel_grid_major=element_line(color=INK, size=0.3, alpha=0.15),
     panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
     panel_border=element_rect(color=INK_SOFT, fill=None),
     axis_title=element_text(color=INK),

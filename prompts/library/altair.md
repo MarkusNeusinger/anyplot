@@ -162,7 +162,7 @@ chart = (
     .configure_view(fill=PAGE_BG, stroke=INK_SOFT)
     .configure_axis(
         domainColor=INK_SOFT, tickColor=INK_SOFT,
-        gridColor=INK, gridOpacity=0.10,
+        gridColor=INK, gridOpacity=0.15,
         labelColor=INK_SOFT, titleColor=INK,
     )
     .configure_title(color=INK)

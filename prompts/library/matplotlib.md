@@ -149,7 +149,7 @@ ax.set_title(..., color=INK)
 ax.set_xlabel(..., color=INK); ax.set_ylabel(..., color=INK)
 ax.tick_params(colors=INK_SOFT, labelcolor=INK_SOFT)
 for s in ('left', 'bottom'): ax.spines[s].set_color(INK_SOFT)
-ax.grid(True, alpha=0.10, color=INK)
+ax.grid(True, alpha=0.15, color=INK)
 
 leg = ax.legend(...)
 if leg:

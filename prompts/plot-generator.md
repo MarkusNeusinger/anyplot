@@ -130,7 +130,7 @@ ax.spines['top'].set_visible(False)
 ax.spines['right'].set_visible(False)
 for s in ('left', 'bottom'):
     ax.spines[s].set_color(INK_SOFT)
-ax.yaxis.grid(True, alpha=0.10, linewidth=0.8, color=INK)
+ax.yaxis.grid(True, alpha=0.15, linewidth=0.8, color=INK)
 
 plt.tight_layout()
 plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)

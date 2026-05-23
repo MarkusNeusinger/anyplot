@@ -188,8 +188,8 @@ ax = Axis(
     bottomspinecolor  = INK_SOFT,
     topspinevisible   = false,
     rightspinevisible = false,
-    xgridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.10),
-    ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.10),
+    xgridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    ygridcolor        = RGBAf(INK.r, INK.g, INK.b, 0.15),
     xminorgridvisible = false,
     yminorgridvisible = false,
 )
@@ -263,8 +263,8 @@ ax = Axis(
     rightspinevisible  = false,
     leftspinecolor     = INK_SOFT,
     bottomspinecolor   = INK_SOFT,
-    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.10),
-    ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.10),
+    xgridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
+    ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.15),
 )
 
 scatter!(ax, x, y; color = ANYPLOT_PALETTE[1], markersize = 12, strokewidth = 0)
