@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-23
@@ -58,12 +58,15 @@ for i, (name, proj) in enumerate(projections):
     ax.add_feature(cfeature.BORDERS, linewidth=0.3, edgecolor=INK_SOFT, alpha=0.5, zorder=2)
 
     # Graticule with lat/lon labels where supported
+    # Disable bottom labels for top-row subplots to prevent overlap with second-row titles
+    is_top_row = i < 2
     try:
         gl = ax.gridlines(draw_labels=True, linewidth=0.5, color=INK_SOFT, alpha=0.4, linestyle="--")
         gl.top_labels = False
         gl.right_labels = False
-        gl.xlabel_style = {"size": 5.5, "color": INK_MUTED}
-        gl.ylabel_style = {"size": 5.5, "color": INK_MUTED}
+        gl.bottom_labels = not is_top_row
+        gl.xlabel_style = {"size": 6.5, "color": INK_MUTED}
+        gl.ylabel_style = {"size": 6.5, "color": INK_MUTED}
     except Exception:
         gl = ax.gridlines(draw_labels=False, linewidth=0.5, color=INK_SOFT, alpha=0.4, linestyle="--")
     gl.xlocator = plt.FixedLocator(np.arange(-180, 181, 30))
@@ -80,7 +83,7 @@ for i, (name, proj) in enumerate(projections):
                     n_samples=64,
                     facecolor=TISSOT_COLOR,
                     edgecolor="#7B1117",
-                    alpha=0.35,
+                    alpha=0.45 if THEME == "dark" else 0.35,
                     linewidth=0.8,
                     zorder=3,
                 )
@@ -89,5 +92,5 @@ for i, (name, proj) in enumerate(projections):
 
     ax.set_title(name, fontsize=10, fontweight="bold", color=INK, pad=6)
 
-fig.subplots_adjust(left=0.02, right=0.98, top=0.84, bottom=0.03, hspace=0.12, wspace=0.04)
+fig.subplots_adjust(left=0.02, right=0.98, top=0.86, bottom=0.03, hspace=0.28, wspace=0.04)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
