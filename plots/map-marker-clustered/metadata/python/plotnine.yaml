@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:52:40Z'
-updated: '2026-05-23T12:04:36Z'
+updated: '2026-05-23T12:22:25Z'
 generated_by: claude-sonnet
 workflow_run: 26331787825
 issue: 3766
@@ -12,42 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 85
+quality_score: 87
 review:
   strengths:
-  - 'Technically clean implementation: correct theme tokens, proper anyplot palette
-    assignment, KISS structure, deterministic seed'
-  - Hierarchical clustering with scipy to generate meaningful geographic clusters
-    goes well beyond random scatter points
-  - Size-encoded bubble markers with white bold count labels inside are effective
-    and clear
-  - Geographic state outlines + city orientation labels provide genuine map context
-    without a heavy basemap dependency
-  - Both renders pass theme-readability check; no dark-on-dark or light-on-light issues
+  - Correct anyplot palette (Retail→#009E73, Restaurant→#9418DB, Service→#B71D27,
+    Entertainment→#16B8F3) in canonical order
+  - All font sizes explicitly set — axis_title=10, axis_text=8, plot_title=12, legend_text=8
+  - Convex hull polygons effectively show cluster geographic extent
+  - Cluster count labels (white bold) inside sized circles are well-executed
+  - 'Both themes render correctly — dark background #1A1A17, light #FAF8F1, chrome
+    flips properly'
+  - State boundary outlines provide meaningful geographic context without geopandas
+    dependency
+  - Hierarchical clustering (scipy) produces exactly 5 geographically meaningful clusters
+  - scale_fill_identity() idiomatic pattern correctly maps pre-computed hull fill
+    colors
   weaknesses:
-  - Three of five clusters use the same red (#B71D27 / Service category) — Los Angeles
-    and San Diego are visually indistinguishable by color; seed data so each city
-    cluster has a clearly distinct dominant category
-  - City orientation labels at geom_text size=6.5 are slightly small; increase to
-    size=7.5–8 for better mobile readability
-  - Empty canvas real estate on the right/east side of the map beyond the state boundaries;
-    narrow longitude range or adjust map extent
-  - No static convex hull (geom_polygon) showing each cluster's geographic extent
-    — feasible and would satisfy a key spec feature
-  - Panel border (4-sided element_rect) is slightly boxy for a map; removing top/right
-    border would give a cleaner open map style
+  - 'DE-01 / DE-02: axis_line is still set on both themes — for a map-style plot,
+    removing axis lines (element_blank) alongside panel_border would be cleaner; the
+    L-frame competes with the geo outlines'
+  - 'DE-01: panel_border=element_blank() removes the panel frame, but top and right
+    spines are still visible via axis_line — should also blank axis_ticks and/or axis_line
+    to achieve a fully minimal map aesthetic'
+  - 'LM-02: no distinctively plotnine-only feature exploited — coord_map() / coord_sf()
+    would be more authentic for geographic data; also, annotate() from ggplot side
+    or stat_* layers are not leveraged'
+  - 'VQ-01: geom_text size=7 for count labels and size=7.5 for city labels are borderline
+    at mobile (~400 px) viewports — bumping both to size=8/9 would improve readability'
+  - 'VQ-05: geographic empty space in lower-right quadrant (south of San Diego / east
+    of coast) creates modest wasted canvas area'
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white (#FAF8F1) — correct
-      Chrome: title "map-marker-clustered · python · plotnine · anyplot.ai" readable in dark ink; axis labels "Longitude (°)" and "Latitude (°N)" readable; tick labels in INK_SOFT (#4A4A44) readable; city orientation labels in INK_MUTED (#6B6A63) readable
-      Data: five bubble markers — SF=green (#009E73), Seattle=purple (#9418DB), Portland/LA/SD=red (#B71D27); sizes 54–66 pts; white bold count labels inside each bubble; state boundary outlines as subtle gray paths
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "map-marker-clustered · python · plotnine · anyplot.ai" in dark ink, readable. Axis labels "Longitude (°)" and "Latitude (°N)" in dark ink at 10pt, clearly visible. Tick labels (~8pt) in INK_SOFT dark gray, readable. City reference labels (Seattle, Portland, San Francisco, Los Angeles, San Diego) in muted gray above their clusters, legible. Legend box has elevated #FFFDF6 background with INK_SOFT border; Category and "Points in cluster" headings are dark and legible.
+      Data: Five large bubble clusters — Seattle (green #009E73, count 67), Portland (purple #9418DB, count 66), San Francisco (red #B71D27, count 68), Los Angeles (sky blue #16B8F3, count 42), San Diego (green #009E73, count 57). White bold count labels inside each circle. Semi-transparent convex hull polygons (alpha 0.13) show cluster extents; Seattle and Portland hulls partially overlap. Simplified WA/OR/CA state outlines in muted gray.
+      Legibility verdict: PASS — all text is readable against the warm off-white background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: warm near-black (#1A1A17) — correct
-      Chrome: title visible in warm off-white (INK=#F0EFE8); axis labels readable; tick labels in INK_SOFT (#B8B7B0) readable against dark background; city labels in INK_MUTED (#A8A79F) readable; legend text visible — no dark-on-dark issues
-      Data: data colors identical to light render — SF cluster remains #009E73, Seattle remains #9418DB, three red clusters remain #B71D27; state boundary outlines visible as lighter-gray paths; white count labels still readable on colored markers
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title and axis labels render in light #F0EFE8 ink, clearly visible. Tick labels in #B8B7B0, readable. City reference labels in #A8A79F (INK_MUTED), visible against the dark surface. Legend box uses #242420 elevated background with INK_SOFT (#B8B7B0) border; legend text appears in lighter tones and is legible.
+      Data: Identical data colors to light render — green, purple, red, sky blue, green — confirming palette positions 1–7 are theme-independent. White count labels inside clusters still contrast well. Convex hull polygons retain their colored semi-transparent fills. State outlines remain subtle against the dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text elements are clearly readable against the warm near-black background. Brand green #009E73 is distinctly visible.
   criteria_checklist:
     visual_quality:
       score: 28
@@ -58,47 +63,50 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All sizes explicitly set; city labels at size=6.5 slightly small
-          for mobile
+        comment: All sizes explicitly set; count/city labels at size=7/7.5 are borderline
+          at mobile viewports
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlaps in either render
+        comment: No meaningful overlaps; Portland/Seattle markers distinct despite
+          geographic proximity
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Cluster bubbles clearly sized; white count labels readable inside
-          markers
+        comment: Five cluster bubbles well-sized and visually prominent; alpha=0.85
+          appropriate for 5 points
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: CVD-safe anyplot palette; white text on colored circles has strong
-          contrast
+        comment: anyplot palette is colorblind-safe; white-on-color count labels provide
+          adequate contrast
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good proportions; minor unused space on right/east side of canvas
+        comment: Good geographic layout; modest empty space in lower-right quadrant
+          south of San Diego
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Longitude (°) and Latitude (°N) with units; correct title format
+        comment: Longitude (°) and Latitude (°N) both descriptive with units; title
+          format correct
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Retail=#009E73 (pos1), Restaurant=#9418DB (pos2), Service=#B71D27
-          (pos3); backgrounds correct; chrome theme-adaptive in both renders
+        comment: Canonical anyplot positions 1-4 used; chrome flips correctly between
+          themes; backgrounds correct
     design_excellence:
       score: 13
       max: 20
@@ -108,24 +116,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Above defaults with geographic context, size encoding, styled markers;
-          not FiveThirtyEight level; three clusters share same red
+        comment: Above a generic default — convex hulls, size encoding, multi-layer
+          composition show design intent; not yet publication-ready
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Subtle grid (alpha=0.10/0.05), styled legend; panel border 4-sided
-          is conventional for map but slightly boxy
+        comment: Grid very subtle (alpha 0.10/0.05), panel_border blank, legend refined;
+          axis_line still visible undermines full minimal-map aesthetic
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size+color encoding communicates geographic cluster story; missing
-          convex hull for cluster extent insight
+        comment: Size encoding guides attention to denser cities; color per cluster
+          tells category story; convex hulls add depth
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -133,51 +141,55 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct clustered marker map with hierarchical clustering
+        comment: Correct static clustered marker map — geo coordinates, sized/colored
+          cluster bubbles, count labels
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Count labels, category colors, basemap present; no convex hull cluster
-          extent indicator
+        comment: Count labels, convex hull extents, distinct category colors, geographic
+          basemap — all static features present; interactive zoom/click appropriately
+          omitted
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X, Latitude on Y; all clusters visible at correct positions
+        comment: Longitude on x, Latitude on y, size=cluster count, color=dominant
+          category — all correct
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data categories
+        comment: Title is 'map-marker-clustered · python · plotnine · anyplot.ai';
+          Category + Points in cluster legends correct
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows clustering, size variation, category diversity, count labels;
-          missing expanded cluster view
+        comment: Multiple clusters, varying sizes, different dominant categories,
+          geographic spread, convex hull extents all shown
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real US West Coast cities with accurate coordinates; realistic business
-          categories
+        comment: US West Coast retail/restaurant/service/entertainment locations —
+          plausible real-world scenario, neutral content
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Accurate lat/lon for all five cities; plausible cluster sizes; realistic
-          spread
+        comment: City coordinates factually correct; 300 points across 5 cities gives
+          reasonable 42-68 per cluster; state outlines plausible
     code_quality:
       score: 10
       max: 10
@@ -187,8 +199,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → tokens → data → clustering → plot →
-          save'
+        comment: Linear Imports → Data → Plot → Save structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -200,19 +211,21 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: All imports used including scipy.cluster.hierarchy
+        comment: All imports used — os, numpy, pandas, plotnine components, scipy.cluster.hierarchy,
+          scipy.spatial
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; groupby().agg() idiomatic; no fake UI
+        comment: Well-structured; clustering and hull computation are necessary complexity;
+          exception handling in hull loop is appropriate
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png with correct dpi/dimensions
+        comment: Saves to plot-{THEME}.png; no deprecated APIs
     library_mastery:
       score: 6
       max: 10
@@ -222,15 +235,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar of graphics layering, scale_size_continuous, guides(override_aes=...)
-          — idiomatic patterns
+        comment: scale_fill_identity(), guides() override_aes, aes() mappings, multiple
+          geom layers — all idiomatic; strong plotnine grammar usage
       - id: LM-02
         name: Distinctive Features
         score: 2
         max: 5
         passed: false
-        comment: Layer composition replicable in ggplot2/lets-plot; no plotnine-specific
-          features used
+        comment: scale_fill_identity() and guides(override_aes) are plotnine/ggplot2
+          idioms, but no uniquely plotnine feature; coord_map() or coord_sf() would
+          have been more distinctive for geographic data
   verdict: REJECTED
 impl_tags:
   dependencies:
@@ -242,7 +256,9 @@ impl_tags:
   patterns:
   - data-generation
   - groupby-aggregation
+  - iteration-over-groups
   dataprep:
   - hierarchical-clustering
   styling:
   - alpha-blending
+  - grid-styling
