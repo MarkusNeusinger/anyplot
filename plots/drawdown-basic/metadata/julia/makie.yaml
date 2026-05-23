@@ -1,0 +1,238 @@
+library: makie
+language: julia
+specification_id: drawdown-basic
+created: '2026-05-23T11:06:14Z'
+updated: '2026-05-23T11:27:28Z'
+generated_by: claude-sonnet
+workflow_run: 26330870080
+issue: 3752
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
+review:
+  strengths:
+  - Semantic color logic (red=#B71D27 for loss, green=#009E73 for recovery) correctly
+    applies anyplot semantic-exception rules
+  - Hollow circle marker with strokewidth + strokecolor is Makie-distinctive technique
+    that clearly marks the max DD trough
+  - Multi-line stats annotation (Max DD %, Duration, Recovery) adds genuine informational
+    value
+  - 'Theme-adaptive chrome complete and correct: all axis/spine/label tokens flip
+    properly; 48% fill alpha on dark compensates for reduced contrast'
+  - KISS code structure with idiomatic Julia (let blocks, accumulate, vcat)
+  - Custom categorical x-axis tick labels (Start / Year 1 / Year 2 / Year 3) improve
+    readability over raw day numbers
+  weaknesses:
+  - Recovery point markers (green triangles at zero baseline) not visible in either
+    render — data trajectory with seed 42 does not produce any new all-time highs
+    after initial dips. Increase phase 3 mean daily return from 0.0025 to 0.0035 to
+    guarantee at least one recovery.
+  - Stats annotation text positioned inside semi-transparent red fill without background
+    box — add rect! patch behind text using ELEVATED_BG for better legibility in both
+    themes.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: warm off-white #FAF8F1 — correct
+      Chrome: title "drawdown-basic · julia · makie · anyplot.ai" in dark near-black text, ~65% width; x-axis labels (Start/Year 1/Year 2/Year 3) and "Trading Day" label visible in INK; y-axis "Drawdown (%)" and tick labels (-20, -40) visible in INK_SOFT; all readable
+      Data: red (#B71D27) semi-transparent fill (28% alpha) covering drawdown area; drawdown line in same red; hollow circle marker at max DD trough; "Max DD: -49.5%" annotation with dotted leader line; no green recovery triangles visible
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: warm near-black #1A1A17 — correct
+      Chrome: title in light #F0EFE8; axis labels and tick labels in light #B8B7B0 — all readable, no dark-on-dark failures
+      Data: same red fill at 48% alpha creating heavier dark-red appearance; drawdown line visible at fill boundary; hollow circle marker and annotation text visible in light color; data colors identical to light render — only chrome flips
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set; title, axis labels, tick labels, annotation
+          all well-proportioned and readable in both themes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Fill and line excellent for 756-point density; recovery markers absent/invisible
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Semantic red/green, anyplot-safe palette
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 correct, well-balanced margins, ~75% canvas utilization
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Trading Day and Drawdown (%) with unit
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correct: red pos-3 for loss, green pos-1 for
+          recovery; backgrounds #FAF8F1/#1A1A17; chrome fully adaptive'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Semantic colors, hollow-circle marker, dotted leader line, multi-line
+          stats annotation; above defaults but not publication-ready
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed, Y-axis-only subtle grid, custom tick labels,
+          leader-line annotation
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual hierarchy with red fill and focal-point annotation;
+          recovery story absent from render
+    spec_compliance:
+      score: 14
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct drawdown chart with filled area
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: All features present except recovery-point markers not visible in
+          rendered output
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X=Trading Day, Y=Drawdown (%) correct
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Correct title format; single-series, no legend needed
+    data_quality:
+      score: 13
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 4
+        max: 6
+        passed: true
+        comment: Two drawdown episodes and max-DD shown; no recovery to new ATH demonstrated
+          (seed 42 trajectory issue)
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Portfolio NAV simulation with plausible multi-year phase structure
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Daily returns ±1-2%, max DD ~-49.5% plausible for volatile equity
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat script, no functions/classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42)
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random all used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic Julia let blocks for scoping, clean structure
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-$(THEME).png with px_per_unit=2
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: band!, lines!, scatter!, hlines!, text! used correctly; accumulate(max,
+          ...) and let blocks idiomatic Julia
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: band! for area fill, hollow stroke-only circle via strokewidth/strokecolor,
+          dotted leader line; solid Makie-specific usage
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - manual-ticks
+  patterns:
+  - data-generation
+  dataprep:
+  - cumulative-sum
+  styling:
+  - alpha-blending
