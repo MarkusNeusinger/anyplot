@@ -1,7 +1,7 @@
 # anyplot.ai
 # drawdown-basic: Drawdown Chart
-# Library: Makie.jl 0.22 | Julia 1.11
-# Quality: pending | Created: 2026-05-23
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 84/100 | Created: 2026-05-23
 
 using CairoMakie
 using Colors
