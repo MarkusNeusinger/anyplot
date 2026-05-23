@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 77/100 | Updated: 2026-05-23
@@ -97,6 +97,8 @@ for name, data in countries_data.items():
         alpha=0.92 if name == "Germany" else 0.72,
     )
     ax1.add_patch(rect)
+
+for name, data in countries_data.items():
     ax1.text(data["lon"], data["lat"] + 0.8, name, fontsize=6.5, ha="center", fontweight="bold", color=INK)
     ax1.text(data["lon"], data["lat"] - 1.6, f"€{data['value']}M", fontsize=6, ha="center", color=INK_SOFT)
 
@@ -310,10 +312,10 @@ fig.suptitle(
 )
 
 # Layout — reserve bottom for colorbar, place it via add_axes to avoid overlap
-fig.subplots_adjust(left=0.08, right=0.94, top=0.88, bottom=0.25, wspace=0.33)
+fig.subplots_adjust(left=0.08, right=0.94, top=0.88, bottom=0.28, wspace=0.33)
 
 sm = plt.cm.ScalarMappable(cmap=anyplot_seq, norm=norm)
-cbar_ax = fig.add_axes([0.10, 0.10, 0.82, 0.038])
+cbar_ax = fig.add_axes([0.10, 0.12, 0.82, 0.038])
 cbar = fig.colorbar(sm, cax=cbar_ax, orientation="horizontal")
 cbar.set_label("Sales Revenue (€M)", fontsize=8, color=INK)
 cbar.ax.tick_params(labelsize=7, colors=INK_SOFT)
