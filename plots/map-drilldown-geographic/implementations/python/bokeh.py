@@ -1,510 +1,608 @@
-""" pyplots.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 87/100 | Created: 2026-01-20
+Library: bokeh | Python 3.13
+Quality: pending | Created: 2026-05-23
 """
 
+import base64
+import os
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png
-from bokeh.layouts import column
-from bokeh.models import ColorBar, ColumnDataSource, CustomJS, Div, HoverTool, LinearColorMapper, TapTool
-from bokeh.palettes import Blues9
+from bokeh.io import output_file, save
+from bokeh.models import ColorBar, ColumnDataSource, CustomJS, HoverTool, LinearColorMapper, TapTool, Title
 from bokeh.plotting import figure
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
 np.random.seed(42)
 
-# =============================================================================
-# Data: Hierarchical geographic data with countries -> states -> cities
-# Using synthetic sales data in millions USD
-# =============================================================================
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+OCEAN_BG = "#D6EAF8" if THEME == "light" else "#1C2833"
 
-# Countries with approximate polygon boundaries (simplified rectangles for demo)
-countries_data = {
-    "name": ["United States", "Canada", "Mexico", "Brazil", "Argentina"],
-    "value": [850, 320, 180, 420, 95],  # Aggregated sales
-    "x": [
-        [-125, -65, -65, -125],
-        [-140, -50, -50, -140],
-        [-118, -86, -86, -118],
-        [-74, -34, -34, -74],
-        [-73, -53, -53, -73],
-    ],
-    "y": [[24, 24, 49, 49], [49, 49, 72, 72], [14, 14, 32, 32], [-34, -34, 5, 5], [-55, -55, -22, -22]],
-    "centroid_x": [-95, -95, -102, -54, -63],
-    "centroid_y": [37, 60, 23, -15, -38],
-    "has_children": [True, True, True, True, True],
-}
 
-# US States data (shown when drilling into US)
-us_states_data = {
-    "name": ["California", "Texas", "New York", "Florida", "Illinois", "Washington"],
-    "value": [220, 180, 150, 120, 90, 90],
-    "x": [
-        [-124, -114, -114, -124],
-        [-106, -93, -93, -106],
-        [-80, -72, -72, -80],
-        [-87, -80, -80, -87],
-        [-91, -87, -87, -91],
-        [-124, -117, -117, -124],
-    ],
-    "y": [[32, 32, 42, 42], [26, 26, 36, 36], [40, 40, 45, 45], [25, 25, 31, 31], [37, 37, 42, 42], [45, 45, 49, 49]],
-    "centroid_x": [-119, -99.5, -76, -83.5, -89, -120.5],
-    "centroid_y": [37, 31, 42.5, 28, 39.5, 47],
-    "parent": ["United States"] * 6,
-    "has_children": [True, True, True, True, True, True],
-}
+# anyplot_seq: brand green (#009E73) → dark azure (#003D94)
+ANYPLOT_SEQ256 = [
+    "#{:02X}{:02X}{:02X}".format(
+        int(round(0x00 + (0x00 - 0x00) * t / 255)),
+        int(round(0x9E + (0x3D - 0x9E) * t / 255)),
+        int(round(0x73 + (0x94 - 0x73) * t / 255)),
+    )
+    for t in range(256)
+]
 
-# California cities (shown when drilling into California)
-ca_cities_data = {
-    "name": ["Los Angeles", "San Francisco", "San Diego", "Sacramento", "San Jose"],
-    "value": [85, 55, 35, 25, 20],
-    "x": [
-        [-118.8, -117.5, -117.5, -118.8],
-        [-122.8, -122.0, -122.0, -122.8],
-        [-117.5, -116.8, -116.8, -117.5],
-        [-121.8, -121.0, -121.0, -121.8],
-        [-122.2, -121.5, -121.5, -122.2],
-    ],
-    "y": [
-        [33.5, 33.5, 34.5, 34.5],
-        [37.3, 37.3, 38.0, 38.0],
-        [32.4, 32.4, 33.2, 33.2],
-        [38.2, 38.2, 39.0, 39.0],
-        [37.0, 37.0, 37.6, 37.6],
-    ],
-    "centroid_x": [-118.15, -122.4, -117.15, -121.4, -121.85],
-    "centroid_y": [34, 37.65, 32.8, 38.6, 37.3],
-    "parent": ["California"] * 5,
-    "has_children": [False, False, False, False, False],
-}
+# Data: Americas region, annual sales ($M) — hierarchical countries → states → cities
 
-# Color mapper for choropleth
-color_mapper = LinearColorMapper(palette=Blues9[::-1], low=0, high=900)
+country_xs = [
+    [-125, -65, -65, -125],
+    [-140, -50, -50, -140],
+    [-118, -86, -86, -118],
+    [-74, -34, -34, -74],
+    [-73, -53, -53, -73],
+]
+country_ys = [[24, 24, 49, 49], [49, 49, 72, 72], [14, 14, 32, 32], [-34, -34, 5, 5], [-55, -55, -22, -22]]
+country_names = ["United States", "Canada", "Mexico", "Brazil", "Argentina"]
+country_values = [850, 320, 180, 420, 95]
+country_cx = [-95, -95, -102, -54, -63]
+country_cy = [38, 61, 24, -14, -37]
+country_cy_val = [32, 55, 18, -20, -43]
+country_labels = [f"${v}M" for v in country_values]
 
-# =============================================================================
-# Create main figure
-# =============================================================================
+us_xs = [
+    [-124, -114, -114, -124],
+    [-106, -93, -93, -106],
+    [-80, -72, -72, -80],
+    [-87, -80, -80, -87],
+    [-91, -87, -87, -91],
+    [-124, -117, -117, -124],
+]
+us_ys = [[32, 32, 42, 42], [26, 26, 36, 36], [40, 40, 45, 45], [25, 25, 31, 31], [37, 37, 42, 42], [45, 45, 49, 49]]
+us_names = ["California", "Texas", "New York", "Florida", "Illinois", "Washington"]
+us_values = [220, 180, 150, 120, 90, 90]
+us_cx = [-119, -99.5, -76, -83.5, -89, -120.5]
+us_cy = [38.5, 32.5, 43.0, 29.5, 40.5, 47.5]
+us_cy_val = [36.5, 30.5, 41.5, 27.5, 38.5, 46.0]
+us_labels = [f"${v}M" for v in us_values]
+
+ca_xs = [
+    [-118.8, -117.5, -117.5, -118.8],
+    [-122.8, -122.0, -122.0, -122.8],
+    [-117.5, -116.8, -116.8, -117.5],
+    [-121.8, -121.0, -121.0, -121.8],
+    [-122.2, -121.5, -121.5, -122.2],
+]
+ca_ys = [
+    [33.5, 33.5, 34.5, 34.5],
+    [37.3, 37.3, 38.0, 38.0],
+    [32.4, 32.4, 33.2, 33.2],
+    [38.2, 38.2, 39.0, 39.0],
+    [37.0, 37.0, 37.6, 37.6],
+]
+ca_names = ["Los Angeles", "San Francisco", "San Diego", "Sacramento", "San Jose"]
+ca_values = [85, 55, 35, 25, 20]
+ca_cx = [-118.15, -122.4, -117.15, -121.4, -121.85]
+ca_cy = [34.2, 37.85, 33.0, 38.8, 37.5]
+ca_cy_val = [33.8, 37.45, 32.6, 38.4, 37.15]
+ca_labels = [f"${v}M" for v in ca_values]
+
+cn_xs = [
+    [-95, -74, -74, -95],
+    [-80, -57, -57, -80],
+    [-139, -120, -120, -139],
+    [-120, -110, -110, -120],
+    [-102, -95, -95, -102],
+]
+cn_ys = [[42, 42, 57, 57], [45, 45, 63, 63], [49, 49, 60, 60], [49, 49, 60, 60], [49, 49, 60, 60]]
+cn_names = ["Ontario", "Quebec", "British Columbia", "Alberta", "Manitoba"]
+cn_values = [120, 80, 65, 40, 15]
+cn_cx = [-84.5, -68.5, -129.5, -115.0, -98.5]
+cn_cy = [50.5, 55.0, 55.0, 55.0, 55.0]
+cn_cy_val = [48.5, 53.0, 53.0, 53.0, 53.0]
+cn_labels = [f"${v}M" for v in cn_values]
+
+bc_xs = [
+    [-123.3, -122.9, -122.9, -123.3],
+    [-123.5, -123.2, -123.2, -123.5],
+    [-122.9, -122.5, -122.5, -122.9],
+    [-123.0, -122.8, -122.8, -123.0],
+    [-119.6, -119.3, -119.3, -119.6],
+]
+bc_ys = [
+    [49.2, 49.2, 49.4, 49.4],
+    [48.4, 48.4, 48.6, 48.6],
+    [49.0, 49.0, 49.2, 49.2],
+    [49.2, 49.2, 49.3, 49.3],
+    [49.8, 49.8, 50.1, 50.1],
+]
+bc_names = ["Vancouver", "Victoria", "Surrey", "Burnaby", "Kelowna"]
+bc_values = [30, 15, 10, 6, 4]
+bc_cx = [-123.1, -123.35, -122.7, -122.9, -119.45]
+bc_cy = [49.35, 48.55, 49.15, 49.27, 49.97]
+bc_cy_val = [49.23, 48.43, 49.03, 49.22, 49.85]
+bc_labels = [f"${v}M" for v in bc_values]
+
+# Color mapper: actual data range (all levels combined)
+color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=0, high=850)
+
+# Figure — canonical 3200×1800, toolbar disabled for clean PNG
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
     x_range=(-140, -25),
     y_range=(-60, 75),
     tools="pan,wheel_zoom,reset",
-    toolbar_location="right",
+    toolbar_location=None,
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=280,
 )
 
 # Main title
-p.title.text = "map-drilldown-geographic · bokeh · pyplots.ai"
-p.title.text_font_size = "28pt"
+p.title.text = "map-drilldown-geographic · python · bokeh · anyplot.ai"
+p.title.text_font_size = "50pt"
 p.title.align = "center"
+p.title.text_color = INK
 
-# =============================================================================
-# Country level patches (initial view)
-# =============================================================================
-countries_source = ColumnDataSource(
+# Breadcrumb navigation title (updated by JS on drill-down)
+breadcrumb_title = Title(
+    text="📍 World",
+    text_font_size="30pt",
+    text_color=INK,
+    align="left",
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.9,
+    border_line_color=INK_SOFT,
+    border_line_width=1,
+    standoff=6,
+)
+p.add_layout(breadcrumb_title, "above")
+
+# Instruction footer
+instruction_title = Title(
+    text="Click a shaded region to drill down  •  Reset tool (↺) in toolbar returns to world view",
+    text_font_size="24pt",
+    text_color=INK_SOFT,
+    align="center",
+    standoff=8,
+)
+p.add_layout(instruction_title, "below")
+
+# Theme chrome
+p.background_fill_color = OCEAN_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+p.outline_line_width = 1
+
+p.xaxis.axis_label = "Longitude"
+p.yaxis.axis_label = "Latitude"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.10
+p.ygrid.grid_line_alpha = 0.10
+
+# Country renderers (visible initially)
+country_src = ColumnDataSource(
     data={
-        "xs": countries_data["x"],
-        "ys": countries_data["y"],
-        "name": countries_data["name"],
-        "value": countries_data["value"],
-        "centroid_x": countries_data["centroid_x"],
-        "centroid_y": countries_data["centroid_y"],
-        "has_children": countries_data["has_children"],
+        "xs": country_xs,
+        "ys": country_ys,
+        "name": country_names,
+        "value": country_values,
+        "cx": country_cx,
+        "cy": country_cy,
+        "cy_val": country_cy_val,
+        "label_val": country_labels,
     }
 )
-
-country_patches = p.patches(
+country_patches_r = p.patches(
     xs="xs",
     ys="ys",
-    source=countries_source,
+    source=country_src,
     fill_color={"field": "value", "transform": color_mapper},
-    line_color="#306998",
-    line_width=3,
-    alpha=0.8,
-    hover_fill_color="#FFD43B",
-    hover_line_color="#306998",
-    hover_alpha=0.9,
-    selection_fill_color="#FFD43B",
-    name="countries",
+    line_color=INK_SOFT,
+    line_width=4,
+    fill_alpha=0.85,
+    hover_fill_alpha=0.95,
+    hover_line_color=INK,
+    hover_line_width=5,
+    visible=True,
 )
-
-# Country labels - name (with contrasting background for visibility in PNG)
-countries_label_source = ColumnDataSource(
-    data={
-        "x": countries_data["centroid_x"],
-        "y": [cy + 4 for cy in countries_data["centroid_y"]],  # Offset up for name
-        "name": countries_data["name"],
-    }
-)
-
-p.text(
-    x="x",
-    y="y",
+country_names_r = p.text(
+    x="cx",
+    y="cy",
     text="name",
-    source=countries_label_source,
+    source=country_src,
+    text_font_size="34pt",
+    text_align="center",
+    text_baseline="middle",
+    text_color=INK,
+    text_font_style="bold",
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
+    visible=True,
+)
+country_vals_r = p.text(
+    x="cx",
+    y="cy_val",
+    text="label_val",
+    source=country_src,
     text_font_size="28pt",
     text_align="center",
     text_baseline="middle",
-    text_color="#000000",
-    text_font_style="bold",
-    background_fill_color="rgba(255, 255, 255, 0.85)",
-    background_fill_alpha=0.85,
-    name="country_labels",
+    text_color=INK_SOFT,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
+    visible=True,
 )
 
-# Country value labels - displayed below name for static view visibility
-countries_value_source = ColumnDataSource(
+# US state renderers (hidden initially)
+us_src = ColumnDataSource(
     data={
-        "x": countries_data["centroid_x"],
-        "y": [cy - 5 for cy in countries_data["centroid_y"]],  # Offset down for value
-        "value": [f"${v}M" for v in countries_data["value"]],
+        "xs": us_xs,
+        "ys": us_ys,
+        "name": us_names,
+        "value": us_values,
+        "cx": us_cx,
+        "cy": us_cy,
+        "cy_val": us_cy_val,
+        "label_val": us_labels,
     }
 )
-
-p.text(
-    x="x",
-    y="y",
-    text="value",
-    source=countries_value_source,
-    text_font_size="24pt",
-    text_align="center",
-    text_baseline="middle",
-    text_color="#1a3c5a",
-    text_font_style="bold",
-    background_fill_color="rgba(255, 255, 255, 0.85)",
-    background_fill_alpha=0.85,
-    name="country_value_labels",
-)
-
-# =============================================================================
-# US States level patches (hidden initially)
-# =============================================================================
-states_source = ColumnDataSource(
-    data={
-        "xs": us_states_data["x"],
-        "ys": us_states_data["y"],
-        "name": us_states_data["name"],
-        "value": us_states_data["value"],
-        "centroid_x": us_states_data["centroid_x"],
-        "centroid_y": us_states_data["centroid_y"],
-        "has_children": us_states_data["has_children"],
-    }
-)
-
-state_patches = p.patches(
+us_patches_r = p.patches(
     xs="xs",
     ys="ys",
-    source=states_source,
+    source=us_src,
     fill_color={"field": "value", "transform": color_mapper},
-    line_color="#306998",
-    line_width=2,
-    alpha=0.8,
-    hover_fill_color="#FFD43B",
-    hover_line_color="#306998",
-    hover_alpha=0.9,
+    line_color=INK_SOFT,
+    line_width=3,
+    fill_alpha=0.85,
+    hover_fill_alpha=0.95,
+    hover_line_color=INK,
+    hover_line_width=4,
     visible=False,
-    name="states",
 )
-
-states_label_source = ColumnDataSource(
-    data={
-        "x": us_states_data["centroid_x"],
-        "y": [cy + 1.5 for cy in us_states_data["centroid_y"]],  # Offset up for name
-        "name": us_states_data["name"],
-    }
-)
-
-state_labels = p.text(
-    x="x",
-    y="y",
+us_names_r = p.text(
+    x="cx",
+    y="cy",
     text="name",
-    source=states_label_source,
+    source=us_src,
+    text_font_size="28pt",
+    text_align="center",
+    text_baseline="middle",
+    text_color=INK,
+    text_font_style="bold",
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
+    visible=False,
+)
+us_vals_r = p.text(
+    x="cx",
+    y="cy_val",
+    text="label_val",
+    source=us_src,
     text_font_size="22pt",
     text_align="center",
     text_baseline="middle",
-    text_color="#000000",
-    text_font_style="bold",
-    background_fill_color="rgba(255, 255, 255, 0.85)",
-    background_fill_alpha=0.85,
+    text_color=INK_SOFT,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
     visible=False,
-    name="state_labels",
 )
 
-# State value labels
-states_value_source = ColumnDataSource(
+# California city renderers (hidden initially)
+ca_src = ColumnDataSource(
     data={
-        "x": us_states_data["centroid_x"],
-        "y": [cy - 2 for cy in us_states_data["centroid_y"]],  # Offset down for value
-        "value": [f"${v}M" for v in us_states_data["value"]],
+        "xs": ca_xs,
+        "ys": ca_ys,
+        "name": ca_names,
+        "value": ca_values,
+        "cx": ca_cx,
+        "cy": ca_cy,
+        "cy_val": ca_cy_val,
+        "label_val": ca_labels,
     }
 )
-
-state_value_labels = p.text(
-    x="x",
-    y="y",
-    text="value",
-    source=states_value_source,
-    text_font_size="20pt",
-    text_align="center",
-    text_baseline="middle",
-    text_color="#1a3c5a",
-    text_font_style="bold",
-    background_fill_color="rgba(255, 255, 255, 0.85)",
-    background_fill_alpha=0.85,
-    visible=False,
-    name="state_value_labels",
-)
-
-# =============================================================================
-# California cities level patches (hidden initially)
-# =============================================================================
-cities_source = ColumnDataSource(
-    data={
-        "xs": ca_cities_data["x"],
-        "ys": ca_cities_data["y"],
-        "name": ca_cities_data["name"],
-        "value": ca_cities_data["value"],
-        "centroid_x": ca_cities_data["centroid_x"],
-        "centroid_y": ca_cities_data["centroid_y"],
-        "has_children": ca_cities_data["has_children"],
-    }
-)
-
-city_patches = p.patches(
+ca_patches_r = p.patches(
     xs="xs",
     ys="ys",
-    source=cities_source,
+    source=ca_src,
     fill_color={"field": "value", "transform": color_mapper},
-    line_color="#306998",
+    line_color=INK_SOFT,
     line_width=2,
-    alpha=0.8,
-    hover_fill_color="#FFD43B",
-    hover_line_color="#306998",
-    hover_alpha=0.9,
+    fill_alpha=0.85,
+    hover_fill_alpha=0.95,
+    hover_line_color=INK,
+    hover_line_width=3,
     visible=False,
-    name="cities",
 )
-
-cities_label_source = ColumnDataSource(
-    data={
-        "x": ca_cities_data["centroid_x"],
-        "y": [cy + 0.25 for cy in ca_cities_data["centroid_y"]],  # Offset up for name
-        "name": ca_cities_data["name"],
-    }
-)
-
-city_labels = p.text(
-    x="x",
-    y="y",
+ca_names_r = p.text(
+    x="cx",
+    y="cy",
     text="name",
-    source=cities_label_source,
-    text_font_size="20pt",
+    source=ca_src,
+    text_font_size="22pt",
     text_align="center",
     text_baseline="middle",
-    text_color="#000000",
+    text_color=INK,
     text_font_style="bold",
-    background_fill_color="rgba(255, 255, 255, 0.85)",
-    background_fill_alpha=0.85,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
     visible=False,
-    name="city_labels",
 )
-
-# City value labels
-cities_value_source = ColumnDataSource(
-    data={
-        "x": ca_cities_data["centroid_x"],
-        "y": [cy - 0.35 for cy in ca_cities_data["centroid_y"]],  # Offset down for value
-        "value": [f"${v}M" for v in ca_cities_data["value"]],
-    }
-)
-
-city_value_labels = p.text(
-    x="x",
-    y="y",
-    text="value",
-    source=cities_value_source,
+ca_vals_r = p.text(
+    x="cx",
+    y="cy_val",
+    text="label_val",
+    source=ca_src,
     text_font_size="18pt",
     text_align="center",
     text_baseline="middle",
-    text_color="#1a3c5a",
-    text_font_style="bold",
-    background_fill_color="rgba(255, 255, 255, 0.85)",
-    background_fill_alpha=0.85,
+    text_color=INK_SOFT,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
     visible=False,
-    name="city_value_labels",
 )
 
-# =============================================================================
-# Breadcrumb navigation
-# =============================================================================
-breadcrumb_div = Div(
-    text="""<div style='font-size: 24pt; font-family: sans-serif; padding: 15px 30px;
-                        background: #f5f5f5; border-radius: 8px; display: inline-block;'>
-            <span style='color: #306998; font-weight: bold;'>📍 World</span>
-            <span id='breadcrumb-country' style='display: none;'>
-                <span style='color: #888;'> › </span>
-                <span class='bc-link' style='color: #306998; cursor: pointer;'>Country</span>
-            </span>
-            <span id='breadcrumb-state' style='display: none;'>
-                <span style='color: #888;'> › </span>
-                <span class='bc-link' style='color: #306998; cursor: pointer;'>State</span>
-            </span>
-            </div>""",
-    width=4800,
-    height=70,
+# Canada province renderers (hidden initially)
+cn_src = ColumnDataSource(
+    data={
+        "xs": cn_xs,
+        "ys": cn_ys,
+        "name": cn_names,
+        "value": cn_values,
+        "cx": cn_cx,
+        "cy": cn_cy,
+        "cy_val": cn_cy_val,
+        "label_val": cn_labels,
+    }
+)
+cn_patches_r = p.patches(
+    xs="xs",
+    ys="ys",
+    source=cn_src,
+    fill_color={"field": "value", "transform": color_mapper},
+    line_color=INK_SOFT,
+    line_width=3,
+    fill_alpha=0.85,
+    hover_fill_alpha=0.95,
+    hover_line_color=INK,
+    hover_line_width=4,
+    visible=False,
+)
+cn_names_r = p.text(
+    x="cx",
+    y="cy",
+    text="name",
+    source=cn_src,
+    text_font_size="28pt",
+    text_align="center",
+    text_baseline="middle",
+    text_color=INK,
+    text_font_style="bold",
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
+    visible=False,
+)
+cn_vals_r = p.text(
+    x="cx",
+    y="cy_val",
+    text="label_val",
+    source=cn_src,
+    text_font_size="22pt",
+    text_align="center",
+    text_baseline="middle",
+    text_color=INK_SOFT,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
+    visible=False,
 )
 
-# =============================================================================
-# Color bar legend - positioned with margin to avoid cutoff
-# =============================================================================
+# BC city renderers (hidden initially)
+bc_src = ColumnDataSource(
+    data={
+        "xs": bc_xs,
+        "ys": bc_ys,
+        "name": bc_names,
+        "value": bc_values,
+        "cx": bc_cx,
+        "cy": bc_cy,
+        "cy_val": bc_cy_val,
+        "label_val": bc_labels,
+    }
+)
+bc_patches_r = p.patches(
+    xs="xs",
+    ys="ys",
+    source=bc_src,
+    fill_color={"field": "value", "transform": color_mapper},
+    line_color=INK_SOFT,
+    line_width=2,
+    fill_alpha=0.85,
+    hover_fill_alpha=0.95,
+    hover_line_color=INK,
+    hover_line_width=3,
+    visible=False,
+)
+bc_names_r = p.text(
+    x="cx",
+    y="cy",
+    text="name",
+    source=bc_src,
+    text_font_size="22pt",
+    text_align="center",
+    text_baseline="middle",
+    text_color=INK,
+    text_font_style="bold",
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
+    visible=False,
+)
+bc_vals_r = p.text(
+    x="cx",
+    y="cy_val",
+    text="label_val",
+    source=bc_src,
+    text_font_size="18pt",
+    text_align="center",
+    text_baseline="middle",
+    text_color=INK_SOFT,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.88,
+    visible=False,
+)
+
+# Color bar legend
 color_bar = ColorBar(
     color_mapper=color_mapper,
     width=50,
-    height=700,
+    height=600,
     location=(0, 0),
-    title="Sales\n($M)",
-    title_text_font_size="26pt",
+    title="Sales ($M)",
+    title_text_font_size="28pt",
     title_text_font_style="bold",
-    major_label_text_font_size="20pt",
+    title_text_color=INK,
+    major_label_text_font_size="22pt",
+    major_label_text_color=INK_SOFT,
     title_standoff=20,
     margin=30,
     padding=20,
+    background_fill_color=PAGE_BG,
 )
 p.add_layout(color_bar, "right")
-p.min_border_right = 300  # Ensure space for color bar
 
-# =============================================================================
-# Hover tool with tooltips
-# =============================================================================
+# Hover tool — all patch renderers
 hover = HoverTool(
-    renderers=[country_patches, state_patches, city_patches],
+    renderers=[country_patches_r, us_patches_r, ca_patches_r, cn_patches_r, bc_patches_r],
     tooltips=[("Region", "@name"), ("Sales", "$@value{0}M")],
-    mode="mouse",
 )
 p.add_tools(hover)
 
-# =============================================================================
-# Tap tool for drill-down interaction
-# =============================================================================
+# TapTool with drill-down CustomJS
 tap_callback = CustomJS(
     args={
         "p": p,
-        "country_patches": country_patches,
-        "state_patches": state_patches,
-        "city_patches": city_patches,
-        "state_labels": state_labels,
-        "city_labels": city_labels,
-        "state_value_labels": state_value_labels,
-        "city_value_labels": city_value_labels,
-        "breadcrumb": breadcrumb_div,
+        "country_patches_r": country_patches_r,
+        "country_names_r": country_names_r,
+        "country_vals_r": country_vals_r,
+        "us_patches_r": us_patches_r,
+        "us_names_r": us_names_r,
+        "us_vals_r": us_vals_r,
+        "ca_patches_r": ca_patches_r,
+        "ca_names_r": ca_names_r,
+        "ca_vals_r": ca_vals_r,
+        "cn_patches_r": cn_patches_r,
+        "cn_names_r": cn_names_r,
+        "cn_vals_r": cn_vals_r,
+        "bc_patches_r": bc_patches_r,
+        "bc_names_r": bc_names_r,
+        "bc_vals_r": bc_vals_r,
+        "breadcrumb": breadcrumb_title,
     },
     code="""
-    // Get the selected indices from the tapped renderer
-    const countries_selected = country_patches.data_source.selected.indices;
-    const states_selected = state_patches.data_source.selected.indices;
-    const cities_selected = city_patches.data_source.selected.indices;
+const show = (r) => { r.visible = true; };
+const hide = (r) => { r.visible = false; };
 
-    if (countries_selected.length > 0 && country_patches.visible) {
-        const idx = countries_selected[0];
-        const name = country_patches.data_source.data['name'][idx];
+const sel_c  = country_patches_r.data_source.selected.indices;
+const sel_us = us_patches_r.data_source.selected.indices;
+const sel_ca = ca_patches_r.data_source.selected.indices;
+const sel_cn = cn_patches_r.data_source.selected.indices;
+const sel_bc = bc_patches_r.data_source.selected.indices;
 
-        if (name === 'United States') {
-            // Drill down to US states
-            country_patches.visible = false;
-            state_patches.visible = true;
-            state_labels.visible = true;
-            state_value_labels.visible = true;
-
-            // Update view bounds to US
-            p.x_range.start = -130;
-            p.x_range.end = -65;
-            p.y_range.start = 20;
-            p.y_range.end = 55;
-
-            // Update breadcrumb
-            breadcrumb.text = `<div style='font-size: 24pt; font-family: sans-serif; padding: 15px 30px;
-                              background: #f5f5f5; border-radius: 8px; display: inline-block;'>
-                <span style='color: #306998; cursor: pointer;' onclick='window.drillUp("world")'>📍 World</span>
-                <span style='color: #888;'> › </span>
-                <span style='color: #306998; font-weight: bold;'>United States</span>
-            </div>`;
-        }
-        country_patches.data_source.selected.indices = [];
+if (sel_c.length > 0 && country_patches_r.visible) {
+    const name = country_patches_r.data_source.data['name'][sel_c[0]];
+    if (name === 'United States') {
+        [country_patches_r, country_names_r, country_vals_r].forEach(hide);
+        [us_patches_r, us_names_r, us_vals_r].forEach(show);
+        p.x_range.start = -130; p.x_range.end = -65;
+        p.y_range.start = 20;   p.y_range.end = 55;
+        breadcrumb.text = "📍 World  ›  United States";
+    } else if (name === 'Canada') {
+        [country_patches_r, country_names_r, country_vals_r].forEach(hide);
+        [cn_patches_r, cn_names_r, cn_vals_r].forEach(show);
+        p.x_range.start = -145; p.x_range.end = -50;
+        p.y_range.start = 42;   p.y_range.end = 75;
+        breadcrumb.text = "📍 World  ›  Canada";
     }
+    country_patches_r.data_source.selected.indices = [];
+}
 
-    if (states_selected.length > 0 && state_patches.visible) {
-        const idx = states_selected[0];
-        const name = state_patches.data_source.data['name'][idx];
-
-        if (name === 'California') {
-            // Drill down to California cities
-            state_patches.visible = false;
-            state_labels.visible = false;
-            state_value_labels.visible = false;
-            city_patches.visible = true;
-            city_labels.visible = true;
-            city_value_labels.visible = true;
-
-            // Update view bounds to California
-            p.x_range.start = -125;
-            p.x_range.end = -114;
-            p.y_range.start = 32;
-            p.y_range.end = 42;
-
-            // Update breadcrumb
-            breadcrumb.text = `<div style='font-size: 24pt; font-family: sans-serif; padding: 15px 30px;
-                              background: #f5f5f5; border-radius: 8px; display: inline-block;'>
-                <span style='color: #306998; cursor: pointer;' onclick='window.drillUp("world")'>📍 World</span>
-                <span style='color: #888;'> › </span>
-                <span style='color: #306998; cursor: pointer;' onclick='window.drillUp("us")'>United States</span>
-                <span style='color: #888;'> › </span>
-                <span style='color: #306998; font-weight: bold;'>California</span>
-            </div>`;
-        }
-        state_patches.data_source.selected.indices = [];
+if (sel_us.length > 0 && us_patches_r.visible) {
+    const name = us_patches_r.data_source.data['name'][sel_us[0]];
+    if (name === 'California') {
+        [us_patches_r, us_names_r, us_vals_r].forEach(hide);
+        [ca_patches_r, ca_names_r, ca_vals_r].forEach(show);
+        p.x_range.start = -125; p.x_range.end = -114;
+        p.y_range.start = 32;   p.y_range.end = 42;
+        breadcrumb.text = "📍 World  ›  United States  ›  California";
     }
+    us_patches_r.data_source.selected.indices = [];
+}
 
-    city_patches.data_source.selected.indices = [];
+if (sel_cn.length > 0 && cn_patches_r.visible) {
+    const name = cn_patches_r.data_source.data['name'][sel_cn[0]];
+    if (name === 'British Columbia') {
+        [cn_patches_r, cn_names_r, cn_vals_r].forEach(hide);
+        [bc_patches_r, bc_names_r, bc_vals_r].forEach(show);
+        p.x_range.start = -140; p.x_range.end = -118;
+        p.y_range.start = 47;   p.y_range.end = 62;
+        breadcrumb.text = "📍 World  ›  Canada  ›  British Columbia";
+    }
+    cn_patches_r.data_source.selected.indices = [];
+}
+
+if (sel_ca.length > 0) { ca_patches_r.data_source.selected.indices = []; }
+if (sel_bc.length > 0) { bc_patches_r.data_source.selected.indices = []; }
 """,
 )
 
-tap_tool = TapTool(callback=tap_callback, renderers=[country_patches, state_patches, city_patches])
+tap_tool = TapTool(
+    callback=tap_callback, renderers=[country_patches_r, us_patches_r, ca_patches_r, cn_patches_r, bc_patches_r]
+)
 p.add_tools(tap_tool)
 
-# =============================================================================
-# Styling
-# =============================================================================
-p.xaxis.axis_label = "Longitude"
-p.yaxis.axis_label = "Latitude"
-p.xaxis.axis_label_text_font_size = "22pt"
-p.yaxis.axis_label_text_font_size = "22pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.xgrid.grid_line_alpha = 0.3
-p.ygrid.grid_line_alpha = 0.3
-p.background_fill_color = "#f0f8ff"
-p.border_fill_color = "#ffffff"
-p.outline_line_color = "#306998"
-p.outline_line_width = 2
+# Save HTML and PNG
+output_file(f"plot-{THEME}.html")
+save(p)
 
-# Instruction text
-instruction_div = Div(
-    text="""<div style='font-size: 22pt; font-family: sans-serif; color: #555;
-                        text-align: center; padding: 10px;'>
-            💡 <b>Click on a region to drill down</b> into its subdivisions.
-            Currently showing: Countries → States (US) → Cities (California)
-            </div>""",
-    width=4800,
-    height=60,
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    # Oversized window so the full 3200×1800 Bokeh SVG fits in the viewport
+    f"--window-size={W},{H + 200}",
+    "--hide-scrollbars",
+):
+    opts.add_argument(arg)
+driver = webdriver.Chrome(options=opts)
+driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
+time.sleep(3)
+# CDP clip to exact figure dimensions — captures beyond viewport if needed
+screenshot = driver.execute_cdp_cmd(
+    "Page.captureScreenshot",
+    {"format": "png", "captureBeyondViewport": True, "clip": {"x": 0, "y": 0, "width": W, "height": H, "scale": 1}},
 )
-
-# =============================================================================
-# Layout
-# =============================================================================
-layout = column(breadcrumb_div, p, instruction_div)
-
-# =============================================================================
-# Save output
-# =============================================================================
-export_png(layout, filename="plot.png")
+driver.quit()
+img_bytes = base64.b64decode(screenshot["data"])
+with open(f"plot-{THEME}.png", "wb") as f:
+    f.write(img_bytes)
