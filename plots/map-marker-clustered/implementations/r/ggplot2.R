@@ -1,7 +1,7 @@
 #' anyplot.ai
 #' map-marker-clustered: Clustered Marker Map
-#' Library: ggplot2 | R
-#' Quality: pending | Created: 2026-05-23
+#' Library: ggplot2 3.5.1 | R 4.4.1
+#' Quality: 85/100 | Created: 2026-05-23
 
 library(ggplot2)
 library(dplyr)
