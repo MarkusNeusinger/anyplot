@@ -5,7 +5,6 @@
 
 library(ggplot2)
 library(dplyr)
-library(tidyr)
 library(scales)
 library(ragg)
 
@@ -67,7 +66,20 @@ p <- ggplot(dplyr::filter(df, !is.na(value)), aes(x = date, y = value)) +
         linewidth  = 0.5,
         linetype   = "dashed"
     ) +
-    geom_line(aes(color = metric), linewidth = 0.9) +
+    geom_line(aes(color = metric), linewidth = 1.1) +
+    geom_text(
+        data = tibble::tibble(
+            date   = event_date,
+            y_pos  = Inf,
+            metric = factor("Price (USD)", levels = c("Price (USD)", "Volume (M)", "RSI (14)"))
+        ),
+        aes(x = date, y = y_pos, label = "Event"),
+        color       = INK_MUTED,
+        size        = 2.5,
+        hjust       = -0.15,
+        vjust       = 1.5,
+        inherit.aes = FALSE
+    ) +
     facet_wrap(~metric, ncol = 1, scales = "free_y", strip.position = "right") +
     scale_color_manual(values = metric_colors, guide = "none") +
     scale_x_date(
@@ -91,7 +103,9 @@ p <- ggplot(dplyr::filter(df, !is.na(value)), aes(x = date, y = value)) +
             linewidth = 0.2
         ),
         panel.grid.minor = element_blank(),
-        panel.border     = element_rect(color = INK_SOFT, fill = NA, linewidth = 0.3),
+        panel.border        = element_blank(),
+        axis.line.x.bottom  = element_line(color = INK_SOFT, linewidth = 0.3),
+        axis.line.y.left    = element_line(color = INK_SOFT, linewidth = 0.3),
         panel.spacing    = unit(0.4, "cm"),
         axis.text        = element_text(color = INK_SOFT, size = 8),
         axis.title       = element_text(color = INK, size = 10),
