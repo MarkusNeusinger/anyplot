@@ -60,6 +60,28 @@ rebased_googl = price_googl / price_googl[0] * 100
 rebased_msft = price_msft / price_msft[0] * 100
 rebased_spy = price_spy / price_spy[0] * 100
 
+# Year-end returns for legend labels (data storytelling)
+final_returns = {
+    "AAPL": rebased_aapl[-1] - 100,
+    "GOOGL": rebased_googl[-1] - 100,
+    "MSFT": rebased_msft[-1] - 100,
+    "SPY": rebased_spy[-1] - 100,
+}
+
+
+def fmt_ret(r):
+    sign = "+" if r >= 0 else ""
+    return f"{sign}{r:.1f}%"
+
+
+# Best performer gets a thicker stroke for visual emphasis
+best = max(final_returns, key=final_returns.get)
+
+
+def series_stroke(name):
+    return {"width": 6} if name == best else {"width": 3}
+
+
 # Style
 custom_style = Style(
     background=PAGE_BG,
@@ -103,36 +125,40 @@ chart = pygal.Line(
 chart.x_labels = x_labels_all
 
 chart.add(
-    "AAPL",
+    f"AAPL ({fmt_ret(final_returns['AAPL'])})",
     [
         {"value": val, "label": f"AAPL | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
         for i, val in enumerate(rebased_aapl.tolist())
     ],
+    stroke_style=series_stroke("AAPL"),
 )
 chart.add(
-    "GOOGL",
+    f"GOOGL ({fmt_ret(final_returns['GOOGL'])})",
     [
         {"value": val, "label": f"GOOGL | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
         for i, val in enumerate(rebased_googl.tolist())
     ],
+    stroke_style=series_stroke("GOOGL"),
 )
 chart.add(
-    "MSFT",
+    f"MSFT ({fmt_ret(final_returns['MSFT'])})",
     [
         {"value": val, "label": f"MSFT | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
         for i, val in enumerate(rebased_msft.tolist())
     ],
+    stroke_style=series_stroke("MSFT"),
 )
 chart.add(
-    "SPY (Benchmark)",
+    f"SPY ({fmt_ret(final_returns['SPY'])})",
     [
         {"value": val, "label": f"SPY | {dates[i].strftime('%Y-%m-%d')} | {val:.1f}"}
         for i, val in enumerate(rebased_spy.tolist())
     ],
+    stroke_style=series_stroke("SPY"),
 )
 
 # Horizontal reference line at y=100 anchors the starting baseline visually
-chart.add("Start = 100", [100.0] * n_days, show_dots=False, stroke_style={"width": 2, "dasharray": "6,4"})
+chart.add("Baseline (100)", [100.0] * n_days, show_dots=False, stroke_style={"width": 2, "dasharray": "6,4"})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
