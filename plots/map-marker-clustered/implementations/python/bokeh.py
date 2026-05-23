@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-23
+Quality: 86/100 | Updated: 2026-05-23
 """
 
 import os
