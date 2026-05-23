@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-23
@@ -11,7 +11,20 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColorBar, ColumnDataSource, CustomJS, HoverTool, LinearColorMapper, TapTool, Title
+from bokeh.layouts import column
+from bokeh.models import (
+    BooleanFilter,
+    Button,
+    CDSView,
+    ColorBar,
+    ColumnDataSource,
+    CustomJS,
+    HoverTool,
+    Label,
+    LinearColorMapper,
+    TapTool,
+    Title,
+)
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -71,11 +84,11 @@ us_cy_val = [36.5, 30.5, 41.5, 27.5, 38.5, 46.0]
 us_labels = [f"${v}M" for v in us_values]
 
 ca_xs = [
-    [-118.8, -117.5, -117.5, -118.8],
-    [-122.8, -122.0, -122.0, -122.8],
-    [-117.5, -116.8, -116.8, -117.5],
-    [-121.8, -121.0, -121.0, -121.8],
-    [-122.2, -121.5, -121.5, -122.2],
+    [-123.3, -122.9, -122.9, -123.3],
+    [-123.5, -123.2, -123.2, -123.5],
+    [-122.9, -122.5, -122.5, -122.9],
+    [-123.0, -122.8, -122.8, -123.0],
+    [-119.6, -119.3, -119.3, -119.6],
 ]
 ca_ys = [
     [33.5, 33.5, 34.5, 34.5],
@@ -127,10 +140,10 @@ bc_cy = [49.35, 48.55, 49.15, 49.27, 49.97]
 bc_cy_val = [49.23, 48.43, 49.03, 49.22, 49.85]
 bc_labels = [f"${v}M" for v in bc_values]
 
-# Color mapper: actual data range (all levels combined)
+# Color mapper: full data range across all levels
 color_mapper = LinearColorMapper(palette=ANYPLOT_SEQ256, low=0, high=850)
 
-# Figure — canonical 3200×1800, toolbar disabled for clean PNG
+# Figure — canonical 3200×1800; btn_back is hidden initially (display:none) so adds no height
 p = figure(
     width=3200,
     height=1800,
@@ -144,13 +157,11 @@ p = figure(
     min_border_right=280,
 )
 
-# Main title
 p.title.text = "map-drilldown-geographic · python · bokeh · anyplot.ai"
 p.title.text_font_size = "50pt"
 p.title.align = "center"
 p.title.text_color = INK
 
-# Breadcrumb navigation title (updated by JS on drill-down)
 breadcrumb_title = Title(
     text="📍 World",
     text_font_size="30pt",
@@ -164,9 +175,8 @@ breadcrumb_title = Title(
 )
 p.add_layout(breadcrumb_title, "above")
 
-# Instruction footer
 instruction_title = Title(
-    text="Click a shaded region to drill down  •  Reset tool (↺) in toolbar returns to world view",
+    text="Click a shaded region to drill down  •  Use ← Back button to navigate up the hierarchy",
     text_font_size="24pt",
     text_color=INK_SOFT,
     align="center",
@@ -174,7 +184,6 @@ instruction_title = Title(
 )
 p.add_layout(instruction_title, "below")
 
-# Theme chrome
 p.background_fill_color = OCEAN_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
@@ -199,7 +208,7 @@ p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
-# Country renderers (visible initially)
+# Country source shared between drillable and leaf renderers
 country_src = ColumnDataSource(
     data={
         "xs": country_xs,
@@ -212,10 +221,17 @@ country_src = ColumnDataSource(
         "label_val": country_labels,
     }
 )
-country_patches_r = p.patches(
+
+# CDSViews split drillable (US, Canada) from leaf (Mexico, Brazil, Argentina)
+drillable_view = CDSView(filter=BooleanFilter(booleans=[True, True, False, False, False]))
+leaf_view = CDSView(filter=BooleanFilter(booleans=[False, False, True, True, True]))
+
+# Drillable countries: full opacity, solid border
+country_drillable_r = p.patches(
     xs="xs",
     ys="ys",
     source=country_src,
+    view=drillable_view,
     fill_color={"field": "value", "transform": color_mapper},
     line_color=INK_SOFT,
     line_width=4,
@@ -225,6 +241,24 @@ country_patches_r = p.patches(
     hover_line_width=5,
     visible=True,
 )
+
+# Leaf countries: reduced opacity + dashed border signals "no drill-down available"
+country_leaf_r = p.patches(
+    xs="xs",
+    ys="ys",
+    source=country_src,
+    view=leaf_view,
+    fill_color={"field": "value", "transform": color_mapper},
+    line_color=INK_SOFT,
+    line_width=3,
+    fill_alpha=0.45,
+    line_dash="dashed",
+    hover_fill_alpha=0.55,
+    hover_line_color=INK,
+    hover_line_width=4,
+    visible=True,
+)
+
 country_names_r = p.text(
     x="cx",
     y="cy",
@@ -253,7 +287,22 @@ country_vals_r = p.text(
     visible=True,
 )
 
-# US state renderers (hidden initially)
+# Narrative annotation: guide viewer to the top-performing region
+us_top_label = Label(
+    x=-123,
+    y=45,
+    text="★  United States leads — $850M",
+    text_font_size="26pt",
+    text_color="#009E73",
+    text_font_style="bold",
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.92,
+    border_line_color="#009E73",
+    border_line_width=2,
+    visible=True,
+)
+p.add_layout(us_top_label)
+
 us_src = ColumnDataSource(
     data={
         "xs": us_xs,
@@ -307,7 +356,6 @@ us_vals_r = p.text(
     visible=False,
 )
 
-# California city renderers (hidden initially)
 ca_src = ColumnDataSource(
     data={
         "xs": ca_xs,
@@ -361,7 +409,6 @@ ca_vals_r = p.text(
     visible=False,
 )
 
-# Canada province renderers (hidden initially)
 cn_src = ColumnDataSource(
     data={
         "xs": cn_xs,
@@ -415,7 +462,6 @@ cn_vals_r = p.text(
     visible=False,
 )
 
-# BC city renderers (hidden initially)
 bc_src = ColumnDataSource(
     data={
         "xs": bc_xs,
@@ -469,7 +515,6 @@ bc_vals_r = p.text(
     visible=False,
 )
 
-# Color bar legend
 color_bar = ColorBar(
     color_mapper=color_mapper,
     width=50,
@@ -488,18 +533,28 @@ color_bar = ColorBar(
 )
 p.add_layout(color_bar, "right")
 
-# Hover tool — all patch renderers
 hover = HoverTool(
-    renderers=[country_patches_r, us_patches_r, ca_patches_r, cn_patches_r, bc_patches_r],
+    renderers=[country_drillable_r, country_leaf_r, us_patches_r, ca_patches_r, cn_patches_r, bc_patches_r],
     tooltips=[("Region", "@name"), ("Sales", "$@value{0}M")],
 )
 p.add_tools(hover)
 
-# TapTool with drill-down CustomJS
+# Back navigation button — hidden initially (display:none adds no layout height for PNG capture)
+btn_back = Button(
+    label="← World",
+    visible=False,
+    width=380,
+    height=55,
+    button_type="default",
+    styles={"margin-left": "180px", "margin-bottom": "6px", "font-size": "20px", "font-weight": "bold"},
+)
+
 tap_callback = CustomJS(
     args={
         "p": p,
-        "country_patches_r": country_patches_r,
+        "country_src": country_src,
+        "country_drillable_r": country_drillable_r,
+        "country_leaf_r": country_leaf_r,
         "country_names_r": country_names_r,
         "country_vals_r": country_vals_r,
         "us_patches_r": us_patches_r,
@@ -515,33 +570,41 @@ tap_callback = CustomJS(
         "bc_names_r": bc_names_r,
         "bc_vals_r": bc_vals_r,
         "breadcrumb": breadcrumb_title,
+        "btn_back": btn_back,
+        "us_top_label": us_top_label,
     },
     code="""
 const show = (r) => { r.visible = true; };
 const hide = (r) => { r.visible = false; };
 
-const sel_c  = country_patches_r.data_source.selected.indices;
+const sel_c  = country_src.selected.indices;
 const sel_us = us_patches_r.data_source.selected.indices;
 const sel_ca = ca_patches_r.data_source.selected.indices;
 const sel_cn = cn_patches_r.data_source.selected.indices;
 const sel_bc = bc_patches_r.data_source.selected.indices;
 
-if (sel_c.length > 0 && country_patches_r.visible) {
-    const name = country_patches_r.data_source.data['name'][sel_c[0]];
+if (sel_c.length > 0 && country_drillable_r.visible) {
+    const idx = sel_c[0];
+    const name = country_src.data['name'][idx];
     if (name === 'United States') {
-        [country_patches_r, country_names_r, country_vals_r].forEach(hide);
+        [country_drillable_r, country_leaf_r, country_names_r, country_vals_r, us_top_label].forEach(hide);
         [us_patches_r, us_names_r, us_vals_r].forEach(show);
         p.x_range.start = -130; p.x_range.end = -65;
         p.y_range.start = 20;   p.y_range.end = 55;
         breadcrumb.text = "📍 World  ›  United States";
+        btn_back.label = "← World";
+        btn_back.visible = true;
     } else if (name === 'Canada') {
-        [country_patches_r, country_names_r, country_vals_r].forEach(hide);
+        [country_drillable_r, country_leaf_r, country_names_r, country_vals_r, us_top_label].forEach(hide);
         [cn_patches_r, cn_names_r, cn_vals_r].forEach(show);
         p.x_range.start = -145; p.x_range.end = -50;
         p.y_range.start = 42;   p.y_range.end = 75;
         breadcrumb.text = "📍 World  ›  Canada";
+        btn_back.label = "← World";
+        btn_back.visible = true;
     }
-    country_patches_r.data_source.selected.indices = [];
+    // Leaf regions (Mexico, Brazil, Argentina): tap silently ignored — dashed border signals leaf
+    country_src.selected.indices = [];
 }
 
 if (sel_us.length > 0 && us_patches_r.visible) {
@@ -552,6 +615,7 @@ if (sel_us.length > 0 && us_patches_r.visible) {
         p.x_range.start = -125; p.x_range.end = -114;
         p.y_range.start = 32;   p.y_range.end = 42;
         breadcrumb.text = "📍 World  ›  United States  ›  California";
+        btn_back.label = "← United States";
     }
     us_patches_r.data_source.selected.indices = [];
 }
@@ -564,6 +628,7 @@ if (sel_cn.length > 0 && cn_patches_r.visible) {
         p.x_range.start = -140; p.x_range.end = -118;
         p.y_range.start = 47;   p.y_range.end = 62;
         breadcrumb.text = "📍 World  ›  Canada  ›  British Columbia";
+        btn_back.label = "← Canada";
     }
     cn_patches_r.data_source.selected.indices = [];
 }
@@ -573,14 +638,72 @@ if (sel_bc.length > 0) { bc_patches_r.data_source.selected.indices = []; }
 """,
 )
 
+back_callback = CustomJS(
+    args={
+        "p": p,
+        "country_drillable_r": country_drillable_r,
+        "country_leaf_r": country_leaf_r,
+        "country_names_r": country_names_r,
+        "country_vals_r": country_vals_r,
+        "us_patches_r": us_patches_r,
+        "us_names_r": us_names_r,
+        "us_vals_r": us_vals_r,
+        "ca_patches_r": ca_patches_r,
+        "ca_names_r": ca_names_r,
+        "ca_vals_r": ca_vals_r,
+        "cn_patches_r": cn_patches_r,
+        "cn_names_r": cn_names_r,
+        "cn_vals_r": cn_vals_r,
+        "bc_patches_r": bc_patches_r,
+        "bc_names_r": bc_names_r,
+        "bc_vals_r": bc_vals_r,
+        "breadcrumb": breadcrumb_title,
+        "btn_back": btn_back,
+        "us_top_label": us_top_label,
+    },
+    code="""
+const show = (r) => { r.visible = true; };
+const hide = (r) => { r.visible = false; };
+const lbl = btn_back.label;
+
+if (lbl === "← World") {
+    [us_patches_r, us_names_r, us_vals_r,
+     cn_patches_r, cn_names_r, cn_vals_r].forEach(hide);
+    [country_drillable_r, country_leaf_r, country_names_r, country_vals_r, us_top_label].forEach(show);
+    p.x_range.start = -140; p.x_range.end = -25;
+    p.y_range.start = -60;  p.y_range.end = 75;
+    breadcrumb.text = "📍 World";
+    btn_back.visible = false;
+} else if (lbl === "← United States") {
+    [ca_patches_r, ca_names_r, ca_vals_r].forEach(hide);
+    [us_patches_r, us_names_r, us_vals_r].forEach(show);
+    p.x_range.start = -130; p.x_range.end = -65;
+    p.y_range.start = 20;   p.y_range.end = 55;
+    breadcrumb.text = "📍 World  ›  United States";
+    btn_back.label = "← World";
+} else if (lbl === "← Canada") {
+    [bc_patches_r, bc_names_r, bc_vals_r].forEach(hide);
+    [cn_patches_r, cn_names_r, cn_vals_r].forEach(show);
+    p.x_range.start = -145; p.x_range.end = -50;
+    p.y_range.start = 42;   p.y_range.end = 75;
+    breadcrumb.text = "📍 World  ›  Canada";
+    btn_back.label = "← World";
+}
+""",
+)
+btn_back.js_on_click(back_callback)
+
 tap_tool = TapTool(
-    callback=tap_callback, renderers=[country_patches_r, us_patches_r, ca_patches_r, cn_patches_r, bc_patches_r]
+    callback=tap_callback,
+    renderers=[country_drillable_r, country_leaf_r, us_patches_r, ca_patches_r, cn_patches_r, bc_patches_r],
 )
 p.add_tools(tap_tool)
 
-# Save HTML and PNG
+# Layout: back button above plot; when hidden (initial state) it has display:none so adds no height
+layout = column(btn_back, p, spacing=0)
+
 output_file(f"plot-{THEME}.html")
-save(p)
+save(layout)
 
 W, H = 3200, 1800
 opts = Options()
@@ -589,7 +712,6 @@ for arg in (
     "--no-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
-    # Oversized window so the full 3200×1800 Bokeh SVG fits in the viewport
     f"--window-size={W},{H + 200}",
     "--hide-scrollbars",
 ):
@@ -597,7 +719,6 @@ for arg in (
 driver = webdriver.Chrome(options=opts)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
 time.sleep(3)
-# CDP clip to exact figure dimensions — captures beyond viewport if needed
 screenshot = driver.execute_cdp_cmd(
     "Page.captureScreenshot",
     {"format": "png", "captureBeyondViewport": True, "clip": {"x": 0, "y": 0, "width": W, "height": H, "scale": 1}},
