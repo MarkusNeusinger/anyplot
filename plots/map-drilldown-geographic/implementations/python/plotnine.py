@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 77/100 | Updated: 2026-05-23
@@ -239,6 +239,11 @@ states_data = {
     },
 }
 
+# Identify top-3 and bottom-3 states for focal emphasis
+sorted_by_value = sorted(states_data.items(), key=lambda x: x[1]["value"])
+bottom_3 = {s[0] for s in sorted_by_value[:3]}  # AZ (64), IN (67), FL (68)
+top_3 = {s[0] for s in sorted_by_value[-3:]}  # VA (83), CA (85), NY (91)
+
 # Build dataframe for state polygons
 polygon_rows = []
 for state_name, state_info in states_data.items():
@@ -255,15 +260,26 @@ for state_name, state_info in states_data.items():
         )
 
 df_states = pd.DataFrame(polygon_rows)
+df_top3 = df_states[df_states["state"].isin(top_3)].copy()
+df_bottom3 = df_states[df_states["state"].isin(bottom_3)].copy()
 
-# State labels (centroids) for annotations
+# Nudge centroids for crowded northeastern states to reduce label overlap
+centroid_nudge = {
+    "New York": (-76.0, 43.3),
+    "Tennessee": (-86.3, 35.7),
+    "Illinois": (-89.5, 40.2),
+    "Wisconsin": (-89.7, 44.8),
+    "Michigan": (-85.5, 44.3),
+}
+
 label_rows = []
 for state_name, state_info in states_data.items():
+    centroid = centroid_nudge.get(state_name, state_info["centroid"])
     label_rows.append(
         {
             "state": state_name,
-            "lon": state_info["centroid"][0],
-            "lat": state_info["centroid"][1],
+            "lon": centroid[0],
+            "lat": centroid[1],
             "value": state_info["value"],
             "abbrev": state_info["abbrev"],
             "label": f"{state_info['abbrev']}\n{state_info['value']}",
@@ -278,16 +294,19 @@ max_value = df_labels["value"].max()
 breadcrumb_text = "World  >  USA  >  States"
 
 # Build choropleth map using anyplot_seq colormap (green → dark azure)
+# Highlight outlines: lime for top-3 performers, red for bottom-3
 plot = (
     ggplot()
     + geom_polygon(
         aes(x="lon", y="lat", group="state", fill="value"), data=df_states, color=PAGE_BG, size=1.5, alpha=0.92
     )
+    + geom_polygon(aes(x="lon", y="lat", group="state"), data=df_top3, color="#99B314", fill="none", size=2.5)
+    + geom_polygon(aes(x="lon", y="lat", group="state"), data=df_bottom3, color="#B71D27", fill="none", size=2.5)
     + geom_text(
         aes(x="lon", y="lat", label="label"),
         data=df_labels,
-        size=7,
-        color="#F0EFE8",
+        size=5,
+        color="white",
         fontweight="bold",
         va="center",
         ha="center",
