@@ -54,7 +54,11 @@ anyplot uses the **anyplot palette** — a bespoke, colorblind-safe categorical 
 - Never introduce custom hex values when the anyplot palette already covers the need.
 
 **Semantic exception (use sparingly):**
-When a category has a strong, unambiguous real-world color association — grass→green, wood→tan, blood→red, sky→blue — pick the closest palette member instead of the next ordinal position. The match must come **from the anyplot palette** (no custom hexes), and the semantic mapping must be obvious from the data labels. Default to canonical order whenever the categories are abstract (groups A/B/C, regions, models, etc.).
+When a category has a strong, unambiguous color association, pick the closest palette member instead of the next ordinal position. Two valid types of association:
+- **Real-world objects:** grass→green, wood→tan, blood→red, sky→blue.
+- **Status conventions:** bad/error/loss→red, good/ok/profit→green, neutral/warning→tan or pink.
+
+The match must come **from the anyplot palette** (no custom hexes), and the semantic mapping must be obvious from the data labels (legend literally says "Pass / Fail", "Profit / Loss", "OK / Error", etc.). Default to canonical order whenever the categories are abstract (groups A/B/C, regions, models, anonymous bins).
 
 ### Continuous Data — the categorical palette is NOT used
 
