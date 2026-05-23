@@ -297,10 +297,12 @@ jobs:
           # attempt errors out (e.g. environment setup failure); a later successful
           # retry merges via this workflow but historically didn't clean up :failed,
           # leaving the issue with both :done and :failed for the same library.
-          gh issue edit "$ISSUE" --remove-label "generate:${LIBRARY}" 2>/dev/null || true
-          gh issue edit "$ISSUE" --remove-label "impl:${LIBRARY}:pending" 2>/dev/null || true
-          gh issue edit "$ISSUE" --remove-label "impl:${LIBRARY}:failed" 2>/dev/null || true
-          gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done"
+          # Single API call (comma-separated) — matches the pattern in
+          # impl-generate.yml and avoids the partial-update window of separate edits.
+          gh issue edit "$ISSUE" \
+            --remove-label "generate:${LIBRARY},impl:${LIBRARY}:pending,impl:${LIBRARY}:failed" \
+            --add-label "impl:${LIBRARY}:done" 2>/dev/null || \
+            gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done"
 
       - name: Post success to issue
         if: steps.check.outputs.should_run == 'true' && steps.issue.outputs.number != ''
