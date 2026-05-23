@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: dashboard-synchronized-crosshair
 created: '2026-01-20T19:37:34Z'
-updated: '2026-05-23T12:55:36Z'
+updated: '2026-05-23T13:11:00Z'
 generated_by: claude-sonnet
 workflow_run: 26332804985
 issue: 3784
@@ -12,47 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/altair/plot-dark.html
-quality_score: 88
+quality_score: 87
 review:
   strengths:
-  - 'Fully idiomatic Altair linked-view implementation: shared `nearest` selection
-    propagates the crosshair across all three panels correctly in the HTML output'
-  - Complete theme adaptation — all chrome tokens (INK, INK_SOFT, ELEVATED_BG, PAGE_BG)
-    applied through configure_axis, configure_title, configure_legend, and configure_view;
-    both renders are clean
-  - Realistic, domain-appropriate financial data with meaningful analytical features
-    (overbought/oversold reference lines, correlated volume/price volatility)
-  - Perfect code structure, reproducibility, and output format
+  - Proper Altair selection API for synchronized crosshair — idiomatic use of nearest
+    selection_point and mark_rule with conditional opacity across all three chart
+    panels
+  - Linked zoom/pan via selection_interval(bind="scales") shared across all charts
+    — correctly uses the same parameter name to link views in Vega-Lite
+  - Overbought/oversold reference zones with semi-transparent fills add meaningful
+    analytical context to the momentum chart
+  - 'Correct anyplot palette usage in canonical order: green price (#009E73), purple
+    volume (#9418DB), red momentum (#B71D27)'
+  - Theme adaptation is fully correct in both renders — INK/INK_SOFT tokens applied
+    to title, axis labels, tick labels, legend; backgrounds match FAF8F1 / 1A1A17
+  - 'Canvas sizing handled correctly: inner view widths sized to avoid vl-convert
+    overshoot, then padded to exact 3200×1800 with PIL'
+  - Clean shared-axis design — X-axis labels and ticks hidden on top two charts, shown
+    only on bottom chart
   weaknesses:
-  - 'Price chart y-axis starts at 0 while data spans ~80-115: this leaves ~65% of
-    the chart height as empty baseline. Add scale=alt.Scale(zero=False) to the price
-    Y encoding so the axis zooms into the actual price range and the line variation
-    is visible'
-  - 'Missing synchronized zoom/pan: the spec requires it for interactive libraries.
-    Add a shared alt.selection_interval() bound to all three views, or chain .interactive()
-    on the vconcat to enable synchronized brushing/panning across charts'
-  - Grid lines active on both axes via configure_axis(grid=True); for time-series
-    line/bar charts the style guide prefers y-axis only (horizontal grid lines). Add
-    configure_axisX(grid=False) to reduce visual noise
-  - 'Data storytelling lacks visual emphasis on the key story: the dramatic momentum
-    collapse below the oversold line at the end is the most interesting event but
-    the chart does not highlight it. Add a semi-transparent area fill below the oversold
-    threshold or an annotation at the crossover point'
+  - Sub-chart panel titles ("Price", "Volume", "Momentum Indicator") at fontSize=12
+    are the same size as axis titles — they would read more clearly as panel headers
+    if slightly larger (fontSize=13-14) or made bold
+  - 'Design Excellence is serviceable but not exceptional: no spine removal (configure_view
+    strokeWidth=0 hides the box border but axis domain lines remain), and the overall
+    visual style is clean-functional rather than polished-editorial'
+  - Volume bars at opacity=0.7 produce a slightly washed-out purple; reducing to opacity=0.85
+    or removing the opacity entirely would give crisper bars without over-darkening
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
-      Chrome: Title "dashboard-synchronized-crosshair · python · altair · anyplot.ai" bold centered — readable. Sub-chart titles "Price", "Volume", "Momentum Indicator" left-anchored in dark ink — readable. Y-axis labels "Price ($)", "Volume", "Momentum" in dark INK_SOFT — readable. X-axis label "Trading Date" dark — readable. Tick labels in 10pt INK_SOFT — readable. All text readable against light background.
-      Data: Price line in #009E73 (brand green) oscillating 80-115. Volume bars in #9418DB (purple) at 0.7 opacity. Momentum line in #B71D27 (red) with INK_SOFT dashed reference lines at y=30 and y=70. Data colors correct first-series = #009E73.
-      Legibility verdict: PASS — all text readable at full and mobile scale in light theme.
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, no pure white
+      Chrome: Main title "dashboard-synchronized-crosshair · python · altair · anyplot.ai" in dark near-black — clearly readable. Panel sub-titles "Price", "Volume", "Momentum Indicator" in dark text, visible. Y-axis titles ("Price ($)", "Volume", "Momentum") in dark text, readable. Tick labels in dark-gray (INK_SOFT), readable. X-axis date labels ("Jan 2024" ... "Oct 2024") visible on bottom chart only.
+      Data: Price line in #009E73 (brand green), Volume bars in #9418DB (purple) at opacity=0.7, Momentum line in #B71D27 (red). Overbought/oversold zone fills in light red tint (opacity=0.08), dashed reference lines at y=30 and y=70 visible in INK_SOFT gray.
+      Legibility verdict: PASS — all text is readable against the warm off-white background.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark surface, not pure black
-      Chrome: Title in light/near-white text — readable. Sub-chart titles in light text — readable. Axis labels and tick labels all in light-colored text (INK/INK_SOFT tokens — #F0EFE8 / #B8B7B0) — readable. No dark-on-dark failures detected. Reference lines appear as light dashed lines — visible.
-      Data: Identical data colors to light render — green price line, purple volume bars, red momentum line — confirmed no palette shift between themes.
-      Legibility verdict: PASS — all text readable against dark background in dark theme; brand green #009E73 clearly visible.
+      Background: Near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Main title and all panel sub-titles appear in light cream (#F0EFE8 via configure_title(color=INK)), readable against dark background. Axis titles in same light cream. Tick labels in #B8B7B0 (INK_SOFT for dark theme), visible. No dark-on-dark failures observed.
+      Data: Price line (#009E73), Volume bars (#9418DB), Momentum line (#B71D27) — colors identical to light render as required. Reference zones and dashed lines at overbought/oversold thresholds visible. The semi-transparent zone fills adapt well to dark background.
+      Legibility verdict: PASS — all text is readable against the near-black background; no dark-on-dark failures detected.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -60,82 +61,83 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=16, sub-titles=12, axis=12,
-          ticks=10). Readable in both themes. Minor: price chart height=90 with y-scale
-          0-120 squeezes actual data range (80-115) into top third.'
+        comment: 'All text readable in both themes. Font sizes explicitly set: 10px
+          tick, 12px axis title, 16px main title. Minor: panel sub-titles at fontSize=12
+          are same size as axis titles — slightly small as panel headers.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text or element overlap across all three stacked charts.
+        comment: No text or element overlaps in either render. Charts stack cleanly
+          with spacing=10.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line (strokeWidth=2), volume bars (opacity=0.7), momentum line
-          (strokeWidth=2) appropriately scaled for 200 data points.
+        comment: 200 data points at medium density. Lines at strokeWidth=2 clearly
+          visible. Volume bars distinguishable. Reference lines with dashed style
+          visible in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette (green/purple/red) is colorblind-safe; reference
-          lines use neutral INK_SOFT grey.
+        comment: Three anyplot palette colors used. Good contrast in both themes.
+          CVD-safe palette.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Three charts fill canvas well. Minor: price chart y-axis starting
-          at 0 leaves ~65% height as empty space below actual data range (80-115).'
+        comment: Canvas gate passed (no gate file). 3200x1800 landscape. Three-panel
+          stacked layout with good proportions. No clipping visible.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price ($) has units; Volume (SI format clarifies scale); Momentum
-          (0-100 standard); Trading Date descriptive.
+        comment: 'Y-axes labeled with units: Price ($), Volume, Momentum. X-axis:
+          Trading Date with date format. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #9418DB, third #B71D27. Background
-          #FAF8F1 (light) and #1A1A17 (dark). INK/INK_SOFT tokens throughout chrome
-          in both themes.'
+        comment: 'First series #009E73 (price). Second #9418DB (volume). Third #B71D27
+          (momentum). Backgrounds correct: #FAF8F1 light, #1A1A17 dark. Both renders
+          theme-correct.'
     design_excellence:
       score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Well-configured with semantic color assignment and modern dashboard
-          conventions (left-anchored titles, hidden x-axis on top charts, reference
-          lines at 30/70). Not exceptional — reads as intentional but not publication-design
-          level.
+        passed: true
+        comment: Above default (4). Coherent financial dashboard narrative. Overbought/oversold
+          zones add analytical context. Clean multi-chart composition. Not exceptional
+          — functional rather than editorial polish.
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
-        passed: false
-        comment: View border removed (strokeWidth=0), subtle grid at opacity 0.10,
-          themed axis colors, appropriate 10px vconcat spacing. Grid active on both
-          axes (x and y) while y-only is preferred.
+        passed: true
+        comment: Above default (2). Clean shared-axis design with X-axis hidden on
+          top charts. X-grid disabled. Y-grid at opacity=0.10 is subtle. configure_view
+          strokeWidth=0 removes box border.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: false
-        comment: Momentum decline into oversold territory at end creates latent narrative;
-          reference lines at 30/70 provide analytical context. No visual emphasis
-          marks the focal point — viewer must discover the story.
+        passed: true
+        comment: Above default (2). Financial story (price/volume/momentum) is coherent.
+          Overbought/oversold zones guide viewer interpretation. No strong focal point
+          or emphasis technique.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -143,30 +145,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-chart stacked dashboard with synchronized crosshair via alt.selection_point(nearest=True)
-          shared across views. Correct Altair implementation.
+        comment: 'Correct: multi-chart dashboard with synchronized crosshair. Line
+          for price and momentum, bar for volume.'
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Synchronized crosshair, per-chart tooltips, stacked layout, independent
-          y-axes, x-axis only on bottom chart all present. Missing: synchronized zoom/pan
-          — Altair supports this via alt.selection_interval() but not implemented.'
+        passed: true
+        comment: Synchronized vertical crosshair via shared nearest selection. Tooltips
+          per chart. Stacked vertical layout. Linked zoom/pan via bind='scales'. Independent
+          y-axis scales.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on shared x-axis; price/volume/indicator correctly mapped to
-          independent y-axes.
+        comment: Date on shared x-axis. Price/volume/indicator correctly mapped to
+          respective y-axes. Full 200-day range shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'dashboard-synchronized-crosshair · python · altair · anyplot.ai'
-          correct format. Sub-chart labels serve as series identification.
+        comment: 'Title exactly: ''dashboard-synchronized-crosshair · python · altair
+          · anyplot.ai''. No legend needed — each panel self-identifies via y-axis
+          title.'
     data_quality:
       score: 15
       max: 15
@@ -176,24 +179,24 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows all three series with realistic variation; momentum spans full
-          range including both overbought and oversold territory; volume correlated
-          with price volatility.
+        comment: Three chart types demonstrating multi-series dashboard. Crosshair
+          sync, zoom/pan linkage, tooltips per chart. Momentum zones add analytical
+          depth.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock market dashboard (price, volume, momentum oscillator, Jan-Oct
-          2024) is a real, neutral, comprehensible financial analysis scenario.
+        comment: Stock market data (price, volume, momentum indicator) over 200 trading
+          days. Realistic and politically neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price starting at 100 with realistic daily volatility; volume 1M-4M
-          shares per day (mid-cap range); momentum 0-100 with 30/70 reference levels
-          matching standard RSI conventions.
+        comment: Price ~85-115 (random walk from 100). Volume 1M-4M (realistic for
+          stocks). Momentum 0-100 with overbought/oversold zones at 70/30 — industry
+          standard.
     code_quality:
       score: 10
       max: 10
@@ -203,8 +206,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → tokens → data → chart layers → compose →
-          save. No functions or classes.'
+        comment: No functions or classes. Linear top-to-bottom flow. Clean composition.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -222,36 +224,36 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: Clean separation of base charts, shared selection parameter pattern,
-          idiomatic Altair layer composition. No over-engineering.
+        comment: Appropriate complexity for synchronized multi-chart dashboard. No
+          fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html, canvas padded to exact
-          3200x1800 with PIL.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. Current
+          Altair 6.x API.
     library_mastery:
-      score: 10
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of alt.selection_point, alt.condition, alt.layer(), alt.vconcat(),
-          encoding type suffixes, configure_* for global theming.
+        comment: 'Idiomatic Altair: selection_point with nearest=True, add_params
+          on multiple layers, vconcat composition, alt.condition for conditional opacity,
+          proper T/Q encoding types.'
       - id: LM-02
         name: Distinctive Features
-        score: 5
+        score: 3
         max: 5
         passed: true
-        comment: Altair's shared parameter system (add_params(nearest) across multiple
-          views) for linked crosshair and alt.condition() for reactive opacity are
-          distinctively Vega-Lite features not replicable with minor syntax changes
-          in other libraries.
-  verdict: REJECTED
+        comment: 'Uses distinctly Altair/Vega-Lite features: shared selection_point
+          across vconcat panels, selection_interval(bind=''scales'') for linked zoom,
+          conditional opacity via alt.condition — not available in imperative libraries.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
