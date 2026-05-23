@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-23
@@ -149,6 +149,13 @@ city_positions = {
     "Santa Monica": (0, 1),
 }
 
+# Global color normalization: all values converted to $M for consistent cross-level scale
+world_regions_m = {k: v * 1000 for k, v in world_regions.items()}
+all_values_m = list(world_regions_m.values()) + list(us_states.values()) + list(ca_cities.values())
+global_vmin = min(all_values_m)
+global_vmax = max(all_values_m)
+global_norm = Normalize(vmin=global_vmin, vmax=global_vmax)
+
 # Figure — 3200 × 1800 px (landscape 16:9)
 fig = plt.figure(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 gs = fig.add_gridspec(1, 3, left=0.04, right=0.88, top=0.84, bottom=0.14, wspace=0.20)
@@ -157,8 +164,6 @@ for ax in axes:
     ax.set_facecolor(PAGE_BG)
 
 # ---- Panel 1: World Regions ----
-values1 = list(world_regions.values())
-vmin1, vmax1 = min(values1), max(values1)
 patches1, colors1 = [], []
 for name in world_positions:
     col, row = world_positions[name]
@@ -172,8 +177,7 @@ for name in world_positions:
             edgecolor=PAGE_BG,
         )
     )
-    norm_v = (world_regions[name] - vmin1) / (vmax1 - vmin1)
-    colors1.append(anyplot_seq(0.15 + norm_v * 0.80))
+    colors1.append(anyplot_seq(global_norm(world_regions_m[name])))
 
 axes[0].add_collection(PatchCollection(patches1, facecolors=colors1, edgecolors=PAGE_BG, linewidths=1.5))
 
@@ -183,7 +187,7 @@ for name in world_positions:
     axes[0].text(
         cx, cy + 0.12, world_labels[name], ha="center", va="center", fontsize=7, fontweight="bold", color=BOX_TEXT
     )
-    axes[0].text(cx, cy - 0.14, world_values_text[name], ha="center", va="center", fontsize=5.5, color=BOX_TEXT)
+    axes[0].text(cx, cy - 0.14, world_values_text[name], ha="center", va="center", fontsize=6, color=BOX_TEXT)
 
 hcol, hrow = world_positions["North America"]
 axes[0].add_patch(
@@ -199,16 +203,14 @@ axes[0].add_patch(
     )
 )
 
-axes[0].set_xlim(0.5, 5.5)
-axes[0].set_ylim(-0.5, 4.0)
+axes[0].set_xlim(0.9, 4.9)
+axes[0].set_ylim(-0.3, 3.8)
 axes[0].set_aspect("equal")
 axes[0].axis("off")
 axes[0].set_title("Level 1: World Regions", fontsize=9, fontweight="bold", color=INK, pad=6)
 axes[0].text(0.5, -0.11, "World", transform=axes[0].transAxes, ha="center", fontsize=7, color=INK_MUTED, style="italic")
 
 # ---- Panel 2: US States ----
-values2 = list(us_states.values())
-vmin2, vmax2 = min(values2), max(values2)
 patches2, colors2 = [], []
 for name in state_positions:
     col, row = state_positions[name]
@@ -222,8 +224,7 @@ for name in state_positions:
             edgecolor=PAGE_BG,
         )
     )
-    norm_v = (us_states[name] - vmin2) / (vmax2 - vmin2)
-    colors2.append(anyplot_seq(0.15 + norm_v * 0.80))
+    colors2.append(anyplot_seq(global_norm(us_states[name])))
 
 axes[1].add_collection(PatchCollection(patches2, facecolors=colors2, edgecolors=PAGE_BG, linewidths=1.5))
 
@@ -233,7 +234,7 @@ for name in state_positions:
     axes[1].text(
         cx, cy + 0.12, state_labels[name], ha="center", va="center", fontsize=7, fontweight="bold", color=BOX_TEXT
     )
-    axes[1].text(cx, cy - 0.14, state_values_text[name], ha="center", va="center", fontsize=5.5, color=BOX_TEXT)
+    axes[1].text(cx, cy - 0.14, state_values_text[name], ha="center", va="center", fontsize=6, color=BOX_TEXT)
 
 hcol2, hrow2 = state_positions["California"]
 axes[1].add_patch(
@@ -266,8 +267,6 @@ axes[1].text(
 )
 
 # ---- Panel 3: California Cities ----
-values3 = list(ca_cities.values())
-vmin3, vmax3 = min(values3), max(values3)
 patches3, colors3 = [], []
 for name in city_positions:
     col, row = city_positions[name]
@@ -281,8 +280,7 @@ for name in city_positions:
             edgecolor=PAGE_BG,
         )
     )
-    norm_v = (ca_cities[name] - vmin3) / (vmax3 - vmin3)
-    colors3.append(anyplot_seq(0.15 + norm_v * 0.80))
+    colors3.append(anyplot_seq(global_norm(ca_cities[name])))
 
 axes[2].add_collection(PatchCollection(patches3, facecolors=colors3, edgecolors=PAGE_BG, linewidths=1.5))
 
@@ -292,7 +290,7 @@ for name in city_positions:
     axes[2].text(
         cx, cy + 0.12, city_labels[name], ha="center", va="center", fontsize=7, fontweight="bold", color=BOX_TEXT
     )
-    axes[2].text(cx, cy - 0.14, city_values_text[name], ha="center", va="center", fontsize=5.5, color=BOX_TEXT)
+    axes[2].text(cx, cy - 0.14, city_values_text[name], ha="center", va="center", fontsize=6, color=BOX_TEXT)
 
 axes[2].set_xlim(-0.5, 4.0)
 axes[2].set_ylim(-0.8, 6.2)
@@ -310,15 +308,15 @@ axes[2].text(
     style="italic",
 )
 
-# Colorbar — relative sales performance within each level
-sm = plt.cm.ScalarMappable(cmap=anyplot_seq, norm=Normalize(vmin=0, vmax=1))
+# Colorbar — consistent scale across all three hierarchy levels
+sm = plt.cm.ScalarMappable(cmap=anyplot_seq, norm=global_norm)
 sm.set_array([])
 cbar_ax = fig.add_axes([0.905, 0.18, 0.020, 0.52])
 cbar = fig.colorbar(sm, cax=cbar_ax)
-cbar.set_label("Sales rank\n(within level)", fontsize=7, color=INK_SOFT, labelpad=3)
+cbar.set_label("Annual Sales", fontsize=7, color=INK_SOFT, labelpad=3)
 cbar.ax.tick_params(labelsize=6, colors=INK_SOFT, length=2)
-cbar.set_ticks([0.0, 0.5, 1.0])
-cbar.set_ticklabels(["Min", "Mid", "Max"])
+cbar.set_ticks([global_vmin, (global_vmin + global_vmax) / 2, global_vmax])
+cbar.set_ticklabels(["$1.2M", "$157B", "$312B"])
 cbar.outline.set_edgecolor(INK_SOFT)
 cbar.outline.set_linewidth(0.5)
 
