@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-23
@@ -36,13 +36,16 @@ sns.set_theme(
     },
 )
 
-# Anyplot palette
-COLOR_PRICE = "#009E73"
-COLOR_VOLUME = "#16B8F3"
-COLOR_RSI = "#9418DB"
+# Anyplot palette — canonical order: green, purple, red, sky-blue, lime, …
+ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
+sns.set_palette(ANYPLOT_PALETTE)
+
+COLOR_PRICE = "#009E73"  # position 1
+COLOR_VOLUME = "#9418DB"  # position 2
+COLOR_RSI = "#B71D27"  # position 3
 COLOR_OVERBOUGHT = "#B71D27"
 COLOR_OVERSOLD = "#99B314"
-COLOR_CROSSHAIR = "#B71D27"
+COLOR_CROSSHAIR = "#16B8F3"
 
 # Data — stock-like metrics over 200 trading days
 np.random.seed(42)
@@ -82,16 +85,15 @@ ax1.annotate(
     xy=(crosshair_date, crosshair_price),
     xytext=(6, 6),
     textcoords="offset points",
-    fontsize=7,
+    fontsize=9,
     fontweight="bold",
     color="white",
     bbox={"boxstyle": "round,pad=0.25", "facecolor": COLOR_CROSSHAIR, "edgecolor": "none", "alpha": 0.92},
 )
 ax1.set_ylabel("Price ($)", fontsize=10, color=INK)
 ax1.tick_params(axis="y", labelsize=8)
-ax1.spines["top"].set_visible(False)
-ax1.spines["right"].set_visible(False)
-ax1.spines["bottom"].set_visible(False)
+ax1.tick_params(bottom=False)
+sns.despine(ax=ax1, bottom=True)
 ax1.spines["left"].set_color(INK_SOFT)
 ax1.yaxis.grid(True, alpha=0.10, linewidth=0.6)
 
@@ -108,17 +110,16 @@ ax2.annotate(
     xy=(crosshair_date, crosshair_volume),
     xytext=(6, 6),
     textcoords="offset points",
-    fontsize=7,
+    fontsize=9,
     fontweight="bold",
     color="white",
     bbox={"boxstyle": "round,pad=0.25", "facecolor": COLOR_CROSSHAIR, "edgecolor": "none", "alpha": 0.92},
 )
 ax2.set_ylabel("Volume", fontsize=10, color=INK)
 ax2.tick_params(axis="y", labelsize=8)
+ax2.tick_params(bottom=False)
 ax2.yaxis.set_major_formatter(plt.FuncFormatter(lambda x, p: f"{x / 1e6:.0f}M"))
-ax2.spines["top"].set_visible(False)
-ax2.spines["right"].set_visible(False)
-ax2.spines["bottom"].set_visible(False)
+sns.despine(ax=ax2, bottom=True)
 ax2.spines["left"].set_color(INK_SOFT)
 ax2.yaxis.grid(True, alpha=0.10, linewidth=0.6)
 
@@ -136,7 +137,7 @@ ax3.annotate(
     xy=(crosshair_date, crosshair_rsi),
     xytext=(6, 6),
     textcoords="offset points",
-    fontsize=7,
+    fontsize=9,
     fontweight="bold",
     color="white",
     bbox={"boxstyle": "round,pad=0.25", "facecolor": COLOR_CROSSHAIR, "edgecolor": "none", "alpha": 0.92},
@@ -145,8 +146,7 @@ ax3.set_ylabel("RSI", fontsize=10, color=INK)
 ax3.set_xlabel("Date", fontsize=10, color=INK)
 ax3.tick_params(axis="both", labelsize=8)
 ax3.legend(loc="upper right", fontsize=8, framealpha=0.9)
-ax3.spines["top"].set_visible(False)
-ax3.spines["right"].set_visible(False)
+sns.despine(ax=ax3)
 ax3.spines["left"].set_color(INK_SOFT)
 ax3.spines["bottom"].set_color(INK_SOFT)
 ax3.yaxis.grid(True, alpha=0.10, linewidth=0.6)
