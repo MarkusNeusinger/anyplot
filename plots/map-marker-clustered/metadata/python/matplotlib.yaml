@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:50:50Z'
-updated: '2026-05-23T11:47:25Z'
+updated: '2026-05-23T12:08:55Z'
 generated_by: claude-sonnet
 workflow_run: 26331588742
 issue: 3766
@@ -12,71 +12,42 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - 'Full theme adaptation (light + dark) with correct token usage throughout: PAGE_BG,
-    ELEVATED_BG, INK, INK_SOFT, INK_MUTED all properly wired to axis labels, ticks,
-    legend, and annotation boxes'
-  - 'Correct anyplot palette usage: Retail=#009E73 (position 1), Grocery=#9418DB (position
-    2), Electronics=#B71D27 (position 3) — canonical order, first series is brand
-    green'
-  - 'Geographic map built purely from matplotlib primitives: ax.fill() for land polygon,
-    ax.plot() for border lines, ocean background via ax.set_facecolor() — distinctive
-    use of the library''s low-level drawing API'
-  - Logarithmic cluster size scaling (150 + log1p(size)*80) correctly prevents large
-    clusters from dominating the canvas and small clusters from being invisible
-  - 'Two-level visual hierarchy: semi-transparent individual points (alpha=0.20, s=12)
-    as density backdrop + prominent cluster markers as focal elements — clean separation
-    of detail and summary'
-  - 'Canvas control done correctly: figsize=(8, 4.5) dpi=400 → 3200x1800, no bbox_inches=''tight'',
-    explicit fig.subplots_adjust() — follows library rules exactly'
-  - 'Realistic European store-location context: 8 major cities, 280 total locations,
-    3 plausible retail categories — comprehensible neutral business scenario'
-  - np.random.seed(42) ensures reproducibility; zip(..., strict=True) is idiomatic
-    Python 3.10+ defensive coding
-  - 'Summary annotation (''Total: 280 locations · 27 clusters'') with styled rounded
-    box adds useful context without cluttering the map'
+  - 'Excellent static adaptation of the interactive clustering concept: grid-based
+    clustering with an inset axes showing the zoomed London view is the right solution
+    for a static library'
+  - Theme-adaptive geographic colors (ocean/land) using the same INK/PAGE_BG token
+    system as the rest of the chrome — cohesive design across map and chrome
+  - 'Perfect code quality: KISS structure, seed set, clean imports, idiomatic Axes
+    methods, correct savefig without bbox_inches=''tight'''
+  - Multi-layer information hierarchy (faint backdrop → prominent clusters → inset
+    → London annotation) creates clear visual depth and guides the reader
   weaknesses:
-  - Cluster count labels at fontsize=6 are the smallest text in the image; at mobile
-    scale (~400px wide, ~8x downscale) single and double digit numbers inside cluster
-    circles become barely distinguishable — raise to fontsize=7 or 8
-  - In the Southern Europe region (lon 11–15, lat 40–42) several cluster circles crowd
-    together (counts 9, 7, 8, 16 for Rome-area cities) causing partial overlap of
-    marker edges; consider reducing cluster grid density or adjusting grid offsets
-    to spread them further apart
-  - 'DE-01: Design sophistication is strong but the simplified coast polygon has jagged
-    inconsistencies (Scandinavian peninsula omitted, Baltic coast missing) that undercut
-    the professional look — adding a few more coastline vertices or at minimum extending
-    the polygon to include the British Isles visible in the data extent (-10 lon)
-    would lift polish'
-  - 'DE-03: Data storytelling could be stronger — the visual shows WHERE stores are
-    but not WHAT the key insight is; a brief annotation highlighting the densest cluster
-    (e.g., ''London: 50 locations — largest hub'') or a visible size legend showing
-    what marker size represents would guide the viewer more directly'
-  - 'SC-02: The spec mentions showing individual marker labels when ''expanded'' and
-    visualizing the two zoom states (clustered view vs. expanded individual view)
-    — a small inset or side panel showing a zoomed-in city (e.g., London) with individual
-    markers labeled would demonstrate the full clustering concept that the spec describes'
-  - 'LM-02: The geographic drawing uses ax.fill() and ax.plot() which are general
-    matplotlib primitives; adding a scale bar or north arrow using matplotlib.patches
-    (FancyArrowPatch or Rectangle) would showcase more distinctively matplotlib-specific
-    cartographic conventions'
+  - London annotation box (xytext=(lc_lon+6, lc_lat+0.5)) is positioned too close
+    to the inset axes left boundary, causing visual overlap at the inset border —
+    shift xytext to avoid overlap with inset
+  - Inset tick labels at 4.5pt (approx 25 source px) are borderline-readable at mobile
+    scale; increase to at least 5.5pt for both inset title and ticks
+  - The dashed zoom box and inset panel could be connected more explicitly (e.g.,
+    ax.indicate_inset_zoom() or connector lines from box corners to inset corners)
+    to make the spatial relationship immediately obvious and improve LM-02
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 page background; plot area facecolor is light ocean blue (#C4D9E8) for the sea, with a tan/beige land polygon (#EDE8D4) covering Western/Central Europe.
-      Chrome: Title "map-marker-clustered · python · matplotlib · anyplot.ai" in dark text at fontsize=12, spanning ~70% of canvas width (expected for this long mandated title). Axis labels "Longitude (°)" and "Latitude (°)" at fontsize=10 in dark ink, clearly readable. Tick labels (numeric lat/lon values) at fontsize=8 in INK_SOFT (#4A4A44), readable. Legend ("Store Type") with ELEVATED_BG frame (#FFFDF6) in upper-left, readable at fontsize=7. Geographic italic labels ("Atlantic Ocean", "Mediterranean Sea") at fontsize=7, visible. Summary annotation ("Total: 280 locations · 27 clusters") in bottom-right with rounded ELEVATED_BG box.
-      Data: 27 cluster markers colored by dominant category — green (#009E73 Retail), purple (#9418DB Grocery), red (#B71D27 Electronics) — with white count annotations inside. Individual points shown semi-transparently (alpha=0.20, s=12) as density backdrop in matching category colors. Cluster sizes range from 1 to 40+, with logarithmic size scaling making larger clusters visually prominent. Cities visible: London (23, 31, 19 clusters), Berlin area (1, 2, 3), Paris (40, 6, 7), Madrid/Spain (14, 14, 1), Rome/Italy area (9, 7, 8, 16, 15), Vienna/Prague/Amsterdam.
-      Legibility verdict: PASS — all text readable against the warm off-white surface. Cluster count labels at fontsize=6 are small but readable at full 3200x1800 resolution.
+      Background: Warm off-white (#FAF8F1) figure background with light blue ocean (#C4D9E8) and warm beige land (#EDE8D4)
+      Chrome: Title "map-marker-clustered · python · matplotlib · anyplot.ai" in dark ink, clearly readable; axis labels "Longitude (°)" / "Latitude (°)" at 10pt in dark ink; tick labels at 8pt legible; legend with Store Type title and category labels readable; annotation "London hub · 19 stores" visible; geographic labels in muted italic readable
+      Data: Retail=#009E73 (green), Grocery=#9418DB (purple), Electronics=#B71D27 (red); cluster markers prominent with count annotations; individual backdrop points at alpha=0.20 intentionally faint; inset shows London expanded view with correctly colored points
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 page background; plot area facecolor is dark ocean (#192633), land polygon dark olive (#2A2820) — both correctly theme-adaptive, not pure black.
-      Chrome: Title visible in light text (#F0EFE8) against dark background — clearly readable. Axis labels in light ink, readable. Tick labels in INK_SOFT dark-theme value (#B8B7B0), visible against the near-black background — NO dark-on-dark failures detected. Legend frame in ELEVATED_BG dark (#242420) with INK_SOFT edge, legend text in #B8B7B0, title in #F0EFE8 — all readable. Geographic italic labels in INK_MUTED dark (#A8A79F), visible. Summary annotation box in ELEVATED_BG dark.
-      Data: Cluster marker colors are IDENTICAL to light render — green #009E73, purple #9418DB, red #B71D27 — as required (only chrome flips, data colors stay constant). White count annotations inside cluster circles remain readable against the colored markers. Individual scatter points with same category colors at alpha=0.20, clearly visible against the dark ocean background.
-      Legibility verdict: PASS — all text readable against the warm near-black surface. Both theme renders are correct and fully readable. No dark-on-dark failures found.
+      Background: Warm near-black (#1A1A17) figure background with dark blue ocean (#192633) and dark warm land (#2A2820)
+      Chrome: Title text in light cream, clearly readable against dark background; axis labels and tick labels flip to light text — all readable; no dark-on-dark failures observed; legend frame uses elevated dark background (#242420); annotation callout uses elevated dark background; geographic labels in muted light tones visible
+      Data: Colors identical to light render — Retail=#009E73, Grocery=#9418DB, Electronics=#B71D27; cluster marker colors unchanged; inset correctly colored
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -84,55 +55,47 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, axes=10, ticks=8, legend=7,
-          cluster labels=6). Both themes fully readable. Cluster count labels at fontsize=6
-          are the smallest and borderline at mobile scale — minor deduction.
+        comment: All font sizes explicitly set; main text well-proportioned; inset
+          tick labels at 4.5pt are borderline for mobile scale
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Southern Europe cluster area (lon 11-15, lat 40-42) shows crowding
-          with 4-5 cluster markers close together; marker edges partially overlap
-          but count annotations remain individually readable.
+        comment: London annotation box sits at edge of inset axes boundary, minor
+          visual overlap at border
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Cluster markers perfectly sized and prominent. Individual scatter
-          points (alpha=0.20, s=12) intentionally faint as density backdrop — design
-          choice, not a visibility failure.
+        comment: Cluster markers prominent; backdrop points at alpha=0.20 intentionally
+          faint as density context
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three anyplot palette colors (green/purple/red) are CVD-safe by design.
-          White count labels on colored circles provide strong contrast.
+        comment: Three anyplot palette colors well-separated and CVD-safe
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Explicit fig.subplots_adjust(left=0.09,
-          right=0.98, top=0.93, bottom=0.11). Map fills canvas well with balanced
-          margins. No content clipped.
+        comment: Canvas gate passed; balanced layout with subplots_adjust
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format exactly. 'Longitude (°)' and 'Latitude
-          (°)' are descriptive with units.
+        comment: Longitude (°) and Latitude (°) are descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Retail=#009E73 (position 1, brand green first), Grocery=#9418DB
-          (position 2), Electronics=#B71D27 (position 3). Backgrounds #FAF8F1 light
-          / #1A1A17 dark. Data colors identical across themes. Full compliance.'
+        comment: 'First series #009E73; canonical palette order; light #FAF8F1 / dark
+          #1A1A17 backgrounds; all chrome theme-correct'
     design_excellence:
       score: 15
       max: 20
@@ -142,31 +105,24 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'Strong design: theme-adaptive ocean/land colors, logarithmic cluster
-          scaling, layered z-ordering, styled legend frame, italic geographic labels.
-          Clearly above defaults. Simplified coastline polygon (missing British Isles,
-          Scandinavia) prevents publication-ready score.'
+        comment: 'Strong design: theme-adaptive geographic colors, multi-layer hierarchy,
+          north arrow, geographic labels — clearly above defaults'
       - id: DE-02
         name: Visual Refinement
         score: 5
         max: 6
         passed: true
-        comment: Subtle dashed grid (alpha=0.10), top/right spines removed, styled
-          legend with ELEVATED_BG frame, transparent individual points, explicit margin
-          control, rounded annotation box. Very refined. The rough land polygon edges
-          are the only visible imperfection.
+        comment: Top/right spines removed; subtle dashed coordinate grid alpha=0.10;
+          refined legend; logarithmic cluster-marker sizing; careful z-ordering
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Good visual hierarchy: transparent scatter backdrop + prominent
-          cluster markers guides the eye. Logarithmic size scaling encodes density
-          meaningfully. Missing: annotation highlighting the key insight (densest
-          city, dominant category pattern) that would make the story immediately obvious
-          to the viewer.'
+        comment: London hub annotation with arrow creates focal point; zoom box +
+          inset demonstrates clustering concept; dual-scale narrative guides viewer
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -174,32 +130,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Clustered marker map with geographic context, category color-coding,
-          and count labels — correct chart type.
+        comment: Geographic map with grid-based clustering; inset shows expanded state
+          — valid static adaptation
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Cluster count labels ✓, distinct category colors ✓, dominant category
-          per cluster ✓, basemap ✓. Interactive features (zoom, click-to-expand, hover
-          spider lines) correctly omitted for static library. Missing: a demonstration
-          of the ''expanded'' individual marker state — an inset or small panel showing
-          a zoomed city would complete the spec''s dual-view concept.'
+        comment: Cluster markers with counts, category coloring with dominant-category,
+          basemap, individual markers in inset; interactive features correctly omitted
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Longitude on X-axis, Latitude on Y-axis, correct geographic extent
-          for all 8 European cities.
+        comment: Longitude on X, Latitude on Y; geographically correct coordinates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'map-marker-clustered · python · matplotlib · anyplot.ai'.
-          Legend labels match data categories (Retail, Grocery, Electronics).
+        comment: Exact title format; Store Type legend with correct category labels
     data_quality:
       score: 15
       max: 15
@@ -209,25 +160,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows clusters of varying sizes (1 to 40+), three distinct categories,
-          geographic variation across Europe, both individual points and cluster summaries
-          — all aspects of the plot type are demonstrated.
+        comment: 'Shows all aspects: clustered overview, backdrop density, expanded
+          inset, multi-category coloring'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: European multi-category retailer with stores in Paris, London, Berlin,
-          Rome, Madrid, Vienna, Prague, Amsterdam — realistic, comprehensible, neutral
-          business scenario.
+        comment: Real European cities with neutral business scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: City coordinates are geographically accurate. Latitude 36-56°N and
-          Longitude -12 to 22°E correctly spans Western/Central Europe. Store counts
-          20-50 per city are plausible for a European retailer.
+        comment: Geographically correct coordinates; plausible urban spread; realistic
+          store counts
     code_quality:
       score: 10
       max: 10
@@ -237,66 +184,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → theme tokens → data generation → clustering
-          → plot elements → style → save. No functions or classes.'
+        comment: Linear flow, no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before any random operations.
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, matplotlib.pyplot, numpy — all three are used.
+        comment: All imports used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code. zip(..., strict=True) is idiomatic Python 3.10+.
-          Logarithmic scaling formula is succinct. No fake UI elements.
+        comment: Clean, Pythonic; strict=True in zip; defensive leg guard; appropriate
+          complexity
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png. No bbox_inches='tight'. Current matplotlib
-          API throughout.
+        comment: Saves as plot-{THEME}.png; ax.* methods; no deprecated APIs
     library_mastery:
-      score: 7
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correctly uses ax.* methods throughout (scatter, fill, plot, annotate,
-          text, grid, legend, set_xlim, set_ylim, spines). fig.subplots_adjust() for
-          canvas control. plt.setp() for batch property setting. Idiomatic and expert
-          usage.
+        comment: Expertly uses ax.inset_axes, ax.fill, ax.annotate with arrowprops,
+          ax.add_patch, fig.subplots_adjust
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: ax.fill() for geographic polygon drawing and zorder-based layering
-          system (zorder 1-6) are distinctively matplotlib capabilities. Custom basemap
-          built entirely from matplotlib primitives rather than external geo libraries
-          shows depth of matplotlib knowledge.
-  verdict: REJECTED
+        comment: inset_axes for mini-map, FancyArrowPatch for north arrow, Rectangle
+          patch for zoom indicator — above generic but not uniquely unreplicable
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
   - custom-legend
+  - inset-axes
+  - patches
   patterns:
   - data-generation
   - iteration-over-groups
-  - explicit-figure
   dataprep:
   - binning
   styling:
