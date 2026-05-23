@@ -1,20 +1,45 @@
-""" pyplots.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
-Library: bokeh 3.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: bokeh | Python
 """
 
+import os
+import sys
+
+
+# Remove the script's own directory from sys.path so "import bokeh" finds the
+# installed package instead of this file (also named bokeh.py).
+_this_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _this_dir]
+
+import time
+from pathlib import Path
+
 import numpy as np
-from bokeh.io import export_png, save
-from bokeh.models import ColumnDataSource, LabelSet, Legend, LegendItem
+from bokeh.io import output_file, save
+from bokeh.models import ColumnDataSource, LabelSet, Legend, LegendItem, Rect
 from bokeh.plotting import figure
-from bokeh.resources import CDN
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 
-# Data - Store locations across a region (coffee shop chain example)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Map background color (subtle geographic feel without tile provider)
+MAP_BG = "#D4E8F0" if THEME == "light" else "#1C2E35"
+
+# anyplot palette — canonical order
+ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+
+# Data — coffee shop chain locations across NYC neighborhoods
 np.random.seed(42)
 
-# Generate clustered store locations around major neighborhoods
 neighborhoods = [
     {"name": "Downtown", "lat": 40.758, "lon": -73.985, "stores": 45},
     {"name": "Midtown", "lat": 40.755, "lon": -73.975, "stores": 35},
@@ -28,221 +53,247 @@ neighborhoods = [
     {"name": "DUMBO", "lat": 40.703, "lon": -73.988, "stores": 15},
 ]
 
-# Generate individual store locations around each neighborhood center
-all_lats = []
-all_lons = []
-all_labels = []
-all_categories = []
-all_neighborhoods = []
-
 categories = ["Coffee", "Express", "Roastery", "Reserve"]
 category_weights = [0.5, 0.3, 0.15, 0.05]
+category_colors = dict(zip(categories, ANYPLOT_PALETTE, strict=False))
+
+all_lats, all_lons, all_categories = [], [], []
 
 for hood in neighborhoods:
-    n_stores = hood["stores"]
-    # Add some random scatter around the center
-    store_lats = hood["lat"] + np.random.normal(0, 0.008, n_stores)
-    store_lons = hood["lon"] + np.random.normal(0, 0.008, n_stores)
-    store_labels = [f"{hood['name']} Store {i + 1}" for i in range(n_stores)]
-    store_categories = np.random.choice(categories, n_stores, p=category_weights)
-
-    all_lats.extend(store_lats)
-    all_lons.extend(store_lons)
-    all_labels.extend(store_labels)
-    all_categories.extend(store_categories)
-    all_neighborhoods.extend([hood["name"]] * n_stores)
+    n = hood["stores"]
+    all_lats.extend(hood["lat"] + np.random.normal(0, 0.008, n))
+    all_lons.extend(hood["lon"] + np.random.normal(0, 0.008, n))
+    all_categories.extend(np.random.choice(categories, n, p=category_weights))
 
 lats = np.array(all_lats)
 lons = np.array(all_lons)
-labels = np.array(all_labels)
 store_categories = np.array(all_categories)
-store_neighborhoods = np.array(all_neighborhoods)
 
-
-# Convert lat/lon to Web Mercator projection (inline calculation)
-k = 6378137  # Earth radius in meters
+# Convert lat/lon → Web Mercator (inline)
+k = 6378137
 mercator_x = lons * (k * np.pi / 180.0)
 mercator_y = np.log(np.tan((90 + lats) * np.pi / 360.0)) * k
 
-# Grid-based clustering for marker aggregation
-# This simulates zoom-level clustering behavior
-grid_size = 2500  # meters in Web Mercator
-
-# Calculate grid cell for each point
-grid_x = np.floor(mercator_x / grid_size).astype(int)
-grid_y = np.floor(mercator_y / grid_size).astype(int)
-
-# Create unique cluster IDs from grid coordinates
-cluster_ids = grid_x * 10000 + grid_y
+# Grid-based clustering
+grid_size = 2500  # metres
+grid_xi = np.floor(mercator_x / grid_size).astype(int)
+grid_yi = np.floor(mercator_y / grid_size).astype(int)
+cluster_ids = grid_xi * 10000 + grid_yi
 unique_clusters = np.unique(cluster_ids)
 
-# Calculate cluster centers and counts
-cluster_centers_x = []
-cluster_centers_y = []
-cluster_counts = []
-cluster_dominant_category = []
-
-category_colors = {
-    "Coffee": "#306998",  # Python Blue
-    "Express": "#FFD43B",  # Python Yellow
-    "Roastery": "#4B8BBE",  # Light Blue
-    "Reserve": "#2ECC71",  # Green
-}
-
-for cluster_id in unique_clusters:
-    mask = cluster_ids == cluster_id
-    cluster_centers_x.append(mercator_x[mask].mean())
-    cluster_centers_y.append(mercator_y[mask].mean())
+cluster_cx, cluster_cy, cluster_counts, cluster_dominant = [], [], [], []
+for cid in unique_clusters:
+    mask = cluster_ids == cid
+    cluster_cx.append(mercator_x[mask].mean())
+    cluster_cy.append(mercator_y[mask].mean())
     cluster_counts.append(mask.sum())
+    cats = store_categories[mask]
+    unique_c, counts_c = np.unique(cats, return_counts=True)
+    cluster_dominant.append(unique_c[counts_c.argmax()])
 
-    # Find dominant category in cluster
-    cluster_cats = store_categories[mask]
-    unique, counts = np.unique(cluster_cats, return_counts=True)
-    dominant = unique[counts.argmax()]
-    cluster_dominant_category.append(dominant)
-
-cluster_centers_x = np.array(cluster_centers_x)
-cluster_centers_y = np.array(cluster_centers_y)
+cluster_cx = np.array(cluster_cx)
+cluster_cy = np.array(cluster_cy)
 cluster_counts = np.array(cluster_counts)
 
-# Calculate cluster marker sizes based on count
-min_size = 45
-max_size = 110
-count_normalized = (cluster_counts - cluster_counts.min() + 1) / (cluster_counts.max() - cluster_counts.min() + 1)
-cluster_sizes = min_size + np.sqrt(count_normalized) * (max_size - min_size)
+# Scale marker size by cluster count
+min_sz, max_sz = 45, 110
+norm = (cluster_counts - cluster_counts.min() + 1) / (cluster_counts.max() - cluster_counts.min() + 1)
+cluster_sizes = min_sz + np.sqrt(norm) * (max_sz - min_sz)
 
-# Color clusters by dominant category
-cluster_colors = [category_colors[cat] for cat in cluster_dominant_category]
+# Map extent
+x_start, x_end = -8265000, -8215000
+y_start, y_end = 4955000, 5015000
+cx = (x_start + x_end) / 2
+cy = (y_start + y_end) / 2
 
-# Create figure with tile map
+# Build figure — landscape 3200×1800, no toolbar for PNG accuracy
 p = figure(
-    width=4800,
-    height=2700,
+    width=3200,
+    height=1800,
+    x_range=(x_start, x_end),
+    y_range=(y_start, y_end),
     x_axis_type="mercator",
     y_axis_type="mercator",
-    title="map-marker-clustered · bokeh · pyplots.ai",
-    tools="pan,wheel_zoom,box_zoom,reset,hover,save",
+    title="map-marker-clustered · bokeh · anyplot.ai",
+    toolbar_location=None,
     tooltips=[("Stores", "@count"), ("Dominant Type", "@category")],
+    min_border_bottom=160,
+    min_border_left=180,
+    min_border_top=110,
+    min_border_right=50,
 )
 
-# Add map tiles (CartoDB Positron for clean basemap)
-p.add_tile("CartoDB Positron")
+# Map-like background rectangle
+map_bg_source = ColumnDataSource(data={"x": [cx], "y": [cy], "w": [x_end - x_start], "h": [y_end - y_start]})
+p.add_glyph(map_bg_source, Rect(x="x", y="y", width="w", height="h", fill_color=MAP_BG, line_color=None))
 
-# Create cluster data source
-cluster_source = ColumnDataSource(
-    data={
-        "x": cluster_centers_x,
-        "y": cluster_centers_y,
-        "count": cluster_counts,
-        "size": cluster_sizes,
-        "color": cluster_colors,
-        "category": cluster_dominant_category,
-        "count_label": [str(c) for c in cluster_counts],
-    }
+# Faint individual store markers
+individual_source = ColumnDataSource(data={"x": mercator_x, "y": mercator_y, "category": store_categories})
+p.scatter(
+    x="x", y="y", source=individual_source, size=8, fill_color=ANYPLOT_PALETTE[0], fill_alpha=0.20, line_color=None
 )
 
-# Create separate renderers for each category to build legend
+# Per-category cluster renderers for legend (all 4 categories always present)
 legend_items = []
-for category, color in category_colors.items():
-    cat_mask = np.array([cat == category for cat in cluster_dominant_category])
-    if any(cat_mask):
-        cat_source = ColumnDataSource(
+for cat, color in category_colors.items():
+    cat_mask = np.array([d == cat for d in cluster_dominant])
+    if cat_mask.any():
+        src = ColumnDataSource(
             data={
-                "x": cluster_centers_x[cat_mask],
-                "y": cluster_centers_y[cat_mask],
+                "x": cluster_cx[cat_mask],
+                "y": cluster_cy[cat_mask],
                 "size": cluster_sizes[cat_mask],
                 "count": cluster_counts[cat_mask],
                 "count_label": [str(c) for c in cluster_counts[cat_mask]],
-                "category": [category] * cat_mask.sum(),
+                "category": [cat] * int(cat_mask.sum()),
             }
         )
         renderer = p.scatter(
-            x="x",
-            y="y",
-            source=cat_source,
-            size="size",
-            fill_color=color,
-            fill_alpha=0.8,
-            line_color="#333333",
-            line_width=3,
+            x="x", y="y", source=src, size="size", fill_color=color, fill_alpha=0.88, line_color="white", line_width=2.5
         )
-        legend_items.append(LegendItem(label=f"{category} (dominant)", renderers=[renderer]))
+    else:
+        # Off-screen phantom point so the legend glyph renders with the right color
+        src = ColumnDataSource(
+            data={"x": [-9.9e8], "y": [-9.9e8], "size": [80.0], "count": [0], "count_label": [""], "category": [cat]}
+        )
+        renderer = p.scatter(
+            x="x", y="y", source=src, size="size", fill_color=color, fill_alpha=0.88, line_color="white", line_width=2.5
+        )
+    legend_items.append(LegendItem(label=cat, renderers=[renderer]))
 
-# Add count labels on cluster markers
-cluster_labels_set = LabelSet(
-    x="x",
-    y="y",
-    text="count_label",
-    source=cluster_source,
-    text_font_size="24pt",
-    text_font_style="bold",
-    text_color="white",
-    text_align="center",
-    text_baseline="middle",
+# Cluster count labels
+cluster_source = ColumnDataSource(
+    data={
+        "x": cluster_cx,
+        "y": cluster_cy,
+        "count": cluster_counts,
+        "size": cluster_sizes,
+        "count_label": [str(c) for c in cluster_counts],
+        "category": cluster_dominant,
+    }
 )
-p.add_layout(cluster_labels_set)
-
-# Show individual markers faintly to indicate member positions
-individual_source = ColumnDataSource(
-    data={"x": mercator_x, "y": mercator_y, "label": labels, "category": store_categories}
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="count_label",
+        source=cluster_source,
+        text_font_size="24pt",
+        text_font_style="bold",
+        text_color="white",
+        text_align="center",
+        text_baseline="middle",
+    )
 )
 
-p.scatter(x="x", y="y", source=individual_source, size=10, fill_color="#306998", fill_alpha=0.2, line_color=None)
+# Neighborhood name labels
+hood_labels_source = ColumnDataSource(
+    data={
+        "x": [hood["lon"] * (k * np.pi / 180.0) for hood in neighborhoods],
+        "y": [np.log(np.tan((90 + hood["lat"]) * np.pi / 360.0)) * k - 1200 for hood in neighborhoods],
+        "name": [hood["name"] for hood in neighborhoods],
+    }
+)
+p.add_layout(
+    LabelSet(
+        x="x",
+        y="y",
+        text="name",
+        source=hood_labels_source,
+        text_font_size="14pt",
+        text_color=INK_MUTED,
+        text_align="center",
+        text_baseline="top",
+    )
+)
 
-# Add legend for store types
+# Legend
 legend = Legend(
     items=legend_items,
     location="top_left",
     title="Store Type",
-    title_text_font_size="24pt",
-    label_text_font_size="18pt",
-    glyph_height=35,
-    glyph_width=35,
-    spacing=12,
-    padding=20,
-    background_fill_alpha=0.9,
-    background_fill_color="white",
-    border_line_color="#306998",
-    border_line_width=2,
+    title_text_font_size="30pt",
+    title_text_font_style="bold",
+    title_text_color=INK,
+    label_text_font_size="26pt",
+    label_text_color=INK_SOFT,
+    glyph_height=32,
+    glyph_width=32,
+    spacing=10,
+    padding=18,
+    background_fill_color=ELEVATED_BG,
+    background_fill_alpha=0.92,
+    border_line_color=INK_SOFT,
+    border_line_width=1,
 )
 p.add_layout(legend, "right")
 
-# Add text annotation explaining clustering
-p.text(
-    x=[-8250000],
-    y=[4965000],
-    text=["Clustered markers show aggregated store counts"],
-    text_font_size="20pt",
-    text_color="#555555",
-    text_font_style="italic",
-)
+# Typography
+p.title.text_font_size = "50pt"
+p.title.text_color = INK
 
-# Styling
-p.title.text_font_size = "32pt"
-p.title.text_color = "#306998"
-p.xaxis.axis_label = "Easting (m)"
-p.yaxis.axis_label = "Northing (m)"
-p.xaxis.axis_label_text_font_size = "24pt"
-p.yaxis.axis_label_text_font_size = "24pt"
-p.xaxis.major_label_text_font_size = "18pt"
-p.yaxis.major_label_text_font_size = "18pt"
-p.xaxis.axis_line_width = 2
-p.yaxis.axis_line_width = 2
-p.xaxis.major_tick_line_width = 2
-p.yaxis.major_tick_line_width = 2
+p.xaxis.axis_label = "Longitude"
+p.yaxis.axis_label = "Latitude"
+p.xaxis.axis_label_text_font_size = "42pt"
+p.yaxis.axis_label_text_font_size = "42pt"
+p.xaxis.axis_label_text_color = INK
+p.yaxis.axis_label_text_color = INK
+p.xaxis.major_label_text_font_size = "34pt"
+p.yaxis.major_label_text_font_size = "34pt"
+p.xaxis.major_label_text_color = INK_SOFT
+p.yaxis.major_label_text_color = INK_SOFT
 
-# Set view to focus on NYC area
-p.x_range.start = -8265000
-p.x_range.end = -8215000
-p.y_range.start = 4955000
-p.y_range.end = 5015000
+p.xaxis.axis_line_color = INK_SOFT
+p.yaxis.axis_line_color = INK_SOFT
+p.xaxis.major_tick_line_color = INK_SOFT
+p.yaxis.major_tick_line_color = INK_SOFT
 
-# Background and border
-p.background_fill_color = None
-p.border_fill_color = "#ffffff"
-p.outline_line_color = "#306998"
-p.outline_line_width = 2
+p.xgrid.grid_line_color = INK
+p.ygrid.grid_line_color = INK
+p.xgrid.grid_line_alpha = 0.08
+p.ygrid.grid_line_alpha = 0.08
 
-# Save as PNG and HTML
-export_png(p, filename="plot.png")
-save(p, filename="plot.html", title="map-marker-clustered · bokeh · pyplots.ai", resources=CDN)
+# Theme-adaptive background
+p.background_fill_color = PAGE_BG
+p.border_fill_color = PAGE_BG
+p.outline_line_color = INK_SOFT
+p.outline_line_width = 1
+
+# Save HTML (interactive artifact)
+html_path = f"plot-{THEME}.html"
+output_file(html_path, title="map-marker-clustered · bokeh · anyplot.ai")
+save(p)
+
+# Screenshot via headless Chrome (Selenium 4 / Selenium Manager)
+# Bokeh 3.9.0 adds a Notifications bar (~139 px) above the figure in the HTML
+# page even when toolbar_location=None. Use element screenshot to capture just
+# the figure div at its declared 3200×1800 size.
+W, H = 3200, 1800
+opts = Options()
+for arg in (
+    "--headless=new",
+    "--no-sandbox",
+    "--disable-dev-shm-usage",
+    "--disable-gpu",
+    f"--window-size={W},{H + 200}",  # extra vertical space so figure isn't clipped
+    "--hide-scrollbars",
+    "--force-device-scale-factor=1",
+):
+    opts.add_argument(arg)
+
+from selenium.webdriver.common.by import By
+
+
+driver = webdriver.Chrome(options=opts)
+driver.set_window_size(W, H + 200)
+driver.get(f"file://{Path(html_path).resolve()}")
+time.sleep(3)
+
+# Try to screenshot just the Bokeh figure element to avoid the notifications bar
+try:
+    fig_elem = driver.find_element(By.CSS_SELECTOR, ".bk-Figure")
+    fig_elem.screenshot(f"plot-{THEME}.png")
+except Exception:
+    driver.save_screenshot(f"plot-{THEME}.png")
+
+driver.quit()
