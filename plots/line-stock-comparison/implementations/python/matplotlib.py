@@ -1,8 +1,9 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-23
 """
+
 import os
 import sys
 
@@ -53,10 +54,26 @@ fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
 ax.set_facecolor(PAGE_BG)
 
 for (symbol, values), color in zip(rebased.items(), ANYPLOT_PALETTE, strict=False):
-    ax.plot(dates, values, label=symbol, color=color, linewidth=2.5)
+    # SPY is the benchmark — thicker line for emphasis and visual hierarchy
+    lw = 3.0 if symbol == "SPY" else 2.0
+    ax.plot(dates, values, label=symbol, color=color, linewidth=lw)
 
-# Reference line at 100 (starting point) — not in legend, labelled via annotation
+# Reference line at 100 (starting point)
 ax.axhline(y=100, color=INK_MUTED, linestyle="--", linewidth=1.0, alpha=0.7, zorder=1)
+
+# Annotate SPY as benchmark to create visual hierarchy and storytelling focal point
+spy_final = rebased["SPY"][-1]
+spy_color = ANYPLOT_PALETTE[3]  # SPY is 4th series (#16B8F3)
+ax.annotate(
+    "Benchmark",
+    xy=(dates[-1], spy_final),
+    xytext=(10, 0),
+    textcoords="offset points",
+    color=spy_color,
+    fontsize=7,
+    fontweight="bold",
+    va="center",
+)
 
 # Date formatting with major monthly ticks and minor biweekly ticks
 ax.xaxis.set_major_locator(mdates.MonthLocator())
@@ -65,7 +82,7 @@ ax.xaxis.set_minor_locator(mdates.WeekdayLocator(byweekday=0, interval=2))
 fig.autofmt_xdate(rotation=30, ha="right")
 
 # Grid — y-axis only, subtle
-ax.yaxis.grid(True, alpha=0.10, color=INK, linewidth=0.8)
+ax.yaxis.grid(True, alpha=0.15, color=INK, linewidth=0.8)
 ax.set_axisbelow(True)
 
 # Spines — L-shaped
@@ -88,6 +105,6 @@ if leg:
     leg.get_frame().set_linewidth(0.5)
     plt.setp(leg.get_texts(), color=INK_SOFT)
 
-fig.subplots_adjust(left=0.09, right=0.97, top=0.92, bottom=0.14)
+fig.subplots_adjust(left=0.09, right=0.93, top=0.92, bottom=0.14)
 plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
 plt.close()
