@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:49:40Z'
-updated: '2026-05-23T11:58:01Z'
+updated: '2026-05-23T12:09:38Z'
 generated_by: claude-sonnet
 workflow_run: 26331747999
 issue: 3766
@@ -12,52 +12,44 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/altair/plot-dark.html
-quality_score: 80
+quality_score: 86
 review:
   strengths:
-  - Correct anyplot palette usage with all three categories in canonical order; both
-    light and dark themes fully correct with proper chrome token application
-  - Proper canvas sizing (width=620, height=320, scale_factor=4.0) with PIL padding
-    to exact 3200x1800 — no canvas gate failure
-  - Grid-based clustering without external geo-dependencies (clean implementation
-    within constraints)
-  - Log-scaled size encoding effectively conveys cluster density across a wide count
-    range (3–19)
-  - Near-white count labels on colored circles maintain readability across all marker
-    colors and both themes
-  - Clean KISS code structure with full reproducibility (np.random.seed(42)), idiomatic
-    Altair layer composition, and correct HTML export
+  - Full theme-adaptive implementation with all chrome tokens correctly mapped for
+    both light and dark renders
+  - 'Excellent Altair idiomatic usage: alt.topo_feature, albersUsa projection, selection_point
+    with mouseover, transform_filter for hover-gating — all distinctively Altair'
+  - Logarithmic size scale cleanly communicates cluster density without requiring
+    a legend entry
+  - Realistic CONUS store location dataset (10 real cities, 3 meaningful categories,
+    500 points in valid coordinate bounds)
+  - Clean KISS code structure with PIL padding to exact target canvas dimensions —
+    no crop, no helper functions
+  - HTML output correctly produced alongside PNG for interactive hover experience
   weaknesses:
-  - 'One stray cluster (purple, count=3) floats in the upper-left outside the US basemap
-    boundary because the 1.5-degree std noise on some city coordinates generates lat/lon
-    values outside the albersUsa projection area. Fix: clamp generated coordinates
-    to US bounding box (lat 24–49, lon -125 to -66) before clustering, or reduce noise
-    std to 0.8 degrees.'
-  - Dynamic zoom-responsive clustering is not implemented in the HTML output — saved
-    HTML provides only zoom/pan of static pre-computed grid clusters. Spec calls for
-    clusters that expand/collapse as user zooms. Consider using Altair selection +
-    transform_filter to show individual markers when zoom exceeds a threshold.
-  - Design Excellence is moderate — the map is clean but lacks standout polish. Consider
-    adding opacity variation per cluster size, using a faint graticule background,
-    or adding a convex hull overlay for cluster regions in the HTML version.
-  - 'DQ-03 minor: lat/lon random noise (std=1.5) is wide enough to push some coordinates
-    into the ocean or Canada; tighter noise (std=0.8–1.0) would keep all generated
-    stores within a plausible metro area.'
+  - Click-to-zoom cluster expansion (per spec) not implemented — hover-based reveal
+    is a reasonable Altair substitute but doesn't match spec exactly
+  - In dense regions (NE coast, Pacific NW), overlapping cluster circles make count
+    labels compete visually; a slight opacity reduction on overlapping circles or
+    nudge to cluster grid_size could improve readability
+  - 'DE-03 storytelling: largest cluster concentrations are not visually emphasized
+    beyond natural size — a subtle annotation or emphasis on the highest-count cluster
+    would elevate the narrative'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) canvas with US state boundaries in light gray (#E8E6DF fill, #B8B7B0 stroke)
-      Chrome: Title "map-marker-clustered · python · altair · anyplot.ai" left-aligned in dark ink; subtitle in muted gray; legend in bottom-right with elevated fill and labeled categories
-      Data: Three anyplot palette colors — green (#009E73) for retail, purple (#9418DB) for food, red (#B71D27) for services; circles log-scaled by cluster count (3–19); near-white count labels overlaid on each circle; one isolated purple cluster (count=3) in upper-left outside the US basemap area
-      Legibility verdict: PASS — all title, subtitle, count labels, and legend text clearly readable against light background; no light-on-light issues
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "map-marker-clustered · python · altair · anyplot.ai" in dark ink (#1A1A17), fontSize=16, readable. Subtitle in muted ink (#4A4A44), fontSize=12, readable. Legend box with ELEVATED_BG fill (#FFFDF6), INK_SOFT labels, INK title — all readable.
+      Data: Cluster circles in green (#009E73 = retail), purple (#9418DB = food), red (#B71D27 = services). Sizes scale logarithmically by count. White count labels (bold, fontSize=10) on each cluster. State boundaries in light gray fill/stroke.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) canvas; US state boundaries shift to darker gray (#2A2A27 fill, #4A4A44 stroke)
-      Chrome: Title and subtitle rendered in light ink (#F0EFE8 / #B8B7B0); legend uses elevated dark background (#242420) with light label/title text — all theme-correct; no dark-on-dark failures detected
-      Data: Data cluster colors identical to light render (green, purple, red at same positions and sizes); near-white count labels remain sharp on all three marker colors against the dark canvas
-      Legibility verdict: PASS — all text readable against dark background; data colors unchanged confirming correct theme separation
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title and subtitle render in light ink (#F0EFE8 / #B8B7B0) — clearly readable against dark background. Legend box uses elevated dark fill (#242420), light label text. State boundaries switch to dark fill (#2A2A27) with darker stroke (#4A4A44).
+      Data: Cluster colors identical to light render — retail green, food purple, services red — only chrome flips as required. Count labels remain white (#FFFDF6), readable on all colored markers.
+      Legibility verdict: PASS — no dark-on-dark failures detected; all text elements readable.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -65,54 +57,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (16px), subtitle (12px), count labels (10px) all explicitly
-          set; minor deduction for smallest count labels (3-count clusters) being
-          at the lower bound of readability
+        comment: Font sizes explicitly set (title=16, subtitle=12, legend=10, count
+          labels=10). All readable in both themes. Count labels at 10px tight in dense
+          NE region but readable.
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: true
+        comment: Cluster circles naturally overlap in dense regions (NE coast, Pacific
+          NW), causing visual competition between count labels. Expected for cluster
+          map but costs readability.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Cluster bubble overlap is expected for geographic density plots;
-          count labels individually readable; slight crowding in southeast/midwest
-          regions
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Log-scaled circles clearly differentiate cluster sizes; near-white
-          count text sharp on all palette colors
+        comment: Cluster sizes well-proportioned via logarithmic scale. Smallest clusters
+          in NE a bit small but still readable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Three-category anyplot palette is CVD-safe; near-white labels provide
-          strong contrast on all marker colors
+        comment: Anyplot palette (green/purple/red) is colorblind-safe by design.
+          White stroke on circles aids differentiation.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; map centered well; one stray cluster outside
-          US basemap boundary in upper-left is a minor visual artifact
+        comment: Map fills canvas well. Legend well-positioned at bottom-right. No
+          overflow or clipping. Canvas padded to exactly 3200x1800.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title format correct; subtitle 'size = count' is descriptive; no
-          axis labels needed for geographic map
+        comment: Geographic map — no traditional axis labels expected. Subtitle provides
+          clear context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First category (retail) = #009E73; palette positions 1-3 in order;
-          backgrounds correct for both themes; all chrome theme-adaptive'
+        comment: 'Retail=#009E73, food=#9418DB, services=#B71D27 — canonical anyplot
+          palette order. Background #FAF8F1 (light) / #1A1A17 (dark). All chrome theme-adaptive.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -120,81 +112,81 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Custom theme tokens, log-scale size encoding, PAGE_BG stroke on markers
-          for separation, styled legend — above defaults but not publication-ready
+        comment: 'Above generic defaults: custom map fill/stroke via theme tokens,
+          logarithmic size scaling, white stroke on markers, theme-adaptive legend.
+          Thoughtful design.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Borderless view, no unnecessary chrome, theme-adaptive map colors,
-          custom legend styling — solid refinement for a map
+        comment: strokeWidth=0 on view removes chart border, subtle state boundaries,
+          styled legend. Room for more polish on smaller cluster opacity.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: true
-        comment: Size encoding tells the density story; color tells category; subtitle
-          explains encoding — effective but straightforward
+        comment: Size encoding communicates density, color encodes categories, subtitle
+          explains interaction. Above display-only but no strong focal narrative on
+          highest-density regions.
     spec_compliance:
-      score: 12
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Correct clustered marker map on geographic basemap; static grid-based
-          clustering vs zoom-level-responsive dynamic clustering (Altair's practical
-          limit for PNG)
+        comment: 'Correct: geographic clustered marker map with basemap, cluster circles
+          sized by count, hover-reveal spider lines.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Count labels ✓, distinct colors ✓, basemap ✓, tooltips in HTML ✓.
-          Missing: zoom-responsive cluster expansion, click-to-zoom reveal, convex
-          hull/spider lines on hover'
+        passed: true
+        comment: Count display, distinct colors, basemap, spider lines on hover all
+          present. Click-to-zoom not implemented — hover expansion substituted.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly mapped via Altair geographic encoding; size encodes
-          log-scaled count; color encodes dominant category
+        comment: Latitude/longitude correctly encoded. AlbersUSA projection covers
+          all 500 CONUS store points.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'map-marker-clustered · python · altair · anyplot.ai' correct;
-          legend shows all three categories with correct palette colors
+        comment: Title exactly matches required format. Legend labels match category
+          names.
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows clustering, size variation, color categories, count labels,
-          tooltip, basemap; zoom-responsive behavior absent (implementation constraint)
+        comment: 500 points, three categories, clustering shows varied densities,
+          count labels, spider line data structure for member reveal.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US retail/food/services store locations across 10 major cities; neutral
-          business domain; 500 realistic point count
+        comment: 10 real major US cities with realistic store types (retail, food,
+          services). Neutral business scenario.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Cluster counts (3-19) realistic; one stray cluster outside US boundary
-          due to 1.5-degree std noise pushing some coordinates into ocean/Canada
+        comment: Coordinates clipped to valid CONUS bounds. Store counts per cluster
+          geographically plausible.
     code_quality:
       score: 10
       max: 10
@@ -204,61 +196,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data generation → clustering → chart
-          layers → save; no functions or classes'
+        comment: 'Linear flow: imports → tokens → data → clustering → spider lines
+          → visualization → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: os, sys, altair, numpy, pandas, PIL all actively used
+        comment: 'All imports used: altair, numpy, pandas, PIL, os, sys.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, readable code; sys.path guard prevents package shadowing;
-          no fake UI elements
+        comment: Appropriate complexity for layered geo chart with interactive hover.
+          Spider line loop is necessarily iterative.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png with PIL padding to 3200x1800 and plot-{THEME}.html;
-          correct vl-convert API
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. PIL padding
+          to exact 3200x1800 target.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Excellent Altair idioms: alt.topo_feature, albersUsa projection,
+          selection_point with mouseover, transform_filter gating, layered composition,
+          alt.Title with subtitle, configure_legend/configure_view.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Proper alt.topo_feature for CDN topojson, mark_geoshape for basemap,
-          albersUsa projection, layer composition (+), alt.Title with properties
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: Vega's topo_feature with CDN topojson is distinctly Altair/Vega-Lite;
-          geographic projection encoding; multi-layer geographic chart hard to replicate
-          in most other libraries
-  verdict: REJECTED
+        comment: 'Uses Altair-specific geo features (topo_feature, albersUsa projection),
+          declarative selection_point with mouseover for spider line gating, multi-layer
+          geo composition. Minor gap: no conditional opacity encoding on hover state.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
-  - layer-composition
   - hover-tooltips
   - html-export
+  - layer-composition
   patterns:
   - data-generation
   - groupby-aggregation
