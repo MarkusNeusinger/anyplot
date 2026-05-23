@@ -1,10 +1,12 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 76/100 | Updated: 2026-05-23
 """
 
+import json
 import os
+import urllib.request
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -37,135 +39,22 @@ sns.set_theme(
     },
 )
 
-# Major continent outlines (simplified polygons, lon/lat degrees)
-coastlines = [
-    # North America
-    [
-        (-168, 66),
-        (-141, 70),
-        (-130, 70),
-        (-120, 60),
-        (-125, 50),
-        (-125, 40),
-        (-117, 33),
-        (-105, 25),
-        (-97, 26),
-        (-82, 25),
-        (-81, 30),
-        (-75, 35),
-        (-70, 42),
-        (-67, 45),
-        (-60, 47),
-        (-55, 52),
-        (-60, 60),
-        (-65, 68),
-        (-80, 70),
-        (-100, 73),
-        (-120, 75),
-        (-145, 72),
-        (-168, 66),
-    ],
-    # South America
-    [
-        (-82, 10),
-        (-77, 0),
-        (-80, -5),
-        (-70, -15),
-        (-60, -5),
-        (-50, 0),
-        (-35, -5),
-        (-40, -23),
-        (-55, -35),
-        (-68, -55),
-        (-75, -50),
-        (-75, -40),
-        (-70, -20),
-        (-80, -5),
-        (-82, 10),
-    ],
-    # Europe
-    [
-        (-10, 36),
-        (-10, 45),
-        (-5, 48),
-        (0, 52),
-        (5, 55),
-        (10, 58),
-        (20, 60),
-        (28, 70),
-        (35, 70),
-        (30, 60),
-        (25, 55),
-        (20, 50),
-        (15, 45),
-        (20, 40),
-        (25, 35),
-        (35, 35),
-        (28, 42),
-        (20, 38),
-        (10, 38),
-        (-10, 36),
-    ],
-    # Africa
-    [
-        (-17, 15),
-        (-17, 28),
-        (-5, 36),
-        (10, 38),
-        (20, 33),
-        (35, 30),
-        (45, 12),
-        (52, 12),
-        (45, 0),
-        (42, -10),
-        (35, -25),
-        (25, -34),
-        (18, -35),
-        (12, -20),
-        (15, -5),
-        (5, 5),
-        (-10, 5),
-        (-17, 15),
-    ],
-    # Asia
-    [
-        (35, 30),
-        (45, 42),
-        (52, 45),
-        (70, 42),
-        (80, 30),
-        (75, 15),
-        (90, 22),
-        (100, 15),
-        (105, 22),
-        (110, 5),
-        (120, 25),
-        (130, 35),
-        (140, 45),
-        (145, 55),
-        (135, 70),
-        (100, 78),
-        (70, 75),
-        (50, 70),
-        (30, 70),
-        (35, 50),
-        (45, 45),
-        (35, 30),
-    ],
-    # Australia
-    [
-        (113, -22),
-        (120, -18),
-        (135, -12),
-        (145, -15),
-        (152, -25),
-        (150, -38),
-        (140, -38),
-        (130, -33),
-        (115, -35),
-        (113, -22),
-    ],
-]
+# Load Natural Earth 110m country boundaries (~177 countries)
+_NE_URL = (
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson"
+)
+with urllib.request.urlopen(_NE_URL, timeout=20) as _resp:
+    _geojson = json.loads(_resp.read())
+
+# Extract outer rings for each country polygon
+country_rings = []
+for _feat in _geojson["features"]:
+    _geom = _feat["geometry"]
+    if _geom["type"] == "Polygon":
+        country_rings.append(np.array(_geom["coordinates"][0]))
+    elif _geom["type"] == "MultiPolygon":
+        for _poly in _geom["coordinates"]:
+            country_rings.append(np.array(_poly[0]))
 
 # Major city reference points for seaborn scatterplot layer
 cities = pd.DataFrame(
@@ -240,20 +129,19 @@ for idx, (proj_key, title, xlim, ylim) in enumerate(proj_configs):
         xs, ys = project(lns, np.full_like(lns, float(lat)), proj_key)
         ax.plot(xs, ys, color=GRID, linewidth=0.5, alpha=0.6)
 
-    # Coastline fills
-    for coast in coastlines:
-        lons_c = np.array([p[0] for p in coast])
-        lats_c = np.array([p[1] for p in coast])
+    # Country boundaries (~177 countries) — fills land, edges form country borders
+    for ring in country_rings:
+        lons_c, lats_c = ring[:, 0], ring[:, 1]
         xs, ys = project(lons_c, lats_c, proj_key)
         if (~np.isnan(xs)).sum() >= 3:
-            ax.fill(xs, ys, color=LAND, edgecolor=LAND_EDGE, linewidth=0.8, alpha=0.9, zorder=2)
+            ax.fill(xs, ys, color=LAND, edgecolor=LAND_EDGE, linewidth=0.4, alpha=0.9, zorder=2)
 
     # Horizon circle for orthographic
     if proj_key == "orthographic":
         t = np.linspace(0, 2 * np.pi, 360)
         ax.plot(np.cos(t), np.sin(t), color=INK_SOFT, linewidth=0.8, zorder=5)
 
-    # City reference dots — seaborn scatterplot layer
+    # City reference dots — seaborn scatterplot layer; s=70 for 6 sparse points
     cx, cy = project(cities["lon"].values, cities["lat"].values, proj_key)
     city_df = pd.DataFrame({"x": cx, "y": cy})
     visible = ~np.isnan(cx)
@@ -263,7 +151,7 @@ for idx, (proj_key, title, xlim, ylim) in enumerate(proj_configs):
             x="x",
             y="y",
             color="#009E73",
-            s=20,
+            s=70,
             marker="o",
             edgecolor=PAGE_BG,
             linewidth=0.5,
