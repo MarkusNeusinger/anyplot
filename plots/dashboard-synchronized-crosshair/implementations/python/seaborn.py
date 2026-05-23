@@ -35,6 +35,7 @@ sns.set_theme(
         "legend.edgecolor": INK_SOFT,
     },
 )
+sns.set_context("notebook", font_scale=1.0)
 
 # Anyplot palette — canonical order: green, purple, red, sky-blue, lime, …
 ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
@@ -56,8 +57,9 @@ price_returns = np.random.randn(n_points) * 0.02
 price = 100 * np.cumprod(1 + price_returns)
 volume = np.abs(price_returns) * 1e8 + np.random.exponential(5e6, n_points)
 rsi = np.clip(50 + np.cumsum(np.random.randn(n_points) * 3), 20, 80)
+ma20 = pd.Series(price).rolling(20, min_periods=1).mean().values
 
-df = pd.DataFrame({"date": dates, "price": price, "volume": volume, "rsi": rsi})
+df = pd.DataFrame({"date": dates, "price": price, "volume": volume, "rsi": rsi, "ma20": ma20})
 
 # Crosshair position for static demonstration
 crosshair_idx = 120
@@ -72,9 +74,21 @@ fig, axes = plt.subplots(
 )
 ax1, ax2, ax3 = axes
 
-# Chart 1: Price — line with area fill
+# Chart 1: Price — line with 20-day moving average and area fill
 ax1.set_facecolor(PAGE_BG)
-sns.lineplot(data=df, x="date", y="price", ax=ax1, color=COLOR_PRICE, linewidth=2.0)
+sns.lineplot(data=df, x="date", y="price", ax=ax1, color=COLOR_PRICE, linewidth=2.0, errorbar=None, label="Price")
+sns.lineplot(
+    data=df,
+    x="date",
+    y="ma20",
+    ax=ax1,
+    color=INK_SOFT,
+    linewidth=1.0,
+    linestyle="--",
+    alpha=0.7,
+    errorbar=None,
+    label="20-day MA",
+)
 ax1.fill_between(df["date"], df["price"], alpha=0.15, color=COLOR_PRICE)
 ax1.axvline(x=crosshair_date, color=COLOR_CROSSHAIR, linewidth=1.2, linestyle="--", alpha=0.85)
 ax1.scatter(
@@ -93,13 +107,14 @@ ax1.annotate(
 ax1.set_ylabel("Price ($)", fontsize=10, color=INK)
 ax1.tick_params(axis="y", labelsize=8)
 ax1.tick_params(bottom=False)
+ax1.legend(loc="upper left", fontsize=8, framealpha=0.9)
 sns.despine(ax=ax1, bottom=True)
 ax1.spines["left"].set_color(INK_SOFT)
 ax1.yaxis.grid(True, alpha=0.10, linewidth=0.6)
 
 # Chart 2: Volume — seaborn line plot with area fill
 ax2.set_facecolor(PAGE_BG)
-sns.lineplot(data=df, x="date", y="volume", ax=ax2, color=COLOR_VOLUME, linewidth=1.5)
+sns.lineplot(data=df, x="date", y="volume", ax=ax2, color=COLOR_VOLUME, linewidth=1.5, errorbar=None)
 ax2.fill_between(df["date"], df["volume"], alpha=0.22, color=COLOR_VOLUME)
 ax2.axvline(x=crosshair_date, color=COLOR_CROSSHAIR, linewidth=1.2, linestyle="--", alpha=0.85)
 ax2.scatter(
@@ -125,7 +140,7 @@ ax2.yaxis.grid(True, alpha=0.10, linewidth=0.6)
 
 # Chart 3: RSI indicator with overbought/oversold reference bands
 ax3.set_facecolor(PAGE_BG)
-sns.lineplot(data=df, x="date", y="rsi", ax=ax3, color=COLOR_RSI, linewidth=2.0)
+sns.lineplot(data=df, x="date", y="rsi", ax=ax3, color=COLOR_RSI, linewidth=2.0, errorbar=None)
 ax3.axhline(y=70, color=COLOR_OVERBOUGHT, linestyle=":", linewidth=1.2, alpha=0.85, label="Overbought (70)")
 ax3.axhline(y=30, color=COLOR_OVERSOLD, linestyle=":", linewidth=1.2, alpha=0.85, label="Oversold (30)")
 ax3.fill_between(df["date"], 30, 70, alpha=0.08, color=INK_SOFT)
