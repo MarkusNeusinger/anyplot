@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-23
@@ -38,7 +38,7 @@ price = 100 + np.cumsum(np.random.randn(n_points) * 2 + 0.05)
 volume = np.abs(np.diff(price, prepend=price[0])) * 1e6 + np.random.uniform(0.5e6, 2e6, n_points)
 rsi_raw = 50 + np.cumsum(np.random.randn(n_points) * 3)
 rsi_raw = np.clip(rsi_raw, 10, 90)
-rsi = 30 + (rsi_raw - rsi_raw.min()) / (rsi_raw.max() - rsi_raw.min()) * 40
+rsi = 20 + (rsi_raw - rsi_raw.min()) / (rsi_raw.max() - rsi_raw.min()) * 60
 
 # Canvas — square 2400×2400 for 3-panel vertical stack
 fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(6, 6), dpi=400, facecolor=PAGE_BG, sharex=True)
@@ -49,7 +49,7 @@ for ax in (ax1, ax2, ax3):
     ax.spines["top"].set_visible(False)
     ax.spines["right"].set_visible(False)
     ax.spines["left"].set_color(INK_SOFT)
-    ax.tick_params(axis="y", labelsize=7, colors=INK_SOFT)
+    ax.tick_params(axis="y", labelsize=8, colors=INK_SOFT, length=0)
     ax.yaxis.grid(True, alpha=0.12, linewidth=0.6, color=INK)
     ax.set_axisbelow(True)
 
@@ -91,9 +91,9 @@ ax3.text(dates[-1], 70.5, "Overbought", fontsize=6, color=COLOR_RED, ha="right",
 ax3.text(dates[-1], 29.5, "Oversold", fontsize=6, color=BRAND, ha="right", va="top")
 ax3.set_ylabel("RSI", fontsize=8, color=INK)
 ax3.set_xlabel("Date", fontsize=8, color=INK)
-ax3.set_ylim(18, 82)
+ax3.set_ylim(10, 90)
 ax3.spines["bottom"].set_color(INK_SOFT)
-ax3.tick_params(axis="x", labelsize=7, colors=INK_SOFT)
+ax3.tick_params(axis="x", labelsize=8, colors=INK_SOFT, length=0)
 ax3.xaxis.set_major_formatter(DateFormatter("%b '%y"))
 ax3.xaxis.set_major_locator(MonthLocator(bymonth=[1, 4, 7, 10]))
 leg3 = ax3.legend(fontsize=7, loc="upper left")
