@@ -1,14 +1,44 @@
-""" pyplots.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
-Library: seaborn 0.13.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-20
+Library: seaborn | Python 3.13
+Quality: pending | Created: 2026-05-23
 """
+
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+
+# Set seaborn theme BEFORE figure creation
+sns.set_theme(
+    style="ticks",
+    rc={
+        "figure.facecolor": PAGE_BG,
+        "axes.facecolor": PAGE_BG,
+        "axes.edgecolor": INK_SOFT,
+        "axes.labelcolor": INK,
+        "text.color": INK,
+        "xtick.color": INK_SOFT,
+        "ytick.color": INK_SOFT,
+        "grid.color": INK,
+        "grid.alpha": 0.10,
+        "legend.facecolor": ELEVATED_BG,
+        "legend.edgecolor": INK_SOFT,
+    },
+)
+sns.set_context("notebook", font_scale=1.0)
 
 # Data - Generate synthetic stock price data for 4 tech companies over 1 year
 np.random.seed(42)
@@ -19,7 +49,6 @@ symbols = ["AAPL", "GOOGL", "MSFT", "SPY"]
 # Generate realistic stock price movements using geometric Brownian motion
 data = []
 for symbol in symbols:
-    # Different drift and volatility for each stock
     if symbol == "AAPL":
         drift, volatility = 0.0008, 0.018
     elif symbol == "GOOGL":
@@ -37,32 +66,48 @@ for symbol in symbols:
 
 df = pd.DataFrame(data)
 
-# Plot
-fig, ax = plt.subplots(figsize=(16, 9))
+# Plot — landscape canvas (3200×1800)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
 
-# Set seaborn style
-sns.set_style("whitegrid")
+palette_map = dict(zip(symbols, ANYPLOT_PALETTE, strict=True))
 
-# Use distinct, colorblind-safe colors
-palette = {"AAPL": "#306998", "GOOGL": "#E24A33", "MSFT": "#8EBA42", "SPY": "#FFD43B"}
+sns.lineplot(
+    data=df, x="date", y="rebased_price", hue="symbol", hue_order=symbols, palette=palette_map, linewidth=2.5, ax=ax
+)
 
-# Line plot with distinct colors
-sns.lineplot(data=df, x="date", y="rebased_price", hue="symbol", palette=palette, linewidth=2.5, ax=ax)
+# Reference line at 100 (starting point)
+ax.axhline(y=100, color=INK_SOFT, linestyle="--", linewidth=1.0, alpha=0.6)
 
-# Add reference line at 100 (starting point)
-ax.axhline(y=100, color="gray", linestyle="--", linewidth=1.5, alpha=0.7, label="_nolegend_")
+# Style
+ax.set_xlabel("Date", fontsize=10, color=INK)
+ax.set_ylabel("Rebased Price (Start = 100)", fontsize=10, color=INK)
+ax.set_title("line-stock-comparison · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
+ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Styling
-ax.set_xlabel("Date", fontsize=20)
-ax.set_ylabel("Rebased Price (Start = 100)", fontsize=20)
-ax.set_title("line-stock-comparison · seaborn · pyplots.ai", fontsize=24)
-ax.tick_params(axis="both", labelsize=16)
+# Legend in lower left to minimize data area overlap
+ax.legend(
+    title="Symbol",
+    fontsize=8,
+    title_fontsize=8,
+    loc="lower left",
+    frameon=True,
+    facecolor=ELEVATED_BG,
+    edgecolor=INK_SOFT,
+)
 
-# Improve legend
-ax.legend(title="Symbol", fontsize=16, title_fontsize=18, loc="upper left")
+# Grid — y-axis only for line chart
+ax.yaxis.grid(True, alpha=0.10, linewidth=0.8)
+ax.set_axisbelow(True)
 
-# Format x-axis dates
+# Spines — remove top and right
+ax.spines["top"].set_visible(False)
+ax.spines["right"].set_visible(False)
+ax.spines["left"].set_color(INK_SOFT)
+ax.spines["bottom"].set_color(INK_SOFT)
+
+# Rotate x-axis dates for readability
 fig.autofmt_xdate(rotation=30)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight")
+# Save — no bbox_inches='tight' per seaborn canvas rule
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)
