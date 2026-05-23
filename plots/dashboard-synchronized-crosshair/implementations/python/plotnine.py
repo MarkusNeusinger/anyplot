@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 75/100 | Updated: 2026-05-23
@@ -108,24 +108,24 @@ plot = (
     )
     + facet_wrap("~metric", ncol=1, scales="free_y")
     + scale_x_datetime(date_breaks="1 month", date_labels="%b %Y")
-    + scale_y_continuous()
+    + scale_y_continuous(breaks=lambda lims: np.linspace(lims[0], lims[1], 4).tolist())
     + labs(title="dashboard-synchronized-crosshair · python · plotnine · anyplot.ai", x="Date", y="")
     + theme_minimal()
     + theme(
-        figure_size=(8, 4.5),
+        figure_size=(6, 6),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_blank(),
-        plot_title=element_text(size=12, weight="bold", ha="center", color=INK),
-        axis_title_x=element_text(size=10, color=INK),
+        plot_title=element_text(size=10, weight="bold", ha="center", color=INK),
+        axis_title_x=element_text(size=9, color=INK),
         axis_title_y=element_blank(),
-        axis_text=element_text(size=8, color=INK_SOFT),
+        axis_text=element_text(size=7, color=INK_SOFT),
         axis_text_x=element_text(angle=45, ha="right"),
-        strip_text=element_text(size=10, weight="bold", color=INK),
-        strip_background=element_rect(fill=PAGE_BG, color=INK_SOFT),
-        panel_spacing=0.15,
+        strip_text=element_text(size=9, weight="bold", color=INK),
+        strip_background=element_rect(fill=PAGE_BG, color=None),
+        panel_spacing=0.2,
     )
 )
 
-plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)
+plot.save(f"plot-{THEME}.png", dpi=400, width=6, height=6, units="in", verbose=False)
