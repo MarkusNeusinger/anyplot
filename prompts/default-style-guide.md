@@ -53,12 +53,21 @@ anyplot uses the **anyplot palette** — a bespoke, colorblind-safe categorical 
 - Only position 8 changes between light and dark themes; positions 1–7 stay identical so a category keeps its identity.
 - Never introduce custom hex values when the anyplot palette already covers the need.
 
-**Semantic exception (use sparingly):**
-When a category has a strong, unambiguous color association, pick the closest palette member instead of the next ordinal position. Two valid types of association:
-- **Real-world objects:** grass→green, wood→tan, blood→red, sky→blue.
-- **Status conventions:** bad/error/loss→red, good/ok/profit→green, neutral/warning→tan or pink.
+**Semantic exception:**
+The default rule is "use positions 1→N in canonical order." But whenever a category has a strong, widely-shared color association that a reader would expect, pick the closest palette member instead of the next ordinal position. This isn't a niche carve-out — there are many such cases. Some illustrative examples (not an exhaustive list):
 
-The match must come **from the anyplot palette** (no custom hexes), and the semantic mapping must be obvious from the data labels (legend literally says "Pass / Fail", "Profit / Loss", "OK / Error", etc.). Default to canonical order whenever the categories are abstract (groups A/B/C, regions, models, anonymous bins).
+- **Real-world objects:** grass→green, wood→tan, blood→red, sky→blue.
+- **Status / quality:** bad/error/fail→red, good/ok/pass→green, neutral/warning→tan or pink.
+- **Finance:** profit/up/gain→green, loss/down→red (stock-chart bullish/bearish bars, P&L deltas).
+- **Sentiment / polarity:** positive→green, negative→red, neutral→tan or pink.
+- **Domain conventions:** temperature hot→red / cold→sky, party colors that map cleanly to palette members, traffic-light states (red/tan/green), etc.
+
+The test isn't "does it appear in the list above" — it's "would a typical reader of this chart expect this category to look like this color?" If yes, and a palette member matches that expectation, use it.
+
+**Constraints (always):**
+- Colors must come **from the anyplot palette** (no custom hexes).
+- The semantic mapping must be obvious from the data labels — the legend or category names should literally say "Pass / Fail", "Profit / Loss", "Up / Down", "Hot / Cold", "OK / Error", etc.
+- Default to canonical order whenever the categories are abstract (groups A/B/C, regions, models, anonymous bins, k-means clusters) — no expectation to break ordinal there.
 
 ### Continuous Data — the categorical palette is NOT used
 
