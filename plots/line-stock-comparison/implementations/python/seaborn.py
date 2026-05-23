@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-23
@@ -85,26 +85,15 @@ ax.set_ylabel("Rebased Price (Start = 100)", fontsize=10, color=INK)
 ax.set_title("line-stock-comparison · python · seaborn · anyplot.ai", fontsize=12, fontweight="medium", color=INK)
 ax.tick_params(axis="both", labelsize=8, colors=INK_SOFT)
 
-# Legend in lower left to minimize data area overlap
-ax.legend(
-    title="Symbol",
-    fontsize=8,
-    title_fontsize=8,
-    loc="lower left",
-    frameon=True,
-    facecolor=ELEVATED_BG,
-    edgecolor=INK_SOFT,
-)
+# Move legend to upper-left where lines haven't diverged yet (seaborn-idiomatic)
+sns.move_legend(ax, "upper left", title="Symbol", fontsize=8, title_fontsize=8)
 
 # Grid — y-axis only for line chart
 ax.yaxis.grid(True, alpha=0.10, linewidth=0.8)
 ax.set_axisbelow(True)
 
-# Spines — remove top and right
-ax.spines["top"].set_visible(False)
-ax.spines["right"].set_visible(False)
-ax.spines["left"].set_color(INK_SOFT)
-ax.spines["bottom"].set_color(INK_SOFT)
+# Spines — remove top and right (seaborn-idiomatic)
+sns.despine(ax=ax)
 
 # Rotate x-axis dates for readability
 fig.autofmt_xdate(rotation=30)
