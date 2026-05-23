@@ -10,13 +10,19 @@
 # ///
 """Palette baseline diagnostic for anyplot.
 
-Generates a single self-contained HTML page that visualises the current anyplot
-palette across three domains, each evaluated for normal vision and three
+Generates a single self-contained HTML page that visualises the **Okabe-Ito
+baseline** (the historical anyplot palette before variant D was adopted)
+across three domains, each evaluated for normal vision and three
 100%-severity CVD simulations (deuteranopia, protanopia, tritanopia):
 
-  A. Categorical plot palette (Okabe-Ito 7 + 2 adaptive neutrals)
+  A. Categorical plot palette (Okabe-Ito 7 + 2 adaptive neutrals) — kept
+     hardcoded as the baseline that every candidate variant in
+     ``palette-variants.py`` is scored against.
   B. Continuous plot colormaps (viridis, cividis, BrBG)
   C. Website surface & chrome tokens — including homepage hero mockup
+
+For the currently-active anyplot palette (variant D), see
+``docs/reference/palette-variants/D-balanced.html``.
 
 Run::
 

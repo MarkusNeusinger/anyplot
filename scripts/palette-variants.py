@@ -10,7 +10,7 @@
 # ///
 """Palette variant generator for anyplot (Issue #5817).
 
-Generates 5 candidate replacement palettes inspired by Anselmoo's
+Generates 6 candidate replacement palettes inspired by Anselmoo's
 ``dracula-palette`` generator (https://anselmoo.github.io/dracula-palette/),
 all anchored at the brand green ``#009E73`` and selected by max-min ΔE in
 CAM02-UCS under normal vision + 3 CVD conditions (deuteranomaly,
@@ -22,7 +22,8 @@ Variants differ in their hue-selection strategy:
   B — triadic              (three hue anchors 120° apart)
   C — split-complementary  (green plus two flanking complements)
   D — balanced             (Petroff-style max-min, paper-ink chroma)
-  F — harmonic             (balanced rule but relaxed C corridor)
+  E — harmonic             (balanced rule but relaxed C corridor)
+  F — okabe-anchored       (forces Okabe-Ito green + vermillion, fills 5)
 
 For each, the script:
 
@@ -36,8 +37,8 @@ For each, the script:
      ``palette-analysis.py``, so the variant pages are directly comparable
      to the baseline diagnostic.
 
-Output: ``docs/reference/palette-variants/{A..E}-<name>.html`` plus an
-``index.html`` linking the five.
+Output: ``docs/reference/palette-variants/{A..F}-<name>.html`` plus an
+``index.html`` linking the six.
 
 Run::
 
@@ -1058,9 +1059,9 @@ def render_index_page(rows: list[tuple[Variant, list[str], float, float]]) -> st
 <a class="variant-card baseline-card" href="../palette-analysis.html">
     <div class="card-head">
         <span class="key">★</span>
-        <h3>baseline — okabe-ito <em>(current)</em></h3>
+        <h3>baseline — okabe-ito <em>(legacy)</em></h3>
     </div>
-    <p class="one-liner">today's plot palette. every variant below tries to clear this bar — the bar is the green×blue tritanopia collapse at ΔE 11.73.</p>
+    <p class="one-liner">the previous plot palette, kept here as the bar every variant below tried to clear — the bar is the green×blue tritanopia collapse at ΔE 11.73. variant D has since been adopted as the active anyplot palette.</p>
     <div class="strip">
         <div class="chips-big">{baseline_chip_top}</div>
         <div class="chips-tail">{baseline_chip_tail}</div>
