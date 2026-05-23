@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-23
@@ -8,6 +8,7 @@ import os
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import FancyArrowPatch, Rectangle
 
 
 # Theme tokens
@@ -152,6 +153,15 @@ europe_coast_lat = [
 ]
 ax.fill(europe_coast_lon, europe_coast_lat, color=LAND_BG, alpha=0.9, zorder=1)
 
+# British Isles — Great Britain and Ireland (fills the map's western extent)
+gb_lon = [-5.7, 1.8, 1.5, 0.0, -2.0, -4.0, -5.5, -5.0, -5.5, -5.7]
+gb_lat = [50.0, 51.2, 53.0, 54.5, 55.0, 55.8, 55.0, 54.0, 52.0, 50.0]
+ax.fill(gb_lon, gb_lat, color=LAND_BG, alpha=0.9, zorder=1)
+
+ie_lon = [-10.5, -8.0, -6.0, -6.0, -6.5, -7.5, -10.0, -10.5]
+ie_lat = [51.5, 51.5, 52.0, 53.0, 54.5, 55.0, 54.5, 51.5]
+ax.fill(ie_lon, ie_lat, color=LAND_BG, alpha=0.9, zorder=1)
+
 # Country boundary lines
 ax.plot([-2, 3], [42.5, 42.5], color=BORDER_COL, linewidth=0.5, alpha=0.4, zorder=2)
 ax.plot([6, 8, 8], [49, 49, 47], color=BORDER_COL, linewidth=0.5, alpha=0.4, zorder=2)
@@ -161,7 +171,7 @@ ax.plot([6, 10, 14], [46, 47, 46], color=BORDER_COL, linewidth=0.5, alpha=0.4, z
 # Subtle coordinate grid
 ax.grid(True, alpha=0.10, linestyle="--", color=INK, linewidth=0.5, zorder=3)
 
-# Individual data points (semi-transparent)
+# Individual data points (semi-transparent density backdrop)
 for cat in cat_names:
     mask = categories == cat
     ax.scatter(lons[mask], lats[mask], c=cat_colors[cat], alpha=0.20, s=12, edgecolors="none", zorder=4)
@@ -171,7 +181,38 @@ for center, size, cat in zip(cluster_centers, cluster_sizes, cluster_dominant_ca
     lat, lon = center
     marker_size = 150 + np.log1p(size) * 80
     ax.scatter(lon, lat, s=marker_size, c=cat_colors[cat], alpha=0.88, edgecolors=PAGE_BG, linewidths=1.5, zorder=5)
-    ax.annotate(str(size), (lon, lat), fontsize=6, fontweight="bold", ha="center", va="center", color="white", zorder=6)
+    ax.annotate(str(size), (lon, lat), fontsize=7, fontweight="bold", ha="center", va="center", color="white", zorder=6)
+
+# Data storytelling: annotate the London cluster (highest-count city) as the key insight
+london_ref_lat, london_ref_lon = 51.5074, -0.1278
+city_dist = np.sqrt((cluster_centers[:, 0] - london_ref_lat) ** 2 + (cluster_centers[:, 1] - london_ref_lon) ** 2)
+largest_idx = np.argmin(city_dist)
+lc_lon = float(cluster_centers[largest_idx][1])
+lc_lat = float(cluster_centers[largest_idx][0])
+ax.annotate(
+    f"London hub · {cluster_sizes[largest_idx]} stores",
+    xy=(lc_lon, lc_lat),
+    xytext=(lc_lon + 6, lc_lat + 0.5),
+    fontsize=6,
+    color=INK,
+    ha="left",
+    arrowprops={"arrowstyle": "->", "color": INK_MUTED, "lw": 0.8, "shrinkB": 10},
+    bbox={"facecolor": ELEVATED_BG, "edgecolor": INK_SOFT, "alpha": 0.85, "boxstyle": "round,pad=0.3"},
+    zorder=7,
+)
+
+# Dashed zoom-box around London area — signals the inset region
+london_zoom_rect = Rectangle(
+    (-2.5, 49.8), 4.7, 3.7, fill=False, edgecolor=INK_SOFT, linewidth=0.7, linestyle="dashed", alpha=0.65, zorder=6
+)
+ax.add_patch(london_zoom_rect)
+
+# North arrow using FancyArrowPatch (matplotlib.patches cartographic convention)
+north_arrow = FancyArrowPatch(
+    (20.5, 37.5), (20.5, 39.2), arrowstyle="->", color=INK_SOFT, mutation_scale=8, linewidth=1.2, zorder=7
+)
+ax.add_patch(north_arrow)
+ax.text(20.5, 39.6, "N", fontsize=7, fontweight="bold", color=INK_SOFT, ha="center", va="bottom", zorder=7)
 
 # Legend
 legend_handles = [
@@ -196,7 +237,7 @@ if leg:
 # Geographic reference labels
 ax.annotate("Atlantic\nOcean", (-9, 46), fontsize=7, style="italic", color=INK_MUTED, ha="center", alpha=0.8, zorder=4)
 ax.annotate(
-    "Mediterranean Sea", (8, 37.5), fontsize=7, style="italic", color=INK_MUTED, ha="center", alpha=0.8, zorder=4
+    "Mediterranean Sea", (5, 37.5), fontsize=7, style="italic", color=INK_MUTED, ha="center", alpha=0.8, zorder=4
 )
 
 # Style
@@ -211,6 +252,29 @@ for s in ("left", "bottom"):
 
 ax.set_xlim(-12, 22)
 ax.set_ylim(36, 56)
+
+# Inset axes: expanded view of London — demonstrates the spec's "zoom" dual-state concept
+london_mask = (lats > 49.8) & (lats < 53.5) & (lons > -2.5) & (lons < 2.2)
+ax_inset = ax.inset_axes([0.70, 0.58, 0.28, 0.35])
+ax_inset.set_facecolor(OCEAN_BG)
+ax_inset.fill(gb_lon, gb_lat, color=LAND_BG, alpha=0.9, zorder=1)
+for cat in cat_names:
+    m = london_mask & (categories == cat)
+    if np.any(m):
+        ax_inset.scatter(
+            lons[m], lats[m], c=cat_colors[cat], s=16, alpha=0.80, edgecolors="white", linewidths=0.4, zorder=3
+        )
+ax_inset.set_xlim(-2.5, 2.2)
+ax_inset.set_ylim(49.8, 53.5)
+ax_inset.set_title("London → expanded", fontsize=5.5, color=INK, pad=2)
+ax_inset.tick_params(axis="both", labelsize=4.5, colors=INK_MUTED)
+for s in ("top", "right"):
+    ax_inset.spines[s].set_visible(False)
+for s in ("left", "bottom"):
+    ax_inset.spines[s].set_color(INK_SOFT)
+# District labels to represent individual marker context
+for dname, dlon, dlat in [("Central", -0.12, 51.50), ("East End", 0.85, 51.52), ("North", -0.10, 52.30)]:
+    ax_inset.text(dlon, dlat, dname, fontsize=5, color=INK_MUTED, ha="center", va="bottom", alpha=0.9, zorder=5)
 
 # Summary annotation
 ax.text(
