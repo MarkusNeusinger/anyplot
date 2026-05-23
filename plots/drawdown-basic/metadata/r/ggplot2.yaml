@@ -1,0 +1,252 @@
+library: ggplot2
+language: r
+specification_id: drawdown-basic
+created: '2026-05-23T11:01:59Z'
+updated: '2026-05-23T11:20:18Z'
+generated_by: claude-sonnet
+workflow_run: 26330832513
+issue: 3752
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
+review:
+  strengths:
+  - 'Perfect spec compliance: all required drawdown features implemented (running
+    max, filled area, recovery markers, trough marker, key statistics, highlighted
+    max DD period, zero baseline)'
+  - 'Excellent semantic color use: red (#B71D27) for financial loss is the correct
+    anyplot semantic exception for the drawdown domain'
+  - 'Theme adaptation is thorough: alpha adjusted between light/dark (0.25 vs 0.45),
+    all ink tokens properly applied, backgrounds correct in both renders'
+  - 'Realistic, comprehensive synthetic data: multiple market phases demonstrate all
+    drawdown chart features in a neutral, plausible context'
+  - Clean, idiomatic R/ggplot2 code with modern API usage throughout (linewidth not
+    size for lines)
+  weaknesses:
+  - Dark render fill alpha (0.45) makes the filled area very visually heavy — dominant
+    dark red mass reduces readability contrast between fill and dark background; consider
+    reducing to ~0.35 so the line remains more prominent relative to the fill
+  - LM-02 could be elevated by using geom_ribbon(aes(ymin=drawdown, ymax=0)) instead
+    of geom_area for more idiomatic ggplot2 bounded-fill semantics, or sec_axis()
+    for the optional secondary price overlay mentioned in the spec
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "drawdown-basic · r · ggplot2 · anyplot.ai" bold dark ink, subtitle with key stats in muted ink, Y-axis label "Drawdown from Peak (%)" in dark ink, tick labels in INK_SOFT (#4A4A44) — all clearly readable
+      Data: Red (#B71D27) filled area below zero baseline with matching line, open-circle recovery markers at zero crossings, larger open-circle trough marker at -42.9%, subtle pinkish rect highlighting max DD period. Semantic exception correctly applied (red for financial loss)
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title and subtitle in near-white (#F0EFE8), tick labels and axis title in INK_SOFT (#B8B7B0) — all clearly readable against dark background. No dark-on-dark failures observed.
+      Data: Same #B71D27 red (data colors identical to light render). Fill alpha increased to 0.45 (vs 0.25 in light) making the area visually dense but line still distinguishable. Recovery and trough markers visible.
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=12, subtitle=9, axis.title=10,
+          ticks=8). Readable in both themes. Title ~75-80% width as expected for mandated
+          format.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text or data collisions in either render.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Filled area prominent, line visible at linewidth=0.7 for 756 dense
+          data points. Recovery and trough markers clearly visible.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Monochromatic red for single-series drawdown is CVD-safe with sufficient
+          contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Good margins, no cut-off elements
+          in either render.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Y-axis 'Drawdown from Peak (%)' descriptive with units. No X-axis
+          label appropriate for date axis.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Uses #B71D27 (anyplot palette pos 3) — correct semantic exception
+          for financial loss. Backgrounds and chrome correct in both themes.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color, highlighted max DD period, recovery/trough
+          markers, explicit typography hierarchy. Above defaults but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis-only grid at linewidth=0.15, no minor grid, no panel border,
+          X-axis baseline line, explicit margins. Refined beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear visual narrative through bull/bear phases, size-differentiated
+          markers, subtitle stats, highlighted max DD period. Good visual hierarchy.
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Correct drawdown chart: filled area below zero with line overlay.'
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Running max, filled area, max DD highlight, recovery markers, key
+          statistics, zero baseline — all present.
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Dates on X, drawdown % on Y, all data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'drawdown-basic · r · ggplot2 · anyplot.ai' correct. No legend
+          appropriate for single-series.
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: 'Comprehensive: bull run, first correction, full recovery, deeper
+          bear market, partial recovery. Multiple recovery crossings. Both recovered
+          and not-recovered states shown.'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Synthetic portfolio NAV 2021-2023 with plausible market phases. Neutral
+          financial domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Max drawdown -42.9%, 354 days to trough, no full recovery in window
+          — all realistic for a stock portfolio over this period.
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Linear flow: tokens → data → statistics → plot → save. No functions
+          or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only ggplot2 and ragg imported, both used.
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean idiomatic R. Appropriate complexity. Comments explain non-obvious
+          intent.
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png via sprintf. Modern linewidth= not size=
+          for lines.
+    library_mastery:
+      score: 8
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert grammar-of-graphics usage: layer composition, scale_x_date
+          with date_breaks/labels, annotate rect, theme_minimal with targeted overrides.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses scale_x_date, geom_area, annotate(rect). Solid ggplot2 usage
+          but misses opportunity for geom_ribbon or sec_axis to showcase distinctively
+          ggplot2 features.
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - cumulative-sum
+  styling:
+  - alpha-blending
+  - edge-highlighting
