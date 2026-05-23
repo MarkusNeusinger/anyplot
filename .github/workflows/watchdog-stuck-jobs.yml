@@ -146,6 +146,62 @@ jobs:
                 -f attempt="$attempt"
               continue
             fi
+
+            # Case 3: ai-approved but never merged — impl-merge `pull_request: labeled`
+            #   event was lost. Re-dispatch impl-merge.yml manually.
+            if echo " $labels " | grep -q " ai-approved " \
+               && (( age > STALE_SEC )); then
+              marker="watchdog:merge-rescued"
+              if echo " $labels " | grep -q " $marker "; then
+                echo "::warning::PR #$num: ai-approved merge already rescued — needs manual attention"
+                continue
+              fi
+              ensure_label "$marker" "5319e7" "Watchdog re-dispatched impl-merge once"
+              if [[ "$DRY_RUN" != "true" ]]; then
+                gh pr edit "$num" --add-label "$marker" 2>/dev/null || true
+              fi
+              dispatch "PR #$num: merge (ai-approved stuck)" impl-merge.yml \
+                -f pr_number="$num"
+              continue
+            fi
+
+            # Case 4: ai-rejected but no ai-attempt-N label — impl-repair `labeled`
+            #   trigger inside impl-review.yml never fired. Re-dispatch attempt 1.
+            if echo " $labels " | grep -q " ai-rejected " \
+               && ! echo " $labels " | grep -qE " ai-attempt-[0-9]+ " \
+               && (( age > STALE_SEC )); then
+              marker="watchdog:repair-rescued-1"
+              if echo " $labels " | grep -q " $marker "; then
+                echo "::warning::PR #$num: ai-rejected initial-repair already rescued — needs manual attention"
+                continue
+              fi
+              ensure_label "$marker" "5319e7" "Watchdog re-dispatched repair attempt 1"
+              if [[ "$DRY_RUN" != "true" ]]; then
+                gh pr edit "$num" --add-label "$marker" 2>/dev/null || true
+              fi
+              dispatch "PR #$num: repair (initial, ai-rejected, no attempt label)" impl-repair.yml \
+                -f pr_number="$num" \
+                -f specification_id="$spec_id" \
+                -f library="$library" \
+                -f attempt="1"
+              continue
+            fi
+
+            # Case 5: implementation PR has NO labels at all — impl-review never started.
+            #   Happens when impl-generate.yml's repository_dispatch to impl-review didn't land.
+            if [[ -z "$labels" ]] && (( age > STALE_SEC )); then
+              marker="watchdog:review-bootstrap"
+              # No existing labels to check against marker — use PR comments instead?
+              # Simpler: just dispatch review. If review fails repeatedly, normal
+              # ai-review-failed flow (Case 1) takes over after that.
+              ensure_label "$marker" "5319e7" "Watchdog bootstrapped initial review"
+              if [[ "$DRY_RUN" != "true" ]]; then
+                gh pr edit "$num" --add-label "$marker" 2>/dev/null || true
+              fi
+              dispatch "PR #$num: review (never started, no labels)" impl-review.yml \
+                -f pr_number="$num"
+              continue
+            fi
           done < <(echo "$PRS_JSON" | jq -c '.[]')
 
           ##### B) Scan spec-ready issues for stuck generation ###############
