@@ -1,207 +1,241 @@
 library: highcharts
+language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:29:23Z'
-updated: '2026-01-19T12:31:58Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21137406097
+updated: '2026-05-21T02:29:11Z'
+generated_by: claude-sonnet
+workflow_run: 26200816322
 issue: 3808
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/highcharts/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Accurate EAN-13 encoding with proper L/G/R code tables and first-digit pattern
+  - 'Perfect spec compliance: all EAN-13 structural requirements met (guards, encoding,
+    quiet zones, digit display)'
+  - Technically correct barcode encoding with L/G/R tables and first-digit pattern
     selection
-  - Clean visual design with professional styling (shadow, rounded corners)
-  - Correct placement of guard bars extending below data bars
-  - Human-readable digits properly positioned with first digit outside the barcode
-  - Good use of Highcharts ecosystem for HTML generation and Selenium for PNG export
+  - 'Excellent VQ scores: explicit font sizing, no overlap, crisp bar visibility'
+  - Clean code structure with correct Highcharts patterns (SVG Renderer, xrange, load
+    events)
+  - Smart design decision to keep barcode panel light in both themes for scannability
+  - Real-world product code (German Bosch product) adds authenticity
   weaknesses:
-  - Uses helper functions which slightly deviates from KISS principle (though justified
-    for EAN-13 complexity)
-  image_description: 'The plot displays an EAN-13 barcode for the German product code
-    "4006381333931". The visualization shows a white background with a centered barcode
-    container featuring a subtle shadow. The title "barcode-ean13 · highcharts · pyplots.ai"
-    appears at the top in blue (#306998), with a gray subtitle showing "EAN-13: 4006381333931".
-    The barcode itself consists of black vertical bars of varying widths on a white
-    background, with guard bars (start, center, end) extending slightly lower than
-    the data bars. Human-readable digits are displayed below the barcode with the
-    first digit "4" positioned outside the left guard pattern, followed by "006381"
-    on the left side and "333931" on the right side, separated by the center guard.
-    The barcode is enclosed in a white container with rounded corners and a subtle
-    box shadow.'
+  - 'Minor bottom whitespace: MARGIN_B=280px leaves ~15% empty space below digit labels
+    — could reduce to 180-200px to improve canvas utilization'
+  - Design Excellence is limited by the technical format; slight improvement possible
+    by reducing bottom margin and letting the barcode fill more of the canvas proportionally
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 page background; elevated barcode panel #FFFDF6 spanning ~87% of canvas width
+      Chrome: Title "barcode-ean13 · python · highcharts · anyplot.ai" in bold dark ink at 66px (~65% canvas width); subtitle "EAN-13: 4006381333931" in muted dark; axes hidden (correct for barcode)
+      Data: Near-black (#1A1A17) barcode bars on the light panel; guard bars (start/center/end) extend visibly lower than data bars; 13 digits displayed below in large bold font; first digit "4" positioned left of start guard
+      Legibility verdict: PASS — all text clearly readable; digit labels large and crisp
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 page background; barcode panel stays light #FFFDF6 (correct — barcodes require light substrate for scannability)
+      Chrome: Title and subtitle flip to light colors on dark page background — both clearly readable; no dark-on-dark failures
+      Data: Barcode bars and digit labels remain dark (#1A1A17) against the light panel — identical to light render, correct behavior
+      Legibility verdict: PASS — excellent contrast throughout; deliberate decision to keep barcode panel light in dark theme is the right design choice
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title, subtitle, and barcode digits are all clearly readable with
-          appropriate font sizes
+        comment: All font sizes explicitly set (title 66px, subtitle 48px, digits
+          80px); readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, all text and bars are well-separated
+        comment: No overlapping elements; digit spacing generous
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Barcode bars are crisp and well-defined, guard bars properly extend
-          lower
+        comment: Bars crisp and well-defined; guard extensions visible; digits large
+          and prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Simple black bars on white background, perfect contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good centering but some wasted space around the barcode container
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: Not applicable for barcode visualization
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean design, no unnecessary elements
+        comment: High contrast black-on-white; no CVD issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Minor excess whitespace at bottom (MARGIN_B=280px); canvas utilization
+          ~63%
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct format; axes hidden (appropriate); subtitle provides
+          code context
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct page backgrounds; barcode bars black (required for scanning,
+          not a categorical series); theme-adaptive chrome
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Clean professional rendering; warm panel contrast intentional; constrained
+          by technical format
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes hidden, no grid, no unnecessary chrome; guard bar extension
+          is refined detail
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Subtitle shows encoded number; digit labels aid interpretation; real
+          product code adds context
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct EAN-13 barcode visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Proper L/G/R encoding patterns based on first digit
-      - id: SC-03
+        comment: Correct EAN-13 barcode with full encoding (L/G/R tables, first-digit
+          pattern)
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has start/center/end guards, human-readable digits, first digit outside
-          left guard; quiet zones present
-      - id: SC-04
-        name: Data Range
+        comment: Quiet zones 9 modules, start/center/end guards, guard descent, first
+          digit outside guard
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All 13 digits properly displayed
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Module-based axis hidden correctly; all 13 digits displayed
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Subtitle shows the code value which serves as identification
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses barcode-ean13 · highcharts · pyplots.ai
+        comment: Title exact format; no legend (appropriate for single encoding)
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows standard EAN-13 with guard patterns, varying bar widths, and
-          human-readable text
+        comment: 'All EAN-13 components: guards, L/G/R encoding, guard descent, quiet
+          zones, 13-digit display'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses real German product code (4006381333931), appropriate example
+        comment: German product code (Bosch drill bit set); real-world retail scenario;
+          neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Barcode is well-proportioned; could be slightly larger for scanning
-          demos
+        comment: Country code 40 (Germany) correct; check digit verified; 9-module
+          quiet zones meet spec
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Uses functions for encoding (acceptable for EAN-13 complexity), but
-          still organized linearly
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Deterministic data, no random elements
+        comment: 'Flat: constants → encoding → HTML → Selenium → PIL; no functions
+          or classes'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; fixed code, no randomness
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean encoding tables; xrange approach elegant; SVG Renderer usage
+          well-organized
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current API usage
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: true
-        comment: Saves both plot.html and plot.png
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png + plot-{THEME}.html; PIL safety net for exact
+          canvas dims
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Creative use of Highcharts styling/container with custom SVG for
-          precise barcode rendering, HTML export capability
+        comment: xrange series, SVG Renderer, chart load events — correct Highcharts
+          patterns; bypasses highcharts_core Python wrapper
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: xrange series, SVG Renderer API, load events — genuinely Highcharts-distinctive
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - html-export
-  - patches
-  patterns:
-  - data-generation
+  - annotations
+  patterns: []
   dataprep: []
   styling:
   - minimal-chrome
-  - edge-highlighting

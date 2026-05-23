@@ -17,7 +17,7 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 - Note all required features
 
 ### 2. Read the Implementation
-`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}` — `${EXT}` is `.py` for python libraries (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot) and `.R` for ggplot2
+`plots/${SPEC_ID}/implementations/${LANGUAGE}/${LIBRARY}${EXT}` — `${EXT}` is `.py` for python libraries (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot), `.R` for ggplot2, and `.jl` for makie
 
 ### 3. Read Library-Specific Rules
 `prompts/library/${LIBRARY}.md`
@@ -30,14 +30,14 @@ Evaluate if the **${LIBRARY}** implementation matches the specification for `${S
 You MUST use the Read tool to open **both** `plot_images/plot-light.png` AND `plot_images/plot-dark.png` and visually analyze each image.
 
 - Compare both renders with the spec requirements.
-- The Okabe-Ito data colors (positions 1–7) must be **identical** between light and dark — only chrome (background, text, grid, legend frames) flips.
+- The anyplot palette data colors (positions 1–7) must be **identical** between light and dark — only chrome (background, text, grid, legend frames) flips.
 - A review without seeing both images is **invalid**.
 - If one or both images cannot be read, STOP and report the error (pipeline failure — flag in `weaknesses`).
 - Your review MUST include an "Image Description" section that describes **both** renders, proving you looked at them.
 
 ### 5b. Consult the Style Guide for Palette + Theme Rules
 
-Read `prompts/default-style-guide.md` — the "Categorical Palette" (Okabe-Ito), "Continuous Data" (viridis/cividis/BrBG), and "Theme-adaptive Chrome" sections are the authoritative reference for VQ-07 scoring.
+Read `prompts/default-style-guide.md` — the "Categorical Palette" (anyplot palette), "Continuous Data" (`anyplot_seq` / `anyplot_div` only), and "Theme-adaptive Chrome" sections are the authoritative reference for VQ-07 scoring.
 
 ### 5c. MANDATORY: Theme-Readability Check (both renders)
 
@@ -65,6 +65,24 @@ For `plot-dark.png` (background should be `#1A1A17`):
 
 A plot that's perfect in one theme but unreadable in the other still **fails** — both renders must pass. Be strict: a plot that ships to the website broken on dark mode is worse than one that fails review and gets repaired.
 
+### 5c2. MANDATORY: Canvas dimension gate (if present)
+
+The workflow's pre-check step (`impl-review.yml` → "Canvas dimension gate") measures the saved `plot-light.png` against the two canonical canvas sizes (3200×1800 landscape, 2400×2400 square, ±16 px tolerance). When the gate fails, it writes the synthetic weakness to `/tmp/anyplot-canvas-gate.txt`.
+
+**Before scoring, check whether `/tmp/anyplot-canvas-gate.txt` exists:**
+
+```bash
+ls -la /tmp/anyplot-canvas-gate.txt 2>/dev/null && cat /tmp/anyplot-canvas-gate.txt
+```
+
+If it **does** exist:
+- The file contains a single paragraph: `Canvas dimensions drifted from required target. Actual: WxH. Closest valid target: TWxTH (±16 px tolerance). Signed delta: ±dx × ±dy — direction. Most likely cause: …`
+- **Copy that paragraph verbatim into your `weaknesses` array as the FIRST item.** Do not paraphrase; the repair model needs the literal "actual=WxH" and signed delta numbers to know which knob to turn and which direction.
+- **Set VQ-05 (Layout & Canvas) to 0/4 regardless of other observations.** Canvas drift is a hard rule; the quality_score must drop low enough to route the PR into impl-repair through the existing 5-review/4-repair cascade.
+- Keep scoring the other categories honestly — useful signal for repair is good signal — but do **not** lift VQ-05 just because the visual proportions look fine inside the wrong-sized canvas.
+
+If it does **not** exist: the gate passed; no canvas-specific action — score VQ-05 normally based on the visual proportional checks in 5d below.
+
 ### 5d. MANDATORY: Proportional Sizing Check (both renders)
 
 Visually estimate from each PNG — no pixel measurement needed. These are soft proportional checks **without hard thresholds**. Violations cost points in the existing VQ-01 (Text Legibility), VQ-02 (No Overlap), and VQ-05 (Layout & Canvas) categories rather than triggering a separate pass/fail item. A single visual problem can reduce points in multiple categories simultaneously (holistic, not strict).
@@ -86,9 +104,9 @@ Visually estimate from each PNG — no pixel measurement needed. These are soft 
 - "Title spans ~80% of width at fontsize=14pt." → Expected for the long mandated anyplot title; no deduction.
 - "Y-axis label 'Fläche von Häusern in Quadratmetern' takes ~40% of axis length at fontsize=12pt." → Genuinely long label at sensible fontsize; no deduction as long as it doesn't overflow the axis.
 
-### 6. Check for Auto-Reject (AR-08)
+### 6. Check for Auto-Reject (AR-08, AR-09)
 
-**For static libraries (matplotlib, seaborn, plotnine, ggplot2) only:**
+**AR-08 — Fake interactivity (static libraries only — matplotlib, seaborn, plotnine, ggplot2, makie):**
 
 Before scoring, check if the implementation fakes interactive features:
 - Simulated tooltips (annotation boxes styled as hover tooltips)
@@ -97,6 +115,27 @@ Before scoring, check if the implementation fakes interactive features:
 - Code comments mentioning "simulating hover/click/interactivity"
 
 If found: Score = 0, verdict = REJECTED, note AR-08 violation.
+
+**AR-09 — Edge clipping (all libraries):**
+
+Inspect both renders for any title, axis tick label, axis title, legend, or annotation that has **visible pixels chopped off at the canvas border** — i.e. the element was rendered partially outside the saved PNG's bounding box and the missing pixels are gone for good. This is the single most embarrassing failure mode for the catalog: a chart with chopped-off text publishes broken into the gallery.
+
+**Strict definition:** AR-09 fires only when **pixels of the element are actually missing**. Proximity to the border, touching the border, or being rendered right up against the edge with all pixels visible is **not** AR-09 — that's at most a VQ-05 deduction. The bar is evidence of chopped content, not crowded margins.
+
+Trigger AR-09 if you see ANY of:
+- **Title cropped at the top edge** — top of letters cut off, descenders missing, or title not fully visible above the plot area.
+- **Y-axis tick labels missing their leftmost digit/character** because the label extends past the left canvas edge (e.g. "500" rendered as "00", "1,000" as ",000").
+- **X-axis label cut at the bottom edge** — axis title only partially visible, descender row chopped.
+- **Legend entries hidden behind / merged into the canvas edge** with letters chopped off.
+- **Any annotation, label, or category text whose bounding box is partially outside the saved PNG** so part of the text is gone.
+
+If found: **Score = 0, verdict = REJECTED, note AR-09 violation** and identify which element(s) were clipped and on which edge (e.g. "title clipped at top edge of light render — top ~10 px of letters missing"). Repair will receive this and shrink the inner-chart dims so vl-convert / matplotlib / etc. don't push content off the canvas.
+
+**False-positive guard — do NOT trigger AR-09 for:**
+- Text that extends past the plot/axis bounds but stays *within* the canvas (VQ-05 deduction at most).
+- Tooltips, legend swatches, or grid lines aligned with the canvas border by design.
+- Tight-but-readable margins where every pixel of the text is visible — proximity ≠ clipping.
+- Touching the border without any missing pixels — touching ≠ chopped.
 
 ### 7. Evaluate Using 6-Category Criteria
 
@@ -111,7 +150,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | VQ-04 | Color Accessibility | 2 | Adequate contrast + CVD-safe (beyond palette)? No red-green as sole signal? |
 | VQ-05 | Layout & Canvas | 4 | Good proportions? Nothing cut off? Title 50–70% width, balanced axis labels, no overflow — see 5d. |
 | VQ-06 | Axis Labels & Title | 2 | Descriptive with units? |
-| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series follows Okabe-Ito order? Continuous data uses `viridis`/`cividis`/`BrBG`? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
+| VQ-07 | Palette Compliance | 2 | First categorical series = `#009E73`? Multi-series uses anyplot palette (canonical order, or semantic-exception order when category labels imply real-world colors)? Continuous data uses `anyplot_seq` (single-polarity) or `anyplot_div` (diverging) — no other colormaps allowed? Plot backgrounds are `#FAF8F1` (light) / `#1A1A17` (dark)? Both renders theme-correct? |
 
 #### Design Excellence (20 pts)
 | ID | Criterion | Max | Check |
@@ -128,7 +167,7 @@ Read `prompts/quality-criteria.md` and evaluate:
 | SC-01 | Plot Type | 5 | Correct chart type? |
 | SC-02 | Required Features | 4 | All features from spec? |
 | SC-03 | Data Mapping | 3 | X/Y correct? Axes show all data? |
-| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r}). Legend labels match? |
+| SC-04 | Title & Legend | 3 | Title is `{spec-id} · {language} · {library} · anyplot.ai`, optionally prefixed with `{Descriptive Title} · ` (language ∈ {python, r, julia}). Legend labels match? |
 
 #### Data Quality (15 pts)
 | ID | Criterion | Max | Check |

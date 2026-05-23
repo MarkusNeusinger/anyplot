@@ -1,16 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: matplotlib 3.10.8 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-19
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 86/100 | Updated: 2026-05-21
 """
+
+import os
+import sys
+
+
+sys.path = sys.path[1:]  # prevent this file from shadowing the installed matplotlib package
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.colors import LinearSegmentedColormap
 
 
-# Code 128 encoding tables
-# Each character is encoded as 6 bar widths (alternating bars and spaces)
-# Values represent the relative widths of each element (1-4 units)
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# Code 128B encoding: each character → 6 bar/space widths (alternating)
 CODE128_B = {
     " ": [2, 1, 2, 2, 2, 2],
     "!": [2, 2, 2, 1, 2, 2],
@@ -109,7 +121,6 @@ CODE128_B = {
     "~": [1, 3, 1, 1, 4, 1],
 }
 
-# Character value mapping for Code 128B (used for checksum calculation)
 CODE128_B_VALUES = {
     char: i
     for i, char in enumerate(
@@ -117,14 +128,11 @@ CODE128_B_VALUES = {
     )
 }
 
-# Start code B pattern
 START_B = [2, 1, 1, 4, 1, 2]
 START_B_VALUE = 104
-
-# Stop pattern (includes final bar)
 STOP = [2, 3, 3, 1, 1, 1, 2]
 
-# Patterns for checksum characters (indices 0-102)
+# Checksum symbol patterns (indices 0–102 for modulo-103 calculation)
 CHECKSUM_PATTERNS = [
     [2, 1, 2, 2, 2, 2],
     [2, 2, 2, 1, 2, 2],
@@ -234,82 +242,100 @@ CHECKSUM_PATTERNS = [
     [2, 1, 1, 2, 3, 2],
 ]
 
-# Data to encode
+# Data
 content = "SHIP-2024-ABC123"
 
-# Build the barcode pattern
-bars = []
-bars.extend(START_B)  # Start Code B
-
-# Calculate checksum while encoding
+# Encode: start + data + checksum + stop
+bars = list(START_B)
 checksum = START_B_VALUE
 for i, char in enumerate(content):
-    if char in CODE128_B:
-        bars.extend(CODE128_B[char])
-        checksum += CODE128_B_VALUES[char] * (i + 1)
-    else:
-        # Replace unsupported characters with space
-        bars.extend(CODE128_B[" "])
-        checksum += CODE128_B_VALUES[" "] * (i + 1)
+    pattern = CODE128_B.get(char, CODE128_B[" "])
+    bars.extend(pattern)
+    checksum += CODE128_B_VALUES.get(char, 0) * (i + 1)
 
-# Add checksum character
-checksum_value = checksum % 103
-bars.extend(CHECKSUM_PATTERNS[checksum_value])
-
-# Add stop pattern
+bars.extend(CHECKSUM_PATTERNS[checksum % 103])
 bars.extend(STOP)
 
-# Convert bar widths to binary pattern (1=bar, 0=space)
+# Convert bar widths to binary (1=bar, 0=space)
 binary_pattern = []
 is_bar = True
 for width in bars:
     binary_pattern.extend([1 if is_bar else 0] * width)
     is_bar = not is_bar
 
-# Create the barcode image
-bar_width = 3  # Width of each module in pixels
+# Layout
 barcode_height = 200
-quiet_zone = 30  # Quiet zone width in modules
-
-# Add quiet zones
+quiet_zone = 30
 full_pattern = [0] * quiet_zone + binary_pattern + [0] * quiet_zone
-
-# Create plot (16:9 aspect ratio)
-fig, ax = plt.subplots(figsize=(16, 9))
-
-# Create barcode array
 barcode_width = len(full_pattern)
 barcode_array = np.array([full_pattern] * barcode_height)
 
-# Plot barcode
-ax.imshow(barcode_array, cmap="binary", aspect="auto", interpolation="nearest")
+# Zone boundaries for structural annotations
+# Code 128 standard: every symbol (except STOP) = 11 modules; STOP = 13 modules
+_sw = 11
+_stop_w = sum(STOP)  # 13
+_qz0_end = quiet_zone
+_start_end = _qz0_end + _sw
+_data_end = _start_end + len(content) * _sw
+_check_end = _data_end + _sw
+_stop_end = _check_end + _stop_w
 
-# Remove axes for clean barcode appearance
+zones = [
+    (_qz0_end - quiet_zone, _qz0_end, "Quiet Zone"),
+    (_qz0_end, _start_end, "Start"),
+    (_start_end, _data_end, f"Data · Code B ({len(content)} chars)"),
+    (_data_end, _check_end, "Check"),
+    (_check_end, _stop_end, "Stop"),
+    (_stop_end, barcode_width, "Quiet Zone"),
+]
+
+# Plot — landscape canvas: figsize=(8, 4.5) × dpi=400 → 3200×1800 px
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400, facecolor=PAGE_BG)
+ax.set_facecolor(PAGE_BG)
+
+# Theme-adaptive colormap: 0 (space) → PAGE_BG, 1 (bar) → INK
+bar_cmap = LinearSegmentedColormap.from_list("barcode_cmap", [PAGE_BG, INK], N=2)
+ax.imshow(barcode_array, cmap=bar_cmap, aspect="auto", interpolation="nearest", vmin=0, vmax=1)
+
 ax.set_xticks([])
 ax.set_yticks([])
 
-# Add human-readable text below barcode
+# Structural zone annotations above the barcode
+y_tick_top = 0  # tick mark at barcode top edge
+y_bracket = -9  # horizontal bracket line
+y_label = -20  # zone label center
+
+for x0, x1, label in zones:
+    cx = (x0 + x1) / 2
+    ax.plot([x0, x1], [y_bracket, y_bracket], color=INK_MUTED, lw=0.6, solid_capstyle="butt")
+    ax.plot([x0, x0], [y_tick_top, y_bracket], color=INK_MUTED, lw=0.6)
+    ax.plot([x1, x1], [y_tick_top, y_bracket], color=INK_MUTED, lw=0.6)
+    ax.text(cx, y_label, label, fontsize=6, ha="center", va="center", color=INK_MUTED, fontfamily="monospace")
+
+# Human-readable text below barcode
 ax.text(
     barcode_width / 2,
-    barcode_height + 30,
+    barcode_height + 28,
     content,
-    fontsize=32,
+    fontsize=16,
     ha="center",
     va="top",
     fontfamily="monospace",
     fontweight="bold",
+    color=INK,
 )
 
-# Add title
-ax.set_title("barcode-code128 · matplotlib · pyplots.ai", fontsize=24, pad=40)
-
-# Set limits to show the text
 ax.set_xlim(-10, barcode_width + 10)
-ax.set_ylim(barcode_height + 80, -40)
+ax.set_ylim(barcode_height + 75, -38)
 
-# Add border around barcode area
 for spine in ax.spines.values():
     spine.set_visible(False)
 
-plt.tight_layout()
-plt.savefig("plot.png", dpi=300, bbox_inches="tight", facecolor="white")
+# Style
+ax.set_title("barcode-code128 · python · matplotlib · anyplot.ai", fontsize=12, fontweight="medium", color=INK, pad=8)
+ax.tick_params(colors=INK_SOFT)
+
+fig.subplots_adjust(left=0.02, right=0.98, top=0.93, bottom=0.04)
+
+# Save
+plt.savefig(f"plot-{THEME}.png", dpi=400, facecolor=PAGE_BG)

@@ -633,9 +633,15 @@ async def get_related_specs(
 async def _fetch_plausible_visitors() -> VisitorsResponse:
     """Query the Plausible Stats API v2 for unique visitors per day (last 28d).
 
-    The 28-day window matches Plausible's own default "Last 28 days" report so
-    the totals here align with what the dashboard at plausible.io/anyplot.ai
-    shows by default.
+    The 28-day window ends on today (inclusive) so the rightmost bar reflects
+    current-day traffic as a partial day, matching how Plausible's dashboard
+    "Last 28 days" view renders.
+
+    Note: we deliberately do NOT use Plausible's `"28d"` preset because it
+    maps to `[today-28, today-1]` (the source uses `last = today - 1 day`,
+    see plausible/analytics PR #5282), which excludes today and left the
+    rightmost chart bar permanently at 0. An explicit `[today-27, today]`
+    custom range pulls today's partial row in.
 
     Returns an empty `points` list when the API key is not configured or the
     upstream call fails — the stats page treats `points: []` as "no data" and
@@ -647,10 +653,12 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
     if not settings.plausible_api_key:
         return VisitorsResponse(points=[])
 
+    today = datetime.now(timezone.utc).date()
+    start = today - timedelta(days=27)
     payload = {
         "site_id": settings.plausible_site_id,
         "metrics": ["visitors"],
-        "date_range": "28d",
+        "date_range": [start.isoformat(), today.isoformat()],
         "dimensions": ["time:day"],
     }
     try:
@@ -682,7 +690,6 @@ async def _fetch_plausible_visitors() -> VisitorsResponse:
             count = 0
         by_date[day_str] = count
 
-    today = datetime.now(timezone.utc).date()
     points = [
         VisitorPoint(
             date=(today - timedelta(days=offset)).isoformat(),

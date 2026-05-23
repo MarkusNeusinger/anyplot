@@ -2,9 +2,9 @@ library: highcharts
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T21:44:27Z'
-updated: '2026-05-20T00:14:59Z'
+updated: '2026-05-20T17:50:26Z'
 generated_by: claude-sonnet
-workflow_run: 26132295822
+workflow_run: 26178774024
 issue: 3826
 language_version: 3.13.13
 library_version: unknown
@@ -12,44 +12,47 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/highcharts/plot-dark.html
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'All five specification requirements met: log-log axes, three fatigue-regime region
-    bands with labels, horizontal reference lines for Ultimate/Yield/Endurance Limit,
-    scatter test data with per-level replication, and Basquin fit line.'
-  - 'Excellent theme adaptation: all chrome elements correctly switch between INK
-    and INK_SOFT tokens; backgrounds match #FAF8F1 / #1A1A17; no dark-on-dark or light-on-light
-    failures.'
-  - Region band shading using very-low-opacity Okabe-Ito-adjacent fills adds clear
-    narrative structure without competing with the data.
-  - 'Marker edge highlighting (lineColor: PAGE_BG) and elevated legend background
-    show attention to visual polish.'
-  - Data is realistic and domain-appropriate (structural steel S-N properties with
-    plausible Basquin parameters).
+  - 'Perfect spec compliance: all required S-N curve elements present (log-log axes,
+    three fatigue regimes, three reference lines, Basquin fit, scatter of multiple
+    specimens per stress level)'
+  - Excellent data storytelling through Highcharts-native plotBands and plotLines
+    — the viewer immediately reads the engineering story without additional explanation
+  - 'Full palette and theme compliance: #009E73 first series, correct #FAF8F1/#1A1A17
+    backgrounds, all chrome tokens theme-adaptive in both renders'
+  - Realistic and factually correct structural steel data with appropriate Basquin
+    parameters (ultimate 500 MPa, yield 350 MPa, endurance 200 MPa)
+  - PIL safety net plus CDP viewport override ensures exact 3200x1800 output per library
+    guide
+  - 'Comprehensive code quality: np.random.seed(42), clean imports, KISS structure,
+    correct HTML artifacts saved'
   weaknesses:
-  - LineSeries imported from wrong submodule (highcharts_core.options.series.area
-    instead of highcharts_core.options.series.line) — fix the import path for correctness.
-  - Region band labels (32px) are slightly small relative to tick labels (44px); consider
-    bumping to 36-38px for better readability at mobile scale.
-  - '"Infinite Life" region label and the top-right legend occupy the same corner
-    of the plot; shifting the legend slightly lower (y: 140) would remove the visual
-    tension.'
+  - Subtitle and 'High-Cycle Fatigue' band label overlap at the top of the plot area
+    — increase chart marginTop from 110 to ~150, or move band labels down (increase
+    y from 30 to 60-80) to create vertical clearance between the subtitle and the
+    region band labels
+  - LineSeries imported from highcharts_core.options.series.area instead of the canonical
+    highcharts_core.options.series.line — functionally harmless but should match the
+    correct module path
+  - All four spines present; removing the top and right axis lines (set their lineWidth
+    to 0) would improve visual refinement per style guide defaults
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct per style guide
-      Chrome: Title "sn-curve-basic · python · highcharts · anyplot.ai" in bold dark INK (#1A1A17) at 66px — clearly readable. Axis labels "Stress Amplitude (MPa)" and "Number of Cycles to Failure (N)" in dark INK at 56px — readable. Tick labels at 44px in INK_SOFT (#4A4A44) — readable. Region band labels ("Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life") at 32px in INK_SOFT — slightly small but legible. Reference line labels (Ultimate Strength / Yield Strength / Endurance Limit) right-aligned in their respective colors — readable.
-      Data: First series scatter dots are #009E73 (Okabe-Ito position 1, brand green) — correct. Basquin fit line is #D55E00 (Okabe-Ito position 2, vermillion). Three region bands use subtle rgba fills. Three dashed horizontal reference lines in red/orange/green.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "sn-curve-basic · python · highcharts · anyplot.ai" in bold dark ink (~75% width); subtitle "Structural Steel — Power-law (Basquin) regression with fatigue regime boundaries" in muted dark; axis labels "Number of Cycles to Failure (N)" and "Stress Amplitude (MPa)" clearly readable; tick labels in dark soft color
+      Data: Green (#009E73) scatter points with white edges (Test Data); orange-red (#D55E00) fit line (Basquin Fit); three low-opacity region bands (orange/blue/green for fatigue regimes); three dashed reference lines (#CC79A7 Ultimate 500MPa, #E69F00 Yield 350MPa, #56B4E9 Endurance 200MPa)
+      Legibility verdict: PASS with one overlap: subtitle text and "High-Cycle Fatigue" band label occupy same vertical strip at top of plot area — visible text collision
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct per style guide
-      Chrome: Title and axis labels flip to light INK (#F0EFE8) — clearly readable against dark background. Tick labels in INK_SOFT (#B8B7B0) — readable. Region band labels in INK_SOFT — legible. Legend text in INK_SOFT — readable. No dark-on-dark failures observed; no near-black text on near-black background.
-      Data: Scatter dot color (#009E73) and fit line color (#D55E00) are identical to light render — correct. Brand green is visibly distinct from the dark background.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title, subtitle, axis labels and tick labels flip to light cream/grey tones (#F0EFE8 / #B8B7B0) and remain clearly readable; legend background switches to elevated dark (#242420); no dark-on-dark failures observed
+      Data: Green scatter (#009E73) and orange-red fit line (#D55E00) are identical to light render — data colors unchanged; region bands slightly more visible on dark surface but remain subtle
+      Legibility verdict: PASS — all text readable in dark theme; same subtitle/band-label overlap present as in light render
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
@@ -57,74 +60,82 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set per style guide; readable in both themes.
-          Region band labels at 32px slightly small for mobile.
+        comment: 'All font sizes explicitly set (title 66px, subtitle 40px, axis labels
+          56px, tick labels 44px, band labels 36px, reference-line labels 34px). Both
+          renders readable. Minor: 40px subtitle contributes to top-of-plot overlap.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: Clean layout; no collisions between region labels, reference-line
-          labels, or legend.
+        passed: false
+        comment: Subtitle overlaps with 'High-Cycle Fatigue' band label at top of
+          plot area in both renders. Both elements share the same vertical strip just
+          at the chart margin boundary.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: radius=10 markers appropriate for ~35 data points; fit line lineWidth=5
-          prominent.
+        comment: Scatter markers radius=10 with white edges well-sized for ~40-point
+          dataset. Fit line width=5 clearly prominent. All data elements optimal.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green/orange data pair CVD-safe; reference lines use distinct colors
-          + dash styles.
+        comment: Green+orange-red CVD-safe Okabe-Ito pair. Reference line colors are
+          distinct and labeled. No red-green-only encoding.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Generous margins; minor visual tension between Infinite Life label
-          and top-right legend.
+        comment: 3200x1800 canvas confirmed (gate passed). Plot fills canvas well.
+          Minor deduction for subtitle-band-label overlap tightening top margin.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive labels with units; correct mandated title format.
+        comment: 'X: ''Number of Cycles to Failure (N)'', Y: ''Stress Amplitude (MPa)''
+          — descriptive with units.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73, second #D55E00; backgrounds #FAF8F1/#1A1A17;
-          both themes correct.'
+        comment: 'First series #009E73 correct, fit line #D55E00 (Okabe-Ito pos 2)
+          correct. Light background #FAF8F1, dark background #1A1A17. All chrome tokens
+          theme-adaptive.'
     design_excellence:
       score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Region bands, styled reference lines with colored labels, elevated
-          legend, marker edge highlights — deliberate design above baseline.
+        comment: 'Well above defaults: colored region bands, three labeled reference
+          lines, subtitle, and Basquin fit create publication-aware composition. Deductions
+          for subtitle/band-label overlap reducing polish and all four spines present.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Very-low-opacity region bands, subtle grid rgba(10%), marker edge
-          outlines. Polished beyond defaults.
+        comment: Subtle 10%-opacity grid, low-opacity region-band fills, white-edge
+          scatter markers show real visual attention. All four spines remain (no explicit
+          removal).
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Region shading creates three-regime narrative; reference lines provide
-          engineering context; layered scatter/fit/reference hierarchy.
+        comment: 'Excellent: three fatigue-regime bands immediately orient viewer;
+          reference lines frame engineering context; Basquin fit shows trend through
+          noisy scatter. Very minor: no explicit emphasis on the endurance-limit boundary
+          transition.'
     spec_compliance:
       score: 15
       max: 15
@@ -134,28 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-N/Wohler scatter + Basquin fit on log-log axes.
+        comment: 'Correct S-N curve: log-log scatter + power-law fit line.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-log scale, reference lines, three regions, scatter replication,
-          Basquin fit all present.
+        comment: Log-log axes, reference lines (Ultimate/Yield/Endurance), three fatigue
+          regime regions, Basquin regression fit, scatter of multiple specimens per
+          stress level — all present.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X: cycles (log), Y: stress MPa (log); range 10^2-10^8 x 150-600
-          MPa.'
+        comment: X = cycles (10^2 to 10^8), Y = stress amplitude MPa. Log scales on
+          both axes. Full data coverage.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Mandated title format correct; legend labels Test Data / Basquin
-          Fit appropriate.
+        comment: Title 'sn-curve-basic · python · highcharts · anyplot.ai' matches
+          required format. Legend 'Test Data' and 'Basquin Fit' are correct.
     data_quality:
       score: 15
       max: 15
@@ -165,23 +177,25 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Full fatigue curve with all three regimes; multiple samples per stress
-          level; fit + scatter + reference lines.
+        comment: Shows scatter of test specimens, Basquin fit, all three fatigue regimes,
+          and three key material property reference values.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Structural steel with realistic properties (Su=500, Sy=350, Se=200
-          MPa); plausible Basquin parameters.
+        comment: Structural steel fatigue testing — neutral, real engineering domain,
+          no controversial content.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Cycle range 10^2-10^8 and stress 150-600 MPa are domain-appropriate.
+        comment: Ultimate 500 MPa, yield 350 MPa (70% of ultimate), endurance 200
+          MPa (40% of ultimate) — consistent with real structural steel. Cycle range
+          10^2 to 10^8 matches standard fatigue testing.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -189,34 +203,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean linear script.
+        comment: Linear Imports -> Data -> Chart -> Export. No functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: LineSeries imported from highcharts_core.options.series.area instead
-          of highcharts_core.options.series.line.
+        passed: true
+        comment: 'All imports used. Note: LineSeries imported from series.area instead
+          of series.line (canonical path), but functionally correct.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organised, no fake UI elements.
+        comment: Clean and Pythonic. Appropriate complexity for multi-element chart.
+          No over-engineering.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png + plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly. CDP viewport
+          override and PIL safety net included.
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -224,20 +240,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: ScatterSeries + LineSeries properly constructed; plotBands and plotLines
-          used correctly; logarithmic axis type set.
+        comment: Correct Chart(container='container') pattern, HighchartsOptions,
+          typed series classes, add_series() API, plotBands and plotLines with rich
+          inline label configs.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: plotBands for region shading, plotLines with right-aligned colored
-          labels, log-axis via type=logarithmic — good use of Highcharts-native declarative
-          API.
+        comment: plotBands for region shading with labeled zones and plotLines with
+          inline value labels are genuinely Highcharts-specific. CDP override and
+          inline JS embedding also library-specific.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - html-export
   patterns:

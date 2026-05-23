@@ -2,9 +2,9 @@ library: matplotlib
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:45:39Z'
-updated: '2026-05-20T00:07:18Z'
+updated: '2026-05-20T17:32:03Z'
 generated_by: claude-sonnet
-workflow_run: 26131765696
+workflow_run: 26178047708
 issue: 3826
 language_version: 3.13.13
 library_version: 3.10.9
@@ -12,49 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/matplotlib/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - 'Complete spec implementation: all required features present (dual log scales,
-    Basquin fit, three reference lines, three region labels, scatter with realistic
-    noise)'
-  - Correct Okabe-Ito palette in canonical order with brand green (#009E73) first;
-    theme-adaptive chrome perfect in both light and dark renders
-  - Realistic structural steel fatigue data using Basquin equation physics (A=1200,
-    b=0.12) with appropriate log-normal scatter and np.random.seed(42)
-  - Clean, reproducible flat-script code with no functions or classes; appropriate
-    complexity for a multi-series engineering plot
-  - Both major and minor grids correctly applied for log-scale readability with distinct
-    alpha values (0.12 major, 0.06 minor)
+  - 'Perfect spec compliance: all required elements (log-log axes, three material
+    property reference lines, Basquin fit, three fatigue regions) implemented correctly'
+  - Correct Okabe-Ito palette across all five data series (brand green first, then
+    positions 2–5 in order)
+  - 'Full theme adaptation: all chrome elements (text, spines, grid, legend, annotation
+    boxes) correctly use INK/INK_SOFT/INK_MUTED/ELEVATED_BG tokens — dark render has
+    no dark-on-dark failures'
+  - 'Follows canvas rules strictly: figsize=(8, 4.5), dpi=400, no bbox_inches=''tight'''
+  - Region shading + italic annotations create genuine data storytelling beyond a
+    basic scatter+line plot
   weaknesses:
-  - '"Infinite Life" annotation at y=170 sits at only ~8.5% above the ylim bottom
-    (150) on log scale, leaving no breathing room between the label and the bottom
-    spine — lower ylim to ~130 or reposition annotation to y=180-185'
-  - 'Design storytelling could be stronger: adding subtle translucent axhspan fills
-    (alpha~0.05) for the three fatigue regions would make the narrative immediately
-    visual without requiring the viewer to read the annotations'
-  - 'Y-axis tick labels render in scientific notation (2x10^2, 4x10^2) due to log
-    scale; engineering convention for MPa values prefers plain integers — use ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda
-    x, _: f''{int(x)}''))'
-  - 'LM-02 limited: no matplotlib-distinctive technique is used (e.g., LogFormatter
-    customization, FuncFormatter for tick labels, fill_between for region shading)'
+  - Region shadings (axhspan, alpha=0.05–0.07) are nearly imperceptible on the dark
+    render — consider using a theme-adaptive alpha (e.g., 0.07 light / 0.11 dark)
+    so the three fatigue zones remain visible in both themes
+  - The Basquin fit line extends below the endurance limit (200 MPa) toward ~130 MPa
+    at 10^8 cycles, implying the material fails at infinite-life stress levels — consider
+    clipping the fit line at the endurance limit (y≥200 MPa) to avoid physically misleading
+    extrapolation
+  - Minor marker overlap in the low-cycle fatigue region (~10^3–5×10^3 cycles) where
+    2–3 data points overlap; acceptable for realistic scatter but could reduce marker
+    size slightly (s=80) with alpha=0.7 to reveal the full distribution
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct, not pure white
-      Chrome: Title "sn-curve-basic · python · matplotlib · anyplot.ai" in dark ink (#1A1A17) at fontsize=12 (~70% width, expected for mandated format); Y-axis label "Stress Amplitude (MPa)" and X-axis label "Number of Cycles to Failure (N)" in dark ink at fontsize=10; tick labels in secondary ink (#4A4A44) at fontsize=8 using scientific notation on Y-axis (2×10², 4×10², 6×10²); legend in upper right with styled frame (ELEVATED_BG fill, INK_SOFT edge, INK_SOFT text); region annotations in italic muted ink at fontsize=7 ("Low-Cycle Fatigue" upper left, "High-Cycle Fatigue" middle with background box, "Infinite Life" bottom right near y=170)
-      Data: ~40 green (#009E73) scatter markers (s=100, alpha=0.75) with white edges; orange (#D55E00) Basquin fit line (linewidth=2.0); blue (#0072B2) dashed line at 500 MPa (Ultimate Strength); pink (#CC79A7) dashed line at 350 MPa (Yield Strength); gold (#E69F00) dashed line at 200 MPa (Endurance Limit); first series is #009E73 as required
-      Notable issue: "Infinite Life" annotation at y=170 on log scale with ylim=(150, 650) is very close to bottom spine (~8.5% from bottom) — tight but legible
-      Legibility verdict: PASS (all text readable against light background; no light-on-light issues)
+      Background: Warm off-white (#FAF8F1) — correct theme surface
+      Chrome: Title "sn-curve-basic · python · matplotlib · anyplot.ai" in dark medium-weight text, clearly readable. X-axis label "Number of Cycles to Failure (N)" and Y-axis label "Stress Amplitude (MPa)" both at 10pt in dark ink. Tick labels at 8pt in INK_SOFT (#4A4A44), readable. Legend in upper-right with rounded frame (ELEVATED_BG fill), text in INK_SOFT. Three italic region annotations ("Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life") with transparent bbox are readable.
+      Data: Teal/green scatter points (#009E73, first series, brand green). Orange/vermillion Basquin fit line (#D55E00). Blue dashed horizontal at 500 MPa (#0072B2). Pink dashed at 350 MPa (#CC79A7). Golden dashed at 200 MPa (#E69F00). Three very subtle region shadings (alpha=0.05-0.07) barely visible but present.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct, not pure black
-      Chrome: Title in light primary ink (#F0EFE8); axis labels in light primary ink; tick labels in secondary light ink (#B8B7B0); legend frame uses ELEVATED_BG (#242420) fill with lighter text; region annotation text in tertiary muted ink (#A8A79F) — all correctly adapted to dark theme
-      Data: Green scatter markers, orange fit line, blue/pink/gold reference lines — identical colors to light render confirming only chrome flips between themes
-      Dark-on-dark check: No dark-on-dark failures detected; all text elements are clearly readable against the near-black surface
-      Legibility verdict: PASS (all text readable against dark background; no dark-on-dark issues)
+      Background: Warm near-black (#1A1A17) — correct dark theme surface
+      Chrome: Title and all axis labels flip to light colors (#F0EFE8 / #B8B7B0), clearly readable against dark background. Tick labels are light-colored — no dark-on-dark failures. Legend frame uses dark elevated background (#242420). Region annotation text ("Low-Cycle Fatigue", "High-Cycle Fatigue", "Infinite Life") visible in INK_MUTED (#A8A79F).
+      Data: Scatter points remain #009E73 (identical to light render). Basquin fit remains #D55E00. Reference lines retain their blue/pink/golden Okabe-Ito colors — all identical to light render. Region shadings (axhspan) are nearly imperceptible at alpha=0.05-0.07 on the dark background.
+      Legibility verdict: PASS — all text readable; region shadings near-invisible but not a legibility failure
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -62,53 +58,54 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set; both themes fully readable; minor:
-          ''Infinite Life'' annotation at y=170 very close to ylim bottom (150), leaving
-          minimal breathing room above bottom spine'
+        comment: All text explicitly sized and readable in both themes; minor deduction
+          for 'Infinite Life' annotation tight near y-axis lower bound at y=182 (below
+          200 MPa endurance limit line)
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlaps in either render
+        comment: Scatter points cluster in low-cycle fatigue region (~10^3-5*10^3
+          cycles), several points overlap; acceptable for realistic fatigue scatter
+          but slightly crowded
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: ~40 scatter points at s=100 appropriate for 30-100 point density;
-          fit line at linewidth=2.0 and dashed reference lines clearly distinct
+        comment: All primary elements (markers, fit line, reference lines) clearly
+          visible; region shadings (axhspan, alpha=0.05-0.07) nearly imperceptible
+          on dark render
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette is CVD-safe with adequate luminance contrast throughout
+        comment: Full Okabe-Ito palette, CVD-safe, no red-green sole signals
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good overall proportions with tight_layout; deducted 1 for 'Infinite
-          Life' annotation at y=170 being ~8.5% above ylim bottom (150), cramped against
-          bottom spine
+        comment: Correct landscape 3200x1800 canvas, no bbox_inches='tight', good
+          whitespace and proportions, no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Descriptive axis labels with units; title follows correct mandatory
-          format
+        comment: '''Number of Cycles to Failure (N)'' and ''Stress Amplitude (MPa)''
+          are descriptive with units; title format correct'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; Okabe-Ito canonical order maintained;
-          light #FAF8F1 and dark #1A1A17 backgrounds; theme-adaptive chrome correct
-          in both renders'
+        comment: 'First series = #009E73; multi-series follows Okabe-Ito order; backgrounds
+          #FAF8F1 (light) / #1A1A17 (dark) correct'
     design_excellence:
-      score: 13
+      score: 12
       max: 20
       items:
       - id: DE-01
@@ -116,25 +113,24 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above plain library default: Okabe-Ito applied deliberately, italic
-          region annotations with styled background boxes, clean typography hierarchy;
-          not yet at ''strong design'' level'
+        comment: 'Intentional design: region shadings, italic fatigue regime labels
+          with bbox annotations, styled legend frame — above the default; deliberate
+          hierarchy but not exceptional'
       - id: DE-02
         name: Visual Refinement
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Top and right spines removed; grid subtle with distinct alphas for
-          major (0.12) and minor (0.06) lines appropriate for log scale; legend frame
-          styled with ELEVATED_BG
+        comment: Top/right spines removed, y-only subtle grid, annotation boxes with
+          rounded corners and alpha fill, tick label styling via INK_SOFT token
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three labeled fatigue regions create narrative structure; material
-          property reference lines guide viewer to key engineering thresholds; visual
-          hierarchy present but not forceful — region shading would strengthen storytelling
+        comment: Three-region narrative (low-cycle / high-cycle / infinite life) clearly
+          communicated through shading + labels + reference lines; viewer guided from
+          high-stress to endurance limit
     spec_compliance:
       score: 15
       max: 15
@@ -144,28 +140,27 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-N (Wohler) curve with dual log scales
+        comment: Correct S-N curve on log-log axes with scatter data and fit line
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Both log scales, Basquin power-law fit, three reference lines (Ultimate/Yield/Endurance),
-          three fatigue region labels, scatter with realistic variability
+        comment: Log scales, all three reference lines (Ultimate, Yield, Endurance),
+          three fatigue regions, Basquin fit line — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cycles (N) on X-axis, Stress Amplitude (MPa) on Y-axis; full data
-          range visible
+        comment: Cycles on x-axis, stress amplitude on y-axis, full range displayed
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches mandatory format; all five legend entries correctly
-          labelled
+        comment: Title is exactly 'sn-curve-basic · python · matplotlib · anyplot.ai';
+          legend labels match all data series
     data_quality:
       score: 15
       max: 15
@@ -175,23 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'Shows all aspects: scatter with log-normal noise, Basquin fit, scatter
-          across multiple stress levels, three distinct fatigue regimes with labels,
-          three material property thresholds'
+        comment: Scatter test data, Basquin fit, all three material property lines,
+          region shading, region annotations — complete coverage
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Structural steel fatigue data using Basquin equation (A=1200, b=0.12)
-          with realistic scatter; neutral engineering domain
+        comment: Structural steel fatigue, stress 200-500 MPa, cycle range 10^2-10^8
+          are all realistic and domain-neutral
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stress range 150-650 MPa and cycle range 100-10^8 consistent with
-          real structural steel fatigue test data
+        comment: Log-log scale appropriate; y-axis 120-650 MPa captures all reference
+          values; x-axis 10^2-10^8 spans engineering-relevant regime
     code_quality:
       score: 10
       max: 10
@@ -201,35 +195,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: imports -> tokens -> data -> plot -> save; no functions
-          or classes'
+        comment: Flat, no functions or classes, logically organized sections
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) ensures deterministic output
+        comment: np.random.seed(42) set before all random calls
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only os, numpy, matplotlib.pyplot imported; all used
+        comment: os, matplotlib.pyplot, numpy, FixedLocator, FuncFormatter — all used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, Pythonic structure; appropriate complexity; no over-engineering
+        comment: Appropriate complexity, no fake UI, clear variable names
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png at dpi=400; current matplotlib 3.10 API
-          throughout
+        comment: savefig(f'plot-{THEME}.png', dpi=400) without bbox_inches='tight'
     library_mastery:
-      score: 6
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -237,21 +229,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Axes-method usage throughout; log scale via set_xscale/yscale; plt.setp()
-          for batch legend text styling; slightly above default-3
+        comment: Uses Axes methods throughout (ax.scatter, ax.plot, ax.axhline, ax.axhspan);
+          FixedLocator + FuncFormatter for precise log-scale tick control
       - id: LM-02
         name: Distinctive Features
-        score: 2
+        score: 3
         max: 5
-        passed: false
-        comment: Uses major/minor grid for log-scale and annotation bbox styling —
-          solid patterns but not features that distinctively separate matplotlib from
-          peer libraries; slightly above default-1 for minor-grid log technique
+        passed: true
+        comment: ax.axhspan for region shading (distinctive matplotlib feature), FuncFormatter
+          for custom tick labels, ax.annotate with bbox styling; solid usage but stops
+          short of more advanced matplotlib capabilities
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - manual-ticks
   patterns:
   - data-generation
   - iteration-over-groups
@@ -261,4 +254,3 @@ impl_tags:
   styling:
   - alpha-blending
   - edge-highlighting
-  - grid-styling

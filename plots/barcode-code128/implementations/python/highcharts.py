@@ -1,23 +1,28 @@
-""" pyplots.ai
+""" anyplot.ai
 barcode-code128: Code 128 Barcode
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-19
+Library: highcharts unknown | Python 3.13.13
+Quality: 87/100 | Updated: 2026-05-21
 """
 
+import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Code 128 encoding tables
-# Each character is represented by a pattern of bar widths (alternating black/white)
-# Pattern format: 6 elements representing bar widths (1-4 units each)
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# Code 128 encoding tables (value: (pattern, Code A, Code B, Code C))
 CODE128_PATTERNS = {
-    # value: (pattern, Code A char, Code B char, Code C value)
     0: ("212222", " ", " ", "00"),
     1: ("222122", "!", "!", "01"),
     2: ("222221", '"', '"', "02"),
@@ -124,185 +129,245 @@ CODE128_PATTERNS = {
     103: ("211412", "START_A", "START_A", "START_A"),
     104: ("211214", "START_B", "START_B", "START_B"),
     105: ("211232", "START_C", "START_C", "START_C"),
-    106: ("2331112", "STOP", "STOP", "STOP"),  # Stop pattern is 7 elements
+    106: ("2331112", "STOP", "STOP", "STOP"),
 }
 
-# Build reverse lookup for Code B characters
-CODE_B_LOOKUP = {}
-for value, (_pattern, _char_a, char_b, _char_c) in CODE128_PATTERNS.items():
-    if value < 103:  # Exclude special codes
-        CODE_B_LOOKUP[char_b] = value
+# Reverse lookup: Code B character → value
+CODE_B_LOOKUP = {data[2]: val for val, data in CODE128_PATTERNS.items() if val < 103}
 
-
-def encode_code128(content):
-    """Encode a string to Code 128B barcode pattern."""
-    # Use Code 128B (standard ASCII printable characters)
-    values = [104]  # Start with Code B start character
-
-    # Encode each character
-    for char in content:
-        if char in CODE_B_LOOKUP:
-            values.append(CODE_B_LOOKUP[char])
-        else:
-            # For characters not in lookup, use space
-            values.append(0)
-
-    # Calculate check digit (modulo 103)
-    checksum = values[0]  # Start character
-    for i, value in enumerate(values[1:], start=1):
-        checksum += i * value
-    check_digit = checksum % 103
-    values.append(check_digit)
-
-    # Add stop character
-    values.append(106)
-
-    return values
-
-
-def values_to_bars(values):
-    """Convert Code 128 values to bar widths."""
-    bars = []
-    for value in values:
-        pattern = CODE128_PATTERNS[value][0]
-        for width in pattern:
-            bars.append(int(width))
-    return bars
-
-
-# Data - Code 128 barcode content
+# Data — a realistic shipping label barcode
 content = "SHIP-2024-ABC123"
 
-# Encode the content
-encoded_values = encode_code128(content)
-bar_widths = values_to_bars(encoded_values)
+# Encode Code 128B: Start B → data chars → check digit → Stop
+values = [104]  # START_B
+for char in content:
+    values.append(CODE_B_LOOKUP.get(char, 0))
+checksum = values[0]
+for i, v in enumerate(values[1:], 1):
+    checksum += i * v
+values.append(checksum % 103)
+values.append(106)  # STOP
 
-# Convert bar widths to actual bar data for rendering
-# Each bar alternates between black and white, starting with black
+# Build bar positions (black bars only; alternating black/white starts black)
 bars = []
 x_pos = 0
 is_black = True
-
-for width in bar_widths:
-    if is_black:
-        bars.append({"x": x_pos, "width": width, "color": "#000000"})
-    x_pos += width
-    is_black = not is_black
-
+for v in values:
+    for ch in CODE128_PATTERNS[v][0]:
+        width = int(ch)
+        if is_black:
+            bars.append({"x": x_pos, "width": width})
+        x_pos += width
+        is_black = not is_black
 total_barcode_width = x_pos
 
-# Chart dimensions
-chart_width = 4800
-chart_height = 2700
+# Structural widths for structural annotations
+start_w = sum(int(c) for c in CODE128_PATTERNS[104][0])  # START_B pattern
+stop_w = sum(int(c) for c in CODE128_PATTERNS[106][0])  # STOP pattern
+check_digit_val = values[-2]
+check_w = sum(int(c) for c in CODE128_PATTERNS[check_digit_val][0])
+data_span = total_barcode_width - start_w - check_w - stop_w  # pure data chars
 
-# Calculate scaling to fit barcode nicely in chart
-quiet_zone = 400  # Quiet zones on each side
-available_width = chart_width - (2 * quiet_zone)
-scale_factor = available_width / total_barcode_width
+# Quiet zones in barcode units (~12% each side, standard recommends ≥10x narrowest bar)
+quiet_zone_units = int(total_barcode_width * 0.12)
 
-# Barcode dimensions on chart
-bar_height = 1400
-bar_top = 500  # Y position for top of bars
+# xrange series data — each black bar becomes a {x, x2, y, color} point
+# x-axis spans 0..x_total (quiet zone + barcode + quiet zone)
+x_total = total_barcode_width + 2 * quiet_zone_units
+bars_data = [
+    {"x": b["x"] + quiet_zone_units, "x2": b["x"] + b["width"] + quiet_zone_units, "y": 0, "color": "#000000"}
+    for b in bars
+]
 
-# Download Highcharts JS
-highcharts_url = "https://code.highcharts.com/highcharts.js"
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+# Canvas layout
+W, H = 3200, 1800
+MARGIN_T, MARGIN_R, MARGIN_B, MARGIN_L = 200, 200, 200, 200
+PLOT_W = W - MARGIN_L - MARGIN_R  # 2600
+PLOT_H = H - MARGIN_T - MARGIN_B  # 1400
 
-# Build JavaScript to render barcode bars as rectangles
-bars_js = ""
-for bar in bars:
-    scaled_x = quiet_zone + (bar["x"] * scale_factor)
-    scaled_width = max(bar["width"] * scale_factor, 3)  # Minimum 3px for visibility
-    bars_js += f"""
-    chart.renderer.rect({scaled_x}, {bar_top}, {scaled_width}, {bar_height}, 0)
-        .attr({{fill: '{bar["color"]}', 'stroke-width': 0}})
-        .add();
-    """
+POINT_WIDTH = 950  # xrange bar height in pixels (68% of plot height)
 
-# Human-readable text position
-text_y = bar_top + bar_height + 120
-text_x = chart_width / 2
+# Vertical pixel positions
+bar_cy = MARGIN_T + PLOT_H // 2  # 900
+bar_top_px = bar_cy - POINT_WIDTH // 2  # 425
+bar_bot_px = bar_cy + POINT_WIDTH // 2  # 1375
+annot_y = bar_bot_px + 60  # 1435 — zone labels inside white box
+human_y = bar_bot_px + 155  # 1530 — human-readable text
+footer_y = H - 70  # 1730 — technical footer
 
-# Generate HTML with Highcharts
+
+def bx_to_px(bx_units: float) -> float:
+    """Barcode x-units → absolute canvas pixel x."""
+    return MARGIN_L + (bx_units / x_total) * PLOT_W
+
+
+# Horizontal annotation anchor pixels
+qz_left_cx = bx_to_px(quiet_zone_units / 2)
+qz_right_cx = bx_to_px(x_total - quiet_zone_units / 2)
+start_cx = bx_to_px(quiet_zone_units + start_w / 2)
+data_cx = bx_to_px(quiet_zone_units + start_w + data_span / 2)
+check_cx = bx_to_px(quiet_zone_units + start_w + data_span + check_w / 2)
+stop_cx = bx_to_px(quiet_zone_units + total_barcode_width - stop_w / 2)
+
+# Divider tick positions (vertical rules between zones, drawn as 1px rects)
+div_xs = [
+    bx_to_px(quiet_zone_units),  # after left QZ
+    bx_to_px(quiet_zone_units + start_w),  # after START
+    bx_to_px(quiet_zone_units + start_w + data_span),  # after DATA
+    bx_to_px(quiet_zone_units + start_w + data_span + check_w),  # after CHECK
+    bx_to_px(x_total - quiet_zone_units),  # before right QZ
+]
+div_ticks_js = "\n                        ".join(
+    f"c.renderer.rect({x:.1f},{annot_y - 20},1,42,0).attr({{fill:'#C8C5B8','stroke-width':0}}).add();" for x in div_xs
+)
+
+# Download Highcharts core + xrange module (inline for headless Chrome)
+hc_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/12.2.0/highcharts.js"
+hc_xrange_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/12.2.0/modules/xrange.js"
+with urllib.request.urlopen(hc_url, timeout=30) as r:
+    highcharts_js = r.read().decode("utf-8")
+with urllib.request.urlopen(hc_xrange_url, timeout=30) as r:
+    highcharts_xrange_js = r.read().decode("utf-8")
+
+bars_data_json = json.dumps(bars_data)
+
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
-    <style>
-        body {{ margin: 0; padding: 0; background: #ffffff; }}
-        #container {{ width: 4800px; height: 2700px; }}
-    </style>
+    <script>{highcharts_xrange_js}</script>
 </head>
-<body>
-    <div id="container"></div>
+<body style="margin:0;padding:0;background:{PAGE_BG};">
+    <div id="container" style="width:{W}px;height:{H}px;"></div>
     <script>
-        var chart = Highcharts.chart('container', {{
-            chart: {{
-                width: 4800,
-                height: 2700,
-                backgroundColor: '#ffffff',
-                events: {{
-                    load: function() {{
-                        var chart = this;
-                        // Render barcode bars as rectangles
-                        {bars_js}
-                        // Add human-readable text
-                        chart.renderer.text('{content}', {text_x}, {text_y})
-                            .attr({{align: 'center'}})
-                            .css({{
-                                fontSize: '72px',
-                                fontFamily: '"Courier New", Courier, monospace',
-                                fontWeight: 'bold',
-                                color: '#000000',
-                                letterSpacing: '8px'
-                            }})
-                            .add();
-                    }}
+    var chart = Highcharts.chart('container', {{
+        chart: {{
+            type: 'xrange',
+            width: {W},
+            height: {H},
+            backgroundColor: '{PAGE_BG}',
+            plotBackgroundColor: '#FFFFFF',
+            plotBorderWidth: 1,
+            plotBorderColor: '#DDDDCC',
+            margin: [{MARGIN_T}, {MARGIN_R}, {MARGIN_B}, {MARGIN_L}],
+            events: {{
+                load: function() {{
+                    var c = this;
+
+                    /* ── Zone divider ticks ── */
+                    {div_ticks_js}
+
+                    /* ── Zone labels (annotation strip) ── */
+                    c.renderer.text('← Quiet Zone', {qz_left_cx:.1f}, {annot_y})
+                        .attr({{align:'center'}})
+                        .css({{fontSize:'28px',color:'#999990',fontStyle:'italic'}})
+                        .add();
+                    c.renderer.text('START B', {start_cx:.1f}, {annot_y})
+                        .attr({{align:'center'}})
+                        .css({{fontSize:'28px',color:'#555550',fontWeight:'bold',letterSpacing:'2px'}})
+                        .add();
+                    c.renderer.text('DATA  ({len(content)} chars · Subset B)', {data_cx:.1f}, {annot_y})
+                        .attr({{align:'center'}})
+                        .css({{fontSize:'28px',color:'#444440'}})
+                        .add();
+                    c.renderer.text('CHK', {check_cx:.1f}, {annot_y})
+                        .attr({{align:'center'}})
+                        .css({{fontSize:'28px',color:'#777770'}})
+                        .add();
+                    c.renderer.text('STOP', {stop_cx:.1f}, {annot_y})
+                        .attr({{align:'center'}})
+                        .css({{fontSize:'28px',color:'#555550',fontWeight:'bold',letterSpacing:'2px'}})
+                        .add();
+                    c.renderer.text('Quiet Zone →', {qz_right_cx:.1f}, {annot_y})
+                        .attr({{align:'center'}})
+                        .css({{fontSize:'28px',color:'#999990',fontStyle:'italic'}})
+                        .add();
+
+                    /* ── Human-readable text ── */
+                    c.renderer.text('{content}', {W // 2}, {human_y})
+                        .attr({{align:'center'}})
+                        .css({{fontSize:'54px',fontFamily:'"Courier New",Courier,monospace',
+                               fontWeight:'bold',color:'#000000',letterSpacing:'8px'}})
+                        .add();
+
+                    /* ── Technical footer ── */
+                    c.renderer.text(
+                        'Code 128B · Subset B encodes ASCII 32–126 (printable) · Subset C encodes numeric pairs (2× density) · Check digit: mod 103',
+                        {W // 2}, {footer_y})
+                        .attr({{align:'center'}})
+                        .css({{fontSize:'34px',color:'{INK_SOFT}'}})
+                        .add();
                 }}
-            }},
-            title: {{
-                text: 'barcode-code128 \\u00b7 highcharts \\u00b7 pyplots.ai',
-                style: {{fontSize: '48px', fontWeight: 'bold', color: '#333333'}},
-                y: 100
-            }},
-            subtitle: {{
-                text: 'Code 128 Barcode Visualization',
-                style: {{fontSize: '32px', color: '#666666'}},
-                y: 160
-            }},
-            credits: {{enabled: false}},
-            legend: {{enabled: false}},
-            xAxis: {{visible: false}},
-            yAxis: {{visible: false}}
-        }});
+            }}
+        }},
+        title: {{
+            text: 'barcode-code128 · python · highcharts · anyplot.ai',
+            style: {{fontSize:'66px',fontWeight:'bold',color:'{INK}'}},
+            margin: 30
+        }},
+        tooltip: {{enabled: false}},
+        credits: {{enabled: false}},
+        legend: {{enabled: false}},
+        xAxis: {{
+            min: 0,
+            max: {x_total},
+            visible: false
+        }},
+        yAxis: {{
+            min: -0.5,
+            max: 0.5,
+            visible: false
+        }},
+        plotOptions: {{
+            xrange: {{
+                pointWidth: {POINT_WIDTH},
+                borderWidth: 0,
+                grouping: false,
+                states: {{hover: {{enabled: false}}}}
+            }}
+        }},
+        series: [{{
+            type: 'xrange',
+            name: 'Code 128B Barcode',
+            data: {bars_data_json}
+        }}]
+    }});
     </script>
 </body>
 </html>"""
 
-# Save HTML file
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Write temp HTML for screenshot
+# Screenshot via headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
-# Take screenshot with Selenium
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument(f"--window-size={W},{H}")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(5)  # Wait for chart to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-# Clean up temp file
 Path(temp_path).unlink()
+
+# Normalize to exact canvas dimensions
+img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if img.size != (W, H):
+    norm = Image.new("RGB", (W, H), PAGE_BG)
+    norm.paste(img, ((W - img.size[0]) // 2, (H - img.size[1]) // 2))
+    norm.save(f"plot-{THEME}.png")

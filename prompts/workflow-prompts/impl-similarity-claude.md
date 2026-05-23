@@ -36,11 +36,11 @@ Look for groups of 2+ libraries where the descriptions reveal the same:
 - data formula / random seed / sample size
 - example domain (web traffic vs stock prices vs weather is a real, distinguishing choice)
 - visual variant when the spec listed multiple (e.g. plain line vs filled-area vs min/max-highlighted)
-- chrome / annotation choices beyond the mandated Okabe-Ito + theme palette
+- chrome / annotation choices beyond the mandated anyplot palette + theme palette
 
 ### What does NOT count as copying — these are project-mandated
 
-- **Okabe-Ito palette positions 1–7.** The data colors are fixed by the style guide; identical colors there are required, not copied.
+- **anyplot palette positions 1–7.** The data colors are fixed by the style guide; identical colors there are required, not copied.
 - **Plot size and aspect ratio.** Fixed by `prompts/default-style-guide.md` and the per-library prompts. Identical aspect ratios across all 9 libs are correct, expected behavior — never propose "different aspect ratios" as divergence advice.
 - **Theme chrome.** Page background `#FAF8F1` (light) / `#1A1A17` (dark), text inks, etc. flip identically across libs by design.
 
@@ -48,7 +48,7 @@ If a candidate cluster's identical signal is *only* one of the mandated items ab
 
 ## Step 4: Inspect ambiguous clusters (optional)
 
-If the `image_description` blobs for a candidate cluster don't conclusively show copying — e.g. you can't tell whether two libraries used the same random seed, or whether their domain is genuinely the same — you MAY use the Read tool on `plots/{SPEC_ID}/implementations/{language}/{library}{ext}` for **only those libraries inside the candidate cluster** to verify. (`{language}` is `python` for the Python libraries and `r` for ggplot2; `{ext}` is `.py` or `.R` accordingly.)
+If the `image_description` blobs for a candidate cluster don't conclusively show copying — e.g. you can't tell whether two libraries used the same random seed, or whether their domain is genuinely the same — you MAY use the Read tool on `plots/{SPEC_ID}/implementations/{language}/{library}{ext}` for **only those libraries inside the candidate cluster** to verify. (`{language}` is `python` for the Python libraries, `r` for ggplot2, and `julia` for makie; `{ext}` is `.py`, `.R`, or `.jl` accordingly.)
 
 **Do not read sibling source files for libraries that are not in a candidate cluster.** That wastes tokens and is not what this audit is for.
 

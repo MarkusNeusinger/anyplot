@@ -9,8 +9,9 @@ Implementation
      │
      ▼
 ┌─────────────────────┐
-│  Stage 1: Auto-Reject  │  ──► FAIL → Score = 0, regenerate
-│  (8 quick checks)      │
+│  Stage 1: Auto-Reject  │  ──► FAIL → Score = 0
+│  (9 checks)            │       AR-01..AR-05, AR-07: regenerate (workflow)
+│                        │       AR-06, AR-08, AR-09: repair via review cascade (AI)
 └─────────────────────┘
      │ PASS
      ▼
@@ -32,7 +33,7 @@ Implementation
 
 ## Stage 1: Auto-Reject
 
-Quick checks **before** AI evaluation. On fail: Score=0, no retry.
+Checks that gate quality scoring. On fail: Score=0. Workflow-handled checks (AR-01..AR-05, AR-07) reject without retry — regenerate the whole impl. AI-handled checks (AR-06, AR-08, AR-09) set score=0 inside the review and enter the existing 5-review / 4-repair cascade.
 
 | ID | Check | Description | Verification |
 |----|-------|-------------|--------------|
@@ -44,8 +45,9 @@ Quick checks **before** AI evaluation. On fail: Score=0, no retry.
 | AR-06 | NOT_FEASIBLE | Library cannot implement spec | AI decision |
 | AR-07 | WRONG_FORMAT | Wrong output type | Not .png for static libraries |
 | AR-08 | FAKE_FUNCTIONALITY | Static library simulates interactive features | AI decision |
+| AR-09 | EDGE_CLIPPING | Title / axis label / legend clipped at canvas border | AI decision (visual) |
 
-**Check order:** AR-01 → AR-02 → AR-03 → AR-04 → AR-05 → AR-06 → AR-07 → AR-08
+**Check order:** AR-01 → AR-02 → AR-03 → AR-04 → AR-05 → AR-06 → AR-07 → AR-08 → AR-09
 
 ### AR-05: Library Usage
 
@@ -83,6 +85,28 @@ A static library (matplotlib, seaborn, plotnine) simulates interactive features 
 - Cell annotations in heatmaps (these are native text, not fake tooltips)
 - Color encoding of time direction (arrows, gradients showing progression)
 - Honest notes like "See Plotly version for interactive features"
+
+### AR-09: Edge Clipping
+
+Any text element — title, axis title, axis tick labels, legend, annotations — is **clipped at the canvas border**, meaning visible pixels of the element are missing because they were rendered outside the saved PNG's bounding box and chopped off.
+
+This is distinct from VQ-05's soft "no overflow" check (deducts when text leaves its *axis* but stays on the canvas). AR-09 rejects outright when pixels are missing at the *canvas* edge. The post-render canvas-size gate enforces dimensions but cannot see what is at those edges — that's the reviewer's job.
+
+**Triggers (auto-reject, Score = 0):**
+- Title cropped at top edge (top of letters cut, descenders missing, title not fully visible above the plot area)
+- Y-axis tick labels missing leftmost digit because they touch the left canvas edge ("500" rendered as "00")
+- X-axis label cut at bottom edge (axis title only half-visible at the canvas bottom)
+- Legend entries hidden behind / merged into the canvas edge
+- Any annotation, label, or category text whose bounding box is partially outside the saved PNG
+
+**NOT auto-reject (legitimate / handled by VQ-05 instead):**
+- Tooltips or hover affordances drawn intentionally near the edge
+- Decorative gridlines or borders aligned with the canvas edge
+- Text that overflows its *axis bounds* but stays fully within the canvas — that's a VQ-05 deduction at most, not AR-09
+- Tight-but-readable margins: every pixel of the text is visible, just close to the edge
+- Touching the border without missing pixels (proximity ≠ clipping)
+
+The bar is strict: AR-09 requires evidence that pixels were *removed*, not merely that an element sits near the boundary.
 
 ---
 
@@ -149,7 +173,7 @@ A static library (matplotlib, seaborn, plotnine) simulates interactive features 
 | VQ-04 | Color Accessibility | 2 | 2=colorblind-safe contrast, 1=ok, 0=red-green only |
 | VQ-05 | Layout & Canvas | 4 | 4=perfect, 2=ok, 0=cut-off |
 | VQ-06 | Axis Labels & Title | 2 | 2=with units, 1=descriptive, 0=x/y |
-| VQ-07 | Palette Compliance | 2 | 2=correct Okabe-Ito / continuous palette + theme-correct chrome, 1=partial, 0=non-compliant |
+| VQ-07 | Palette Compliance | 2 | 2=correct anyplot palette / anyplot continuous cmap + theme-correct chrome, 1=partial, 0=non-compliant |
 
 ### VQ-01: Text Legibility (8 Points)
 
@@ -210,7 +234,7 @@ This check covers **contrast and CVD safety beyond palette choice** — e.g., ad
 | 1 | Acceptable but not optimal |
 | 0 | Red-green as only distinguishing feature, or critical contrast failures |
 
-**Note:** Palette choice itself (correct Okabe-Ito, correct continuous cmap) is scored separately in **VQ-07**. VQ-04 is about how the palette is *applied* — spacing, alpha, luminance — not which palette was picked.
+**Note:** Palette choice itself (correct anyplot palette, correct continuous cmap) is scored separately in **VQ-07**. VQ-04 is about how the palette is *applied* — spacing, alpha, luminance — not which palette was picked.
 
 ### VQ-05: Layout Balance & Canvas Utilization (4 Points)
 
@@ -236,19 +260,19 @@ This check covers **contrast and CVD safety beyond palette choice** — e.g., ad
 
 ### VQ-07: Palette Compliance (2 Points)
 
-The implementation must use the **Okabe-Ito categorical palette** (defined in `prompts/default-style-guide.md` "Categorical Palette") for categorical data and the correct **perceptually-uniform colormap** for continuous data. Both light and dark renders are inspected — the data colors (positions 1–7) must be identical across themes; only the theme-adaptive chrome (background, text, grid, legend box) may flip.
+The implementation must use the **anyplot categorical palette** (defined in `prompts/default-style-guide.md` "Categorical Palette") for categorical data and one of the **anyplot continuous colormaps** (`anyplot_seq` or `anyplot_div`) for continuous data — no other cmaps. Both light and dark renders are inspected — the data colors (positions 1–7) must be identical across themes; only the theme-adaptive chrome (background, text, grid, legend box) may flip.
 
 | Points | Criterion |
 |--------|-----------|
-| 2 | Perfect palette + perfect theme chrome: first categorical series is `#009E73`; if multi-series, colors follow Okabe-Ito in canonical order (`#D55E00`, `#0072B2`, `#CC79A7`, `#E69F00`, `#56B4E9`, `#F0E442`); continuous data uses `viridis`/`cividis` (sequential), `BrBG` (diverging), or `viridis`/`Reds`/`Blues` (heatmaps); plot background is `#FAF8F1` (light) or `#1A1A17` (dark) — never pure white/black; text, grid, and legend-box colors are theme-correct in both renders |
-| 1 | Partial compliance: palette is Okabe-Ito but first series is not `#009E73`; OR continuous data uses an approved cmap but not the default recommendation; OR chrome is mostly theme-correct with one or two off elements (e.g., dark render has one black label) |
+| 2 | Perfect palette + perfect theme chrome: first categorical series is `#009E73`; if multi-series, colors come from the anyplot palette — canonical order (`#9418DB`, `#B71D27`, `#16B8F3`, `#99B314`, `#D359A7`, `#BA843E`) by default, or reassigned to palette members that match strong semantic cues (grass→green, wood→tan, blood→red); continuous data uses `anyplot_seq` (single-polarity) or `anyplot_div` (diverging) — no other cmaps; plot background is `#FAF8F1` (light) or `#1A1A17` (dark) — never pure white/black; text, grid, and legend-box colors are theme-correct in both renders |
+| 1 | Partial compliance: palette is the anyplot palette but first series is not `#009E73`; OR continuous data uses an anyplot cmap but the wrong polarity (e.g. `anyplot_seq` on diverging-polarity data); OR chrome is mostly theme-correct with one or two off elements (e.g., dark render has one black label) |
 | 0 | Non-compliant: legacy `#306998` (Python Blue) still present; categorical palette is arbitrary custom hexes, `Set2`, `tab10`, or `colorblind`; continuous data uses `jet`/`hsv`/`rainbow`; categorical palette applied to continuous data (banding); plot background is pure `#FFFFFF`/`#000000`; or chrome is wrong-theme (e.g., dark page with dark text) |
 
 **Evaluation steps for VQ-07:**
 1. Look at `plot-light.png`: does the primary data series render in `#009E73`? Does the background look like `#FAF8F1`?
 2. Look at `plot-dark.png`: is the data series still `#009E73` (identical to light)? Is the background `#1A1A17`? Is all text light-colored?
-3. If multi-series, confirm the next colors in order match Okabe-Ito positions 2–N.
-4. If continuous: check the source code for `cmap=` / `scheme=` / `color_continuous_scale=`. Reject `jet`, `hsv`, `rainbow`; prefer `viridis`/`cividis` for sequential and `BrBG` for diverging.
+3. If multi-series, confirm the next colors in order match anyplot palette positions 2–N (or the semantic-exception assignment when category labels imply real-world colors).
+4. If continuous: check the source code for `cmap=` / `scheme=` / `color_continuous_scale=`. Reject anything other than `anyplot_seq` (single-polarity) or `anyplot_div` (diverging). Common rejections: `jet`/`hsv`/`rainbow`/`viridis`/`cividis`/`BrBG`/`Reds`/`Blues`/`Greens` — all forbidden.
 5. If either render fails theme-chrome (unreadable text, wrong background), score drops accordingly.
 
 ---
@@ -490,7 +514,7 @@ VISUAL QUALITY (23/30)
   VQ-04: 2/2   (good contrast, CVD-safe)
   VQ-05: 2/4   (ok layout, some wasted space)
   VQ-06: 2/2   (labels with units)
-  VQ-07: 1/2   (palette is Okabe-Ito but first series used #0072B2 instead of #009E73)
+  VQ-07: 1/2   (palette is anyplot but first series used #B71D27 instead of #009E73)
 
 DESIGN EXCELLENCE (8/20)
   DE-01: 4/8   (well-configured default, not exceptional)

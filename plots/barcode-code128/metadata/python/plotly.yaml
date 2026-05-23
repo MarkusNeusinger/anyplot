@@ -1,147 +1,201 @@
 library: plotly
+language: python
 specification_id: barcode-code128
 created: '2026-01-19T10:58:08Z'
-updated: '2026-01-19T11:00:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21134791952
+updated: '2026-05-21T01:04:38Z'
+generated_by: claude-sonnet
+workflow_run: 26198312152
 issue: 3809
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/python/plotly/plot-dark.html
+quality_score: 94
 review:
   strengths:
-  - Implements complete Code 128B encoding algorithm from scratch with proper start/stop
-    patterns and check digit calculation
-  - Clean, high-contrast visualization with proper quiet zones for scannability
-  - Human-readable text positioned correctly below the barcode
-  - Deterministic output with no random elements
-  - Generates both PNG and interactive HTML output
+  - Implements Code 128B encoding from scratch with the full 106-value encoding table,
+    check digit (modulo 103), quiet zones, START_B, data symbols, and STOP — all per-spec
+    mandatory elements
+  - Per-character interactive hover tooltips expose the Code 128B encoded value for
+    each character in the payload — a distinctive and highly educational Plotly feature
+  - Structural anatomy annotations (bracket line, tick marks, region labels START
+    B / DATA / CHK / STOP) teach barcode structure in a static render
+  - Human-readable monospace text below the barcode satisfies the visual verification
+    requirement from the spec
+  - Theme-adaptive chrome correctly swaps INK / INK_SOFT tokens for bars, bracket,
+    annotations, and labels in both light and dark renders without any dark-on-dark
+    failures
+  - Correct canvas size (800×450×scale=4 → 3200×1800) with properly pinned margins
+    and autosize=False
   weaknesses:
-  - Barcode could be slightly larger to better utilize canvas space
-  - Only demonstrates Code 128B subset; could show subset switching capability
-  image_description: The plot displays a Code 128 barcode on a clean white background.
-    At the top center is the title "barcode-code128 · plotly · pyplots.ai" in dark
-    gray text. The barcode itself consists of black vertical bars of varying widths
-    arranged in the characteristic Code 128 pattern, encoding the string "PYPLOTS-2024".
-    The barcode is horizontally centered and occupies roughly 40% of the canvas width.
-    Below the barcode is the human-readable text "PYPLOTS-2024" in a monospace Courier
-    font, centered beneath the bars. The overall layout has adequate quiet zones (white
-    space) on both sides of the barcode. The axes are hidden, creating a clean presentation
-    suitable for a barcode visualization.
+  - Anatomy region labels (START B, DATA (16 chars), CHK, STOP) rendered at font-size
+    10–11 px (×scale=4 = 40–44 source-px) are quite small relative to the canvas and
+    may be hard to read on mobile breakpoints (~400 px srcset) — consider increasing
+    to 13–14 px for better mobile legibility
+  - The horizontal bracket line is rendered at opacity=0.55 in INK_SOFT, which is
+    appropriately subtle but makes the structural annotation band visually thin —
+    a slightly heavier or more opaque bracket would make the anatomy region clearer
+    without harming the aesthetic
+  - Dark-mode barcode uses INK (#F0EFE8) bars on near-black background (inverted barcode),
+    which is thematically consistent but diverges from the spec note recommending
+    high-contrast black-on-white — acceptable for display context but worth noting
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "barcode-code128 · python · plotly · anyplot.ai" at top center in dark INK (#1A1A17) — clearly readable. Subtitle "Code 128B · ASCII Subset (32–127)" in INK_SOFT medium gray above the barcode bars — readable. Anatomy bracket line and region labels (START B, DATA (16 chars), CHK, STOP) appear in the narrow band between the barcode top and subtitle in INK_SOFT at font-size 10–11 px — present but subtle at display resolution. Human-readable "SHIP-2024-ABC123" in Courier New monospace in INK (#1A1A17) below the barcode — clearly readable. No axes visible (correctly hidden).
+      Data: Barcode bars rendered in INK (#1A1A17 — near-black) on the warm off-white background, giving high contrast. Quiet zones visible on left and right. Bars span full height of allocated barcode area.
+      Legibility verdict: PASS — all key text (title, subtitle, human-readable code) is clearly readable. Anatomy labels are present but small; no illegibility in either theme.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in INK (#F0EFE8 near-white) — clearly readable against the dark background. Subtitle "Code 128B · ASCII Subset (32–127)" in INK_SOFT (#B8B7B0 medium gray) — readable. Anatomy bracket and region labels in INK_SOFT on dark background — slightly more visible than in light render due to the gray-on-dark contrast. Human-readable "SHIP-2024-ABC123" in near-white INK — clearly readable. No dark-on-dark failures observed.
+      Data: Barcode bars rendered in INK (#F0EFE8 near-white/cream) on the near-black background — inverted barcode appearance consistent with dark theme. Data colors are identical to the light render's structural encoding; only the bar fill color flips with the theme token (which is the correct behavior for this plot type). High contrast maintained.
+      Legibility verdict: PASS — all text elements are clearly readable against the dark background. No dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and human-readable text are clearly readable at full size
+        comment: Title, subtitle, and human-readable code all clearly readable in
+          both themes. Anatomy labels (START B, DATA, CHK, STOP) are present at font-size
+          10–11 px (×scale=4 = 40–44 source-px) — readable at full resolution but
+          small on mobile breakpoints.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements
+        comment: No overlapping elements. Anatomy labels, subtitle, and human-readable
+          text are well-separated.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Barcode bars are clearly visible with appropriate sizing and contrast
+        comment: Barcode bars are very prominent in both themes. All text elements
+          clearly visible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: High contrast black on white, universally accessible
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Barcode is centered but occupies less than 50% of canvas; some wasted
-          vertical space
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: Not applicable for barcode visualization (axes hidden intentionally)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: No grid or legend needed; clean presentation
+        comment: High contrast in both themes. No CVD concerns (no red-green reliance).
+          INK vs PAGE_BG gives excellent contrast.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200×1800 canvas (800×450×scale=4). Margins l=80 r=40 t=80
+          b=60 per guidelines. No overflow or clipping detected.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Title format correct: ''barcode-code128 · python · plotly · anyplot.ai''.
+          Axes appropriately hidden (no labels needed). Descriptive subtitle and anatomy
+          annotations provide context.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Light background #FAF8F1 and dark background #1A1A17 both correct.
+          Barcode bars use theme-adaptive INK token (not Okabe-Ito, which is correct
+          — bars are structural data, not categorical series).'
+    design_excellence:
+      score: 15
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 7
+        max: 8
+        passed: true
+        comment: Implementing the complete Code 128B encoding table (106 entries)
+          from scratch is impressive. Anatomy annotations with bracket/tick structure
+          and per-character hover tooltips show real design thought. Professional
+          clean look.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes completely hidden (appropriate). Bracket line uses opacity=0.55
+          for subtlety. Warm backgrounds correctly applied. Clean minimal design.
+          Could be more refined with slightly heavier anatomy bracket.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Barcode explains its own encoding structure through anatomy annotations.
+          Hover interactivity lets users explore per-character Code 128B values. Human-readable
+          text provides visual context. Good educational narrative.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct Code 128 barcode visualization
+        comment: Correct Code 128 barcode visualization with authentic encoding.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: String correctly encoded using Code 128B subset
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Includes start pattern, check digit (mod 103), stop pattern, quiet
-          zones, human-readable text
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: quiet zones (QUIET_ZONE=80), START_B pattern,
+          modulo-103 check digit, STOP pattern, human-readable text in monospace below
+          barcode.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full barcode visible with proper margins
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: '''SHIP-2024-ABC123'' correctly encoded using Code 128B subset.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Human-readable text matches encoded content
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: barcode-code128 · plotly · pyplots.ai'
+        comment: Title exactly matches required format. No legend (single series,
+          correct omission).
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows Code 128B encoding; could demonstrate subset switching (A/B/C)
-          for fuller coverage
+        comment: 'Full Code 128 feature set: START, data symbols, check digit, STOP,
+          quiet zones, human-readable text, structural anatomy.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: PYPLOTS-2024 is a realistic product/tracking code scenario
+        comment: '''SHIP-2024-ABC123'' is a highly realistic shipping tracking code
+          format.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Barcode proportions are reasonable; bar widths are uniform
+        comment: 16-char payload is within the spec's recommended 48-char maximum
+          and realistic for a shipping label.
     code_quality:
       score: 10
       max: 10
@@ -151,50 +205,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → encoding → plotting → save'
+        comment: Flat script, no unnecessary functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic encoding from fixed string
+        comment: Fully deterministic — barcode encoding is pure computation from the
+          fixed content string.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects imported
+        comment: Only os and plotly.graph_objects — minimal and correct.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Appropriate complexity for a barcode encoder. zip with strict=True
+          is idiomatic. Clean variable names.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (write_image) and plot-{THEME}.html (write_html)
+          correctly.
+    library_mastery:
+      score: 10
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses go.Figure with shapes and annotations; could leverage more Plotly
-          interactivity
+        comment: Correct use of go.Figure() with add_shape (rects and lines), add_annotation,
+          add_trace (Scatter with opacity=0 markers for hover zones). Proper layout
+          via update_layout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 5
+        max: 5
+        passed: true
+        comment: Per-character hover tooltips (invisible scatter markers over each
+          character position) and structural region hover points are distinctively
+          Plotly. write_html alongside write_image leverages Plotly's interactive
+          output capability.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
-  - patches
+  - hover-tooltips
+  - html-export
   patterns:
   - iteration-over-groups
   dataprep: []
   styling:
   - minimal-chrome
+  - alpha-blending

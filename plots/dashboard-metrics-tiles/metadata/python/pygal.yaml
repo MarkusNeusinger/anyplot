@@ -1,213 +1,259 @@
 library: pygal
+language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:05:56Z'
-updated: '2026-01-19T13:08:26Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21138483232
+updated: '2026-05-21T03:42:27Z'
+generated_by: claude-sonnet
+workflow_run: 26203421692
 issue: 3791
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/pygal/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent dashboard layout with clean, professional appearance matching spec requirements
-  - Creative use of pygal for sparklines embedded in a PIL-drawn dashboard canvas
-  - Proper color coding for status indicators (green/yellow/red) and favorable/unfavorable
-    changes
-  - Interactive HTML version with responsive CSS grid and embedded SVG sparklines
-    from pygal
-  - Good use of pygal Style class for customizing sparkline appearance
+  - Well-structured 3×2 dashboard grid with 6 metric tiles, all spec-required components
+    present (value, label, sparkline, change indicator, status coding)
+  - Both light (#FAF8F1) and dark (#1A1A17) themes render correctly — theme-adaptive
+    chrome properly wired through all text and background elements
+  - 'Semantic Okabe-Ito status color assignment: good=#009E73, warning=#E69F00, critical=#D55E00
+    — directional arrows supplement color encoding for CVD safety'
+  - Creative use of pygal Line charts with transparent backgrounds embedded as rasterized
+    sparklines in PIL-composed tiles, plus full pygal SVG inline HTML output
+  - 'Font sizes explicitly set with clear hierarchy: value=100px, change=52px, name=46px,
+    trend=36px; tile backgrounds use elevated surface color for depth'
   weaknesses:
-  - Uses helper functions (is_favorable_change, create_sparkline, draw_tile) instead
-    of flat KISS structure preferred by code guidelines
-  - Sparklines could be slightly larger within the tiles for better trend visibility
-  image_description: 'The plot displays a 3x2 grid dashboard with 6 metric tiles on
-    a white background. The title "dashboard-metrics-tiles · pygal · pyplots.ai" is
-    centered at the top in bold black text. Each tile has a light gray (#f8f9fa) background
-    with rounded corners and a colored status bar at the top: green for "good" status
-    (CPU Usage, Response Time, Throughput, Active Users), yellow for "warning" (Memory),
-    and red for "critical" (Error Rate). Each tile contains: the metric name in gray
-    text, a large bold value with unit (45%, 72%, 120ms, 2.1%, 1,250req/s, 3,420),
-    a change indicator with up/down arrow and percentage in green (favorable) or red
-    (unfavorable), and a small blue (#306998) filled area sparkline in the bottom-right
-    corner showing the trend. The layout is clean and well-organized with consistent
-    spacing between tiles.'
+  - The main canvas layout is entirely PIL/ImageDraw-based; pygal is used only for
+    sparklines — this limits Library Mastery score since idiomatic pygal usage is
+    minimal for the overall composition
+  - The 36px trend label font is on the small side at this canvas size — it reads
+    well at full resolution but approaches marginal at mobile scale (~8px equivalent)
+  - Sparkline area could make better use of vertical space — on some tiles (Throughput,
+    Active Users) the filled area hugs the bottom, leaving the upper portion visually
+    empty
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 canvas, tile surfaces elevated to #FFFDF6 — matches style guide, not pure white.
+      Chrome: Title "dashboard-metrics-tiles · python · pygal · anyplot.ai" centered at top in dark ink — fully readable. Metric names (e.g. "CPU Usage") in INK_SOFT muted gray, clearly readable. "7-day trend" separator labels in muted gray, readable at full resolution. No text is light-on-light.
+      Data: Status bars at tile tops: green (#009E73) for good tiles, orange (#E69F00) for Memory warning, red (#D55E00) for Error Rate critical. Values in large bold dark ink. Change arrows: green (▼ favorable decreases; ▲ favorable increases) and red (unfavorable directions). Sparklines filled with #0072B2 (Okabe-Ito pos 3) against tile background.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 canvas, tile surfaces elevated to #242420 — matches style guide, not pure black.
+      Chrome: Title in light #F0EFE8 text on dark background — fully readable. Metric names and trend labels in INK_SOFT #B8B7B0 muted light gray — readable. Value text in #F0EFE8 — very readable at 100px bold. No dark-on-dark failures detected.
+      Data: Data colors are identical to light render — status bars same green/orange/red, sparklines same #0072B2, change arrows same green (#009E73) and red (#D55E00). Only chrome (backgrounds, text, tile surfaces) flips.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text is clearly readable; title, values, and labels are well-sized
-          for the canvas
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping elements; all text and sparklines are well-separated
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Sparklines are visible but could be slightly larger for better trend
-          visibility
+        comment: Font sizes explicitly set with clear hierarchy. 36px trend label
+          is functional but approaches marginal at mobile scale.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps detected in either render. Tile layout cleanly separates
+          all elements.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Sparklines and status bars clearly visible. Some sparklines hug the
+          bottom of the area, leaving upper space less used.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Good color choices; status colors are distinct; change indicators
-          use semantic colors
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent 3x2 grid layout with balanced margins and good canvas utilization
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for dashboard tiles (no axes)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Clean tile backgrounds, no distracting elements
+        comment: Arrow glyphs supplement color encoding for change direction — CVD-safe.
+          Status bars + arrows provide redundant encoding.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200×1800 canvas confirmed. 3×2 grid fills canvas well with balanced
+          margins and GAP spacing.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axes (dashboard format). Title correctly formatted.
+          Units embedded in value display (%, ms, req/s).
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito status colors used correctly. Sparkline uses position
+          3 (#0072B2). Backgrounds #FAF8F1/#1A1A17. Both themes correct.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design clearly above defaults: rounded tile corners, colored
+          status bars, elevated tile backgrounds, clear typographic hierarchy. Not
+          publication-ready maximum but well above configured defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean tiles with no unnecessary chrome. Subtle separator line above
+          sparklines. Transparent sparkline backgrounds. Good refinement but not every
+          detail polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Visual hierarchy guides the reader: status bars immediately signal
+          health, color-coded arrows tell the change story, sparklines show trend
+          context. Error Rate critical tile stands out clearly.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct dashboard tile layout as specified
+        comment: Dashboard metrics tiles with sparklines — exactly the requested visualization
+          type.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: 'All data elements correctly mapped: values, labels, changes, history'
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: KPI value, label, sparkline, change
-          indicator with arrow'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: prominent value display, metric label,
+          mini sparkline, change indicator with arrow, status color coding, 3×2 grid
+          for 6 tiles.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All metrics and sparklines display their full data range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'All data fields mapped: metric_name, current_value+unit, history→sparkline,
+          change_percent+direction, status→color.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Status colors correctly indicate good/warning/critical states
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: dashboard-metrics-tiles · pygal · pyplots.ai'
+        comment: Title is 'dashboard-metrics-tiles · python · pygal · anyplot.ai'
+          — correct format. No legend needed (each tile is self-labeled).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows all three status types (good/warning/critical), both positive
-          and negative changes, varied metrics
+        comment: Covers all status types (good, warning, critical), both positive
+          and negative changes, various metric domains (compute, network, users).
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic server monitoring scenario with CPU, Memory, Response Time,
-          Error Rate, Throughput, Active Users
+        comment: 'Operations monitoring dashboard with realistic server metrics: CPU
+          45%, Memory 72%, Response Time 120ms, Error Rate 2.1%, Throughput 1250 req/s,
+          Active Users 3420. Neutral domain.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic; slight deduction as some trends could show
-          more dramatic variation
+        comment: All values in plausible real-world ranges for server monitoring.
+          History trends are smooth and realistic.
     code_quality:
-      score: 7
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 0
-        max: 3
-        passed: false
-        comment: Uses helper functions (is_favorable_change, create_sparkline, draw_tile)
-          instead of flat script
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42) and deterministic data
+        comment: 'No functions or classes. Linear flow: imports → tokens → data →
+          layout → tile loop → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set. Data is mostly hardcoded and deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (pygal, PIL, cairosvg, numpy)
+        comment: 'All imports used: os, sys, io.BytesIO, cairosvg, numpy, pygal, PIL,
+          pygal.style.Style.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Modern API usage
+        comment: Clean Pythonic code. sys.path manipulation is a necessary workaround
+          for naming conflict. Appropriate complexity for a dashboard composition.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 3
         max: 5
         passed: true
-        comment: Uses pygal Line charts for sparklines with custom Style, transparent
-          backgrounds, fill=True; generates interactive HTML with embedded SVG
+        comment: Idiomatic pygal usage for sparklines (pygal.Line with Style, fill,
+          transparent backgrounds). However, main canvas composition is entirely PIL-based,
+          limiting idiomatic pygal surface area.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses pygal's SVG export for both rasterized PNG embedding (via cairosvg)
+          and inline SVG HTML output. The transparent-background sparkline technique
+          is specific to pygal's SVG rendering.
   verdict: APPROVED
 impl_tags:
   dependencies:
-  - cairosvg
   - pillow
+  - cairosvg
   techniques:
-  - subplots
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - alpha-blending
-  - edge-highlighting
+  - minimal-chrome

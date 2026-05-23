@@ -30,6 +30,7 @@ on:
           - highcharts
           - letsplot
           - ggplot2
+          - makie
       issue_number:
         description: "Issue number (optional, for tracking)"
         required: false
@@ -118,6 +119,10 @@ jobs:
             ggplot2)
               LANGUAGE="r"
               EXT=".R"
+              ;;
+            makie)
+              LANGUAGE="julia"
+              EXT=".jl"
               ;;
             *)
               LANGUAGE="python"
@@ -245,6 +250,10 @@ jobs:
       - name: Setup R + ggplot2
         if: steps.inputs.outputs.language == 'r'
         uses: ./.github/actions/setup-r
+
+      - name: Setup Julia + Makie
+        if: steps.inputs.outputs.language == 'julia'
+        uses: ./.github/actions/setup-julia
 
       # ========================================================================
       # Generate: Create implementation branch and code
@@ -401,7 +410,7 @@ jobs:
         id: claude
         continue-on-error: true
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@dde2242db6af13460b916652159b6ba19a598f30  # v1
+        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
@@ -421,7 +430,7 @@ jobs:
         if: steps.claude.outcome == 'failure'
         id: claude_retry
         timeout-minutes: 60
-        uses: anthropics/claude-code-action@dde2242db6af13460b916652159b6ba19a598f30  # v1
+        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           claude_args: "--model ${{ steps.inputs.outputs.model }}"
@@ -511,13 +520,20 @@ jobs:
             # Rscript exits non-zero after partial stdout.
             LANGUAGE_VERSION=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e 'cat(as.character(getRversion()))' 2>/dev/null | tail -n1)
             is_version "$LANGUAGE_VERSION" || LANGUAGE_VERSION="unknown"
+          elif [ "$LANGUAGE" = "julia" ]; then
+            # `julia -e 'print(VERSION)'` prints `1.11.2` (or similar) on stdout.
+            # tail -n1 + is_version reject anything else that might leak in or land
+            # if julia exits non-zero after partial stdout.
+            LANGUAGE_VERSION=$(julia -e 'print(VERSION)' 2>/dev/null | tail -n1)
+            is_version "$LANGUAGE_VERSION" || LANGUAGE_VERSION="unknown"
           else
             LANGUAGE_VERSION="$PYTHON_VERSION"
           fi
 
           # Get library version. Python libs read via `pip show`; R libs via
-          # packageVersion() inside Rscript. Names that differ between catalogue
-          # id and registry id are mapped explicitly.
+          # packageVersion() inside Rscript; Julia libs via Pkg API.
+          # Names that differ between catalogue id and registry id are mapped
+          # explicitly.
           get_pip_version() {
             .venv/bin/pip show "$1" 2>/dev/null | grep -i "^Version:" | awk '{print $2}'
           }
@@ -526,9 +542,36 @@ jobs:
             v=$(RENV_CONFIG_STARTUP_QUIET=TRUE Rscript -e "cat(as.character(packageVersion('$1')))" 2>/dev/null | tail -n1)
             is_version "$v" && printf '%s' "$v"
           }
+          get_julia_version() {
+            # Pkg.dependencies() returns a Dict{UUID, PackageInfo}; locate the
+            # entry by name and print its `.version`. Any version-parse failure
+            # gets rejected by the is_version check downstream.
+            local v
+            v=$(julia --project=. -e "
+              using Pkg
+              for (_, info) in Pkg.dependencies()
+                if info.name == \"$1\"
+                  print(info.version)
+                  break
+                end
+              end
+            " 2>/dev/null | tail -n1)
+            is_version "$v" && printf '%s' "$v"
+          }
 
           if [ "$LANGUAGE" = "r" ]; then
             LIBRARY_VERSION=$(get_r_version "$LIBRARY")
+          elif [ "$LANGUAGE" = "julia" ]; then
+            # Catalogue id `makie` maps to the Julia package `Makie` (CairoMakie
+            # bundles the same version; we report the user-facing Makie version).
+            case "$LIBRARY" in
+              makie)
+                LIBRARY_VERSION=$(get_julia_version "Makie")
+                ;;
+              *)
+                LIBRARY_VERSION=$(get_julia_version "$LIBRARY")
+                ;;
+            esac
           else
             case "$LIBRARY" in
               letsplot)

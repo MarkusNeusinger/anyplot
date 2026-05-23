@@ -1953,6 +1953,61 @@ class TestInsightsRouter:
             today_point = next(p for p in points if p["date"] == today_iso)
             assert today_point["visitors"] == 42
 
+    def test_visitors_requests_explicit_date_range_including_today(self, client: TestClient) -> None:
+        """Plausible's `"28d"` preset excludes today (it maps to [today-28, today-1]),
+        so we must send an explicit `[today-27, today]` custom date range to
+        ensure today's partial-day visitors appear in the rightmost chart bar.
+        Locking this in via the outgoing payload so the bug can't silently
+        regress to the "always 0 today" behavior.
+        """
+        from datetime import datetime as _dt
+        from datetime import timedelta
+        from datetime import timezone as _tz
+
+        frozen_now = _dt(2026, 5, 13, 12, 0, 0, tzinfo=_tz.utc)
+        today_iso = frozen_now.date().isoformat()
+        expected_start_iso = (frozen_now.date() - timedelta(days=27)).isoformat()
+
+        captured: dict = {}
+
+        class _MockResp:
+            status_code = 200
+
+            def raise_for_status(self) -> None:
+                return None
+
+            def json(self) -> dict:
+                return {"results": []}
+
+        class _MockClient:
+            async def __aenter__(self):
+                return self
+
+            async def __aexit__(self, *_args):
+                return False
+
+            async def post(self, *_args, **kwargs):
+                captured["payload"] = kwargs.get("json")
+                return _MockResp()
+
+        class _FrozenDatetime(_dt):
+            @classmethod
+            def now(cls, tz=None):  # type: ignore[override]
+                return frozen_now if tz is _tz.utc else frozen_now.replace(tzinfo=None)
+
+        with (
+            patch("api.routers.insights.get_or_set_cache", side_effect=_passthrough_cache),
+            patch("api.routers.insights.settings") as mock_settings,
+            patch("api.routers.insights.httpx.AsyncClient", return_value=_MockClient()),
+            patch("api.routers.insights.datetime", _FrozenDatetime),
+        ):
+            mock_settings.plausible_api_key = "test-key"
+            mock_settings.plausible_site_id = "anyplot.ai"
+            mock_settings.plausible_api_url = "https://plausible.io/api/v2/query"
+            response = client.get("/insights/visitors")
+            assert response.status_code == 200
+            assert captured["payload"]["date_range"] == [expected_start_iso, today_iso]
+
 
 class TestSpecCodeEndpoint:
     """Tests for the /specs/{spec_id}/{library}/code endpoint."""

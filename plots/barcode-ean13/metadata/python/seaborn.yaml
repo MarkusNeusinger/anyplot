@@ -1,152 +1,190 @@
 library: seaborn
+language: python
 specification_id: barcode-ean13
 created: '2026-01-19T12:28:22Z'
-updated: '2026-01-19T12:30:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21137406081
+updated: '2026-05-21T02:04:08Z'
+generated_by: claude-sonnet
+workflow_run: 26200430813
 issue: 3808
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/seaborn/plot.png
-preview_html: null
-quality_score: 92
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-ean13/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Creative use of seaborn heatmap to render barcode as binary matrix
-  - Complete and correct EAN-13 encoding implementation with all patterns (L, G, R
-    codes)
-  - Clean publication-quality appearance with proper quiet zones and guard patterns
-  - Human-readable digits properly formatted and positioned
-  - Good use of sns.color_palette to create custom binary colormap
+  - 'Complete standards-compliant EAN-13 encoding from scratch: L/G/R tables, first-digit
+    parity pattern, check digit calculation, guard sequences, and quiet zones all
+    correctly implemented.'
+  - Creative use of sns.heatmap() with a custom 2-color cmap to render the binary
+    barcode array — idiomatic seaborn for an unconventional problem.
+  - 'Theme-adaptive chrome perfectly handled: both backgrounds correct (#FAF8F1 light
+    / #1A1A17 dark), text readable in both themes.'
+  - 'Perfect spec and data quality: real product barcode (Lego EAN-13), deterministic,
+    no random data needed.'
   weaknesses:
-  - Barcode uses non-standard color (blue instead of traditional black) - though stylistically
-    consistent with pyplots branding
-  image_description: The plot displays a standard EAN-13 barcode rendered using seaborn's
-    heatmap function. The barcode consists of vertical bars in Python blue (#306998)
-    on a white background. The bars vary in width (1-4 modules) following proper EAN-13
-    encoding standards, with visible start guard, center guard, and end guard patterns.
-    Quiet zones (white space) are present on both sides of the barcode. The title
-    "barcode-ean13 · seaborn · pyplots.ai" appears centered above the barcode in dark
-    gray bold text. Below the barcode, the human-readable digits "4  006381  333931"
-    are displayed in blue monospace font, properly formatted with the first digit
-    separated, then two groups of 6 digits each. The layout is clean with good use
-    of canvas space.
+  - Excessive empty space at the bottom of the canvas below the digit row — ax.set_ylim
+    extends the y-axis well beyond the digit position, leaving a large blank region.
+    Tighten the bottom ylim or reduce the margin to better utilize canvas height.
+  - 'DE-03 opportunity: the digit groups could include subtle annotations (e.g., small
+    labels for country/manufacturer/product/check regions above the barcode) to explain
+    the encoding structure and add storytelling depth.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "barcode-ean13 · python · seaborn · anyplot.ai" in dark medium-weight text at top — readable. No axis labels or tick labels (appropriate). Human-readable digits "4  006381  333931" in monospace bold below barcode — dark on light, readable.
+      Data: Near-black (#1A1A17) bars on off-white background. Full EAN-13 structure visible: quiet zones, start/center/end guards, left data section (L/G encoded), right data section (R encoded).
+      Legibility verdict: PASS — all text elements clearly readable against light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and digit labels rendered in near-white/cream (#F0EFE8 INK token) — all readable against dark background. No dark-on-dark failures detected.
+      Data: Bars rendered in near-white (#F0EFE8) on dark background — visually inverted barcode appropriate for dark mode. Barcode structure identical to light render; only chrome colors flip.
+      Legibility verdict: PASS — all text elements clearly readable against dark background.
   criteria_checklist:
     visual_quality:
-      score: 38
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and digit text are clearly readable at full size with appropriate
-          font sizes (28pt title, 32pt digits)
+        comment: Font sizes explicitly set (title=12, digits=10). All text readable
+          in both themes. Minor deduction for excessive empty space below digit row
+          reducing canvas proportional balance.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, clean separation between title, barcode,
-          and digits
+        comment: First digit, left group, and right group digits well-separated with
+          no collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Barcode bars are perfectly visible with proper contrast and width
-          ratios
+        comment: Barcode bars prominent and clear in both light and dark renders.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: High contrast blue on white, excellent for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good canvas utilization, barcode fills ~60% of horizontal space with
-          balanced margins
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for barcode visualization (no axes needed)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Axes and spines properly hidden for clean barcode appearance
+        comment: Maximum contrast (near-black on off-white / near-white on near-black).
+          CVD-safe by design.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Barcode well-centered horizontally; excessive empty space at bottom
+          of canvas below digit row.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correct. No axis labels appropriate for barcode visualization
+          type.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Backgrounds correctly themed (#FAF8F1 light / #1A1A17 dark). Custom
+          2-tone colormap appropriate; Okabe-Ito categorical palette does not apply
+          to a barcode.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Clean minimal barcode. Monospace bold for digits adds authenticity.
+          Theme-adaptive coloring elegant. Does not reach publication-quality design
+          sophistication.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines removed, no grid, no tick marks or labels — very clean
+          chrome for a barcode. Generous whitespace around the barcode.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Standard EAN-13 digit grouping (1+6+6) faithfully reproduced. No
+          additional context (country code annotation, manufacturer group labeling)
+          to guide viewer interpretation.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct EAN-13 barcode visualization
+        comment: Correct EAN-13 barcode with all structural components.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Binary encoding correctly mapped to heatmap cells
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All required features present: quiet zones, guards, proper bar widths,
-          human-readable digits'
-      - id: SC-04
-        name: Data Range
+        comment: Quiet zones (9 modules each side), start/center/end guards, L/G/R
+          encoding with first-digit pattern, check digit calculation, human-readable
+          digits in standard positioning.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full barcode visible including quiet zones
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Binary barcode array correctly mapped as heatmap; all 113 modules
+          including quiet zones visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A for barcode (correctly omitted)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: barcode-ean13 · seaborn · pyplots.ai'
+        comment: Title is exactly 'barcode-ean13 · python · seaborn · anyplot.ai'.
+          No legend needed.
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows complete EAN-13 with all encoding patterns, but only one example
+        comment: 'All EAN-13 structural features demonstrated: quiet zones, all guard
+          patterns, first-digit parity encoding, left/right data sections, human-readable
+          digit grouping.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses real German product code as specified in spec
+        comment: '''4006381333931'' is a real German product barcode (Lego); neutral,
+          recognizable business context.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good resolution for display
+        comment: 13-digit EAN-13 standard correctly implemented; check digit verified;
+          encoding tables faithful to standard.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -154,44 +192,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → encoding tables → data → encode
-          → plot → save'
+        comment: 'Linear structure: imports → config/tokens → encoding tables → data
+          → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
-        max: 3
+        max: 2
         passed: true
-        comment: Deterministic data (fixed barcode), no random seed needed
+        comment: Deterministic hardcoded barcode string; no random data.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports used
+        comment: os, matplotlib.pyplot, numpy, seaborn — all used, none superfluous.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn API correctly
+        comment: Appropriate complexity for a from-scratch barcode encoder. No over-engineering,
+          no fake UI elements.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with proper settings
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct dpi and facecolor.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses sns.heatmap() as rendering engine for binary barcode matrix;
+          sns.set_theme() for theming; sns.color_palette([...], as_cmap=True) for
+          custom 2-tone colormap. Creative and idiomatic use.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.heatmap creatively for barcode rendering and sns.color_palette
-          for custom colormap, but not seaborn's typical statistical visualization
-          strength
+        comment: Repurposing sns.heatmap() with a custom 2-color palette to render
+          a binary matrix as a barcode is seaborn-distinctive — couldn't be replicated
+          as cleanly in altair or bokeh.
   verdict: APPROVED
 impl_tags:
   dependencies: []

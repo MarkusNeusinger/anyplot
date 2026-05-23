@@ -103,10 +103,11 @@ export function PlotOfTheDay() {
           <Typography sx={{ fontFamily: mono, fontSize: fontSize.xs, color: colors.primary, fontWeight: 600 }}>$</Typography>
           {(() => {
             // Per-language file extension + runner command. Anyplot ships Python
-            // for nine libraries and R for ggplot2; the chip mimics what a user
-            // would actually type into a shell, so the runner label flips too.
-            const ext = data.language === 'r' ? '.R' : '.py';
-            const runner = data.language === 'r' ? 'Rscript' : 'python';
+            // for nine libraries, R for ggplot2, and Julia for makie; the chip
+            // mimics what a user would actually type into a shell, so the
+            // runner label flips too.
+            const ext = data.language === 'r' ? '.R' : data.language === 'julia' ? '.jl' : '.py';
+            const runner = data.language === 'r' ? 'Rscript' : data.language === 'julia' ? 'julia --project=.' : 'python';
             return (
               <Typography
                 component="a"
@@ -264,7 +265,7 @@ export function PlotOfTheDay() {
             │
           </Typography>
           <Typography sx={{ fontFamily: mono, fontSize: fontSize.xxs, color: semanticColors.mutedText, whiteSpace: 'nowrap' }}>
-            {data.library_name}{data.library_version && data.library_version !== 'unknown' ? ` ${data.library_version}` : ''} · {data.language === 'r' ? 'R' : 'Python'} {data.language_version || data.python_version || (data.language === 'r' ? '4.4' : '3.13')}
+            {data.library_name}{data.library_version && data.library_version !== 'unknown' ? ` ${data.library_version}` : ''} · {data.language === 'r' ? 'R' : data.language === 'julia' ? 'Julia' : 'Python'} {data.language_version || data.python_version || (data.language === 'r' ? '4.4' : data.language === 'julia' ? '1.11' : '3.13')}
           </Typography>
         </Box>
       </Box>

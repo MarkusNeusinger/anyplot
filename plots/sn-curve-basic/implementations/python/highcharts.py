@@ -1,7 +1,7 @@
 """ anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: highcharts unknown | Python 3.13.13
-Quality: 87/100 | Updated: 2026-05-20
+Quality: 86/100 | Updated: 2026-05-20
 """
 
 import os
@@ -15,6 +15,7 @@ from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
 from highcharts_core.options.series.area import LineSeries
 from highcharts_core.options.series.scatter import ScatterSeries
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
@@ -73,10 +74,11 @@ chart.options.chart = {
     "height": 1800,
     "backgroundColor": PAGE_BG,
     "style": {"fontFamily": "Arial, sans-serif", "color": INK},
-    "marginBottom": 120,
-    "marginLeft": 150,
+    "marginBottom": 140,
+    "marginLeft": 160,
     "marginRight": 80,
-    "marginTop": 100,
+    "marginTop": 110,
+    "plotBorderWidth": 0,
 }
 
 chart.options.title = {
@@ -84,7 +86,12 @@ chart.options.title = {
     "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK},
 }
 
-# Region shading via plotBands (2 log-orders each for equal visual weight)
+chart.options.subtitle = {
+    "text": "Structural Steel — Power-law (Basquin) regression with fatigue regime boundaries",
+    "style": {"fontSize": "40px", "color": INK_SOFT},
+    "margin": 30,
+}
+
 region_bands = [
     {
         "from": 100,
@@ -92,7 +99,7 @@ region_bands = [
         "color": "rgba(213,94,0,0.07)",
         "label": {
             "text": "Low-Cycle Fatigue",
-            "style": {"fontSize": "32px", "color": INK_SOFT},
+            "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
             "verticalAlign": "top",
             "y": 30,
@@ -104,7 +111,7 @@ region_bands = [
         "color": "rgba(0,114,178,0.05)",
         "label": {
             "text": "High-Cycle Fatigue",
-            "style": {"fontSize": "32px", "color": INK_SOFT},
+            "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
             "verticalAlign": "top",
             "y": 30,
@@ -116,7 +123,7 @@ region_bands = [
         "color": "rgba(0,158,115,0.06)",
         "label": {
             "text": "Infinite Life",
-            "style": {"fontSize": "32px", "color": INK_SOFT},
+            "style": {"fontSize": "36px", "color": INK_SOFT},
             "align": "center",
             "verticalAlign": "top",
             "y": 30,
@@ -132,8 +139,10 @@ chart.options.x_axis = {
     "max": 100000000,
     "gridLineWidth": 1,
     "gridLineColor": GRID,
+    "lineWidth": 1,
     "lineColor": INK_SOFT,
     "tickColor": INK_SOFT,
+    "tickWidth": 1,
     "tickInterval": 1,
     "plotBands": region_bands,
 }
@@ -146,45 +155,50 @@ chart.options.y_axis = {
     "max": 600,
     "gridLineWidth": 1,
     "gridLineColor": GRID,
+    "lineWidth": 1,
     "lineColor": INK_SOFT,
     "tickColor": INK_SOFT,
+    "tickWidth": 1,
     "plotLines": [
         {
             "value": ultimate_strength,
-            "color": "#E53935",
+            "color": "#CC79A7",
             "width": 4,
             "dashStyle": "Dash",
             "label": {
                 "text": f"Ultimate Strength ({ultimate_strength} MPa)",
-                "align": "right",
-                "style": {"fontSize": "34px", "color": "#E53935", "fontWeight": "bold"},
-                "x": -10,
+                "align": "left",
+                "style": {"fontSize": "34px", "color": "#CC79A7", "fontWeight": "bold"},
+                "x": 10,
+                "y": -10,
             },
             "zIndex": 3,
         },
         {
             "value": yield_strength,
-            "color": "#FB8C00",
+            "color": "#E69F00",
             "width": 4,
             "dashStyle": "Dash",
             "label": {
                 "text": f"Yield Strength ({yield_strength} MPa)",
-                "align": "right",
-                "style": {"fontSize": "34px", "color": "#FB8C00", "fontWeight": "bold"},
-                "x": -10,
+                "align": "left",
+                "style": {"fontSize": "34px", "color": "#E69F00", "fontWeight": "bold"},
+                "x": 10,
+                "y": -10,
             },
             "zIndex": 3,
         },
         {
             "value": endurance_limit,
-            "color": "#43A047",
+            "color": "#56B4E9",
             "width": 4,
             "dashStyle": "Dash",
             "label": {
                 "text": f"Endurance Limit ({endurance_limit} MPa)",
-                "align": "right",
-                "style": {"fontSize": "34px", "color": "#43A047", "fontWeight": "bold"},
-                "x": -10,
+                "align": "left",
+                "style": {"fontSize": "34px", "color": "#56B4E9", "fontWeight": "bold"},
+                "x": 10,
+                "y": -10,
             },
             "zIndex": 3,
         },
@@ -201,7 +215,7 @@ chart.options.legend = {
     "verticalAlign": "top",
     "layout": "vertical",
     "x": -60,
-    "y": 100,
+    "y": 160,
 }
 
 chart.options.plot_options = {
@@ -253,16 +267,28 @@ with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encodin
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--hide-scrollbars")
 chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+# CDP override makes the viewport authoritative; --window-size alone is eaten by Chrome chrome
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
 driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# PIL safety net: pin to exact 3200×1800 in case of ±1-2 px rounding
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")

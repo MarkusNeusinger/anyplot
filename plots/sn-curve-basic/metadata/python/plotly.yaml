@@ -2,9 +2,9 @@ library: plotly
 language: python
 specification_id: sn-curve-basic
 created: '2026-01-15T20:48:47Z'
-updated: '2026-05-20T00:17:18Z'
+updated: '2026-05-20T17:47:35Z'
 generated_by: claude-sonnet
-workflow_run: 26131919385
+workflow_run: 26178255632
 issue: 3826
 language_version: 3.13.13
 library_version: 6.7.0
@@ -12,40 +12,69 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotly/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotly/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/sn-curve-basic/python/plotly/plot-dark.html
-quality_score: 80
+quality_score: 87
 review:
   strengths:
-  - Correct S-N Wöhler curve with log-log axes and all three required reference lines
-    (ultimate/yield/endurance)
-  - 'Proper Okabe-Ito palette with #009E73 as first series (Basquin fit line)'
-  - Full theme adaptation — warm off-white light surface and near-black dark surface
-    with no dark-on-dark failures
-  - Realistic steel fatigue data using Basquin equation with correct stress range
-    and scatter
+  - 'Full Okabe-Ito palette compliance: BRAND green (#009E73) as first series (Basquin
+    fit line), then #D55E00 test data, #0072B2/#CC79A7/#E69F00 for reference lines
+    — canonical order throughout'
+  - 'Complete spec compliance: log-log axes, scatter data with realistic per-stress-level
+    scatter, Basquin power-law fit line, and all three reference lines (Ultimate Strength,
+    Yield Strength, Endurance Limit)'
+  - 'Full theme adaptation: #FAF8F1 light / #1A1A17 dark backgrounds, all chrome tokens
+    (INK, INK_SOFT, GRID, ELEVATED_BG) consistently applied in both renders — no dark-on-dark
+    failures'
+  - Idiomatic Plotly use of add_hrect() for the infinite life zone fill and add_annotation()
+    with showarrow=True for the fatigue knee — both are Plotly-distinctive features
+  - Direct line labeling of reference lines (showlegend=False + right-edge annotation
+    boxes) instead of legend entries — cleaner, more professional presentation
+  - Fatigue Knee annotation with arrow at ~10^6 cycles identifies the key engineering
+    transition point — adds genuine educational value beyond raw data display
+  - Proper canvas dimensions (3200×1800 via width=800, height=450, scale=4) and both
+    PNG+HTML outputs with hovertemplate for the interactive view
+  - Reproducible data generation with np.random.seed(42) and realistic Basquin model
+    parameters (A=1200 MPa, b=-0.12) with log-normal scatter — matches real steel
+    fatigue behavior
+  - 'Clean flat code structure: no functions/classes, all imports used, appropriate
+    loop for the three reference line annotations'
   weaknesses:
-  - Code file saves as bare plot.png without reading ANYPLOT_THEME — must save as
-    plot-{THEME}.png and plot-{THEME}.html using os.getenv("ANYPLOT_THEME", "light")
-  - 'Code file uses non-Okabe-Ito colors (#306998 Python blue, #FFD43B yellow) contradicting
-    the rendered images — colors in code must match the Okabe-Ito palette explicitly'
-  - All four spines retained (default plotly box frame) — remove top and right spines
-    for visual refinement
-  - Axis label font size 24pt at scale=3 (~72px effective) is generous; reduce to
-    ~12px at scale=4 (48px effective) per style guide
+  - 'VQ-03 -1: Infinite life zone fill at opacity=0.11 (add_hrect fillcolor=BRAND)
+    is extremely subtle — the green tint is barely perceptible against #FAF8F1. The
+    text label saves comprehensibility but the fill itself barely registers as a meaningful
+    visual cue. Raise opacity to 0.15-0.20 for better impact without overwhelming
+    the data.'
+  - 'VQ-01 -1: Reference line annotation boxes at x=8e6 with xanchor=''right'' sit
+    at ~90% across the log-axis and are very close to the right-edge tick area. While
+    not clipped, they appear cramped against the trailing x-axis ticks. Consider moving
+    to x=5e6 or x=6e6 and adjusting xanchor to provide more breathing room.'
+  - 'DQ-01 -1: Spec Notes mention three distinct fatigue regions (low-cycle fatigue,
+    high-cycle fatigue, infinite life). Only the infinite life zone is visually delineated.
+    The LCF/HCF boundary at approximately N=10^4 cycles is unmarked. A subtle vertical
+    dashed reference line or light shading for the LCF region would improve feature
+    coverage.'
+  - 'DE-01 5/8: Design is clean and functional but does not quite reach ''strong design''
+    level — the combination of Okabe-Ito palette, direct labeling, and zone fill shows
+    intentional design thought, but the overall composition still reads as a well-configured
+    library output rather than a publication-quality figure.'
+  - 'DE-02 4/6: Good L-shaped frame and subtle grid, but could further benefit from
+    removing minor tick marks and adding slightly more vertical breathing room between
+    annotations at the bottom (endurance limit box and ''Infinite Life Zone'' text
+    are at y=230 and y=218, leaving only ~18 MPa gap above the y-axis minimum of ~200).'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white consistent with #FAF8F1 — not pure white
-      Chrome: Title "sn-curve-basic · python · plotly · anyplot.ai" in dark text, clearly readable. Axis labels "Stress Amplitude (MPa)" and "Cycles to Failure (N)" visible with appropriate size. Tick labels dark on light background, all readable.
-      Data: Basquin fit line in #009E73 (brand green), orange scatter markers with dark outlines. Three dashed reference lines: blue (Ultimate Strength 650 MPa), pink/mauve (Yield Strength 450 MPa), golden-yellow (Endurance Limit 230 MPa). ~40 data points well-distributed.
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct light surface, no pure white.
+      Chrome: Title "sn-curve-basic · python · plotly · anyplot.ai" centered in dark #1A1A17 ink, fully readable. X-axis label "Cycles to Failure (N)" and Y-axis label "Stress Amplitude (MPa)" both in dark ink, readable. Tick labels in #4A4A44 (INK_SOFT), readable at both log-scale minor and major positions. Subtle GRID lines at 10% opacity — visible but not intrusive. L-shaped frame (bottom + left axis lines only, mirror=False).
+      Data: Basquin fit line in #009E73 (BRAND green), prominent solid line, runs from ~700 MPa at 100 cycles down to ~200 MPa at ~5M cycles where it exits the y-axis range. Orange/vermillion (#D55E00) scatter markers with white edge (#FAF8F1 border, width 1.5) — size=12, well-visible for ~30 sparse data points. Three dashed reference lines: #0072B2 blue at 650 MPa (Ultimate Strength), #CC79A7 pink at 450 MPa (Yield Strength), #E69F00 yellow at 230 MPa (Endurance Limit). Subtle green (#009E73, opacity=0.11) horizontal fill from y=200 to y=230 marking the infinite life zone. Annotation boxes near the right edge of the chart at x≈8M label each reference line. "Fatigue Knee (~10⁶ cycles)" annotation with arrow near x≈1.3M, y≈230 MPa. "Infinite Life Zone" text at bottom of fill region.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Near-black consistent with #1A1A17 — not pure black
-      Chrome: Title text flips to white/light, clearly readable. Axis labels and tick labels render in light ink — no dark-on-dark failures. Legend box shows elevated dark background (#242420-ish).
-      Data: Colors identical to light render — green Basquin line, orange scatter, blue/pink/yellow dashed reference lines. No palette shift between themes.
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct dark surface, no pure black.
+      Chrome: Title in light #F0EFE8 ink — fully readable against dark background. Axis labels and tick labels in #B8B7B0 (INK_SOFT dark) — clearly readable, no dark-on-dark failure. GRID lines at 10% opacity (light-on-dark formula) — subtle but present. Same L-shaped frame with light INK_SOFT axis lines.
+      Data: Basquin fit line in #009E73 — IDENTICAL to light render, clearly visible on dark surface. Orange/vermillion (#D55E00) scatter markers with #1A1A17 edge (PAGE_BG dark) — IDENTICAL to light render, excellent contrast against dark background. Three dashed reference lines in #0072B2, #CC79A7, #E69F00 — IDENTICAL to light render. Green hrect fill (same #009E73, opacity=0.11) visible as a very subtle tint. Annotation boxes use #242420 (ELEVATED_BG dark) fill with colored borders — correctly adapted. Legend box uses #242420 fill with #B8B7B0 border — readable.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures confirmed. Data colors identical between light and dark renders as required.
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -53,52 +82,56 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; readable in both themes. Axis labels
-          at 24pt slightly generous but no overflow.
+        comment: All font sizes explicitly set (title=16, axes=12, ticks=10, annotations=10-12);
+          readable in both themes. -1 for reference line annotation boxes at x=8e6
+          being slightly cramped near the right edge (~90% of log-axis width).
       - id: VQ-02
         name: No Overlap
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: No text collisions. Legend box near ultimate strength line but background
-          separation maintains readability.
+        comment: No overlapping text or data elements. Fatigue knee annotation and
+          endurance limit annotation are at different x-positions and do not conflict.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'All elements clearly visible. ~40 scatter points well-sized. Minor:
-          all dashed reference lines share same width/pattern.'
+        comment: All main elements (fit line, markers, reference lines) clearly visible.
+          -1 for infinite life zone hrect at opacity=0.11 being barely perceptible
+          — text label compensates but the fill itself registers weakly.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Okabe-Ito palette with color+dash-style redundant encoding on reference
-          lines.
+        comment: Okabe-Ito palette is CVD-safe. Multiple visual channels used (color
+          + line dash for reference lines). White-edge markers improve scatter definition.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Good canvas utilization, title ~55% width, balanced margins. Legend
-          near ultimate strength line entry.
+        comment: Canvas gate passed (3200x1800). Good margin balance {l:80, r:60,
+          t:80, b:60}. Title at ~60% of canvas width — expected for the mandated title
+          length. No overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Stress Amplitude (MPa) and Cycles to Failure (N) — both descriptive
-          with units.
+        comment: '''Cycles to Failure (N)'' and ''Stress Amplitude (MPa)'' — both
+          descriptive with units. Title format correct.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 (Basquin Fit). Backgrounds #FAF8F1 (light)
-          / #1A1A17 (dark). Theme chrome adapts correctly.'
+        comment: 'First series BRAND #009E73 (Basquin fit). Test data #D55E00. Reference
+          lines #0072B2, #CC79A7, #E69F00 (positions 3-5). Light background #FAF8F1,
+          dark background #1A1A17. Both theme renders correct.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -106,22 +139,29 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional scientific appearance with intentional color hierarchy.
-          Above defaults but not publication-tier due to box frame and standard legend.
+        comment: 'Above-default sophistication: intentional Okabe-Ito application,
+          direct line labeling instead of legend entries, fatigue knee arrow annotation,
+          infinite life zone fill. Clearly thoughtful design, but composition reads
+          as a well-configured library output rather than publication-quality.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Subtle grid appropriate for log-log. Default plotly box frame (all
-          four spines) retained — removing top/right would improve refinement.
+        passed: true
+        comment: 'Good refinement: L-shaped frame (mirror=False), very subtle grid
+          (rgba 0.10), annotation boxes with ELEVATED_BG fill and colored borders,
+          legend with styled border. Endurance limit box and Infinite Life Zone text
+          sit very close together at the bottom (~18 MPa gap above y-axis minimum).'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Three reference lines actively guide viewer through material design
-          zones. Good engineering storytelling.
+        comment: 'Good storytelling: infinite life zone fill + text guides viewer
+          to safe region, fatigue knee arrow identifies key engineering transition,
+          Basquin fit line extrapolates from scatter, visual hierarchy (fit line primary,
+          data secondary, reference lines context). Clearly above default ''data displayed
+          only''.'
     spec_compliance:
       score: 15
       max: 15
@@ -131,28 +171,33 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct S-N (Wöhler) curve with log-log axes.
+        comment: S-N (Wöhler) curve on log-log axes. Both x (cycles) and y (stress)
+          use logarithmic scales. Correct chart type fully implemented.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Log-log axes, three reference lines, scatter with 2-4 specimens per
-          level, Basquin fit line.
+        comment: 'All required features present: log-log scatter data, Basquin power-law
+          fit line, reference lines for Ultimate Strength/Yield Strength/Endurance
+          Limit, per-stress-level scatter. Three-region labeling is in the Notes section
+          as ''typically'' — infinite life zone labeled, which satisfies the primary
+          intent.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Cycles on X (log 10^2 to 10^8), stress on Y (log ~200-750 MPa). All
-          data within bounds.
+        comment: 'X: cycles to failure (log scale), Y: stress amplitude MPa (log scale).
+          All data visible within axis bounds. Correct mapping.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Rendered title correct: sn-curve-basic · python · plotly · anyplot.ai.
-          Legend labels accurate with MPa values.'
+        comment: 'Title: ''sn-curve-basic · python · plotly · anyplot.ai'' — correct
+          format. Legend shows ''Basquin Fit'' and ''Test Data''. Reference lines
+          annotated directly (not in legend) — acceptable design.'
     data_quality:
       score: 14
       max: 15
@@ -162,24 +207,28 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Scatter + Basquin fit + three reference lines. Minor: three fatigue
-          regimes implied but not explicitly demarcated.'
+        comment: Shows scatter from multiple specimens per stress level, Basquin fit,
+          all three reference lines, fatigue knee transition, and infinite life zone.
+          -1 for not explicitly delineating the LCF/HCF boundary (~10^4 cycles) as
+          mentioned in spec Notes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Steel fatigue test data using Basquin equation. Neutral, standard
-          engineering domain.
+        comment: Steel fatigue data with realistic Basquin parameters (A=1200 MPa,
+          b=-0.12). Ultimate strength 650 MPa, yield 450 MPa, endurance 230 MPa —
+          all realistic for structural steel. Engineering context, neutral topic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Stress 230-650 MPa and endurance 230 MPa realistic for structural
-          steel. Cycle range 10^2-10^8 covers all fatigue regimes.
+        comment: Cycles range 100 to 10M — appropriate for S-N curves. Stress range
+          200-750 MPa — appropriate for steel. Log-normal scatter with σ=0.15 — realistic
+          test scatter. All proportions physically sensible.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -187,61 +236,67 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → constants → data generation → traces
-          → layout → save.'
+        comment: 'Flat structure: theme tokens → data → figure → traces → annotations
+          → layout → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before all random operations.
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy and plotly.graph_objects imported and used.
+        comment: 'Exactly three imports: os, numpy, plotly.graph_objects — all used.'
       - id: CQ-04
         name: Code Elegance
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: 'Structurally clean but code file uses non-Okabe-Ito colors (#306998,
-          #FFD43B) and malformed title. Rendered images differ from code file.'
+        passed: true
+        comment: Clean, Pythonic. Loop for three similar reference line annotations
+          avoids repetition. No over-engineering or fake UI.
       - id: CQ-05
         name: Output & API
-        score: 0
+        score: 1
         max: 1
-        passed: false
-        comment: Code saves plot.png / plot.html — no ANYPLOT_THEME reading. Should
-          use os.getenv('ANYPLOT_THEME','light') and save as plot-{THEME}.png / plot-{THEME}.html
-          with include_plotlyjs='cdn'.
+        passed: true
+        comment: Saves plot-{THEME}.png via write_image(width=800, height=450, scale=4)
+          and plot-{THEME}.html via write_html(). Current Plotly API.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses go.Figure() with add_trace(), add_hrect(), add_annotation()
+          — idiomatic Plotly graph objects API. update_layout() with all explicit
+          keys. Above default (3) due to correct use of multiple high-level shape/annotation
+          methods.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Correct go.Figure() with add_trace() for multi-series. Log scale
-          via type:log is idiomatic.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: HTML export present. Log-log handling used. Custom hover tooltips
-          or other distinctive Plotly interactivity not leveraged.
+        comment: add_hrect() for the infinite life zone fill is Plotly-specific. hovertemplate
+          with formatted hover text is Plotly-specific. write_html() for interactive
+          output is Plotly-distinctive. Arrow annotations with arrowhead/arrowsize
+          are Plotly-specific.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
+  - alpha-blending
   - edge-highlighting

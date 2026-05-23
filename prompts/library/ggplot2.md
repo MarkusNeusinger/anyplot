@@ -65,6 +65,17 @@ p <- ggplot(df, aes(x = col_x, y = col_y)) +
   theme_minimal(base_size = 8)
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+| Orientation | `ggsave` `width × height` (`units="in"`, `dpi=400`) | Final PNG     |
+|-------------|------------------------------------------------------|---------------|
+| Landscape   | `width = 8, height = 4.5`                            | 3200 × 1800   |
+| Square      | `width = 6, height = 6`                              | 2400 × 2400   |
+
+Pick the orientation that suits the spec. `ragg::agg_png` honours these values without trimming, so no extra tricks are required — just don't deviate.
+
 ## Figure Size & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ggplot2 inherits sizes via `theme(... base_size = ...)`. Override individual
@@ -107,35 +118,39 @@ ggsave(
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical
 Palette"). First series is **always** `#009E73`.
 
 ```r
-OKABE_ITO <- c(
-  "#009E73",  # 1 — first categorical series
-  "#D55E00",  # 2
-  "#0072B2",  # 3
-  "#CC79A7",  # 4
-  "#E69F00",  # 5
-  "#56B4E9",  # 6
-  "#F0E442"   # 7
+ANYPLOT_PALETTE <- c(
+  "#009E73",  # 1 — first categorical series (brand green)
+  "#9418DB",  # 2
+  "#B71D27",  # 3
+  "#16B8F3",  # 4
+  "#99B314",  # 5
+  "#D359A7",  # 6
+  "#BA843E"   # 7
 )
 
 # Single-series
-geom_point(color = OKABE_ITO[1])
+geom_point(color = ANYPLOT_PALETTE[1])
 
 # Multi-series — categorical
-scale_color_manual(values = OKABE_ITO)
-scale_fill_manual(values  = OKABE_ITO)
+scale_color_manual(values = ANYPLOT_PALETTE)
+scale_fill_manual(values  = ANYPLOT_PALETTE)
 
-# Continuous — NOT Okabe-Ito:
-scale_color_viridis_c(option = "viridis")   # sequential
-scale_color_viridis_c(option = "cividis")   # sequential CVD-safe
-scale_fill_distiller(palette = "BrBG")      # diverging
+# Continuous — only the two anyplot palette-derived cmaps are allowed:
+# Sequential (single-polarity)
+scale_color_gradient(low = "#009E73", high = "#003D94")
+scale_fill_gradient(low  = "#009E73", high = "#003D94")
+# Diverging (around a meaningful midpoint, often 0)
+scale_color_gradient2(low = "#BB0D22", mid = "#A2A598", high = "#007AD9", midpoint = 0)
+scale_fill_gradient2(low  = "#BB0D22", mid = "#A2A598", high = "#007AD9", midpoint = 0)
 ```
 
-Never use `rainbow()`, `heat.colors()`, `terrain.colors()`, `topo.colors()` or
-`hsv()` based palettes — they all fail CVD and luminance ordering.
+Never use `viridis::scale_*_viridis_*()`, `scale_*_distiller()`/`scale_*_brewer()`,
+`rainbow()`, `heat.colors()`, `terrain.colors()`, `topo.colors()` or `hsv()` —
+only the two anyplot stops above.
 
 ## Theme-adaptive Chrome (ggplot2 mapping)
 
@@ -171,7 +186,7 @@ anyplot_theme <- theme_minimal(base_size = 8) +
 # contrast against PAGE_BG instead.
 
 p <- ggplot(df, aes(x, y)) +
-  geom_point(color = OKABE_ITO[1], size = 2.5) +
+  geom_point(color = ANYPLOT_PALETTE[1], size = 2.5) +
   anyplot_theme
 ```
 
@@ -211,8 +226,8 @@ THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-OKABE_ITO   <- c("#009E73", "#D55E00", "#0072B2", "#CC79A7",
-                 "#E69F00", "#56B4E9", "#F0E442")
+ANYPLOT_PALETTE <- c("#009E73", "#9418DB", "#B71D27", "#16B8F3",
+                     "#99B314", "#D359A7", "#BA843E")
 
 # --- Data -------------------------------------------------------------------
 df <- tibble::tibble(
@@ -222,7 +237,7 @@ df <- tibble::tibble(
 
 # --- Plot -------------------------------------------------------------------
 p <- ggplot(df, aes(x, y)) +
-  geom_point(color = OKABE_ITO[1], size = 2.5, alpha = 0.7) +
+  geom_point(color = ANYPLOT_PALETTE[1], size = 2.5, alpha = 0.7) +
   labs(title = "scatter-basic · r · ggplot2 · anyplot.ai", x = "X", y = "Y") +
   theme_minimal(base_size = 8) +
   theme(

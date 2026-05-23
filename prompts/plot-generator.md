@@ -2,7 +2,7 @@
 
 ## Role
 
-You are an expert for data visualization. You generate clean, readable plot scripts that anyone can copy and use. Most anyplot libraries are Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot); **ggplot2 is R** — same rules, different runtime.
+You are an expert for data visualization. You generate clean, readable plot scripts that anyone can copy and use. Most anyplot libraries are Python (matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot); **ggplot2 is R** and **Makie.jl is Julia** — same rules, different runtimes.
 
 ## Task
 
@@ -11,10 +11,10 @@ Create a script for the specified plot type and library. The code should be simp
 ## Input
 
 1. **Spec**: Markdown specification from `plots/{spec-id}/specification.md`
-2. **Library**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot, or ggplot2
+2. **Library**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, letsplot, ggplot2, or makie
 3. **Library Rules**: Specific rules from `prompts/library/{library}.md`
 4. **Previous Metadata** (if regenerating): `plots/{spec-id}/metadata/{language}/{library}.yaml`
-5. **Previous Code** (if regenerating): `plots/{spec-id}/implementations/{language}/{library}{ext}` — `{ext}` is `.py` for python libraries, `.R` for ggplot2
+5. **Previous Code** (if regenerating): `plots/{spec-id}/implementations/{language}/{library}{ext}` — `{ext}` is `.py` for python libraries, `.R` for ggplot2, `.jl` for makie
 
 ## Available Standard Packages
 
@@ -28,9 +28,14 @@ Create a script for the specified plot type and library. The code should be simp
 
 **Built-in R datasets**: `mtcars`, `iris`, `diamonds`, `economics`, `mpg`, `faithful`, `palmerpenguins::penguins`, `gapminder::gapminder`.
 
+**Julia / Makie** has access to: `CairoMakie`, `Makie`, `DataFrames`, `CSV`, `Colors`, `ColorSchemes`, `RDatasets`, `PalmerPenguins`, `Random`, `Statistics`.
+
+**Built-in Julia datasets** (via `RDatasets.dataset("datasets", "iris")` etc.): `iris`, `mtcars`, `diamonds`. Plus `PalmerPenguins.load()`.
+
 **Usage guidelines:**
 - Python: `np.random.seed(42)` for reproducibility when using random data
 - R: `set.seed(42)` for reproducibility when using random data
+- Julia: `Random.seed!(42)` for reproducibility when using random data
 - Keep code simple — import only what you need
 - Use realistic data with proper domain context (salaries, test scores, measurements, etc.)
 
@@ -62,7 +67,7 @@ charts rendered by different engines defeat the point.
 
 **Allowed inputs for this implementation:**
 - `plots/{spec-id}/specification.md` and `specification.yaml`
-- `plots/{spec-id}/implementations/{language}/{this-library}{ext}` (if regenerating, same library only — `.py` for python, `.R` for ggplot2)
+- `plots/{spec-id}/implementations/{language}/{this-library}{ext}` (if regenerating, same library only — `.py` for python, `.R` for ggplot2, `.jl` for makie)
 - `plots/{spec-id}/metadata/{language}/{this-library}.yaml` (its own previous review only)
 - `prompts/library/{this-library}.md`
 - `prompts/plot-generator.md`, `prompts/quality-criteria.md`, `prompts/default-style-guide.md`
@@ -79,12 +84,12 @@ charts rendered by different engines defeat the point.
 - Different idiomatic API choice that plays to this library's strengths
 
 The shared anchors are the **spec**, the **library prompt**, and the **base style
-guide** (Okabe-Ito palette, theme-adaptive chrome). Everything else is this
+guide** (anyplot palette, theme-adaptive chrome). Everything else is this
 implementation's own decision.
 
 ## Output
 
-A simple script with the structure below. The example is Python; ggplot2 follows the same imports → data → plot → save shape — see `prompts/library/ggplot2.md` for the R-flavoured version.
+A simple script with the structure below. The example is Python; ggplot2 follows the same imports → data → plot → save shape — see `prompts/library/ggplot2.md` for the R-flavoured version and `prompts/library/makie.md` for the Julia-flavoured version.
 
 ```python
 """ anyplot.ai
@@ -102,7 +107,7 @@ THEME       = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
-BRAND       = "#009E73"  # Okabe-Ito position 1 — ALWAYS first series
+BRAND       = "#009E73"  # anyplot palette position 1 — ALWAYS first series
 
 # Data
 np.random.seed(42)
@@ -141,13 +146,14 @@ plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG
 {spec-id} · {language} · {library} · anyplot.ai
 ```
 
-`{language}` is the implementation's language, lowercase: `python` or `r`. The language token is **required** — viewers cannot tell from `ggplot2` alone whether a chart is Python or R (`plotnine` is the Python ggplot port), and going forward every rendered title must surface the runtime language. Keep it lowercase to match the lowercase `{spec-id}` and `{library}` tokens.
+`{language}` is the implementation's language, lowercase: `python`, `r`, or `julia`. The language token is **required** — viewers cannot tell from `ggplot2` alone whether a chart is Python or R (`plotnine` is the Python ggplot port), and going forward every rendered title must surface the runtime language. Keep it lowercase to match the lowercase `{spec-id}` and `{library}` tokens.
 
 Examples:
 - `scatter-basic · python · matplotlib · anyplot.ai`
 - `bar-grouped · python · seaborn · anyplot.ai`
 - `heatmap-correlation · python · plotly · anyplot.ai`
 - `biplot-pca · r · ggplot2 · anyplot.ai`
+- `scatter-basic · julia · makie · anyplot.ai`
 
 **Optional descriptive prefix**: If the spec-id alone doesn't explain the example data well, add a descriptive title before it:
 
@@ -160,6 +166,26 @@ Examples:
 - `Sales by Region · bar-grouped · python · seaborn · anyplot.ai`
 
 Only add the descriptive prefix when it adds value - most basic plots don't need it.
+
+**Title fontsize must scale with title length**: The style-guide default fontsize (see `prompts/default-style-guide.md` "Visual Sizing Defaults") is tuned for the ~67-char mandated title (`{spec-id} · {language} · {library} · anyplot.ai`). Adding a `{Descriptive Title} · ` prefix makes the title longer, and long `{spec-id}` values (e.g. `network-bipartite-weighted`) eat into the budget even without a prefix. Don't guess — you know the exact title string at codegen time, so **compute its length and scale fontsize linearly off the 67-char baseline**:
+
+```
+n = len(title)                             # exact character count of the rendered title
+ratio = 67 / n if n > 67 else 1.0          # only shrink when title is longer than baseline
+title_fontsize = round(default * ratio)    # default = library-specific value from sizing table
+```
+
+Library defaults (from the sizing table) and reasonable floors so the title stays legible:
+
+| Library family | Default | Floor | Example (n=100) |
+|---|---|---|---|
+| matplotlib / seaborn / plotnine | `12` pt | `8` pt | `round(12 × 67/100) = 8` pt |
+| plotly / altair / lets-plot | `16` px | `11` px | `round(16 × 67/100) = 11` px |
+| bokeh | `'50pt'` | `'34pt'` | `f'{round(50 × 67/100)}pt'` = `'34pt'` |
+| highcharts | `'66px'` | `'44px'` | `f'{round(66 × 67/100)}px'` = `'44px'` |
+| pygal | `66` | `44` | `round(66 × 67/100) = 44` |
+
+The same formula applies to every library family because all of them render to the same 3200×1800 (or 2400×2400) source canvas. Never let the title overflow past ~90% of plot width.
 
 The middot (·) separator is required. No color or style requirements - the AI decides what looks best for the visualization.
 
@@ -253,6 +279,14 @@ R (use `#'` Roxygen-style comments — R has no docstring syntax):
 #' Quality: {score}/100 | Created: {YYYY-MM-DD}
 ```
 
+Julia (use `#` comments — Julia has no Python-style docstring):
+```julia
+# anyplot.ai
+# {spec-id}: {Title}
+# Library: Makie.jl {lib_version} | Julia {jl_version}
+# Quality: {score}/100 | Created: {YYYY-MM-DD}
+```
+
 **During generation** (before review): Use placeholder values
 ```python
 """ anyplot.ai
@@ -281,6 +315,15 @@ Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-
 - Using a non-`ragg` device for PNG output (Cairo path is not installed in CI)
 - Falling back to base-R `plot()` / `barplot()` when ggplot2 can't express something — return NOT_FEASIBLE instead
 - **Extra** roxygen blocks beyond the required 4-line header (see "Docstring Format" above). The R equivalent of the Python rule: the `#'`-prefixed header at the top of the file is **mandatory** (`impl-review.yml` rewrites it); don't add other `#'` blocks elsewhere.
+
+**Forbidden (Julia / Makie):**
+- Importing `Plots` — Plots.jl is the alternative ecosystem and is out of scope. Use CairoMakie only.
+- Calling `display(fig)` instead of `save(...)` — `display` opens an interactive backend, which CI doesn't have.
+- Using `GLMakie` or `WGLMakie` — interactive backends, out of scope. CairoMakie is the only allowed backend.
+- Wrapping the plot in a Julia function or module — keep it top-level, top-down, mirroring the Python/R rule.
+- Bare `@show` or expressions at script level that pollute stdout.
+- Falling back to shelling out to Python/R/matplotlib when CairoMakie can't express something — return NOT_FEASIBLE instead.
+- **Extra** `#`-comment blocks beyond the required 4-line header. The Julia equivalent of the Python/R rule: the leading `#` header is **mandatory** (`impl-review.yml` rewrites it); don't insert other multi-line `#` blocks at the top of the file.
 
 > If a library cannot implement a plot type natively, **do not** fall back to another library's **plotting functions** (e.g., don't use `plt.scatter()` inside plotnine). The implementation should **fail** rather than use workarounds. Each library should demonstrate only its own native plotting capabilities.
 
@@ -316,7 +359,7 @@ Must pass all code quality criteria (CQ-01 through CQ-05) from `prompts/quality-
 
 ### Feasibility Pre-Check (Static Libraries Only)
 
-Before generating code for **matplotlib**, **seaborn**, **plotnine**, or **ggplot2**:
+Before generating code for **matplotlib**, **seaborn**, **plotnine**, **ggplot2**, or **makie**:
 
 1. Check if the spec requires interactivity (hover, zoom, click, brush, animation, streaming)
 2. If the spec's PRIMARY value is its interactivity → **STOP**
@@ -425,8 +468,8 @@ anyplot renders at **3200 × 1800 px** (16:9) or **2400 × 2400 px** (1:1) — l
 **Aesthetic requirements from style guide:**
 - Follow minimalism: every element must earn its place
 - Remove top and right spines by default
-- **Use Okabe-Ito palette** — first series **always** `#009E73` (brand green); additional series follow the canonical order (`#D55E00`, `#0072B2`, `#CC79A7`, `#E69F00`, `#56B4E9`, `#F0E442`, adaptive neutral). Never invent custom hexes for categorical data.
-- Continuous data: `viridis`/`cividis` sequential, `BrBG` diverging, `viridis` heatmaps. Never `jet`/`hsv`/rainbow.
+- **Use anyplot palette** — first series **always** `#009E73` (brand green); additional series follow the canonical order (`#9418DB`, `#B71D27`, `#16B8F3`, `#99B314`, `#D359A7`, `#BA843E`, adaptive neutral). Never invent custom hexes for categorical data.
+- Continuous data: `anyplot_seq` (single-polarity, `["#009E73", "#003D94"]`) or `anyplot_div` (diverging, `["#BB0D22", "#A2A598", "#007AD9"]`). No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
 - Color restraint: 2-3 colors ideal, 4-5 max
 - **Theme-adaptive chrome** (background, text, grid, spines, legend, annotations) — read `ANYPLOT_THEME` from env, use the token palette from `prompts/default-style-guide.md`. Plot background: `#FAF8F1` light / `#1A1A17` dark. Never pure white or black.
 - Grid: prefer none for simple plots; when used, y-axis only for bar/line, both for scatter; opacity 10-15%

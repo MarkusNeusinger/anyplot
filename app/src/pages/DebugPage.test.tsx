@@ -35,7 +35,7 @@ const mockDebugData = {
       updated: '2025-01-01',
       avg_score: 92,
       altair: 90, bokeh: 91, ggplot2: null, highcharts: null, letsplot: null,
-      matplotlib: 95, plotly: 88, plotnine: null, pygal: null, seaborn: 94,
+      makie: null, matplotlib: 95, plotly: 88, plotnine: null, pygal: null, seaborn: 94,
     },
   ],
 };
@@ -225,6 +225,59 @@ describe('DebugPage', () => {
       expect(screen.getByText(/failed to fetch/i)).toBeInTheDocument();
     });
     expect(replaceSpy).not.toHaveBeenCalled();
+  });
+
+  // The debug feedback list ships a "copy Claude Code prompt" button next to
+  // every message so admins can drop straight from triage into a Claude Code
+  // session that already knows the URL, the reaction, and the user's text.
+  it('copies a Claude-Code-ready prompt for a feedback message', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText } });
+
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...window.location, origin: 'https://anyplot.ai', href: 'https://anyplot.ai/debug' },
+    });
+
+    vi.stubGlobal('fetch', vi.fn((url: string) => {
+      if (url.includes('/debug/ping')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve({ database_connected: true, response_time_ms: 10, timestamp: '2026-05-21T00:00:00Z' }) });
+      }
+      if (url.includes('/debug/feedback/messages')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve([
+            {
+              id: 'fb-1',
+              message: 'Axis labels overlap on mobile',
+              reaction: 'bug',
+              contact: null,
+              path: '/plots/scatter-basic',
+              spec_id: 'scatter-basic',
+              viewport: '375x812',
+              status: 'new',
+              created_at: '2026-05-21T09:00:00Z',
+            },
+          ]),
+        });
+      }
+      if (url.includes('/debug/feedback/top')) {
+        return Promise.resolve({ ok: true, json: () => Promise.resolve([]) });
+      }
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(mockDebugData) });
+    }));
+
+    render(<DebugPage />);
+
+    const copyBtn = await screen.findByRole('button', { name: /copy claude code prompt/i });
+    fireEvent.click(copyBtn);
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledTimes(1));
+    const copied = writeText.mock.calls[0][0] as string;
+    expect(copied).toContain('https://anyplot.ai/plots/scatter-basic');
+    expect(copied).toContain('bug report');
+    expect(copied).toContain('> Axis labels overlap on mobile');
+    expect(copied).toContain('Open a pull request');
   });
 
 });

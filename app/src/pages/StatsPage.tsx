@@ -466,7 +466,8 @@ export function StatsPage() {
                     <Link
                       key={tag}
                       component={RouterLink}
-                      to={param ? `/?${param}=${tag}` : '/'}
+                      to={param ? `/plots?${param}=${encodeURIComponent(tag)}` : '/plots'}
+                      onClick={() => { if (param) trackEvent('tag_click', { param, value: tag, source: 'stats' }); }}
                       sx={{
                         fontFamily: typography.fontFamily, fontSize: size, fontWeight: weight, textDecoration: 'none',
                         px: 0.75, py: 0.25, borderRadius: 0.5,

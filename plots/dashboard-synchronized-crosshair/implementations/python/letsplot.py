@@ -1,52 +1,74 @@
-""" pyplots.ai
+""" anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-23
 """
+
+import os
 
 import numpy as np
 import pandas as pd
-from lets_plot import *  # noqa: F403
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot import (
+    LetsPlot,
+    aes,
+    element_blank,
+    element_line,
+    element_rect,
+    element_text,
+    geom_hline,
+    geom_line,
+    geom_path,
+    geom_point,
+    geom_segment,
+    geom_text,
+    gggrid,
+    ggplot,
+    ggsize,
+    ggtitle,
+    labs,
+    layer_tooltips,
+    scale_y_continuous,
+    theme,
+    theme_minimal,
+)
+from lets_plot.export import ggsave
 
 
-LetsPlot.setup_html()  # noqa: F405
+LetsPlot.setup_html()
 
-# Data - Stock-like data with price, volume, and RSI indicator
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID_COLOR = "#E1DFD9" if THEME == "light" else "#32322F"
+
+ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
+CROSSHAIR_COLOR = ANYPLOT_PALETTE[5]  # #D359A7 pink — visually distinct from all 3 series
+
+# Data — stock dashboard: price, volume, RSI over 200 trading days
 np.random.seed(42)
 n_points = 200
 
 dates = pd.date_range("2024-01-01", periods=n_points, freq="B")
-
-# Price series (cumulative random walk)
 returns = np.random.normal(0.001, 0.02, n_points)
 price = 100 * np.cumprod(1 + returns)
-
-# Volume series (correlated with absolute returns)
-base_volume = 1000000
+base_volume = 1_000_000
 volume = base_volume * (1 + 2 * np.abs(returns)) * np.random.uniform(0.8, 1.2, n_points)
-
-# RSI-like indicator (oscillating between 30-70 mostly)
 rsi = 50 + 20 * np.sin(np.linspace(0, 8 * np.pi, n_points)) + np.random.normal(0, 5, n_points)
 rsi = np.clip(rsi, 0, 100)
 
-df = pd.DataFrame(
-    {
-        "date": dates,
-        "price": price,
-        "volume": volume / 1e6,  # In millions
-        "rsi": rsi,
-    }
-)
+df = pd.DataFrame({"date": dates, "price": price, "volume": volume / 1e6, "rsi": rsi, "zero": 0.0})
 
-# Select a crosshair position at index 100 (mid-point) for demonstration
+# Crosshair position at index 100 (mid-point)
 crosshair_idx = 100
 crosshair_date = df["date"].iloc[crosshair_idx]
 crosshair_price = df["price"].iloc[crosshair_idx]
 crosshair_volume = df["volume"].iloc[crosshair_idx]
 crosshair_rsi = df["rsi"].iloc[crosshair_idx]
 
-# Crosshair annotation data - single point for each chart
+# Annotation data for each chart
 crosshair_price_df = pd.DataFrame(
     {"date": [crosshair_date], "price": [crosshair_price], "label": [f"${crosshair_price:.2f}"]}
 )
@@ -55,124 +77,105 @@ crosshair_volume_df = pd.DataFrame(
 )
 crosshair_rsi_df = pd.DataFrame({"date": [crosshair_date], "rsi": [crosshair_rsi], "label": [f"{crosshair_rsi:.1f}"]})
 
-# Vertical line data for crosshair
+# Vertical crosshair line data (geom_path needs two points per line)
 vline_price_df = pd.DataFrame(
     {"date": [crosshair_date, crosshair_date], "y": [df["price"].min() * 0.98, df["price"].max() * 1.02]}
 )
-vline_volume_df = pd.DataFrame({"date": [crosshair_date, crosshair_date], "y": [0, df["volume"].max() * 1.1]})
-vline_rsi_df = pd.DataFrame({"date": [crosshair_date, crosshair_date], "y": [0, 100]})
+vline_volume_df = pd.DataFrame({"date": [crosshair_date, crosshair_date], "y": [0.0, df["volume"].max() * 1.1]})
+vline_rsi_df = pd.DataFrame({"date": [crosshair_date, crosshair_date], "y": [0.0, 100.0]})
 
-# Common theme for all charts
-common_theme = theme(  # noqa: F405
-    axis_title=element_text(size=18),  # noqa: F405
-    axis_text=element_text(size=14),  # noqa: F405
-    plot_title=element_text(size=20),  # noqa: F405
-    legend_text=element_text(size=14),  # noqa: F405
-    axis_line=element_line(size=1),  # noqa: F405
-    panel_grid_major=element_line(color="#E0E0E0", size=0.5),  # noqa: F405
-    panel_grid_minor=element_blank(),  # noqa: F405
+# Shared theme for all sub-charts
+common_theme = theme(
+    axis_title=element_text(size=18, color=INK),
+    axis_text=element_text(size=14, color=INK_SOFT),
+    plot_title=element_text(size=15, color=INK),
+    legend_text=element_text(size=14, color=INK_SOFT),
+    legend_title=element_text(size=14, color=INK),
+    axis_line=element_line(color=INK_SOFT, size=1),
+    panel_grid_major=element_line(color=GRID_COLOR, size=0.4),
+    panel_grid_minor=element_blank(),
+    plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    panel_background=element_rect(fill=PAGE_BG),
+    legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
 )
 
-# Chart 1: Price with synchronized crosshair
+# Chart 1: Price
 price_chart = (
-    ggplot(df, aes(x="date", y="price"))  # noqa: F405
-    + geom_line(color="#306998", size=1.5, tooltips=layer_tooltips().line("@date").line("Price|$@price"))  # noqa: F405
-    + geom_path(  # noqa: F405
-        data=vline_price_df,
-        mapping=aes(x="date", y="y"),  # noqa: F405
-        color="#E91E63",
-        size=1.2,
-        alpha=0.8,
-    )
-    + geom_point(data=crosshair_price_df, mapping=aes(x="date", y="price"), color="#E91E63", size=6)  # noqa: F405
-    + geom_text(  # noqa: F405
+    ggplot(df, aes(x="date", y="price"))
+    + geom_line(color=ANYPLOT_PALETTE[0], size=1.5, tooltips=layer_tooltips().line("@date").line("Price|$@price"))
+    + geom_path(data=vline_price_df, mapping=aes(x="date", y="y"), color=CROSSHAIR_COLOR, size=1.2, alpha=0.85)
+    + geom_point(data=crosshair_price_df, mapping=aes(x="date", y="price"), color=CROSSHAIR_COLOR, size=6)
+    + geom_text(
         data=crosshair_price_df,
-        mapping=aes(x="date", y="price", label="label"),  # noqa: F405
-        hjust=-0.15,
-        vjust=0.5,
-        color="#E91E63",
+        mapping=aes(x="date", y="price", label="label"),
+        hjust=0.5,
+        vjust=-1.2,
+        color=CROSSHAIR_COLOR,
         size=12,
     )
-    + labs(x="", y="Price ($)", title="Price")  # noqa: F405
-    + theme_minimal()  # noqa: F405
+    + labs(x="", y="Price ($)", title="Price")
+    + theme_minimal()
     + common_theme
 )
 
-# Chart 2: Volume with synchronized crosshair
+# Chart 2: Volume — geom_segment renders color= reliably vs geom_bar fill= quirk
 volume_chart = (
-    ggplot(df, aes(x="date", y="volume"))  # noqa: F405
-    + geom_bar(  # noqa: F405
-        fill="#FFD43B",
-        stat="identity",
-        alpha=0.8,
-        width=0.8,
-        tooltips=layer_tooltips().line("@date").line("Volume|@volume M"),  # noqa: F405
+    ggplot(df, aes(x="date", xend="date", y="zero", yend="volume"))
+    + geom_segment(
+        color=ANYPLOT_PALETTE[1], size=2.0, alpha=0.85, tooltips=layer_tooltips().line("@date").line("Volume|@volume M")
     )
-    + geom_path(  # noqa: F405
-        data=vline_volume_df,
-        mapping=aes(x="date", y="y"),  # noqa: F405
-        color="#E91E63",
-        size=1.2,
-        alpha=0.8,
-    )
-    + geom_point(data=crosshair_volume_df, mapping=aes(x="date", y="volume"), color="#E91E63", size=6)  # noqa: F405
-    + geom_text(  # noqa: F405
+    + geom_path(data=vline_volume_df, mapping=aes(x="date", y="y"), color=CROSSHAIR_COLOR, size=1.2, alpha=0.85)
+    + geom_point(data=crosshair_volume_df, mapping=aes(x="date", y="volume"), color=CROSSHAIR_COLOR, size=6)
+    + geom_text(
         data=crosshair_volume_df,
-        mapping=aes(x="date", y="volume", label="label"),  # noqa: F405
-        hjust=-0.15,
-        vjust=0.5,
-        color="#E91E63",
+        mapping=aes(x="date", y="volume", label="label"),
+        hjust=0.5,
+        vjust=-1.2,
+        color=CROSSHAIR_COLOR,
         size=12,
     )
-    + labs(x="", y="Volume (M)", title="Volume")  # noqa: F405
-    + theme_minimal()  # noqa: F405
+    + labs(x="", y="Volume (M)", title="Volume")
+    + theme_minimal()
     + common_theme
 )
 
-# Chart 3: RSI Indicator with synchronized crosshair
+# Chart 3: RSI Indicator
 rsi_chart = (
-    ggplot(df, aes(x="date", y="rsi"))  # noqa: F405
-    + geom_line(color="#DC2626", size=1.5, tooltips=layer_tooltips().line("@date").line("RSI|@rsi"))  # noqa: F405
-    + geom_hline(yintercept=70, linetype="dashed", color="#888888", size=0.8)  # noqa: F405
-    + geom_hline(yintercept=30, linetype="dashed", color="#888888", size=0.8)  # noqa: F405
-    + geom_path(  # noqa: F405
-        data=vline_rsi_df,
-        mapping=aes(x="date", y="y"),  # noqa: F405
-        color="#E91E63",
-        size=1.2,
-        alpha=0.8,
-    )
-    + geom_point(data=crosshair_rsi_df, mapping=aes(x="date", y="rsi"), color="#E91E63", size=6)  # noqa: F405
-    + geom_text(  # noqa: F405
+    ggplot(df, aes(x="date", y="rsi"))
+    + geom_line(color=ANYPLOT_PALETTE[2], size=1.5, tooltips=layer_tooltips().line("@date").line("RSI|@rsi"))
+    + geom_hline(yintercept=70, linetype="dashed", color=INK_SOFT, size=0.8)
+    + geom_hline(yintercept=30, linetype="dashed", color=INK_SOFT, size=0.8)
+    + geom_path(data=vline_rsi_df, mapping=aes(x="date", y="y"), color=CROSSHAIR_COLOR, size=1.2, alpha=0.85)
+    + geom_point(data=crosshair_rsi_df, mapping=aes(x="date", y="rsi"), color=CROSSHAIR_COLOR, size=6)
+    + geom_text(
         data=crosshair_rsi_df,
-        mapping=aes(x="date", y="rsi", label="label"),  # noqa: F405
-        hjust=-0.15,
-        vjust=0.5,
-        color="#E91E63",
+        mapping=aes(x="date", y="rsi", label="label"),
+        hjust=0.5,
+        vjust=-1.2,
+        color=CROSSHAIR_COLOR,
         size=12,
     )
-    + labs(  # noqa: F405
-        x="Date",
-        y="RSI",
-        title="RSI Indicator",
-        caption=f"■ Synchronized crosshair at {crosshair_date.strftime('%Y-%m-%d')}",
-    )
-    + scale_y_continuous(limits=[0, 100])  # noqa: F405
-    + theme_minimal()  # noqa: F405
+    + scale_y_continuous(limits=[0, 100])
+    + labs(x="Date", y="RSI", title="RSI Indicator")
+    + theme_minimal()
     + common_theme
-    + theme(plot_caption=element_text(size=14, color="#E91E63", hjust=0))  # noqa: F405
 )
 
-# Combine charts using gggrid for vertical stacked layout
-# Price chart gets more vertical space (2:1:1 ratio)
+# Combine into stacked dashboard with 2:1:1 height ratio
+TITLE = "dashboard-synchronized-crosshair · python · letsplot · anyplot.ai"
+n = len(TITLE)
+title_fontsize = round(18 * (67 / n)) if n > 67 else 18
+
 combined = (
-    gggrid([price_chart, volume_chart, rsi_chart], ncol=1, heights=[2, 1, 1])  # noqa: F405
-    + ggsize(1600, 900)  # noqa: F405
-    + ggtitle("dashboard-synchronized-crosshair · letsplot · pyplots.ai")  # noqa: F405
+    gggrid([price_chart, volume_chart, rsi_chart], ncol=1, heights=[2, 1, 1])
+    + ggsize(800, 450)
+    + ggtitle(TITLE)
+    + theme(
+        plot_title=element_text(size=title_fontsize, color=INK),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+    )
 )
 
-# Save PNG (scale 3x to get 4800 x 2700 px)
-export_ggsave(combined, filename="plot.png", path=".", scale=3)
-
-# Save HTML for interactive version with tooltips
-export_ggsave(combined, filename="plot.html", path=".")
+# Save PNG (scale=4 → 3200×1800 px) and HTML
+ggsave(combined, filename=f"plot-{THEME}.png", path=".", scale=4)
+ggsave(combined, filename=f"plot-{THEME}.html", path=".")

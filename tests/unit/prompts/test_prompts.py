@@ -221,12 +221,12 @@ class TestPromptStructure:
 
     @pytest.mark.parametrize("filename", EXPECTED_LIBRARY_PROMPTS)
     def test_library_prompt_has_color_section(self, filename: str) -> None:
-        """Each library prompt should have a Colors section with the Okabe-Ito brand color."""
+        """Each library prompt should have a Colors section with the anyplot brand color."""
         content = (LIBRARY_PROMPTS_DIR / filename).read_text()
         assert "## Colors" in content, f"{filename} missing ## Colors section"
-        # Phase A migrated all library prompts from Python Blue (#306998) to
-        # Okabe-Ito bluish green (#009E73) as the mandated first-series color.
-        assert "#009E73" in content, f"{filename} missing Okabe-Ito brand color reference"
+        # The brand bluish green (#009E73) is mandated as the first-series color
+        # across all library prompts — anyplot palette position 1.
+        assert "#009E73" in content, f"{filename} missing anyplot brand color reference"
 
     @pytest.mark.parametrize("filename", EXPECTED_LIBRARY_PROMPTS)
     def test_library_prompt_no_hardcoded_yellow(self, filename: str) -> None:

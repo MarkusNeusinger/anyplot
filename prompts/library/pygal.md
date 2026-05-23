@@ -7,10 +7,16 @@ import pygal
 from pygal.style import Style
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+- **Landscape**: `width=3200, height=1800`
+- **Square**: `width=2400, height=2400`
+
 ## Create Chart
 
 ```python
-# Target: 3200 × 1800 px (see default-style-guide.md)
 chart = pygal.Bar(
     width=3200,
     height=1800,
@@ -69,8 +75,8 @@ PAGE_BG     = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK         = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED   = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ('#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442')
+ANYPLOT_PALETTE = ('#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E')
 
 custom_style = Style(
     background=PAGE_BG,
@@ -78,7 +84,7 @@ custom_style = Style(
     foreground=INK,                 # primary text
     foreground_strong=INK,          # title
     foreground_subtle=INK_MUTED,    # tick labels, grid tone
-    colors=OKABE_ITO,               # first series = brand green
+    colors=ANYPLOT_PALETTE,         # first series = brand green
     # pygal font sizes are unitless integers, rendered into the SVG at the
     # source-pixel grid (no DPI/scale multiplier). To match matplotlib 12pt
     # @ dpi=400 (= 67 source-px), set unitless values directly to the target
@@ -108,18 +114,26 @@ chart = pygal.Bar(
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`. For pygal, the palette is always passed via the `Style` object — see the Sizing + Theme section above.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`. For pygal, the palette is always passed via the `Style` object — see the Sizing + Theme section above.
 
 ```python
-OKABE_ITO = ('#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442')
+ANYPLOT_PALETTE = ('#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E')
 
-# Single-series: OKABE_ITO[0] is still the first color pygal cycles through
-custom_style = Style(..., colors=OKABE_ITO)
+# Single-series: ANYPLOT_PALETTE[0] is still the first color pygal cycles through
+custom_style = Style(..., colors=ANYPLOT_PALETTE)
 
-# Continuous data: pygal doesn't have built-in cmaps. For heatmap-like scales,
-# interpolate manually from viridis via matplotlib (e.g., matplotlib.cm.viridis(t))
-# and pass the resulting hex tuple as `colors`.
+# Continuous data: pygal doesn't have built-in cmaps. Interpolate manually
+# between the anyplot palette-derived endpoints — never substitute viridis
+# or any other named cmap.
+def _lerp_hex(c0, c1, t):
+    r0, g0, b0 = (int(c0[i:i+2], 16) for i in (1, 3, 5))
+    r1, g1, b1 = (int(c1[i:i+2], 16) for i in (1, 3, 5))
+    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
+    return f"#{r:02X}{g:02X}{b:02X}"
+# Sequential (single-polarity): #009E73 → #003D94
+seq_stops = tuple(_lerp_hex("#009E73", "#003D94", i / (n - 1)) for i in range(n))
+# Diverging (around a meaningful midpoint): #BB0D22 ↔ #A2A598 ↔ #007AD9
 ```
 
 ## Grid Opacity

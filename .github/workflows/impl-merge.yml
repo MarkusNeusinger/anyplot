@@ -109,6 +109,10 @@ jobs:
               LANGUAGE="r"
               EXT=".R"
               ;;
+            makie)
+              LANGUAGE="julia"
+              EXT=".jl"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"
@@ -288,10 +292,17 @@ jobs:
           # Create labels if they don't exist
           gh label create "impl:${LIBRARY}:done" --color "0e8a16" --description "${LIBRARY} implementation merged" 2>/dev/null || true
 
-          # Remove trigger and pending, add done
-          gh issue edit "$ISSUE" --remove-label "generate:${LIBRARY}" 2>/dev/null || true
-          gh issue edit "$ISSUE" --remove-label "impl:${LIBRARY}:pending" 2>/dev/null || true
-          gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done"
+          # Remove trigger, pending, and any stale failed label from earlier attempts,
+          # then add done. The :failed label is added by impl-generate.yml when an
+          # attempt errors out (e.g. environment setup failure); a later successful
+          # retry merges via this workflow but historically didn't clean up :failed,
+          # leaving the issue with both :done and :failed for the same library.
+          # Single API call (comma-separated) — matches the pattern in
+          # impl-generate.yml and avoids the partial-update window of separate edits.
+          gh issue edit "$ISSUE" \
+            --remove-label "generate:${LIBRARY},impl:${LIBRARY}:pending,impl:${LIBRARY}:failed" \
+            --add-label "impl:${LIBRARY}:done" 2>/dev/null || \
+            gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done"
 
       - name: Post success to issue
         if: steps.check.outputs.should_run == 'true' && steps.issue.outputs.number != ''
@@ -331,8 +342,9 @@ jobs:
           ISSUE: ${{ steps.issue.outputs.number }}
           SPEC_ID: ${{ steps.extract.outputs.specification_id }}
         run: |
-          # All 9 supported libraries
-          LIBRARIES="matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot"
+          # All supported libraries (mirrors core/constants.py SUPPORTED_LIBRARIES).
+          # ggplot2 (R) and makie (Julia) are non-Python entries; everything else is Python.
+          LIBRARIES="matplotlib seaborn plotly bokeh altair plotnine pygal highcharts letsplot ggplot2 makie"
 
           # Get current labels on the issue
           LABELS=$(gh issue view "$ISSUE" --json labels -q '.labels[].name' 2>/dev/null || echo "")
@@ -353,11 +365,12 @@ jobs:
             fi
           done
 
+          TOTAL_LIBS=$(echo "$LIBRARIES" | wc -w | tr -d ' ')
           TOTAL=$((DONE_COUNT + FAILED_COUNT))
-          echo "::notice::Libraries: $DONE_COUNT done, $FAILED_COUNT failed, $TOTAL/9 total"
+          echo "::notice::Libraries: $DONE_COUNT done, $FAILED_COUNT failed, $TOTAL/$TOTAL_LIBS total"
 
-          # Close issue if all 9 libraries are done OR done+failed=9
-          if [ "$TOTAL" -eq 9 ]; then
+          # Close issue if all supported libraries are done OR done+failed=TOTAL_LIBS
+          if [ "$TOTAL" -eq "$TOTAL_LIBS" ]; then
             # Build status table
             TABLE="| Library | Status |\n|---------|--------|"
             for lib in $LIBRARIES; do
@@ -370,10 +383,10 @@ jobs:
 
             if [ "$FAILED_COUNT" -eq 0 ]; then
               TITLE=":tada: All Implementations Complete!"
-              SUMMARY="All 9 library implementations for \`${SPEC_ID}\` have been successfully merged."
+              SUMMARY="All ${TOTAL_LIBS} library implementations for \`${SPEC_ID}\` have been successfully merged."
             else
               TITLE=":white_check_mark: Implementations Complete"
-              SUMMARY="${DONE_COUNT}/9 implementations merged, ${FAILED_COUNT} libraries could not implement this plot type."
+              SUMMARY="${DONE_COUNT}/${TOTAL_LIBS} implementations merged, ${FAILED_COUNT} libraries could not implement this plot type."
             fi
 
             gh issue comment "$ISSUE" --body "## ${TITLE}

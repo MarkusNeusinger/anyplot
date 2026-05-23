@@ -14,11 +14,23 @@ from __future__ import annotations
 
 # Canonical set of all supported plotting libraries (IDs)
 SUPPORTED_LIBRARIES = frozenset(
-    ["altair", "bokeh", "ggplot2", "highcharts", "letsplot", "matplotlib", "plotly", "plotnine", "pygal", "seaborn"]
+    [
+        "altair",
+        "bokeh",
+        "ggplot2",
+        "highcharts",
+        "letsplot",
+        "makie",
+        "matplotlib",
+        "plotly",
+        "plotnine",
+        "pygal",
+        "seaborn",
+    ]
 )
 
 # Supported programming languages
-SUPPORTED_LANGUAGES = frozenset(["python", "r"])
+SUPPORTED_LANGUAGES = frozenset(["python", "r", "julia"])
 
 # Language metadata for database seeding (analog to LIBRARIES_METADATA)
 LANGUAGES_METADATA = [
@@ -37,6 +49,14 @@ LANGUAGES_METADATA = [
         "runtime_version": "4.4",
         "documentation_url": "https://www.r-project.org",
         "description": "Language and environment for statistical computing and graphics. Widely used in academia, biotech, and finance research, with a rich package ecosystem on CRAN.",
+    },
+    {
+        "id": "julia",
+        "name": "Julia",
+        "file_extension": ".jl",
+        "runtime_version": "1.11",
+        "documentation_url": "https://julialang.org",
+        "description": "High-level, high-performance dynamic language for technical computing. Combines the productivity of Python/R with the speed of compiled languages; popular in scientific computing, numerical analysis, and machine learning research.",
     },
 ]
 
@@ -84,6 +104,14 @@ LIBRARIES_METADATA = [
         "version": "4.5.0",
         "documentation_url": "https://lets-plot.org",
         "description": "Multiplatform plotting library built on the principles of the Grammar of Graphics. A faithful adaptation of R's ggplot2 that extends Grammar of Graphics principles to both Python and Kotlin.",
+    },
+    {
+        "id": "makie",
+        "name": "Makie.jl",
+        "language_id": "julia",
+        "version": "0.22",
+        "documentation_url": "https://docs.makie.org",
+        "description": "High-performance, extensible visualization ecosystem for Julia. CairoMakie renders publication-quality static PNG/SVG/PDF; GLMakie/WGLMakie handle interactive use. anyplot uses CairoMakie for the static gallery.",
     },
     {
         "id": "matplotlib",

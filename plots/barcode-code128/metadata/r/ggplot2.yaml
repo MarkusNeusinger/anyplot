@@ -1,0 +1,256 @@
+library: ggplot2
+language: r
+specification_id: barcode-code128
+created: '2026-05-21T01:24:43Z'
+updated: '2026-05-21T01:42:53Z'
+generated_by: claude-sonnet
+workflow_run: 26198780219
+issue: 3809
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/barcode-code128/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - Technically correct Code 128 Subset B encoding with proper Mod-103 check digit,
+    start (value 104) and stop patterns, and 10-module quiet zones on each side
+  - 'Theme-adaptive chrome correctly implemented in both renders — warm #FAF8F1 /
+    #1A1A17 backgrounds with INK tokens applied to all text elements; no dark-on-dark
+    or light-on-light issues'
+  - Clean minimal layout with theme_void() and a subtle frame border (INK_SOFT) that
+    anchors the barcode without cluttering; monospace font for human-readable text
+    is an excellent design choice
+  - Idiomatic R implementation using vapply() for vectorized character-to-code conversion
+    and do.call(rbind, ...) for efficient data frame construction
+  weaknesses:
+  - Human-readable text annotation (size=6.5mm ≈ 18.5pt) is visually larger than the
+    title (size=12pt), creating an inverted hierarchy where the specimen ID dominates
+    the plot title — consider reducing to size=5.0 or 5.5 so the title leads visually
+  - Spec highlights three code subsets (A, B, C) with dynamic switching as a key feature;
+    implementation only demonstrates Subset B without commentary — a brief caption
+    note or second label example would improve DQ-01 coverage
+  - Design Excellence is at default levels — no visual emphasis or focal point beyond
+    the barcode's inherent structure; subtitle adds context but storytelling remains
+    passive
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct page surface color, clearly not pure white.
+      Chrome: Title "barcode-code128 · r · ggplot2 · anyplot.ai" in bold dark ink at 12pt — clearly readable. Subtitle annotation "Specimen Label — Healthcare Lab Tracking" in italic INK_SOFT gray above the barcode — readable. Caption "Code 128 Subset B · Mod-103 check digit · Quiet zones: 10× module width" in 7pt muted gray at bottom — legible at canvas size.
+      Data: White barcode rectangle with black bars rendered via geom_rect() — high contrast. Subtle INK_SOFT border frame around barcode. Human-readable "SPEC-LAB-2024-X789" in large monospace font below barcode in dark INK color.
+      Legibility verdict: PASS — all text is clearly readable against the warm light background; no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface, clearly not pure black.
+      Chrome: Title in bold light-colored text (#F0EFE8) — clearly readable against dark background. Subtitle annotation in lighter gray (INK_SOFT #B8B7B0) — readable. Caption in muted gray — legible. No dark-on-dark failures detected.
+      Data: Barcode background remains white (intentional per spec — scan reliability requires black bars on white), creating a bright white rectangle on the dark surface. Black bars identical to light render. Human-readable "SPEC-LAB-2024-X789" in light INK color (#F0EFE8) — clearly visible. Border frame visible in INK_SOFT tone.
+      Legibility verdict: PASS — all chrome elements use correct dark-theme tokens; no dark-on-dark failures.
+  criteria_checklist:
+    visual_quality:
+      score: 29
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set and readable in both themes; human-readable
+          annotation (size=6.5mm ~18.5pt) is larger than title (12pt), creating a
+          mild inverted hierarchy — intentional for barcode but slightly unconventional
+          for a visualization catalog
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlap — all elements well-spaced
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: High-contrast black bars on white background, clearly visible in
+          both themes
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Maximum contrast (black/white barcode); no CVD issues
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; good proportions with balanced margins; barcode
+          fills ~50% of canvas width appropriately
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Correct title format; caption provides technical encoding details
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'PAGE_BG correct for both themes (#FAF8F1 light / #1A1A17 dark);
+          black/white barcode is spec-mandated; all chrome uses correct INK tokens'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): subtle frame border adds polish, monospace font
+          choice for human-readable text is intentional and appropriate, contextual
+          subtitle enhances the design. Not yet at FiveThirtyEight-level'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: theme_void() correctly removes all axis chrome; white barcode on
+          warm background creates pleasant contrast; subtle INK_SOFT frame adds refinement;
+          generous whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Contextual subtitle 'Specimen Label — Healthcare Lab Tracking' and
+          technical caption provide storytelling context above default; no visual
+          emphasis or focal point beyond barcode structure
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Correct Code 128 barcode visualization built from geom_rect()
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Quiet zones (10-module), Start B (value 104), Mod-103 check digit,
+          Stop pattern (value 106), human-readable text below, high-contrast black/white
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: X dimension maps module positions correctly; Y is bar height; encoding
+          correctly maps ASCII chars via utf8ToInt()-32
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'barcode-code128 · r · ggplot2 · anyplot.ai' matches required
+          format exactly
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Shows quiet zones, start/stop patterns, check digit, human-readable
+          text, proper bar/space widths. Missing: spec highlights multi-subset (A/B/C)
+          switching capability which is not demonstrated'
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: '''SPEC-LAB-2024-X789'' with ''Specimen Label — Healthcare Lab Tracking''
+          context is realistic and neutral'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 18-character alphanumeric code within recommended 48-char limit;
+          bar widths follow Code 128 proportions correctly
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Clean structure; encode_code128b() and patterns_to_df() helper functions
+          are necessary for this visualization type
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) present; encoding is deterministic
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: Only library(ggplot2) and library(ragg) — both used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Idiomatic use of vapply() for character conversion; efficient do.call(rbind,
+          rows) for data frame construction; no over-engineering
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-%s.png with THEME variable; uses current ragg::agg_png
+          device
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Good ggplot2 idioms: geom_rect() for bars, annotate() for text,
+          theme_void(), coord_cartesian(clip=''off'') for out-of-bounds annotations,
+          labs() for title/caption'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Creative use of ggplot2's grammar of graphics (data frames + geom_rect)
+          to construct a barcode type not natively supported by the library; coord_cartesian(clip='off')
+          enables annotations outside the plot area
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - annotations
+  - layer-composition
+  patterns:
+  - iteration-over-groups
+  - matrix-construction
+  dataprep: []
+  styling:
+  - minimal-chrome

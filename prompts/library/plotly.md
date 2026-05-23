@@ -19,10 +19,32 @@ fig.add_trace(go.Scatter(x=x, y=y))
 fig = px.scatter(df, x='col_x', y='col_y')
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+| Orientation | write_image kwargs                         | Final PNG     |
+|-------------|--------------------------------------------|---------------|
+| Landscape   | `width=800, height=450, scale=4`           | 3200 × 1800   |
+| Square      | `width=600, height=600, scale=4`           | 2400 × 2400   |
+
+`fig.update_layout(autosize=True)` is **forbidden** — it overrides `width`/`height` and produces variable output. Always pass `autosize=False` together with explicit `width`, `height`. Pin the layout margins explicitly so titles/legends don't push the inner plot off-center and the long mandated title never gets clipped:
+
+```python
+fig.update_layout(
+    autosize=False,
+    margin=dict(l=80, r=40, t=80, b=60),   # tweak ±20 if needed; never remove
+)
+```
+
+Pick landscape or square based on the spec's content — same decision rule as every other library in the catalog.
+
 ## Layout & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
 ```python
 fig.update_layout(
+    autosize=False,
+    margin=dict(l=80, r=40, t=80, b=60),
     # Title kept compact — the long mandated "{spec-id} · python · plotly · anyplot.ai"
     # title would overflow at 22+px on this canvas.
     title=dict(text=title, font=dict(size=16)),
@@ -41,8 +63,9 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 ## Save (PNG)
 
 ```python
-# Target: 3200 × 1800 px (800 × scale=4). See default-style-guide.md.
-fig.write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)
+# Hard target: 3200 × 1800 (landscape) or 2400 × 2400 (square). See "Canvas" above.
+fig.write_image(f'plot-{THEME}.png', width=800, height=450, scale=4)         # landscape
+# fig.write_image(f'plot-{THEME}.png', width=600, height=600, scale=4)       # square
 ```
 
 **Note**: Requires `kaleido` for PNG export.
@@ -54,24 +77,26 @@ For static outputs → `write_image()`.
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-OKABE_ITO = ['#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442']
+ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E']
 
 # Single-series
 fig = go.Figure(go.Scatter(x=x, y=y, mode='markers',
-                           marker=dict(color=OKABE_ITO[0])))
+                           marker=dict(color=ANYPLOT_PALETTE[0])))
 
 # Multi-series via color_discrete_sequence (plotly express)
 fig = px.scatter(df, x='x', y='y', color='category',
-                 color_discrete_sequence=OKABE_ITO)
+                 color_discrete_sequence=ANYPLOT_PALETTE)
 
-# Continuous — NOT Okabe-Ito:
-#   Sequential: color_continuous_scale='viridis' or 'cividis'
-#   Diverging:  color_continuous_scale='BrBG'
-#   Forbidden:  'jet', 'hsv', 'rainbow'
+# Continuous — only the two anyplot palette-derived cmaps are allowed:
+ANYPLOT_SEQ = [[0.0, "#009E73"], [1.0, "#003D94"]]                                   # sequential / single-polarity
+ANYPLOT_DIV = [[0.0, "#BB0D22"], [0.5, "#A2A598"], [1.0, "#007AD9"]]                 # diverging
+# Sequential: color_continuous_scale=ANYPLOT_SEQ
+# Diverging:  color_continuous_scale=ANYPLOT_DIV
+# Forbidden: any other scale ('viridis'/'cividis'/'BrBG'/'Reds'/'Blues'/'Greens'/'jet'/'hsv'/'rainbow').
 ```
 
 ## Theme-adaptive Chrome (plotly mapping)

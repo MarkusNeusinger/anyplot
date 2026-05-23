@@ -8,10 +8,18 @@ from bokeh.models import ColumnDataSource
 from bokeh.io import output_file, save
 ```
 
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+- **Landscape**: `width=3200, height=1800`
+- **Square**: `width=2400, height=2400`
+
+The Selenium `--window-size` below **must match** these dims. **Do not omit `toolbar_location=None`** — bokeh's default toolbar adds ~30–50 px above the plot, which is what shrank every May 2026 bokeh PNG from 3200×1800 to 3200×1661. The HTML artifact still gets a working toolbar from `output_file(...)`.
+
 ## Create Figure
 
 ```python
-# Target: 3200 × 1800 px (see default-style-guide.md).
 # `width` / `height` are the TOTAL canvas; axis labels at the new 36–42pt
 # native-pixel sizes need explicit `min_border_*` reservations or they get
 # clipped at the edges of the rendered PNG. Reserve ~150px per side for
@@ -127,23 +135,34 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-OKABE_ITO = ['#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442']
+ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E']
 
 # Single-series
-p.scatter(x, y, color=OKABE_ITO[0])
+p.scatter(x, y, color=ANYPLOT_PALETTE[0])
 
 # Multi-series: iterate in canonical order
 for i, group in enumerate(groups):
-    p.scatter(..., color=OKABE_ITO[i], legend_label=group)
+    p.scatter(..., color=ANYPLOT_PALETTE[i], legend_label=group)
 
-# Continuous — NOT Okabe-Ito. Use bokeh's built-in palettes:
-from bokeh.palettes import Viridis256, Cividis256, BrBG11
-#   Sequential: Viridis256, Cividis256
-#   Diverging:  BrBG11 (or BrBG9 for coarser binning)
+# Continuous — only the two anyplot palette-derived cmaps are allowed.
+# Build a 256-stop ramp by interpolating between the endpoints:
+import numpy as np
+def _lerp_hex(c0, c1, t):
+    r0, g0, b0 = (int(c0[i:i+2], 16) for i in (1, 3, 5))
+    r1, g1, b1 = (int(c1[i:i+2], 16) for i in (1, 3, 5))
+    r, g, b = (int(round(a + (b - a) * t)) for a, b in ((r0, r1), (g0, g1), (b0, b1)))
+    return f"#{r:02X}{g:02X}{b:02X}"
+ANYPLOT_SEQ256 = [_lerp_hex("#009E73", "#003D94", t/255.0) for t in range(256)]
+ANYPLOT_DIV256 = (
+    [_lerp_hex("#BB0D22", "#A2A598", t/127.0) for t in range(128)] +
+    [_lerp_hex("#A2A598", "#007AD9", t/127.0) for t in range(128)]
+)
+# Pass to bokeh.models.LinearColorMapper(palette=ANYPLOT_SEQ256, low=…, high=…)
+# Forbidden: bokeh's Viridis/Cividis/BrBG and any other named palette for continuous data.
 ```
 
 ## Theme-adaptive Chrome (bokeh mapping)

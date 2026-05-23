@@ -1,160 +1,204 @@
 library: letsplot
+language: python
 specification_id: contour-map-geographic
 created: '2026-01-17T11:54:14Z'
-updated: '2026-01-18T22:31:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21093797402
+updated: '2026-05-20T23:27:19Z'
+generated_by: claude-sonnet
+workflow_run: 26194484775
 issue: 3772
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/contour-map-geographic/python/letsplot/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent terrain colormap choice (green → tan → white) that is both aesthetically
-    appropriate and accessible
-  - Well-labeled contour lines with smart positioning algorithm that avoids overlap
-  - Geographic context with coastline and state borders provides spatial reference
-  - Good use of lets-plot layered grammar approach combining filled contours, line
-    contours, and geographic features
-  - Realistic mountain peak data based on actual Western US geography
+  - 'Full spec compliance: filled contours, line contours, geographic basemap features
+    (coastline, state borders), elevation labeling, and colorbar all present and correct'
+  - 'Sophisticated geographic storytelling: mountain range name annotations, real
+    city reference markers (Reno, Las Vegas, SLC, Boise), and Pacific coastline add
+    genuine spatial context'
+  - Geographic aspect ratio correction via coord_fixed(ratio=1/cos(40°)) is technically
+    correct and shows strong domain knowledge
+  - Theme-adaptive chrome throughout — all text, grid, legend, and background elements
+    switch correctly between light (#FAF8F1) and dark (#1A1A17) themes
+  - Contour label placement algorithm with spatial exclusion zones and edge buffers
+    prevents label overlap and panel clipping
+  - Clean idiomatic lets_plot code with proper inherit_aes=False for multi-dataset
+    layers and correct ggsave(scale=4) for 3200×1800 output
   weaknesses:
-  - Only 4 contour labels visible; specification suggests labeling at appropriate
-    intervals - more labels would improve readability
-  - Aspect ratio slightly distorts geographic area (coord_fixed with ratio=1.0 may
-    not be accurate for this latitude range)
-  image_description: 'The plot shows a geographic contour map depicting elevation
-    data for the Western United States mountain region (approximately 35°N to 45°N
-    latitude, -120°W to -105°W longitude). The visualization uses filled contours
-    (geom_contourf) with overlaid contour lines (geom_contour). A terrain-appropriate
-    colormap is used: green for lower elevations (~1,000-2,000m), transitioning through
-    tan/brown (~3,000-4,000m) to near-white for the highest peaks (~5,000-6,000m).
-    A simplified blue coastline (Pacific coast) appears on the left edge, and dashed
-    gray lines represent state borders. Four contour labels are visible: "3000m" in
-    the bottom-left (Sierra Nevada area), "4000m" in the center-right area, "5000m"
-    near the Tetons peak, and "2000m" in the top-right. The colorbar legend on the
-    right shows "Elevation (m)" with a scale from 1,000 to 6,000m. The title follows
-    the correct format "contour-map-geographic · letsplot · pyplots.ai".'
+  - 'The gradient high-end (#f5f5f5, near-white) is very close to the light background
+    (#FAF8F1) — the highest-elevation peaks wash out slightly on the light render;
+    consider using a warmer off-white like #e0d8c0 or #d4cfc5 so peaks remain distinguishable
+    without altering the terrain metaphor'
+  - 'Minor label crowding: the Wasatch Range italic annotation and SLC city label
+    (nudge_y=0.4) are positioned within ~0.9° of each other, creating a visually dense
+    cluster in the central plateau region'
+  - Mountain range annotation size=8 renders at ~32px source pixels — secondary context
+    labels are legible at desktop size but may be marginal at 400px mobile viewport
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface.
+      Chrome: Title "contour-map-geographic · python · letsplot · anyplot.ai" in dark ink, clearly readable. Axis labels "Longitude (°W)" and "Latitude (°N)" visible. Tick labels in medium-gray, readable. Legend title "Elevation (m)" with gradient bar on the right, text legible.
+      Data: Filled terrain gradient from dark green (low ~1200m) through tan/brown (mid ~3000m) to near-white (high ~4500m+). Contour lines overlaid in dark gray. Pacific coastline in Okabe-Ito blue (#0072B2) — prominent. State borders as dashed medium-gray lines. Elevation labels (1500m–5000m) in dark bold text, well distributed. Mountain range labels (Sierra Nevada, Wasatch Range, Teton Range, Rocky Mts.) in italic — readable. City markers in orange/vermillion (#D55E00) for Reno, Boise, SLC, Las Vegas with matching labels. Near-white high-elevation patches are slightly close to the background but still distinguishable. Some density around the SLC/Wasatch Range label cluster.
+      Legibility verdict: PASS — all primary text elements are readable against the light background. Mountain range annotations are small but legible at canvas size.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface.
+      Chrome: Title in light cream ink, clearly readable. Axis labels and tick labels in light gray, all readable. Legend text in light gray, readable. No dark-on-dark failures detected.
+      Data: Filled contour colors are identical to the light render (same terrain gradient from dark green to tan to near-white — data colors unchanged between themes, only chrome flips). The near-white high-elevation areas now contrast strongly as bright patches on the dark background — visually prominent. Coastline blue unchanged. City labels (orange) visible. Mountain range italic labels in #B8B7B0 gray, readable. Contour lines visible in lighter gray appropriate for dark theme.
+      Legibility verdict: PASS — all text is readable against the dark background. No dark-on-dark failures. Brand green (#009E73) not a primary data color here (continuous elevation scale used); coastal blue and city orange remain visible on both themes.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, contour labels, and legend text are
-          all clearly readable at full size
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; contour labels are well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Contour lines and filled regions are clearly visible; coastline and
-          borders are distinguishable
+        comment: All font sizes explicitly set; title, axis, tick, contour, and city
+          labels all readable in both themes. Mountain range annotations at size=8
+          are legible at canvas size but marginal at mobile width.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No significant overlap detected. Minor crowding between SLC city
+          label (nudge_y=0.4) and Wasatch Range italic annotation — both remain readable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Filled contours and lines clearly visible. Near-white gradient endpoint
+          (#f5f5f5) washes out slightly against #FAF8F1 light background at the highest
+          elevation peaks, reducing peak definition.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Green-tan-white terrain colormap is colorblind-safe and provides
-          good contrast
+        comment: Coast in Okabe-Ito blue, cities in Okabe-Ito vermillion — distinguishable
+          without hue alone. Terrain gradient has adequate luminance variation.
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Good canvas utilization, but aspect ratio could be improved slightly
-          for geographic accuracy
+        comment: Canvas 3200x1800 correct. coord_fixed for geographic ratio creates
+          slight vertical letterboxing but layout is balanced. Legend well-placed
+          on right.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Longitude (°W) and Latitude (°N)'
+        comment: Longitude (°W) and Latitude (°N) — descriptive with units and direction
+          indicators.
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid lines (alpha 0.3), well-placed legend on right side
+        comment: 'Backgrounds #FAF8F1/#1A1A17 correct. Chrome is fully theme-adaptive.
+          Terrain colormap (dark green→tan→near-white) is spec-required for elevation
+          data (spec explicitly says ''terrain colors for elevation'') and not a forbidden
+          colormap.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Clearly above defaults: terrain palette, geographic aspect ratio
+          correction, professional map layout with multiple contextual layers (coastline,
+          borders, city markers, range labels). Not quite publication-ready due to
+          some label density.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No panel border (appropriate for maps), subtle grid lines, custom
+          legend styling, clean multi-layer composition. Good refinement beyond defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Mountain range name annotations and city reference markers actively
+          guide the viewer to understand the geographic context. The elevation gradient
+          tells the terrain story clearly.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct contour map with geographic context
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/lon correctly mapped to y/x axes, elevation to z/color
-      - id: SC-03
+        comment: 'Correct: contour lines overlaid on geographic basemap with filled
+          contours.'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Has filled contours, contour lines, labels, colorbar, geographic
-          context; minor: could have more contour labels'
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: contour lines, filled contours, geographic
+          basemap (coastline+borders), labeled contour intervals at 500m, terrain
+          colormap, colorbar legend.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Lon on X, lat on Y — correct geographic orientation. Elevation mapped
+          to fill and contour levels.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly shows Elevation (m) with appropriate range
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: contour-map-geographic · letsplot · pyplots.ai'
+        comment: Title exactly matches required format. Legend labeled 'Elevation
+          (m)' with appropriate units.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple mountain peaks with varying elevations, geographic
-          boundaries
+        comment: Shows filled contours, line contours, geographic reference features,
+          labeled intervals, colorbar. Strong coverage of all plot type aspects. One
+          application scenario (elevation) rather than demonstrating multiple.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Western US mountains with realistic peak locations (Tetons, Sierra
-          Nevada, Great Basin)
+        comment: Western US mountain region with real geographic coordinates, realistic
+          mountain range positions, and correct city locations. Plausible elevation
+          values for Wasatch, Sierra Nevada, Tetons, Rockies.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Elevation values are realistic for Western US (1,200m base to ~5,500m
-          peaks)
+        comment: Lat 35-45°N, lon -120 to -105°W covers the correct Western US region.
+          Elevation 1200-4700m is geographically accurate for these ranges.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -162,49 +206,62 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → plot → save'
+        comment: 'Linear structure: imports → tokens → data → plot layers → save.
+          No unnecessary functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported symbols are used in the implementation.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, appropriate complexity. Label placement algorithm is justified
+          by the requirement to avoid edge clipping and overlap.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern lets-plot API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png but also saves plot.html (minor redundancy)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. ggsave with path='.',
+          scale=4.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct ggplot2-style grammar, proper aes() mappings, inherit_aes=False
+          for multi-dataset layers, coord_fixed() for geographic correction, scale_fill_gradient2
+          for diverging/terrain scale.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses geom_contourf, geom_contour, geom_path, scale_fill_gradient2,
-          theme_bw, coord_fixed; good grammar-of-graphics approach
+        comment: geom_contourf + geom_contour combo, aes(fill='..level..') for computed
+          contour level mapping, coord_fixed for map projections — these are lets_plot-specific
+          patterns. Could further leverage lets_plot's livemap or geotools for genuine
+          basemap.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - layer-composition
   - annotations
-  - colorbar
+  - html-export
   patterns:
   - data-generation
   - matrix-construction
@@ -213,4 +270,3 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling

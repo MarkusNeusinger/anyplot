@@ -22,6 +22,9 @@ This document contains comprehensive project documentation for AI agents working
 *R (1):*
 - **ggplot2** - The de facto standard for R; grammar of graphics, layered chart composition
 
+*Julia (1):*
+- **Makie.jl** - High-performance Julia visualization. CairoMakie ships publication-quality static PNG via a pure-Cairo backend.
+
 **Core Principle**: Community proposes plot ideas via GitHub Issues -> AI generates code -> AI quality review -> Deployed.
 
 ## Essential Commands
@@ -327,13 +330,13 @@ gs://anyplot-images/
 3. `impl-merge.yml` promotes staging -> production when PR merges to main
 
 **Interactive libraries** (generate `.html`): plotly, bokeh, altair, highcharts, pygal, letsplot
-**PNG only**: matplotlib, seaborn, plotnine
+**PNG only**: matplotlib, seaborn, plotnine, ggplot2, makie
 
 ## Tech Stack
 
 - **Backend**: FastAPI, SQLAlchemy (async), PostgreSQL, Python 3.13+
 - **Frontend**: React 19, Vite 8, TypeScript 6, MUI 9
-- **Plotting**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot
+- **Plotting**: matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot, ggplot2, Makie.jl
 - **Package Manager**: uv (fast Python installer)
 - **Infrastructure**: Google Cloud Run, Cloud SQL, Cloud Storage
 - **Automation**: GitHub Actions
@@ -690,7 +693,7 @@ uv run python -m automation.scripts.label_manager list
 ### Implementation Labels (on specification issue)
 
 - **`generate:{library}`** - Trigger single library generation (e.g., `generate:matplotlib`)
-- **`generate:all`** - Trigger all 10 libraries via bulk-generate
+- **`generate:all`** - Trigger all 11 libraries via bulk-generate
 - **`impl:{library}:pending`** - Generation in progress
 - **`impl:{library}:done`** - Implementation merged to main
 - **`impl:{library}:failed`** - Max retries exhausted (3 attempts)

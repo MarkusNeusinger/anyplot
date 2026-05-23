@@ -1,7 +1,7 @@
 """ anyplot.ai
 sn-curve-basic: S-N Curve (Wöhler Curve)
 Library: bokeh 3.9.0 | Python 3.13.13
-Quality: 91/100 | Updated: 2026-05-20
+Quality: 92/100 | Updated: 2026-05-20
 """
 
 import os
@@ -15,7 +15,7 @@ sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd(), os.path.dirna
 
 import numpy as np  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import ColumnDataSource, HoverTool, Label, Span  # noqa: E402
+from bokeh.models import BoxAnnotation, ColumnDataSource, HoverTool, Label, Span  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -30,7 +30,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"  # Okabe-Ito position 1 — data series
 ULT_COLOR = "#D55E00"  # Okabe-Ito position 2 — Ultimate Strength line
 ENDU_COLOR = "#0072B2"  # Okabe-Ito position 3 — Endurance Limit line
-YIELD_COLOR = "#E69F00"  # Okabe-Ito position 5 — Yield Strength line
+YIELD_COLOR = "#CC79A7"  # Okabe-Ito position 4 — Yield Strength line
 
 # Data — S-N fatigue test results for steel specimens (Basquin equation)
 np.random.seed(42)
@@ -82,11 +82,14 @@ p = figure(
     min_border_right=50,
 )
 
+# Infinite-life zone shaded below the endurance limit
+p.add_layout(BoxAnnotation(top=endurance_limit, bottom=0, fill_color=ENDU_COLOR, fill_alpha=0.12, line_color=None))
+
 p.line(
     x="cycles_fit",
     y="stress_fit",
     source=source_fit,
-    line_width=5,
+    line_width=7,
     line_color=BRAND,
     line_alpha=0.9,
     legend_label="Basquin Fit (S = A·N^b)",
@@ -109,10 +112,10 @@ p.add_tools(hover)
 
 # Reference lines for material properties
 p.add_layout(
-    Span(location=ultimate_strength, dimension="width", line_color=ULT_COLOR, line_width=4, line_dash="dashed")
+    Span(location=ultimate_strength, dimension="width", line_color=ULT_COLOR, line_width=3, line_dash="dashed")
 )
-p.add_layout(Span(location=yield_strength, dimension="width", line_color=YIELD_COLOR, line_width=4, line_dash="dashed"))
-p.add_layout(Span(location=endurance_limit, dimension="width", line_color=ENDU_COLOR, line_width=4, line_dash="dashed"))
+p.add_layout(Span(location=yield_strength, dimension="width", line_color=YIELD_COLOR, line_width=3, line_dash="dashed"))
+p.add_layout(Span(location=endurance_limit, dimension="width", line_color=ENDU_COLOR, line_width=3, line_dash="dashed"))
 
 p.add_layout(
     Label(
@@ -138,7 +141,7 @@ p.add_layout(
     Label(
         x=150,
         y=210,
-        text=f"Endurance Limit ({endurance_limit} MPa)",
+        text=f"Endurance Limit ({endurance_limit} MPa)  ← infinite life",
         text_font_size="28pt",
         text_color=ENDU_COLOR,
         text_font_style="bold",
@@ -161,9 +164,9 @@ p.yaxis.axis_line_color = INK_SOFT
 p.xaxis.major_tick_line_color = INK_SOFT
 p.yaxis.major_tick_line_color = INK_SOFT
 
-p.xgrid.grid_line_color = INK
+# Y-only grid for cleaner line+scatter chart
+p.xgrid.grid_line_color = None
 p.ygrid.grid_line_color = INK
-p.xgrid.grid_line_alpha = 0.10
 p.ygrid.grid_line_alpha = 0.10
 
 p.background_fill_color = PAGE_BG
@@ -198,7 +201,10 @@ for arg in (
     opts.add_argument(arg)
 
 driver = webdriver.Chrome(options=opts)
-driver.set_window_size(W, H)
+# Override emulated viewport to exactly W×H regardless of browser chrome overhead
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": W, "height": H, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{Path(f'plot-{THEME}.html').resolve()}")
 time.sleep(3)
 driver.save_screenshot(f"plot-{THEME}.png")

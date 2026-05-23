@@ -32,12 +32,12 @@ export function LibrariesPage() {
         <title>libraries | anyplot.ai</title>
         <meta
           name="description"
-          content="Ten plotting libraries across Python and R — matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot, ggplot2. Same specs, every library."
+          content="Eleven plotting libraries across Python, R, and Julia — matplotlib, seaborn, plotly, bokeh, altair, plotnine, pygal, highcharts, lets-plot, ggplot2, Makie.jl. Same specs, every library."
         />
         <meta property="og:title" content="libraries | anyplot.ai" />
         <meta
           property="og:description"
-          content="Ten plotting libraries across Python and R — same specs, every library."
+          content="Eleven plotting libraries across Python, R, and Julia — same specs, every library."
         />
         <link rel="canonical" href="https://anyplot.ai/libraries" />
       </Helmet>

@@ -1,237 +1,264 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 88/100 | Updated: 2026-05-20
 """
+
+import json
+import os
+import sys
+
+
+# This file is named pygal.py — without this fix it shadows the installed pygal package.
+_d = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p) != _d]
+os.chdir(_d)  # ensure relative output paths (plot-*.png/html) land next to this script
 
 import pygal
 from pygal.style import Style
 
 
-# Hierarchical data: Company -> Divisions -> Teams
-# Structure: {id: {"name": str, "value": num, "parent": str or None, "children": [ids]}}
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+
+# Hierarchical data: Company -> Divisions -> Teams -> Sub-teams
 hierarchy = {
-    # Root level - Company divisions
     "root": {"name": "Company", "value": None, "parent": None, "children": ["tech", "sales", "ops"]},
     "tech": {"name": "Technology", "value": 4200, "parent": "root", "children": ["dev", "infra", "data"]},
     "sales": {"name": "Sales", "value": 3100, "parent": "root", "children": ["retail", "enterprise", "partner"]},
     "ops": {"name": "Operations", "value": 2400, "parent": "root", "children": ["hr", "finance", "legal"]},
-    # Level 2 - Technology teams
     "dev": {"name": "Development", "value": 1800, "parent": "tech", "children": ["frontend", "backend", "mobile"]},
     "infra": {"name": "Infrastructure", "value": 1400, "parent": "tech", "children": ["cloud", "security", "network"]},
     "data": {"name": "Data Science", "value": 1000, "parent": "tech", "children": ["ml", "analytics", "etl"]},
-    # Level 2 - Sales teams
     "retail": {"name": "Retail", "value": 1200, "parent": "sales", "children": []},
     "enterprise": {"name": "Enterprise", "value": 1400, "parent": "sales", "children": []},
     "partner": {"name": "Partners", "value": 500, "parent": "sales", "children": []},
-    # Level 2 - Operations teams
     "hr": {"name": "Human Resources", "value": 800, "parent": "ops", "children": []},
     "finance": {"name": "Finance", "value": 1000, "parent": "ops", "children": []},
     "legal": {"name": "Legal", "value": 600, "parent": "ops", "children": []},
-    # Level 3 - Development sub-teams
     "frontend": {"name": "Frontend", "value": 600, "parent": "dev", "children": []},
     "backend": {"name": "Backend", "value": 800, "parent": "dev", "children": []},
     "mobile": {"name": "Mobile", "value": 400, "parent": "dev", "children": []},
-    # Level 3 - Infrastructure sub-teams
     "cloud": {"name": "Cloud", "value": 600, "parent": "infra", "children": []},
     "security": {"name": "Security", "value": 500, "parent": "infra", "children": []},
     "network": {"name": "Network", "value": 300, "parent": "infra", "children": []},
-    # Level 3 - Data Science sub-teams
     "ml": {"name": "Machine Learning", "value": 450, "parent": "data", "children": []},
     "analytics": {"name": "Analytics", "value": 350, "parent": "data", "children": []},
     "etl": {"name": "ETL Pipeline", "value": 200, "parent": "data", "children": []},
 }
 
-# Build breadcrumb trail from root to current node
-current_level = "root"
-trail = []
-node = current_level
-while node and node in hierarchy:
-    trail.insert(0, hierarchy[node]["name"])
-    node = hierarchy[node]["parent"]
-breadcrumb = " > ".join(trail)
-
-# Get children data for current level
-children_ids = hierarchy[current_level]["children"]
-names = [hierarchy[cid]["name"] for cid in children_ids]
-values = [hierarchy[cid]["value"] for cid in children_ids]
-has_children = [len(hierarchy[cid]["children"]) > 0 for cid in children_ids]
-
-# Custom style for large canvas (4800x2700)
+# Use primary INK for foreground_subtle in dark theme so value labels stay fully readable
 custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=("#306998", "#FFD43B", "#4CAF50", "#FF5722", "#9C27B0", "#00BCD4", "#FF9800", "#795548"),
-    title_font_size=72,
-    label_font_size=48,
-    major_label_font_size=42,
-    legend_font_size=42,
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK if THEME == "dark" else INK_MUTED,
+    colors=OKABE_ITO,
+    title_font_size=66,
+    label_font_size=56,
+    major_label_font_size=44,
+    legend_font_size=44,
     value_font_size=36,
     tooltip_font_size=36,
-    stroke_width=2,
+    stroke_width=2.5,
     opacity=0.9,
     opacity_hover=1.0,
     transition="400ms ease-in-out",
 )
 
-# Create bar chart with drilldown indication
-chart = pygal.Bar(
-    width=4800,
-    height=2700,
-    style=custom_style,
-    title="bar-drilldown · pygal · pyplots.ai",
-    x_title=f"Breadcrumb: {breadcrumb}",
-    y_title="Budget (in thousands $)",
-    show_legend=True,
-    legend_at_bottom=False,
-    legend_box_size=24,
-    show_y_guides=True,
-    show_x_guides=False,
-    x_label_rotation=0,
-    print_values=True,
-    print_values_position="top",
-    value_formatter=lambda x: f"${x:,.0f}K",
-    human_readable=True,
-    spacing=30,
-    margin=60,
-    margin_top=100,
-    margin_bottom=120,
-    truncate_legend=-1,
-    truncate_label=-1,
-)
+# Pre-render SVGs for all drillable levels; save PNG from root
+level_svgs = {}
+for level_id, level_node in hierarchy.items():
+    if not level_node["children"]:
+        continue
 
-# Add data with tooltips indicating drilldown capability
-# Bars with children show "Click to drill down" in tooltip
-chart_data = []
-for name, value, has_child, cid in zip(names, values, has_children, children_ids, strict=True):
-    if has_child:
-        label = f"{name}: ${value:,}K - Click to drill down"
-    else:
-        label = f"{name}: ${value:,}K (leaf node)"
-    chart_data.append({"value": value, "label": label, "xlink": f"javascript:drillDown('{cid}')"})
+    # Build breadcrumb for this level
+    level_trail = []
+    level_cursor = level_id
+    while level_cursor and level_cursor in hierarchy:
+        level_trail.insert(0, hierarchy[level_cursor]["name"])
+        level_cursor = hierarchy[level_cursor]["parent"]
+    level_breadcrumb = " > ".join(level_trail)
 
-chart.add("Divisions", chart_data)
-chart.x_labels = names
+    level_children = level_node["children"]
+    level_names = [hierarchy[cid]["name"] for cid in level_children]
+    level_values = [hierarchy[cid]["value"] for cid in level_children]
+    level_has_children_flags = [bool(hierarchy[cid]["children"]) for cid in level_children]
 
-# Custom JavaScript for drilldown functionality (embedded in HTML output)
-hierarchy_json = (
-    str(hierarchy).replace("'", '"').replace("None", "null").replace("True", "true").replace("False", "false")
-)
-drilldown_js = f"""
-<script type="text/javascript">
-// Hierarchical data for client-side navigation
-var hierarchy = {hierarchy_json};
+    level_chart = pygal.Bar(
+        width=3200,
+        height=1800,
+        style=custom_style,
+        title="bar-drilldown · python · pygal · anyplot.ai",
+        x_title=f"Breadcrumb: {level_breadcrumb}",
+        y_title="Budget (thousands $)",
+        show_legend=False,
+        show_y_guides=False,
+        show_x_guides=False,
+        x_label_rotation=0,
+        print_values=True,
+        print_values_position="top",
+        value_formatter=lambda x: f"${x:,.0f}K",
+        human_readable=True,
+        spacing=30,
+        margin=60,
+        margin_top=100,
+        margin_bottom=120,
+        truncate_legend=-1,
+        truncate_label=-1,
+    )
 
-function getBreadcrumb(nodeId) {{
-    var trail = [];
-    var current = nodeId;
-    while (current && hierarchy[current]) {{
-        trail.unshift(hierarchy[current].name);
-        current = hierarchy[current].parent;
-    }}
-    return trail.join(' > ');
-}}
+    level_data = []
+    for i, (lname, lval, lhas_child, lcid) in enumerate(
+        zip(level_names, level_values, level_has_children_flags, level_children, strict=True)
+    ):
+        # Per-bar Okabe-Ito colors: visually distinguish categories and emphasize the dominant bar
+        lcolor = OKABE_ITO[i % len(OKABE_ITO)]
+        llabel = f"{lname}: ${lval:,}K — click to drill down" if lhas_child else f"{lname}: ${lval:,}K (leaf node)"
+        level_data.append({"value": lval, "label": llabel, "xlink": f"javascript:drillDown('{lcid}')", "color": lcolor})
 
-function drillDown(nodeId) {{
-    if (!hierarchy[nodeId] || hierarchy[nodeId].children.length === 0) {{
-        alert('This is a leaf node - no further drill-down available.');
-        return;
-    }}
+    level_chart.add("Divisions", level_data)
+    level_chart.x_labels = level_names
 
-    var children = hierarchy[nodeId].children;
-    var message = 'Drilling into: ' + hierarchy[nodeId].name + '\\n\\n';
-    message += 'Breadcrumb: ' + getBreadcrumb(nodeId) + '\\n\\n';
-    message += 'Sub-categories:\\n';
+    if level_id == "root":
+        level_chart.render_to_png(f"plot-{THEME}.png")
 
-    for (var i = 0; i < children.length; i++) {{
-        var child = hierarchy[children[i]];
-        var suffix = child.children.length > 0 ? ' (has sub-levels)' : ' (leaf)';
-        message += '- ' + child.name + ': $' + child.value.toLocaleString() + 'K' + suffix + '\\n';
-    }}
+    level_svg_bytes = level_chart.render()
+    level_svgs[level_id] = level_svg_bytes.decode("utf-8") if isinstance(level_svg_bytes, bytes) else level_svg_bytes
 
-    message += '\\n(In a full implementation, this would render a new chart)';
-    alert(message);
-}}
+# JSON-safe embedding: escape </script> sequences that would break the HTML parser
+hierarchy_json = json.dumps({k: {**v} for k, v in hierarchy.items()}).replace("</", r"<\/")
+level_svgs_json = json.dumps(level_svgs).replace("</", r"<\/")
 
-function drillUp() {{
-    alert('Click on the breadcrumb trail to navigate back up the hierarchy.');
-}}
-</script>
-"""
-
-# Save PNG (static view of root level)
-chart.render_to_png("plot.png")
-
-# Save HTML with embedded drilldown JavaScript
-svg_content = chart.render()
-svg_str = svg_content.decode("utf-8") if isinstance(svg_content, bytes) else svg_content
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>bar-drilldown - pygal - pyplots.ai</title>
+    <title>bar-drilldown · python · pygal · anyplot.ai</title>
     <style>
         body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 20px;
-            background: #f5f5f5;
+            background: {PAGE_BG};
+            color: {INK};
         }}
-        .container {{
-            max-width: 100%;
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }}
-        .breadcrumb {{
-            font-size: 24px;
-            color: #306998;
-            margin-bottom: 20px;
-            padding: 10px 20px;
-            background: #f0f4f8;
+        .container {{ max-width: 100%; padding: 20px; }}
+        .nav-bar {{
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 12px 20px;
+            background: {ELEVATED_BG};
             border-radius: 4px;
+        }}
+        #breadcrumb {{
+            font-size: 20px;
+            color: {OKABE_ITO[0]};
+            font-weight: 600;
+            flex: 1;
+        }}
+        #back-btn {{
+            display: none;
+            padding: 8px 18px;
+            background: {OKABE_ITO[0]};
+            color: {PAGE_BG};
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
             cursor: pointer;
         }}
-        .breadcrumb:hover {{
-            background: #e0e8f0;
-        }}
+        #back-btn:hover {{ opacity: 0.85; }}
         .instructions {{
-            font-size: 18px;
-            color: #666;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: #fff3cd;
+            font-size: 16px;
+            margin-bottom: 16px;
+            padding: 12px 20px;
+            background: {ELEVATED_BG};
             border-radius: 4px;
-            border-left: 4px solid #FFD43B;
+            border-left: 4px solid {OKABE_ITO[0]};
         }}
-        svg {{
-            width: 100%;
-            height: auto;
-        }}
-        svg rect:hover {{
-            cursor: pointer;
-        }}
+        #chart-container svg {{ width: 100%; height: auto; }}
+        #chart-container svg a {{ cursor: pointer; }}
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="breadcrumb" onclick="drillUp()">
-            {breadcrumb} (click bars to drill down)
+        <div class="nav-bar">
+            <button id="back-btn" onclick="drillUp()">&#8592; Back</button>
+            <div id="breadcrumb">Company</div>
         </div>
         <div class="instructions">
-            <strong>Interactive Drilldown:</strong> Click on any bar to drill into its sub-categories.
-            Hover over bars to see details.
+            <strong>Interactive Drilldown:</strong> Click any bar to explore its sub-categories.
+            Use the Back button to navigate up the hierarchy.
         </div>
-        {svg_str}
+        <div id="chart-container">{level_svgs.get("root", "")}</div>
     </div>
-    {drilldown_js}
+    <script type="text/javascript">
+    var hierarchy = {hierarchy_json};
+    var levelSvgs = {level_svgs_json};
+    var navHistory = ["root"];
+
+    function getBreadcrumbText(nodeId) {{
+        var trail = [];
+        var cur = nodeId;
+        while (cur && hierarchy[cur]) {{
+            trail.unshift(hierarchy[cur].name);
+            cur = hierarchy[cur].parent;
+        }}
+        return trail.join(' > ');
+    }}
+
+    function updateNav() {{
+        var btn = document.getElementById("back-btn");
+        btn.style.display = navHistory.length > 1 ? "inline-block" : "none";
+        document.getElementById("breadcrumb").textContent = getBreadcrumbText(navHistory[navHistory.length - 1]);
+    }}
+
+    function renderLevel(nodeId) {{
+        if (!levelSvgs[nodeId]) return;
+        document.getElementById("chart-container").innerHTML = levelSvgs[nodeId];
+        updateNav();
+    }}
+
+    function drillDown(nodeId) {{
+        if (!hierarchy[nodeId] || !hierarchy[nodeId].children.length || !levelSvgs[nodeId]) return;
+        navHistory.push(nodeId);
+        renderLevel(nodeId);
+    }}
+
+    function drillUp() {{
+        if (navHistory.length <= 1) return;
+        navHistory.pop();
+        renderLevel(navHistory[navHistory.length - 1]);
+    }}
+
+    // Event delegation: intercept xlink:href clicks on SVG anchors for drilldown
+    document.getElementById("chart-container").addEventListener("click", function(e) {{
+        var target = e.target;
+        while (target && target !== this) {{
+            var href = target.getAttribute("xlink:href") || target.getAttribute("href") || "";
+            if (href.indexOf("drillDown") !== -1) {{
+                e.preventDefault();
+                var m = href.match(/drillDown\\('([^']+)'\\)/);
+                if (m) drillDown(m[1]);
+                return;
+            }}
+            target = target.parentElement;
+        }}
+    }});
+    </script>
 </body>
 </html>
 """
 
-with open("plot.html", "w", encoding="utf-8") as f:
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)

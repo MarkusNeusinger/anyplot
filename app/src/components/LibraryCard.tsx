@@ -13,6 +13,7 @@ const DESCRIPTIONS: Record<string, string> = {
   highcharts: 'Interactive web charts, stock charts, and maps.',
   letsplot: 'Grammar of graphics by JetBrains. Interactive.',
   ggplot2: 'The reference grammar of graphics. R’s expressive plotting standard.',
+  makie: 'High-performance Julia visualization. CairoMakie ships publication-quality static charts.',
 };
 
 interface LibraryCardProps {

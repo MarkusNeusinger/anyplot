@@ -105,6 +105,10 @@ jobs:
               LANGUAGE="r"
               EXT=".R"
               ;;
+            makie)
+              LANGUAGE="julia"
+              EXT=".jl"
+              ;;
             *)
               LANGUAGE="python"
               EXT=".py"
@@ -179,6 +183,106 @@ jobs:
           fi
           echo "::notice::Found both theme renders — proceeding to review"
 
+      # Canvas dimension gate — runs before the AI review.
+      # The saved PNG must be exactly 3200×1800 (landscape) or 2400×2400 (square)
+      # within ±16 px (≤0.5 %). On drift, write /tmp/anyplot-canvas-gate.txt with
+      # a synthetic weakness (named actual+target+signed delta + likely cause).
+      # ai-quality-review.md reads that file and treats canvas_gate=fail as a
+      # MUST-flag weakness that forces VQ-05 to 0, which drags the quality_score
+      # below the repair threshold — re-routing the PR into impl-repair through
+      # the existing 5-review/4-repair cascade. Never raw `exit 1` here:
+      # impl-repair.yml is dispatched by ai-rejected label only, so a hard step
+      # failure would leave a dead PR with no retry path.
+      - name: Canvas dimension gate
+        env:
+          LIBRARY: ${{ steps.pr.outputs.library }}
+          ATTEMPT: ${{ steps.attempts.outputs.display }}
+        run: |
+          # Clean any stale file from a previous run on this runner.
+          rm -f /tmp/anyplot-canvas-gate.txt
+
+          pip install --quiet pillow
+
+          python3 <<'PY'
+          import os
+          import sys
+          from pathlib import Path
+
+          from PIL import Image
+
+          LIBRARY = os.environ["LIBRARY"]
+          ATTEMPT = os.environ["ATTEMPT"]
+          TOLERANCE = 16  # ≤0.5 % on the 3200-axis
+          TARGETS = [(3200, 1800), (2400, 2400)]
+
+          path = Path("plot_images/plot-light.png")
+          with Image.open(path) as img:
+              w, h = img.size
+
+          # Pick the closer target so the repair feedback names the right one.
+          tw, th = min(TARGETS, key=lambda t: abs(w - t[0]) + abs(h - t[1]))
+          dw, dh = w - tw, h - th
+          ok = abs(dw) <= TOLERANCE and abs(dh) <= TOLERANCE
+
+          status = "pass" if ok else "fail"
+          print(
+              f"::notice::canvas_gate library={LIBRARY} status={status} "
+              f"actual={w}x{h} target={tw}x{th} delta={dw:+d}x{dh:+d} attempt={ATTEMPT}"
+          )
+
+          if ok:
+              sys.exit(0)
+
+          # Build the synthetic weakness — include actual, target, signed delta,
+          # direction, possible aspect mismatch, and library-specific likely cause.
+          # This is what impl-repair sees in metadata.review.weaknesses.
+          direction_parts = []
+          if dw < 0:
+              direction_parts.append(f"width is {-dw} px short")
+          elif dw > 0:
+              direction_parts.append(f"width is {dw} px over")
+          if dh < 0:
+              direction_parts.append(f"height is {-dh} px short")
+          elif dh > 0:
+              direction_parts.append(f"height is {dh} px over")
+          direction = "; ".join(direction_parts) or "axes on target individually but combined off"
+
+          aspect_note = ""
+          # Aspect-mismatch hint: actual is landscape-ish but closest target is square (or vice versa)
+          actual_aspect = w / h if h else 1
+          if (tw, th) == (2400, 2400) and actual_aspect > 1.2:
+              aspect_note = " — the implementation rendered a landscape canvas but the closest target is square; reconsider orientation."
+          elif (tw, th) == (3200, 1800) and actual_aspect < 0.85:
+              aspect_note = " — the implementation rendered a portrait/square canvas but the closest target is landscape; reconsider orientation."
+
+          # Library-specific likely cause (concrete repair hints, not generic).
+          causes = {
+              "matplotlib": "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`).",
+              "seaborn":    "Most likely cause: `bbox_inches='tight'` on `savefig` — remove it (default `bbox_inches=None`).",
+              "altair":     "Most likely cause: vl-convert padding title/legend outside `width`/`height`. Add `configure_view(continuousWidth=…, continuousHeight=…)` + zero `padding` and normalize the saved PNG with the PIL crop/pad snippet in `prompts/library/altair.md`.",
+              "plotly":     "Most likely cause: `autosize=True` or implicit margin growth. Set `autosize=False` and pin `margin=dict(...)` explicitly.",
+              "bokeh":      "Most likely cause: bokeh toolbar adding ~30-50 px above the figure. Set `toolbar_location=None`.",
+              "highcharts": "Most likely cause: Chrome chrome eating viewport space. Use `Emulation.setDeviceMetricsOverride` via CDP (see `prompts/library/highcharts.md` Save section) — `--window-size` alone is not authoritative in headless mode.",
+              "pygal":      "Check that `pygal.<Chart>(width=…, height=…)` and the SVG→PNG conversion don't override dims.",
+              "plotnine":   "Check `ggsave(width=…, height=…, units='in', dpi=400)` and `theme(figure_size=…)`; do not pass `bbox_inches='tight'`.",
+              "letsplot":   "Check `ggsize(W, H)` and `ggsave(..., scale=4)` pair — only the two canonical pairs land on target.",
+              "ggplot2":    "Check `ggsave(width=…, height=…, units='in', dpi=400)` with `ragg::agg_png`.",
+              "makie":      "Check `Figure(resolution=(1600, 900))` + `save(..., px_per_unit=2)` (landscape) or `resolution=(1200, 1200)` + `px_per_unit=2` (square) — those are the only two canonical pairs.",
+          }
+          cause = causes.get(LIBRARY, f"Review `prompts/library/{LIBRARY}.md` 'Canvas — hard rule' section.")
+
+          weakness = (
+              f"Canvas dimensions drifted from required target. "
+              f"Actual: {w}×{h}. Closest valid target: {tw}×{th} (±{TOLERANCE} px tolerance). "
+              f"Signed delta: {dw:+d} × {dh:+d} — {direction}.{aspect_note} "
+              f"{cause} "
+              f"Re-render at exactly {tw}×{th}; the post-render gate enforces this."
+          )
+
+          Path("/tmp/anyplot-canvas-gate.txt").write_text(weakness, encoding="utf-8")
+          print(f"::warning::Canvas gate FAILED — wrote synthetic weakness to /tmp/anyplot-canvas-gate.txt: {weakness}")
+          PY
+
       - name: React with eyes emoji
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -191,7 +295,7 @@ jobs:
         id: review
         continue-on-error: true
         timeout-minutes: 30
-        uses: anthropics/claude-code-action@dde2242db6af13460b916652159b6ba19a598f30  # v1
+        uses: anthropics/claude-code-action@24492741e0ccfdef4c1d19da8e11e0f373d07494  # v1
         env:
           LIBRARY: ${{ steps.pr.outputs.library }}
           SPEC_ID: ${{ steps.pr.outputs.specification_id }}
@@ -541,7 +645,7 @@ jobs:
 
           # Human-readable runtime label for the header. Extend this map when a new
           # language joins the catalog.
-          RUNTIME_LABEL = {"python": "Python", "r": "R"}.get(language, language.capitalize())
+          RUNTIME_LABEL = {"python": "Python", "r": "R", "julia": "Julia"}.get(language, language.capitalize())
 
           with open(impl_file, "r") as f:
               content = f.read()
@@ -559,6 +663,33 @@ jobs:
               # Match a leading run of #' lines (the existing roxygen header). Anchored to
               # start of file. If no header exists we fall back to prepending one.
               pattern = r"\A(?:#'[^\n]*\n)+"
+              if re.match(pattern, content):
+                  new_content = re.sub(pattern, new_header + "\n", content, count=1)
+              else:
+                  new_content = new_header + "\n" + content
+          elif language == "julia":
+              # Julia has no docstring syntax; anyplot uses a leading `#` comment
+              # block, mirroring the Python/R conventions. Newlines in the title
+              # would break the comment block, so sanitize them.
+              title_safe = title.replace("\n", " ")
+              new_header = (
+                  "# anyplot.ai\n"
+                  f"# {spec_id}: {title_safe}\n"
+                  f"# Library: {library} {lib_version} | {RUNTIME_LABEL} {lang_version}\n"
+                  f"# Quality: {score}/100 | {date_info}"
+              )
+              # Match a leading run of `#`-prefixed Julia line-comments (the
+              # existing header). Anchored to start of file. If no header
+              # exists we fall back to prepending one. The character class
+              # after `#` is intentionally narrow: either `[ \t]` (a space or
+              # tab — the canonical header style `# anyplot.ai`) or empty
+              # (i.e. a bare `#` immediately followed by `\n`). This excludes:
+              # `#=` (block-comment openers, which would otherwise swallow the
+              # block-comment body) and `#!` (shebangs — Julia ignores them
+              # but they're not part of the header we own). If either ever
+              # appears as the first non-blank line of a file, the regex
+              # falls through and the canonical header is prepended above it.
+              pattern = r"\A(?:#(?:[ \t][^\n]*|)\n)+"
               if re.match(pattern, content):
                   new_content = re.sub(pattern, new_header + "\n", content, count=1)
               else:

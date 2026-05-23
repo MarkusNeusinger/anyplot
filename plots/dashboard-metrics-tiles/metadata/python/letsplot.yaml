@@ -1,210 +1,253 @@
 library: letsplot
+language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:07:20Z'
-updated: '2026-01-19T13:10:10Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21138483168
+updated: '2026-05-21T03:47:20Z'
+generated_by: claude-sonnet
+workflow_run: 26203546386
 issue: 3791
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/letsplot/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent dashboard layout using facet_wrap with free_y scales
-  - Smart color logic for change indicators (favorable vs unfavorable based on metric
-    type)
-  - Clean tile appearance with hidden axes and grid
-  - Good layering of area fill, line, and endpoint markers
-  - Proper lets-plot exports (PNG with scale and HTML for interactivity)
+  - 'Full spec compliance: all four required tile elements (value, sparkline, change
+    indicator, metric label) present across all 6 tiles'
+  - Fully theme-adaptive chrome in both renders — correct backgrounds, INK/INK_SOFT
+    token usage, no dark-on-dark failures
+  - 'Semantically correct change indicator logic: favorable/unfavorable determined
+    per metric context, not just raw positive/negative'
+  - Warning badge (⚠) in Memory strip text provides instant at-a-glance differentiation
+    beyond color alone
+  - Clean dashboard aesthetic with elevated card backgrounds, removed axis decorations,
+    generous tile spacing
+  - Correct canvas (3200×1800), title format, and dual HTML+PNG output; layer_tooltips()
+    enhances interactive HTML
   weaknesses:
-  - Could use more prominent visual distinction for the warning status tile (Memory)
-    beyond just orange fill
+  - Change labels (size=14) in a 3-column tile layout become borderline small at mobile
+    width (~400px) — consider increasing to size=16-17 for better mobile legibility
+  - Strip text and change label are similar size (both 14), flattening the typographic
+    hierarchy within each tile — strip_text could be 16-18 to anchor metric identity
+    more strongly
+  - 'LM-02 underutilizes letsplot-distinctive features: layer_tooltips is present
+    but tooltip content could be richer; ggbunch() or plot composition could create
+    more independent tile layouts'
   image_description: |-
-    The plot displays a 3x2 grid of 6 dashboard metric tiles arranged in a faceted layout. Each tile contains:
-    - A metric name header at the top in gray text (Active Users, CPU Usage, Error Rate, Memory, Response Time, Throughput)
-    - A large prominent value displayed in the center in bold dark text (1,284 / 45% / 0.8% / 72% / 120ms / 847req/s)
-    - A mini sparkline visualization showing trend history with a green filled area chart and line (orange fill for the warning-status Memory tile)
-    - An endpoint marker (green dot) at the end of each sparkline
-    - A change indicator with up/down arrow and percentage below the sparkline (▲/▼ with values like 12.5%, 5.2%, 22.0%, 8.3%, 15.1%, 3.7%)
-    - The change indicator colors correctly differentiate favorable changes (green) from unfavorable changes (red/orange) based on metric context
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct. Tile panels use elevated #FFFDF6 with subtle #4A4A44 borders.
+      Chrome: Title "dashboard-metrics-tiles · python · letsplot · anyplot.ai" in bold dark #1A1A17 — readable. Strip metric names in #4A4A44 (INK_SOFT) — readable. No axis labels/ticks (hidden by design).
+      Data: Five tiles have #009E73 (Okabe-Ito #1) green sparklines (area fill alpha=0.25 + line size=2 + endpoint dot size=5). Memory tile uses amber #F59E0B sparkline with ⚠ badge in strip. Large bold values (size=22) in dark INK color. Change indicators (size=14) in green (#009E73) for favorable or red (#EF4444) for unfavorable changes.
+      Legibility verdict: PASS — all text readable, no light-on-light issues. Change labels (size=14) are smaller but legible at full resolution; may be borderline at 400px mobile scale in 3-column layout.
 
-    The overall layout has a very light gray background (#F9FAFB) with white tile panels surrounded by subtle gray borders. The title "dashboard-metrics-tiles · letsplot · pyplots.ai" appears at the top center in large bold text. The tiles are well-spaced with consistent sizing, creating a clean professional dashboard appearance. Axes, ticks, and grids are intentionally hidden to achieve the tile aesthetic.
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct. Tile panels use #242420 (dark elevated) with #B8B7B0 borders.
+      Chrome: Title in light cream #F0EFE8 — readable. Strip metric names in #B8B7B0 (INK_SOFT dark) against dark elevated tile background — readable. No dark-on-dark failures observed.
+      Data: Colors identical to light render — green #009E73 sparklines, amber #F59E0B Memory sparkline. Large values in #F0EFE8 (INK dark) — clearly visible on dark background. Change indicators retain green/red semantic colors — both visible on dark surface.
+      Legibility verdict: PASS — no dark-on-dark failures, data colors identical to light render as required.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title large and bold, metric names clearly readable, values very
-          prominent, change percentages readable
+        comment: Large value labels (size=22) excellent; change labels (size=14) borderline
+          small at mobile width in 3-column layout
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements, all text and sparklines well separated
+        comment: No overlap — value and change labels at distinct y offsets (y_value
+          above peak, y_change below trough)
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Sparklines clearly visible with appropriate line thickness and point
-          markers
+        comment: Sparklines clearly visible; free_y ensures each tile fills available
+          space optimally; endpoint dots prominent
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Green/orange/red status colors work well, not pure red-green only
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent 3x2 grid layout, tiles well-spaced, good use of canvas
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for dashboard tiles - axes intentionally hidden per spec requirements
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for dashboard tiles - grid hidden per spec requirements
-    spec_compliance:
-      score: 23
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct dashboard tile layout with sparklines and metrics
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values, change indicators, and sparklines correctly displayed
-      - id: SC-03
-        name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: 'All main features present: metric labels, values, sparklines, change
-          indicators with arrows'
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All sparkline data visible within tiles
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: true
-        comment: No legend needed, change direction logic correctly applied
-      - id: SC-06
-        name: Title Format
         score: 2
         max: 2
         passed: true
-        comment: 'Correct format: dashboard-metrics-tiles · letsplot · pyplots.ai'
-    data_quality:
-      score: 19
+        comment: Arrows provide second encoding channel beyond green/red color; amber
+          warning separates from both
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800); 3x2 grid with generous panel_spacing;
+          good proportions
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No axis labels (appropriate); title format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Good status uses #009E73 (Okabe-Ito #1); backgrounds correct #FAF8F1/#1A1A17;
+          warning/critical semantic deviations justified'
+    design_excellence:
+      score: 14
       max: 20
       items:
-      - id: DQ-01
-        name: Feature Coverage
-        score: 8
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
         max: 8
         passed: true
-        comment: Shows 6 diverse metrics with mix of up/down changes, good/warning
-          status, various units
-      - id: DQ-02
-        name: Realistic Context
-        score: 6
-        max: 7
+        comment: Status-semantic colors, elevated card backgrounds, warning badge,
+          value+sparkline+change combination — above default but not exceptional
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
         passed: true
-        comment: Excellent server/infrastructure monitoring scenario with realistic
-          metric names and values
-      - id: DQ-03
-        name: Appropriate Scale
+        comment: Axis decorations cleanly removed; panel borders define tiles; generous
+          spacing; strip and change label same size (missed hierarchy)
+      - id: DE-03
+        name: Data Storytelling
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Clear hierarchy: large value > change indicator > sparkline; Memory
+          tile stands out immediately; excellent at-a-glance readability'
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
         score: 5
         max: 5
         passed: true
-        comment: 'Realistic values: CPU 45%, Memory 72%, Response Time 120ms, Active
-          Users 1,284, Error Rate 0.8%, Throughput 847 req/s'
+        comment: Dashboard metric tiles with sparklines in 3x2 grid — correct
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: 'All four required elements per tile: KPI value, metric label, sparkline,
+          change indicator with arrow'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Historical trend to sparklines, current value as label, change percent
+          as arrow+color; context-aware favorable/unfavorable logic
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''dashboard-metrics-tiles · python · letsplot · anyplot.ai''
+          — correct format'
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers current value, trend history, directional change, percentage,
+          and status classification
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Real-world server metrics: CPU, Memory, Response Time, Active Users,
+          Error Rate, Throughput — all realistic values'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Values and units domain-appropriate; seed=42 for reproducibility
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Generally follows KISS, but has some complexity in data transformation
-          loop
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        comment: Flat script, no functions or classes
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
         max: 2
         passed: true
-        comment: All imports used but more verbose than needed
+        comment: np.random.seed(42) set
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no extras
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: No deprecated functions
+        comment: Clean readable structure; appropriate complexity
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html via ggsave
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of lets-plot: facet_wrap for grid, geom_area + geom_line
-          layering, geom_text for labels, scale_color_manual/scale_fill_manual, comprehensive
-          theme customization'
+        comment: 'Correct ggplot grammar: facet_wrap with scales=free_y, scale_color_manual,
+          theme() with element_* functions, ggsize+ggsave scale=4, layer_tooltips'
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: layer_tooltips() is distinctive and used on line+point geoms; HTML
+          export adds value. Could leverage ggbunch() for independent tile layouts
+          or richer tooltip content
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
   - layer-composition
+  - hover-tooltips
+  - html-export
   - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
+  - groupby-aggregation
   dataprep:
   - cumulative-sum
   styling:
-  - minimal-chrome
   - alpha-blending
+  - minimal-chrome

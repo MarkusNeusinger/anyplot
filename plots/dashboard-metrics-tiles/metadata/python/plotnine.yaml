@@ -1,152 +1,182 @@
 library: plotnine
+language: python
 specification_id: dashboard-metrics-tiles
 created: '2026-01-19T13:06:45Z'
-updated: '2026-01-19T13:09:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21138483098
+updated: '2026-05-21T03:39:00Z'
+generated_by: claude-sonnet
+workflow_run: 26203360534
 issue: 3791
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-metrics-tiles/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent clean dashboard aesthetic with professional appearance
-  - Good use of facet_wrap for creating the tile grid layout
-  - Color coding by status (green/orange/red) is well-implemented
-  - Sparklines provide useful trend context for each metric
-  - Realistic operations monitoring scenario with appropriate data values
-  - Proper title format following the spec convention
+  - 'Excellent dual-theme adaptation: both light and dark renders use correct background
+    tokens (#FAF8F1/#1A1A17), elevated tile fills, and appropriate INK/INK_SOFT text
+    colors throughout — no dark-on-dark failures'
+  - Creative and idiomatic use of plotnine's facet_wrap + scale_color_identity to
+    build a fully grid-based dashboard layout without falling back to matplotlib
+  - Status-aware Okabe-Ito color coding (green/orange/red) creates immediate visual
+    triage — the critical Error Rate tile stands out clearly
+  - 'Comprehensive spec compliance: all six required tile components (label, value,
+    sparkline, change indicator, status color, change direction) are present and working'
   weaknesses:
-  - Change indicators are uniformly gray instead of colored green/red based on favorable/unfavorable
-    changes as specified
-  - Sparklines could be slightly thicker for better visibility
-  - Could leverage more plotnine-specific features like stat transformations
+  - Noticeable vertical gap between the two rows of tiles — panel_spacing or figure
+    height could be tuned to reduce the empty vertical band between row 1 and row
+    2 (affects VQ-05)
+  - Change indicator text at size=6 is quite small for the 3200x1800 canvas — increasing
+    to size=7 or 8 would improve mobile readability (affects VQ-01)
+  - Memory tile shows a green up-arrow for an already-at-warning-status metric — minor
+    semantic inconsistency where increasing memory (moving toward critical) signals
+    as a 'favorable' direction (affects DE-03 storytelling accuracy)
   image_description: |-
-    The plot displays a 3x2 grid of 6 metric dashboard tiles on a light gray background. Each tile contains:
-    - A metric name at the top in dark gray bold text (CPU Usage, Memory, Response Time, Active Users, Error Rate, Throughput)
-    - A large prominent value in the center colored by status: green for good metrics (#27AE60), orange/yellow for warning (#F39C12 - Memory at 72%), red for critical (#E74C3C - Error Rate at 0.8%)
-    - A change indicator below with up/down triangle arrows and percentage values in gray
-    - A sparkline chart at the bottom of each tile showing trend history, with the line color matching the status
-    - The sparklines sit on a slightly darker gray background band
-    - Title at the top reads "dashboard-metrics-tiles · plotnine · pyplots.ai"
-    - Overall clean dashboard aesthetic with white tile backgrounds and consistent spacing
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct, not pure white
+      Chrome: Title "dashboard-metrics-tiles · python · plotnine · anyplot.ai" in dark INK text at top — readable. Metric labels in bold dark INK. No axis labels (theme_void). Tile borders in INK_SOFT.
+      Data: Six tiles in 3x2 grid. CPU Usage 45% in #009E73 (green), Memory 72% in #E69F00 (orange/warning), Response Time 120ms in #009E73, Active Users 1284 in #009E73, Error Rate 0.8% in #D55E00 (critical red-orange), Throughput 3450req/s in #009E73. Sparklines use status-colored lines on #EDEAE0 background strips.
+      Legibility verdict: PASS — all text readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct, not pure black
+      Chrome: Title in light #F0EFE8 text — readable. Metric labels in light INK. Tile backgrounds flip to #242420. Sparkline backgrounds flip to #2A2A26. Tile borders in INK_SOFT (lighter variant).
+      Data: Status colors are identical to light render — #009E73, #E69F00, #D55E00 unchanged. Only chrome elements flip.
+      Legibility verdict: PASS — all text light-colored on dark background, no dark-on-dark failures observed
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: All text readable; metric names, values, and change indicators clearly
-          visible. Change indicators could be slightly larger.
+        comment: All font sizes explicitly set; change indicators at size=6 are small
+          but readable; title at size=10 is compact and appropriate
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements; each tile well-spaced with clear separation.
+        comment: No overlapping elements in either render
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Sparklines visible and appropriately sized. Could be slightly thicker.
+        comment: Sparklines at size=1.4 are visible but compact; alpha=0.9 appropriate
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Green/orange/red status colors with sufficient contrast and distinction.
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent 3x2 grid layout with balanced margins and good canvas use.
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Metric labels descriptive with units where appropriate (%, ms, req/s).
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Okabe-Ito status colors are CVD-safe; arrows provide directional
+          signal beyond hue
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Noticeable vertical gap between two tile rows; canvas utilization
+          otherwise good
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: No legend needed. Sparkline background subtle but lacks visible grid
-          context.
+        comment: Title correctly formatted; metric names serve as tile labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Okabe-Ito status colors; backgrounds #FAF8F1/#1A1A17 correct for
+          both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above generic default: status-aware color hierarchy, theme-adaptive
+          elevated tile backgrounds with subtle borders'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_void(), sparkline area backgrounds, elevated tile fills, INK_SOFT
+          borders show deliberate refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Traffic-light color coding guides eye to critical Error Rate; large-value
+          typography creates reading hierarchy
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct dashboard metrics tiles layout with KPI tiles in a grid.
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Values, labels, sparklines, and change indicators correctly displayed.
-      - id: SC-03
+        comment: Correct dashboard metric tiles in 3x2 grid
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has all features but change indicators should be colored green/red
-          per spec.
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: KPI value, metric label, sparkline, change indicator
+          with arrow/percentage, status color coding'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All sparklines show full data range appropriately.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Data correctly mapped; sparklines use normalized scale with proper
+          x-axis range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed; status colors self-explanatory.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly uses spec-id · library · pyplots.ai format.
+        comment: Title is 'dashboard-metrics-tiles · python · plotnine · anyplot.ai'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Good variety of metrics showing different states and change directions.
+        comment: All three statuses represented; both positive and negative changes;
+          varied scales
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Operations monitoring dashboard is realistic with plausible metrics.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 'All values realistic: CPU 45%, Memory 72%, Response Time 120ms,
-          etc.'
+        comment: 'Real-world ops monitoring: CPU, Memory, Response Time, Active Users,
+          Error Rate, Throughput'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: All values factually plausible for ops dashboard context
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -154,49 +184,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save.'
+        comment: 'Flat: imports → constants → data → plot → save; no functions or
+          classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42).
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used.
+        comment: All imported names are used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Pythonic code; data-driven color via identity scale is elegant
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses explicit width/height in save() instead of relying solely on
-          figure_size.
-    library_features:
-      score: 2
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct dpi, width, height, units
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 2
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
-        passed: false
-        comment: Uses facet_wrap and theme_void idiomatically but doesn't leverage
-          stat layers or more grammar-of-graphics patterns.
+        passed: true
+        comment: scale_color_identity(), pd.Categorical for facet ordering, theme_void()
+          with comprehensive theme() overrides
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: facet_wrap as dashboard grid engine and geom layer composition are
+          distinctively plotnine/grammar-of-graphics approaches
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - faceting
-  - annotations
   - layer-composition
   patterns:
   - data-generation

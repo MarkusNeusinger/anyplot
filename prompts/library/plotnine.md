@@ -30,7 +30,9 @@ from plotnine import (
     geom_point, geom_line, geom_bar, geom_boxplot,
     labs, theme, theme_minimal,
     element_text, element_rect, element_line,
-    scale_fill_brewer, scale_color_brewer
+    scale_color_manual, scale_fill_manual,
+    scale_color_gradient, scale_fill_gradient,
+    scale_color_gradient2, scale_fill_gradient2,
 )
 ```
 
@@ -44,6 +46,17 @@ plot = (
     + theme_minimal()
 )
 ```
+
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
+
+| Orientation | `figure_size` | `ggsave` `width × height` (`units='in'`, `dpi=400`) | Final PNG     |
+|-------------|---------------|------------------------------------------------------|---------------|
+| Landscape   | `(8, 4.5)`    | `width=8, height=4.5`                                | 3200 × 1800   |
+| Square      | `(6, 6)`      | `width=6, height=6`                                  | 2400 × 2400   |
+
+Pick the orientation that suits the spec — same decision the other libraries make. plotnine's matplotlib backend respects `figure_size`/`width`/`height` directly, so no extra tricks are required as long as you don't pass `bbox_inches='tight'` to `ggsave` (`ggsave` doesn't expose it, but if you fall back to `plt.savefig`, do **not** add it — same trim risk as matplotlib/seaborn).
 
 ## Figure Size & Sizing for 3200×1800 px (starting values — review-loop tunes)
 
@@ -70,33 +83,6 @@ See `prompts/default-style-guide.md` "Proportional Sizing" for review criteria.
 plot.save(f'plot-{THEME}.png', dpi=400, width=8, height=4.5, units='in')
 ```
 
-## Brewer Palettes
-
-**IMPORTANT**: Palette type must match the palette name!
-
-```python
-# Qualitative (categorical)
-+ scale_fill_brewer(type='qual', palette='Set2')
-+ scale_fill_brewer(type='qual', palette='Paired')
-+ scale_fill_brewer(type='qual', palette='Dark2')
-
-# Sequential (numeric)
-+ scale_fill_brewer(type='seq', palette='Blues')
-+ scale_fill_brewer(type='seq', palette='Greens')
-
-# Diverging (around zero)
-+ scale_fill_brewer(type='div', palette='RdBu')
-+ scale_fill_brewer(type='div', palette='PiYG')
-```
-
-```python
-# WRONG: Set2 is NOT sequential!
-+ scale_fill_brewer(type='seq', palette='Set2')
-
-# RIGHT: Set2 is qualitative
-+ scale_fill_brewer(type='qual', palette='Set2')
-```
-
 ## Geoms
 
 ```python
@@ -110,24 +96,28 @@ geom_tile()      # Heatmap
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-OKABE_ITO = ['#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442']
+ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E']
 
 # Single-series
-+ geom_point(color=OKABE_ITO[0])
++ geom_point(color=ANYPLOT_PALETTE[0])
 
 # Multi-series
-+ scale_color_manual(values=OKABE_ITO)
-+ scale_fill_manual(values=OKABE_ITO)
++ scale_color_manual(values=ANYPLOT_PALETTE)
++ scale_fill_manual(values=ANYPLOT_PALETTE)
 
-# Continuous — NOT Okabe-Ito:
-from plotnine import scale_color_cmap, scale_fill_cmap
-+ scale_color_cmap(cmap_name='viridis')          # sequential
-+ scale_color_cmap(cmap_name='cividis')          # sequential CVD
-+ scale_fill_cmap(cmap_name='BrBG')              # diverging
+# Continuous — only the two anyplot palette-derived cmaps are allowed:
+from plotnine import scale_color_gradient, scale_color_gradient2, scale_fill_gradient, scale_fill_gradient2
+# Sequential (single-polarity)
++ scale_color_gradient(low='#009E73', high='#003D94')
++ scale_fill_gradient(low='#009E73',  high='#003D94')
+# Diverging (around a meaningful midpoint, often 0)
++ scale_color_gradient2(low='#BB0D22', mid='#A2A598', high='#007AD9', midpoint=0)
++ scale_fill_gradient2(low='#BB0D22',  mid='#A2A598', high='#007AD9', midpoint=0)
+# Forbidden: scale_color_cmap / scale_fill_cmap with viridis/cividis/BrBG/Reds/Blues/Greens — only anyplot stops.
 ```
 
 ## Theme-adaptive Chrome (plotnine mapping)
@@ -159,7 +149,7 @@ anyplot_theme = theme(
     legend_title=element_text(color=INK),
 )
 
-plot = (ggplot(df, aes('x', 'y')) + geom_point(color=OKABE_ITO[0]) + anyplot_theme)
+plot = (ggplot(df, aes('x', 'y')) + geom_point(color=ANYPLOT_PALETTE[0]) + anyplot_theme)
 ggsave(plot, filename=f'plot-{THEME}.png', dpi=400, width=8, height=4.5)
 ```
 

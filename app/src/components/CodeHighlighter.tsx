@@ -1,16 +1,19 @@
 import SyntaxHighlighter from 'react-syntax-highlighter/dist/esm/prism-light';
 import python from 'react-syntax-highlighter/dist/esm/languages/prism/python';
 import r from 'react-syntax-highlighter/dist/esm/languages/prism/r';
+import julia from 'react-syntax-highlighter/dist/esm/languages/prism/julia';
 import { typography } from '../theme';
 
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('r', r);
+SyntaxHighlighter.registerLanguage('julia', julia);
 
 // Map anyplot language IDs → Prism grammar names. Anything we don't know about
 // falls back to plain text so the block still renders, just unhighlighted.
 const PRISM_LANGUAGE: Record<string, string> = {
   python: 'python',
   r: 'r',
+  julia: 'julia',
 };
 
 // Theme-aware Okabe-Ito syntax theme. All colors come from CSS variables in

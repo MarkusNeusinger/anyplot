@@ -18,12 +18,21 @@ import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 ```
 
-## Create Figure
+## Canvas — hard rule, no deviation
+
+The saved PNG must be **exactly** one of these two sizes (post-render gate in `impl-review.yml` rejects anything off by more than 16 px and re-triggers repair):
 
 ```python
-# Target: 3200 × 1800 px (8 × 400dpi). See default-style-guide.md "Visual Sizing Defaults".
-fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)
+# Landscape — default for most plots (16:9)
+fig, ax = plt.subplots(figsize=(8, 4.5), dpi=400)   # → 3200 × 1800 px
+
+# Square — only for symmetric plots (pie, radar, heatmap, maze, …)
+fig, ax = plt.subplots(figsize=(6, 6), dpi=400)     # → 2400 × 2400 px
 ```
+
+Pick one based on the spec; do not invent a third aspect. Multi-panel layouts must keep the figure dims constant (use `gridspec` / `subplot_mosaic` to subdivide internally).
+
+**Do not use `bbox_inches="tight"` on `savefig`.** It silently trims the canvas (typically ~30–50 px on each axis → e.g. 3200×1800 becomes 3160×1760) and was the documented cause of every matplotlib drift in the May 2026 fan-out. Use `bbox_inches=None` (the explicit default) instead, and let `figsize × dpi` produce the exact target. If you need to control padding, use `fig.subplots_adjust(left=…, right=…, top=…, bottom=…)` *inside* the figure.
 
 ## Plot Methods
 
@@ -42,7 +51,7 @@ plt.scatter(x, y)
 ## Save
 
 ```python
-plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
+plt.savefig(f'plot-{THEME}.png', dpi=400)  # bbox_inches MUST stay default (None) — see "Canvas" above
 ```
 
 ## Sizing for 3200×1800 px (starting values — adjust per plot, review-loop tunes)
@@ -50,7 +59,10 @@ plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight')
 ```python
 # Text sizes — title kept compact because the mandated "{spec-id} · python · matplotlib · anyplot.ai"
 # title is ~67 chars and would overflow at 16+pt on the 3200px-wide canvas.
-ax.set_title(title, fontsize=12, fontweight='medium')
+# Title fontsize scales linearly with title length so a "{Descriptive Title} · " prefix or a
+# long {spec-id} doesn't overflow — compute from the exact title string at codegen time:
+#   title_fontsize = max(8, round(12 * 67 / len(title))) if len(title) > 67 else 12
+ax.set_title(title, fontsize=title_fontsize, fontweight='medium')
 ax.set_xlabel(x_label, fontsize=10)
 ax.set_ylabel(y_label, fontsize=10)
 ax.tick_params(axis='both', labelsize=8)
@@ -95,29 +107,31 @@ ax.boxplot(data, tick_labels=group_names)  # Right
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette" for the canonical list). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette" for the canonical list). First series is **always** `#009E73`.
 
 ```python
-# Okabe-Ito palette — use positions 1→N in canonical order
-OKABE_ITO = ['#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442']
+# anyplot palette — use positions 1→N in canonical order
+ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E']
 
 # Single-series: always position 1 (brand green)
-color = OKABE_ITO[0]  # '#009E73'
+color = ANYPLOT_PALETTE[0]  # '#009E73'
 
 # Multi-series: take the first N colors in order, don't cherry-pick
-ax.set_prop_cycle(color=OKABE_ITO[:N])
+ax.set_prop_cycle(color=ANYPLOT_PALETTE[:N])
 
-# Continuous data — Okabe-Ito is NOT used (causes banding):
-#   Sequential: cmap='viridis' or 'cividis'
-#   Diverging:  cmap='BrBG'
-#   Heatmaps:   cmap='viridis' or single-polarity 'Reds'/'Blues'
-#   Forbidden:  'jet', 'hsv', 'rainbow'
+# Continuous data — only the two anyplot palette-derived cmaps are allowed
+# (no viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow):
+from matplotlib.colors import LinearSegmentedColormap
+anyplot_seq = LinearSegmentedColormap.from_list("anyplot_seq", ["#009E73", "#003D94"])
+anyplot_div = LinearSegmentedColormap.from_list("anyplot_div", ["#BB0D22", "#A2A598", "#007AD9"])
+# Sequential / single-polarity heatmaps: cmap=anyplot_seq
+# Diverging (signed deviations, residuals, correlations):    cmap=anyplot_div
 ```
 
 ## Theme-adaptive Chrome (matplotlib mapping)
 
-The pipeline runs each implementation twice: `ANYPLOT_THEME=light` → `plot-light.png`, `ANYPLOT_THEME=dark` → `plot-dark.png`. Backgrounds, text, grid, spines, legend frames, and annotation boxes all flip; only the Okabe-Ito data colors stay constant.
+The pipeline runs each implementation twice: `ANYPLOT_THEME=light` → `plot-light.png`, `ANYPLOT_THEME=dark` → `plot-dark.png`. Backgrounds, text, grid, spines, legend frames, and annotation boxes all flip; only the anyplot palette data colors stay constant.
 
 ```python
 import os
@@ -147,7 +161,7 @@ if leg:
 ax.annotate(..., color=INK,
             bbox=dict(facecolor=ELEVATED_BG, edgecolor=INK_SOFT, alpha=0.9))
 
-plt.savefig(f'plot-{THEME}.png', dpi=400, bbox_inches='tight', facecolor=PAGE_BG)
+plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG)  # do NOT add bbox_inches='tight'
 ```
 
 ## Output Files
