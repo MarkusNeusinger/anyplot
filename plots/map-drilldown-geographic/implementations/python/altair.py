@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-23
@@ -244,7 +244,7 @@ states_data = pd.DataFrame(
     }
 )
 
-# City-level sales data (third hierarchy level — drill-down leaf nodes)
+# City-level sales data (level 3 leaf nodes — CA, TX, NY, FL only)
 cities_data = pd.DataFrame(
     {
         "state": [
@@ -290,8 +290,9 @@ region_data = (
     states_data.groupby("region").agg(total_value=("value", "sum"), num_states=("state", "count")).reset_index()
 )
 
-# Interactive selection for HTML drill-down (click region bar to highlight states)
-region_select = alt.selection_point(fields=["region"], name="region_drill")
+# Interactive selections — defaults produce a meaningful static PNG; clickable in HTML
+region_select = alt.selection_point(fields=["region"], name="region_drill", value=[{"region": "West"}])
+state_select = alt.selection_point(fields=["state"], name="state_drill", value=[{"state": "California"}])
 
 # Choropleth map — states colored by sales value using anyplot_seq colormap
 states_map = alt.topo_feature(us_states_url, "states")
@@ -308,9 +309,9 @@ choropleth = (
                 titleFontSize=12,
                 labelFontSize=10,
                 orient="bottom-left",
-                gradientLength=150,
-                gradientThickness=15,
-                offset=10,
+                gradientLength=130,
+                gradientThickness=12,
+                offset=8,
                 titleColor=INK,
                 labelColor=INK_SOFT,
             ),
@@ -323,10 +324,10 @@ choropleth = (
     )
     .transform_lookup(lookup="id", from_=alt.LookupData(states_data, "id", ["state", "value", "region"]))
     .project(type="albersUsa")
-    .properties(width=355, height=220)
+    .properties(width=340, height=220)
 )
 
-# Region bars — level 1: country → regions (click to drill down in HTML)
+# Region bars — ① Country → Regions (click to drill down)
 region_bars = (
     alt.Chart(region_data)
     .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
@@ -336,9 +337,7 @@ region_bars = (
         color=alt.Color(
             "region:N",
             scale=alt.Scale(domain=REGIONS, range=ANYPLOT_PALETTE),
-            legend=alt.Legend(
-                title="Region", titleFontSize=10, labelFontSize=9, orient="top", direction="horizontal", columns=4
-            ),
+            legend=alt.Legend(title="Region", titleFontSize=10, labelFontSize=11, orient="right", direction="vertical"),
         ),
         opacity=alt.condition(region_select, alt.value(1.0), alt.value(0.55)),
         tooltip=[
@@ -348,34 +347,64 @@ region_bars = (
         ],
     )
     .add_params(region_select)
-    .properties(width=225, height=108, title=alt.Title("① USA → Regions", fontSize=11, color=INK))
+    .properties(width=185, height=60, title=alt.Title("① USA → Regions", fontSize=11, color=INK))
 )
 
-# California city bars — level 3 drill-down (West → California → Cities)
-ca_cities = cities_data[cities_data["state"] == "California"]
+# State bars — ② Region → States (filtered by selected region via transform_filter)
+state_bars = (
+    alt.Chart(states_data)
+    .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4)
+    .encode(
+        y=alt.Y("state:N", sort="-x", title=None),
+        x=alt.X("value:Q", title="Sales ($K)", axis=alt.Axis(grid=True, gridOpacity=0.10)),
+        color=alt.Color("region:N", scale=alt.Scale(domain=REGIONS, range=ANYPLOT_PALETTE), legend=None),
+        opacity=alt.condition(state_select, alt.value(1.0), alt.value(0.55)),
+        tooltip=[
+            alt.Tooltip("state:N", title="State"),
+            alt.Tooltip("region:N", title="Region"),
+            alt.Tooltip("value:Q", title="Sales ($K)", format=",.0f"),
+        ],
+    )
+    .transform_filter(region_select)
+    .add_params(state_select)
+    .properties(width=185, height=75, title=alt.Title("② Region → States", fontSize=11, color=INK))
+)
 
+# City bars — ③ State → Cities (filtered by selected state; CA, TX, NY, FL have data)
 city_bars = (
-    alt.Chart(ca_cities)
+    alt.Chart(cities_data)
     .mark_bar(cornerRadiusTopRight=4, cornerRadiusBottomRight=4, color=ANYPLOT_PALETTE[0])
     .encode(
         y=alt.Y("city:N", sort="-x", title=None),
         x=alt.X("value:Q", title="Sales ($K)", axis=alt.Axis(grid=True, gridOpacity=0.10)),
         tooltip=[alt.Tooltip("city:N", title="City"), alt.Tooltip("value:Q", title="Sales ($K)", format=",.0f")],
     )
-    .properties(width=225, height=105, title=alt.Title("③ West → California → Cities", fontSize=11, color=INK))
+    .transform_filter(state_select)
+    .properties(width=185, height=45, title=alt.Title("③ State → Cities", fontSize=11, color=INK))
 )
 
-# Breadcrumb — shows current navigation path in the drill-down hierarchy
+# Breadcrumb showing current drill-down path
 breadcrumb_df = pd.DataFrame({"label": ["USA  ▸  West  ▸  California  ▸  Cities"]})
 breadcrumb = (
     alt.Chart(breadcrumb_df)
     .mark_text(fontSize=10, align="left", fontWeight="bold", color=INK_SOFT)
     .encode(text="label:N", x=alt.value(2), y=alt.value(10))
-    .properties(width=225, height=18)
+    .properties(width=185, height=13)
 )
 
-# Sidebar: breadcrumb + region bars + city bars
-sidebar = alt.vconcat(breadcrumb, region_bars, city_bars, spacing=10).resolve_legend(color="independent")
+# Note: city drill-down available for CA, TX, NY, FL only
+city_note_df = pd.DataFrame({"label": ["City data available for CA · TX · NY · FL only"]})
+city_note = (
+    alt.Chart(city_note_df)
+    .mark_text(fontSize=9, align="left", fontStyle="italic", color=INK_SOFT)
+    .encode(text="label:N", x=alt.value(2), y=alt.value(10))
+    .properties(width=185, height=10)
+)
+
+# Sidebar: breadcrumb + all three hierarchy levels + note
+sidebar = alt.vconcat(breadcrumb, region_bars, state_bars, city_bars, city_note, spacing=7).resolve_legend(
+    color="independent"
+)
 
 # Full chart composition
 chart = (
@@ -387,7 +416,7 @@ chart = (
             fontSize=16,
             anchor="middle",
             color=INK,
-            subtitle=["Hierarchical US Sales: Country → Region → State → City  (click regions in HTML to drill down)"],
+            subtitle=["Hierarchical US Sales: Country → Region → State → City  (click to drill down in HTML)"],
             subtitleFontSize=10,
             subtitleColor=INK_SOFT,
         ),
