@@ -1,162 +1,185 @@
 library: highcharts
+language: python
 specification_id: map-projections
 created: '2026-01-20T02:50:26Z'
-updated: '2026-01-20T02:53:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21157678738
+updated: '2026-05-23T08:30:14Z'
+generated_by: claude-sonnet
+workflow_run: 26327638541
 issue: 3771
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-projections/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-projections/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/highcharts/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - Excellent demonstration of Highcharts Maps projection capabilities with 4 distinct
-    views
-  - Clean 2x2 grid layout allows easy visual comparison between projections
-  - Proper graticule implementation using mapline series with GeoJSON
-  - Both static PNG and interactive HTML outputs provided
-  - Consistent styling across all map panels (Python blue theme)
-  - Good use of projection rotation to show different geographic focuses in Orthographic
-    views
+  - 'Perfect anyplot palette compliance: brand green (#009E73) for land, purple (#9418DB)
+    for graticule, correct warm backgrounds for both themes'
+  - 'Excellent code structure: loop-based projection config, inline CDN embedding,
+    Selenium CDP viewport override, PIL canvas-pinning safety net'
+  - 'Full Highcharts Maps API usage: mapView.projection, Highcharts.geojson() conversion,
+    mapline series type, topology-based world map'
+  - Clean 2x2 grid with per-panel titles and educational projection descriptions providing
+    clear data storytelling
+  - 'Perfect spec compliance: all required features present (multiple projections,
+    graticule, clean borders)'
   weaknesses:
-  - Graticule lines do not show degree labels (0°, 30°, 60°, etc.) which would help
-    viewers understand the projection distortion
-  - Some projections (Miller Cylindrical) have noticeable empty space in their containers
+  - Mercator projection (most widely recognized; first listed in spec) is absent —
+    Miller Cylindrical is used instead; consider replacing Miller Cylindrical with
+    Mercator for stronger educational impact
+  - Panel title (36px) and panel subtitle/description (also 36px) are the same font
+    size, removing typographic hierarchy within each card — description should be
+    visibly smaller (e.g., 26-28px)
+  - Main page title at 60px CSS is slightly below the style-guide default of 66px;
+    increase to 66px
   image_description: |-
-    The plot displays a 2x2 grid layout comparing four different cartographic projections of the world map. The main title "map-projections · highcharts · pyplots.ai" appears at the top center in dark gray text, followed by a subtitle explaining the comparison.
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "map-projections · python · highcharts · anyplot.ai" in bold dark ink (#1A1A17), clearly readable. Subtitle in #4A4A44, readable. Panel titles ("Miller Cylindrical", "Equal Earth", "Orthographic · Americas", "Robinson") in bold dark ink, readable. Panel descriptions in same 36px as titles (minor hierarchy issue). All chrome text readable.
+      Data: Land masses in #009E73 (brand green, position 1). Graticule in #9418DB (purple, position 2) at 0.45 opacity — visible as subtle faint dashed lines. Country borders in off-white (PAGE_BG). Panel card backgrounds slightly elevated (#FFFDF6 vs #FAF8F1 page).
+      Legibility verdict: PASS — all text readable in light theme
 
-    Top-left (Miller Cylindrical): Shows a rectangular world map with longitude/latitude graticule lines (dashed purple) visible. Land masses are rendered in a medium blue color (#306998 - Python Blue) with white country borders.
-
-    Top-right (Equal Earth): An oval/elliptical equal-area projection showing all continents with the same blue coloring and white borders. The graticule forms curved lines characteristic of this projection.
-
-    Bottom-left (Orthographic - Americas): A globe view centered on the Americas showing North and South America prominently. The spherical projection displays only the visible hemisphere with graticule lines curving around the globe.
-
-    Bottom-right (Orthographic - Africa/Europe): A globe view centered on Africa and Europe, showing these continents prominently along with parts of Asia and South America on the edges.
-
-    All four maps use consistent styling: blue land (#306998), white country borders, light gray background panels with subtle borders, and dashed purple graticule lines. The layout is clean with good spacing between panels.
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and all text rendered in light ink (#F0EFE8 / #B8B7B0), clearly readable against dark background. No dark-on-dark failures observed. Panel titles and descriptions legible.
+      Data: Land masses remain identical #009E73 (brand green) — data colors match light render exactly, only chrome flipped. Graticule more visible against dark background. Country borders (PAGE_BG #1A1A17) appear as subtle dark outlines within green land masses.
+      Legibility verdict: PASS — all text readable in dark theme, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Main title is large and clear (72px), projection titles (48px) and
-          subtitles (28px) are all readable at the 4800x2700 resolution
+        comment: 'All text readable in both themes. Minor: main title at 60px (guide
+          says 66px); panel subtitle same 36px as panel title, losing hierarchy.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, clean layout
+        comment: Clean 2x2 layout, no text collisions in either render.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Maps are well-sized within their containers, country borders visible,
-          graticule lines appropriately styled
+        comment: Land masses prominent in brand green, graticule visible and intentionally
+          subtle, country borders clear.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Uses Python blue for land, purple for graticule, white for borders
-          - no red-green conflicts
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good 2x2 grid layout, but Miller Cylindrical and Equal Earth maps
-          have some empty space due to their aspect ratios
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: No axis labels - maps typically don't have them, but spec mentions
-          graticule labels which could show degree values
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Graticule lines are subtle dashed style, no legend needed for this
-          visualization
+        comment: Strong contrast between green land and neutral ocean; colorblind-safe
+          anyplot palette.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 canvas confirmed. 2x2 grid proportions balanced.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Map context uses panel titles + descriptions in lieu of axis labels.
+          Main title format correct.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Land #009E73 (pos 1), graticule #9418DB (pos 2), backgrounds #FAF8F1/#1A1A17,
+          elevated #FFFDF6/#242420 — all correct.'
+    design_excellence:
+      score: 11
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: false
+        comment: Clean grid layout with subtle card elevation. Professional but relies
+          on default Highcharts Maps appearance without additional design layers.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Legend/credits/navigation disabled, graticule uses dashed ShortDash
+          with 0.45 opacity — deliberate refinements.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 4 diverse projection types with per-panel descriptions explaining
+          each projection's trade-offs creates good educational narrative.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: 'Correct plot type: world maps with multiple projections'
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: World boundaries correctly displayed for all projections
-      - id: SC-03
+        comment: World map with multiple cartographic projections side-by-side.
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 'Multiple projections shown (4), graticule present, clean country
-          borders. Missing: Tissot indicatrices (spec says optional)'
-      - id: SC-04
-        name: Data Range
+        comment: Multiple projections, graticule at 30-degree intervals, clean coastlines
+          and borders, land color scheme all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full world shown in each projection as appropriate
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: World topology correctly loaded, all projections accurately applied.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend, but projection names serve as identification. No data
-          values being mapped
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: map-projections · highcharts · pyplots.ai'
+        comment: Title matches required format exactly. No legend needed for single-color
+          land masses.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows 4 different projections (Miller, Equal Earth, 2x Orthographic
-          with different centers), demonstrates both cylindrical and spherical views
+        comment: '4 projections: cylindrical, equal-area, globe, compromise. Mercator
+          (most widely recognized; first in spec) is absent — Miller Cylindrical used
+          instead.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Real world map data, educational cartography use case
+        comment: Real Highcharts world topology, factual geographic content, no controversial
+          elements.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Appropriate for world maps, some projections could better fill their
-          containers
+        comment: Global scale with 30-degree graticule interval is cartographic standard.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,50 +187,57 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → config → HTML generation → Selenium
-          screenshot'
+        comment: No functions or classes; clean list-of-dicts config pattern with
+          a single loop.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic - no random data, uses fixed world topology from Highcharts
-          CDN
+        comment: Fully deterministic — CDN downloads plus geometric graticule generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: json, tempfile, time, urllib, Path, selenium'
+        comment: All imports (json, os, tempfile, time, urllib.request, pathlib, PIL,
+          selenium) actively used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Well-organized: theme tokens at top, projection configs in list,
+          loop-based chart config, inline CDN embedding.'
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highcharts Maps API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png (correct) but also saves plot.html (not required,
-          but acceptable for interactive libraries)
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of Highcharts Maps capabilities: multiple projections
-          (Miller, EqualEarth, Orthographic), projection rotation for centering views,
-          mapline series for graticule, topology loading, and interactive HTML export'
+        comment: Correct highmaps.js, Highcharts.mapChart(), mapView.projection, mapline
+          series type, Highcharts.geojson() conversion, proj4.js.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Showcases Highcharts Maps projection system, topology-based world
+          map, graticule as GeoJSON mapline overlay, 4 simultaneous mapChart instances.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - subplots
   - html-export
@@ -215,4 +245,5 @@ impl_tags:
   - iteration-over-groups
   dataprep: []
   styling:
-  - grid-styling
+  - alpha-blending
+  - minimal-chrome
