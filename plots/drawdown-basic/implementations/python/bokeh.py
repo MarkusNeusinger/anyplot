@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-23
@@ -55,6 +55,19 @@ drawdown = (prices - running_max) / running_max * 100
 max_dd_idx = int(np.argmin(drawdown))
 max_dd_value = drawdown[max_dd_idx]
 max_dd_date = dates[max_dd_idx]
+
+# Max drawdown duration: from last peak before trough to the trough
+peak_idxs = np.where(drawdown[:max_dd_idx] >= -0.1)[0]
+dd_start_idx = int(peak_idxs[-1]) if len(peak_idxs) > 0 else 0
+max_dd_duration = (dates[max_dd_idx] - dates[dd_start_idx]).days
+
+# Recovery time: from trough back to new high (drawdown ≥ 0)
+rec_idxs = np.where(drawdown[max_dd_idx:] >= -0.1)[0]
+if len(rec_idxs) > 0:
+    recovery_days = (dates[max_dd_idx + int(rec_idxs[0])] - dates[max_dd_idx]).days
+    recovery_str = f"{recovery_days} days"
+else:
+    recovery_str = "N/A"
 
 # Find recovery points — transitions from negative drawdown back to zero (new highs)
 recovery_dates = []
@@ -116,12 +129,24 @@ p.add_layout(
     )
 )
 
+# Stats block (data coords, upper area): max DD %, duration, recovery time
+_stats_x = dates[int(0.55 * n_days)]  # mid-right section, well before the right edge
+_stats = [
+    (f"Max DD: {max_dd_value:.1f}%", MAX_DD_COLOR),
+    (f"Duration: {max_dd_duration} days", INK),
+    (f"Recovery: {recovery_str}", RECOVERY_COLOR),
+]
+for _i, (_text, _color) in enumerate(_stats):
+    p.add_layout(
+        Label(x=_stats_x, y=-4 - _i * 6, text=_text, text_font_size="28pt", text_color=_color, text_align="left")
+    )
+
 # Recovery (new high) markers
 if recovery_dates:
     p.scatter(
         x=recovery_dates,
-        y=[0.0] * len(recovery_dates),
-        size=16,
+        y=[0.6] * len(recovery_dates),
+        size=24,
         color=RECOVERY_COLOR,
         marker="triangle",
         legend_label="New High",
@@ -144,7 +169,7 @@ p.legend.label_text_color = INK_SOFT
 # Theme-adaptive chrome
 p.background_fill_color = PAGE_BG
 p.border_fill_color = PAGE_BG
-p.outline_line_color = INK_SOFT
+p.outline_line_color = "rgba(0,0,0,0)"
 p.title.text_color = INK
 p.xaxis.axis_label_text_color = INK
 p.yaxis.axis_label_text_color = INK
