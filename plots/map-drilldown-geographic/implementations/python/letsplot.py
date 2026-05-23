@@ -346,13 +346,13 @@ world_plot = (
     + geom_text(
         data=df,
         mapping=aes(x="label_lon", y="label_lat", label="name"),
-        size=9,
+        size=11,
         color=INK,
         fontface="bold",
         tooltips="none",
     )
     + scale_size(range=[5, 18], guide="none")
-    + scale_fill_gradient(low="#009E73", high="#003D94", name="Sales ($M)")
+    + scale_fill_gradient(low="#009E73", high="#003D94", name="Sales (M $)")
     + coord_fixed(ratio=1.3, xlim=[-180, 200], ylim=[-60, 75])
     + labs(
         title="map-drilldown-geographic · python · letsplot · anyplot.ai",
@@ -360,10 +360,10 @@ world_plot = (
     )
     + theme_void()
     + theme(
-        plot_title=element_text(size=14, face="bold", hjust=0.5, color=INK),
-        plot_subtitle=element_text(size=10, hjust=0.5, color=INK_SOFT),
-        legend_title=element_text(size=10, color=INK),
-        legend_text=element_text(size=9, color=INK_SOFT),
+        plot_title=element_text(size=16, face="bold", hjust=0.5, color=INK),
+        plot_subtitle=element_text(size=12, hjust=0.5, color=INK_SOFT),
+        legend_title=element_text(size=11, color=INK),
+        legend_text=element_text(size=10, color=INK_SOFT),
         legend_position=[0.92, 0.18],
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
@@ -394,22 +394,22 @@ us_plot = (
     + geom_text(
         data=df_states,
         mapping=aes(x="lon", y="lat", label="abbr"),
-        size=8,
+        size=10,
         color=INK,
         fontface="bold",
         nudge_y=-2.5,
         tooltips="none",
     )
     + scale_size(range=[5, 16], guide="none")
-    + scale_fill_gradient(low="#009E73", high="#003D94", name="Sales ($M)")
+    + scale_fill_gradient(low="#009E73", high="#003D94", name="Sales (M $)")
     + coord_fixed(ratio=1.3, xlim=[-128, -65], ylim=[23, 52])
     + labs(title="USA → State Level  (drill-down)", subtitle="Breadcrumb: World > United States")
     + theme_void()
     + theme(
-        plot_title=element_text(size=11, face="bold", hjust=0.5, color=INK),
-        plot_subtitle=element_text(size=9, hjust=0.5, color=INK_SOFT),
-        legend_title=element_text(size=9, color=INK),
-        legend_text=element_text(size=8, color=INK_SOFT),
+        plot_title=element_text(size=13, face="bold", hjust=0.5, color=INK),
+        plot_subtitle=element_text(size=11, hjust=0.5, color=INK_SOFT),
+        legend_title=element_text(size=10, color=INK),
+        legend_text=element_text(size=9, color=INK_SOFT),
         legend_position=[0.85, 0.15],
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
