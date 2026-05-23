@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 86/100 | Created: 2026-05-23
@@ -68,6 +68,8 @@ combined["view"] = pd.Categorical(
 title = "linked-views-selection · python · plotnine · anyplot.ai"
 title_fontsize = max(8, round(12 * min(1.0, 67 / len(title))))
 
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
 anyplot_theme = theme(
     figure_size=(8, 4.5),
     plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
@@ -79,6 +81,7 @@ anyplot_theme = theme(
     axis_title=element_text(color=INK, size=9),
     axis_text=element_text(color=INK_SOFT, size=7),
     plot_title=element_text(color=INK, size=title_fontsize),
+    plot_subtitle=element_text(color=INK_MUTED, size=8),
     legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     legend_key=element_rect(fill=PAGE_BG),
     legend_text=element_text(color=INK_SOFT, size=7),
@@ -91,6 +94,10 @@ anyplot_theme = theme(
 color_map = {"Setosa (selected)": SELECTED_COLOR, "Other species": UNSELECTED_COLOR}
 alpha_map = {"Setosa (selected)": 0.85, "Other species": 0.25}
 
+n_selected = (df["species_id"] == 0).sum()
+n_total = len(df)
+subtitle = f"Setosa: {n_selected} selected of {n_total} iris samples · unselected points de-emphasized"
+
 # Plot — three coordinated scatter views with consistent selection encoding
 plot = (
     ggplot(combined, aes("x", "y", color="selection", alpha="selection"))
@@ -99,7 +106,7 @@ plot = (
     + scale_color_manual(values=color_map, name="")
     + scale_alpha_manual(values=alpha_map)
     + guides(alpha=False)
-    + labs(x="", y="", title=title)
+    + labs(x="Measurement (cm)", y="Measurement (cm)", title=title, subtitle=subtitle)
     + anyplot_theme
 )
 
