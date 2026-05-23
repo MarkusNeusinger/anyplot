@@ -19,6 +19,7 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+SELECTOR_ACTIVE = "rgba(26,26,23,0.12)" if THEME == "light" else "rgba(240,239,232,0.12)"
 
 ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
 
@@ -45,6 +46,7 @@ for symbol, params in stocks.items():
 # Create DataFrame and normalize all series to 100 at the starting point (rebasing)
 df = pd.DataFrame(price_data, index=date_range)
 df_rebased = (df / df.iloc[0]) * 100
+dates = df_rebased.index.strftime("%Y-%m-%d").tolist()
 
 # Plot
 fig = go.Figure()
@@ -52,7 +54,7 @@ fig = go.Figure()
 for i, symbol in enumerate(stocks.keys()):
     fig.add_trace(
         go.Scatter(
-            x=df_rebased.index,
+            x=dates,
             y=df_rebased[symbol],
             mode="lines",
             name=symbol,
@@ -73,6 +75,19 @@ fig.add_hline(
     annotation_font_color=INK_MUTED,
 )
 
+# Add end-point value labels for each series to show final performance
+for i, symbol in enumerate(stocks.keys()):
+    final_value = df_rebased[symbol].iloc[-1]
+    fig.add_annotation(
+        x=dates[-1],
+        y=final_value,
+        text=f"  {final_value:.0f}",
+        showarrow=False,
+        xanchor="left",
+        yanchor="middle",
+        font={"size": 9, "color": ANYPLOT_PALETTE[i]},
+    )
+
 # Layout
 fig.update_layout(
     autosize=False,
@@ -92,6 +107,19 @@ fig.update_layout(
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
+        "rangeselector": {
+            "buttons": [
+                {"count": 1, "label": "1M", "step": "month", "stepmode": "backward"},
+                {"count": 3, "label": "3M", "step": "month", "stepmode": "backward"},
+                {"count": 6, "label": "6M", "step": "month", "stepmode": "backward"},
+                {"step": "all", "label": "1Y"},
+            ],
+            "bgcolor": ELEVATED_BG,
+            "activecolor": SELECTOR_ACTIVE,
+            "bordercolor": INK_SOFT,
+            "borderwidth": 1,
+            "font": {"color": INK_SOFT, "size": 9},
+        },
         "rangeslider": {"visible": True, "bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "thickness": 0.05},
     },
     yaxis={
@@ -113,7 +141,7 @@ fig.update_layout(
         "xanchor": "center",
         "x": 0.5,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 80},
+    margin={"l": 80, "r": 80, "t": 80, "b": 80},
     hovermode="x unified",
 )
 
