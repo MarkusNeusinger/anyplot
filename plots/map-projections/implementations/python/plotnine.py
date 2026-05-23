@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-23
@@ -24,6 +24,7 @@ from plotnine import (
     facet_wrap,
     geom_path,
     geom_polygon,
+    geom_text,
     ggplot,
     labs,
     theme,
@@ -90,32 +91,25 @@ _YF = np.array(
 )
 
 
-def _project(df, proj):
-    """Apply named projection to a DataFrame with lon/lat columns."""
-    d = df.copy()
-    lon, lat = d["lon"].values, d["lat"].values
-    if proj == "Equirectangular":
-        d["x"] = np.radians(lon)
-        d["y"] = np.radians(lat)
-    elif proj == "Mercator":
-        d["x"] = np.radians(lon)
-        d["y"] = np.log(np.tan(np.pi / 4 + np.radians(np.clip(lat, -85, 85)) / 2))
-    elif proj == "Robinson":
-        a = np.abs(lat)
-        d["x"] = np.radians(lon) * np.interp(a, _LAT, _XF) * 0.8487
-        d["y"] = np.interp(a, _LAT, _YF) * np.sign(lat) * 1.3523
-    elif proj == "Mollweide":
-        lo = np.radians(lon)
-        la = np.radians(lat)
-        t = la.copy()
-        for _ in range(15):
-            den = 2 + 2 * np.cos(2 * t)
-            den = np.where(np.abs(den) < 1e-10, 1e-10, den)
-            t -= (2 * t + np.sin(2 * t) - np.pi * np.sin(la)) / den
-        d["x"] = 2 * np.sqrt(2) / np.pi * lo * np.cos(t)
-        d["y"] = np.sqrt(2) * np.sin(t)
-    d["projection"] = proj
-    return d
+def _mollweide(lon, lat):
+    la = np.radians(lat)
+    t = la.copy()
+    for _ in range(15):
+        den = 2 + 2 * np.cos(2 * t)
+        den = np.where(np.abs(den) < 1e-10, 1e-10, den)
+        t -= (2 * t + np.sin(2 * t) - np.pi * np.sin(la)) / den
+    return 2 * np.sqrt(2) / np.pi * np.radians(lon) * np.cos(t), np.sqrt(2) * np.sin(t)
+
+
+PROJ_FNS = {
+    "Equirectangular": lambda lon, lat: (np.radians(lon), np.radians(lat)),
+    "Mercator": lambda lon, lat: (np.radians(lon), np.log(np.tan(np.pi / 4 + np.radians(np.clip(lat, -85, 85)) / 2))),
+    "Robinson": lambda lon, lat: (
+        np.radians(lon) * np.interp(np.abs(lat), _LAT, _XF) * 0.8487,
+        np.interp(np.abs(lat), _LAT, _YF) * np.sign(lat) * 1.3523,
+    ),
+    "Mollweide": _mollweide,
+}
 
 
 # === Continent coastlines ===
@@ -1000,15 +994,23 @@ df_grat = pd.DataFrame(grat_records)
 proj_order = ["Equirectangular", "Mercator", "Robinson", "Mollweide"]
 all_cont, all_grat, all_bord = [], [], []
 for proj in proj_order:
-    pc = _project(df_cont, proj)
+    fn = PROJ_FNS[proj]
+
+    pc = df_cont.copy()
+    pc["x"], pc["y"] = fn(pc["lon"].values, pc["lat"].values)
+    pc["projection"] = proj
     pc["proj_continent"] = proj + "_" + pc["continent"]
     all_cont.append(pc)
 
-    pg = _project(df_grat, proj)
+    pg = df_grat.copy()
+    pg["x"], pg["y"] = fn(pg["lon"].values, pg["lat"].values)
+    pg["projection"] = proj
     pg["proj_group"] = proj + "_" + pg["group"]
     all_grat.append(pg)
 
-    pb = _project(df_bord, proj)
+    pb = df_bord.copy()
+    pb["x"], pb["y"] = fn(pb["lon"].values, pb["lat"].values)
+    pb["projection"] = proj
     pb["proj_border"] = proj + "_" + pb["border"]
     all_bord.append(pb)
 
@@ -1018,6 +1020,20 @@ df_all_bord = pd.concat(all_bord, ignore_index=True)
 
 for df in (df_all_cont, df_all_grat, df_all_bord):
     df["projection"] = pd.Categorical(df["projection"], categories=proj_order, ordered=True)
+
+# Per-panel distortion annotations (DE-03)
+PROJ_NOTES = {
+    "Equirectangular": "equidistant cylindrical",
+    "Mercator": "conformal · area-distorting",
+    "Robinson": "compromise · balanced",
+    "Mollweide": "equal-area pseudocylindrical",
+}
+annot_records = []
+for proj in proj_order:
+    x_a, y_a = PROJ_FNS[proj](np.array([0.0]), np.array([-50.0]))
+    annot_records.append({"projection": proj, "x": float(x_a[0]), "y": float(y_a[0]), "label": PROJ_NOTES[proj]})
+df_annot = pd.DataFrame(annot_records)
+df_annot["projection"] = pd.Categorical(df_annot["projection"], categories=proj_order, ordered=True)
 
 # Plot
 plot = (
@@ -1032,6 +1048,7 @@ plot = (
         alpha=0.85,
     )
     + geom_path(aes(x="x", y="y", group="proj_border"), data=df_all_bord, color=INK, size=0.35, alpha=0.65)
+    + geom_text(aes(x="x", y="y", label="label"), data=df_annot, color=INK_SOFT, size=7, ha="center")
     + facet_wrap("~projection", ncol=2, scales="free")
     + coord_fixed(ratio=1.0)
     + labs(
@@ -1041,7 +1058,7 @@ plot = (
     + theme(
         figure_size=(8, 4.5),
         plot_title=element_text(size=12, weight="bold", ha="center", color=INK),
-        plot_subtitle=element_text(size=8, ha="center", color=INK_SOFT),
+        plot_subtitle=element_text(size=10, ha="center", color=INK_SOFT),
         strip_text=element_text(size=9, weight="bold", color=INK),
         strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         axis_text=element_blank(),
@@ -1049,6 +1066,7 @@ plot = (
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
         panel_background=element_rect(fill=OCEAN_BG),
+        panel_border=element_rect(color=INK_SOFT, fill=None, size=0.5),
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_position="none",
     )
