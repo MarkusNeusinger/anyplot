@@ -1,12 +1,14 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 75/100 | Updated: 2026-05-23
 """
 
+import json
 import os
 import sys
 import time
+import urllib.request
 from pathlib import Path
 
 
@@ -32,6 +34,80 @@ ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 BRAND = "#009E73"
+
+# --- Natural Earth 110m country outlines ---
+_NE_URL = (
+    "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/geojson/ne_110m_admin_0_countries.geojson"
+)
+_NE_CACHE = Path(__file__).parent / "countries_110m.json"
+if not _NE_CACHE.exists():
+    with urllib.request.urlopen(_NE_URL, timeout=30) as _r:
+        _NE_CACHE.write_bytes(_r.read())
+with _NE_CACHE.open() as _f:
+    _WORLD = json.load(_f)
+
+# Extract outer rings from every polygon / sub-polygon
+_rings = []
+for _feat in _WORLD["features"]:
+    _g = _feat["geometry"]
+    if _g["type"] == "Polygon":
+        _outer = [_g["coordinates"][0]]
+    else:  # MultiPolygon
+        _outer = [_poly[0] for _poly in _g["coordinates"]]
+    for _ring in _outer:
+        _rings.append((np.array([p[0] for p in _ring], dtype=float), np.array([p[1] for p in _ring], dtype=float)))
+
+
+def _moll_theta(lat_r):
+    """Mollweide auxiliary angle via Newton's method."""
+    th = np.asarray(lat_r, dtype=float).copy()
+    lr = np.asarray(lat_r, dtype=float)
+    for _ in range(12):
+        th += -(2 * th + np.sin(2 * th) - np.pi * np.sin(lr)) / (2 + 2 * np.cos(2 * th) + 1e-12)
+    return th
+
+
+def _country_patches_equirect(lat_clip=85.0):
+    xs, ys = [], []
+    for lons_d, lats_d in _rings:
+        xs.append(np.radians(lons_d).tolist())
+        ys.append(np.radians(np.clip(lats_d, -lat_clip, lat_clip)).tolist())
+    return xs, ys
+
+
+def _country_patches_mercator(lat_clip=82.0):
+    xs, ys = [], []
+    for lons_d, lats_d in _rings:
+        lr = np.clip(np.radians(lats_d), np.radians(-lat_clip), np.radians(lat_clip))
+        lr = np.clip(lr, -np.pi / 2 * 0.97, np.pi / 2 * 0.97)
+        xs.append(np.radians(lons_d).tolist())
+        ys.append(np.log(np.tan(np.pi / 4 + lr / 2)).tolist())
+    return xs, ys
+
+
+def _country_patches_sinusoidal(lat_clip=85.0):
+    xs, ys = [], []
+    for lons_d, lats_d in _rings:
+        lr = np.radians(np.clip(lats_d, -lat_clip, lat_clip))
+        xs.append((np.radians(lons_d) * np.cos(lr)).tolist())
+        ys.append(lr.tolist())
+    return xs, ys
+
+
+def _country_patches_mollweide(lat_clip=85.0):
+    xs, ys = [], []
+    for lons_d, lats_d in _rings:
+        lr = np.radians(np.clip(lats_d, -lat_clip, lat_clip))
+        th = _moll_theta(lr)
+        xs.append(((2 * np.sqrt(2) / np.pi) * np.radians(lons_d) * np.cos(th)).tolist())
+        ys.append((np.sqrt(2) * np.sin(th)).tolist())
+    return xs, ys
+
+
+c1_xs, c1_ys = _country_patches_equirect()
+c2_xs, c2_ys = _country_patches_mercator()
+c3_xs, c3_ys = _country_patches_sinusoidal()
+c4_xs, c4_ys = _country_patches_mollweide()
 
 # Graticule intervals and Tissot positions
 lats_deg = np.arange(-90, 91, 30)
@@ -89,6 +165,9 @@ p1.yaxis.visible = False
 p1.xgrid.visible = False
 p1.ygrid.visible = False
 
+p1.patches(
+    xs=c1_xs, ys=c1_ys, fill_color=INK_SOFT, fill_alpha=0.15, line_color=INK_SOFT, line_width=0.7, line_alpha=0.6
+)
 grat1 = p1.line(x=grat1_x, y=grat1_y, line_color=INK_SOFT, line_width=1.5, line_alpha=0.5)
 tissot1 = p1.line(x=tissot1_x, y=tissot1_y, line_color=BRAND, line_width=2.5, line_alpha=0.9)
 
@@ -98,7 +177,7 @@ p1.text(
     y=[np.radians(d) for _, d in [("60°N", 60), ("30°N", 30), ("0°", 0), ("30°S", -30), ("60°S", -60)]],
     text=["60°N", "30°N", "0°", "30°S", "60°S"],
     text_color=INK_SOFT,
-    text_font_size="16pt",
+    text_font_size="22pt",
     text_align="left",
     text_baseline="middle",
 )
@@ -107,7 +186,7 @@ p1.text(
     y=[np.radians(-84)] * 3,
     text=["90°W", "0°", "90°E"],
     text_color=INK_SOFT,
-    text_font_size="16pt",
+    text_font_size="22pt",
     text_align="center",
     text_baseline="top",
 )
@@ -118,7 +197,7 @@ legend1 = Legend(
         LegendItem(label="Tissot indicatrix", renderers=[tissot1]),
     ],
     location="bottom_right",
-    label_text_font_size="18pt",
+    label_text_font_size="24pt",
     label_text_color=INK_SOFT,
     background_fill_color=ELEVATED_BG,
     border_line_color=INK_SOFT,
@@ -177,6 +256,9 @@ p2.yaxis.visible = False
 p2.xgrid.visible = False
 p2.ygrid.visible = False
 
+p2.patches(
+    xs=c2_xs, ys=c2_ys, fill_color=INK_SOFT, fill_alpha=0.15, line_color=INK_SOFT, line_width=0.7, line_alpha=0.6
+)
 grat2 = p2.line(x=grat2_x, y=grat2_y, line_color=INK_SOFT, line_width=1.5, line_alpha=0.5)
 tissot2 = p2.line(x=tissot2_x, y=tissot2_y, line_color=BRAND, line_width=2.5, line_alpha=0.9)
 
@@ -189,7 +271,7 @@ p2.text(
     y=merc_y_labels,
     text=["60°N", "30°N", "0°", "30°S", "60°S"],
     text_color=INK_SOFT,
-    text_font_size="16pt",
+    text_font_size="22pt",
     text_align="left",
     text_baseline="middle",
 )
@@ -199,7 +281,7 @@ p2.text(
     y=[merc_y_bottom] * 3,
     text=["90°W", "0°", "90°E"],
     text_color=INK_SOFT,
-    text_font_size="16pt",
+    text_font_size="22pt",
     text_align="center",
     text_baseline="top",
 )
@@ -210,7 +292,7 @@ legend2 = Legend(
         LegendItem(label="Tissot indicatrix (grows poleward)", renderers=[tissot2]),
     ],
     location="bottom_right",
-    label_text_font_size="18pt",
+    label_text_font_size="24pt",
     label_text_color=INK_SOFT,
     background_fill_color=ELEVATED_BG,
     border_line_color=INK_SOFT,
@@ -268,9 +350,13 @@ p3.yaxis.visible = False
 p3.xgrid.visible = False
 p3.ygrid.visible = False
 
+p3.patches(
+    xs=c3_xs, ys=c3_ys, fill_color=INK_SOFT, fill_alpha=0.15, line_color=INK_SOFT, line_width=0.7, line_alpha=0.6
+)
 grat3 = p3.line(x=grat3_x, y=grat3_y, line_color=INK_SOFT, line_width=1.5, line_alpha=0.5)
 tissot3 = p3.line(x=tissot3_x, y=tissot3_y, line_color=BRAND, line_width=2.5, line_alpha=0.9)
 
+# Lat labels (left edge of each parallel)
 sin_edge_x = [
     np.radians(-180) * np.cos(np.radians(d))
     for _, d in [("60°N", 60), ("30°N", 30), ("0°", 0), ("30°S", -30), ("60°S", -60)]
@@ -281,9 +367,19 @@ p3.text(
     y=sin_edge_y,
     text=["60°N", "30°N", "0°", "30°S", "60°S"],
     text_color=INK_SOFT,
-    text_font_size="16pt",
+    text_font_size="22pt",
     text_align="right",
     text_baseline="middle",
+)
+# Lon labels along the equator (widest part of sinusoidal projection)
+p3.text(
+    x=[np.radians(d) for _, d in [("90°W", -90), ("0°", 0), ("90°E", 90)]],
+    y=[np.radians(-84)] * 3,
+    text=["90°W", "0°", "90°E"],
+    text_color=INK_SOFT,
+    text_font_size="22pt",
+    text_align="center",
+    text_baseline="top",
 )
 
 legend3 = Legend(
@@ -292,7 +388,7 @@ legend3 = Legend(
         LegendItem(label="Tissot indicatrix (equal-area)", renderers=[tissot3]),
     ],
     location="bottom_right",
-    label_text_font_size="18pt",
+    label_text_font_size="24pt",
     label_text_color=INK_SOFT,
     background_fill_color=ELEVATED_BG,
     border_line_color=INK_SOFT,
@@ -359,9 +455,13 @@ p4.yaxis.visible = False
 p4.xgrid.visible = False
 p4.ygrid.visible = False
 
+p4.patches(
+    xs=c4_xs, ys=c4_ys, fill_color=INK_SOFT, fill_alpha=0.15, line_color=INK_SOFT, line_width=0.7, line_alpha=0.6
+)
 grat4 = p4.line(x=grat4_x, y=grat4_y, line_color=INK_SOFT, line_width=1.5, line_alpha=0.5)
 tissot4 = p4.line(x=tissot4_x, y=tissot4_y, line_color=BRAND, line_width=2.5, line_alpha=0.9)
 
+# Lat labels at the left edge of the Mollweide ellipse
 moll_edge_x, moll_edge_y = [], []
 for lat_val in [60, 30, 0, -30, -60]:
     lr = np.array([np.radians(lat_val)])
@@ -376,9 +476,20 @@ p4.text(
     y=moll_edge_y,
     text=["60°N", "30°N", "0°", "30°S", "60°S"],
     text_color=INK_SOFT,
-    text_font_size="16pt",
+    text_font_size="22pt",
     text_align="right",
     text_baseline="middle",
+)
+# Lon labels along the equatorial axis (widest row of the Mollweide ellipse)
+_moll_lon_x = [(2 * np.sqrt(2) / np.pi) * np.radians(d) for d in [-90, 0, 90]]
+p4.text(
+    x=_moll_lon_x,
+    y=[-1.47, -1.47, -1.47],
+    text=["90°W", "0°", "90°E"],
+    text_color=INK_SOFT,
+    text_font_size="22pt",
+    text_align="center",
+    text_baseline="top",
 )
 
 legend4 = Legend(
@@ -387,7 +498,7 @@ legend4 = Legend(
         LegendItem(label="Tissot indicatrix (equal-area)", renderers=[tissot4]),
     ],
     location="bottom_right",
-    label_text_font_size="18pt",
+    label_text_font_size="24pt",
     label_text_color=INK_SOFT,
     background_fill_color=ELEVATED_BG,
     border_line_color=INK_SOFT,
@@ -422,7 +533,6 @@ output_file(f"plot-{THEME}.html")
 save(layout)
 
 W, H = 3200, 1800
-# Use a taller window to compensate for headless Chrome chrome overhead, then crop.
 WIN_H = H + 200
 opts = Options()
 for arg in (
