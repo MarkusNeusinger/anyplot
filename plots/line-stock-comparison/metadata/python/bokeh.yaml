@@ -2,7 +2,7 @@ library: bokeh
 language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:22:33Z'
-updated: '2026-05-23T10:01:44Z'
+updated: '2026-05-23T20:12:42Z'
 generated_by: claude-sonnet
 workflow_run: 26329571253
 issue: 3748
@@ -12,57 +12,45 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stoc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/bokeh/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/bokeh/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/bokeh/plot-dark.html
-quality_score: 83
+quality_score: 92
 review:
   strengths:
-  - Perfect visual quality in both light and dark renders — all font sizes explicitly
-    set (50pt title, 42pt axis labels, 34pt ticks), fully readable in both themes
-    with correct theme-adaptive chrome
-  - 'Correct anyplot palette in canonical order (AAPL=#009E73, GOOGL=#9418DB, MSFT=#B71D27,
-    SPY=#16B8F3) with correct theme backgrounds (#FAF8F1 light, #1A1A17 dark)'
-  - Reference line at 100 is an effective storytelling element — immediately shows
-    which stocks are above/below the starting benchmark
-  - Y-only grid (xgrid disabled) is the right design call for a line chart, subtle
-    at 10% alpha
-  - 'Excellent code quality: reproducible with seed 42, clean KISS structure, correct
-    dual output (HTML + PNG), idiomatic Selenium headless Chrome pattern'
-  - 'Distinctive bokeh features well-used: HoverTool with datetime formatter, Legend
-    click_policy=''hide'' for series toggling, Span annotation, interactive HTML +
-    static PNG dual output'
-  - Correct GBM simulation with realistic stock tickers (AAPL, GOOGL, MSFT, SPY) and
-    plausible daily drift/volatility parameters
+  - 'Perfect spec compliance: all required features present — rebasing to 100, horizontal
+    reference line at 100, distinct anyplot palette colors, legend, and sensible y-axis
+    label'
+  - 'Sophisticated visual hierarchy: performance-based line widths (7px for best/worst
+    performers, 4px for middle) plus colored end-of-series labels with final values
+    guide the reader without annotations'
+  - 'Excellent data quality: real stock tickers (AAPL, GOOGL, MSFT, SPY), realistic
+    GBM parameters per-symbol (individual seeds), believable 1-year daily returns'
+  - 'Full theme adaptation: all chrome tokens (background, title, axis labels, tick
+    labels, grid, legend fill/border) correctly mapped for both light and dark renders'
+  - 'Good use of Bokeh-specific features: Band for performance envelope, Span for
+    reference line, HoverTool with datetime formatting, legend click_policy=''hide'',
+    Range1d for extended x-axis, CDP screenshot for precise canvas capture'
   weaknesses:
-  - 'Prices are NOT explicitly rebased to 100 — spec requires ''rebased = price /
-    first_price * 100'' but the code uses ''100 * np.exp(np.cumsum(returns))'' which
-    starts each series at ~100±2% (not exactly 100). Fix: after generating prices,
-    divide by prices[0] and multiply by 100.'
-  - All 4 spines remain visible (p.outline_line_color = INK_SOFT creates a complete
-    box). Style guide says to remove top and right spines — in bokeh set p.outline_line_color
-    = None to remove the box, or set a specific frame/spine approach to achieve an
-    L-shaped frame effect.
-  - Design lacks visual hierarchy — no series is visually emphasized. Consider making
-    the best-performing and worst-performing lines stand out via line_width differentiation
-    (e.g., 7pt for top performer, 4pt for others) or using an annotation label at
-    the end of each line to show final value, eliminating the need for the legend
-    box.
-  - SPY's synthetic trajectory (~65% annual return with seed 42) is unrealistically
-    high for an index ETF — consider adjusting drift/volatility parameters or normalizing
-    the simulation to produce more realistic relative performance spreads.
+  - Legend placed inside plot area (location='top_left') creates a background-fill
+    box that partially covers the early GOOGL line data around Jan–Mar 2024 when the
+    purple line climbs to ~120. Consider moving the legend outside the plot area (p.add_layout(legend,
+    'right') or 'above') to prevent data occlusion.
+  - 'DE-02 could be further refined: the legend border adds subtle chrome noise. Removing
+    border_line_color from the legend or making it fully transparent would push visual
+    refinement toward 6/6.'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
-      Chrome: Title "line-stock-comparison · python · bokeh · anyplot.ai" in dark ink, spans ~65% of plot width (expected for the long mandated title). X-axis label "Date" and Y-axis label "Rebased Price (Start = 100)" both in dark ink at 42pt — clearly readable. Tick labels (Jan 2024…Jan 2025 on X; 80–160 on Y) in secondary ink (INK_SOFT) at 34pt — all readable. Legend in top-left with elevated background (#FFFDF6) and border, showing AAPL/GOOGL/MSFT/SPY with matching color swatches. All text readable against the light background.
-      Data: 4 lines — AAPL (#009E73 green), GOOGL (#9418DB purple), MSFT (#B71D27 red), SPY (#16B8F3 cyan) — at line_width=5, alpha=0.9. Dashed horizontal reference line at y=100 in INK_SOFT. Subtle Y-only grid at 10% alpha. SPY (cyan) rises dramatically to ~160-170 by Jan 2025; GOOGL (purple) rises to ~130-140; AAPL (green) and MSFT (red) both decline below 100 for much of the year before recovering partially. All lines start near (but not exactly at) 100 in Jan 2024.
-      Legibility verdict: PASS — all text elements clearly readable against the warm off-white background.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Bold title "line-stock-comparison · python · bokeh · anyplot.ai" at top in dark ink, clearly readable. Y-axis label "Rebased Price (Start = 100)" rotated on left side, readable. X-axis label "Date" at bottom, readable. Tick labels on both axes in INK_SOFT (#4A4A44), readable. Y-axis grid lines visible at 10% alpha — subtle, not competing with data.
+      Data: Four stock lines clearly visible — AAPL (#009E73 green), GOOGL (#9418DB purple), MSFT (#B71D27 red), SPY (#16B8F3 cyan/sky blue). GOOGL rises dramatically to ~144 by year end, clearly the best performer. MSFT underperforms, ending at ~89. Reference dashed line at 100 is visible. Subtle gray performance band at 85–115% is barely visible but adds texture. End-of-series labels (e.g. "GOOGL 144") are colored to match each line. Legend in top-left with stock symbols. Performance-based line widths: GOOGL and MSFT (best/worst) drawn thicker.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title, axis labels, tick labels all rendered in light text (INK / INK_SOFT tokens) — clearly visible against the dark background. No dark-on-dark text failure observed. Legend background switches to elevated dark (#242420) with INK_SOFT border. All chrome elements correctly flip between themes.
-      Data: All 4 data colors identical to the light render (AAPL green, GOOGL purple, MSFT red, SPY cyan) — only chrome (background, text, grid) flips. Dashed reference line at 100 remains visible. Grid lines slightly lighter appearance on dark background but still subtle.
-      Legibility verdict: PASS — all text readable against the near-black background; no dark-on-dark failures.
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title and axis labels rendered in light ink (#F0EFE8), clearly visible against dark background. Tick labels in secondary ink (#B8B7B0), readable. Subtle grid lines visible at 10% alpha. Legend box has elevated dark fill (#242420) with soft border.
+      Data: All four data colors are identical to the light render — AAPL green (#009E73), GOOGL purple (#9418DB), MSFT red (#B71D27), SPY cyan (#16B8F3). No hue shift between themes. End-of-series labels match line colors and are readable. Brand green #009E73 remains clearly visible on the near-black surface.
+      Legibility verdict: PASS — no dark-on-dark failures, all text readable against dark background.
   criteria_checklist:
     visual_quality:
-      score: 30
+      score: 29
       max: 30
       items:
       - id: VQ-01
@@ -71,81 +59,87 @@ review:
         max: 8
         passed: true
         comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
-          ticks/legend). Well-proportioned in both themes. Title spans ~65% of width
-          — expected for mandated title length.
+          ticks, 28pt end-labels, 34pt legend). All text readable in both themes.
+          Title fills ~60% of width as expected for the mandated format.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text-on-text or text-on-data overlap. Legend positioned top-left
-          clear of the data area.
+        comment: 'Smart label y-assignment prevents end-label collisions. Minor: legend
+          inside plot area (top_left) places its fill box over the early GOOGL line
+          data around Jan-Mar 2024.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at line_width=5 clearly visible in both renders. Alpha=0.9
-          appropriate for 252-day time series.
+        comment: All 4 stock lines clearly visible. Performance-based line widths
+          (7px best/worst, 4px others) are density-appropriate. End-of-series labels
+          and reference line all readable.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is colorblind-safe. Four colors well-differentiated
-          by hue and luminance.
+        comment: Anyplot palette is CVD-safe. Green/purple/red/cyan are distinguishable
+          without relying on hue alone — sufficient luminance and saturation differences.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas (gate passed). Generous explicit min_border_* margins.
-          Plot fills canvas well.
+        comment: Canvas gate passed (no gate file found). Plot fills canvas appropriately.
+          Extended x-axis range for end-of-series labels is well-balanced. min_border
+          values prevent clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'X: ''Date'', Y: ''Rebased Price (Start = 100)'' — descriptive with
-          units. Title in correct format.'
+        comment: Y-axis 'Rebased Price (Start = 100)' is descriptive with context.
+          X-axis 'Date' is appropriate. Title correctly formatted as spec-id · python
+          · bokeh · anyplot.ai.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'AAPL=#009E73 (first series) ✓. Canonical palette order. Backgrounds
-          #FAF8F1/#1A1A17 ✓. Theme-adaptive chrome in both renders ✓.'
+        comment: 'First series AAPL=#009E73 (brand green). Next: GOOGL=#9418DB, MSFT=#B71D27,
+          SPY=#16B8F3 — canonical palette order. Light bg=#FAF8F1, dark bg=#1A1A17.
+          All chrome tokens theme-adaptive in both renders.'
     design_excellence:
-      score: 10
+      score: 14
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 6
         max: 8
-        passed: false
-        comment: 'Well-configured library default: correct anyplot palette, custom
-          legend styling, reference line. Not exceptional — no bold typography hierarchy
-          or intentional emphasis on standout performers.'
+        passed: true
+        comment: 'Strong design above library defaults: intentional visual hierarchy
+          via performance-based line widths, colored end-of-series labels with final
+          values, subtle performance band. Clean anyplot palette. Clearly thoughtful,
+          not generic.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: 'Y-only grid (good choice), subtle 10% alpha grid, custom legend
-          background/border. BUT: all 4 spines visible (p.outline_line_color = INK_SOFT
-          creates full box). Style guide requires removing top/right spines.'
+        passed: true
+        comment: 'Good refinement: y-grid only (no x-grid), no outline box (outline_line_color=None),
+          subtle 4% alpha performance band, clean L-shaped frame. Legend border adds
+          minor chrome. Not maximally polished but clearly above defaults.'
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
-        passed: false
-        comment: Reference line at 100 provides clear visual context for performance
-          comparison. Color-coding aids tracking. But no visual hierarchy — no series
-          is emphasized, no end-of-series labels, viewer must read legend to identify
-          each line.
+        passed: true
+        comment: 'Good storytelling: performance-based line widths emphasize best/worst
+          performers, end-of-series labels show exact final values, reference line
+          at 100 contextualizes relative performance. Viewer immediately identifies
+          GOOGL as winner, MSFT as underperformer.'
     spec_compliance:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -153,57 +147,59 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-line time-series chart for stock comparison.
+        comment: Correct multi-line chart comparing stock performance. 4 series (AAPL,
+          GOOGL, MSFT, SPY) within spec range of 2-10 series.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: 'Distinct colors ✓, legend ✓, reference line at 100 ✓, grid ✓. MISSING:
-          explicit rebasing (price / first_price * 100). Code uses 100*exp(cumsum(returns))
-          — series start ~100±2%, not exactly 100.'
+        passed: true
+        comment: 'All required features present: normalization to 100 at start (prices/prices[0]*100),
+          distinct colors, legend, y-axis showing rebased values, horizontal reference
+          line at 100 (Span). Grid lines for readability. Optional event highlights
+          not included but marked optional in spec.'
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Date on X ✓, all series visible ✓. Y-axis shows approximate rebased
-          values but not explicitly normalized to 100.
+        passed: true
+        comment: 'X-axis: dates (datetime). Y-axis: rebased price starting at 100.
+          All 4 stocks visible across full date range.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'line-stock-comparison · python · bokeh · anyplot.ai' is exactly
-          the required format. Legend shows AAPL, GOOGL, MSFT, SPY correctly.
+        comment: 'Title: ''line-stock-comparison · python · bokeh · anyplot.ai'' —
+          exact required format. Legend labels: AAPL, GOOGL, MSFT, SPY — match data
+          correctly.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 4 stocks with different drift/volatility profiles covering tech (AAPL,
-          GOOGL, MSFT) and a market index (SPY). Shows both outperformers and underperformers
-          relative to 100 baseline.
+        comment: 'Shows full feature set: multiple series with varied trajectories
+          (one dramatic outperformer +44%, one underperformer -11%, two moderate performers),
+          SPY as benchmark index, realistic divergence of paths over time.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real stock tickers, 2024 full trading year, GBM is the standard financial
-          model. Content is neutral.
+        comment: Real, recognizable stock tickers (AAPL, GOOGL, MSFT, SPY). 2024 calendar
+          year. Neutral financial data with no controversial content.
       - id: DQ-03
         name: Appropriate Scale
-        score: 3
+        score: 4
         max: 4
-        passed: false
-        comment: Y-axis range 80-170 is plausible. However, SPY (seed 42 realization)
-          shows ~65% annual return — far above realistic S&P 500 performance (~10-15%/year).
-          GBM parameters (drift=0.0004, vol=0.010) are reasonable but the specific
-          seed produces an unrealistic outcome.
+        passed: true
+        comment: Rebased to 100 at start. GBM parameters (drift 0.0002-0.0006, volatility
+          0.009-0.020) are realistic for US large-cap stocks. Final values (89-144)
+          represent plausible 1-year returns.
     code_quality:
       score: 10
       max: 10
@@ -213,66 +209,78 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → figure → glyphs → tools → save. No classes
-          or helper functions.'
+        comment: 'Clean linear flow: Imports -> Theme tokens -> Data generation ->
+          Figure setup -> Font sizes -> Band -> Span -> Labels -> Lines -> HoverTool
+          -> Legend -> Chrome -> Save HTML -> Screenshot. No unnecessary functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set before any random calls.
+        comment: Each stock uses np.random.RandomState with a dedicated seed (42-45).
+          Deterministic output across runs.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used. sys.path manipulation is necessary to avoid circular
-          import with bokeh.py filename.
+        comment: 'All imports are used: base64 (CDP decode), os (ANYPLOT_THEME env),
+          sys (path manipulation), time (sleep), Path (resolve), numpy, pandas, all
+          bokeh models, selenium.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean dict-based stock params, loop for series, no fake UI, appropriate
-          complexity.
+        comment: Clean, Pythonic. Smart label y-position assignment prevents overlaps
+          elegantly. CDP screenshot approach ensures exact canvas dimensions. sys.path
+          manipulation explained by comment. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.html and plot-{THEME}.png. Modern bokeh API throughout.
+        comment: Saves plot-{THEME}.html (interactive) and plot-{THEME}.png (static).
+          No deprecated APIs. Current bokeh 3.x patterns used throughout.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expert use of bokeh''s high-level API: figure(), ColumnDataSource
+          for Band, add_layout() for all model additions, Range1d for custom axis
+          range, output_file()+save() for HTML. Idiomatic throughout.'
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses figure(), Span, HoverTool, Legend with items list, output_file+save,
-          Selenium headless Chrome — all idiomatic bokeh patterns. Well above generic.
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: HoverTool with datetime formatter (vline mode), Legend click_policy='hide'
-          for interactive series toggling in HTML, Span for reference line. These
-          are genuinely distinctive bokeh capabilities.
-  verdict: REJECTED
+        comment: 'Uses multiple Bokeh-specific features: Band model for confidence
+          region, Span for reference line, Label for end-of-series callouts, HoverTool
+          with datetime formatter in vline mode, legend click_policy=''hide'' for
+          interactive toggling, Range1d for extended x-axis. Clearly leverages Bokeh''s
+          distinctive model system.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   techniques:
   - hover-tooltips
   - html-export
+  - annotations
   - custom-legend
   patterns:
   - data-generation
   - iteration-over-groups
+  - columndatasource
   dataprep:
   - time-series
+  - normalization
   - cumulative-sum
   styling:
   - alpha-blending
