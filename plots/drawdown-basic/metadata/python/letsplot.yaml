@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: drawdown-basic
 created: '2026-01-20T12:01:12Z'
-updated: '2026-05-23T11:07:20Z'
+updated: '2026-05-23T11:16:55Z'
 generated_by: claude-sonnet
 workflow_run: 26330795390
 issue: 3752
@@ -15,51 +15,52 @@ preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-
 quality_score: 84
 review:
   strengths:
-  - 'Semantic color exception correctly applied: red (#B71D27) for drawdown losses
-    and green (#009E73) for recovery points — matches finance conventions'
-  - 'All theme tokens properly wired: background, ink, grid, legend box all flip correctly
-    between light (#FAF8F1) and dark (#1A1A17) themes'
-  - Multi-layer composition (geom_area + geom_line + geom_hline + geom_point) creates
-    rich, readable visualization of drawdown depth and recovery
-  - 'All required spec features present: drawdown calculation, filled area, zero baseline,
-    max DD marker, recovery point markers, and key stat caption'
-  - lets_plot-distinctive layer_tooltips() with formatted lines adds genuine interactivity;
-    shape=21 hollow circles with fill=PAGE_BG integrate with theme
-  - 'Correct canvas: ggsize(800, 450) + scale=4 = 3200×1800 px landscape — gate passed'
-  - Reproducible with np.random.seed(42), realistic return parameters, clean KISS
-    structure
+  - Correct drawdown chart implementation with filled area, line, dashed zero-baseline,
+    distinct max-drawdown marker, and recovery-point markers
+  - All theme tokens (PAGE_BG, INK, INK_SOFT, INK_MUTED, GRID_COLOR) properly wired
+    — both light and dark renders are fully readable with no dark-on-dark or light-on-light
+    failures
+  - 'Valid semantic color exception: loss/drawdown → #B71D27 (palette pos 3), recovery
+    → #009E73 (palette pos 1) — matches finance convention documented in style guide'
+  - Letsplot-distinctive layer_tooltips() used for interactive HTML output alongside
+    PNG; both plot-light.html and plot-dark.html saved
+  - Semi-transparent fill (alpha=0.30) prevents the large filled area from dominating;
+    x-axis grid suppressed (panel_grid_major_x=element_blank()), keeping horizontal
+    grid only — good time-series practice
+  - 'Clean KISS code: linear structure, np.random.seed(42) for reproducibility, all
+    imports used'
   weaknesses:
-  - 'SC-03: X-axis uses day_num (integer 0-499) instead of the ''date'' column — spec
-    explicitly lists ''date (datetime)'' as the x variable; switch aes(x=''day_num'')
-    to aes(x=''date'') and format the date axis for readability'
-  - 'DE-02: Both X and Y major grid lines shown; style guide recommends Y-axis-only
-    grid for time-series line charts — remove panel_grid_major_x via element_blank()
-    to reduce visual noise'
-  - 'DE-02: Legend has an explicit box border (legend_background color=INK_SOFT) which
-    adds visual weight; consider removing the border color or making it very subtle
-    (e.g., alpha 20%)'
-  - 'VQ-04: Red (#B71D27) and green (#009E73) are the primary CVD pair — while semantic
-    exception is justified, differentiate by shape: use shape=16 (filled circle) for
-    one category vs shape=21 (hollow) for the other to encode category independently
-    of hue'
-  - 'DE-01: Recovery point markers are dense and cluster heavily near zero (10+ circles
-    stacked in some areas around days 270-340) — reduce marker size to size=5 and
-    add alpha=0.8 so individual markers remain distinguishable when overlapping'
+  - 'SC-02 PARTIAL: Spec requires displaying max drawdown percentage, max drawdown
+    duration, AND recovery time — only the percentage and date are shown in the caption.
+    Add duration (e.g. ''~60 days'') and recovery time to the caption or as a text
+    annotation'
+  - 'VQ-04 MINOR: Red (#B71D27) vs green (#009E73) are the two sole legend colors;
+    shape differentiation (filled circle vs open circle) provides some CVD mitigation,
+    but the combination still fails deuteranopia without further differentiation —
+    consider adding a label or using line-vs-point instead of two point shapes'
+  - 'VQ-02 MINOR: Recovery point markers all sit at y=0 by definition and cluster
+    visually at the zero baseline — crowding is inherent to the chart type but could
+    be reduced by slightly jittering vertically (e.g., y=0.3) or reducing marker size
+    to 3.5'
+  - 'DE-01 MODERATE: Design is well-configured but not yet publication-polished —
+    the legend frame (elevated background) is visible but the overall look is a good
+    default, not a distinctive visual style. Consider a cleaner legend or a subtle
+    annotation callout for the max drawdown'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white, visually matches #FAF8F1 — correct anyplot light surface.
-      Chrome: Title "drawdown-basic · python · letsplot · anyplot.ai" renders in dark ink, readable (~65% plot width). Y-axis label "Drawdown (%)" and X-axis label "Trading Days" both in dark text, similar sizes, well-proportioned. Tick labels (dark text) clearly readable on both axes. Caption "Max Drawdown: -42.9% on Day 402" bottom-right, tertiary ink, readable. Legend at top with box border shows hollow red circle (Max Drawdown) and hollow teal circle (Recovery Point) — both labeled clearly.
-      Data: Semi-transparent red filled area (#B71D27 at alpha=0.30) below zero baseline shows four distinct drawdown periods. Red line (size=1.2) traces the drawdown curve. Teal/green hollow circles (#009E73) mark recovery points near y=0; some clusters of 5-10 overlapping circles visible around days 100-120 and 270-340. Single red hollow circle at approximately day 402 at -42.9% marks max drawdown. Zero baseline shown as dashed INK_SOFT horizontal line. Subtle crosshatch grid (both X and Y) visible but not dominant.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light failures.
+      Background: Warm off-white (~#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Title "drawdown-basic · python · letsplot · anyplot.ai" in dark (#1A1A17), ~55% of plot width, clearly readable. Y-axis label "Drawdown (%)" and X-axis label "Date" in dark ink, size 12. Tick labels (Feb/May/Aug/Nov dates on x; -5 to -45 on y) in INK_SOFT (#4A4A44), size 10. Caption "Max Drawdown: -42.9% on 2023-07-19" bottom-right in INK_MUTED. Legend top-center shows "Max Drawdown" (red filled circle) and "Recovery Point" (green open circle) on ELEVATED_BG panel.
+      Data: Large semi-transparent red (#B71D27, alpha=0.30) filled area below zero across ~3 major drawdown periods reaching -40% peak depth. Solid red line traces the drawdown magnitude. Dashed horizontal zero-line in INK_SOFT. Red solid point marks max drawdown (~-42.9%). Green open circles (#009E73) at y=0 mark recovery points — clusters of them along the top near the zero line.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white surface.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black, matches #1A1A17 — correct anyplot dark surface.
-      Chrome: Title in light text, clearly readable on dark background. Axis labels and tick labels in lighter tone (INK_SOFT #B8B7B0), readable. Caption visible at bottom right in muted light text. Legend box has dark elevated background (#242420), labels in lighter text. No dark-on-dark failures observed.
-      Data: Data colors identical to light render — red filled area and red line maintain #B71D27; teal recovery markers maintain #009E73; data identity preserved across themes. Grid lines subtle on dark surface. Max drawdown marker clearly visible at bottom.
-      Legibility verdict: PASS — all text readable against dark background; brand green #009E73 visible as recovery markers; no dark-on-dark failures detected.
+      Background: Warm near-black (~#1A1A17) — correct dark surface, not pure black.
+      Chrome: Title in light (#F0EFE8), clearly readable. Axis labels and tick labels in B8B7B0 range (INK_SOFT dark variant) — visible against near-black. Caption in lighter muted tone, readable at bottom right. Legend panel shows ELEVATED_BG (#242420) background with light text labels. No dark-on-dark failures detected.
+      Data: Same red (#B71D27) filled area and line — identical color to light render. Same green (#009E73) open circles for recovery points. Data colors unchanged between themes (only chrome flips).
+      Legibility verdict: PASS — all text clearly readable against the warm near-black surface. No dark-on-dark issues found.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -67,52 +68,57 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=16, axis=12, ticks=10, caption=10,
-          legend=10); readable in both themes; proportions good
+        comment: All font sizes explicitly set (title=16, axis=12, tick=10, caption=10).
+          Well-proportioned in both renders. Deduct 1 for title appearing at ~55%
+          width (slightly conservative for the mandated 67-char string but not a violation).
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: No text overlap; recovery point markers cluster near zero line in
-          multiple areas — visible crowding but main content readable
+        comment: Minor crowding of recovery point markers clustered at y=0 baseline
+          — inherent to drawdown chart type where many return-to-zero events share
+          the same y coordinate. Text labels and legend are clear.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: 'All elements clearly visible: area fill, drawdown line, zero baseline,
-          markers all well-sized for 500 data points'
+        comment: Filled area and line clearly visible. Max drawdown red solid point
+          blends slightly with the dense red line at the bottom. Recovery open circles
+          are clearly distinct. Marker size=5 appropriate for 500-point dataset.
       - id: VQ-04
         name: Color Accessibility
         score: 1
         max: 2
         passed: true
-        comment: Red-green pair is most common CVD combination; semantic exception
-          is justified (loss/recovery) but no shape differentiation to compensate
+        comment: Red/green legend pair is a deuteranopia concern; shape differentiation
+          (filled vs open circle, shape 16 vs 21) partially mitigates but does not
+          fully resolve. Acceptable.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas, gate passed; good proportions, no clipping,
-          legend well-placed at top
+        comment: Canvas gate passed (3200x1800). Plot fills canvas well. Legend at
+          top, good margins, no overflow or clipping.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correct format; 'Drawdown (%)' with units; 'Trading Days' descriptive;
-          stats in caption
+        comment: 'Y-axis: ''Drawdown (%)'' with units. X-axis: ''Date''. Title format
+          correct. Caption adds key statistic.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception correctly applied (green=recovery, red=loss);
-          backgrounds #FAF8F1/#1A1A17; chrome theme-adaptive in both renders'
+        comment: 'Valid semantic exception: loss→#B71D27 (palette pos 3), recovery→#009E73
+          (palette pos 1). Background #FAF8F1 light / #1A1A17 dark. Chrome fully theme-adaptive
+          in both renders.'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -120,24 +126,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above default: semantic color, multi-layer composition, custom theme
-          tokens, hollow markers with theme-fill. Not yet strong-design tier.'
+        comment: 'Above defaults: semantic palette, semi-transparent fill, suppressed
+          x-grid, themed backgrounds. Not yet publication-polished — legend frame
+          visible, no callout refinement.'
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: 'theme_minimal removes top/right spines; custom grid alpha; no minor
-          grid. Deductions: both X+Y grid shown (Y-only better for line charts); legend
-          box border adds visual weight'
+        comment: 'Good: x-grid suppressed (time-series best practice), horizontal
+          grid at very low opacity (#4A4A4433), axis_line set, legend positioned at
+          top. Some details polished but not full refinement.'
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear hierarchy: filled area emphasizes depth, max DD marker serves
-          as focal point, caption provides key stat. Caption restates info already
-          visible in chart.'
+        comment: 'Visual hierarchy exists: filled area shows drawdown periods, line
+          shows magnitude, markers highlight key events, caption conveys max drawdown
+          stat. Good story but missing duration/recovery-time stats weakens it.'
     spec_compliance:
       score: 14
       max: 15
@@ -147,29 +154,30 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct drawdown chart: percentage decline from peak, filled area
-          below zero'
+        comment: 'Correct drawdown chart: filled area, line, zero baseline, markers
+          — all present.'
       - id: SC-02
         name: Required Features
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 'All features: drawdown calculation, semi-transparent fill, max DD
-          marker, recovery points, key stats, zero baseline'
+        comment: 'Running-max drawdown calc ✓, filled area ✓, max drawdown marker
+          ✓, recovery points ✓, zero reference line ✓. Missing: max drawdown duration
+          and recovery time in statistics (spec says ''display key statistics: max
+          drawdown %, max drawdown duration, and recovery time'').'
       - id: SC-03
         name: Data Mapping
-        score: 2
+        score: 3
         max: 3
         passed: true
-        comment: Y-axis correct (drawdown %); X-axis uses day_num integer instead
-          of the spec-specified 'date' datetime column
+        comment: X=date (datetime), Y=drawdown (%) — correct mapping, all data visible.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''drawdown-basic · python · letsplot · anyplot.ai'' correct;
-          legend labels ''Max Drawdown''/''Recovery Point'' match markers'
+        comment: 'Title: ''drawdown-basic · python · letsplot · anyplot.ai'' — exact
+          format. Legend: ''Max Drawdown'' and ''Recovery Point'' — correct labels.'
     data_quality:
       score: 14
       max: 15
@@ -179,22 +187,24 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows multiple drawdown periods, recovery, max drawdown highlight.
-          Missing optional underlying price overlay.
+        comment: 'Multiple drawdown periods of varying depth and duration, multiple
+          recovery events, engineered volatility regimes create realistic variation.
+          Slight deduct: secondary price series not shown (optional per spec but would
+          improve coverage).'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Simulated stock/portfolio returns with realistic parameters; neutral
-          business context; 500 business days ≈ 2 years
+        comment: Financial investment/portfolio drawdown — neutral, comprehensible,
+          real-world scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: -42.9% max drawdown realistic for volatile portfolio; 1.2% daily
-          std is high but plausible for stress scenario
+        comment: Max drawdown ~-42.9% over 2 years is realistic for a volatile asset.
+          Multiple distinct drawdown regimes are plausible.
     code_quality:
       score: 10
       max: 10
@@ -204,31 +214,32 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential: tokens → data → plot → save. No functions or classes.'
+        comment: 'Linear: imports → tokens → data → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported names used
+        comment: All imported symbols are used in the plot.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, no fake UI elements
+        comment: Clean, Pythonic code. Appropriate complexity for the visualization.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-light/dark.png and .html correctly
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html. Correct output
+          format.
     library_mastery:
       score: 7
       max: 10
@@ -238,16 +249,18 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'ggplot grammar used correctly: geom layers, scale_color_manual,
-          labs, theme_minimal+theme, ggsize; layer_tooltips used properly'
+        comment: 'Strong idiomatic grammar-of-graphics usage: aes(), layered geoms,
+          scale_color_manual, scale_shape_manual, theme customization. Good ggplot-style
+          composition.'
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with .format() and .line() (lets_plot-specific);
-          shape=21 with fill/stroke; HTML export — genuine lets_plot strengths
-  verdict: REJECTED
+        comment: layer_tooltips() with format/line chaining is letsplot-specific.
+          HTML export alongside PNG is distinctive. scale_shape_manual used well.
+          Not exceptional — could use letsplot-specific faceting or annotation features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -258,5 +271,7 @@ impl_tags:
   - data-generation
   dataprep:
   - time-series
+  - cumulative-sum
   styling:
   - alpha-blending
+  - edge-highlighting
