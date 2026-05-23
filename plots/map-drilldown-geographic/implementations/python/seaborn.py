@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
-Library: seaborn | Python 3.13
-Quality: pending | Updated: 2026-05-23
+Library: seaborn 0.13.2 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-23
 """
 
 import os
