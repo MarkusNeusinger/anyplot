@@ -2,7 +2,7 @@ library: seaborn
 language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:56:28Z'
-updated: '2026-05-23T10:51:12Z'
+updated: '2026-05-23T11:06:23Z'
 generated_by: claude-sonnet
 workflow_run: 26330530798
 issue: 3752
@@ -12,115 +12,100 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/seaborn/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 84
+quality_score: 86
 review:
   strengths:
-  - Correct drawdown chart type with filled area, zero baseline, max-DD marker, and
-    recovery markers covering all core spec requirements
-  - 'Semantic palette assignment is well-chosen: loss=red (#B71D27), recovery=green
-    (#009E73), max-DD emphasis=purple (#9418DB) — all from the anyplot palette and
-    matching universal financial conventions'
-  - 'Theme-adaptive chrome applied correctly in both renders: warm off-white (#FAF8F1)
-    light background, near-black (#1A1A17) dark background, text flips appropriately
-    with INK/INK_SOFT tokens'
-  - Explicit font sizes set throughout (title=12, labels=10, ticks=8) and all text
-    is readable in both themes
-  - Code is clean KISS structure with a deterministic seed (np.random.seed(99)), all
-    imports used, and correct savefig output with no bbox_inches='tight'
-  - 'Recovery annotation with arrow ("Recovery: 92d") adds quantitative insight and
-    creates a clear focal point at the worst drawdown period'
+  - 'Excellent semantic color exception: drawdown=red (#B71D27), recovery=green (#009E73),
+    max-DD emphasis=purple (#9418DB) — all from the anyplot palette, meaningful, and
+    consistent across both themes.'
+  - 'Perfect theme adaptation: both renders correctly flip chrome while keeping data
+    colors identical.'
+  - Creative seaborn-specific KDE marginal panel alongside the main drawdown chart
+    demonstrates library mastery.
+  - 'Comprehensive data storytelling: filled area + line + max-DD marker + recovery
+    triangles + annotation creates a complete narrative arc.'
+  - 'Perfect data quality: realistic energy commodity scenario with varied drawdown
+    patterns (crash, partial bounce, extended weakness, recovery).'
   weaknesses:
-  - 'Library Mastery is low: the implementation is primarily matplotlib (fill_between,
-    scatter, axhline, annotate, spines, tick_params) with seaborn contributing only
-    sns.lineplot + sns.set_theme. Use more seaborn-specific patterns to increase LM
-    score — e.g., use sns.lineplot with hue or a seaborn FacetGrid, or leverage seaborn''s
-    built-in statistical fill utilities'
-  - Design Excellence capped by weak library-specific distinctiveness. The chart is
-    well-designed for matplotlib but not distinctively seaborn. Adding seaborn statistical
-    features (e.g., confidence bands via sns.lineplot's errorbar parameter) would
-    improve both LM-02 and DE-01
-  - Max drawdown duration (the number of days from the start of the max drawdown trough
-    to its lowest point) is not shown; spec explicitly lists it as a required statistic
-    alongside recovery time. Add it as an annotation or text box
-  - Dense cluster of 'New High' green upward triangles in 2022–2023 creates visual
-    clutter near the zero line — many small markers overlap. Consider reducing s from
-    90 to 60 or adding slight jitter/alpha to handle the crowded region
-  - 'Color accessibility (VQ-04): red fill + green markers is the classic CVD pair.
-    Shape redundancy partially mitigates this, but adding a pattern or position-based
-    label would make it fully CVD-safe'
-  - 'DE-02 refinement gap: the y-axis grid uses alpha=0.10 which is quite faint. Consider
-    also adding subtle x-axis date major gridlines and slightly increasing the horizontal
-    padding around the legend to prevent it overlapping data in dense periods'
+  - KDE marginal panel is too narrow (width_ratio=[5,1]) — barely distinguishable
+    visually. Widen to [3,1] or [4,1] to make it a meaningful second visual element;
+    alternatively add the price/value overlay on a secondary y-axis as suggested by
+    the spec.
+  - Dense recovery markers (green triangles) in the 2022-2023 period overlap heavily
+    at the zero line, creating visual clutter. Show only the first recovery after
+    each drawdown trough, or use vertical dashed lines instead.
+  - Annotation fontsize=7.5 is quite small; the Duration line may be hard to read
+    when scaled down. Increase to 9-10pt or use a stats box for clearer key-metric
+    display.
+  - DE-01 could reach strong design by widening the KDE panel, adding a gradient fill
+    on the drawdown area, or a caption-level stats box showing max-DD, duration, and
+    recovery days more prominently.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
-      Chrome: Title "drawdown-basic · python · seaborn · anyplot.ai" in dark ink at top (~65-70% width). X-axis label "Trading Date" and Y-axis label "Drawdown (%)" in dark ink at fontsize=10. Date tick labels (2020-01 through 2023-01) and percentage ticks (0 to -50) in INK_SOFT, all clearly readable. Subtle horizontal grid lines at alpha=0.10.
-      Data: Red (#B71D27) filled semi-transparent area (alpha=0.30) below the zero baseline, topped by a bright red drawdown line (linewidth=1.8). Purple (#9418DB) downward triangle marks the max drawdown (~-45.4%) around 2020-09. Green (#009E73) upward triangles mark new all-time highs at the zero line. "Recovery: 92d" annotation with arrow points to the max DD marker. Legend in lower-right shows all three series.
-      Legibility verdict: PASS — all text elements are clearly readable against the light background.
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "drawdown-basic · python · seaborn · anyplot.ai" at fontsize=12 in dark ink (#1A1A17), filling ~75-78% of canvas width (expected for long mandated string). Axis labels "Drawdown (%)" and "Trading Date" in dark ink at fontsize=10. Tick labels at fontsize=8 in INK_SOFT (#4A4A44). Legend in lower right with elevated background (#FFFDF6). Annotation "Recovery: 92d / Duration: Xd" at fontsize=7.5 in INK_SOFT with arrow.
+      Data: Red (#B71D27) filled area below zero baseline (alpha=0.30) + red line (linewidth=1.8). Green (#009E73) upward triangles at zero line for recovery points. Purple (#9418DB) downward triangle for max drawdown at ~-45.4% around 2020-09. Data colors all from anyplot palette with semantic exception.
+      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title and axis labels are light-colored (#F0EFE8), tick labels in lighter gray (#B8B7B0). All text flips correctly to light-on-dark. Grid lines remain subtle. Legend box uses elevated dark background (#242420). "Recovery: 92d" annotation text is light-colored and readable.
-      Data: Red line (#B71D27) and fill are identical in hue to the light render. The semi-transparent fill (alpha=0.30) over the dark background creates a very dark reddish zone — still distinguishable but less vivid than in light mode. Purple max DD marker and green new-high markers are identical in color to the light render as expected.
-      Legibility verdict: PASS — no dark-on-dark failures detected. All text is light-colored against the near-black background. The fill area is slightly less distinct in dark mode but the line and markers remain clearly visible.
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title, axis labels, and tick labels rendered in light cream/off-white (#F0EFE8 / #B8B7B0), clearly readable against dark background. Legend box uses elevated dark background (#242420). Annotation text in INK_SOFT light-gray (#B8B7B0), readable on dark surface. Grid lines are subtle horizontal marks.
+      Data: Data colors are identical to light render — same red (#B71D27) fill, same green (#009E73) upward triangles, same purple (#9418DB) max-DD marker. Only chrome flips between themes.
+      Legibility verdict: PASS — no dark-on-dark failures; all text readable; brand green #009E73 clearly visible on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (title=12, labels=10, ticks=8, annotation=7.5).
-          Title spans ~65-70% width. Both themes fully readable.
+        comment: All font sizes explicitly set (title=12, axis=10, ticks=8, legend=7,
+          annotation=7.5). Both themes readable. Annotation at 7.5pt slightly small.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text overlaps. Recovery annotation positioned with arrow, not
-          overlapping data. Legend in lower right clear.
+        comment: Dense green recovery markers in 2022-2023 cluster at zero line causing
+          minor visual clutter.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Line (lw=1.8) and fill (alpha=0.30) appropriate for 750-point series.
-          Max DD marker (s=120) and new-high markers (s=90) visible. Dense green triangle
-          cluster near zero in 2022+ is slightly cluttered but not critical.
+        comment: 750-point line + fill well adapted to density; recovery markers at
+          s=60 slightly small in dense sections.
       - id: VQ-04
         name: Color Accessibility
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: Red (#B71D27) and green (#009E73) are the dominant color signals
-          — classic CVD pair. Shape redundancy (fill/line vs upward triangle vs downward
-          triangle) partially mitigates, but red-green remains the primary distinguisher.
+        comment: Red/green distinction supplemented by different marker shapes (filled
+          area vs. upward/downward triangle); CVD-safe.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Canvas gate passed. Plot fills canvas well with generous margins.
-          Legend is inside the plot area. Canvas 3200x1800 (16:9 landscape) correct.
+        comment: Good proportions overall; KDE marginal panel at width_ratio=[5,1]
+          very narrow (~14% of plot area), barely contributes.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y: ''Drawdown (%)'' with units. X: ''Trading Date'' descriptive.
-          Title matches exact format spec.'
+        comment: Drawdown (%) and Trading Date are descriptive with appropriate units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Semantic exception correctly applied: finance loss=red (#B71D27
-          pos 3), recovery/gain=green (#009E73 pos 1), emphasis=purple (#9418DB pos
-          2) — all from anyplot palette, universally expected financial color coding.
-          Backgrounds #FAF8F1 / #1A1A17 correct. Chrome flips correctly in both renders.'
+        comment: 'Semantic exception correctly applied (drawdown=red pos3, recovery=green
+          pos1, emphasis=purple pos2); backgrounds #FAF8F1/#1A1A17 correct; chrome
+          fully theme-adaptive; data colors identical across themes.'
     design_excellence:
       score: 13
       max: 20
@@ -130,30 +115,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above a configured default: semantic color mapping, three-tier visual
-          hierarchy (fill+line, special marker, recovery markers), theme-adaptive
-          chrome. Not yet publication-ready (typography could be bolder, layout tighter).
-          Score 5 — between well-configured (4) and strong design (6).'
+        comment: 'Above well-configured default: intentional semantic color scheme,
+          KDE marginal, semi-transparent fill, multi-marker approach. KDE too narrow
+          for strong design level.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed, left/bottom spines themed with INK_SOFT,
-          subtle y-axis grid at alpha=0.10, themed legend border. Good refinement
-          above defaults but not fully polished (e.g., no x-date gridlines, grid could
-          be slightly stronger at 0.12-0.15 alpha for readability).
+        comment: Top/right spines removed; subtle grid with explicit low alpha; theme-adaptive
+          legend box. Good refinement.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: 'Clear narrative: drawdown depth shown via filled area, worst point
-          highlighted with purple marker + ''Recovery: 92d'' annotation, new highs
-          marked. Viewer immediately sees the story. Score 4 — visual hierarchy guides
-          the reader.'
+        comment: Clear focal point via purple max-DD marker + annotation; red fill
+          vs. green recovery creates visual narrative; solid hierarchy.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -161,33 +141,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct drawdown chart: filled area below zero baseline, time series
-          x-axis, drawdown % y-axis.'
+        comment: Correct drawdown chart with filled area below zero baseline.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Present: drawdown calculation ✓, zero-baseline fill ✓, max DD marker
-          ✓, recovery point markers ✓, recovery time annotation ✓, zero line ✓, max
-          DD % in legend ✓. Missing: max drawdown duration (days from peak to max
-          DD trough) not explicitly shown.'
+        comment: 'All required features: drawdown calculation, fill-to-zero, max-DD
+          marker, recovery markers, key statistics, zero baseline.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: X=trading dates, Y=drawdown %. All data visible across full date
-          range.
+        comment: X=Trading Date, Y=Drawdown (%), correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''drawdown-basic · python · seaborn · anyplot.ai'' — exact
-          format. Legend: ''Drawdown'', ''Max DD: -45.4%'', ''New High'' — all correct.'
+        comment: Title matches required format; legend labels descriptive and accurate.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
@@ -195,25 +170,22 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Shows multiple drawdown periods of varying depth and duration, multiple
-          recovery points, the maximum drawdown event, and a recovery annotation.
-          Full feature coverage.
+        comment: Multiple distinct drawdown periods with varying depths; crash, bounce,
+          extended weakness, recovery phases — full coverage.
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Synthetic energy commodity index with 2020 demand-shock crash — plausible
-          and realistic financial scenario. Not abstract. Context only in code comments,
-          not in chart text, limiting reader comprehension.
+        comment: Synthetic energy commodity index with demand-shock crash (COVID-like
+          2020); realistic neutral financial scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Max drawdown ~45% realistic for energy commodity in 2020 COVID context.
-          750 business days (2020-2023) plausible. Recovery of 92 days consistent
-          with the data.
+        comment: Max drawdown ~-45% plausible for volatile energy commodity; 92-day
+          recovery realistic; σ=1.8% daily returns appropriate.
     code_quality:
       score: 10
       max: 10
@@ -223,8 +195,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: theme tokens → data generation → drawdown
-          calculation → plot → save.'
+        comment: 'Linear: imports → data → plot → save, no functions/classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -236,51 +207,49 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
+        comment: All imports used (os, plt, np, pd, sns, GridSpec).
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code, no over-engineering, no fake UI elements.
+        comment: Clean, Pythonic; multi-panel GridSpec appropriate for two-panel design.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=400) — correct. No bbox_inches='tight'.
-          Current seaborn 0.14+ API.
+        comment: Saves as plot-{THEME}.png; no deprecated APIs.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct use of sns.lineplot, sns.kdeplot, sns.set_theme with rc overrides;
+          shares y-axis between panels idiomatically.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.lineplot (correct seaborn plotting function) and sns.set_theme
-          with rc dict. However, the bulk of the chart is matplotlib primitives (fill_between,
-          scatter, axhline, annotate). Seaborn is not leveraged for its statistical
-          or compositional strengths.
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: sns.set_theme with rc for theme-adaptive dark mode is a seaborn-specific
-          pattern. But fill_between, scatter markers, annotations are all pure matplotlib.
-          The chart could be replicated with minor syntax changes in matplotlib alone.
-          No use of seaborn statistical estimation, hue-based grouping, or FacetGrid.
+        comment: sns.kdeplot for marginal distribution panel is distinctly seaborn;
+          shared y-axis with sharey=ax uses seaborn/matplotlib patterns well.
   verdict: REJECTED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - subplots
   patterns:
   - data-generation
   - explicit-figure
   dataprep:
   - time-series
+  - kde
   styling:
   - alpha-blending
+  - grid-styling
