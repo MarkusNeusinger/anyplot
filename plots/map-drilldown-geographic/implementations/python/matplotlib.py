@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: matplotlib 3.10.9 | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-23
