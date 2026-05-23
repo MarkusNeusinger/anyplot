@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: dashboard-synchronized-crosshair
 created: '2026-01-20T19:38:46Z'
-updated: '2026-05-23T20:21:35Z'
+updated: '2026-05-23T20:33:44Z'
 generated_by: claude-sonnet
 workflow_run: 26342301214
 issue: 3784
@@ -12,42 +12,56 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/highcharts/plot-dark.html
-quality_score: 89
+quality_score: 90
 review:
   strengths:
-  - Full anyplot palette compliance across both renders; all three chrome token families
-    (background, ink, grid) correctly theme-adaptive
-  - Synchronized crosshair implementation is correct and idiomatic — pointer.normalize()
-    + drawCrosshair() + hideCrosshair() is exactly the Highcharts-recommended approach
-  - RSI plotBands with colored zone labels (Overbought/Oversold) are an excellent
-    use of Highcharts native API that adds meaningful context
-  - Code is clean and reproducible; Highcharts.merge() pattern avoids duplication
-    across the three chart configs
-  - Canvas pinned to exact 3200x1800 with PIL safety net; both HTML and PNG artifacts
-    saved correctly
+  - 'Synchronized crosshair implementation is expert-level: uses Highcharts-native
+    APIs (pointer.normalize, searchPoint, drawCrosshair, hideCrosshair, afterSetExtremes)
+    — exactly how Highcharts docs recommend it'
+  - Highcharts.merge(commonOptions, ...) pattern eliminates code duplication cleanly
+    across three charts
+  - 'Full spec compliance: synchronized zoom/pan via afterSetExtremes, synchronized
+    crosshair via mousemove, independent y-axes with shared x-axis datetime'
+  - 'RSI plotBands with semantic anyplot-palette colors (#009E73 for oversold, #B71D27
+    for overbought) guide the viewer''s eye immediately to the key signal zones'
+  - Start-price plotLine with label on Price chart adds meaningful reference context
+  - Correct anyplot palette (green → purple → red) in canonical order with identical
+    data colors across both themes
+  - All font sizes explicitly set at correct highcharts native-pixel values (66px
+    title, 54px sub-chart titles, 52px axis labels, 44px ticks)
+  - Canvas correctly pinned to 3200×1800 with CDP setDeviceMetricsOverride + PIL safety
+    net
+  - 'Realistic financial data: stock price (random walk), volume (lognormal with volatility
+    scaling), RSI (cumulative walk clipped to 0–100 with early oversold demonstration)'
+  - Both HTML and PNG artifacts produced for both themes — correct output artifacts
   weaknesses:
-  - Synchronized zoom/pan not implemented — wire up afterSetExtremes on each chart
-    xAxis to call setExtremes on all other charts, completing the dashboard synchronization
-    story
-  - RSI data never enters the oversold (<30) zone, making the Oversold band label
-    decorative rather than demonstrated — adjust random walk so data dips below 30
-    briefly in the first ~20 points
-  - Inter-chart gap (10px) is too tight for a dashboard layout — increase to 25-30px
-    to give panels more visual breathing room
-  - Design storytelling could be elevated with a thin dashed reference line on the
-    price chart at the starting price ($100) as a baseline reference annotation
+  - 'DE-01 capped at 5/8: dashboard is clean and functional but doesn''t yet reach
+    FiveThirtyEight-level polish — consider adding subtle chart-to-chart connecting
+    visual cues (e.g., very faint vertical alignment markers, or a shared narrow x-axis
+    ruler strip) to make the synchronization more visually obvious even in a static
+    render'
+  - 'DE-02 at 4/6: top/right spines not removed in the sub-charts (lineColor is set
+    but spines are retained) — removing them would sharpen the minimalist dashboard
+    look; for chart borders in a multi-chart layout this is acceptable but still deducts
+    from refinement'
+  - 'LM-01 at 4/5: implementation bypasses the highcharts_core Python SDK entirely,
+    building raw HTML/JS instead — for complex synchronized-crosshair interactivity
+    this is pragmatically correct, but the Python SDK approach is preferred for simpler
+    Highcharts specs'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct light theme surface
-      Chrome: Main title "dashboard-synchronized-crosshair · python · highcharts · anyplot.ai" bold and readable in dark ink. Per-chart subtitles ("Price", "Volume", "RSI Indicator") at 54px — readable and proportional. Y-axis labels ("Price (USD)", "Volume", "RSI") and tick labels all clearly visible in dark ink on off-white background.
-      Data: Price series in #009E73 (brand green) — line chart showing Jan-Jul price movement. Volume in #9418DB (purple) — column chart with notable spike. RSI in #B71D27 (red) — area chart with green-shaded oversold and red-shaded overbought zones.
-      Legibility verdict: PASS — all text readable, no overlap, no clipping detected
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Dashboard title "dashboard-synchronized-crosshair · python · highcharts · anyplot.ai" in dark ink at top, clearly readable. Three stacked sub-chart titles ("Price", "Volume", "RSI Indicator") in bold dark text at correct 54px size. Y-axis labels ("Price (USD)", "Volume", "RSI") and x-axis date tick labels ("Jan 08", "Jan 22", "Feb 05", ...) in secondary ink (#4A4A44), all fully readable. Start price annotation "Start $101" visible on price chart right edge. "Oversold" and "Overbought" band labels visible on RSI chart.
+      Data: Price chart — green (#009E73) line showing random-walk stock price (~$86–$110) over ~150 trading days with a dashed horizontal reference line at starting price. Volume chart — purple (#9418DB) column bars with one notable spike around Mar 18. RSI chart — red (#B71D27) area chart (0.2 fill opacity) in 0–100 range; green-tinted plotBand for oversold zone (0–30) with "Oversold" label; red-tinted plotBand for overbought zone (70–100) with "Overbought" label.
+      Grid lines: subtle, low-opacity horizontal and vertical lines visible on all three charts — not dominant.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
 
     Dark render (plot-dark.png):
-      Background: Near-black #1A1A17 — correct dark theme surface
-      Chrome: Main title and per-chart subtitles rendered in light-colored ink (#F0EFE8 equivalent) — clearly readable against dark background. Tick labels and axis labels use secondary ink token (#B8B7B0 equivalent) — readable, no dark-on-dark issues. Grid lines subtle against dark surface.
-      Data: Colors identical to light render — green price line, purple volume bars, red RSI area. RSI band labels ("Overbought" in red, "Oversold" in green) visible against dark background.
-      Legibility verdict: PASS — all text readable in both themes, data colors identical across renders, chrome correctly inverted
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Dashboard title and all sub-chart titles in light cream text (#F0EFE8), clearly readable against dark background. Axis tick labels and axis titles in secondary light ink (#B8B7B0), readable. "Start $101" annotation visible. "Oversold" and "Overbought" labels visible.
+      Data: Data colors identical to light render — price line is same #009E73 green, volume bars same #9418DB purple, RSI area same #B71D27 red. RSI plotBands with same semi-transparent green/red fills, readable against dark background. No dark-on-dark failures detected.
+      Grid lines: subtle, low-opacity, visible against the dark surface.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
       score: 29
@@ -58,50 +72,61 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set (66px title, 54px chart subtitles,
-          52px axis labels, 44px ticks). Well-proportioned and readable in both themes.
-          Per-chart subtitles slightly large at 54px but functionally appropriate
-          for dashboard.
+        comment: 'All font sizes explicitly set at correct highcharts native-pixel
+          values (66px title, 54px sub-chart titles, 52px axis labels, 44px ticks,
+          36px tooltips). All readable in both themes. Minor: three separate Highcharts
+          instances means some CSS duplication but result is well-proportioned.'
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements in either render.
+        comment: No overlapping text elements in either render. Three charts well-spaced
+          with 25px gap. Tick labels have adequate spacing. Annotations positioned
+          correctly.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Line (lineWidth=3, no markers), columns, and area (fillOpacity=0.2)
-          all well-adapted to 150-point time series density.
+        comment: Price line (3px lineWidth) clearly visible. Volume columns clearly
+          visible with appropriate bar sizing. RSI area with 0.2 fillOpacity clearly
+          shows the trend while remaining transparent. 150 data points at medium density,
+          well-adapted element sizes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette positions 1-3 used; colorblind-safe by design.
+        comment: Anyplot palette (positions 1-3) is colorblind-safe. Adequate contrast
+          in both themes. Green, purple, red are distinguishable without hue-only
+          reliance.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Three charts fill 3200x1800 canvas well; spacing proportions balanced;
-          canvas gate passed.
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Three charts
+          fill the 3200x1800 canvas efficiently with 30px outer padding and 25px chart
+          gaps. Chart heights (640px price, 473px volume, 473px RSI) plus title bar
+          (70px+15px margin) sum correctly to 1800px layout.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axes: Price (USD), Volume, RSI — descriptive with units where
-          applicable.'
+        comment: '''Price (USD)'' has units. Volume is a share-count (unitless is
+          correct for trading volume). RSI is a dimensionless indicator (0-100 range
+          shown via yAxis min/max). X-axis uses formatted date labels. Good.'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Price=#009E73 (first), Volume=#9418DB (second), RSI=#B71D27 (third).
-          Backgrounds #FAF8F1/#1A1A17. All chrome tokens theme-adaptive.'
+        comment: Price=#009E73 (position 1, brand green). Volume=#9418DB (position
+          2, purple). RSI=#B71D27 (position 3, red). Canonical order. Light bg=#FAF8F1,
+          dark bg=#1A1A17. Data colors identical across themes. Chrome adapts correctly
+          via ANYPLOT_THEME tokens.
     design_excellence:
       score: 13
       max: 20
@@ -111,28 +136,31 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured default: anyplot palette applied with intent, three
-          distinct chart types arranged purposefully, RSI plot bands add contextual
-          meaning. Not at strong design level — lacks callout annotations or typographic
-          hierarchy distinguishing primary from secondary info.'
+        comment: 'Above defaults: RSI plotBands with semantic anyplot-palette fills
+          guide viewer to key signal zones, start price reference line adds analytical
+          context, three different chart types (line/column/area) show intentional
+          design variety. Not quite FiveThirtyEight-level but clearly above a well-configured
+          default.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Subtle grid (low-opacity gridLineColor), no cluttering legend, spacing
-          parameters explicitly set. Minor: 10px inter-chart spacing is too tight
-          for a dashboard.'
+        comment: Legends disabled (each chart has its own title instead), credits
+          disabled, grid subtle (rgba 0.10 opacity). Top/right spines retained — acceptable
+          for multi-chart dashboard borders but misses the L-spine refinement. Generous
+          but not cramped spacing.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Complementary financial series tell a coherent story. RSI band labels
-          create emphasis on critical zones. Color assignment supports interpretation.
-          No explicit insight annotations.
+        comment: Visual hierarchy through RSI plotBands immediately draws the eye
+          to oversold/overbought zones. Start price reference creates temporal anchoring.
+          Three panels together tell a complete technical analysis story. Early oversold
+          RSI demonstration is intentional and informative.
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -140,56 +168,58 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-chart dashboard with line, column, and area sub-charts.
+        comment: Multi-chart synchronized dashboard exactly as specified. Three Highcharts
+          instances with shared x-axis.
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Synchronized vertical crosshair implemented via Highcharts pointer
-          API; per-chart tooltips at same x-position; independent y-axis scales; stacked
-          layout; HTML artifacts saved. Missing: synchronized zoom/pan via afterSetExtremes.'
+        comment: 'All spec features present: synchronized crosshair (mousemove+drawCrosshair),
+          shared tooltip, stacked vertical layout, synchronized zoom/pan (afterSetExtremes),
+          independent y-axes, clear visual connection via aligned x-axis.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on shared X-axis; price/volume/RSI on independent Y-axes as
-          specified.
+        comment: Datetime x-axis shared across all three charts. Price→line, Volume→column,
+          RSI→area. All data correctly mapped.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: dashboard-synchronized-crosshair · python · highcharts ·
-          anyplot.ai. No legend — each chart has its own titled panel, which is correct
-          for this layout.'
+        comment: Title exactly 'dashboard-synchronized-crosshair · python · highcharts
+          · anyplot.ai'. No series legends (each chart has its own titled sub-chart
+          label — appropriate for dashboard layout).
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: 'Price shows trending behavior, volume shows notable spike event,
-          RSI demonstrates momentum with overbought zone entry. Minor: RSI never enters
-          oversold zone (<30) despite the band being labeled.'
+        comment: 'Shows all aspects: trending price, volume correlated with price
+          moves, RSI ranging through oversold/overbought/neutral zones. 150 business
+          days gives enough range to show meaningful patterns.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock market financial data (price, volume, RSI) over 150 trading
-          days; neutral, professional, real-world domain.
+        comment: Stock market technical analysis (price, volume, RSI) is a real, widely-recognized,
+          neutral financial scenario. Non-controversial. Concrete domain context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price ~$86-108 (realistic mid-cap range), volume ~2.5M-13M (plausible),
-          RSI clipped at 10-90 (correct for indicator).
+        comment: Stock price ~$86-110 (realistic for a mid-cap stock). Volume in millions
+          (realistic for a liquid stock). RSI 0-100 (correct range for the indicator).
+          Random walk price model with lognormal volume scaling is realistic.
     code_quality:
       score: 10
       max: 10
@@ -199,63 +229,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear Python: imports → tokens → data → HTML string → file save
-          → Selenium screenshot.'
+        comment: 'Flat linear code: imports → tokens → data generation → HTML construction
+          → save HTML → selenium screenshot → PIL canvas pin. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42) at line 34.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All 9 imports are used.
+        comment: 'All imports used: os, tempfile, time, urllib.request, pathlib.Path,
+          numpy, pandas, PIL.Image, selenium.webdriver, selenium Options.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Highcharts.merge() for common options avoids repetition; JS IIFE
-          pattern is clean; PIL canvas pin is idiomatic.
+        comment: Clean and well-organized. IIFE pattern in JS is good practice. Highcharts.merge
+          for option inheritance is clean. Appropriate complexity for the task.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. No
+          deprecated APIs.
     library_mastery:
-      score: 9
+      score: 8
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Expert use of Highcharts.merge(), chart.pointer.normalize(), xAxis[0].drawCrosshair(),
-          series.searchPoint(), plotBands with labels — all idiomatic Highcharts patterns.
+        comment: 'Expert Highcharts JS API usage: Highcharts.merge for DRY config
+          inheritance, pointer.normalize for cross-chart events, xAxis.drawCrosshair/hideCrosshair,
+          afterSetExtremes for synchronized zoom. Bypasses highcharts_core Python
+          SDK (pragmatically correct for complex synchronized interactions) but uses
+          idiomatic Highcharts JS patterns throughout.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Cross-chart crosshair sync using Highcharts.charts array, pointer
-          API normalization, and drawCrosshair() is distinctly Highcharts. plotBands
-          with labeled zones adds further library-specific depth. One point withheld
-          because synchronized zoom (afterSetExtremes) — a distinctly Highcharts feature
-          specified by the spec — is absent.
-  verdict: REJECTED
+        comment: 'Uses Highcharts-distinctive features: synchronized crosshair via
+          chart.pointer.normalize + xAxis.drawCrosshair (cannot be replicated easily
+          in other libraries), plotBands for RSI zones, plotLines for reference annotation,
+          Highcharts.addEvent for afterSetExtremes zoom sync. These are signature
+          Highcharts capabilities.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   techniques:
   - html-export
-  - hover-tooltips
   - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
@@ -263,4 +298,3 @@ impl_tags:
   - cumulative-sum
   styling:
   - alpha-blending
-  - grid-styling
