@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-23
@@ -48,9 +48,9 @@ projections = [
         "description": "Globe view centered on the Americas",
     },
     {
-        "name": "Orthographic · Africa & Europe",
-        "projection": {"name": "Orthographic", "rotation": [-20, -20]},
-        "description": "Globe view centered on Africa & Europe",
+        "name": "Robinson",
+        "projection": {"name": "Robinson"},
+        "description": "Compromise projection — balances shape and area",
     },
 ]
 
@@ -64,7 +64,7 @@ for proj in projections:
             "spacing": [10, 10, 10, 10],
         },
         "title": {"text": proj["name"], "style": {"fontSize": "36px", "fontWeight": "bold", "color": INK}},
-        "subtitle": {"text": proj["description"], "style": {"fontSize": "22px", "color": INK_SOFT}},
+        "subtitle": {"text": proj["description"], "style": {"fontSize": "36px", "color": INK_SOFT}},
         "mapNavigation": {"enabled": False},
         "mapView": {"projection": proj["projection"]},
         "legend": {"enabled": False},
@@ -86,7 +86,7 @@ for proj in projections:
                 "name": "Graticule",
                 "data": None,  # set dynamically in JS
                 "color": GRATICULE_COLOR,
-                "opacity": 0.25,
+                "opacity": 0.45,
                 "lineWidth": 1,
                 "dashStyle": "ShortDash",
                 "enableMouseTracking": False,
