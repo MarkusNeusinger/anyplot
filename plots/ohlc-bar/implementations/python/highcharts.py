@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 ohlc-bar: OHLC Bar Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 88/100 | Updated: 2026-05-23
@@ -59,6 +59,13 @@ for i in range(n_days):
 
 opens = [round(o, 2) for o in opens]
 
+# 5-day SMA for trend layer
+sma_period = 5
+sma_closes = []
+for i in range(sma_period - 1, n_days):
+    avg = sum(closes[i - sma_period + 1 : i + 1]) / sma_period
+    sma_closes.append(round(avg, 2))
+
 # Generate trading dates (skip weekends)
 start_date = datetime(2024, 6, 1)
 dates = []
@@ -74,6 +81,17 @@ for i in range(n_days):
     timestamp = int(dates[i].timestamp() * 1000)
     ohlc_data.append([timestamp, opens[i], highs[i], lows[i], closes[i]])
 
+sma_data = []
+for i in range(sma_period - 1, n_days):
+    timestamp = int(dates[i].timestamp() * 1000)
+    sma_data.append([timestamp, sma_closes[i - (sma_period - 1)]])
+
+# Net-change subtitle for data storytelling
+net_change = closes[-1] - opens[0]
+pct_change = net_change / opens[0] * 100
+sign = "+" if net_change >= 0 else ""
+subtitle_text = f"Jun–Aug 2024  ·  Net change: {sign}${net_change:.2f} / {sign}{pct_change:.1f}%"
+
 title = "ohlc-bar · python · highcharts · anyplot.ai"
 
 chart_options = {
@@ -82,13 +100,15 @@ chart_options = {
         "width": 3200,
         "height": 1800,
         "backgroundColor": PAGE_BG,
+        "plotBorderWidth": 0,
         "marginBottom": 160,
         "marginLeft": 200,
         "marginRight": 80,
-        "marginTop": 130,
+        "marginTop": 150,
         "style": {"fontFamily": "Arial, sans-serif", "color": INK},
     },
     "title": {"text": title, "style": {"fontSize": "66px", "fontWeight": "600", "color": INK}, "y": 55},
+    "subtitle": {"text": subtitle_text, "style": {"fontSize": "36px", "color": INK_SOFT}, "y": 110},
     "xAxis": {
         "type": "datetime",
         "title": {"text": "Date", "style": {"fontSize": "56px", "color": INK}, "margin": 25},
@@ -110,7 +130,17 @@ chart_options = {
         "lineColor": INK_SOFT,
         "opposite": False,
     },
-    "legend": {"enabled": False},
+    "legend": {
+        "enabled": True,
+        "itemStyle": {"color": INK_SOFT, "fontSize": "36px", "fontWeight": "normal"},
+        "backgroundColor": "transparent",
+        "borderWidth": 0,
+        "align": "right",
+        "verticalAlign": "top",
+        "layout": "vertical",
+        "x": -80,
+        "y": 160,
+    },
     "tooltip": {
         "split": False,
         "style": {"fontSize": "32px"},
@@ -125,7 +155,19 @@ chart_options = {
     "navigator": {"enabled": False},
     "scrollbar": {"enabled": False},
     "credits": {"enabled": False},
-    "series": [{"type": "ohlc", "name": "Stock Price", "data": ohlc_data}],
+    "series": [
+        {"type": "ohlc", "name": "Stock Price", "data": ohlc_data},
+        {
+            "type": "line",
+            "name": "5-day SMA",
+            "data": sma_data,
+            "color": INK_SOFT,
+            "lineWidth": 2,
+            "dashStyle": "Dash",
+            "enableMouseTracking": False,
+            "marker": {"enabled": False},
+        },
+    ],
 }
 
 # Download Highstock JS (OHLC type lives in Highstock)
