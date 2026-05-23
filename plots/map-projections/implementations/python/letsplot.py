@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 78/100 | Updated: 2026-05-23
@@ -39,7 +39,7 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
 ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
 LAND_COLOR = ANYPLOT_PALETTE[0]  # brand green — first categorical series
-TISSOT_COLOR = ANYPLOT_PALETTE[2]  # red — second distinct series
+TISSOT_COLOR = ANYPLOT_PALETTE[1]  # purple — canonical second series
 
 np.random.seed(42)
 
@@ -331,11 +331,11 @@ for lat in [-60, -30, 0, 30, 60]:
 
 tissot = pd.DataFrame(tissot_rows)
 
-# Manual legend positioned in bottom-left ocean area
+# Manual legend in South Atlantic gap between lat=-30 and lat=-60 Tissot rows
 legend_data = pd.DataFrame(
     {
         "x": [-170, -170],
-        "y": [-60, -73],
+        "y": [-43, -51],
         "label": ["Land Masses", "Tissot Indicatrices"],
         "color": [LAND_COLOR, TISSOT_COLOR],
     }
