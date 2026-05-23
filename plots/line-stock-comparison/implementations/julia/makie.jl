@@ -1,7 +1,7 @@
 # anyplot.ai
 # line-stock-comparison: Stock Price Comparison Chart
-# Library: Makie.jl 0.21 | Julia 1.11
-# Quality: pending | Created: 2026-05-23
+# Library: makie 0.22.10 | Julia 1.11.9
+# Quality: 87/100 | Created: 2026-05-23
 
 using CairoMakie
 using Colors
