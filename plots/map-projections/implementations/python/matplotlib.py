@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-projections: World Map with Different Projections
-Library: matplotlib | Python 3.13
-Quality: 91/100 | Updated: 2026-05-23
+Library: matplotlib 3.10.9 | Python 3.13.13
+Quality: 84/100 | Updated: 2026-05-23
 """
 
 import os
