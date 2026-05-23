@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 81/100 | Updated: 2026-05-23
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -25,15 +27,18 @@ from plotnine import (
 )
 
 
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+PANEL_BG = "#D6EAF8" if THEME == "light" else "#1A2A3A"
+
 # Seed for reproducibility
 np.random.seed(42)
 
 # Hierarchical geographic data: USA states with performance metrics
-# This represents a static view of what would be a drillable map
-# Note: plotnine is a static library - interactive drill-down requires
-# libraries like plotly, bokeh, or altair
-
-# Simplified US state boundaries (approximate polygons) - 20 states for better coverage
 states_data = {
     "California": {
         "coords": [
@@ -118,7 +123,7 @@ states_data = {
             (-91.5, 42.5),
         ],
         "value": 78,
-        "centroid": (-89.8, 40.8),  # Shifted slightly NW to reduce overlap with IN
+        "centroid": (-89.8, 40.8),
         "abbrev": "IL",
     },
     "Washington": {
@@ -159,7 +164,7 @@ states_data = {
     "Ohio": {
         "coords": [(-84.8, 41.7), (-80.5, 42.0), (-80.5, 39.5), (-81.7, 38.9), (-84.8, 39.1), (-84.8, 41.7)],
         "value": 69,
-        "centroid": (-82.2, 40.8),  # Shifted slightly NE to reduce overlap with IN
+        "centroid": (-82.2, 40.8),
         "abbrev": "OH",
     },
     "Pennsylvania": {
@@ -181,7 +186,7 @@ states_data = {
             (-90.4, 46.0),
         ],
         "value": 73,
-        "centroid": (-85.0, 44.5),  # Shifted N slightly to reduce crowding
+        "centroid": (-85.0, 44.5),
         "abbrev": "MI",
     },
     "Nevada": {
@@ -211,7 +216,7 @@ states_data = {
     "Tennessee": {
         "coords": [(-90.3, 35.0), (-81.7, 36.6), (-81.7, 35.0), (-88.0, 35.0), (-90.3, 35.0)],
         "value": 70,
-        "centroid": (-86.5, 35.4),  # Shifted S slightly to avoid NC overlap
+        "centroid": (-86.5, 35.4),
         "abbrev": "TN",
     },
     "Missouri": {
@@ -223,7 +228,7 @@ states_data = {
     "Indiana": {
         "coords": [(-88.1, 41.8), (-84.8, 41.8), (-84.8, 38.0), (-88.1, 37.8), (-88.1, 41.8)],
         "value": 67,
-        "centroid": (-86.2, 39.0),  # Shifted S to reduce overlap with IL and MI
+        "centroid": (-86.2, 39.0),
         "abbrev": "IN",
     },
     "Wisconsin": {
@@ -233,6 +238,11 @@ states_data = {
         "abbrev": "WI",
     },
 }
+
+# Identify top-3 and bottom-3 states for focal emphasis
+sorted_by_value = sorted(states_data.items(), key=lambda x: x[1]["value"])
+bottom_3 = {s[0] for s in sorted_by_value[:3]}  # AZ (64), IN (67), FL (68)
+top_3 = {s[0] for s in sorted_by_value[-3:]}  # VA (83), CA (85), NY (91)
 
 # Build dataframe for state polygons
 polygon_rows = []
@@ -250,15 +260,27 @@ for state_name, state_info in states_data.items():
         )
 
 df_states = pd.DataFrame(polygon_rows)
+df_top3 = df_states[df_states["state"].isin(top_3)].copy()
+df_bottom3 = df_states[df_states["state"].isin(bottom_3)].copy()
 
-# State labels (centroids) for annotations
+# Nudge centroids for crowded northeastern states to reduce label overlap
+centroid_nudge = {
+    "New York": (-76.0, 43.3),
+    "Tennessee": (-86.3, 36.4),  # push north — TN polygon is a thin strip
+    "Virginia": (-78.5, 38.4),  # push north to separate from NC
+    "Illinois": (-89.5, 40.2),
+    "Wisconsin": (-89.7, 44.8),
+    "Michigan": (-85.5, 44.3),
+}
+
 label_rows = []
 for state_name, state_info in states_data.items():
+    centroid = centroid_nudge.get(state_name, state_info["centroid"])
     label_rows.append(
         {
             "state": state_name,
-            "lon": state_info["centroid"][0],
-            "lat": state_info["centroid"][1],
+            "lon": centroid[0],
+            "lat": centroid[1],
             "value": state_info["value"],
             "abbrev": state_info["abbrev"],
             "label": f"{state_info['abbrev']}\n{state_info['value']}",
@@ -267,86 +289,65 @@ for state_name, state_info in states_data.items():
 
 df_labels = pd.DataFrame(label_rows)
 
-# Calculate actual data range for accurate legend
 min_value = df_labels["value"].min()
 max_value = df_labels["value"].max()
 
-# Create breadcrumb navigation indicator (static representation)
 breadcrumb_text = "World  >  USA  >  States"
 
-# Build choropleth-style state map with improved layout
+# Build choropleth map using anyplot_seq colormap (green → dark azure)
+# Highlight outlines: lime for top-3 performers, red for bottom-3
 plot = (
     ggplot()
-    # State polygons with value-based fill (choropleth)
     + geom_polygon(
-        aes(x="lon", y="lat", group="state", fill="value"), data=df_states, color="#FFFFFF", size=1.5, alpha=0.92
+        aes(x="lon", y="lat", group="state", fill="value"), data=df_states, color=PAGE_BG, size=1.5, alpha=0.92
     )
-    # State labels with abbreviation and value - larger font
+    + geom_polygon(aes(x="lon", y="lat", group="state"), data=df_top3, color="#99B314", fill="none", size=2.5)
+    + geom_polygon(aes(x="lon", y="lat", group="state"), data=df_bottom3, color="#B71D27", fill="none", size=2.5)
     + geom_text(
         aes(x="lon", y="lat", label="label"),
         data=df_labels,
-        size=10,
-        color="#1a1a1a",
+        size=4,
+        color="white",
         fontweight="bold",
         va="center",
         ha="center",
     )
-    # Color scale - limits match actual data range (64-91) for legend accuracy
-    # Using explicit breaks to ensure full range is displayed
     + scale_fill_gradient(
-        low="#FEE08B",  # Light yellow
-        high="#1A5276",  # Deep blue
+        low="#009E73",
+        high="#003D94",
         name="Performance\nScore",
         limits=(min_value, max_value),
-        breaks=[64, 70, 76, 82, 88, 91],  # Explicit breaks covering full range
+        breaks=[64, 70, 76, 82, 88, 91],
     )
-    # Longitude axis - tighter limits to reduce empty space on left
     + scale_x_continuous(
         breaks=[-120, -110, -100, -90, -80], labels=["120°W", "110°W", "100°W", "90°W", "80°W"], limits=(-126, -72)
     )
-    # Latitude axis with degree labels for geographic context
     + scale_y_continuous(
         breaks=[25, 30, 35, 40, 45, 50], labels=["25°N", "30°N", "35°N", "40°N", "45°N", "50°N"], limits=(22, 51)
     )
-    # Fixed aspect ratio for geographic accuracy
     + coord_fixed(ratio=1.3)
-    # Breadcrumb as annotation - positioned within tighter bounds
-    + annotate("text", x=-125, y=50, label=breadcrumb_text, size=14, color="#1A5276", fontweight="bold", ha="left")
-    # Click instruction annotation
-    + annotate(
-        "text",
-        x=-125,
-        y=48.8,
-        label="Click any state to drill down (interactive version)",
-        size=9,
-        color="#555555",
-        ha="left",
-        fontstyle="italic",
-    )
-    # Title and labels with geographic axis context
-    + labs(
-        title="map-drilldown-geographic · plotnine · pyplots.ai",
-        subtitle="US Regional Performance Scores (Static View - Drill-down requires interactive library)",
-        x="Longitude",
-        y="Latitude",
-    )
+    + annotate("text", x=-125, y=50, label=breadcrumb_text, size=9, color=INK, fontweight="bold", ha="left")
+    + annotate("text", x=-74, y=25.5, label="▲ Top 3", size=8, color="#99B314", ha="right", fontweight="bold")
+    + annotate("text", x=-74, y=23.5, label="▼ Bottom 3", size=8, color="#B71D27", ha="right", fontweight="bold")
+    + labs(title="map-drilldown-geographic · python · plotnine · anyplot.ai", x="Longitude", y="Latitude")
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=28, weight="bold", ha="center"),
-        plot_subtitle=element_text(size=16, ha="center", color="#555555"),
-        axis_title=element_text(size=18, color="#444444"),
-        axis_text=element_text(size=14, color="#666666"),
-        axis_ticks=element_line(color="#CCCCCC", size=0.5),
-        panel_grid_major=element_line(color="#D0D0D0", size=0.2, alpha=0.25),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PANEL_BG),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_blank(),
-        panel_background=element_rect(fill="#EDF4F7"),
-        plot_background=element_rect(fill="white"),
-        legend_title=element_text(size=16, weight="bold"),
-        legend_text=element_text(size=14),
-        legend_position="right",  # Standard right position
-        legend_background=element_rect(fill="white", color="#CCCCCC", size=0.5),
+        panel_border=element_rect(color=INK_SOFT, fill=None),
+        plot_title=element_text(size=12, weight="bold", color=INK, ha="center"),
+        axis_title=element_text(size=10, color=INK),
+        axis_text=element_text(size=8, color=INK_SOFT),
+        axis_line=element_blank(),
+        axis_ticks=element_line(color=INK_SOFT, size=0.5),
+        legend_title=element_text(size=8, weight="bold", color=INK),
+        legend_text=element_text(size=8, color=INK_SOFT),
+        legend_position="right",
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
     )
 )
 
-# Save at 300 DPI for 4800x2700 px output
-plot.save("plot.png", dpi=300, verbose=False)
+# Save
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in", verbose=False)

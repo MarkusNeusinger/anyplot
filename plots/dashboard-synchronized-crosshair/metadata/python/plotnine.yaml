@@ -1,162 +1,193 @@
 library: plotnine
+language: python
 specification_id: dashboard-synchronized-crosshair
 created: '2026-01-20T19:39:43Z'
-updated: '2026-01-20T20:10:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21184654287
+updated: '2026-05-23T13:01:46Z'
+generated_by: claude-sonnet
+workflow_run: 26332848592
 issue: 3784
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 87
 review:
   strengths:
-  - Excellent use of plotnine faceting (facet_wrap with free_y scales) for multi-panel
-    layout
-  - Proper categorical ordering ensures consistent panel arrangement (Price, Volume,
-    RSI)
-  - Good visual demonstration of synchronized crosshair concept with vertical line
-    spanning all panels
-  - Value labels at crosshair position with appropriate formatting per metric type
-  - Clean data generation with realistic stock market context
-  - Professional styling with minimal theme and subtle grid
+  - 'Perfect spec compliance: all required dashboard features present and well-executed
+    for a static library'
+  - Full theme-adaptive chrome in both renders — both light and dark pass readability
+    checks with no dark-on-dark or light-on-light failures
+  - Realistic domain-appropriate data (stock price/volume/RSI) with meaningful variation
+    across all three metrics
+  - Effective visual hierarchy via green data lines and red crosshair accent creating
+    a clear focal point
+  - Clean KISS code with ordered categorical facets (CategoricalDtype) keeping panel
+    order deterministic
   weaknesses:
-  - RSI panel strip text shows RSI Indicator instead of just RSI (minor inconsistency)
-  - Y-axis label is blank but could show contextual labels per panel
-  image_description: 'The plot displays a synchronized multi-chart dashboard with
-    three vertically stacked panels using plotnine''s faceting capabilities. The top
-    panel shows "Price ($)" with values ranging from ~85 to ~110, the middle panel
-    shows "Volume (M)" ranging from ~1 to ~3.5 million, and the bottom panel shows
-    "RSI Indicator" ranging from ~10 to ~80. All three panels share a common x-axis
-    showing dates from January 2024 to October 2024. A synchronized red dashed vertical
-    crosshair line spans all three panels at approximately late June 2024, with red
-    marker points highlighting the values at that position. Each panel has a label
-    showing the value at the crosshair position: "$92.89" for price, "1.86M" for volume,
-    and "RSI: 10.0" for RSI. The lines are rendered in blue (#306998) with good visibility.
-    The grid is subtle gray, and the overall layout demonstrates the synchronized
-    crosshair concept effectively for a static library.'
+  - Tick label font size (7pt) is slightly below the recommended 8pt for 2400x2400
+    canvas; bump axis_text to size=8 for better mobile readability
+  - Strip panel headers retain a visible rectangular border despite strip_background
+    color=None; try adding panel_border=element_blank() to fully suppress residual
+    frames
+  - panel_spacing=0.2 introduces visible vertical gaps between panels; reducing to
+    0.1 or 0.15 would create a tighter more cohesive dashboard feel
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Title "dashboard-synchronized-crosshair · python · plotnine · anyplot.ai" bold and visible; strip headers "Price ($)", "Volume (M)", "RSI" in bold dark text; x-axis "Date" label and monthly tick labels (Jan-Oct 2024) rotated 45° and readable; y-axis blank by design (units in strip headers); all text is dark-colored against light background
+      Data: Three panels with #009E73 brand green data lines; dashed red #B71D27 vertical crosshair spanning all panels; red markers at intersection points; geom_label boxes showing "$113.26", "1.12M", "RSI: 65.0" with elevated background fill
+      Legibility verdict: PASS — all text clearly readable, no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Same title and strip headers in light #F0EFE8 text; axis labels and tick labels in lighter #B8B7B0 tone; annotation label boxes use #242420 elevated fill — all clearly readable against dark surface; no dark-on-dark failures detected
+      Data: Data line colors identical to light render — #009E73 green lines and #B71D27 red crosshair elements unchanged; only chrome flipped
+      Legibility verdict: PASS — all text clearly readable on dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title bold at 24pt, strip text 18pt bold, axis text 14pt - all clearly
-          readable
-      - id: VQ-02
-        name: No Overlap
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: No overlapping text or elements; labels positioned above markers
-          with good clearance
+        comment: All font sizes explicitly set (title=10pt, x-axis=9pt, ticks=7pt,
+          strip=9pt); readable in both themes; tick labels slightly below 8pt guide
+          recommendation for this canvas size
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: 'No overlap: 45-degree rotated monthly x-axis labels well-spaced;
+          annotation labels positioned above data points without collision'
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Lines visible with size=1.5, markers prominent; RSI panel values
-          appear very low in later portion
+        comment: geom_line(size=1.0) well-adapted to 200-point time series; crosshair
+          markers (size=3.0) clearly distinct; all elements visible in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue for data, red for crosshair - colorblind-safe with excellent
-          contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good vertical stacking but significant white space between panels
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Date on x-axis, strip text shows metric names with units
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: 'Green #009E73 vs red #B71D27 crosshair satisfies CVD safety via
+          lightness contrast under deuteranopia'
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Three-panel layout fills 2400x2400 canvas well; minor visual gaps
+          between panels from panel_spacing=0.2
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle at alpha=0.4, no legend needed for single-series panels
+        comment: Strip labels carry units (Price ($), Volume (M), RSI); x-axis labelled
+          Date; y-axis blank by design
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Data lines #009E73 (position 1); crosshair uses #B71D27 (palette
+          position 3); backgrounds #FAF8F1/#1A1A17; all chrome tokens theme-adaptive
+          in both renders'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: Well-configured library default with anyplot theme tokens; intentional
+          green/red color scheme; professional but not at FiveThirtyEight level
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal() removes spines; grid at alpha=0.10 is subtle; strip
+          panel header boxes retain slight rectangular prominence
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red dashed crosshair with value annotations creates strong focal
+          point demonstrating synchronized-inspection concept; green/red hierarchy
+          guides the viewer
     spec_compliance:
-      score: 23
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements multi-chart dashboard with stacked panels
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on x-axis, values on y-axis, correctly mapped for all three
-          metrics
-      - id: SC-03
+        comment: Multi-panel line chart stacked vertically with synchronized crosshair
+          — correct chart type for dashboard
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has synchronized crosshair line, markers, value labels; label formats
-          slightly inconsistent
-      - id: SC-04
-        name: Data Range
+        comment: Vertical crosshair (geom_vline), value annotations (geom_label),
+          stacked layout (facet_wrap ncol=1), independent y-axes (scales=free_y),
+          shared x-axis — all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within panel ranges, independent y-scales per panel
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on x-axis, metric values on y-axis, correct panel assignment
+          for each series
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: N/A - single series per panel, strip text serves as legend
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: 'Title format correct: dashboard-synchronized-crosshair · plotnine
-          · pyplots.ai'
+        comment: Title matches dashboard-synchronized-crosshair · python · plotnine
+          · anyplot.ai exactly; no legend needed for single-series panels
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows price trends, volume spikes, RSI indicator; RSI values extend
-          beyond typical 30-70 range
+        comment: 'All three dashboard metrics present: price with trend+seasonality,
+          volume with earnings-season effects, RSI with momentum — all show realistic
+          variation'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Stock market data with price, volume, and RSI indicator is perfect
-          real-world scenario
+        comment: Stock market domain with price/volume/RSI is a classic neutral use
+          case for synchronized crosshair dashboards
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price ~$90-110 realistic; volume in millions appropriate; RSI shows
-          values outside typical 30-70 range
+        comment: Price ~$90-120, volume ~1-2M shares, RSI clipped to 10-90 (standard
+          range) — all factually coherent
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -164,42 +195,53 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean structure: imports → data → plot → save; no functions or classes'
+        comment: 'Linear: imports -> theme tokens -> data generation -> DataFrame
+          construction -> plot -> save'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used; no stray imports
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic; CategoricalDtype for ordered facets; no over-engineering;
+          no fake interactivity code
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves to plot.png correctly but with verbose=False param
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png using current plotnine API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of plotnine grammar: facet_wrap, aes mapping, geom
-          layers, scale_x_datetime, theme customization'
+        comment: 'Strong ggplot2 grammar: facet_wrap with scales=free_y, scale_x_datetime
+          with date_breaks/date_labels, callable breaks in scale_y_continuous, geom_vline
+          with datetime xintercept'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses CategoricalDtype(ordered=True) for facet panel ordering, scales=free_y
+          for independent axes, and callable breaks — all distinctively ggplot-style
+          patterns
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -209,10 +251,7 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - wide-to-long
   dataprep:
   - time-series
-  - cumulative-sum
   styling:
   - alpha-blending
-  - grid-styling
