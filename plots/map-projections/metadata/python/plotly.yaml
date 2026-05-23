@@ -1,159 +1,183 @@
 library: plotly
+language: python
 specification_id: map-projections
 created: '2026-01-20T02:48:38Z'
-updated: '2026-01-20T02:51:21Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21157678721
+updated: '2026-05-23T08:18:04Z'
+generated_by: claude-sonnet
+workflow_run: 26327435415
 issue: 3771
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-projections/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-projections/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/python/plotly/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent demonstration of 6 different projection types side-by-side for easy
-    comparison
-  - Clean, professional color scheme with good contrast (blue land, light ocean, gold
-    graticules)
-  - Proper use of Plotly geo subplot system with individual projection configurations
-  - Interactive HTML output provided alongside PNG
-  - Graticule lines at 30-degree intervals as specified
-  - Country borders and lakes visible
+  - Perfect spec compliance — all 6 required projections, graticule at 30°, correct
+    title format
+  - 'Excellent palette adherence: land uses #009E73 identically in both renders; ocean
+    adapts by theme'
+  - Theme adaptation is complete and correct — no dark-on-dark or light-on-light failures
+  - Clean, idiomatic Plotly geo code using dynamic geo_key pattern for multi-subplot
+    geo maps
+  - HTML output included, leveraging Plotlys interactive strengths
+  - Fully deterministic with minimal imports
   weaknesses:
-  - Could benefit from adding Tissot indicatrices to show distortion patterns (mentioned
-    as optional in spec)
-  - Minor code redundancy with geo configuration being set twice (update_geos and
-    update_layout loop)
-  image_description: The plot displays a 2×3 grid of world maps, each showcasing a
-    different cartographic projection. The main title "map-projections · plotly ·
-    pyplots.ai" is centered at the top in dark gray. Each subplot has its projection
-    name as a title (Mercator, Robinson, Mollweide, Orthographic, Equal Earth, Natural
-    Earth). Land masses are rendered in a blue color (#306998), oceans in a light
-    blue (#E8F4F8), and coastlines/country borders in dark blue (#1A3D5C). Yellow/gold
-    graticule lines (latitude/longitude grid) are visible at 30-degree intervals across
-    all projections. The Mercator projection shows the classic rectangular distortion,
-    Robinson and Mollweide show elliptical shapes, Orthographic displays a globe-like
-    hemisphere view centered on Africa, and Equal Earth and Natural Earth show similar
-    pseudo-cylindrical projections. The layout is clean with minimal margins.
+  - Mercator panel renders visibly smaller than the oval projections (clips at ~85°
+    latitude producing a square footprint vs. full-width ellipses), causing mild visual
+    imbalance in the 2x3 grid
+  - Tissot indicatrices (optional but educational) not included — would strengthen
+    the distortion storytelling
+  - Subplot title contrast is slightly subdued (INK_SOFT at 12pt over map panels);
+    bumping to 13pt or INK color would improve readability
+  - No choropleth data layer included — the spec allows an optional value variable
+    for coloring, which would add data depth
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot surface color
+      Chrome: Title "map-projections · python · plotly · anyplot.ai" centered in #1A1A17 at 16pt; subplot labels in #4A4A44 at 12pt — all readable
+      Data: Land in #009E73 (anyplot position 1), ocean in #C8E0F0 (light blue), graticule at 20% opacity, coast/country borders in #006B4F
+      Legibility verdict: PASS — all text clearly readable against the light background; no light-on-light issues
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface color
+      Chrome: Title and subplot labels in light ink (#F0EFE8/#B8B7B0) — clearly readable against dark background; no dark-on-dark issues detected
+      Data: Land color #009E73 IDENTICAL to light render (correct); ocean flips to deep navy #192632; graticule at 20% white-tinted opacity
+      Legibility verdict: PASS — all text readable on dark background; brand green #009E73 reads excellently on dark surface
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Main title at 32pt, subplot titles at 22pt, all clearly readable
+        comment: Title (16pt) and subplot titles (12pt) readable in both themes; minor
+          dock for subdued subplot contrast
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text or elements
+        comment: No text or element collisions across any panel in either render
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Maps are well-sized, coastlines clearly visible, graticule lines
-          distinct
+        comment: Land, ocean, graticule, coastlines, country borders all clearly visible
+          in both themes
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue land, light ocean, gold grid lines - colorblind friendly
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good 2x3 grid layout, maps fill space well, minor spacing could be
-          improved
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: false
-        comment: N/A for maps, no lat/lon labels shown (acceptable for projection
-          comparison)
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Yellow graticule lines are visible but not overwhelming
+        comment: Strong green-on-blue contrast; no red-green-only encoding
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas correct (3200x1800); Mercator panel visibly smaller than oval
+          projections — mild grid imbalance
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title correctly formatted; subplot labels descriptive for geo maps
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Land #009E73 identical in both renders; backgrounds #FAF8F1/#1A1A17;
+          ocean adapts by theme'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom anyplot green, theme-adaptive ocean, subtle graticule — clear
+          design intent; no choropleth data layer
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle 20%-opacity graticule, clean frame borders in INK_SOFT, generous
+          inter-panel whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Side-by-side layout enables immediate comparison of projection distortion;
+          pedagogical ordering
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct chart type - world maps with multiple projections
+        comment: 'Correct: world maps with multiple projections in a comparison grid'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Geography correctly rendered for each projection type
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Multiple projections shown (6 total), graticule displayed at 30 degree
-          intervals, coastlines and country borders visible
-      - id: SC-04
-        name: Data Range
+        comment: All 6 projections, graticule at 30°, coastlines, country borders,
+          neutral color scheme
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full world coverage shown in each projection
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: All continents and world geography correctly rendered in every projection
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Each subplot clearly titled with projection name
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: map-projections · plotly · pyplots.ai'
+        comment: Title exactly 'map-projections · python · plotly · anyplot.ai'; subplot
+          titles identify each projection
     data_quality:
-      score: 17
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows 6 diverse projections demonstrating different distortion characteristics,
-          but no Tissot indicatrices
+        comment: All mandatory features covered; Tissot indicatrices (optional) not
+          included
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Uses real world geography with proper coastlines, country borders,
-          and lakes
+        comment: Real world boundaries via Plotly built-in geo data; neutral educational
+          context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: All projections show complete world coverage, Orthographic showing
-          one hemisphere is expected
+        comment: Global scale appropriate for demonstrating projection characteristics
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,50 +185,61 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save'
+        comment: Flat script, no classes or functions; clean loop over projection
+          list
       - id: CQ-02
         name: Reproducibility
-        score: 1
-        max: 3
-        passed: false
-        comment: No random seed needed (uses built-in geo data), but deterministic
+        score: 2
+        max: 2
+        passed: true
+        comment: Fully deterministic; uses built-in geographic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only plotly.graph_objects and plotly.subplots used
+        comment: Only os, plotly.graph_objects, plotly.subplots.make_subplots — all
+          used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Plotly API
+        comment: Dynamic geo_key generation is the correct pattern for multi-geo subplots
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; uses current Plotly
+          API
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Plotly geo subplot capabilities with make_subplots
-          specs for geo type, interactive HTML export, built-in world geography, multiple
-          projection types
+        comment: Correct use of make_subplots with geo specs, go.Scattergeo, update_layout
+          with dynamic geo keys
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Showcases Plotly built-in geo: named projections, showland/showocean/showlakes/showcountries,
+          HTML output'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - html-export
-  patterns: []
+  - hover-tooltips
+  patterns:
+  - iteration-over-groups
   dataprep: []
   styling:
   - grid-styling
