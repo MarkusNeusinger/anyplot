@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Created: 2026-05-23
@@ -50,6 +50,10 @@ for sym, params in stocks.items():
 
 dates_ms = [int(d.timestamp() * 1000) for d in trading_days]
 
+# Find NVDA peak for annotation
+nvda_peak_idx = int(np.argmax(prices["NVDA"]))
+nvda_peak_date_ms = dates_ms[nvda_peak_idx]
+
 # Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
@@ -62,11 +66,12 @@ chart.options.chart = {
     "style": {"color": INK},
     "marginBottom": 120,
     "marginLeft": 140,
+    "plotBorderWidth": 0,
 }
 
 chart.options.title = {
     "text": "Tech Sector 2024 · line-stock-comparison · python · highcharts · anyplot.ai",
-    "style": {"fontSize": "66px", "color": INK},
+    "style": {"fontSize": "66px", "color": INK, "fontWeight": "bold"},
 }
 
 chart.options.x_axis = {
@@ -77,6 +82,17 @@ chart.options.x_axis = {
     "tickColor": INK_SOFT,
     "gridLineColor": GRID,
     "gridLineWidth": 1,
+    "tickInterval": 30 * 24 * 3600 * 1000,
+    "plotLines": [
+        {
+            "value": nvda_peak_date_ms,
+            "color": "#009E73",
+            "dashStyle": "ShortDash",
+            "width": 2,
+            "label": {"text": "NVDA Peak", "style": {"color": "#009E73", "fontSize": "36px"}, "rotation": 0, "y": 20},
+            "zIndex": 3,
+        }
+    ],
 }
 
 chart.options.y_axis = {
@@ -106,8 +122,7 @@ chart.options.y_axis = {
 chart.options.legend = {
     "itemStyle": {"color": INK_SOFT, "fontSize": "44px"},
     "backgroundColor": ELEVATED_BG,
-    "borderColor": INK_SOFT,
-    "borderWidth": 1,
+    "borderWidth": 0,
 }
 
 chart.options.plot_options = {"line": {"lineWidth": 3.5, "marker": {"enabled": False}}}
