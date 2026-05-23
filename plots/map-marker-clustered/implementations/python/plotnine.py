@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-23
@@ -10,21 +10,26 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    coord_cartesian,
+    element_blank,
     element_line,
     element_rect,
     element_text,
     geom_path,
     geom_point,
+    geom_polygon,
     geom_text,
     ggplot,
     guide_legend,
     guides,
     labs,
     scale_color_manual,
+    scale_fill_identity,
     scale_size_continuous,
     theme,
 )
 from scipy.cluster.hierarchy import fcluster, linkage
+from scipy.spatial import ConvexHull
 
 
 # Theme tokens
@@ -49,17 +54,25 @@ city_centers = {
     "San Diego": (32.7, -117.2),
 }
 
+# Per-city weighted categories ensure each cluster has a visually distinct dominant color
+category_types = ["Retail", "Restaurant", "Service", "Entertainment"]
+city_weights = {
+    "Seattle": [0.70, 0.10, 0.10, 0.10],  # Retail  → #009E73
+    "Portland": [0.10, 0.70, 0.10, 0.10],  # Restaurant → #9418DB
+    "San Francisco": [0.10, 0.10, 0.70, 0.10],  # Service → #B71D27
+    "Los Angeles": [0.10, 0.10, 0.10, 0.70],  # Entertainment → #16B8F3
+    "San Diego": [0.70, 0.10, 0.10, 0.10],  # Retail → #009E73 (far from Seattle)
+}
+
 n_points = 300
 lats, lons, cats = [], [], []
-category_types = ["Retail", "Restaurant", "Service", "Entertainment"]
 
 for _ in range(n_points):
     city = np.random.choice(list(city_centers.keys()))
     clat, clon = city_centers[city]
-    # Tight spread ensures hierarchical clustering cleanly separates each city
     lats.append(clat + np.random.normal(0, 0.04))
     lons.append(clon + np.random.normal(0, 0.04))
-    cats.append(np.random.choice(category_types))
+    cats.append(np.random.choice(category_types, p=city_weights[city]))
 
 df = pd.DataFrame({"lat": lats, "lon": lons, "category": cats})
 
@@ -78,6 +91,24 @@ cluster_markers = (
     .reset_index()
 )
 cluster_markers["label"] = cluster_markers["count"].astype(str)
+
+# Convex hull polygons showing each cluster's geographic extent
+hull_rows = []
+for cluster_id in sorted(df["cluster"].unique()):
+    pts = df[df["cluster"] == cluster_id][["lon", "lat"]].values
+    if len(pts) >= 3:
+        try:
+            hull = ConvexHull(pts)
+            verts = pts[hull.vertices]
+            verts = np.vstack([verts, verts[0]])
+            cat = cluster_markers.loc[cluster_markers["cluster"] == cluster_id, "category"].iloc[0]
+            for lon_v, lat_v in verts:
+                hull_rows.append({"lon": lon_v, "lat": lat_v, "cluster": cluster_id, "category": cat})
+        except Exception:
+            pass
+
+hull_df = pd.DataFrame(hull_rows)
+hull_df["fill_color"] = hull_df["category"].map(CATEGORY_COLORS)
 
 # Simplified West Coast state outlines for geographic context
 state_boundaries = pd.concat(
@@ -108,19 +139,30 @@ state_boundaries = pd.concat(
 )
 
 # City reference labels for geographic orientation
-city_labels = pd.DataFrame([{"lat": lat + 0.65, "lon": lon, "name": city} for city, (lat, lon) in city_centers.items()])
+city_label_df = pd.DataFrame(
+    [{"lat": lat + 0.65, "lon": lon, "name": city} for city, (lat, lon) in city_centers.items()]
+)
 
 # Plot
 plot = (
     ggplot(cluster_markers, aes(x="lon", y="lat"))
+    + geom_polygon(
+        data=hull_df,
+        mapping=aes(x="lon", y="lat", group="cluster", fill="fill_color"),
+        alpha=0.13,
+        color=INK_SOFT,
+        size=0.25,
+    )
     + geom_path(
         data=state_boundaries, mapping=aes(x="lon", y="lat", group="state"), color=INK_SOFT, size=0.4, alpha=0.5
     )
-    + geom_text(data=city_labels, mapping=aes(x="lon", y="lat", label="name"), color=INK_MUTED, size=6.5, va="bottom")
+    + geom_text(data=city_label_df, mapping=aes(x="lon", y="lat", label="name"), color=INK_MUTED, size=7.5, va="bottom")
     + geom_point(aes(size="count", color="category"), alpha=0.85, stroke=1.2)
     + geom_text(aes(label="label"), size=7, color="white", fontweight="bold")
     + scale_color_manual(values=CATEGORY_COLORS, name="Category")
+    + scale_fill_identity()
     + scale_size_continuous(range=(6, 13), name="Points in cluster")
+    + coord_cartesian(xlim=(-125.5, -116.5))
     + labs(title="map-marker-clustered · python · plotnine · anyplot.ai", x="Longitude (°)", y="Latitude (°N)")
     + theme(
         figure_size=(8, 4.5),
@@ -128,7 +170,7 @@ plot = (
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
         panel_grid_minor=element_line(color=INK, size=0.2, alpha=0.05),
-        panel_border=element_rect(color=INK_SOFT, fill=None),
+        panel_border=element_blank(),
         axis_title=element_text(color=INK, size=10),
         axis_text=element_text(color=INK_SOFT, size=8),
         axis_line=element_line(color=INK_SOFT),
