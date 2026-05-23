@@ -1,24 +1,42 @@
-""" pyplots.ai
+""" anyplot.ai
 map-marker-clustered: Clustered Marker Map
-Library: highcharts unknown | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-20
+Library: highcharts unknown | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-23
 """
 
 import json
+import os
 import tempfile
 import time
 import urllib.request
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Generate sample store location data across the United States
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+MAP_FILL = "#E8E4DB" if THEME == "light" else "#2A2A25"
+MAP_BORDER = "#B0AC9F" if THEME == "light" else "#4A4A44"
+
+# anyplot palette for the four store categories
+CATEGORY_COLORS = {
+    "Grocery": "#009E73",  # position 1 — brand green
+    "Electronics": "#9418DB",  # position 2 — purple
+    "Clothing": "#B71D27",  # position 3 — red
+    "Home Goods": "#16B8F3",  # position 4 — sky blue
+}
+
+# Data: retail stores clustered around 15 major US cities
 np.random.seed(42)
 
-# Create clusters of stores in major metropolitan areas
 cities = {
     "New York": (40.7128, -74.0060, 50),
     "Los Angeles": (34.0522, -118.2437, 45),
@@ -37,15 +55,7 @@ cities = {
     "Miami": (25.7617, -80.1918, 20),
 }
 
-categories = ["Grocery", "Electronics", "Clothing", "Home Goods"]
-category_colors = {
-    "Grocery": "#306998",  # Python Blue
-    "Electronics": "#FFD43B",  # Python Yellow
-    "Clothing": "#9467BD",  # Purple
-    "Home Goods": "#17BECF",  # Cyan
-}
-
-# Generate store data
+categories = list(CATEGORY_COLORS.keys())
 stores = []
 for city_name, (lat, lon, count) in cities.items():
     for i in range(count):
@@ -58,47 +68,44 @@ for city_name, (lat, lon, count) in cities.items():
                 "lon": round(store_lon, 4),
                 "name": f"{city_name} Store #{i + 1}",
                 "category": category,
-                "color": category_colors[category],
             }
         )
 
-# Download required Highcharts modules
+# Download required Highcharts modules (inline for headless Chrome)
 highcharts_url = "https://code.highcharts.com/highcharts.js"
 maps_url = "https://code.highcharts.com/maps/modules/map.js"
 marker_clusters_url = "https://code.highcharts.com/modules/marker-clusters.js"
 us_map_url = "https://code.highcharts.com/mapdata/countries/us/us-all.topo.json"
 
-with urllib.request.urlopen(highcharts_url, timeout=30) as response:
-    highcharts_js = response.read().decode("utf-8")
+_headers = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
+    "Referer": "https://www.highcharts.com/",
+    "Accept": "*/*",
+}
 
-with urllib.request.urlopen(maps_url, timeout=30) as response:
-    maps_js = response.read().decode("utf-8")
+with urllib.request.urlopen(urllib.request.Request(highcharts_url, headers=_headers), timeout=30) as _r:
+    highcharts_js = _r.read().decode("utf-8")
 
-with urllib.request.urlopen(marker_clusters_url, timeout=30) as response:
-    marker_clusters_js = response.read().decode("utf-8")
+with urllib.request.urlopen(urllib.request.Request(maps_url, headers=_headers), timeout=30) as _r:
+    maps_js = _r.read().decode("utf-8")
 
-with urllib.request.urlopen(us_map_url, timeout=30) as response:
-    us_map_data = response.read().decode("utf-8")
+with urllib.request.urlopen(urllib.request.Request(marker_clusters_url, headers=_headers), timeout=30) as _r:
+    marker_clusters_js = _r.read().decode("utf-8")
 
-# Prepare data for Highcharts
-series_data = {}
+with urllib.request.urlopen(urllib.request.Request(us_map_url, headers=_headers), timeout=30) as _r:
+    us_map_data = _r.read().decode("utf-8")
+
+# Group stores by category for per-series clustering
+series_by_category = {cat: [] for cat in categories}
 for store in stores:
-    cat = store["category"]
-    if cat not in series_data:
-        series_data[cat] = []
-    series_data[cat].append({"lat": store["lat"], "lon": store["lon"], "name": store["name"]})
+    series_by_category[store["category"]].append({"lat": store["lat"], "lon": store["lon"], "name": store["name"]})
 
-# Build series data for each category (JSON only for data points)
-series_data_json = {}
-for cat, points in series_data.items():
-    series_data_json[cat] = json.dumps(points)
-
-# Build JavaScript series definitions with proper cluster dataLabels formatter
-js_series_definitions = []
-for cat in series_data.keys():
-    color = category_colors[cat]
-    data_json = series_data_json[cat]
-    js_series_definitions.append(f"""{{
+# Build one mappoint series per category with clustering enabled
+js_series_parts = []
+for cat in categories:
+    color = CATEGORY_COLORS[cat]
+    data_json = json.dumps(series_by_category[cat])
+    js_series_parts.append(f"""{{
             type: 'mappoint',
             name: '{cat}',
             color: '{color}',
@@ -113,12 +120,12 @@ for cat in series_data.keys():
                     return '';
                 }},
                 style: {{
-                    fontSize: '20px',
+                    fontSize: '34px',
                     fontWeight: 'bold',
                     color: '#ffffff',
-                    textOutline: '2px #333333'
+                    textOutline: '2px rgba(0,0,0,0.6)'
                 }},
-                y: 5
+                y: 6
             }},
             cluster: {{
                 enabled: true,
@@ -126,19 +133,21 @@ for cat in series_data.keys():
                 animation: {{ duration: 450 }},
                 layoutAlgorithm: {{ type: 'grid', gridSize: 70 }},
                 zones: [
-                    {{ from: 1, to: 4, marker: {{ radius: 20 }} }},
-                    {{ from: 5, to: 9, marker: {{ radius: 26 }} }},
-                    {{ from: 10, to: 19, marker: {{ radius: 34 }} }},
-                    {{ from: 20, to: 49, marker: {{ radius: 42 }} }},
-                    {{ from: 50, to: 100, marker: {{ radius: 52 }} }}
+                    {{ from: 1,  to: 4,   marker: {{ radius: 28 }} }},
+                    {{ from: 5,  to: 9,   marker: {{ radius: 30 }} }},
+                    {{ from: 10, to: 19,  marker: {{ radius: 38 }} }},
+                    {{ from: 20, to: 49,  marker: {{ radius: 48 }} }},
+                    {{ from: 50, to: 100, marker: {{ radius: 60 }} }}
                 ]
             }},
-            marker: {{ radius: 10, symbol: 'circle' }}
+            marker: {{ radius: 12, symbol: 'circle' }}
         }}""")
 
-series_js = ",\n        ".join(js_series_definitions)
+series_js = ",\n        ".join(js_series_parts)
 
-# Create HTML with Highcharts map
+store_count = len(stores)
+subtitle_text = f"{store_count} store locations across 15 US cities \\u2014 zoom to expand clusters"
+
 html_content = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -147,28 +156,33 @@ html_content = f"""<!DOCTYPE html>
     <script>{maps_js}</script>
     <script>{marker_clusters_js}</script>
 </head>
-<body style="margin:0; padding:0; background-color:#ffffff;">
-    <div id="container" style="width:4800px; height:2700px;"></div>
+<body style="margin:0; padding:0; background-color:{PAGE_BG};">
+    <div id="container" style="width:3200px; height:1800px;"></div>
     <script>
         var mapData = {us_map_data};
 
         Highcharts.mapChart('container', {{
             chart: {{
                 map: mapData,
-                backgroundColor: '#ffffff',
-                marginBottom: 120
+                backgroundColor: '{PAGE_BG}',
+                width: 3200,
+                height: 1800,
+                marginBottom: 60,
+                style: {{ color: '{INK}' }}
             }},
             title: {{
-                text: 'Clustered Retail Store Locations \\u00b7 map-marker-clustered \\u00b7 highcharts \\u00b7 pyplots.ai',
+                text: 'map-marker-clustered \\u00b7 python \\u00b7 highcharts \\u00b7 anyplot.ai',
                 style: {{
-                    fontSize: '52px',
-                    fontWeight: 'bold'
+                    fontSize: '66px',
+                    fontWeight: 'bold',
+                    color: '{INK}'
                 }}
             }},
             subtitle: {{
-                text: '420 stores across 15 major US cities - zoom to expand clusters',
+                text: '{subtitle_text}',
                 style: {{
-                    fontSize: '36px'
+                    fontSize: '36px',
+                    color: '{INK_SOFT}'
                 }}
             }},
             mapNavigation: {{
@@ -176,7 +190,7 @@ html_content = f"""<!DOCTYPE html>
                 buttonOptions: {{
                     verticalAlign: 'bottom',
                     style: {{
-                        fontSize: '24px'
+                        fontSize: '28px'
                     }}
                 }}
             }},
@@ -186,34 +200,31 @@ html_content = f"""<!DOCTYPE html>
                 verticalAlign: 'middle',
                 layout: 'vertical',
                 itemStyle: {{
-                    fontSize: '36px'
+                    fontSize: '40px',
+                    color: '{INK_SOFT}'
                 }},
-                symbolRadius: 12,
-                symbolHeight: 28,
-                symbolWidth: 28,
-                itemMarginTop: 10,
-                itemMarginBottom: 10
+                backgroundColor: '{ELEVATED_BG}',
+                borderColor: '{INK_SOFT}',
+                borderWidth: 1,
+                padding: 24,
+                symbolRadius: 50,
+                symbolHeight: 36,
+                symbolWidth: 36,
+                itemMarginTop: 14,
+                itemMarginBottom: 14
             }},
             tooltip: {{
                 headerFormat: '',
-                pointFormat: '<b>{{point.name}}</b><br>Lat: {{point.lat:.4f}}, Lon: {{point.lon:.4f}}',
+                pointFormat: '<b>{{point.name}}</b><br>Category: {{series.name}}',
+                clusterFormat: '<b>Cluster</b><br>Points: {{point.clusterPointsAmount}}',
                 style: {{
-                    fontSize: '24px'
-                }},
-                clusterFormat: '<b>Cluster</b><br>Points: {{point.clusterPointsAmount}}'
-            }},
-            plotOptions: {{
-                mappoint: {{
-                    dataLabels: {{
-                        enabled: true,
-                        allowOverlap: true
-                    }}
+                    fontSize: '32px'
                 }}
             }},
             series: [{{
                 name: 'US States',
-                borderColor: '#A0A0A0',
-                nullColor: '#f0f0f0',
+                borderColor: '{MAP_BORDER}',
+                nullColor: '{MAP_FILL}',
                 showInLegend: false,
                 enableMouseTracking: false
             }},
@@ -223,26 +234,37 @@ html_content = f"""<!DOCTYPE html>
 </body>
 </html>"""
 
-# Save interactive HTML
-with open("plot.html", "w", encoding="utf-8") as f:
+# Save interactive HTML artifact
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
     f.write(html_content)
 
-# Take screenshot using Selenium
+# Write temp HTML and screenshot with Selenium
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=4800,2700")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
-time.sleep(6)  # Wait for chart and map to render
-driver.save_screenshot("plot.png")
+time.sleep(5)
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
-Path(temp_path).unlink()  # Clean up temp file
+Path(temp_path).unlink()
+
+# PIL safety net: pin to exact 3200×1800 so the post-render gate is satisfied
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
