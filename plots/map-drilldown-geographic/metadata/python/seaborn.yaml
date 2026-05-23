@@ -1,159 +1,221 @@
 library: seaborn
+language: python
 specification_id: map-drilldown-geographic
 created: '2026-01-20T07:43:15Z'
-updated: '2026-01-20T07:52:33Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21163297404
+updated: '2026-05-23T20:05:00Z'
+generated_by: claude-sonnet
+workflow_run: 26328505142
 issue: 3770
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/seaborn/plot.png
-preview_html: null
-quality_score: 90
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 77
 review:
   strengths:
-  - Excellent three-panel design effectively communicates the drill-down hierarchy
-    concept
-  - Good use of breadcrumb navigation boxes with consistent styling
-  - Effective visual highlighting of drillable regions (bold blue borders)
-  - Clean handling of potentially overlapping city labels through manual positioning
-  - Appropriate use of seaborn scatterplot with size encoding for the cities panel
+  - Creative three-panel layout elegantly conveys the drill-down hierarchy as a static
+    visualization — Level 1 (Countries) → Level 2 (German States) → Level 3 (Bavarian
+    Cities) with arrows between panels
+  - Shared anyplot_seq colorbar spanning all three levels provides consistent value
+    comparison across the hierarchy
+  - Highlighted drill path (Germany outlined in panel 1, Bavaria outlined in panel
+    2) tells a coherent story about which region is being zoomed into
+  - Breadcrumb annotations ('Europe', 'Europe > Germany', 'Europe > Germany > Bavaria')
+    give clear hierarchical context in each panel
+  - 'Proper theme-adaptive chrome: all text, axis colors, backgrounds, and callout
+    boxes switch correctly between light (#FAF8F1) and dark (#1A1A17) themes — no
+    dark-on-dark failures'
+  - Seaborn scatterplot with size+hue encoding on centroids adds a redundant but useful
+    magnitude encoding on top of the rectangle choropleth
+  - Realistic sales revenue data (European countries, German states, Bavarian cities)
+    with plausible values and sensible geographic coordinates
   weaknesses:
-  - Panels 1 and 2 rely heavily on matplotlib Rectangle patches rather than seaborn
-    plotting functions
-  - The colorbar overlaps slightly with the middle panel x-axis label (Longitude partially
-    obscured)
+  - 'Panel 1 (Countries) has significant text overlap: Germany and France rectangles
+    share geographic space, causing country name labels and value labels (€4200M,
+    €3100M, €2200M etc.) to overlap each other — consider reducing fontsize from 6.5pt
+    to 5pt for names and 6pt to 4.5pt for values in dense panels, or clip text to
+    within each rectangle''s bounds'
+  - 'Panel 2 (States) label density: NRW, Hesse, and Baden-Württemberg rectangles
+    are geographically adjacent and their text labels overlap at fontsize=6.5 — tighten
+    label offsets or use a smaller fontsize (5pt) for state names in panel 2'
+  - Scatter centroid dots add visual noise in panels 1 and 2 where rectangles are
+    already labeled — consider removing scatter from panels 1 and 2 and keeping it
+    only in panel 3 (Cities), where there are no rectangles and size+hue provides
+    genuine added value
+  - Seaborn usage is minimal — seaborn scatterplot is used only for centroid markers
+    while all core geographic rendering is done with matplotlib Rectangle patches;
+    the seaborn-specific features (size+hue bubble map) are a useful touch but the
+    library is barely leveraged beyond basic scatterplot
+  - np.random.seed(42) is set but no random data is actually generated (all data is
+    hardcoded dicts) — the seed line is dead code and should be removed
+  - Large bottom whitespace gap between the plot panels and the colorbar (subplots
+    bottom=0.28, colorbar at y=0.12-0.158) creates visual disconnect; reducing bottom
+    to 0.22 and raising cbar_ax y to 0.16 would tighten the layout
   image_description: |-
-    The plot displays a three-panel layout showing a hierarchical geographic drill-down visualization of sales revenue data.
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) fills the entire figure and all three panel backgrounds — correct.
+      Chrome: Title "map-drilldown-geographic · python · seaborn · anyplot.ai" in dark ink, readable at fontsize=12. Panel subtitles "Level 1: Countries", "Level 2: States (Germany)", "Level 3: Cities (Bavaria)" in dark ink at fontsize=10. Axis labels "Longitude (°)" and "Latitude (°)" in dark ink at fontsize=8. Tick labels in INK_SOFT (#4A4A44) at fontsize=7. All text clearly visible against the warm off-white background.
+      Data: Three panels show geographic hierarchy. Panel 1: Five colored rectangles representing European countries (Germany teal-blue highlighted with ACCENT border, others ranging green→blue via anyplot_seq). Small scatter dots at centroids encode value via size and hue. Country names and values labeled (€1900M–€4200M). Panel 2: Six German state rectangles (Bavaria highlighted), labeled with state names and values. Panel 3: Six Bavarian cities as scatter bubbles sized by revenue, labeled with city names and values. ACCENT-green (→) arrows between panels. ACCENT-green breadcrumb boxes in each panel. Shared horizontal colorbar at bottom (green→blue, €0–€4200M). Notable overlap in panel 1 (Germany/France/Italy labels crowd each other) and panel 2 (NRW/Hesse/Bavaria text dense).
+      Legibility verdict: PASS — all text readable; minor overlap in panels 1 and 2 reduces clarity but text remains distinguishable.
 
-    Panel 1 (Level 1: Countries): Shows 5 countries (USA, Canada, Mexico, Brazil, Argentina) represented as rectangles on a coordinate grid with longitude/latitude axes. Each country is colored using a Blues colormap based on sales value, with USA highlighted with a bold blue border ($4,500M). A "World" breadcrumb appears in the top-left corner.
-
-    Panel 2 (Level 2: States): Drills into USA showing 6 states (California, Texas, Florida, New York, Illinois, Washington) as rectangles. California is highlighted with a bold blue border ($1,200M). A "World > USA" breadcrumb is displayed.
-
-    Panel 3 (Level 3: Cities): Drills into California showing 6 cities (Los Angeles, San Francisco, San Diego, San Jose, Sacramento, Fresno) as bubbles using seaborn scatterplot with size encoding. Los Angeles is the largest bubble ($450M). A "World > USA > California" breadcrumb is shown. A legend showing "Sales" values is in the lower right.
-
-    Blue arrows connect the panels indicating drill-down flow. A horizontal colorbar at the bottom shows "Sales Revenue ($M)" from ~50 to ~4500. The title correctly uses the format "map-drilldown-geographic · seaborn · pyplots.ai" with an italic subtitle explaining the interaction concept.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) fills the entire figure and all panel backgrounds — correct.
+      Chrome: Title and axis labels in light cream (#F0EFE8), clearly visible against dark background. Tick labels in INK_SOFT (#B8B7B0). Panel titles in correct light ink. Breadcrumb callout boxes use ELEVATED_BG (#242420) fill with ACCENT-green border — readable. Colorbar labels and ticks in correct light colors. No dark-on-dark failures observed.
+      Data: Data colors are identical to the light render — anyplot_seq green-to-blue gradient unchanged between themes. Rectangle fills and scatter dot colors match the light version. ACCENT green (#009E73) arrows and breadcrumb borders remain visible on the dark surface.
+      Legibility verdict: PASS — full theme adaptation successful; all chrome elements flip correctly to light-on-dark.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 23
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: All text is readable; title is 24pt, subtitles 18pt, labels ~10-14pt.
-          Some value labels on cities are slightly small but still readable
+        comment: All text readable in both themes; smallest value labels at fontsize=5
+          (city values) are marginal for mobile-scaled views; title, panel headers,
+          axis labels all clear
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: Excellent handling of San Francisco/San Jose labels with offset positioning
-          to avoid overlap
+        score: 3
+        max: 6
+        passed: false
+        comment: Notable label overlap in panel 1 (Germany/France/Italy rectangles
+          overlap geographically, causing text collisions) and panel 2 (NRW/Hesse/Baden-Württemberg
+          labels cramped); panel 3 (cities) is better managed with custom offsets
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Rectangles clearly visible with good alpha (0.9), city bubbles sized
-          appropriately (200-800) for 6 data points
+        comment: Rectangles, scatter dots, colorbar all clearly visible; some data
+          obscured by overlapping labels in dense panels
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blues sequential colormap is colorblind-safe
+        comment: anyplot_seq colormap (green→blue) is CVD-safe; ACCENT green visible
+          in both themes
       - id: VQ-05
-        name: Layout Balance
+        name: Layout & Canvas
         score: 3
-        max: 5
+        max: 4
         passed: true
-        comment: Three-panel layout is well-proportioned, but minor wasted space between
-          panels and arrows
+        comment: Canvas 3200×1800 correct; three-panel proportions good; large whitespace
+          gap between bottom of panels and colorbar (subplots bottom=0.28, cbar at
+          y=0.12-0.158)
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Longitude (°), Latitude (°), Sales Revenue
-          ($M)'
+        comment: Axis labels include units (Longitude °, Latitude °); title matches
+          required format
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Grid alpha set to 0.25, legend well-placed in lower right of panel
-          3
+        comment: 'anyplot_seq colormap used throughout; backgrounds #FAF8F1/#1A1A17
+          correct; ACCENT #009E73 used consistently'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default — three-panel layout with drill-path highlighting is
+          a sophisticated static adaptation of an interactive concept; arrows and
+          breadcrumbs add professional polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Above default — top/right spines removed, semi-transparent fills
+          (alpha=0.72/0.92), boxed breadcrumb annotations with rounded corners; limited
+          whitespace refinement
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Above default — highlighted drill path (Germany→Bavaria) tells a
+          coherent story; arrows guide viewer through hierarchy; consistent colorbar
+          enables cross-level comparison
     spec_compliance:
-      score: 23
-      max: 25
+      score: 11
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 3
+        max: 5
         passed: true
-        comment: Correct multi-level geographic visualization showing choropleth-style
-          coloring
+        comment: Geographic hierarchical choropleth concept captured, but uses rectangles
+          instead of actual map shapes; inherently static for an interactive spec
+          — valid seaborn approximation
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Longitude/latitude correctly mapped to X/Y, values correctly mapped
-          to color and size
-      - id: SC-03
         name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: Has drill-down concept, breadcrumbs, color legend. Static image cannot
-          show actual click interaction
-      - id: SC-04
-        name: Data Range
+        score: 2
+        max: 4
+        passed: false
+        comment: 'Has: choropleth coloring, static breadcrumb text, color legend,
+          consistent color scale, hierarchical data at 3 levels. Missing: true drill-down
+          interaction, tooltips on hover, smooth zoom transitions (all impossible
+          in seaborn)'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show all data appropriately for each zoom level
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Lon/lat mapped to axes, values mapped to color (anyplot_seq), three-level
+          hierarchy preserved
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Color bar and size legend both accurate
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but subtitle slightly overlaps with proper title
-          spacing
+        comment: Title 'map-drilldown-geographic · python · seaborn · anyplot.ai'
+          correct; colorbar legend present with 'Sales Revenue (€M)' label
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows all 3 hierarchical levels, demonstrates both high and low values
+        comment: All three drill levels shown (countries/states/cities); choropleth
+          at each level; geographic coordinates correct; hierarchical containment
+          shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sales revenue by geographic region is a real, neutral business scenario
+        comment: 'European sales revenue data: realistic countries (Germany €4200M,
+          France €3100M, UK €2800M, Italy €2200M, Spain €1900M), German states (NRW,
+          Bavaria, Baden-Württemberg, Hesse, Saxony, Brandenburg), Bavarian cities
+          (Munich, Nuremberg, Augsburg, Regensburg, Ingolstadt, Würzburg) — all plausible
+          and neutral'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are plausible, though parent-child aggregation is approximate
+        comment: €M scale is sensible for sales revenue; values range €75M–€4200M
+          covering a realistic spread; geographic coordinates are accurate
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,43 +223,54 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → panels → save. No functions/classes'
+        comment: Flat structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) present (though no actual random data is generated
+          — dead code, but harmless)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib.pyplot, numpy, pandas, seaborn, Rectangle)
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, seaborn,
+          LinearSegmentedColormap, Rectangle'
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
-        passed: false
-        comment: Uses legend='brief' in scatterplot which may generate warnings in
-          newer seaborn
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Reasonable complexity; no fake UI; some repetition between panels
+          is necessary for the three-panel structure
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png correctly; no bbox_inches='tight'
+    library_mastery:
+      score: 5
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 3
         max: 5
         passed: true
-        comment: Uses sns.set_theme(), sns.scatterplot() with size/hue encoding, and
-          Blues palette. Panels 1 and 2 primarily use matplotlib patches
+        comment: Seaborn used for scatterplot with size+hue encoding; most geographic
+          rendering is matplotlib Rectangle patches — seaborn usage limited but idiomatic
+          where applied
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: true
+        comment: Above default — seaborn size+hue bubble encoding on geographic centroids
+          is a library-specific pattern; could leverage seaborn more deeply (e.g.
+          relplot, heatmap, FacetGrid)
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -206,12 +279,12 @@ impl_tags:
   - colorbar
   - annotations
   - patches
-  - custom-legend
   patterns:
-  - data-generation
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
