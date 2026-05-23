@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: map-projections
 created: '2026-05-23T08:20:00Z'
-updated: '2026-05-23T08:28:46Z'
+updated: '2026-05-23T08:42:49Z'
 generated_by: claude-sonnet
 workflow_run: 26327716523
 issue: 3771
@@ -12,51 +12,46 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-proje
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 83
+quality_score: 85
 review:
   strengths:
-  - Mathematically rigorous Mollweide projection implemented from scratch (Newton-Raphson
-    solver for theta), entirely within ggplot2 drawing primitives
-  - 'Excellent dual-theme adaptation: custom OCEAN_BG tokens (#C4DCF0 light / #152030
-    dark) are semantically appropriate and both themes are visually coherent'
-  - Brand green (#009E73) correctly used for Tissot indicatrices as the first (and
-    only) data series
-  - 'Clean visual hierarchy: faint graticule (alpha=0.45) < bolder equator/prime meridian
-    (alpha=0.70) < prominent green Tissot ellipses — guides the viewer''s eye correctly'
-  - 'Tissot indicatrices correctly demonstrate the equal-area property of Mollweide:
-    same surface area at every lat/lon position, with correct latitude cosine correction
-    applied'
-  - theme_void() + coord_fixed() is idiomatic ggplot2 for cartographic use — no unnecessary
-    axis chrome
+  - Implements Mollweide projection from scratch using Newton-Raphson iteration —
+    correctly bypasses sf/ggmap (out of scope) without sacrificing accuracy
+  - 'Theme-adaptive ocean and land colors (not just grey fill): #C4DCF0/#152030 ocean,
+    #D4C9A8/#2A3020 land — thoughtfully chosen for both surfaces'
+  - Tissot indicatrices correctly demonstrate the equal-area property; subtitle explains
+    the visual insight ('every circle covers identical surface')
+  - 'Perfect palette compliance: brand green #009E73 for Tissot circles, correct backgrounds
+    in both themes (#FAF8F1 light / #1A1A17 dark)'
+  - 'Visual hierarchy: equator and prime meridian are bolder than regular graticule
+    — reads naturally'
+  - 'Perfect code quality: deterministic, clean imports, idiomatic ggplot2 grammar,
+    correct canvas size (3200x1800)'
   weaknesses:
-  - 'Missing land masses and country borders: the spec explicitly requires ''world
-    country boundaries'' and ''clean coastlines and country borders.'' The entire
-    plot is ocean-filled with no land polygons visible. Fix: add `library(maps)` and
-    use `map_data(''world'')` to get lon/lat country boundary coordinates, then project
-    them through the `mollweide()` function and render with `geom_polygon()` (land
-    fill) + `geom_path()` (borders) — this avoids `sf` and stays in base ggplot2'
-  - dplyr is imported (`library(dplyr)`) but never used anywhere in the code — remove
-    it to satisfy CQ-03 clean imports
-  - Subtitle at 8.5pt may be hard to read when the image is scaled to mobile widths
-    (~400px). Consider either raising to 9.5pt or shortening the subtitle text
-  - Helper functions `solve_theta()` and `mollweide()` break the KISS (no-functions)
-    code structure. Consider inlining the math or wrapping in a single anonymous call
-    chain to keep the flat script style
+  - Subtitle is ~90 characters long at 9.5pt, causing it to span ~90% of the canvas
+    width and appear nearly edge-to-edge — reduce subtitle length or reduce font size
+    to ~8pt to restore visual breathing room
+  - Only Mollweide projection is shown; the spec description emphasizes demonstrating
+    multiple projections (Mercator, Robinson, Mollweide, etc.) for comparison — consider
+    a 2x2 faceted layout showing 4 projections side-by-side to fully satisfy the educational
+    intent
+  - Tissot indicatrices are limited to ±60° latitude; including a row at ±75° or near-polar
+    positions would better illustrate the extreme distortion in those regions
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
-      Chrome: Title "map-projections · r · ggplot2 · anyplot.ai" in dark ink (#1A1A17) at 12pt, centered — clearly readable. Subtitle in INK_SOFT gray at 8.5pt, also centered — readable at full resolution but small. No axis labels or tick labels (theme_void — appropriate for a map).
-      Data: A Mollweide ellipse filled with light blue ocean (#C4DCF0). Thin, subtle gray graticule lines at 30° intervals (alpha=0.45, linewidth=0.18). Slightly bolder equator and prime meridian lines (alpha=0.70). 30 green (#009E73) Tissot indicatrix ellipses distributed across 5 latitude bands × 6 longitude positions. No land masses or country borders are visible.
-      Legibility verdict: PASS — all text readable; no light-on-light failures.
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface
+      Chrome: Title "map-projections · r · ggplot2 · anyplot.ai" at 12pt in dark ink (#1A1A17), center-aligned, clearly readable. Subtitle in secondary ink (#4A4A44) at 9.5pt — readable but spans ~90% of canvas width approaching edges. No axis labels or tick labels (theme_void appropriate for map).
+      Data: Ocean fill in muted cornflower blue (#C4DCF0), land masses in sandy beige (#D4C9A8). 30-degree graticule in semi-transparent soft ink. Equator and prime meridian drawn bolder. Tissot indicatrices (30 circles at 5 lat-bands × 6 lon-positions) in brand green #009E73. Ellipse boundary outlined.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
-      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0) — clearly readable against the dark background. No dark-on-dark failures anywhere.
-      Data: Ocean changes to dark navy (#152030), which is semantically appropriate and visually distinct. Graticule lines appear as subtle off-white paths. Tissot indicatrices remain exactly #009E73 — identical to the light render (only chrome flipped, data colors unchanged). Ellipse outline visible as a lighter border.
-      Legibility verdict: PASS — all text readable; chrome correctly flips; data colors identical to light render.
+      Background: Near-black #1A1A17 — correct anyplot dark surface
+      Chrome: Title and subtitle use light tokens (#F0EFE8 / #B8B7B0), clearly readable against dark background. No dark-on-dark failures detected. Graticule and ellipse boundary rendered in #B8B7B0.
+      Data: Ocean shifts to deep navy (#152030), land to dark olive green (#2A3020). Tissot indicatrices remain identical brand green #009E73 — data colors unchanged from light render as required. All data elements distinguishable against dark background.
+      Legibility verdict: PASS — all text and data elements readable in dark theme
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -64,74 +59,78 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title (12pt) and subtitle (8.5pt) explicitly set, readable in both
-          themes; subtitle is on the small side for mobile scale
+        comment: 'Title and subtitle readable in both themes. Minor: subtitle (~90
+          chars at 9.5pt) spans ~90% of canvas width, approaching edges.'
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No overlapping elements; Tissot ellipses well-spaced, no text collisions
+        comment: 'No text or data overlaps. Minor: some Tissot circles at high latitudes
+          are visually close in some longitude bands.'
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Tissot indicatrices clearly visible and well-sized; graticule subtle
-          but legible
+        comment: Tissot indicatrices, land, ocean, and graticule all clearly distinguishable
+          in both themes.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green (#009E73) on blue ocean has good contrast in both themes; CVD-safe
+        comment: Brand green against ocean blue/navy has adequate contrast; CVD-safe
+          palette.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: Map fills ~75% of canvas area, balanced margins, no content cut off
+        comment: 'Correct 3200x1800 canvas. Map ellipse well-centered. Minor: subtitle
+          text approaches canvas edges, limiting breathing room despite 50pt plot
+          margins.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title descriptive; subtitle explains projection and Tissot purpose;
-          no axis labels appropriate for theme_void map
+        comment: theme_void() correct for a map. Subtitle provides projection type
+          and educational context.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Data elements use #009E73 (position 1); ocean blue is semantic (blue=water);
-          backgrounds correct #FAF8F1/#1A1A17; chrome flips correctly'
+        comment: 'Tissot circles use ANYPLOT_PALETTE[1] (#009E73). Backgrounds #FAF8F1
+          (light) / #1A1A17 (dark). Data colors identical between themes.'
     design_excellence:
-      score: 15
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: 'Strong design: custom dual-theme ocean colors, intentional graticule
-          hierarchy, harmonious green/blue composition — clearly above defaults'
+        comment: Theme-adaptive ocean/land colors (not grey default), intentional
+          visual hierarchy (equator/prime meridian bolder), good alpha usage.
       - id: DE-02
         name: Visual Refinement
-        score: 5
+        score: 3
         max: 6
         passed: true
-        comment: theme_void removes all extraneous chrome; graticule very subtle (alpha=0.45);
-          equator/prime meridian differentiated; clean ellipse outline
+        comment: theme_void() removes axes correctly for a map. Subtle graticule opacity.
+          Ellipse boundary clean. Subtitle near-edge is a refinement miss.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Subtitle explicitly explains what Tissot indicatrices demonstrate;
-          visual hierarchy guides eye from graticule to reference lines to data ellipses
+        comment: Tissot indicatrices demonstrate equal-area property effectively.
+          Subtitle explains what the circles prove. Clear educational narrative.
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -139,119 +138,121 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: Mollweide projection world map as specified; spec allows
-          single projection with clear title'
+        comment: Correct world map with Mollweide projection. Spec explicitly allows
+          single projection with clear title.
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: Graticule at 30° intervals ✓, Tissot indicatrices ✓; but missing
-          country boundaries and coastlines which spec explicitly requires
+        passed: true
+        comment: 'Graticule at 30° ✓, coastlines/borders ✓, Tissot indicatrices ✓,
+          neutral land colors ✓. Minor deduction: spec description emphasizes multiple
+          projections for comparison; showing only Mollweide limits educational comparison.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Mollweide math correct; graticule correctly positioned; Tissot circles
-          at valid lat/lon centers
+        comment: Real world boundary data from maps package, correct Mollweide projection
+          math (Newton-Raphson), all country polygons displayed.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title exactly 'map-projections · r · ggplot2 · anyplot.ai'; no legend
-          needed for single-series map
+        comment: 'Title matches spec format exactly: ''map-projections · r · ggplot2
+          · anyplot.ai''. No legend needed for single-series.'
     data_quality:
-      score: 13
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 4
+        score: 6
         max: 6
-        passed: false
-        comment: Shows projection math, graticule, Tissot indicatrices — but missing
-          the key world map feature (land polygons)
+        passed: true
+        comment: World boundaries, ocean fill, land fill, graticule, equator, prime
+          meridian, Tissot indicatrices, ellipse boundary all present.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real geographic context, Mollweide is a standard equal-area projection,
-          educational scenario, neutral content
+        comment: Real world boundary data. Mollweide is a genuine equal-area projection.
+          Tissot indicatrices are a standard cartographic tool. Neutral educational
+          context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Projection math correct; Tissot radius (5°) is standard; lat centers
-          ±60° and lon spacing 60° are textbook positions
+        comment: 30° graticule standard. 5° Tissot radius at 5 lat-bands × 6 lon-positions
+          well-calibrated for canvas.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Has helper functions solve_theta() and mollweide() — not pure flat
-          KISS, though they are mathematically necessary
+        passed: true
+        comment: Helper functions solve_theta and mollweide are genuinely necessary
+          since sf/ggmap are out of scope per library rules. Flat, readable structure.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: 'Fully deterministic: all data is computed mathematically, no random
-          elements'
+        comment: No random seed needed; all data is deterministic (real map data +
+          mathematical projection).
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: library(dplyr) is imported but never used anywhere in the code
+        passed: true
+        comment: ggplot2, maps, ragg — all three used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Well-organized; Newton-Raphson solver is correctly implemented; no
-          fake UI; appropriate complexity
+        comment: Appropriate ggplot2 layer composition. No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png using ragg::agg_png at correct dimensions
-          (8x4.5in, dpi=400 = 3200x1800px)
+        comment: Saves as plot-{THEME}.png using ragg::agg_png. Correct dimensions
+          8x4.5 in at 400dpi = 3200x1800.
     library_mastery:
-      score: 5
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: theme_void() for a map, coord_fixed() for aspect ratio, multi-layer
+          geom composition via ggplot2 grammar. Good idiomatic patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses theme_void(), coord_fixed(), geom_polygon(), geom_path() idiomatically;
-          using ggplot2 as a drawing framework rather than exploiting grammar-of-graphics
-          statistical features
-      - id: LM-02
-        name: Distinctive Features
-        score: 2
-        max: 5
-        passed: false
-        comment: theme_void() + coord_fixed() are ggplot2-specific; layer composition
-          is idiomatic; but projection math is all manual — no ggplot2 geo projection
-          features leveraged
-  verdict: REJECTED
+        comment: Mollweide projection implemented in pure R math layered through ggplot2
+          geom system. Multi-layer grammar (ocean fill → land → borders → graticule
+          → equator/meridian → Tissot → boundary) showcases grammar of graphics well.
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - maps
   techniques:
   - layer-composition
+  - patches
   patterns:
-  - data-generation
+  - dataset-loading
   - iteration-over-groups
   dataprep: []
   styling:
