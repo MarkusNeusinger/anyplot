@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: dashboard-synchronized-crosshair
 created: '2026-01-20T19:39:41Z'
-updated: '2026-05-23T20:31:53Z'
+updated: '2026-05-23T20:44:08Z'
 generated_by: claude-sonnet
 workflow_run: 26342314644
 issue: 3784
@@ -12,48 +12,41 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/letsplot/plot-dark.html
-quality_score: 81
+quality_score: 84
 review:
   strengths:
-  - Correctly uses anyplot palette in canonical order across 3 chart panels (green/purple/red)
-  - 'Full static+interactive output: PNG crosshair demo and HTML with layer_tooltips'
-  - Proper theme-adaptive tokens for both light and dark renders with no dark-on-dark
-    failures
-  - RSI reference lines at 30/70 add meaningful domain context
-  - 2:1:1 height ratio correctly emphasizes price chart over secondary indicators
-  - geom_path workaround for crosshair vertical line with scale_color_manual legend
-    is idiomatic
-  - gggrid composite layout with stacked panels is idiomatic letsplot usage
+  - 'Correct anyplot palette throughout: price=#009E73, volume=#9418DB, rsi=#B71D27,
+    crosshair=#D359A7 (palette position 6, distinct from all data series)'
+  - 'Full theme adaptation: all chrome tokens correctly wired to both themes; no dark-on-dark
+    in dark render'
+  - 'Excellent spec compliance: synchronized crosshair with value annotations in static
+    PNG, plus real interactive HTML with layer_tooltips()'
+  - Shared common_theme pattern eliminates code duplication across 3 sub-charts
+  - RSI overbought/oversold reference lines (30/70) add meaningful domain context;
+    height ratio 2:1:1 gives appropriate emphasis to price chart
+  - geom_segment for volume bars (rather than geom_bar) shows library knowledge; comment
+    explains the rationale
   weaknesses:
-  - 'Crosshair geom_point (size=6) overlaps with geom_text annotation labels in all
-    three charts — the dot marker renders at the same (x,y) as the text anchor, causing
-    the label to appear split (e.g. $8[dot]5.91). Fix: increase hjust offset to ~0.5-1.0
-    or use vjust to shift labels above/below the dot instead of beside it'
-  - Three separate redundant Crosshair legends (one per sub-chart) add visual noise
-    without information — all three just say Crosshair. Use show_legend=False on scale_color_manual
-    in sub-charts and add a single shared legend annotation or remove entirely since
-    the pink color and vertical line make the crosshair self-evident
-  - Sub-chart common_theme sets axis_title=18 and plot_title=20 while the outer gggrid
-    title uses fontsize=16 — this inverts the expected hierarchy (panel titles larger
-    than dashboard title). Consider reducing sub-chart title sizes to 14-16pt and
-    increasing dashboard title to 18-20pt
+  - axis_title size=18 and axis_text size=14 render at 72px and 56px at scale=4, exceeding
+    recommended 48px and 40px — particularly noticeable in shorter Volume and RSI
+    sub-panels; reduce to axis_title=12, axis_text=10 per style guide
+  - Design sophistication limited to functional choices (crosshair color, height ratio);
+    no removal of panel border chrome, no refinement of whitespace between sub-panels
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot surface, not pure white. ✓
-      Chrome: Dashboard title "dashboard-synchronized-crosshair · python · letsplot · anyplot.ai" visible in dark ink at top-left. Sub-chart titles "Price", "Volume", "RSI Indicator" in dark ink. Axis labels "Price ($)", "Volume (M)", "RSI", "Date" clearly readable. Month tick labels on x-axis readable. Y-axis numeric ticks readable on price and volume charts; RSI y-axis is compressed but tick at 0 visible.
-      Data: Price line in #009E73 (brand green) — first palette position ✓. Volume bars via geom_segment in #9418DB (purple — second palette position) ✓. RSI line in #B71D27 (red — third palette position) ✓. Pink crosshair (#D359A7, palette position 6) vertical line, dot marker, and annotation label visible in all three panels.
-      Issues: geom_point dot marker (size=6) overlaps with geom_text labels at the same (x,y) anchor — visible as e.g. "$8[dot]5.91" in price chart. Three redundant "Crosshair" legends (one per panel). RSI dashed reference lines at 30/70 visible.
-      Legibility verdict: PASS — all labels readable, though crosshair annotation/dot overlap is a VQ-02 issue.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "dashboard-synchronized-crosshair · python · letsplot · anyplot.ai" in dark INK text at top; sub-chart titles "Price", "Volume", "RSI Indicator" in dark text inside panels; y-axis labels "Price ($)", "Volume (M)", "RSI" and x-axis "Date" in dark INK text; tick labels (month names, numeric values) in INK_SOFT dark gray — all readable
+      Data: Price line #009E73 (green, first series correct); volume segments #9418DB (purple); RSI line #B71D27 (red); crosshair elements #D359A7 (pink palette position 6, distinct from all series); pink vertical crosshair line at day 100, pink dot markers, annotation labels "$85.91" and "47.9"
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface. ✓
-      Chrome: Dashboard title rendered in light (#F0EFE8) ink, clearly readable against dark background. Sub-chart titles "Price", "Volume", "RSI Indicator" in light text. Axis labels and tick labels in INK_SOFT (#B8B7B0) — all readable against dark background. No dark-on-dark failures detected. ✓
-      Data: Data colors identical to light render — green price line, purple volume bars, red RSI line. Pink crosshair identical. Only backgrounds and text/grid chrome colors flip between themes. ✓
-      Issues: Same geom_point/geom_text overlap as light render. Redundant "Crosshair" legends present. Grid lines subtle (GRID_COLOR=#32322F) and not competing with data.
-      Legibility verdict: PASS — all text readable on dark background, no dark-on-dark failure.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title in light INK (#F0EFE8) text; sub-chart titles in light text; axis labels in light text; tick labels in INK_SOFT (#B8B7B0) light gray — all readable against dark background; no dark-on-dark failures observed; RSI dashed reference lines switch to INK_SOFT light gray, remaining visible
+      Data: Price line #009E73 (identical to light render); volume segments #9418DB (identical); RSI line #B71D27 (identical); crosshair #D359A7 (identical) — all data colors unchanged between themes, only chrome flipped
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -61,59 +54,51 @@ review:
         score: 6
         max: 8
         passed: true
-        comment: 'All titles, axis labels, and tick labels readable in both themes.
-          Minor: RSI sub-chart is compressed (1/4 total height) making y-axis ticks
-          harder to read. Sub-chart titles (size=20) are larger than dashboard title
-          (size=16), inverting expected hierarchy.'
+        comment: All font sizes explicitly set; readable in both themes. axis_title=18
+          (72px at scale=4) slightly above recommended 12 (48px); disproportionate
+          in shorter Volume/RSI panels
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: 'geom_point (size=6) at crosshair position overlaps with geom_text
-          label at the same (x,y) anchor in all three charts. Labels still readable
-          but visually split by dot marker. Fix: increase hjust or reposition label
-          above/below dot.'
+        passed: true
+        comment: No overlapping text or data elements in either render
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Price line, volume bars, RSI line all clearly visible. Crosshair
-          vertical line visible. RSI reference lines at 30/70 visible. All data elements
-          distinguishable from background in both themes.
+        comment: All data series clearly visible; volume geom_segment at 200 points
+          slightly dense but readable
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette used — colorblind-safe. Green/purple/red combination
-          has adequate contrast. No red-green as sole distinguishing signal.
+        comment: CVD-safe anyplot palette with good luminance separation across all
+          series
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed (3200x1800). Three-panel stacked layout is well-organized.
-          Three redundant Crosshair legends take horizontal space on right side. Title
-          hierarchy slightly off (panel titles larger than dashboard title).
+        comment: Correct 3200x1800 canvas; 3-panel stacked layout fills canvas well;
+          no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'All axes labeled with units: Price ($), Volume (M), RSI, Date. Descriptive
-          and informative.'
+        comment: 'Descriptive labels with units: Price ($), Volume (M), RSI, Date'
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series (price) uses #009E73. Multi-panel uses canonical palette
-          order (positions 1/2/3). Crosshair uses palette position 6 (#D359A7). Backgrounds
-          #FAF8F1 (light) / #1A1A17 (dark). Both renders theme-correct.'
+        comment: 'First series #009E73; positions 2-3 canonical order; backgrounds
+          #FAF8F1/#1A1A17; all chrome theme-adaptive'
     design_excellence:
-      score: 12
+      score: 11
       max: 20
       items:
       - id: DE-01
@@ -121,27 +106,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Intentional color hierarchy across panels (green/purple/red). Pink
-          crosshair (#D359A7) visually distinct from all data series. 2:1:1 height
-          ratio shows editorial judgment emphasizing price.
+        comment: Thoughtful crosshair color (palette position 6, distinct from all
+          series); height ratio 2:1:1; shared common_theme. Above default, not quite
+          strong design
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: 'theme_minimal() + custom anyplot tokens. Minor grid removed. Major
-          grid with subtle GRID_COLOR. Deduction: three redundant Crosshair legends
-          add visual noise.'
+        comment: theme_minimal base; minor grid removed; major grid subtle with custom
+          GRID_COLOR; explicit axis line styling. Above defaults, not fully polished
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: RSI reference lines at 30/70 (overbought/oversold) add domain context.
-          Cross-panel alignment enables comparison. Crosshair at mid-point clearly
-          demonstrates synchronization concept.
+        comment: RSI reference lines (30/70) add interpretive context; synchronized
+          crosshair creates focal point; coherent financial narrative
     spec_compliance:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: SC-01
@@ -149,31 +132,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct chart type: multi-chart stacked dashboard with synchronized
-          crosshair demonstration.'
+        comment: Multi-chart dashboard with synchronized crosshair; line/segment/line
+          for price/volume/RSI; stacked vertical layout
       - id: SC-02
         name: Required Features
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: 'Synchronized vertical crosshair ✓, shared values via annotations
-          ✓, stacked vertical layout ✓, independent y-axis scales ✓, shared x-axis
-          ✓, layer_tooltips for HTML ✓. Minor gap: synchronized zoom/pan not implemented
-          in HTML.'
+        comment: Synchronized vertical crosshair, value annotations, stacked layout,
+          independent y-scales, interactive HTML with layer_tooltips()
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: 'X-axis: dates over 200 trading days. Y-axes: price/volume/RSI with
-          appropriate ranges. All 200 data points shown.'
+        comment: date on x-axis; price/volume/rsi on respective y-axes; all 200 points
+          shown
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'dashboard-synchronized-crosshair · python · letsplot
-          · anyplot.ai'. Crosshair annotations labeled.
+        comment: Title matches required format; no legend needed (self-labeled via
+          sub-chart titles)
     data_quality:
       score: 14
       max: 15
@@ -183,22 +164,22 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 3-chart dashboard, crosshair synchronization demo, tooltips, stock
-          data with price/volume/RSI.
+        comment: Shows all 3 metrics demonstrating crosshair across different chart
+          types and y-scales; RSI reference lines show overbought/oversold zones
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price/volume/RSI over 200 trading days — plausible and neutral
-          domain.
+        comment: 'Real-world stock market: 200 trading days, cumulative price, volume
+          correlated with volatility, RSI technical indicator'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price ~80-115, Volume ~0-2M, RSI 0-100 with clipping. All values
-          domain-appropriate.
+        comment: Price ~80-110, volume in millions, RSI 0-100 clipped; all realistic
+          for equity data
     code_quality:
       score: 10
       max: 10
@@ -208,34 +189,36 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Sequential top-level script.
+        comment: Imports → tokens → data → per-chart → gggrid → save; no functions
+          or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used.
+        comment: 'All imports used: geom_hline for RSI lines, geom_segment for volume,
+          geom_path for crosshair, gggrid/ggtitle for composition'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, well-organized. geom_path crosshair workaround explained in
-          comment. No fake UI.
+        comment: Shared common_theme reduces repetition; geom_segment comment explains
+          quirk; clean readable structure
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
+        comment: Saves plot-{THEME}.png (scale=4) and plot-{THEME}.html
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
@@ -243,29 +226,29 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: gggrid for composite layout, grammar-of-graphics pattern, proper
-          scale_color_manual with name mapping for legend. geom_path workaround for
-          crosshair (noted in comment as addressing letsplot quirk).
+        comment: Correct ggplot grammar; gggrid for multi-panel; layer_tooltips()
+          for interactive hover; ggsize+scale=4 for canvas control
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 3
         max: 5
         passed: true
-        comment: layer_tooltips() with custom line format is a distinctive letsplot
-          interactive API. gggrid for dashboard layout. Combined PNG+HTML output leveraging
-          letsplot's unique dual-output capability.
+        comment: 'letsplot-specific: gggrid (multi-panel composition), layer_tooltips()
+          API, HTML export; geom_segment workaround demonstrates library knowledge'
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - subplots
-  - layer-composition
   - hover-tooltips
   - html-export
-  - annotations
+  - layer-composition
   patterns:
   - data-generation
   dataprep:
   - time-series
+  - cumulative-sum
   styling:
   - alpha-blending
+  - grid-styling
