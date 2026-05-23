@@ -2,7 +2,7 @@ library: ggplot2
 language: r
 specification_id: line-stock-comparison
 created: '2026-05-23T10:02:15Z'
-updated: '2026-05-23T20:09:15Z'
+updated: '2026-05-23T21:59:45Z'
 generated_by: claude-sonnet
 workflow_run: 26329788039
 issue: 3748
@@ -12,135 +12,129 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stoc
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/r/ggplot2/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 88
 review:
   strengths:
-  - 'Full spec compliance: all required features implemented (normalization to 100,
-    reference line at 100, distinct stock colors, legend, grid)'
-  - 'Excellent data storytelling: real 2023 market events (SVB collapse, NVDA AI surge,
-    Fed rate peak) with shaded rect, vertical markers, and rotated italic labels'
-  - 'Perfect theme adaptation: both light (#FAF8F1) and dark (#1A1A17) renders pass
-    readability checks; adjustcolor() trick embeds alpha into grid hex for dark-mode
-    where element_line lacks alpha support'
-  - 'Clean, idiomatic ggplot2 grammar-of-graphics layering: geom_rect with inherit.aes=FALSE,
-    scale_x_date, scale_color_manual with setNames, proper linewidth= for ggplot2
-    ≥ 3.4'
-  - 'Realistic data: NVDA/MSFT/AAPL/SPY with calibrated mu/sigma parameters; cumprod(exp(returns))
-    log-normal model is financially sound'
+  - 'All spec requirements implemented: rebased-to-100 normalization, reference line
+    at 100, 4-series comparison with correct anyplot palette order'
+  - 'Excellent data storytelling: NVDA ribbon fill creates clear focal point highlighting
+    outperformance vs other series'
+  - 'Realistic, accurate historical context: SVB bank collapse (Mar 2023), NVDA AI
+    Surge (May 2023), Rates Peak (Oct 2023) are all correct events'
+  - 'Advanced ggplot2 features used idiomatically: geom_ribbon(), annotate(''label'')
+    styled callouts, coord_cartesian(clip=''off'') for off-panel labels'
+  - 'Theme adaptation fully correct: all chrome tokens flip between #FAF8F1 and #1A1A17,
+    data colors stay identical between renders'
+  - Clean code with set.seed(42), no functions/classes, correct canvas (3200x1800),
+    proper ragg device, themed output filenames
   weaknesses:
-  - 'Event annotation text (annotate size=2.1) is too small: at the 3200px canvas,
-    the labels render at ~7pt equivalent; when scaled to mobile (~400px), they become
-    ~0.9pt and essentially invisible — increase annotation size to at least size=3.0-3.5'
-  - 'Slight visual crowding in the SVB shaded region: the ''SVB Collapse'' rotated
-    label at y=102 partially overlaps with the NVDA/MSFT stock lines in that price
-    range — consider placing label at a y value above the data range (e.g., y=145)
-    or adjust vjust to shift it clear of the cluster'
-  - 'Design sophistication below the 90+ threshold: the implementation is polished
-    but reads as well-configured ggplot2 defaults with event overlays rather than
-    a deliberately crafted visualization — consider adding end-of-series stock labels
-    (ggrepel or direct geom_text at last date), or a subtle fill ribbon under the
-    NVDA line to emphasize its outperformance'
-  - Library mastery uses standard patterns but misses an opportunity to use a distinctively
-    ggplot2 feature such as coord_cartesian(clip='off') for off-axis annotations,
-    or annotate with geom='label' for styled callout boxes instead of plain text
+  - 'End-of-line label for MSFT shows as ''MSF.'' in both renders — MSFT and SPY end
+    the year at similar rebased values (~115-120), causing their hjust=-0.2 ticker
+    labels to overlap vertically, partially obscuring the ''T'' in MSFT. Fix: add
+    a small y-nudge to separate close end labels (e.g., use ggrepel::geom_text_repel
+    or manually offset last_pts y-values for overlapping labels by ±2-3 units).'
+  - Right legend inside panel potentially crowds the end-of-line labels for mid-range
+    lines (MSFT, SPY). Consider moving legend to a corner with legend.justification
+    or reducing legend.key.size to reduce collision risk.
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct for light theme, not pure white
-      Chrome: Title "line-stock-comparison · r · ggplot2 · anyplot.ai" in dark ink at 12pt, clearly readable; Y-axis label "Rebased Price (Start = 100)" and X-axis label "Date" both in dark ink at 10pt, readable; tick labels at 8pt in secondary ink (#4A4A44), readable; x-axis ticks rotated 30° (Feb '23, Apr '23, Jun '23, Aug '23, Oct '23, Dec '23) — no overlap
-      Data: NVDA line in #009E73 (brand green) — first series correct; MSFT in #9418DB (purple); AAPL in #B71D27 (red); SPY in #16B8F3 (cyan/sky blue). Dashed horizontal reference line at 100 in secondary ink. Light pink-red shaded rect for SVB collapse period (Mar 6–17 2023). Three vertical dotted lines at SVB midpoint, NVDA AI Surge (May 24), and Rates Peak (Oct 26). Rotated italic annotation labels at each marker — small (size=2.1, ~7pt equivalent) but visible at 3200px; would be unreadable at mobile scale
-      Legibility verdict: PASS for desktop; WARN — annotation labels too small for mobile readability
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "line-stock-comparison · r · ggplot2 · anyplot.ai" in dark INK (#1A1A17) clearly readable. Subtitle in softer INK_SOFT. Y-axis label "Rebased Price (Start = 100)" and X-axis label "Date" in dark INK, properly sized (10pt). Tick labels in INK_SOFT (8pt), x-axis ticks rotated 30° for date readability. Grid lines subtle (0.18 linewidth, soft alpha). All text is legible against the warm off-white background.
+      Data: Four lines in anyplot palette canonical order — NVDA (#009E73 green, first series correct), MSFT (#9418DB purple), AAPL (#B71D27 red), SPY (#16B8F3 sky blue). Subtle green ribbon fill under NVDA line emphasizing outperformance. SVB region shaded in faint red (#B71D27 at alpha=0.07). Dashed horizontal reference line at rebased=100. Vertical dotted event markers with styled label annotations (SVB Collapse in red, NVDA AI Surge in green, Rates Peak in INK_SOFT). End-of-line ticker labels: NVDA visible at ~150, AAPL at ~90-95; MSFT label appears as "MSF." — the "T" is obscured, likely overlapping with the nearby SPY end label (both stocks finish at similar values ~115-120).
+      Legibility verdict: PASS overall, with VQ-02 concern on MSFT/SPY end-label overlap at right edge.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct for dark theme, not pure black
-      Chrome: Title in light cream (#F0EFE8), clearly readable against dark background; axis labels and tick labels in secondary light ink (#B8B7B0), readable; grid uses adjustcolor(INK_SOFT, alpha.f=0.35) for subtler dark-mode grid — well handled; legend box uses elevated dark background (#242420) with secondary ink text
-      Data: All four series colors are identical to the light render — #009E73 (NVDA), #9418DB (MSFT), #B71D27 (AAPL), #16B8F3 (SPY) — data palette identity preserved across themes as required. Reference line at 100, SVB shading, event markers all present and visible
-      Legibility verdict: PASS — no dark-on-dark failures; all text readable against the dark surface
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title and subtitle fully flipped to light text (#F0EFE8 INK and #B8B7B0 INK_SOFT). All axis labels, tick labels, and legend text rendered in light tones against the dark background. No dark-on-dark failures detected. Grid lines remain subtle with dark-theme adjusted alpha. SVB collapse region shading still uses #B71D27 (red) which is visible on dark background.
+      Data: All four data line colors are identical to the light render — NVDA green #009E73, MSFT purple #9418DB, AAPL red #B71D27, SPY blue #16B8F3. Ribbon fill, reference line, and event annotations render correctly on dark surface. The "MSF." end-label overlap issue persists identically to light render, confirming it is a real visual issue (MSFT and SPY end labels overlap vertically).
+      Legibility verdict: PASS, with same VQ-02 MSFT/SPY end-label overlap as in light render.
   criteria_checklist:
     visual_quality:
-      score: 27
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: Main text (title 12pt, axis labels 10pt, ticks 8pt) explicitly set
-          and readable in both themes. Event annotation text at size=2.1 (~7pt) is
-          too small for mobile readability — visible at 3200px but effectively invisible
-          at 400px mobile width.
+        comment: Title (12pt), axis labels (10pt), ticks (8pt) all match style guide;
+          readable in both themes. Minor deduction for end-label collision reducing
+          MSFT readability.
       - id: VQ-02
         name: No Overlap
+        score: 4
+        max: 6
+        passed: false
+        comment: MSFT and SPY end-of-line labels overlap vertically at right edge
+          (both stocks finish at similar rebased values ~115-120), causing 'T' in
+          MSFT to be obscured. Visible as 'MSF.' in both light and dark renders.
+      - id: VQ-03
+        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: 'Minor visual crowding: SVB Collapse rotated label at y=102 interacts
-          with NVDA/MSFT lines in that price range. No severe unreadable collision
-          but visual density in the SVB region is slightly crowded.'
-      - id: VQ-03
-        name: Element Visibility
-        score: 6
-        max: 6
-        passed: true
-        comment: Four stock lines at linewidth=1.1, alpha=0.92, 252 points each —
-          well adapted to medium-density line chart. All series clearly distinguishable.
+        comment: Lines at linewidth=1.1 and alpha=0.92 are well visible for 252 data
+          points per series. Ribbon at alpha=0.12 is subtle but intentional. SVB shading
+          at alpha=0.07 is very faint on dark theme.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Uses anyplot palette, which is colorblind-safe (max-min delta-E optimized
-          across CVD simulations).
+        comment: anyplot palette is colorblind-safe by design. 4 colors with good
+          perceptual separation. No red-green sole signal.
       - id: VQ-05
         name: Layout & Canvas
-        score: 4
+        score: 3
         max: 4
         passed: true
-        comment: 3200x1800 landscape canvas, balanced layout with legend on right,
-          12px margins, no overflow or content cut off.
+        comment: Canvas correct 3200x1800. 70pt right margin accommodates end labels.
+          No canvas gate failure. Minor deduction for crowding between end labels
+          and legend.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis: ''Rebased Price (Start = 100)'' — descriptive with context.
-          X-axis: ''Date'' — appropriate for time series.'
+        comment: Y-axis 'Rebased Price (Start = 100)' descriptive with units. Title
+          format correct. Informative subtitle provided.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series NVDA uses #009E73. Canonical palette order: NVDA=#009E73,
-          MSFT=#9418DB, AAPL=#B71D27, SPY=#16B8F3. Backgrounds #FAF8F1 (light) and
-          #1A1A17 (dark). Data colors identical between themes.'
+        comment: 'First series NVDA = #009E73 (brand green). Canonical order followed
+          for all 4 series. Backgrounds #FAF8F1 (light) and #1A1A17 (dark) correct.
+          Chrome tokens fully flipped between themes.'
     design_excellence:
-      score: 13
+      score: 15
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 6
         max: 8
         passed: true
-        comment: 'Above defaults: event overlays (SVB shading, vertical markers, italic
-          annotations) add clear design intent. Not yet at FiveThirtyEight-level polish
-          — end-of-line labels or emphasis ribbon under NVDA would lift it further.'
+        comment: 'Clear design intent: NVDA ribbon fill creates focal point, styled
+          annotate(''label'') callouts for events, end-of-line labels complementing
+          legend. SVB shading color-coded to match annotation. Professional composition.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: 'Good refinement: top/right spines removed, only major grid, subtle
-          grid via adjustcolor(), rotated x-ticks. Slightly below perfect — minor
-          grid could be completely invisible, and legend box border adds visual noise.'
+        comment: theme_minimal removes top/right spines; major-grid-only with 0.18
+          linewidth and alpha via adjustcolor; panel border removed. Axis lines kept
+          appropriately for time-series readability. Good whitespace.
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 5
         max: 6
         passed: true
-        comment: Real 2023 events (SVB collapse, NVDA AI surge, Fed rate peak) with
-          shaded period and labeled markers tell a coherent narrative. Visual hierarchy
-          through NVDA's clearly differentiated performance is effective.
+        comment: 'Strong narrative: NVDA outperformance visually emphasized with ribbon
+          fill; dashed reference at 100 anchors comparison; historical events annotated
+          with contextual labels guiding viewer through 2023 market story.'
     spec_compliance:
       score: 15
       max: 15
@@ -150,57 +144,56 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Multi-line chart with rebased prices — correct type for stock comparison
-          spec.
+        comment: Correct multi-line time series comparing rebased stock prices.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Normalization to 100, reference line at 100, distinct colors, clear
-          legend, grid lines, optional event highlights — all present.
+        comment: 'All spec features: rebased to 100, distinct colors per stock, clear
+          legend, Y-axis shows rebased values, horizontal reference line at 100, SVB
+          region shading as optional event highlight.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Date on X, rebased price on Y, all 4 series visible over the full
-          year.
+        comment: 'X-axis: trading dates. Y-axis: rebased price (start=100). All 4
+          series visible across full year.'
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''line-stock-comparison · r · ggplot2 · anyplot.ai'' — correct
-          format. Legend: NVDA, MSFT, AAPL, SPY with correct palette colors.'
+        comment: Title 'line-stock-comparison · r · ggplot2 · anyplot.ai' correct.
+          Legend identifies all 4 tickers. End-of-line labels add further readability.
     data_quality:
-      score: 15
+      score: 14
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: '4 stocks with varying performance profiles: high-volatility outperformer
-          (NVDA), moderate tech (MSFT/AAPL), low-volatility benchmark (SPY). Full
-          range of rebased performance shown.'
+        comment: 'Comprehensive: 4 stocks with varied volatility profiles, reference
+          line, event shading, event markers, end-of-period labels. Full year of trading
+          days.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: NVDA, MSFT, AAPL, SPY are major real-world stocks; 2023 market events
-          (SVB, AI surge, rate peak) are historically accurate; neutral financial
-          data topic.
+        comment: NVDA/MSFT/AAPL/SPY is a natural 2023 portfolio. Events (SVB collapse
+          Mar 2023, NVDA AI Surge May 2023, Rates Peak Oct 2023) are historically
+          accurate. Neutral financial data.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 'Log-normal daily returns with realistic mu/sigma: NVDA (0.2%/2.8%),
-          MSFT (0.07%/1.5%), AAPL (0.05%/1.2%), SPY (0.03%/0.8%) — well-calibrated
-          to typical 2023 market conditions. 252 trading days = 1 year.'
+        comment: NVDA reaching ~150 (50% gain) reflects real 2023 NVDA performance.
+          Other stocks modest. 252 trading days correct for one year.
     code_quality:
       score: 10
       max: 10
@@ -210,59 +203,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: theme tokens → data generation → plot layers →
-          ggsave. No functions or classes.'
+        comment: Flat script, no functions or classes, sequential flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: set.seed(42) at top of script.
+        comment: set.seed(42) at top, fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: library(ggplot2) and library(ragg) — both used. No unused imports.
+        comment: Only library(ggplot2) and library(ragg) — both used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean ggplot2 layering, idiomatic adjustcolor() trick, setNames()
-          for named palette. No over-engineering.
+        comment: Appropriate complexity for feature richness, named theme object,
+          good ggplot2 patterns. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png via ggsave with ragg::agg_png device. Uses
-          linewidth= (not deprecated size=) for ggplot2 >= 3.4.
+        comment: Saves as plot-{THEME}.png via sprintf, ragg device, correct dims.
     library_mastery:
-      score: 7
+      score: 9
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Grammar of graphics properly applied; theme() layering; scale_color_manual;
+          coord_cartesian(clip='off'); annotate(); all idiomatic ggplot2 patterns.
+      - id: LM-02
+        name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: 'Strong grammar-of-graphics layering: geom_rect with inherit.aes=FALSE,
-          geom_hline, geom_vline, geom_line, annotate(); scale_x_date; scale_color_manual
-          with setNames; proper element_* theme functions. Slightly below perfect
-          because some idiomatic patterns (coord_cartesian(clip=''off''), theme composition
-          as named object) are unused.'
-      - id: LM-02
-        name: Distinctive Features
-        score: 3
-        max: 5
-        passed: true
-        comment: 'adjustcolor() alpha-in-hex trick for dark-mode grid is distinctively
-          ggplot2 (no element_line alpha support). setNames() pattern for named scale_color_manual.
-          geom_rect with inherit.aes=FALSE is proper ggplot2. Missing opportunity:
-          end-of-line labels with ggrepel or coord_cartesian(clip=''off'') for off-axis
-          annotation placement.'
-  verdict: REJECTED
+        comment: geom_ribbon() for outperformance area, annotate('label') for styled
+          callout boxes, geom_rect() for SVB shading, coord_cartesian(clip='off')
+          for off-panel labels — all distinctively ggplot2.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - ragg
@@ -277,4 +263,3 @@ impl_tags:
   - normalization
   styling:
   - alpha-blending
-  - grid-styling
