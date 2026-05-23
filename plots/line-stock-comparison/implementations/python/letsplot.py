@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-23
@@ -17,9 +17,11 @@ from lets_plot import (
     element_text,
     geom_hline,
     geom_line,
+    geom_text,
     ggplot,
     ggsize,
     labs,
+    layer_tooltips,
     scale_color_manual,
     theme,
     theme_minimal,
@@ -35,6 +37,7 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+RULE = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
 ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
 
@@ -62,18 +65,29 @@ for symbol in symbols:
 df = pd.concat(data_frames, ignore_index=True)
 df["rebased"] = df.groupby("symbol")["price"].transform(lambda x: x / x.iloc[0] * 100)
 
+# Last data point per series for end-of-line labels
+df_end = df.loc[df.groupby("symbol")["date"].idxmax()].copy()
+
 # Plot
 plot = (
     ggplot(df, aes(x="date", y="rebased", color="symbol"))
     + geom_hline(yintercept=100, linetype="dashed", color=INK_SOFT, size=0.6, alpha=0.6)
-    + geom_line(size=1.5, alpha=0.9)
+    + geom_line(size=1.5, alpha=0.9, tooltips=layer_tooltips().format("^y", ".1f").line("@symbol").line("Rebased|^y"))
+    + geom_text(
+        data=df_end,
+        mapping=aes(x="date", y="rebased", label="symbol", color="symbol"),
+        hjust=0.5,
+        vjust=2,
+        size=8,
+        fontface="bold",
+    )
     + scale_color_manual(values=ANYPLOT_PALETTE, name="Symbol")
     + labs(title="line-stock-comparison · python · letsplot · anyplot.ai", x="Date", y="Performance (rebased to 100)")
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
-        panel_grid_major=element_line(color=INK_SOFT, size=0.3),
+        panel_grid_major=element_line(color=RULE, size=0.3),
         panel_grid_minor=element_blank(),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
