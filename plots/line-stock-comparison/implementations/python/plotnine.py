@@ -1,14 +1,23 @@
-""" pyplots.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 92/100 | Created: 2026-01-20
+Library: plotnine | Python 3.13
+Quality: pending | Updated: 2026-05-23
 """
+
+import os
+import sys
+
+
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if not p or os.path.abspath(p) != _script_dir]
 
 import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
+    element_blank,
     element_line,
+    element_rect,
     element_text,
     geom_hline,
     geom_line,
@@ -21,51 +30,61 @@ from plotnine import (
 )
 
 
-# Data - Generate synthetic stock price data for comparison
-np.random.seed(42)
-n_days = 252  # One year of trading days
-dates = pd.date_range("2024-01-02", periods=n_days, freq="B")  # Business days
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 
-# Create price series with different drift and volatility
+ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+
+# Data
+np.random.seed(42)
+n_days = 252
+dates = pd.date_range("2024-01-02", periods=n_days, freq="B")
+
 symbols = ["AAPL", "GOOGL", "MSFT", "SPY"]
-colors = ["#306998", "#FFD43B", "#E74C3C", "#2ECC71"]  # Python blue/yellow first
+params = [(0.0005, 0.013), (0.0003, 0.015), (0.0006, 0.012), (0.0004, 0.008)]
 
 dfs = []
-for symbol in symbols:
-    # Random walk with drift
-    daily_returns = np.random.normal(0.0004, 0.015, n_days)
-    prices = 100 * np.exp(np.cumsum(daily_returns))  # Start at 100 (already rebased)
+for symbol, (drift, vol) in zip(symbols, params, strict=True):
+    daily_returns = np.random.normal(drift, vol, n_days)
+    prices = 100 * np.exp(np.cumsum(daily_returns))
     dfs.append(pd.DataFrame({"date": dates, "symbol": symbol, "rebased": prices}))
 
 df = pd.concat(dfs, ignore_index=True)
 
-# Create plot
+# Plot
 plot = (
     ggplot(df, aes(x="date", y="rebased", color="symbol"))
-    + geom_hline(yintercept=100, linetype="dashed", color="#888888", size=0.8)
-    + geom_line(size=1.5)
-    + scale_color_manual(values=colors)
-    + scale_x_date(date_labels="%b %Y", date_breaks="2 months")
+    + geom_hline(yintercept=100, linetype="dashed", color=INK_SOFT, size=0.6)
+    + geom_line(size=1.0)
+    + scale_color_manual(values=ANYPLOT_PALETTE)
+    + scale_x_date(date_labels="%b '%y", date_breaks="2 months")
     + labs(
         x="Date",
-        y="Rebased Price (Starting = 100)",
-        title="line-stock-comparison · plotnine · pyplots.ai",
+        y="Rebased Price (Start = 100)",
+        title="line-stock-comparison · python · plotnine · anyplot.ai",
         color="Symbol",
     )
     + theme_minimal()
     + theme(
-        figure_size=(16, 9),
-        text=element_text(size=14),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
+        figure_size=(8, 4.5),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
+        panel_border=element_blank(),
+        panel_grid_major=element_line(color=INK, size=0.3, alpha=0.10),
+        panel_grid_minor=element_blank(),
+        axis_line=element_line(color=INK_SOFT, size=0.5),
+        axis_title=element_text(color=INK, size=10),
+        axis_text=element_text(color=INK_SOFT, size=8),
         axis_text_x=element_text(angle=45, ha="right"),
-        plot_title=element_text(size=24),
-        legend_text=element_text(size=16),
-        legend_title=element_text(size=18),
-        panel_grid_major=element_line(color="#CCCCCC", size=0.5),
-        panel_grid_minor=element_line(color="#EEEEEE", size=0.3),
+        plot_title=element_text(color=INK, size=12),
+        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_text=element_text(color=INK_SOFT, size=8),
+        legend_title=element_text(color=INK, size=9),
     )
 )
 
 # Save
-plot.save("plot.png", dpi=300)
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
