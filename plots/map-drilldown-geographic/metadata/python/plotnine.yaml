@@ -1,159 +1,188 @@
 library: plotnine
+language: python
 specification_id: map-drilldown-geographic
 created: '2026-01-20T07:44:29Z'
-updated: '2026-01-20T08:06:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21163297436
+updated: '2026-05-23T09:40:02Z'
+generated_by: claude-sonnet
+workflow_run: 26328663425
 issue: 3770
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/plotnine/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 81
 review:
   strengths:
-  - Excellent use of plotnine grammar of graphics for a complex geographic visualization
-  - Clear acknowledgment that drill-down interactivity requires interactive libraries
-    (honest limitation disclosure)
-  - Breadcrumb navigation concept well-illustrated even in static form
-  - Good color scale with colorblind-safe yellow-to-blue gradient
-  - State labels with abbreviation and score provide immediate value understanding
-  - Well-documented code with clear comments explaining the static nature limitation
+  - Correct anyplot_seq colormap (green to azure) applied consistently across both
+    themes
+  - 'Top-3/bottom-3 performer highlights using anyplot palette colors (lime #99B314,
+    red #B71D27) create immediate visual storytelling'
+  - Breadcrumb annotation World > USA > States elegantly conveys hierarchical context
+    without faking interactivity
+  - 'Ocean panel background (#D6EAF8 / #1A2A3A) enhances the map aesthetic and theme-adapts
+    correctly'
+  - All chrome tokens (INK, INK_SOFT, ELEVATED_BG, PAGE_BG) correctly applied in both
+    light and dark renders
+  - Centroid nudging for crowded northeastern states reduces label overlap
+  - 'Perfect code quality: KISS structure, seed, clean imports, idiomatic plotnine
+    grammar'
   weaknesses:
-  - Legend color bar could be taller/more prominent for easier value-to-color mapping
-  - Some visual crowding in the Midwest region (IL, IN, OH labels) though still readable
-  - Grid lines are subtle to the point of being barely visible
-  image_description: 'The plot displays a choropleth-style map of 20 US states showing
-    regional performance scores. States are rendered as simplified polygons with white
-    borders on a light blue-gray panel background. The color scheme uses a yellow-to-blue
-    gradient: light yellow (#FEE08B) for lower scores (64) transitioning to deep blue
-    (#1A5276) for higher scores (91). Each state is labeled with its two-letter abbreviation
-    and numeric score (e.g., "CA 85", "NY 91", "AZ 64"). A breadcrumb navigation "World
-    > USA > States" appears in the upper-left in deep blue, with an italic instruction
-    below it. The title uses the correct format "map-drilldown-geographic · plotnine
-    · pyplots.ai" in large bold text, with a subtitle explaining this is a static
-    view. Axes show longitude (120°W to 80°W) and latitude (25°N to 50°N) with degree
-    labels. The legend on the right displays "Performance Score" with explicit breaks
-    at 64, 70, 76, 82, 88, and 91 covering the full data range.'
+  - 'SC-01/SC-02: Drill-down interactivity (click navigation, zoom transitions, hover
+    tooltips) cannot be implemented in plotnine — static snapshot only shows one hierarchy
+    level'
+  - 'DE-01: Design is above default but not publication-quality — outer spines could
+    be removed for a cleaner map aesthetic (panel_border=element_blank())'
+  - Minor label crowding in the northeastern US cluster (OH/PA at similar latitudes
+    ~40.8-40.9N)
+  - State polygon shapes are noticeably simplified (Colorado as a perfect rectangle)
+    reducing geographic realism
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 (plot background), light ocean-blue #D6EAF8 (panel/ocean)
+      Chrome: Title "map-drilldown-geographic · python · plotnine · anyplot.ai" in dark #1A1A17 — readable. Axis labels "Longitude"/"Latitude" in dark INK — readable. Tick labels (120°W, 25°N etc.) in #4A4A44 INK_SOFT — readable. Legend "Performance Score" in dark INK — readable.
+      Data: State polygons filled with anyplot_seq gradient (#009E73 green → #003D94 dark azure). Top-3 states (CA, VA, NY) have lime #99B314 outlines; bottom-3 (AZ, IN, FL) have red #B71D27 outlines. White bold abbreviation+value labels on each state centroid.
+      Legibility verdict: PASS — all text clearly readable against light background
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 (plot background), dark navy #1A2A3A (panel/ocean)
+      Chrome: Title in light #F0EFE8 — readable. Axis labels in light INK — readable. Tick labels in #B8B7B0 INK_SOFT — readable. Legend text in secondary ink — readable. No dark-on-dark failures observed.
+      Data: Colors identical to light render — anyplot_seq gradient, lime/red outlines, white state labels all unchanged.
+      Legibility verdict: PASS — all text clearly readable against dark background
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, state labels, and legend text are all clearly
-          readable at full size
-      - id: VQ-02
-        name: No Overlap
         score: 7
         max: 8
         passed: true
-        comment: Most labels well-positioned; minor crowding in Midwest (IL/IN/OH)
-          but still readable
+        comment: All font sizes explicitly set; state labels size=4 small but readable
+          as bold white on colored polygons
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Minor crowding in northeastern US cluster (OH/PA); centroid nudges
+          help but labels are close
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: State polygons clearly visible with good contrast, white borders
-          separate states well
+        comment: State polygons clearly visible; highlight outlines prominent; colorbar
+          well-defined
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Yellow-to-blue gradient is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good canvas utilization; map fills reasonable space though some empty
-          area on left
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Axes labeled with Longitude and Latitude with degree notation
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: anyplot_seq gradient colorblind-safe; lime/red highlights distinguishable;
+          white labels adequate contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 correct; map fills canvas well; legend right; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid very subtle, legend gradient bar could be larger for better
-          readability
+        passed: true
+        comment: Standard geographic labels Longitude/Latitude; degree info in tick
+          labels
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'anyplot_seq cmap used; backgrounds #FAF8F1/#1A1A17; all chrome tokens
+          theme-correct in both renders'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: top/bottom outlines, ocean panel background, intentional
+          colormap. Not publication-quality.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Panel border retained (ok for map); subtle grid; refined legend.
+          Could remove outer spines.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear story via lime/red highlights; breadcrumb context; visual hierarchy
+          present
     spec_compliance:
-      score: 23
-      max: 25
+      score: 11
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 3
+        max: 5
         passed: true
-        comment: Correct choropleth-style geographic map with drill-down concept illustrated
+        comment: Correct choropleth base type; drill-down impossible for static plotnine
+          — static snapshot per library rules
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Geographic coordinates correctly mapped, values properly encoded
-          in fill color
-      - id: SC-03
         name: Required Features
-        score: 4
-        max: 5
+        score: 2
+        max: 4
         passed: true
-        comment: Has breadcrumb navigation, color legend, state labels; no actual
-          interactivity acceptable for static library
-      - id: SC-04
-        name: Data Range
+        comment: Static features present (choropleth, breadcrumb, legend); interactive
+          features absent (unavoidable)
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All states visible, data range 64-91 fully represented
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
+        comment: Longitude/Latitude/value correctly mapped; all 20 states visible
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend shows data range correctly with explicit breaks
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: map-drilldown-geographic · plotnine · pyplots.ai'
+        comment: Title correct format; legend Performance Score with gradient
     data_quality:
-      score: 18
-      max: 20
+      score: 12
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows 20 states with varying scores demonstrating the choropleth
-          concept well
+        comment: Hierarchy via breadcrumb; full value range; top/bottom highlights;
+          geographic distribution
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Business performance scores (64-91 range) is a realistic, neutral
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
         score: 4
         max: 5
         passed: true
-        comment: Score values 64-91 are reasonable; geographic boundaries simplified
-          but recognizable
+        comment: Real US states; plausible performance scores; somewhat generic metric
+          name
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Score range 64-91 realistic; polygons simplified — Colorado is a
+          rectangle
     code_quality:
       score: 10
       max: 10
@@ -163,54 +192,60 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data → plot → save'
+        comment: Clean Imports->Data->Plot->Save; no functions/classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current plotnine API
+        comment: Clean Pythonic code; centroid nudge dict is appropriate workaround
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png; current plotnine API
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Layered ggplot grammar; aes(group=state) for polygons; coord_fixed();
+          multiple geom_polygon layers
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of plotnine grammar of graphics with geom_polygon, geom_text,
-          scale_fill_gradient, coord_fixed, and annotate
+        comment: geom_polygon with group aesthetic + coord_fixed() is distinctive
+          ggplot/plotnine geographic pattern
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - colorbar
   - annotations
   - layer-composition
+  - manual-ticks
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep: []
   styling:
   - custom-colormap
   - alpha-blending
-  - edge-highlighting
-  - grid-styling
