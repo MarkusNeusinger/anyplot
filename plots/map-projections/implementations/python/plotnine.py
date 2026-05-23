@@ -1,8 +1,10 @@
-""" pyplots.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Created: 2026-01-20
+Library: plotnine | Python 3.13
+Quality: pending | Created: 2026-05-23
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -21,11 +23,19 @@ from plotnine import (
 )
 
 
-# Seed for reproducibility
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+LAND_COLOR = "#009E73"  # anyplot palette pos 1: green = land (semantic)
+OCEAN_BG = "#D0E8F5" if THEME == "light" else "#0F1F2D"
+
+# Data: continent boundaries
 np.random.seed(42)
 
-# More detailed continent boundaries (lon, lat pairs)
-# North America - more realistic coastline
 na_lon = np.array(
     [
         -168,
@@ -138,7 +148,6 @@ na_lat = np.array(
 )
 continents_raw = [("North America", na_lon, na_lat)]
 
-# South America - more realistic
 sa_lon = np.array(
     [
         -82,
@@ -173,7 +182,6 @@ sa_lat = np.array(
 )
 continents_raw.append(("South America", sa_lon, sa_lat))
 
-# Europe - more realistic
 eu_lon = np.array(
     [
         -10,
@@ -254,7 +262,6 @@ eu_lat = np.array(
 )
 continents_raw.append(("Europe", eu_lon, eu_lat))
 
-# Africa - more realistic
 af_lon = np.array(
     [
         -17,
@@ -343,7 +350,6 @@ af_lat = np.array(
 )
 continents_raw.append(("Africa", af_lon, af_lat))
 
-# Asia - more realistic
 as_lon = np.array(
     [
         60,
@@ -450,7 +456,6 @@ as_lat = np.array(
 )
 continents_raw.append(("Asia", as_lon, as_lat))
 
-# Australia - more realistic
 au_lon = np.array(
     [
         115,
@@ -511,7 +516,6 @@ au_lat = np.array(
 )
 continents_raw.append(("Australia", au_lon, au_lat))
 
-# Antarctica - simplified band
 an_lon = np.linspace(-180, 180, 40)
 an_lat_north = np.array([-62 - 8 * np.abs(np.sin(np.radians(lon))) for lon in an_lon])
 an_lon_full = np.concatenate([an_lon, an_lon[::-1], [an_lon[0]]])
@@ -525,30 +529,24 @@ for name, lons, lats in continents_raw:
         continents_list.append({"continent": name, "order": i, "lon": lons[i], "lat": lats[i]})
 df_continents = pd.DataFrame(continents_list)
 
-# Generate graticule with high resolution for smooth curves
+# Generate graticule (200 pts per meridian, 300 pts per parallel for smooth curves)
 graticule_list = []
-# Longitude lines (meridians) every 30 degrees - 200 points for smooth curves
 for lon_val in range(-180, 181, 30):
     lats = np.linspace(-85, 85, 200)
     for i, lat_val in enumerate(lats):
-        graticule_list.append(
-            {"type": "meridian", "group": f"lon_{lon_val}", "lon": lon_val, "lat": lat_val, "order": i}
-        )
+        graticule_list.append({"group": f"lon_{lon_val}", "lon": lon_val, "lat": lat_val, "order": i})
 
-# Latitude lines (parallels) every 30 degrees - 300 points for smooth curves
 for lat_val in range(-60, 61, 30):
     lons = np.linspace(-180, 180, 300)
     for i, lon_val in enumerate(lons):
-        graticule_list.append(
-            {"type": "parallel", "group": f"lat_{lat_val}", "lon": lon_val, "lat": lat_val, "order": i}
-        )
+        graticule_list.append({"group": f"lat_{lat_val}", "lon": lon_val, "lat": lat_val, "order": i})
 
 df_graticule = pd.DataFrame(graticule_list)
 
 # Projection transformations
 proj_order = ["Equirectangular", "Mercator", "Robinson", "Mollweide"]
 
-# Equirectangular (Plate Carree)
+# Equirectangular (Plate Carrée)
 df_equi_cont = df_continents.copy()
 df_equi_cont["x"] = np.radians(df_equi_cont["lon"])
 df_equi_cont["y"] = np.radians(df_equi_cont["lat"])
@@ -559,7 +557,7 @@ df_equi_grat["x"] = np.radians(df_equi_grat["lon"])
 df_equi_grat["y"] = np.radians(df_equi_grat["lat"])
 df_equi_grat["projection"] = "Equirectangular"
 
-# Mercator projection
+# Mercator
 df_merc_cont = df_continents.copy()
 df_merc_cont["x"] = np.radians(df_merc_cont["lon"])
 lat_clipped = np.clip(df_merc_cont["lat"], -85, 85)
@@ -572,7 +570,7 @@ lat_clipped_g = np.clip(df_merc_grat["lat"], -85, 85)
 df_merc_grat["y"] = np.log(np.tan(np.pi / 4 + np.radians(lat_clipped_g) / 2))
 df_merc_grat["projection"] = "Mercator"
 
-# Robinson projection (lookup table)
+# Robinson (lookup table)
 lat_table = np.array([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90])
 x_table = np.array(
     [
@@ -637,7 +635,7 @@ df_robi_grat["x"] = np.radians(df_robi_grat["lon"]) * x_factor_g * 0.8487
 df_robi_grat["y"] = y_factor_g * np.sign(df_robi_grat["lat"]) * 1.3523
 df_robi_grat["projection"] = "Robinson"
 
-# Mollweide projection (iterative solution)
+# Mollweide (iterative solution)
 df_moll_cont = df_continents.copy()
 lon_rad_c = np.radians(df_moll_cont["lon"].values)
 lat_rad_c = np.radians(df_moll_cont["lat"].values)
@@ -666,47 +664,45 @@ df_moll_grat["projection"] = "Mollweide"
 df_all_continents = pd.concat([df_equi_cont, df_merc_cont, df_robi_cont, df_moll_cont], ignore_index=True)
 df_all_graticule = pd.concat([df_equi_grat, df_merc_grat, df_robi_grat, df_moll_grat], ignore_index=True)
 
-# Create unique group identifiers
 df_all_graticule["proj_group"] = df_all_graticule["projection"] + "_" + df_all_graticule["group"]
 df_all_continents["proj_continent"] = df_all_continents["projection"] + "_" + df_all_continents["continent"]
 
-# Set projection as ordered categorical
 df_all_continents["projection"] = pd.Categorical(df_all_continents["projection"], categories=proj_order, ordered=True)
 df_all_graticule["projection"] = pd.Categorical(df_all_graticule["projection"], categories=proj_order, ordered=True)
 
-# Create the multi-panel projection comparison plot
+# Plot
 plot = (
     ggplot()
-    + geom_path(aes(x="x", y="y", group="proj_group"), data=df_all_graticule, color="#B0C4DE", size=0.4, alpha=0.6)
+    + geom_path(aes(x="x", y="y", group="proj_group"), data=df_all_graticule, color=INK_SOFT, size=0.3, alpha=0.35)
     + geom_polygon(
         aes(x="x", y="y", group="proj_continent"),
         data=df_all_continents,
-        fill="#306998",
-        color="#1a3a52",
-        size=0.6,
-        alpha=0.85,
+        fill=LAND_COLOR,
+        color=INK_SOFT,
+        size=0.4,
+        alpha=0.9,
     )
     + facet_wrap("~projection", ncol=2, scales="free")
     + coord_fixed(ratio=1.0)
     + labs(
-        title="map-projections · plotnine · pyplots.ai",
-        subtitle="Comparison of cartographic projections: Equirectangular, Mercator, Robinson, and Mollweide",
+        title="map-projections · python · plotnine · anyplot.ai",
+        subtitle="Cartographic projections compared: Equirectangular, Mercator, Robinson, Mollweide",
     )
     + theme(
-        figure_size=(16, 9),
-        plot_title=element_text(size=28, weight="bold", ha="center"),
-        plot_subtitle=element_text(size=18, ha="center", color="#555555"),
-        strip_text=element_text(size=20, weight="bold"),
-        strip_background=element_rect(fill="#f0f0f0"),
+        figure_size=(8, 4.5),
+        plot_title=element_text(size=12, weight="bold", ha="center", color=INK),
+        plot_subtitle=element_text(size=8, ha="center", color=INK_SOFT),
+        strip_text=element_text(size=9, weight="bold", color=INK),
+        strip_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         axis_text=element_blank(),
         axis_title=element_blank(),
         axis_ticks=element_blank(),
         panel_grid=element_blank(),
-        panel_background=element_rect(fill="#E8F4F8"),
-        plot_background=element_rect(fill="white"),
+        panel_background=element_rect(fill=OCEAN_BG),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         legend_position="none",
     )
 )
 
-# Save the plot
-plot.save("plot.png", dpi=300, verbose=False)
+# Save
+plot.save(f"plot-{THEME}.png", dpi=400, width=8, height=4.5, units="in")
