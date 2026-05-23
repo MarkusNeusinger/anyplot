@@ -2,7 +2,7 @@ library: letsplot
 language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:51:57Z'
-updated: '2026-05-23T12:01:47Z'
+updated: '2026-05-23T12:13:53Z'
 generated_by: claude-sonnet
 workflow_run: 26331907292
 issue: 3766
@@ -12,48 +12,49 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/letsplot/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/letsplot/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/letsplot/plot-dark.html
-quality_score: 81
+quality_score: 86
 review:
   strengths:
-  - Clean, idiomatic letsplot code with proper grammar-of-graphics layering (geom_polygon
-    + geom_point + geom_text)
-  - 'Correct anyplot palette order: Retail=#009E73, Warehouse=#9418DB, Service Center=#B71D27'
-  - Full theme-adaptive chrome — PAGE_BG, INK, INK_SOFT tokens wired to all text/background
-    elements
-  - Count labels inside bubbles make cluster sizes immediately readable in both renders
-  - layer_tooltips with custom title and multi-line format demonstrates letsplot-specific
-    interactivity
-  - HTML output alongside PNG correctly implemented for interactive library
-  - Both light and dark renders are fully legible with no dark-on-dark failures
-  - 'Perfect code quality: deterministic data, clean imports, flat KISS structure'
-  - Size scale with breaks at 50/100/150/200 provides clear cluster magnitude reference
+  - 'Perfect anyplot palette compliance: Retail→#009E73 (brand green) first, Warehouse→#9418DB,
+    Service Center→#B71D27 in canonical order across both renders'
+  - Both light and dark renders are fully theme-adaptive — all chrome tokens (INK,
+    INK_SOFT, ELEVATED_BG, PAGE_BG) applied consistently to title, caption, legend
+    title, legend text, and legend background
+  - Count labels directly on cluster markers provide immediate quantitative readability
+    without legend look-up
+  - Proportional size encoding with explicit scale range [6,20] and sensible legend
+    breaks (50/100/150/200) effectively communicates cluster magnitude
+  - Genuine HTML interactivity via layer_tooltips() with structured title/count/category
+    format adds web-deployment value
+  - Realistic, neutral US retail chain data with plausible metropolitan cluster counts
+    and total
   weaknesses:
-  - Northeast US cluster overlap (NYC=210, DC=125, New England=85) results in significant
-    bubble occlusion — geographically accurate but visually noisy; count labels partially
-    obscured by overlapping markers
-  - US boundary polygon is a rough 44-vertex approximation — state boundaries are
-    absent and coastal contours are visibly blocky, giving the basemap a sketch-like
-    feel compared to a proper GeoJSON boundary
-  - Desert Southwest cluster (45) is the smallest bubble and its count label appears
-    proportionally cramped — slightly harder to read vs larger clusters
-  - Design excellence is functional but not exceptional — no visual embellishments
-    (e.g. subtle polygon fill gradient, faint grid overlay for lat/lon reference,
-    or cluster outline stroke) that would elevate it beyond a competent baseline
+  - East Coast markers (NYC=210, DC=125, New England=85) are geographically close
+    — NYC and DC circles visually touch; consider reducing scale_size upper bound
+    or slightly adjusting lon/lat offsets to create breathing room
+  - letsplot's geom_livemap() provides real map tile backgrounds (OpenStreetMap, CartoDB,
+    Stamen) and would give accurate coastlines, state boundaries, and geographic context
+    without a manually constructed boundary polygon — the manual polygon is functional
+    but misses the library's premier geographic feature
+  - The simplified US boundary polygon has some geographic imprecision (Great Lakes
+    region, Florida peninsula shape) visible at this scale
+  - Smallest cluster markers (count=45, count=65) have tight count text that could
+    be hard to read at mobile viewport scale (~400px width)
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct anyplot light surface. Map polygon rendered in warm gray (#E0DDD6) with a slightly darker border, providing clear geographic contrast.
-      Chrome: Title "map-marker-clustered · python · letsplot · anyplot.ai" in bold dark ink, centered — fully readable. Caption "Store locations clustered by metropolitan area · 1,410 total" in INK_SOFT at bottom center. Legend titles and labels in correct INK/INK_SOFT tones. No axis labels or ticks (theme_void, appropriate for map).
-      Data: 12 proportional bubble clusters. Retail (#009E73, green) is the most frequent type and largest bubbles; Warehouse (#9418DB, purple) appears for SF/Dallas/DC; Service Center (#B71D27, red) for Desert Southwest/Southeast/New England. White count labels inside each bubble. Alpha=0.88 gives subtle transparency. Northeast US (NYC=210, DC=125, NE=85) shows noticeable bubble overlap/occlusion.
-      Legibility verdict: PASS — all text readable; the "45" (smallest bubble) count label is slightly cramped but legible.
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "map-marker-clustered · python · letsplot · anyplot.ai" in bold dark (#1A1A17) text at top center — clearly readable. Caption "Store locations clustered by metropolitan area · 1,410 total" in secondary ink (#4A4A44) at bottom center — readable. Legend titles in dark ink, legend text in secondary ink — all readable.
+      Data: 12 cluster markers as graduated circles. Retail=#009E73 (brand green, position 1), Warehouse=#9418DB (purple, position 2), Service Center=#B71D27 (dark red, position 3). Sizes range from small (count=45) to large (count=210). White bold count labels inside each circle. Alpha=0.88, stroke=1.5 with INK_SOFT edge. US boundary polygon in light gray.
+      Legibility verdict: PASS — all text readable; small markers (45, 65) have tight count text but legible at full resolution; East Coast markers (NYC=210, DC=125) visually touch but are distinguishable.
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct anyplot dark surface. Map polygon rendered in darker #2A2A27 fill with #4A4A44 border — the contrast is subtle but the US outline is clearly visible.
-      Chrome: Title in light F0EFE8 ink — clearly readable. Caption and legend text in appropriate light INK_SOFT tone. Legend background uses elevated #242420 surface. No dark-on-dark failures observed.
-      Data: Data colors are identical to the light render — #009E73 green, #9418DB purple, #B71D27 red — only the map polygon fill and background flip to dark tones. White count labels remain clearly visible on all colored bubbles. Size legend circles render in near-white against the dark background, clearly distinguishable.
-      Legibility verdict: PASS — all text readable in dark render; no dark-on-dark failures; brand green #009E73 is fully visible and prominent.
+      Background: Warm near-black #1A1A17 — correct dark theme surface, not pure black
+      Chrome: Title in light (#F0EFE8 family) text — clearly readable against dark surface. Caption in secondary light ink — readable. Legend title and text in light-colored tokens — readable. No dark-on-dark failures detected anywhere.
+      Data: Colors identical to light render — green Retail, purple Warehouse, dark red Service Center markers with white count labels. Brand green #009E73 remains prominent and visible. US polygon in dark gray (#2A2A27) with muted border.
+      Legibility verdict: PASS — all text readable in dark theme; no chrome adaptation failures; data colors unchanged from light render as expected.
   criteria_checklist:
     visual_quality:
-      score: 25
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -61,53 +62,52 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Title, caption, legend, and count labels all readable in both renders.
-          Smallest bubble (45) count label slightly cramped.
+        comment: All font sizes explicitly set. Readable in both themes. Minor deduction
+          for tight count labels on smallest markers (45, 65) at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 4
-        max: 6
-        passed: false
-        comment: Significant bubble overlap in northeast US — NYC (210), DC (125),
-          and New England (85) markers overlap substantially; count labels partially
-          obscured.
-      - id: VQ-03
-        name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: All cluster markers clearly visible with good size proportionality.
-          White count labels contrast well on colored bubbles.
+        comment: Minor visual crowding in Northeast — NYC (210) and DC (125) markers
+          touch. All 12 markers distinguishable.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: All cluster markers clearly visible with good size variation. Alpha=0.88
+          appropriate.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is colorblind-safe. White text on colored bubbles
-          ensures adequate contrast.
+        comment: anyplot palette positions 1-3 used. CVD-safe. White count labels
+          provide strong contrast.
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: ggsize(800,450) + scale=4 = 3200x1800 canvas — correct. Map fills
-          canvas well. Northeast cluster crowding is a minor layout concern.
+        comment: Canvas gate passed (3200x1800). Good map fill, balanced margins,
+          legend well-positioned.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title matches required format. Caption provides meaningful context.
-          No axis labels needed for map (theme_void appropriate).
+        comment: theme_void appropriate for map. Title correct. Caption and legend
+          labels descriptive.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Retail=#009E73 (first), Warehouse=#9418DB (second), Service Center=#B71D27
-          (third). Backgrounds #FAF8F1/#1A1A17 correct.'
+        comment: Retail=#009E73 (position 1), Warehouse=#9418DB (position 2), Service
+          Center=#B71D27 (position 3). Both themes correct with proper backgrounds.
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
@@ -115,25 +115,25 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Professional layered composition (polygon + point + text). Size encoding
-          with proportional bubbles and count labels is intentional and clear. Above
-          default (4) due to layered geoms and tooltip design.
+        comment: Clean professional map design with correct palette and theme-adaptive
+          chrome. Above default (4) but below strong design (6) — simplified boundary
+          polygon limits visual impression.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: theme_void() removes all non-data chrome. Alpha blending, elevated
-          legend background, stroke on markers. Rough 44-vertex boundary polygon limits
-          polish.
+        comment: theme_void removes axes cleanly. Marker stroke=1.5 with INK_SOFT,
+          alpha=0.88, legend background with ELEVATED_BG token. Good refinement above
+          defaults.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Size+color dual encoding creates immediate hierarchy. Count labels
-          give direct quantitative access. Caption summarizes total. Geographic context
-          makes regional patterns clear.
+        comment: Size variation guides eye to NYC (210) and Chicago (200) as dominant
+          clusters. Color reveals geographic store type patterns. Count labels enable
+          instant quantitative reads.
     spec_compliance:
       score: 13
       max: 15
@@ -143,57 +143,56 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct clustered marker map concept. Dynamic zoom-based clustering
-          is inherently interactive; static pre-aggregated representation is the appropriate
-          letsplot fallback. HTML output enables tooltips.
+        comment: 'Correct base approach: proportional symbol map with pre-aggregated
+          metropolitan clusters. Dynamic zoom clustering not possible in static/semi-interactive
+          export.'
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
         passed: true
-        comment: Count display in cluster markers ✓, category color-coding ✓, basemap
-          with geographic context ✓. Interactive zoom/expand and convex hull not achievable
-          in static/this library.
+        comment: Count display, category color-coding, geographic basemap, tooltips
+          via layer_tooltips() all present. Zoom transitions and click-to-zoom are
+          inherent library limitations.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Lat/lon correctly mapped to geographic positions. Category→color,
-          count→size mappings correct.
+        comment: lon→x, lat→y, count→size, category→fill all correctly mapped. xlim/ylim
+          set to continental US bounds.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: 'Title: ''map-marker-clustered · python · letsplot · anyplot.ai''
-          exact format. Legend labels match categories.'
+        comment: Title matches exact format. Dual legends (Store Type / Locations)
+          with correct labels and size breaks.
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows cluster count display, category differentiation, geographic
-          distribution, size-encoded magnitude, and legend reference. Pre-aggregation
-          approach demonstrates clustering concept well.
+        comment: All US regions covered, all three store types represented, wide count
+          range (45-210), plausible total (1,410 stores).
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Store locations across US metro areas — realistic, neutral, real-world
-          scenario. Retail/Warehouse/Service Center categories are plausible.
+        comment: US retail chain store locations by metropolitan cluster — real, neutral,
+          comprehensible business scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 12 metro clusters, counts 45–210, total 1,410 — realistic for a national
-          retail chain. Geographic spread covers continental US appropriately.
+        comment: Count values 45-210 plausible for national retail chain. Geographic
+          coordinates accurate for named metros.
     code_quality:
       score: 10
       max: 10
@@ -203,31 +202,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Flat, linear code.
+        comment: 'Clean linear flow: imports → token setup → data → plot construction
+          → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — all data hardcoded, no random elements.
+        comment: Deterministic hardcoded data. No random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imported symbols are used. No unused imports.
+        comment: All 17 lets_plot imports used. pandas and os used. No dead imports.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity. No fake UI elements.
+        comment: Idiomatic letsplot grammar-of-graphics composition. No fake interactivity.
+          Appropriate complexity.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
+        comment: Saves plot-{THEME}.png (scale=4 for 3200x1800) and plot-{THEME}.html.
+          Current API.
     library_mastery:
       score: 7
       max: 10
@@ -237,15 +239,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Grammar-of-graphics layering correctly applied. Scale functions,
-          theme customization, and ggsize/ggsave all used idiomatically.
+        comment: Correct ggplot2-style layer composition. layer_tooltips() used properly.
+          theme_void() appropriate for maps. scale_fill_manual and scale_size with
+          explicit breaks are idiomatic.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: layer_tooltips with custom title/multi-line format is letsplot-specific.
-          HTML export alongside PNG uses letsplot's interactive capability.
+        comment: layer_tooltips() with structured format is letsplot-distinctive.
+          HTML export leveraged. However, geom_livemap() — letsplot's premier geographic
+          feature with real tile backgrounds — was not used.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -253,7 +257,6 @@ impl_tags:
   - layer-composition
   - hover-tooltips
   - html-export
-  - annotations
   patterns: []
   dataprep: []
   styling:
