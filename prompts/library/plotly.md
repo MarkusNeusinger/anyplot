@@ -77,24 +77,26 @@ For static outputs → `write_image()`.
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-OKABE_ITO = ['#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442']
+ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E']
 
 # Single-series
 fig = go.Figure(go.Scatter(x=x, y=y, mode='markers',
-                           marker=dict(color=OKABE_ITO[0])))
+                           marker=dict(color=ANYPLOT_PALETTE[0])))
 
 # Multi-series via color_discrete_sequence (plotly express)
 fig = px.scatter(df, x='x', y='y', color='category',
-                 color_discrete_sequence=OKABE_ITO)
+                 color_discrete_sequence=ANYPLOT_PALETTE)
 
-# Continuous — NOT Okabe-Ito:
-#   Sequential: color_continuous_scale='viridis' or 'cividis'
-#   Diverging:  color_continuous_scale='BrBG'
-#   Forbidden:  'jet', 'hsv', 'rainbow'
+# Continuous — only the two anyplot palette-derived cmaps are allowed:
+ANYPLOT_SEQ = [[0.0, "#009E73"], [1.0, "#003D94"]]                                   # sequential / single-polarity
+ANYPLOT_DIV = [[0.0, "#BB0D22"], [0.5, "#A2A598"], [1.0, "#007AD9"]]                 # diverging
+# Sequential: color_continuous_scale=ANYPLOT_SEQ
+# Diverging:  color_continuous_scale=ANYPLOT_DIV
+# Forbidden: any other scale ('viridis'/'cividis'/'BrBG'/'Reds'/'Blues'/'Greens'/'jet'/'hsv'/'rainbow').
 ```
 
 ## Theme-adaptive Chrome (plotly mapping)

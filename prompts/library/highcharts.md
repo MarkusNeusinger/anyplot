@@ -185,24 +185,32 @@ If you can't get the screenshot to land on exact dims, the PIL pad-or-crop snipp
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7",
-             "#E69F00", "#56B4E9", "#F0E442"]
+ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3",
+                   "#99B314", "#D359A7", "#BA843E"]
 
 # Single-series via chart-level colors (first is used)
-chart.options.colors = OKABE_ITO[:1]
+chart.options.colors = ANYPLOT_PALETTE[:1]
 
 # Multi-series: assign the full palette; highcharts picks per-series in order
-chart.options.colors = OKABE_ITO
+chart.options.colors = ANYPLOT_PALETTE
 
-# Continuous — NOT Okabe-Ito. Use minColor/maxColor or stops for heatmap/treemap:
+# Continuous — only the two anyplot palette-derived cmaps are allowed.
+# Sequential (single-polarity, heatmap/treemap):
 chart.options.color_axis = {
-    'minColor': '#FFF7BC',   # light side of a viridis-like ramp
-    'maxColor': '#014636',
-    'stops': [[0, '#440154'], [0.5, '#21908C'], [1, '#FDE725']],  # viridis stops
+    'minColor': '#009E73',
+    'maxColor': '#003D94',
+    'stops':    [[0, '#009E73'], [1, '#003D94']],
 }
+# Diverging (around a meaningful midpoint):
+chart.options.color_axis = {
+    'minColor': '#BB0D22',
+    'maxColor': '#007AD9',
+    'stops':    [[0, '#BB0D22'], [0.5, '#A2A598'], [1, '#007AD9']],
+}
+# Forbidden: any other gradient (viridis/cividis/BrBG stops, Reds/Blues/Greens).
 ```
 
 ## Theme-adaptive Chrome (highcharts mapping)

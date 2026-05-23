@@ -32,35 +32,51 @@ Two formats are allowed (same pixel count for consistent font sizing across both
 
 ## Color Philosophy
 
-anyplot uses the **Okabe-Ito palette** — a peer-reviewed, colorblind-safe categorical palette designed for scientific publication. It is the single consistency rule that spans every library and every plot.
+anyplot uses the **anyplot palette** — a bespoke, colorblind-safe categorical palette tuned for paper-ink rendering on both warm-cream and warm-black surfaces. It is the single consistency rule that spans every library and every plot.
 
-### Categorical Palette (Okabe-Ito, canonical order)
+### Categorical Palette (anyplot, canonical order)
 
 | # | Hex | Name | Role |
 |---|-----|------|------|
 | 1 | `#009E73` | bluish green | ★ **brand — ALWAYS first series** |
-| 2 | `#D55E00` | vermillion | |
-| 3 | `#0072B2` | blue | |
-| 4 | `#CC79A7` | reddish purple | |
-| 5 | `#E69F00` | orange | |
-| 6 | `#56B4E9` | sky blue | |
-| 7 | `#F0E442` | yellow | Position ≥7 only — never thin lines or small markers (low luminance on light surfaces) |
+| 2 | `#9418DB` | purple | |
+| 3 | `#B71D27` | red | |
+| 4 | `#16B8F3` | sky blue | |
+| 5 | `#99B314` | lime | |
+| 6 | `#D359A7` | pink | |
+| 7 | `#BA843E` | tan | |
 | 8 | *adaptive neutral* | — | `#1A1A1A` on light theme, `#E8E8E0` on dark theme. Reserved for aggregates, residuals, reference lines. |
 
 **Hard rules:**
 - **First series is ALWAYS `#009E73`** — across every library, every plot type. A "Gentoo penguin" is the same green in matplotlib as it is in plotly.
-- Use positions 1→N in order. Don't cherry-pick.
+- Use positions 1→N in order by default. Don't cherry-pick for aesthetic reasons.
 - Only position 8 changes between light and dark themes; positions 1–7 stay identical so a category keeps its identity.
-- Never introduce custom hex values when the Okabe-Ito palette already covers the need.
+- Never introduce custom hex values when the anyplot palette already covers the need.
 
-### Continuous Data — Okabe-Ito is NOT used
+**Semantic exception:**
+The default rule is "use positions 1→N in canonical order." But whenever a category has a strong, widely-shared color association that a reader would expect, pick the closest palette member instead of the next ordinal position. This isn't a niche carve-out — there are many such cases. Some illustrative examples (not an exhaustive list):
 
-Categorical palettes on continuous data produce misleading banding. For continuous data, use perceptually-uniform colormaps:
+- **Real-world objects:** grass→green, wood→tan, blood→red, sky→blue.
+- **Status / quality:** bad/error/fail→red, good/ok/pass→green, neutral/warning→tan or pink.
+- **Finance:** profit/up/gain→green, loss/down→red (stock-chart bullish/bearish bars, P&L deltas).
+- **Sentiment / polarity:** positive→green, negative→red, neutral→tan or pink.
+- **Domain conventions:** temperature hot→red / cold→sky, party colors that map cleanly to palette members, traffic-light states (red/tan/green), etc.
 
-- **Sequential:** `viridis` or `cividis` (default). `Blues` / `Greens` for single-polarity data that should visually tie to the brand.
-- **Diverging:** `BrBG` from ColorBrewer (centered on a meaningful midpoint).
-- **Heatmaps:** `viridis` for neutral, or single-polarity `Reds` / `Blues` when polarity is semantic.
-- **Forbidden:** `jet`, `hsv`, rainbow colormaps — not perceptually uniform.
+The test isn't "does it appear in the list above" — it's "would a typical reader of this chart expect this category to look like this color?" If yes, and a palette member matches that expectation, use it.
+
+**Constraints (always):**
+- Colors must come **from the anyplot palette** (no custom hexes).
+- The semantic mapping must be obvious from the data labels — the legend or category names should literally say "Pass / Fail", "Profit / Loss", "Up / Down", "Hot / Cold", "OK / Error", etc.
+- Default to canonical order whenever the categories are abstract (groups A/B/C, regions, models, anonymous bins, k-means clusters) — no expectation to break ordinal there.
+
+### Continuous Data — the categorical palette is NOT used
+
+Categorical palettes on continuous data produce misleading banding. anyplot ships exactly two palette-derived continuous colormaps; **no other cmap is allowed** — not viridis, not cividis, not BrBG, not Blues/Greens/Reds, and never jet/hsv/rainbow. Both anyplot cmaps are perceptually-uniform in CAM02-UCS (derivation in `docs/reference/palette-variants/D-balanced.html`):
+
+- **`anyplot_seq` (sequential):** brand green → dark azure. Use for single-polarity continuous data (intensity, magnitude, density, single-polarity heatmaps). Build with `LinearSegmentedColormap.from_list("anyplot_seq", ["#009E73", "#003D94"])` (matplotlib) or the library's equivalent two-stop gradient API.
+- **`anyplot_div` (diverging):** red ↔ near-neutral ↔ azure. Use when the data has a meaningful midpoint (correlations, residuals, signed deviations, diverging heatmaps). Build with `LinearSegmentedColormap.from_list("anyplot_div", ["#BB0D22", "#A2A598", "#007AD9"])`.
+
+Pick `anyplot_seq` vs `anyplot_div` from the data's polarity. Never substitute a matplotlib/library-native cmap "because it looks nicer" — palette identity is part of the brand.
 
 ### Color Restraint
 
@@ -70,7 +86,7 @@ Categorical palettes on continuous data produce misleading banding. For continuo
 
 ### Colorblind Safety
 
-The Okabe-Ito palette is already safe for deuteranopia and protanopia. Never override it with custom categorical hexes unless you have a documented reason.
+The anyplot palette is selected via max-min ΔE optimisation across normal, deuteranopia, protanopia, and tritanopia simulations — every pairwise distance among the first-4 positions exceeds the Okabe-Ito baseline. Never override it with custom categorical hexes unless you have a documented reason.
 
 ---
 
@@ -105,7 +121,7 @@ anyplot plots live inside page surfaces that are warm off-white / near-black, **
 
 ### Theme-adaptive Chrome
 
-In addition to the background, every non-data element (title, axis labels, tick labels, spines, grid, legend text, annotations, callout-box fills, footnotes) must use theme-adaptive tokens. Only the Okabe-Ito data colors (positions 1–7) stay constant.
+In addition to the background, every non-data element (title, axis labels, tick labels, spines, grid, legend text, annotations, callout-box fills, footnotes) must use theme-adaptive tokens. Only the anyplot palette data colors (positions 1–7) stay constant.
 
 | Role | Light theme | Dark theme |
 |------|-------------|------------|
@@ -128,7 +144,7 @@ INK_SOFT    = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED   = "#6B6A63" if THEME == "light" else "#A8A79F"
 RULE        = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-BRAND       = "#009E73"  # Okabe-Ito position 1, theme-independent
+BRAND       = "#009E73"  # anyplot palette position 1, theme-independent
 ```
 
 Output file names: `plot-light.png` / `plot-dark.png` (static libraries) plus `plot-light.html` / `plot-dark.html` (interactive libraries).
@@ -242,8 +258,8 @@ The review step checks these proportions visually from the source PNG. There are
 The AI makes the following design decisions for each visualization:
 
 **Color & Palette:**
-- Use Okabe-Ito positions 1→N in order for categorical data (see Color Philosophy). No custom hexes.
-- Colormap choice for continuous data: `viridis`/`cividis` sequential, `BrBG` diverging, `viridis` or single-polarity `Reds`/`Blues` for heatmaps
+- Use anyplot palette positions 1→N in order for categorical data (see Color Philosophy). No custom hexes. May reassign positions when categories carry strong semantic color cues (grass→green, wood→tan, blood→red) — see Semantic Exception in Color Philosophy.
+- Colormap choice for continuous data: **`anyplot_seq`** (single-polarity) or **`anyplot_div`** (diverging-polarity). No other colormaps — see Continuous Data.
 - Alpha/opacity values based on data density
 
 **Layout & Structure:**

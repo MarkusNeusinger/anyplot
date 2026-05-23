@@ -124,36 +124,37 @@ canonical `resolution` values above, this is what produces 3200×1800 or
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md`
+Use the anyplot palette (see `prompts/default-style-guide.md`
 "Categorical Palette"). First series is **always** `#009E73`.
 
 ```julia
-const OKABE_ITO = [
+const ANYPLOT_PALETTE = [
     colorant"#009E73",  # 1 — first categorical series (anyplot brand green)
-    colorant"#D55E00",  # 2
-    colorant"#0072B2",  # 3
-    colorant"#CC79A7",  # 4
-    colorant"#E69F00",  # 5
-    colorant"#56B4E9",  # 6
-    colorant"#F0E442",  # 7
+    colorant"#9418DB",  # 2
+    colorant"#B71D27",  # 3
+    colorant"#16B8F3",  # 4
+    colorant"#99B314",  # 5
+    colorant"#D359A7",  # 6
+    colorant"#BA843E",  # 7
 ]
 
 # Single-series
-scatter!(ax, x, y; color = OKABE_ITO[1])
+scatter!(ax, x, y; color = ANYPLOT_PALETTE[1])
 
 # Multi-series — categorical
-scatter!(ax, x, y; color = group, colormap = OKABE_ITO)
+scatter!(ax, x, y; color = group, colormap = ANYPLOT_PALETTE)
 
-# Continuous — NOT Okabe-Ito:
-# Sequential
-heatmap!(ax, z; colormap = :viridis)
-heatmap!(ax, z; colormap = :cividis)
-# Diverging
-heatmap!(ax, z; colormap = :BrBG)
+# Continuous — only the two anyplot palette-derived cmaps are allowed.
+using ColorSchemes
+const ANYPLOT_SEQ = cgrad([colorant"#009E73", colorant"#003D94"])                                    # sequential / single-polarity
+const ANYPLOT_DIV = cgrad([colorant"#BB0D22", colorant"#A2A598", colorant"#007AD9"])                 # diverging
+# Sequential heatmap:  heatmap!(ax, z; colormap = ANYPLOT_SEQ)
+# Diverging heatmap:   heatmap!(ax, z; colormap = ANYPLOT_DIV)
 ```
 
-Never use `:rainbow`, `:jet`, `:hsv`, `:gist_rainbow`, or any other
-rainbow-family colormap — they all fail CVD and luminance ordering.
+Never use `:viridis`, `:cividis`, `:BrBG`, `:Reds`/`:Blues`/`:Greens`,
+`:rainbow`, `:jet`, `:hsv`, `:gist_rainbow`, or any other named
+colormap — only the two anyplot stops above are allowed.
 
 ## Theme-adaptive Chrome (Makie mapping)
 
@@ -230,9 +231,9 @@ const THEME    = get(ENV, "ANYPLOT_THEME", "light")
 const PAGE_BG  = THEME == "light" ? colorant"#FAF8F1" : colorant"#1A1A17"
 const INK      = THEME == "light" ? colorant"#1A1A17" : colorant"#F0EFE8"
 const INK_SOFT = THEME == "light" ? colorant"#4A4A44" : colorant"#B8B7B0"
-const OKABE_ITO = [
-    colorant"#009E73", colorant"#D55E00", colorant"#0072B2", colorant"#CC79A7",
-    colorant"#E69F00", colorant"#56B4E9", colorant"#F0E442",
+const ANYPLOT_PALETTE = [
+    colorant"#009E73", colorant"#9418DB", colorant"#B71D27", colorant"#16B8F3",
+    colorant"#99B314", colorant"#D359A7", colorant"#BA843E",
 ]
 
 # --- Data -------------------------------------------------------------------
@@ -266,7 +267,7 @@ ax = Axis(
     ygridcolor         = RGBAf(INK.r, INK.g, INK.b, 0.10),
 )
 
-scatter!(ax, x, y; color = OKABE_ITO[1], markersize = 12, strokewidth = 0)
+scatter!(ax, x, y; color = ANYPLOT_PALETTE[1], markersize = 12, strokewidth = 0)
 
 # --- Save -------------------------------------------------------------------
 save("plot-$(THEME).png", fig; px_per_unit = 2)
@@ -307,9 +308,9 @@ assigned. If the file has no leading `#` block, the rewrite prepends one.
   the runner; keep the script silent except for the `save` call.
 - `colorant"#RRGGBB"` (from `Colors`) is the canonical hex-to-color
   helper. Prefer it over manual `RGB(r/255, g/255, b/255)` constructors.
-- For multi-series categorical color, pass an `OKABE_ITO[1:n]` slice to
+- For multi-series categorical color, pass an `ANYPLOT_PALETTE[1:n]` slice to
   `colormap = ...` rather than letting Makie's default cycle pick the
-  first color (which is **not** Okabe-Ito green).
+  first color (which is **not** anyplot brand green).
 - The implementation file must end with a trailing newline — Julia
   parses fine without it, but the impl-review header rewrite assumes
   one.

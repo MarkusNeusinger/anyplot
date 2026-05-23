@@ -104,41 +104,40 @@ sns.boxplot(data=df, x='group', y='value', hue='group', palette='Set2', legend=F
 
 ## Colors
 
-Use the Okabe-Ito palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
+Use the anyplot palette (see `prompts/default-style-guide.md` "Categorical Palette"). First series is **always** `#009E73`.
 
 ```python
-# Okabe-Ito palette — canonical order, first series always #009E73
-OKABE_ITO = ['#009E73', '#D55E00', '#0072B2', '#CC79A7',
-             '#E69F00', '#56B4E9', '#F0E442']
+# anyplot palette — canonical order, first series always #009E73
+ANYPLOT_PALETTE = ['#009E73', '#9418DB', '#B71D27', '#16B8F3',
+                   '#99B314', '#D359A7', '#BA843E']
 
 # Single-series
-color = OKABE_ITO[0]  # '#009E73'
+color = ANYPLOT_PALETTE[0]  # '#009E73'
 sns.scatterplot(data=df, x='x', y='y', color=color)
 
 # Multi-series (hue)
-sns.scatterplot(data=df, x='x', y='y', hue='category', palette=OKABE_ITO[:N])
+sns.scatterplot(data=df, x='x', y='y', hue='category', palette=ANYPLOT_PALETTE[:N])
 
 # Set once globally for a whole figure
-sns.set_palette(OKABE_ITO)
+sns.set_palette(ANYPLOT_PALETTE)
 ```
 
-## Continuous-data Palettes (seaborn cmaps)
+## Continuous-data Palettes (anyplot cmaps only)
 
 ```python
-# Sequential (perceptually uniform)
-cmap='viridis'       # default
-cmap='cividis'       # CVD-optimized alternative
+from matplotlib.colors import LinearSegmentedColormap
 
-# Diverging (centered on midpoint)
-cmap='BrBG'          # ColorBrewer, anyplot default for diverging
+# Sequential / single-polarity (intensity, magnitude, density)
+anyplot_seq = LinearSegmentedColormap.from_list("anyplot_seq", ["#009E73", "#003D94"])
 
-# Single-polarity (ties to brand)
-cmap='Blues' / 'Greens' / 'Reds'
+# Diverging (signed deviations, residuals, correlations)
+anyplot_div = LinearSegmentedColormap.from_list("anyplot_div", ["#BB0D22", "#A2A598", "#007AD9"])
 
-# Forbidden: 'jet', 'hsv', 'rainbow' — not perceptually uniform
+# Use via cmap=anyplot_seq / cmap=anyplot_div on heatmap, kdeplot, etc.
+# Forbidden: any other cmap (viridis/cividis/BrBG/Reds/Blues/Greens/jet/hsv/rainbow).
 ```
 
-Never use seaborn's `palette='Set2'`/`'tab10'`/`'colorblind'` for categorical data — they override the Okabe-Ito brand identity. `'viridis'`, `'Blues'`, `'Greens'` are fine for **continuous** data only.
+Never use seaborn's `palette='Set2'`/`'tab10'`/`'colorblind'` for categorical data — they override the anyplot brand identity. The only continuous cmaps allowed are the two anyplot palette-derived cmaps above.
 
 ## Theme-adaptive Chrome (seaborn mapping)
 

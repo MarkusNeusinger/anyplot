@@ -45,15 +45,22 @@ FONT_CACHE_DIR = Path("/tmp/anyplot-fonts")
 # (`--bg-page`, `--ink`, `--ok-green`, etc.) so the OG cards read as a direct
 # translation of the in-product surfaces.
 
-OK_GREEN = "#009E73"  # brand anchor — the dot in any.plot()
-OK_VERMILLION = "#D55E00"
-OK_BLUE = "#0072B2"
-OK_PURPLE = "#CC79A7"
-OK_ORANGE = "#E69F00"
-OK_SKY = "#56B4E9"
-OK_YELLOW = "#F0E442"
+# anyplot categorical palette — variant D ("balanced") from the palette
+# exploration in #5817. Position 1 (#009E73) carries the same bluish green
+# as Okabe-Ito's first slot so the brand identity (`any.plot()` dot, first
+# series) is preserved; positions 2–7 are selected via Petroff-style
+# max-min ΔE search in the CAM02-UCS paper-ink corridor (J' ∈ [45,72],
+# C ∈ [22,36]). See docs/reference/palette-variants/D-balanced.html for
+# the derivation and CVD analysis.
+ANYPLOT_GREEN = "#009E73"  # brand anchor — the dot in any.plot(); ALWAYS first series
+ANYPLOT_PURPLE = "#9418DB"
+ANYPLOT_RED = "#B71D27"
+ANYPLOT_SKY = "#16B8F3"
+ANYPLOT_LIME = "#99B314"
+ANYPLOT_PINK = "#D359A7"
+ANYPLOT_TAN = "#BA843E"
 
-OKABE_PALETTE = [OK_GREEN, OK_VERMILLION, OK_BLUE, OK_PURPLE, OK_ORANGE, OK_SKY, OK_YELLOW]
+ANYPLOT_PALETTE = [ANYPLOT_GREEN, ANYPLOT_PURPLE, ANYPLOT_RED, ANYPLOT_SKY, ANYPLOT_LIME, ANYPLOT_PINK, ANYPLOT_TAN]
 
 LIGHT_THEME: dict[str, str] = {
     "bg_page": "#F5F3EC",  # warm cream — matches `--bg-page` in app/src/styles/tokens.css
@@ -75,19 +82,20 @@ DARK_THEME: dict[str, str] = {
     "card_shadow": "#000000",
 }
 
-# Library → Okabe-Ito accent color used for the colored 8x8 chip square
+# Library → anyplot palette accent color used for the colored 8x8 chip square
 # next to library.method() callouts. Falls back to brand green for unknowns.
+# Mapping is preserved by palette position from the original Okabe-Ito assignment.
 LIBRARY_COLORS: dict[str, str] = {
-    "matplotlib": OK_BLUE,
-    "seaborn": OK_SKY,
-    "plotly": OK_PURPLE,
-    "bokeh": OK_VERMILLION,
-    "altair": OK_GREEN,
-    "plotnine": OK_ORANGE,
-    "pygal": OK_YELLOW,
-    "highcharts": OK_BLUE,
-    "letsplot": OK_GREEN,
-    "lets-plot": OK_GREEN,
+    "matplotlib": ANYPLOT_RED,  # pos 3
+    "seaborn": ANYPLOT_PINK,  # pos 6
+    "plotly": ANYPLOT_SKY,  # pos 4
+    "bokeh": ANYPLOT_PURPLE,  # pos 2
+    "altair": ANYPLOT_GREEN,  # pos 1
+    "plotnine": ANYPLOT_LIME,  # pos 5
+    "pygal": ANYPLOT_TAN,  # pos 7
+    "highcharts": ANYPLOT_RED,  # pos 3
+    "letsplot": ANYPLOT_GREEN,  # pos 1
+    "lets-plot": ANYPLOT_GREEN,  # pos 1
 }
 
 # Library → typical method call hint shown inside `library.method()` chips.
@@ -105,13 +113,9 @@ LIBRARY_METHOD_HINTS: dict[str, str] = {
     "lets-plot": "ggplot()",
 }
 
-# Backwards-compatible aliases — kept so any external caller / test that imports
-# the older constant names doesn't blow up. New code should reference the theme
-# dicts above directly.
+# Shortcut aliases used by the OG image pipeline.
 ANYPLOT_BG = LIGHT_THEME["bg_page"]
 ANYPLOT_DARK = LIGHT_THEME["ink"]
-ANYPLOT_BLUE = OK_BLUE  # legacy "brand blue" alias — actually Okabe blue now
-ANYPLOT_YELLOW = OK_YELLOW
 COLOR_LABEL_GRAY = LIGHT_THEME["ink_muted"]
 COLOR_PLACEHOLDER_GRAY = LIGHT_THEME["ink_muted"]
 
@@ -498,7 +502,7 @@ def _draw_anyplot_wordmark(
     # "." — the actual MonoLisa period glyph, recolored brand green. Matches the
     # website where the dot is a `.` character with `color: var(--ok-green)` and
     # a 1.3× scale, NOT a filled circle (which used to read way too heavy).
-    draw.text((cursor_x, y), ".", fill=OK_GREEN, font=bold_font)
+    draw.text((cursor_x, y), ".", fill=ANYPLOT_GREEN, font=bold_font)
     cursor_x += _text_advance(draw, ".", bold_font)
 
     # "plot" — bold ink
@@ -656,7 +660,7 @@ def _draw_method_chip(
 
     Returns the horizontal advance of the rendered chip.
     """
-    color = LIBRARY_COLORS.get(library.lower(), OK_GREEN)
+    color = LIBRARY_COLORS.get(library.lower(), ANYPLOT_GREEN)
     method = method or LIBRARY_METHOD_HINTS.get(library.lower(), "plot()")
     label = f"{library}.{method}"
 
@@ -1189,7 +1193,7 @@ def _draw_collage_cards(
             # Labels arrive as either "spec · library" (collage helper) or just "library".
             # Treat the trailing token as the library so the chip color picks correctly.
             library = label_text.split("·")[-1].strip().lower()
-            color = LIBRARY_COLORS.get(library, OK_GREEN)
+            color = LIBRARY_COLORS.get(library, ANYPLOT_GREEN)
             label_y = card_y + actual_card_height + COLLAGE_LABEL_GAP
             square = 10
             square_y = label_y + 4

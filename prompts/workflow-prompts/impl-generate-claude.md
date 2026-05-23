@@ -42,7 +42,7 @@ A post-render gate in `impl-review.yml` measures the saved PNG dimensions and re
 Read these files to understand the requirements:
 
 1. `prompts/plot-generator.md` - Base generation rules
-2. `prompts/default-style-guide.md` - **CRITICAL**: Okabe-Ito palette, continuous-data rules, theme-adaptive chrome tokens. Every new implementation must comply.
+2. `prompts/default-style-guide.md` - **CRITICAL**: anyplot palette, continuous-data rules, theme-adaptive chrome tokens. Every new implementation must comply.
 3. `prompts/library/{LIBRARY}.md` - Library-specific rules + theme-adaptive chrome mapping for this library
 4. `plots/{SPEC_ID}/specification.md` - What to visualize
 
@@ -58,7 +58,7 @@ When regenerating an existing implementation, you MUST read these BEFORE writing
 - Preserve the bits listed under "Strengths" unchanged.
 - Address every bullet under "Weaknesses" and each ❌ item in the criteria checklist.
 - **Canvas size: the Step 0 contract is non-negotiable on regen.** The previous file's `figsize` / `dpi` / `width` / `height` / `scale_factor` values are **historical**, never current — overwrite them to the canonical pair from `prompts/library/{LIBRARY}.md` as your *first* edit, before touching anything else. The post-render gate checks this and re-triggers repair on drift; do not let that fire.
-- **Base style wins on everything else.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This includes **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (Okabe-Ito positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align.
+- **Base style wins on everything else.** If anything in `prompts/default-style-guide.md` or `prompts/library/{LIBRARY}.md` differs from the previous implementation, update the previous code to match. This includes **font sizes** (title, axis labels, tick labels, legend), **marker and line sizes**, **palette** (anyplot palette positions), **theme tokens** (background, INK, INK_SOFT, ELEVATED_BG, GRID), and **chrome** (spines, gridlines, legend frame). The previous review may not have flagged the old values because they were valid at the time — that does NOT make them current. Always re-read the library prompt's "Sizing" section and the style guide's "Visual Sizing Defaults" table on every regen and align.
 - Do NOT discard working structure / data generation / layout choices that the previous review did not flag.
 - Your deliverable is a refined version of the previous file, not a fresh rewrite from the spec.
 
@@ -132,8 +132,8 @@ The script MUST:
   - Julia: `get(ENV, "ANYPLOT_THEME", "light")`
 - Save output as `plot-{THEME}.png` (theme-suffixed, based on the env var).
 - For interactive libraries (plotly, bokeh, altair, highcharts, pygal, letsplot): also save `plot-{THEME}.html`. ggplot2 and makie are PNG-only, no HTML variant.
-- Use `#009E73` (Okabe-Ito position 1) as the **first categorical series**, always. Multi-series follows the canonical order: `#D55E00`, `#0072B2`, `#CC79A7`, `#E69F00`, `#56B4E9`, `#F0E442`.
-- For continuous data: `viridis`/`cividis` (sequential) or `BrBG` (diverging). Never `jet`/`hsv`/`rainbow`.
+- Use `#009E73` (anyplot palette position 1) as the **first categorical series**, always. Multi-series follows the canonical order: `#9418DB`, `#B71D27`, `#16B8F3`, `#99B314`, `#D359A7`, `#BA843E`. May reassign positions when categories carry strong semantic color cues (grass→green, wood→tan, blood→red) — see `prompts/default-style-guide.md` "Semantic exception".
+- For continuous data: build `anyplot_seq` (single-polarity, `["#009E73", "#003D94"]`) or `anyplot_div` (diverging, `["#BB0D22", "#A2A598", "#007AD9"]`) from the anyplot palette. No other cmaps — never viridis/cividis/BrBG/Reds/Blues/Greens or jet/hsv/rainbow.
 - Plot backgrounds: `#FAF8F1` (light) / `#1A1A17` (dark). Never pure `#FFFFFF` or `#000000`.
 - Theme-adaptive chrome (title, axis labels, tick labels, grid, spines, legend frames, annotation boxes) — see `prompts/default-style-guide.md` "Theme-adaptive Chrome" and the library-specific mapping in `prompts/library/{LIBRARY}.md`.
 
