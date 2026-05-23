@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-23
@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 from plotnine import (
     aes,
-    coord_cartesian,
+    coord_fixed,
     element_blank,
     element_line,
     element_rect,
@@ -156,13 +156,13 @@ plot = (
     + geom_path(
         data=state_boundaries, mapping=aes(x="lon", y="lat", group="state"), color=INK_SOFT, size=0.4, alpha=0.5
     )
-    + geom_text(data=city_label_df, mapping=aes(x="lon", y="lat", label="name"), color=INK_MUTED, size=7.5, va="bottom")
+    + geom_text(data=city_label_df, mapping=aes(x="lon", y="lat", label="name"), color=INK_MUTED, size=8.5, va="bottom")
     + geom_point(aes(size="count", color="category"), alpha=0.85, stroke=1.2)
-    + geom_text(aes(label="label"), size=7, color="white", fontweight="bold")
+    + geom_text(aes(label="label"), size=8, color="white", fontweight="bold")
     + scale_color_manual(values=CATEGORY_COLORS, name="Category")
     + scale_fill_identity()
     + scale_size_continuous(range=(6, 13), name="Points in cluster")
-    + coord_cartesian(xlim=(-125.5, -116.5))
+    + coord_fixed(ratio=0.7, xlim=(-125.5, -116.5), ylim=(31.5, 50.5))
     + labs(title="map-marker-clustered · python · plotnine · anyplot.ai", x="Longitude (°)", y="Latitude (°N)")
     + theme(
         figure_size=(8, 4.5),
@@ -173,7 +173,8 @@ plot = (
         panel_border=element_blank(),
         axis_title=element_text(color=INK, size=10),
         axis_text=element_text(color=INK_SOFT, size=8),
-        axis_line=element_line(color=INK_SOFT),
+        axis_line=element_blank(),
+        axis_ticks=element_blank(),
         plot_title=element_text(color=INK, size=12),
         legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
         legend_text=element_text(color=INK_SOFT, size=8),
