@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: bokeh 3.9.0 | Python 3.13.13
 Quality: 78/100 | Updated: 2026-05-23
@@ -18,7 +18,7 @@ from pathlib import Path
 
 import numpy as np
 from bokeh.io import output_file, save
-from bokeh.models import ColumnDataSource, LabelSet, Legend, LegendItem, Rect
+from bokeh.models import ColumnDataSource, LabelSet, Legend, LegendItem, WMTSTileSource
 from bokeh.plotting import figure
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -32,8 +32,15 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-# Map background color (subtle geographic feel without tile provider)
-MAP_BG = "#D4E8F0" if THEME == "light" else "#1C2E35"
+# Map background — placeholder color visible before tiles load
+MAP_BG = "#E8EEF2" if THEME == "light" else "#1C2E35"
+
+# Tile basemap — CartoDB Positron (light) or Dark Matter (dark)
+TILE_URL = (
+    "https://a.basemaps.cartocdn.com/light_all/{Z}/{X}/{Y}.png"
+    if THEME == "light"
+    else "https://a.basemaps.cartocdn.com/dark_all/{Z}/{X}/{Y}.png"
+)
 
 # anyplot palette — canonical order
 ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
@@ -75,8 +82,8 @@ k = 6378137
 mercator_x = lons * (k * np.pi / 180.0)
 mercator_y = np.log(np.tan((90 + lats) * np.pi / 360.0)) * k
 
-# Grid-based clustering
-grid_size = 2500  # metres
+# Grid-based clustering — 3500m cells reduce overlap in dense areas
+grid_size = 3500  # metres
 grid_xi = np.floor(mercator_x / grid_size).astype(int)
 grid_yi = np.floor(mercator_y / grid_size).astype(int)
 cluster_ids = grid_xi * 10000 + grid_yi
@@ -101,21 +108,15 @@ min_sz, max_sz = 45, 110
 norm = (cluster_counts - cluster_counts.min() + 1) / (cluster_counts.max() - cluster_counts.min() + 1)
 cluster_sizes = min_sz + np.sqrt(norm) * (max_sz - min_sz)
 
-# Map extent
-x_start, x_end = -8265000, -8215000
-y_start, y_end = 4955000, 5015000
-cx = (x_start + x_end) / 2
-cy = (y_start + y_end) / 2
-
 # Build figure — landscape 3200×1800, no toolbar for PNG accuracy
 p = figure(
     width=3200,
     height=1800,
-    x_range=(x_start, x_end),
-    y_range=(y_start, y_end),
+    x_range=(-8242000, -8208000),
+    y_range=(4958000, 4998000),
     x_axis_type="mercator",
     y_axis_type="mercator",
-    title="map-marker-clustered · bokeh · anyplot.ai",
+    title="map-marker-clustered · python · bokeh · anyplot.ai",
     toolbar_location=None,
     tooltips=[("Stores", "@count"), ("Dominant Type", "@category")],
     min_border_bottom=160,
@@ -124,9 +125,8 @@ p = figure(
     min_border_right=50,
 )
 
-# Map-like background rectangle
-map_bg_source = ColumnDataSource(data={"x": [cx], "y": [cy], "w": [x_end - x_start], "h": [y_end - y_start]})
-p.add_glyph(map_bg_source, Rect(x="x", y="y", width="w", height="h", fill_color=MAP_BG, line_color=None))
+# Tile basemap — adds streets/boundaries geographic context
+p.add_tile(WMTSTileSource(url=TILE_URL, attribution="© OpenStreetMap contributors © CARTO"))
 
 # Faint individual store markers
 individual_source = ColumnDataSource(data={"x": mercator_x, "y": mercator_y, "category": store_categories})
@@ -201,7 +201,7 @@ p.add_layout(
         y="y",
         text="name",
         source=hood_labels_source,
-        text_font_size="14pt",
+        text_font_size="20pt",
         text_color=INK_MUTED,
         text_align="center",
         text_baseline="top",
@@ -213,13 +213,13 @@ legend = Legend(
     items=legend_items,
     location="top_left",
     title="Store Type",
-    title_text_font_size="30pt",
+    title_text_font_size="34pt",
     title_text_font_style="bold",
     title_text_color=INK,
-    label_text_font_size="26pt",
+    label_text_font_size="34pt",
     label_text_color=INK_SOFT,
-    glyph_height=32,
-    glyph_width=32,
+    glyph_height=48,
+    glyph_width=48,
     spacing=10,
     padding=18,
     background_fill_color=ELEVATED_BG,
@@ -254,15 +254,15 @@ p.ygrid.grid_line_color = INK
 p.xgrid.grid_line_alpha = 0.08
 p.ygrid.grid_line_alpha = 0.08
 
-# Theme-adaptive background
-p.background_fill_color = PAGE_BG
+# Theme-adaptive background (tile placeholder + border area)
+p.background_fill_color = MAP_BG
 p.border_fill_color = PAGE_BG
 p.outline_line_color = INK_SOFT
 p.outline_line_width = 1
 
 # Save HTML (interactive artifact)
 html_path = f"plot-{THEME}.html"
-output_file(html_path, title="map-marker-clustered · bokeh · anyplot.ai")
+output_file(html_path, title="map-marker-clustered · python · bokeh · anyplot.ai")
 save(p)
 
 # Screenshot via headless Chrome (Selenium 4 / Selenium Manager)
@@ -288,7 +288,7 @@ from selenium.webdriver.common.by import By
 driver = webdriver.Chrome(options=opts)
 driver.set_window_size(W, H + 200)
 driver.get(f"file://{Path(html_path).resolve()}")
-time.sleep(3)
+time.sleep(5)  # extended wait for tile layer to load
 
 # Try to screenshot just the Bokeh figure element to avoid the notifications bar
 try:
