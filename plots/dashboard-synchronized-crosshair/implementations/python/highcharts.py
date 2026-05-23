@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
 Library: highcharts unknown | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-23
@@ -42,7 +42,10 @@ volume_base = np.random.lognormal(mean=15, sigma=0.3, size=n_points)
 volume = volume_base * (1 + np.abs(price_returns) * 10)
 
 rsi = 50 + np.cumsum(np.random.normal(0, 3, n_points))
+rsi[:18] -= 30  # force early oversold zone demonstration
 rsi = np.clip(rsi, 10, 90)
+
+start_price = float(price[0])
 
 timestamps = [int(d.timestamp() * 1000) for d in dates]
 price_data = [[t, float(p)] for t, p in zip(timestamps, price, strict=True)]
@@ -86,9 +89,9 @@ html_content = f"""<!DOCTYPE html>
             color: {INK};
             margin-bottom: 15px;
         }}
-        #chart1 {{ height: 655px; margin-bottom: 10px; }}
-        #chart2 {{ height: 485px; margin-bottom: 10px; }}
-        #chart3 {{ height: 485px; }}
+        #chart1 {{ height: 640px; margin-bottom: 25px; }}
+        #chart2 {{ height: 473px; margin-bottom: 25px; }}
+        #chart3 {{ height: 473px; }}
     </style>
 </head>
 <body>
@@ -187,7 +190,21 @@ html_content = f"""<!DOCTYPE html>
                 text: 'Price',
                 style: {{ fontSize: '54px', fontWeight: 'bold', color: '{INK}' }}
             }},
-            yAxis: {{ title: {{ text: 'Price (USD)' }} }},
+            yAxis: {{
+                title: {{ text: 'Price (USD)' }},
+                plotLines: [{{
+                    value: {start_price:.2f},
+                    color: '{INK_SOFT}',
+                    dashStyle: 'LongDash',
+                    width: 2,
+                    label: {{
+                        text: 'Start ${start_price:.0f}',
+                        style: {{ fontSize: '32px', color: '{INK_SOFT}' }},
+                        align: 'right',
+                        x: -10
+                    }}
+                }}]
+            }},
             series: [{{
                 type: 'line',
                 name: 'Price',
@@ -268,6 +285,22 @@ html_content = f"""<!DOCTYPE html>
                 syncCrosshairs.call(Highcharts.charts.find(function(c) {{ return c && c.renderTo.id === id; }}), e);
             }});
             container.addEventListener('mouseleave', syncMouseLeave);
+        }});
+
+        // Synchronized zoom/pan via afterSetExtremes
+        var isSyncing = false;
+        charts.forEach(function(c) {{
+            Highcharts.addEvent(c.xAxis[0], 'afterSetExtremes', function(e) {{
+                if (!isSyncing) {{
+                    isSyncing = true;
+                    charts.forEach(function(other) {{
+                        if (other !== c) {{
+                            other.xAxis[0].setExtremes(e.min, e.max, true, false);
+                        }}
+                    }});
+                    isSyncing = false;
+                }}
+            }});
         }});
 
     }})();
