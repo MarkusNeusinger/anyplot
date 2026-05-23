@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: altair 6.1.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-23
@@ -140,11 +140,11 @@ chart = (
             color=INK,
             anchor="start",
             subtitle=subtitle_str,
-            subtitleFontSize=11,
+            subtitleFontSize=12,
             subtitleColor=INK_SOFT,
         ),
     )
-    .configure_view(fill=PAGE_BG, stroke=INK_SOFT, strokeWidth=1, continuousWidth=620, continuousHeight=320)
+    .configure_view(fill=PAGE_BG, stroke=None, continuousWidth=620, continuousHeight=320)
     .configure_axis(
         labelFontSize=10,
         titleFontSize=12,
@@ -155,7 +155,8 @@ chart = (
         labelColor=INK_SOFT,
         titleColor=INK,
     )
-    .configure_title(color=INK, fontSize=16, subtitleFontSize=11, subtitleColor=INK_SOFT)
+    .configure_axisX(grid=False)
+    .configure_title(color=INK, fontSize=16, subtitleFontSize=12, subtitleColor=INK_SOFT)
     .configure_legend(
         fillColor=ELEVATED_BG,
         strokeColor=INK_SOFT,
