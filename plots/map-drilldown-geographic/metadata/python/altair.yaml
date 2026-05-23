@@ -2,7 +2,7 @@ library: altair
 language: python
 specification_id: map-drilldown-geographic
 created: '2026-01-20T07:44:04Z'
-updated: '2026-05-23T09:14:44Z'
+updated: '2026-05-23T09:32:34Z'
 generated_by: claude-sonnet
 workflow_run: 26328623315
 issue: 3770
@@ -12,95 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/altair/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/altair/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/altair/plot-dark.html
-quality_score: 86
+quality_score: 81
 review:
   strengths:
-  - 'Expert Altair geographic composition: alt.topo_feature + transform_lookup + AlbersUSA
-    projection used idiomatically and correctly'
-  - Three-level hierarchy clearly communicated through numbered labels and breadcrumb
-    navigation combined with choropleth and bar chart panels
-  - 'Full theme-adaptive chrome: all 6 token variables wired through to title, axes,
-    legends, and view — both renders are correct'
-  - anyplot_seq sequential colormap and anyplot categorical palette applied correctly
-    and consistently
-  - Pad-only canvas resize implemented correctly with SystemExit on overshoot and
-    center-pad on undershoot
+  - 'Excellent idiomatic Altair: topo_feature + albersUSA projection + transform_lookup
+    for geographic join — genuinely distinctive Vega-Lite features'
+  - Smart hierarchical composition with numbered drill levels (①②③), breadcrumb path
+    display, and opacity-based selection highlighting — clearly communicates the interactive
+    intent
+  - 'Full palette compliance: anyplot_seq (#009E73→#003D94) for choropleth, anyplot
+    categorical palette in canonical order for region bars, correct theme tokens (PAGE_BG,
+    INK, INK_SOFT, ELEVATED_BG) throughout both renders'
+  - Genuine interactivity via selection_point + transform_filter — drill-down works
+    in HTML without any simulated/fake UI elements
+  - Canvas gate passed; pad-only logic correctly avoids AR-09 crop risk
   weaknesses:
-  - Missing state-level (level 2) drill-down bar panel in sidebar — breadcrumb jumps
-    from regions directly to cities, skipping the explicit state step; add a state_bars
-    chart for the selected region states labeled as the second hierarchy step
-  - HTML drill-down is opacity-only, not data-filtering — wire region_select through
-    transform_filter to filter state bars and city bars so clicking a region shows
-    only that region data
-  - City data covers only 4 states with no visual indicator that other states are
-    non-drillable; add a subtitle or fallback note
-  - Region legend labelFontSize=9 is borderline small at 400-px mobile scale — increase
-    to labelFontSize=11
-  - Dead space in lower-left quadrant below choropleth — extend map height or add
-    content to fill the imbalance
+  - 'State bar chart (② Region → States) uses height=75 with up to 13 West-region
+    states — at scale_factor=4 that is 300 px for 13 items, causing severe label crowding/overlap.
+    Fix: increase height to 130–150, or add .encode(y=alt.Y(..., scale=alt.Scale(padding=0.05)))
+    with step=14 via alt.Step(14) to auto-size the height to content.'
+  - labelFontSize=10 in configure_axis is borderline for the compact sidebar bars;
+    because each bar row is only ~23 px tall at saved resolution, labels touch or
+    overlap. Increasing the chart height (above) will resolve this without changing
+    font size.
+  - Sidebar vconcat spacing=7 is tight for the breadcrumb + three charts + note; consider
+    spacing=10 for a touch more breathing room.
   image_description: |-
     Light render (plot-light.png):
-      Background: warm off-white #FAF8F1 — correct
-      Chrome: Title "map-drilldown-geographic · python · altair · anyplot.ai" centered at top in dark ink (#1A1A17), clearly readable. Subtitle in INK_SOFT. Axis labels "Sales ($K)" in dark ink on both bar charts. Tick labels (0, 200, 400 on choropleth; 0-3000 on region bars; 0-200 on city bars) in INK_SOFT. Breadcrumb "USA ▸ West ▸ California ▸ Cities" in INK_SOFT. All text readable.
-      Data: Choropleth uses anyplot_seq #009E73→#003D94 sequential scale. Region bars use anyplot palette (#009E73 West, #9418DB South, #B71D27 Midwest, #16B8F3 Northeast). City bars use #009E73 single color. First series is #009E73. ✓
-      Legibility verdict: PASS
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, no pure white.
+      Chrome: Title "map-drilldown-geographic · python · altair · anyplot.ai" in dark INK (#1A1A17), clearly readable. Subtitle in lighter INK_SOFT. Axis labels "Sales ($K)" on all three bar charts readable. Breadcrumb "USA ▸ West ▸ California ▸ Cities" visible. Region legend (right side) legible. Choropleth legend "Sales ($K)" at bottom-left readable with gradient bar.
+      Data: US choropleth using anyplot_seq gradient (#009E73 → #003D94) — green for low sales, dark blue for high. Region bars use anyplot palette in correct order: West=#009E73, South=#9418DB, Midwest=#B71D27, Northeast=#16B8F3. City bars use #009E73 (single series, correct). Bar opacity highlights selected items (West region, California state highlighted at full opacity).
+      Issue: "② Region → States" chart uses height=75 for up to 13 West-region states — labels are severely crowded and partially overlapping at saved resolution.
+      Legibility verdict: PASS for overall title/axes/legends. FAIL for state bar labels in chart ② (crowding/overlap for 13 states in 75px chart height).
 
     Dark render (plot-dark.png):
-      Background: warm near-black #1A1A17 — correct
-      Chrome: Title, subtitle, axis labels, tick labels all appear in light cream (#F0EFE8/#B8B7B0) on dark background. Legend boxes have elevated dark gray fill (#242420). Breadcrumb border visible. No dark-on-dark text anywhere — all text readable.
-      Data: Choropleth sequential scale colors identical to light render (teal to dark blue unchanged). Region bar colors identical (green/purple/red/cyan). City bars identical green. Data colors are unchanged between themes. ✓
-      Legibility verdict: PASS
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, no pure black.
+      Chrome: Title and subtitle render in light INK (#F0EFE8) against dark background — clearly readable. Axis labels, tick labels, legend text all appear in light INK_SOFT (#B8B7B0) — no dark-on-dark failures observed. Legend frames use ELEVATED_BG (#242420) with INK_SOFT stroke — correct.
+      Data: Data colors are identical to the light render — anyplot_seq choropleth and categorical region bars use the same hex values (positions 1–4 of anyplot palette unchanged between themes). Only chrome flips.
+      Issue: Same state bar crowding as light render — the layout constraint is structural, not theme-specific.
+      Legibility verdict: PASS for chrome elements. FAIL for state bar labels in chart ② (same crowding issue, theme-independent).
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 22
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 5
         max: 8
-        passed: true
-        comment: All font sizes explicitly set; both themes readable. Region legend
-          labelFontSize=9 is borderline small at mobile scale.
+        passed: false
+        comment: Title, axis labels, and legends all readable. State bar labels in
+          chart ② are too small/crowded (13 states in height=75) — borderline legible
+          at full res, unreadable at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 3
         max: 6
-        passed: true
-        comment: No overlapping elements in either render.
+        passed: false
+        comment: State bar chart (②) has 13 West-region states in height=75; at scale_factor=4
+          (~23px per row vs 40px label height) labels overlap significantly.
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: Map states clearly filled; bars well-sized and readable.
+        comment: Choropleth, region bars, and city bars all clearly visible. Bar opacity
+          condition (1.0 selected / 0.55 unselected) works well.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: anyplot palette CVD-safe; sequential choropleth maintains luminance
-          contrast.
+        comment: anyplot palette is CVD-safe. anyplot_seq for continuous choropleth.
+          No red-green-only signaling.
       - id: VQ-05
         name: Layout & Canvas
         score: 3
         max: 4
         passed: true
-        comment: Good utilization overall but lower-left quadrant below choropleth
-          is visibly empty.
+        comment: 'Canvas 3200x1800 confirmed (gate passed). Layout well-organized:
+          map left, sidebar right. Sidebar is compact but functional. Breadcrumb +
+          note add useful context.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Sales ($K) on all axes and choropleth legend; title format correct.
+        comment: Title follows required format. All bar charts labeled 'Sales ($K)'.
+          Sub-chart titles use descriptive numbered labels.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'anyplot_seq for choropleth; anyplot categorical for bars starting
-          with #009E73; correct light/dark backgrounds.'
+        comment: Choropleth uses anyplot_seq (#009E73→#003D94). Region bars use anyplot
+          palette positions 1-4 in canonical order. PAGE_BG and chrome tokens correct
+          in both themes.
     design_excellence:
       score: 12
       max: 20
@@ -110,24 +117,26 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: Numbered hierarchy labels and breadcrumb are above defaults; bordered
-          panel look prevents higher score.
+        comment: 'Above default: numbered hierarchy levels (①②③), breadcrumb path,
+          opacity-based selection highlighting, sub-chart titles. Thoughtful composition
+          above a generic bar chart.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Subtle grid (0.10 opacity), corner radii on bars, theme-adaptive
-          legend styling. Visible rectangular borders on all panels reduce refinement.
+        comment: Subtle grids (gridOpacity=0.10). Legend frames themed. cornerRadius
+          on bars. Organized layout. Could improve sidebar spacing.
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Numbered hierarchy steps and breadcrumb create clear drill-down narrative.
-          Three-level layout guides viewer effectively.
+        comment: 'Clear visual narrative: top-level map → regional drill → state drill
+          → city drill. Selection state and breadcrumb communicate current context
+          effectively.'
     spec_compliance:
-      score: 13
+      score: 14
       max: 15
       items:
       - id: SC-01
@@ -135,28 +144,31 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Choropleth + multi-level drill-down hierarchy is the correct chart
-          type.
+        comment: 'Correct: hierarchical choropleth map with drill-down sidebar bars
+          covering Country→Region→State→City levels.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Missing: (a) state-level (level 2) bar panel — sidebar jumps from
-          regions to cities; (b) no geographic zoom/drill on click in HTML, only opacity
-          dimming; (c) no graceful handling of non-drillable states.'
+        passed: true
+        comment: Choropleth coloring, multiple hierarchy levels, breadcrumb, color
+          legend, tooltips (HTML), non-clickable note for cities present. Smooth zoom
+          transitions only work in HTML (acceptable for static render).
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: FIPS IDs correctly joined to TopoJSON; value-to-color scale correct.
+        comment: X=Sales($K), Y=regions/states/cities. Geographic data correctly joined
+          via transform_lookup using state FIPS ids. AlbersUSA projection correct
+          for US map.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title format correct; legend labels match data categories.
+        comment: Title exactly 'map-drilldown-geographic · python · altair · anyplot.ai'.
+          Region legend labeled. Choropleth legend labeled 'Sales ($K)'.
     data_quality:
       score: 14
       max: 15
@@ -166,22 +178,25 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows all three hierarchy levels but state-level bar chart is absent;
-          choropleth implies it but explicit panel is missing.
+        comment: All three hierarchy levels shown. Region aggregation computed via
+          groupby. City leaf nodes for 4 major states. Hierarchical parent-child structure
+          clear.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US regional sales with real state names, geographic regions, and
-          recognizable cities. Neutral business scenario.
+        comment: US state-level sales ($K) data is realistic and neutral. Values plausible
+          (CA=520, TX=485, NY=425, FL=380 as top states). City-level data for major
+          metros realistic.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: State values (25-520 $K), regional aggregates (~1600-3100 $K), and
-          city splits are internally consistent and plausible.
+        comment: State values 25-520 ($K), city values 28-335 ($K), regional totals
+          in 1000-3500 range. All scales appropriate for hypothetical regional sales
+          data.
     code_quality:
       score: 10
       max: 10
@@ -191,33 +206,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat sequential code: imports, constants, data, chart composition,
-          save.'
+        comment: Flat script, no unnecessary functions or classes. Clean Altair composition.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data hardcoded; fully deterministic.
+        comment: Fully deterministic — hardcoded data, no randomness needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used.
+        comment: 'All imports used: os, sys, altair, pandas, PIL.Image.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean, idiomatic Altair; no fake UI elements.
+        comment: No fake interactivity — selection_point + transform_filter is genuine
+          Altair interactivity. Code is appropriately complex for this chart type.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly; pad-only
-          resize correct.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current Altair 6.1.0
+          API used.
     library_mastery:
       score: 9
       max: 10
@@ -227,27 +242,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Expert use: topo_feature, mark_geoshape, transform_lookup, AlbersUSA
-          projection, selection_point, condition, resolve_legend.'
+        comment: 'Excellent: topo_feature for TopoJSON loading, transform_lookup for
+          geographic join, selection_point with default values, transform_filter for
+          reactive filtering, vconcat/hconcat composition, resolve_legend — all idiomatic
+          Vega-Lite/Altair patterns.'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: TopoJSON + transform_lookup join and AlbersUSA projection are distinctly
-          Altair. HTML drill-down stays at opacity toggle rather than data filtering,
-          limiting the score.
-  verdict: REJECTED
+        comment: 'albersUSA projection, topo_feature, linked brushing via selection_point
+          across hconcat panels — these are genuinely distinctive Altair capabilities.
+          Minor deduction: could use alt.Step() for auto-height on bar charts.'
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - pillow
   techniques:
   - hover-tooltips
   - html-export
-  - layer-composition
   patterns:
   - groupby-aggregation
   dataprep: []
   styling:
-  - custom-colormap
   - alpha-blending
+  - custom-colormap
