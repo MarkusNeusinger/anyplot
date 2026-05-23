@@ -1,403 +1,252 @@
-""" pyplots.ai
+"""anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 55/100 | Created: 2026-01-20
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-23
 """
 
 import io
+import os
+import sys
+
+
+# Prevent this file (pygal.py) from shadowing the installed pygal package
+_self_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if p != _self_dir]
 
 import numpy as np
 import pygal
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image
 from pygal.style import Style
 
 
-# Data - 200 trading days of stock data with price, volume, and RSI
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+ANYPLOT_PALETTE = ("#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E")
+
+# Data: 200 trading days with price, volume, and RSI
 np.random.seed(42)
 n_days = 200
 dates = [f"Day {i + 1}" for i in range(n_days)]
-
-# Price series (random walk starting at 100)
 returns = np.random.randn(n_days) * 0.02
 price = 100 * np.cumprod(1 + returns)
+volume = (np.abs(np.random.randn(n_days)) * 1e6 + 5e5) * (1 + np.abs(returns) * 10)
+rsi = np.clip(50 + np.cumsum(np.random.randn(n_days) * 2), 0, 100)
 
-# Volume series (correlated with price changes)
-volume = np.abs(np.random.randn(n_days)) * 1000000 + 500000
-volume = volume * (1 + np.abs(returns) * 10)
+# Panel dimensions — widths=3200, heights sum to 1800
+W, H_PRICE, H_VOLUME, H_RSI = 3200, 680, 540, 580
 
-# RSI indicator (bounded 0-100)
-rsi = 50 + np.cumsum(np.random.randn(n_days) * 2)
-rsi = np.clip(rsi, 0, 100)
-
-# Style for Price chart (top) - Blue
+# Price chart — full anyplot title, pos-1 green (#009E73)
 price_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#222222",
-    foreground_subtle="#666666",
-    colors=("#306998",),
-    title_font_size=42,
-    label_font_size=26,
-    major_label_font_size=24,
-    legend_font_size=26,
-    value_font_size=20,
-    font_family="sans-serif",
-    guide_stroke_color="#cccccc",
-    stroke_width=4,
-)
-
-# Style for Volume chart (middle) - Gold
-volume_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#222222",
-    foreground_subtle="#666666",
-    colors=("#E6A800",),
-    title_font_size=42,
-    label_font_size=26,
-    major_label_font_size=24,
-    legend_font_size=26,
-    value_font_size=20,
-    font_family="sans-serif",
-    guide_stroke_color="#cccccc",
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=ANYPLOT_PALETTE,
+    title_font_size=48,
+    label_font_size=36,
+    major_label_font_size=30,
+    legend_font_size=30,
+    value_font_size=26,
     stroke_width=3,
 )
-
-# Style for RSI chart (bottom) - Red
-rsi_style = Style(
-    background="white",
-    plot_background="#fafafa",
-    foreground="#333333",
-    foreground_strong="#222222",
-    foreground_subtle="#666666",
-    colors=("#C0392B",),
-    title_font_size=42,
-    label_font_size=26,
-    major_label_font_size=24,
-    legend_font_size=26,
-    value_font_size=20,
-    font_family="sans-serif",
-    guide_stroke_color="#cccccc",
-    stroke_width=4,
-)
-
-# Chart 1: Price Line Chart (top panel) - Independent Y-axis for price values
 price_chart = pygal.Line(
-    width=4800,
-    height=800,
+    width=W,
+    height=H_PRICE,
     style=price_style,
-    title="Panel 1: Stock Price",
+    title="dashboard-synchronized-crosshair · python · pygal · anyplot.ai",
     y_title="Price ($)",
     show_x_labels=False,
     show_legend=False,
     show_y_guides=True,
-    show_x_guides=True,
+    show_x_guides=False,
     dots_size=0,
     fill=False,
     truncate_label=-1,
-    margin_bottom=5,
-    margin_top=40,
-    margin_left=120,
-    margin_right=50,
+    margin_top=60,
+    margin_bottom=10,
+    margin_left=150,
+    margin_right=60,
 )
 price_chart.add("Price", price.tolist())
 price_chart.x_labels = dates
 
-# Chart 2: Volume Bar/Area Chart (middle panel) - Independent Y-axis for volume
+# Volume chart — pos-2 purple (#9418DB)
+volume_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=("#9418DB", "#009E73", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"),
+    title_font_size=40,
+    label_font_size=36,
+    major_label_font_size=30,
+    legend_font_size=30,
+    value_font_size=26,
+    stroke_width=3,
+)
 volume_chart = pygal.Line(
-    width=4800,
-    height=700,
+    width=W,
+    height=H_VOLUME,
     style=volume_style,
-    title="Panel 2: Trading Volume",
+    title="Trading Volume",
     y_title="Volume (M)",
     show_x_labels=False,
     show_legend=False,
     show_y_guides=True,
-    show_x_guides=True,
+    show_x_guides=False,
     dots_size=0,
     fill=True,
     truncate_label=-1,
-    margin_top=20,
-    margin_bottom=5,
-    margin_left=120,
-    margin_right=50,
+    margin_top=30,
+    margin_bottom=10,
+    margin_left=150,
+    margin_right=60,
 )
-volume_chart.add("Volume", (volume / 1000000).tolist())
+volume_chart.add("Volume", (volume / 1e6).tolist())
 volume_chart.x_labels = dates
 
-# Chart 3: RSI Indicator (bottom panel) - Independent Y-axis bounded 0-100
+# RSI chart — pos-3 red (#B71D27), x-axis visible on bottom panel
+rsi_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=("#B71D27", "#009E73", "#9418DB", "#16B8F3", "#99B314", "#D359A7", "#BA843E"),
+    title_font_size=40,
+    label_font_size=36,
+    major_label_font_size=30,
+    legend_font_size=30,
+    value_font_size=26,
+    stroke_width=3,
+)
 rsi_chart = pygal.Line(
-    width=4800,
-    height=900,
+    width=W,
+    height=H_RSI,
     style=rsi_style,
-    title="Panel 3: RSI Indicator",
+    title="RSI Indicator",
     x_title="Trading Day",
-    y_title="RSI (0-100)",
+    y_title="RSI (0–100)",
     show_x_labels=True,
     show_legend=False,
     show_y_guides=True,
-    show_x_guides=True,
+    show_x_guides=False,
     dots_size=0,
     fill=False,
+    truncate_label=-1,
     x_labels_major_count=10,
     show_minor_x_labels=False,
-    truncate_label=-1,
-    x_label_rotation=45,
+    x_label_rotation=20,
     range=(0, 100),
-    margin_top=20,
-    margin_left=120,
-    margin_right=50,
+    margin_top=30,
+    margin_bottom=40,
+    margin_left=150,
+    margin_right=60,
 )
 rsi_chart.add("RSI", rsi.tolist())
 rsi_chart.x_labels = dates
 
-# Create combined HTML dashboard with synchronized crosshair via JavaScript
-html_content = f"""<!DOCTYPE html>
+# Render SVGs for the interactive HTML
+price_svg = price_chart.render(is_unicode=True)
+volume_svg = volume_chart.render(is_unicode=True)
+rsi_svg = rsi_chart.render(is_unicode=True)
+
+price_js = price.tolist()
+volume_js = (volume / 1e6).tolist()
+rsi_js = rsi.tolist()
+
+html = f"""<!DOCTYPE html>
 <html>
 <head>
-    <title>dashboard-synchronized-crosshair · pygal · pyplots.ai</title>
-    <style>
-        body {{
-            font-family: sans-serif;
-            background: white;
-            margin: 0;
-            padding: 20px;
-        }}
-        .dashboard-title {{
-            text-align: center;
-            font-size: 32px;
-            color: #333;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }}
-        .chart-container {{
-            width: 100%;
-            max-width: 4800px;
-            margin: 0 auto;
-            position: relative;
-        }}
-        .chart {{
-            width: 100%;
-            display: block;
-            border-bottom: 2px solid #e0e0e0;
-        }}
-        .chart:last-child {{
-            border-bottom: none;
-        }}
-        .crosshair {{
-            position: absolute;
-            width: 3px;
-            background: rgba(48, 105, 152, 0.8);
-            pointer-events: none;
-            display: none;
-            z-index: 1000;
-        }}
-        #crosshair1 {{ height: 300px; top: 80px; }}
-        #crosshair2 {{ height: 260px; top: 400px; }}
-        #crosshair3 {{ height: 340px; top: 680px; }}
-        .tooltip {{
-            position: fixed;
-            background: rgba(48, 105, 152, 0.95);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 6px;
-            font-size: 14px;
-            pointer-events: none;
-            display: none;
-            z-index: 1001;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            line-height: 1.6;
-        }}
-    </style>
+<meta charset="utf-8">
+<title>dashboard-synchronized-crosshair · python · pygal · anyplot.ai</title>
+<style>
+* {{ box-sizing: border-box; margin: 0; padding: 0; }}
+body {{ background: {PAGE_BG}; font-family: sans-serif; }}
+.dash {{ position: relative; width: 100%; }}
+.panel {{ width: 100%; display: block; line-height: 0; }}
+.sep {{ height: 1px; background: {INK_MUTED}; opacity: 0.35; }}
+.ch {{ position: absolute; width: 2px; background: {INK}; opacity: 0.4;
+       pointer-events: none; display: none; top: 0; }}
+.tip {{ position: fixed; background: {ELEVATED_BG}; color: {INK};
+        border: 1px solid {INK_MUTED}; padding: 10px 14px; border-radius: 6px;
+        font-size: 13px; line-height: 1.9; pointer-events: none;
+        display: none; z-index: 100; white-space: nowrap;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15); }}
+</style>
 </head>
 <body>
-    <div class="dashboard-title">dashboard-synchronized-crosshair · pygal · pyplots.ai</div>
-    <div class="chart-container" id="dashboard">
-        <div class="crosshair" id="crosshair1"></div>
-        <div class="crosshair" id="crosshair2"></div>
-        <div class="crosshair" id="crosshair3"></div>
-        <div class="chart" id="chart1">{price_chart.render(is_unicode=True)}</div>
-        <div class="chart" id="chart2">{volume_chart.render(is_unicode=True)}</div>
-        <div class="chart" id="chart3">{rsi_chart.render(is_unicode=True)}</div>
-    </div>
-    <div class="tooltip" id="tooltip"></div>
-    <script>
-        const priceData = {price.tolist()};
-        const volumeData = {(volume / 1000000).tolist()};
-        const rsiData = {rsi.tolist()};
-        const n = {n_days};
+<div class="dash" id="dash">
+  <div class="panel">{price_svg}</div>
+  <div class="sep"></div>
+  <div class="panel">{volume_svg}</div>
+  <div class="sep"></div>
+  <div class="panel">{rsi_svg}</div>
+  <div class="ch" id="ch"></div>
+</div>
+<div class="tip" id="tip"></div>
+<script>
+(function() {{
+  var n = {n_days};
+  var prices = {price_js};
+  var vols = {volume_js};
+  var rsis = {rsi_js};
+  var dash = document.getElementById('dash');
+  var ch = document.getElementById('ch');
+  var tip = document.getElementById('tip');
+  var LF = 150 / {W}, RF = 60 / {W};
 
-        const dashboard = document.getElementById('dashboard');
-        const crosshairs = [
-            document.getElementById('crosshair1'),
-            document.getElementById('crosshair2'),
-            document.getElementById('crosshair3')
-        ];
-        const tooltip = document.getElementById('tooltip');
-
-        dashboard.addEventListener('mousemove', function(e) {{
-            const rect = dashboard.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const chartWidth = rect.width;
-
-            const leftMargin = chartWidth * 0.025;
-            const rightMargin = chartWidth * 0.01;
-            const plotWidth = chartWidth - leftMargin - rightMargin;
-
-            if (x >= leftMargin && x <= chartWidth - rightMargin) {{
-                const relX = x - leftMargin;
-                const idx = Math.min(Math.floor((relX / plotWidth) * n), n - 1);
-
-                crosshairs.forEach(ch => {{
-                    ch.style.left = x + 'px';
-                    ch.style.display = 'block';
-                }});
-
-                tooltip.innerHTML = `
-                    <strong>Day ${{idx + 1}}</strong><br>
-                    <span style="color: #89CFF0;">Price:</span> $${{priceData[idx].toFixed(2)}}<br>
-                    <span style="color: #FFD43B;">Volume:</span> ${{volumeData[idx].toFixed(2)}}M<br>
-                    <span style="color: #FF6B6B;">RSI:</span> ${{rsiData[idx].toFixed(1)}}
-                `;
-                tooltip.style.left = (e.clientX + 15) + 'px';
-                tooltip.style.top = (e.clientY + 15) + 'px';
-                tooltip.style.display = 'block';
-            }}
-        }});
-
-        dashboard.addEventListener('mouseleave', function() {{
-            crosshairs.forEach(ch => ch.style.display = 'none');
-            tooltip.style.display = 'none';
-        }});
-    </script>
+  dash.addEventListener('mousemove', function(e) {{
+    var r = dash.getBoundingClientRect();
+    var x = e.clientX - r.left;
+    var w = r.width;
+    var pl = w * LF, pr = w * (1 - RF);
+    if (x < pl || x > pr) {{
+      ch.style.display = 'none';
+      tip.style.display = 'none';
+      return;
+    }}
+    var idx = Math.min(Math.floor((x - pl) / (pr - pl) * n), n - 1);
+    ch.style.left = x + 'px';
+    ch.style.height = r.height + 'px';
+    ch.style.display = 'block';
+    tip.innerHTML =
+      '<strong>Day ' + (idx + 1) + ' / {n_days}</strong><br>' +
+      '<span style="color:#009E73">■</span> Price: <strong>$' + prices[idx].toFixed(2) + '</strong><br>' +
+      '<span style="color:#9418DB">■</span> Volume: <strong>' + vols[idx].toFixed(2) + 'M</strong><br>' +
+      '<span style="color:#B71D27">■</span> RSI: <strong>' + rsis[idx].toFixed(1) + '</strong>';
+    tip.style.left = (e.clientX + 16) + 'px';
+    tip.style.top = (e.clientY + 16) + 'px';
+    tip.style.display = 'block';
+  }});
+  dash.addEventListener('mouseleave', function() {{
+    ch.style.display = 'none';
+    tip.style.display = 'none';
+  }});
+}})();
+</script>
 </body>
 </html>"""
 
-with open("plot.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html)
 
-# Render each chart to PNG and combine vertically for static preview
-price_png = price_chart.render_to_png()
-price_img = Image.open(io.BytesIO(price_png))
+# PNG: composite three panels into exactly 3200×1800
+bg_rgb = tuple(int(PAGE_BG[i : i + 2], 16) for i in (1, 3, 5))
+price_img = Image.open(io.BytesIO(price_chart.render_to_png())).resize((W, H_PRICE), Image.LANCZOS)
+volume_img = Image.open(io.BytesIO(volume_chart.render_to_png())).resize((W, H_VOLUME), Image.LANCZOS)
+rsi_img = Image.open(io.BytesIO(rsi_chart.render_to_png())).resize((W, H_RSI), Image.LANCZOS)
 
-volume_png = volume_chart.render_to_png()
-volume_img = Image.open(io.BytesIO(volume_png))
+canvas = Image.new("RGB", (W, H_PRICE + H_VOLUME + H_RSI), bg_rgb)
+canvas.paste(price_img, (0, 0))
+canvas.paste(volume_img, (0, H_PRICE))
+canvas.paste(rsi_img, (0, H_PRICE + H_VOLUME))
 
-rsi_png = rsi_chart.render_to_png()
-rsi_img = Image.open(io.BytesIO(rsi_png))
-
-# Create title banner
-title_height = 120
-title_img = Image.new("RGB", (4800, title_height), "white")
-draw = ImageDraw.Draw(title_img)
-title_text = "dashboard-synchronized-crosshair · pygal · pyplots.ai"
-try:
-    title_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 56)
-except OSError:
-    title_font = ImageFont.load_default()
-bbox = draw.textbbox((0, 0), title_text, font=title_font)
-text_width = bbox[2] - bbox[0]
-text_x = (4800 - text_width) // 2
-draw.text((text_x, 30), title_text, fill="#333333", font=title_font)
-
-# Panel spacing for visual separation
-panel_gap = 30
-
-# Calculate total height
-total_height = title_height + price_img.height + panel_gap + volume_img.height + panel_gap + rsi_img.height
-
-# Create combined dashboard image with white background
-combined = Image.new("RGB", (4800, total_height), "white")
-y_offset = 0
-
-combined.paste(title_img, (0, y_offset))
-y_offset += title_height
-
-combined.paste(price_img, (0, y_offset))
-price_chart_top = y_offset
-price_chart_bottom = y_offset + price_img.height
-y_offset += price_img.height + panel_gap
-
-combined.paste(volume_img, (0, y_offset))
-volume_chart_top = y_offset
-volume_chart_bottom = y_offset + volume_img.height
-y_offset += volume_img.height + panel_gap
-
-combined.paste(rsi_img, (0, y_offset))
-rsi_chart_top = y_offset
-rsi_chart_bottom = y_offset + rsi_img.height
-
-# Draw on combined image
-crosshair_draw = ImageDraw.Draw(combined)
-
-# Add bold panel separator lines
-separator_color = "#999999"
-crosshair_draw.line([(0, price_chart_bottom + 1), (4800, price_chart_bottom + 1)], fill=separator_color, width=4)
-crosshair_draw.line([(0, volume_chart_bottom + 1), (4800, volume_chart_bottom + 1)], fill=separator_color, width=4)
-
-# Draw synchronized crosshair line at Day 100 spanning all three chart panels
-crosshair_x = 2400  # Center of chart area (Day ~100)
-data_idx = 100
-price_at_crosshair = price[data_idx]
-volume_at_crosshair = volume[data_idx] / 1000000
-rsi_at_crosshair = rsi[data_idx]
-
-# Draw vertical crosshair line through all panels
-crosshair_color = "#306998"
-crosshair_draw.line(
-    [(crosshair_x, price_chart_top + 60), (crosshair_x, price_chart_bottom - 20)], fill=crosshair_color, width=4
-)
-crosshair_draw.line(
-    [(crosshair_x, volume_chart_top + 40), (crosshair_x, volume_chart_bottom - 20)], fill=crosshair_color, width=4
-)
-crosshair_draw.line(
-    [(crosshair_x, rsi_chart_top + 40), (crosshair_x, rsi_chart_bottom - 100)], fill=crosshair_color, width=4
-)
-
-# Draw markers at data points on each chart
-marker_radius = 12
-marker_positions = [
-    (crosshair_x, price_chart_top + price_img.height // 2),
-    (crosshair_x, volume_chart_top + volume_img.height // 2),
-    (crosshair_x, rsi_chart_top + rsi_img.height // 2 - 30),
-]
-marker_colors = ["#306998", "#E6A800", "#C0392B"]
-
-for (mx, my), color in zip(marker_positions, marker_colors, strict=True):
-    crosshair_draw.ellipse(
-        [mx - marker_radius, my - marker_radius, mx + marker_radius, my + marker_radius],
-        fill=color,
-        outline="white",
-        width=3,
-    )
-
-# Add crosshair annotation with synchronized tooltip info
-try:
-    annotation_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 32)
-except OSError:
-    annotation_font = ImageFont.load_default()
-
-annotation_text = f"Synchronized Crosshair at Day {data_idx + 1}"
-crosshair_draw.text(
-    (crosshair_x + 25, price_chart_top + 70), annotation_text, fill=crosshair_color, font=annotation_font
-)
-
-# Add value annotations next to each marker
-try:
-    value_font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 28)
-except OSError:
-    value_font = ImageFont.load_default()
-
-crosshair_draw.text(
-    (crosshair_x + 25, marker_positions[0][1] - 14), f"${price_at_crosshair:.2f}", fill="#306998", font=value_font
-)
-crosshair_draw.text(
-    (crosshair_x + 25, marker_positions[1][1] - 14), f"{volume_at_crosshair:.2f}M", fill="#E6A800", font=value_font
-)
-crosshair_draw.text(
-    (crosshair_x + 25, marker_positions[2][1] - 14), f"RSI: {rsi_at_crosshair:.1f}", fill="#C0392B", font=value_font
-)
-
-combined.save("plot.png", dpi=(300, 300))
+canvas.save(f"plot-{THEME}.png", dpi=(300, 300))
