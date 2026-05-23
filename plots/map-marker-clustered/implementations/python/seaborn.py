@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 80/100 | Updated: 2026-05-23
+Quality: 89/100 | Updated: 2026-05-23
 """
 
 import os
