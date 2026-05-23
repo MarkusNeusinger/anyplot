@@ -86,16 +86,16 @@ DARK_THEME: dict[str, str] = {
 # next to library.method() callouts. Falls back to brand green for unknowns.
 # Mapping is preserved by palette position from the original Okabe-Ito assignment.
 LIBRARY_COLORS: dict[str, str] = {
-    "matplotlib": ANYPLOT_RED,    # pos 3
-    "seaborn": ANYPLOT_PINK,      # pos 6
-    "plotly": ANYPLOT_SKY,        # pos 4
-    "bokeh": ANYPLOT_PURPLE,      # pos 2
-    "altair": ANYPLOT_GREEN,      # pos 1
-    "plotnine": ANYPLOT_LIME,     # pos 5
-    "pygal": ANYPLOT_TAN,         # pos 7
-    "highcharts": ANYPLOT_RED,    # pos 3
-    "letsplot": ANYPLOT_GREEN,    # pos 1
-    "lets-plot": ANYPLOT_GREEN,   # pos 1
+    "matplotlib": ANYPLOT_RED,  # pos 3
+    "seaborn": ANYPLOT_PINK,  # pos 6
+    "plotly": ANYPLOT_SKY,  # pos 4
+    "bokeh": ANYPLOT_PURPLE,  # pos 2
+    "altair": ANYPLOT_GREEN,  # pos 1
+    "plotnine": ANYPLOT_LIME,  # pos 5
+    "pygal": ANYPLOT_TAN,  # pos 7
+    "highcharts": ANYPLOT_RED,  # pos 3
+    "letsplot": ANYPLOT_GREEN,  # pos 1
+    "lets-plot": ANYPLOT_GREEN,  # pos 1
 }
 
 # Library → typical method call hint shown inside `library.method()` chips.
