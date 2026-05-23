@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-23
@@ -88,11 +88,11 @@ fig.update_layout(
     xaxis={
         "title": {"text": "Date", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
-        "showgrid": True,
+        "showgrid": False,
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
         "zerolinecolor": INK_SOFT,
-        "rangeslider": {"visible": True, "bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "thickness": 0.08},
+        "rangeslider": {"visible": True, "bgcolor": ELEVATED_BG, "bordercolor": INK_SOFT, "thickness": 0.05},
     },
     yaxis={
         "title": {"text": "Rebased Price (Starting = 100)", "font": {"size": 12, "color": INK}},
@@ -113,7 +113,7 @@ fig.update_layout(
         "xanchor": "center",
         "x": 0.5,
     },
-    margin={"l": 80, "r": 40, "t": 80, "b": 60},
+    margin={"l": 80, "r": 40, "t": 80, "b": 80},
     hovermode="x unified",
 )
 
