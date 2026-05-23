@@ -5,7 +5,6 @@
 
 library(ggplot2)
 library(dplyr)
-library(scales)
 library(ragg)
 
 set.seed(42)
@@ -56,7 +55,7 @@ venues <- data.frame(
 )
 
 # Grid-based pre-clustering — simulates a fixed zoom-level snapshot
-grid_res <- 3.0
+grid_res <- 3.5
 clusters <- venues %>%
     mutate(
         clat = round(lat / grid_res) * grid_res,
@@ -89,9 +88,9 @@ p <- ggplot() +
         stroke = 0.5
     ) +
     geom_text(
-        data     = clusters %>% filter(count >= 5),
+        data     = clusters,
         aes(x = clon, y = clat, label = count),
-        size     = 2.8,
+        size     = 2.5,
         color    = "white",
         fontface = "bold"
     ) +
