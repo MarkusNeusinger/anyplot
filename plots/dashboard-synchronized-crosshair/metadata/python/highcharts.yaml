@@ -1,216 +1,300 @@
 library: highcharts
+language: python
 specification_id: dashboard-synchronized-crosshair
 created: '2026-01-20T19:38:46Z'
-updated: '2026-01-20T19:41:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21184655839
+updated: '2026-05-23T20:33:44Z'
+generated_by: claude-sonnet
+workflow_run: 26342301214
 issue: 3784
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of synchronized crosshair functionality across three
-    charts
-  - 'Good use of Highcharts-specific features: plotBands for RSI overbought/oversold
-    zones, datetime x-axis, column chart for volume'
-  - Clean visual design with appropriate chart types for each data series (line for
-    price, column for volume, area for RSI)
-  - Colorblind-safe palette (blue, yellow, purple)
-  - Realistic financial data scenario with correlated series
+  - 'Synchronized crosshair implementation is expert-level: uses Highcharts-native
+    APIs (pointer.normalize, searchPoint, drawCrosshair, hideCrosshair, afterSetExtremes)
+    — exactly how Highcharts docs recommend it'
+  - Highcharts.merge(commonOptions, ...) pattern eliminates code duplication cleanly
+    across three charts
+  - 'Full spec compliance: synchronized zoom/pan via afterSetExtremes, synchronized
+    crosshair via mousemove, independent y-axes with shared x-axis datetime'
+  - 'RSI plotBands with semantic anyplot-palette colors (#009E73 for oversold, #B71D27
+    for overbought) guide the viewer''s eye immediately to the key signal zones'
+  - Start-price plotLine with label on Price chart adds meaningful reference context
+  - Correct anyplot palette (green → purple → red) in canonical order with identical
+    data colors across both themes
+  - All font sizes explicitly set at correct highcharts native-pixel values (66px
+    title, 54px sub-chart titles, 52px axis labels, 44px ticks)
+  - Canvas correctly pinned to 3200×1800 with CDP setDeviceMetricsOverride + PIL safety
+    net
+  - 'Realistic financial data: stock price (random walk), volume (lognormal with volatility
+    scaling), RSI (cumulative walk clipped to 0–100 with early oversold demonstration)'
+  - Both HTML and PNG artifacts produced for both themes — correct output artifacts
   weaknesses:
-  - The legends appear below each chart which is functional but takes up extra vertical
-    space
-  - Some wasted whitespace on the right margin
-  image_description: The plot displays a synchronized multi-chart dashboard with three
-    vertically stacked charts sharing a common x-axis (time from January to July 2024).
-    The top chart shows a blue line chart for "Price" with y-axis labeled "Price ($)"
-    ranging from approximately 86 to 110, displaying a stock price random walk pattern.
-    The middle chart displays yellow/gold column bars for "Volume" with values in
-    millions (0 to 15M), showing volume spikes that correlate with larger price movements.
-    The bottom chart shows a purple area chart for "RSI Indicator" with a 0-100 scale,
-    featuring light purple shaded bands marking "Overbought" (70-100) and "Oversold"
-    (0-30) zones. The main dashboard title "dashboard-synchronized-crosshair · highcharts
-    · pyplots.ai" appears prominently at the top in bold black text. Each chart has
-    its own subtitle (Price, Volume, RSI Indicator), legend, and well-labeled axes
-    with date formatting showing weekly intervals (e.g., "Jan 01", "Jan 08", "Feb
-    05"). Grid lines are subtle gray (#e0e0e0). The layout uses a white background
-    with good visual separation between charts. The synchronized crosshair functionality
-    is implemented through JavaScript event handlers that coordinate hover states
-    across all three charts.
+  - 'DE-01 capped at 5/8: dashboard is clean and functional but doesn''t yet reach
+    FiveThirtyEight-level polish — consider adding subtle chart-to-chart connecting
+    visual cues (e.g., very faint vertical alignment markers, or a shared narrow x-axis
+    ruler strip) to make the synchronization more visually obvious even in a static
+    render'
+  - 'DE-02 at 4/6: top/right spines not removed in the sub-charts (lineColor is set
+    but spines are retained) — removing them would sharpen the minimalist dashboard
+    look; for chart borders in a multi-chart layout this is acceptable but still deducts
+    from refinement'
+  - 'LM-01 at 4/5: implementation bypasses the highcharts_core Python SDK entirely,
+    building raw HTML/JS instead — for complex synchronized-crosshair interactivity
+    this is pragmatically correct, but the Python SDK approach is preferred for simpler
+    Highcharts specs'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white.
+      Chrome: Dashboard title "dashboard-synchronized-crosshair · python · highcharts · anyplot.ai" in dark ink at top, clearly readable. Three stacked sub-chart titles ("Price", "Volume", "RSI Indicator") in bold dark text at correct 54px size. Y-axis labels ("Price (USD)", "Volume", "RSI") and x-axis date tick labels ("Jan 08", "Jan 22", "Feb 05", ...) in secondary ink (#4A4A44), all fully readable. Start price annotation "Start $101" visible on price chart right edge. "Oversold" and "Overbought" band labels visible on RSI chart.
+      Data: Price chart — green (#009E73) line showing random-walk stock price (~$86–$110) over ~150 trading days with a dashed horizontal reference line at starting price. Volume chart — purple (#9418DB) column bars with one notable spike around Mar 18. RSI chart — red (#B71D27) area chart (0.2 fill opacity) in 0–100 range; green-tinted plotBand for oversold zone (0–30) with "Oversold" label; red-tinted plotBand for overbought zone (70–100) with "Overbought" label.
+      Grid lines: subtle, low-opacity horizontal and vertical lines visible on all three charts — not dominant.
+      Legibility verdict: PASS — all text readable against light background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, not pure black.
+      Chrome: Dashboard title and all sub-chart titles in light cream text (#F0EFE8), clearly readable against dark background. Axis tick labels and axis titles in secondary light ink (#B8B7B0), readable. "Start $101" annotation visible. "Oversold" and "Overbought" labels visible.
+      Data: Data colors identical to light render — price line is same #009E73 green, volume bars same #9418DB purple, RSI area same #B71D27 red. RSI plotBands with same semi-transparent green/red fills, readable against dark background. No dark-on-dark failures detected.
+      Grid lines: subtle, low-opacity, visible against the dark surface.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: All text clearly readable including title, axis labels, tick marks,
-          and legends
-      - id: VQ-02
-        name: No Overlap
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: No overlapping text or elements, clean layout
+        comment: 'All font sizes explicitly set at correct highcharts native-pixel
+          values (66px title, 54px sub-chart titles, 52px axis labels, 44px ticks,
+          36px tooltips). All readable in both themes. Minor: three separate Highcharts
+          instances means some CSS duplication but result is well-proportioned.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements in either render. Three charts well-spaced
+          with 25px gap. Tick labels have adequate spacing. Annotations positioned
+          correctly.
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Line and area charts visible, volume bars appropriately sized for
-          data density
+        comment: Price line (3px lineWidth) clearly visible. Volume columns clearly
+          visible with appropriate bar sizing. RSI area with 0.2 fillOpacity clearly
+          shows the trend while remaining transparent. 150 data points at medium density,
+          well-adapted element sizes.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blue, yellow, purple palette is colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good vertical stacking but some empty space on right side
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Price ($), Volume, RSI all descriptive with units where appropriate
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Anyplot palette (positions 1-3) is colorblind-safe. Adequate contrast
+          in both themes. Green, purple, red are distinguishable without hue-only
+          reliance.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (no /tmp/anyplot-canvas-gate.txt). Three charts
+          fill the 3200x1800 canvas efficiently with 30px outer padding and 25px chart
+          gaps. Chart heights (640px price, 473px volume, 473px RSI) plus title bar
+          (70px+15px margin) sum correctly to 1800px layout.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid subtle, legends present but could be better integrated
+        comment: '''Price (USD)'' has units. Volume is a share-count (unitless is
+          correct for trading volume). RSI is a dimensionless indicator (0-100 range
+          shown via yAxis min/max). X-axis uses formatted date labels. Good.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Price=#009E73 (position 1, brand green). Volume=#9418DB (position
+          2, purple). RSI=#B71D27 (position 3, red). Canonical order. Light bg=#FAF8F1,
+          dark bg=#1A1A17. Data colors identical across themes. Chrome adapts correctly
+          via ANYPLOT_THEME tokens.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: RSI plotBands with semantic anyplot-palette fills
+          guide viewer to key signal zones, start price reference line adds analytical
+          context, three different chart types (line/column/area) show intentional
+          design variety. Not quite FiveThirtyEight-level but clearly above a well-configured
+          default.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Legends disabled (each chart has its own title instead), credits
+          disabled, grid subtle (rgba 0.10 opacity). Top/right spines retained — acceptable
+          for multi-chart dashboard borders but misses the L-spine refinement. Generous
+          but not cramped spacing.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Visual hierarchy through RSI plotBands immediately draws the eye
+          to oversold/overbought zones. Start price reference creates temporal anchoring.
+          Three panels together tell a complete technical analysis story. Early oversold
+          RSI demonstration is intentional and informative.
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-chart dashboard with line, column, and area charts
+        comment: Multi-chart synchronized dashboard exactly as specified. Three Highcharts
+          instances with shared x-axis.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on x-axis, respective values on y-axis for each chart
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Synchronized crosshairs, stacked layout, independent y-scales, shared
-          x-axis
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features present: synchronized crosshair (mousemove+drawCrosshair),
+          shared tooltip, stacked vertical layout, synchronized zoom/pan (afterSetExtremes),
+          independent y-axes, clear visual connection via aligned x-axis.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axes
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Datetime x-axis shared across all three charts. Price→line, Volume→column,
+          RSI→area. All data correctly mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legends correctly label each series
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Uses correct format but displayed as dashboard title rather than
-          chart title
+        comment: Title exactly 'dashboard-synchronized-crosshair · python · highcharts
+          · anyplot.ai'. No series legends (each chart has its own titled sub-chart
+          label — appropriate for dashboard layout).
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows price movement, volume correlation to price changes, RSI oscillation
-          with overbought/oversold zones
+        comment: 'Shows all aspects: trending price, volume correlated with price
+          moves, RSI ranging through oversold/overbought/neutral zones. 150 business
+          days gives enough range to show meaningful patterns.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock trading scenario with 150 trading days
+        comment: Stock market technical analysis (price, volume, RSI) is a real, widely-recognized,
+          neutral financial scenario. Non-controversial. Concrete domain context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Price ~$86-108, volume in millions, RSI 0-100 all realistic
+        comment: Stock price ~$86-110 (realistic for a mid-cap stock). Volume in millions
+          (realistic for a liquid stock). RSI 0-100 (correct range for the indicator).
+          Random walk price model with lognormal volume scaling is realistic.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Mostly linear but has JS event functions embedded
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: np.random.seed(42) set
+        comment: 'Flat linear code: imports → tokens → data generation → HTML construction
+          → save HTML → selenium screenshot → PIL canvas pin. No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) at line 34.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used
+        comment: 'All imports used: os, tempfile, time, urllib.request, pathlib.Path,
+          numpy, pandas, PIL.Image, selenium.webdriver, selenium Options.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean and well-organized. IIFE pattern in JS is good practice. Highcharts.merge
+          for option inheritance is clean. Appropriate complexity for the task.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current APIs
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png and plot.html correctly
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. No bare plot.png. No
+          deprecated APIs.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Highcharts synchronized charts with crosshairs,
-          tooltips, plotBands for RSI zones, multiple chart types
+        comment: 'Expert Highcharts JS API usage: Highcharts.merge for DRY config
+          inheritance, pointer.normalize for cross-chart events, xAxis.drawCrosshair/hideCrosshair,
+          afterSetExtremes for synchronized zoom. Bypasses highcharts_core Python
+          SDK (pragmatically correct for complex synchronized interactions) but uses
+          idiomatic Highcharts JS patterns throughout.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Uses Highcharts-distinctive features: synchronized crosshair via
+          chart.pointer.normalize + xAxis.drawCrosshair (cannot be replicated easily
+          in other libraries), plotBands for RSI zones, plotLines for reference annotation,
+          Highcharts.addEvent for afterSetExtremes zoom sync. These are signature
+          Highcharts capabilities.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
-  - subplots
-  - hover-tooltips
   - html-export
+  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
   dataprep:
   - time-series
+  - cumulative-sum
   styling:
-  - grid-styling
   - alpha-blending
