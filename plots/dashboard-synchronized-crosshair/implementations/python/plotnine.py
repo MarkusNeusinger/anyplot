@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
-Library: plotnine 0.15.2 | Python 3.13.11
-Quality: 90/100 | Updated: 2026-05-23
+Library: plotnine 0.15.4 | Python 3.13.13
+Quality: 75/100 | Updated: 2026-05-23
 """
 
 import os
