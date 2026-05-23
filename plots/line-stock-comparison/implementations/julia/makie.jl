@@ -55,7 +55,7 @@ month_labels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
 ink_r = Float32(red(INK))
 ink_g = Float32(green(INK))
 ink_b = Float32(blue(INK))
-grid_col = RGBAf(ink_r, ink_g, ink_b, 0.12f0)
+grid_col = RGBAf(ink_r, ink_g, ink_b, 0.15f0)
 ref_col  = RGBAf(ink_r, ink_g, ink_b, 0.40f0)
 
 # Figure
@@ -106,13 +106,24 @@ for j in 1:4
     )
 end
 
+# End-of-series value labels (final rebased performance)
+xlims!(ax, 1, N_DAYS + 25)
+for j in 1:4
+    final_val = prices[end, j]
+    text!(ax, N_DAYS + 3, final_val;
+        text     = string(round(Int, final_val)),
+        color    = ANYPLOT_PALETTE[j],
+        fontsize = 11,
+        align    = (:left, :center),
+    )
+end
+
 # Legend (right column, external to plot)
 Legend(fig[1, 2], ax;
-    labelcolor   = INK,
-    framecolor   = INK_SOFT,
+    labelcolor      = INK,
+    framevisible    = false,
     backgroundcolor = ELEVATED_BG,
-    labelsize    = 12,
-    framevisible = true,
+    labelsize       = 12,
 )
 
 # Save
