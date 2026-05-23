@@ -1,108 +1,154 @@
-""" pyplots.ai
+"""anyplot.ai
 dashboard-synchronized-crosshair: Synchronized Multi-Chart Dashboard
-Library: altair 6.0.0 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: altair | Python 3.13
+Quality: pending | Created: 2026-05-23
 """
+
+import os
 
 import altair as alt
 import numpy as np
 import pandas as pd
+from PIL import Image
 
 
-# Data - Stock-like data with price, volume, and technical indicator
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+# anyplot palette positions 1–3
+COLOR_PRICE = "#009E73"
+COLOR_VOLUME = "#9418DB"
+COLOR_INDICATOR = "#B71D27"
+
+# Data — stock market: price, volume, momentum indicator
 np.random.seed(42)
 n_points = 200
 dates = pd.date_range("2024-01-01", periods=n_points, freq="B")
 
-# Price (random walk)
 returns = np.random.normal(0.001, 0.02, n_points)
 price = 100 * np.cumprod(1 + returns)
 
-# Volume (correlated with absolute returns)
-base_volume = np.random.uniform(1e6, 3e6, n_points)
-volume = base_volume * (1 + np.abs(returns) * 20)
+raw_volume = np.random.uniform(1e6, 3e6, n_points)
+volume = raw_volume * (1 + np.abs(returns) * 20)
 
-# Technical indicator (momentum-like, range 0-100)
-indicator = 50 + np.cumsum(np.random.normal(0, 5, n_points))
-indicator = np.clip(indicator, 0, 100)
+raw_momentum = 50 + np.cumsum(np.random.normal(0, 5, n_points))
+indicator = np.clip(raw_momentum, 0, 100)
 
 df = pd.DataFrame({"date": dates, "price": price, "volume": volume, "indicator": indicator})
 
-# Create synchronized selection for crosshair
+# Synchronized hover selection — shared across all vconcat views via same parameter name
 nearest = alt.selection_point(nearest=True, on="pointerover", fields=["date"], empty=False)
 
-# Base chart with shared x-axis
-base = alt.Chart(df).encode(x=alt.X("date:T", axis=alt.Axis(format="%b %Y", labelFontSize=14, titleFontSize=18)))
+# X encodings: axis hidden on top charts, labeled on bottom chart only
+x_hidden = alt.X("date:T", axis=alt.Axis(labels=False, ticks=False, domain=False, title=None))
+x_labeled = alt.X("date:T", title="Trading Date", axis=alt.Axis(format="%b %Y", labelFontSize=10, titleFontSize=12))
 
-# Vertical rule (crosshair line) that appears on hover
-rule = (
-    base.mark_rule(color="gray", strokeWidth=1, strokeDash=[4, 4])
-    .encode(opacity=alt.condition(nearest, alt.value(1), alt.value(0)))
-    .add_params(nearest)
-)
+# Price chart (top) — green line with synchronized crosshair
+base_p = alt.Chart(df).encode(x=x_hidden)
 
-# Chart 1: Price
-price_line = base.mark_line(color="#306998", strokeWidth=2).encode(
-    y=alt.Y("price:Q", title="Price ($)", axis=alt.Axis(labelFontSize=14, titleFontSize=18))
-)
-price_points = base.mark_point(color="#306998", size=100).encode(
-    y=alt.Y("price:Q"), opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-)
-price_text = base.mark_text(align="left", dx=10, dy=-10, fontSize=14, color="#306998").encode(
-    y=alt.Y("price:Q"), text=alt.condition(nearest, alt.Text("price:Q", format="$.2f"), alt.value(""))
-)
-price_chart = alt.layer(price_line, price_points, price_text, rule).properties(
-    width=1400, height=280, title=alt.Title("Price", fontSize=20, anchor="start")
-)
+price_chart = alt.layer(
+    base_p.mark_line(color=COLOR_PRICE, strokeWidth=2).encode(
+        y=alt.Y("price:Q", title="Price ($)", axis=alt.Axis(labelFontSize=10, titleFontSize=12)),
+        tooltip=[
+            alt.Tooltip("date:T", format="%Y-%m-%d", title="Date"),
+            alt.Tooltip("price:Q", format="$.2f", title="Price"),
+        ],
+    ),
+    base_p.mark_point(color=COLOR_PRICE, size=80, filled=True).encode(
+        y=alt.Y("price:Q"), opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+    ),
+    base_p.mark_rule(color=INK_SOFT, strokeWidth=1.5)
+    .encode(opacity=alt.condition(nearest, alt.value(0.7), alt.value(0)))
+    .add_params(nearest),
+).properties(width=620, height=90, title=alt.Title("Price", anchor="start", fontSize=12))
 
-# Chart 2: Volume
-volume_bar = base.mark_bar(color="#FFD43B", opacity=0.7).encode(
-    y=alt.Y("volume:Q", title="Volume", axis=alt.Axis(labelFontSize=14, titleFontSize=18, format="~s"))
-)
-volume_highlight = base.mark_bar(color="#FFD43B").encode(
-    y=alt.Y("volume:Q"), opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-)
-volume_text = base.mark_text(align="left", dx=10, dy=-10, fontSize=14, color="#B8860B").encode(
-    y=alt.Y("volume:Q"), text=alt.condition(nearest, alt.Text("volume:Q", format=",.0f"), alt.value(""))
-)
-volume_chart = alt.layer(volume_bar, volume_highlight, volume_text, rule).properties(
-    width=1400, height=220, title=alt.Title("Volume", fontSize=20, anchor="start")
-)
+# Volume chart (middle) — purple bars with synchronized crosshair
+base_v = alt.Chart(df).encode(x=x_hidden)
 
-# Chart 3: Indicator
-indicator_line = base.mark_line(color="#2E8B57", strokeWidth=2).encode(
-    y=alt.Y(
-        "indicator:Q",
-        title="Momentum Indicator",
-        scale=alt.Scale(domain=[0, 100]),
-        axis=alt.Axis(labelFontSize=14, titleFontSize=18),
-    )
+volume_chart = alt.layer(
+    base_v.mark_bar(color=COLOR_VOLUME, opacity=0.7).encode(
+        y=alt.Y("volume:Q", title="Volume", axis=alt.Axis(labelFontSize=10, titleFontSize=12, format="~s")),
+        tooltip=[
+            alt.Tooltip("date:T", format="%Y-%m-%d", title="Date"),
+            alt.Tooltip("volume:Q", format=",.0f", title="Volume"),
+        ],
+    ),
+    base_v.mark_rule(color=INK_SOFT, strokeWidth=1.5)
+    .encode(opacity=alt.condition(nearest, alt.value(0.7), alt.value(0)))
+    .add_params(nearest),
+).properties(width=620, height=70, title=alt.Title("Volume", anchor="start", fontSize=12))
+
+# Momentum indicator chart (bottom) — red line with labeled x-axis and reference levels
+base_i = alt.Chart(df).encode(x=x_labeled)
+
+overbought_line = (
+    alt.Chart(pd.DataFrame({"y": [70]})).mark_rule(color=INK_SOFT, strokeDash=[4, 4], strokeWidth=1.0).encode(y="y:Q")
 )
-indicator_points = base.mark_point(color="#2E8B57", size=100).encode(
-    y=alt.Y("indicator:Q"), opacity=alt.condition(nearest, alt.value(1), alt.value(0))
-)
-indicator_text = base.mark_text(align="left", dx=10, dy=-10, fontSize=14, color="#2E8B57").encode(
-    y=alt.Y("indicator:Q"), text=alt.condition(nearest, alt.Text("indicator:Q", format=".1f"), alt.value(""))
-)
-# Reference lines for overbought/oversold levels
-overbought = (
-    alt.Chart(pd.DataFrame({"y": [70]})).mark_rule(color="red", strokeDash=[4, 4], strokeWidth=1).encode(y="y:Q")
-)
-oversold = (
-    alt.Chart(pd.DataFrame({"y": [30]})).mark_rule(color="green", strokeDash=[4, 4], strokeWidth=1).encode(y="y:Q")
-)
-indicator_chart = alt.layer(indicator_line, indicator_points, indicator_text, overbought, oversold, rule).properties(
-    width=1400, height=220, title=alt.Title("Momentum Indicator", fontSize=20, anchor="start")
+oversold_line = (
+    alt.Chart(pd.DataFrame({"y": [30]})).mark_rule(color=INK_SOFT, strokeDash=[4, 4], strokeWidth=1.0).encode(y="y:Q")
 )
 
-# Combine charts vertically with shared x-axis
+indicator_chart = alt.layer(
+    base_i.mark_line(color=COLOR_INDICATOR, strokeWidth=2).encode(
+        y=alt.Y(
+            "indicator:Q",
+            title="Momentum",
+            scale=alt.Scale(domain=[0, 100]),
+            axis=alt.Axis(labelFontSize=10, titleFontSize=12),
+        ),
+        tooltip=[
+            alt.Tooltip("date:T", format="%Y-%m-%d", title="Date"),
+            alt.Tooltip("indicator:Q", format=".1f", title="Momentum"),
+        ],
+    ),
+    base_i.mark_point(color=COLOR_INDICATOR, size=80, filled=True).encode(
+        y=alt.Y("indicator:Q"), opacity=alt.condition(nearest, alt.value(1), alt.value(0))
+    ),
+    overbought_line,
+    oversold_line,
+    base_i.mark_rule(color=INK_SOFT, strokeWidth=1.5)
+    .encode(opacity=alt.condition(nearest, alt.value(0.7), alt.value(0)))
+    .add_params(nearest),
+).properties(width=620, height=70, title=alt.Title("Momentum Indicator", anchor="start", fontSize=12))
+
+# Compose and configure
+TITLE = "dashboard-synchronized-crosshair · python · altair · anyplot.ai"
+
 chart = (
-    alt.vconcat(price_chart, volume_chart, indicator_chart, spacing=15)
-    .properties(title=alt.Title("dashboard-synchronized-crosshair · altair · pyplots.ai", fontSize=28, anchor="middle"))
-    .configure_axis(grid=True, gridOpacity=0.3)
-    .configure_view(strokeWidth=0)
+    alt.vconcat(price_chart, volume_chart, indicator_chart, spacing=10)
+    .properties(background=PAGE_BG, title=alt.Title(TITLE, fontSize=16, anchor="middle"))
+    .configure_view(fill=PAGE_BG, strokeWidth=0)
+    .configure_axis(
+        domainColor=INK_SOFT,
+        tickColor=INK_SOFT,
+        gridColor=INK,
+        gridOpacity=0.10,
+        labelColor=INK_SOFT,
+        titleColor=INK,
+        grid=True,
+    )
+    .configure_title(color=INK)
+    .configure_legend(fillColor=ELEVATED_BG, strokeColor=INK_SOFT, labelColor=INK_SOFT, titleColor=INK)
 )
 
-# Save
-chart.save("plot.png", scale_factor=3.0)
-chart.save("plot.html")
+# Save PNG and pad to exact 3200 × 1800 target
+chart.save(f"plot-{THEME}.png", scale_factor=4.0)
+
+TW, TH = 3200, 1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+_w, _h = _img.size
+if _w > TW or _h > TH:
+    raise SystemExit(
+        f"altair vl-convert produced {_w}×{_h}, exceeds target {TW}×{TH}. "
+        f"Shrink chart .properties(width=, height=) values and re-render."
+    )
+if _w < TW or _h < TH:
+    _canvas = Image.new("RGB", (TW, TH), PAGE_BG)
+    _canvas.paste(_img, ((TW - _w) // 2, (TH - _h) // 2))
+    _canvas.save(f"plot-{THEME}.png")
+
+chart.save(f"plot-{THEME}.html")
