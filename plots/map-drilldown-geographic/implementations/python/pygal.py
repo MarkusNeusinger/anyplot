@@ -28,7 +28,6 @@ INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # anyplot_seq: #003D94 (low) → #009E73 (high), 5 equally-spaced stops
-# lerp("#003D94", "#009E73", i/4) for i in 0..4
 SEQ_COLORS = (
     "#003D94",  # lowest — dark azure
     "#00558C",
@@ -120,10 +119,10 @@ png_map = World(
     width=3200,
     height=1800,
     title="map-drilldown-geographic · python · pygal · anyplot.ai",
-    x_title="Sales by Country ($M USD) · Top Market: United States ($2,100M)",
+    x_title="Sales by Country ($M USD)  ·  ★ USA leads: $2,100M (47%)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=5,
     legend_box_size=40,
     print_values=False,
     print_labels=False,
@@ -133,11 +132,11 @@ png_map = World(
 )
 
 # Add countries ordered lowest→highest so SEQ_COLORS[0..4] map correctly
-png_map.add("Australia ($380M)", {"au": hierarchy["au"]["value"]})
-png_map.add("Brazil ($520M)", {"br": hierarchy["br"]["value"]})
-png_map.add("Germany ($580M)", {"de": hierarchy["de"]["value"]})
-png_map.add("Japan ($850M)", {"jp": hierarchy["jp"]["value"]})
-png_map.add("USA ($2,100M)", {"us": hierarchy["us"]["value"]})
+png_map.add("AUS $380M", {"au": hierarchy["au"]["value"]})
+png_map.add("BRA $520M", {"br": hierarchy["br"]["value"]})
+png_map.add("DEU $580M", {"de": hierarchy["de"]["value"]})
+png_map.add("JPN $850M", {"jp": hierarchy["jp"]["value"]})
+png_map.add("USA $2,100M", {"us": hierarchy["us"]["value"]})
 
 png_map.render_to_png(f"plot-{THEME}.png")
 
@@ -159,7 +158,7 @@ html_map_style = Style(
 world_map = World(
     style=html_map_style,
     width=820,
-    height=500,
+    height=480,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=3,
@@ -168,11 +167,11 @@ world_map = World(
     print_labels=False,
     explicit_size=True,
 )
-world_map.add("Australia ($380M)", {"au": hierarchy["au"]["value"]})
-world_map.add("Brazil ($520M)", {"br": hierarchy["br"]["value"]})
-world_map.add("Germany ($580M)", {"de": hierarchy["de"]["value"]})
-world_map.add("Japan ($850M)", {"jp": hierarchy["jp"]["value"]})
-world_map.add("USA ($2,100M)", {"us": hierarchy["us"]["value"]})
+world_map.add("AUS $380M", {"au": hierarchy["au"]["value"]})
+world_map.add("BRA $520M", {"br": hierarchy["br"]["value"]})
+world_map.add("DEU $580M", {"de": hierarchy["de"]["value"]})
+world_map.add("JPN $850M", {"jp": hierarchy["jp"]["value"]})
+world_map.add("USA $2,100M", {"us": hierarchy["us"]["value"]})
 world_svg = world_map.render(is_unicode=True)
 
 
@@ -194,6 +193,15 @@ for node_id, node_data in hierarchy.items():
             child_vals = [hierarchy[cid]["value"] for cid in children_ids]
             vmin, vmax = min(child_vals), max(child_vals)
             bar_colors = tuple(_lerp_seq_color(v, vmin, vmax) for v in child_vals)
+
+            # Determine child geographic level from depth
+            depth = 0
+            cur = node_id
+            while cur != "world":
+                cur = hierarchy[cur]["parent"]
+                depth += 1
+            child_geo = "State / Province" if depth == 1 else "City"
+
             bar_style = Style(
                 background="transparent",
                 plot_background="transparent",
@@ -211,6 +219,7 @@ for node_id, node_data in hierarchy.items():
                 style=bar_style,
                 width=820,
                 height=440,
+                title=f"{node_data['name']} — Sales by {child_geo} ($M USD)",
                 show_legend=False,
                 show_y_guides=True,
                 y_title="Sales ($M)",
@@ -324,15 +333,64 @@ html_content = f"""<!DOCTYPE html>
             border-left: 3px solid {css_brand};
             border-radius: 0 6px 6px 0;
             padding: 8px 14px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             font-size: 13px;
             color: {css_ink};
         }}
         .callout strong {{ color: {css_brand}; }}
         .callout .sub {{ color: {css_ink_soft}; font-size: 12px; }}
         .callout.hidden {{ display: none; }}
-        @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
-        .fade-in {{ animation: fadeIn 0.3s ease-in-out; }}
+        /* Market share panel — shown at world level */
+        .share-panel {{
+            display: grid;
+            gap: 5px;
+            margin-bottom: 12px;
+        }}
+        .share-panel.hidden {{ display: none; }}
+        .share-row {{
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }}
+        .share-row:hover {{ background: rgba(0,158,115,0.08); }}
+        .share-label {{
+            width: 130px;
+            flex-shrink: 0;
+            font-weight: 500;
+            text-align: right;
+            padding-right: 10px;
+            color: {css_ink};
+        }}
+        .share-bar-wrap {{
+            flex: 1;
+            height: 14px;
+            background: rgba(128,128,128,0.12);
+            border-radius: 3px;
+            overflow: hidden;
+        }}
+        .share-bar {{
+            height: 100%;
+            background: linear-gradient(90deg, #003D94, #009E73);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }}
+        .share-val {{
+            width: 130px;
+            flex-shrink: 0;
+            font-size: 12px;
+            color: {css_ink_soft};
+        }}
+        .share-pct {{
+            color: {css_brand};
+            font-weight: 600;
+        }}
+        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(4px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+        .fade-in {{ animation: fadeIn 0.35s ease-out; }}
         #chart-container {{
             width: 100%;
             min-height: 440px;
@@ -365,8 +423,9 @@ html_content = f"""<!DOCTYPE html>
         <div class="level-info" id="level-info">World View — Sales by Country</div>
         <div class="callout" id="top-callout">
             <span>★</span>
-            <div>Top Market: <strong>United States</strong> — $2,100M <span class="sub">· 47% of total sales ($4,430M)</span></div>
+            <div>Top Market: <strong>United States</strong> — $2,100M <span class="sub">· 47% of global sales ($4,430M total across 5 markets)</span></div>
         </div>
+        <div class="share-panel" id="share-panel"></div>
         <div id="chart-container"></div>
         <p class="hint" id="hint">Click a highlighted country to drill down to states/provinces</p>
     </div>
@@ -419,23 +478,49 @@ html_content += """        };
             document.getElementById('level-info').textContent = getLevelLabel(currentLevel);
         }
 
+        function renderMarketShares() {
+            const panel = document.getElementById('share-panel');
+            if (!panel) return;
+            const countries = hierarchy['world'].children;
+            const total = countries.reduce((s, id) => s + hierarchy[id].value, 0);
+            const maxVal = Math.max(...countries.map(id => hierarchy[id].value));
+            const sorted = [...countries].sort((a, b) => hierarchy[b].value - hierarchy[a].value);
+            panel.innerHTML = sorted.map(id => {
+                const node = hierarchy[id];
+                const pct = ((node.value / total) * 100).toFixed(1);
+                const barW = ((node.value / maxVal) * 100).toFixed(1);
+                return `<div class="share-row" onclick="drillDown('${id}')">
+                    <div class="share-label">${node.name}</div>
+                    <div class="share-bar-wrap"><div class="share-bar" style="width:${barW}%"></div></div>
+                    <div class="share-val">$${node.value}M &nbsp;<span class="share-pct">${pct}%</span></div>
+                </div>`;
+            }).join('');
+        }
+
         function renderChart(levelId) {
             const container = document.getElementById('chart-container');
             const hint = document.getElementById('hint');
             const callout = document.getElementById('top-callout');
+            const sharePanel = document.getElementById('share-panel');
             const levelData = hierarchy[levelId];
             if (!svgCharts[levelId]) {
                 container.innerHTML = '<p style="text-align:center;padding:50px;opacity:0.5;">No detail available</p>';
                 hint.textContent = '';
                 if (callout) callout.classList.add('hidden');
+                if (sharePanel) sharePanel.classList.add('hidden');
                 return;
             }
             container.classList.remove('fade-in');
             void container.offsetWidth;
             container.innerHTML = svgCharts[levelId];
             container.classList.add('fade-in');
-            if (callout) callout.classList.toggle('hidden', levelId !== 'world');
-            if (levelId === 'world') {
+            const isWorld = levelId === 'world';
+            if (callout) callout.classList.toggle('hidden', !isWorld);
+            if (sharePanel) {
+                sharePanel.classList.toggle('hidden', !isWorld);
+                if (isWorld) renderMarketShares();
+            }
+            if (isWorld) {
                 container.querySelectorAll('.country').forEach(el => {
                     const cls = Array.from(el.classList).find(c => c !== 'country' && c !== 'reactive');
                     if (cls && hierarchy[cls] && hierarchy[cls].children.length > 0) {
