@@ -14,7 +14,7 @@ ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 # embed alpha into hex — ggplot2 element_line lacks alpha parameter
-GRID_COLOR  <- adjustcolor(INK_SOFT, alpha.f = if (THEME == "dark") 0.35 else 0.55)
+GRID_COLOR  <- adjustcolor(INK_SOFT, alpha.f = if (THEME == "dark") 0.22 else 0.35)
 
 ANYPLOT_PALETTE <- c("#009E73", "#9418DB", "#B71D27", "#16B8F3")
 
@@ -56,6 +56,29 @@ svb_region <- data.frame(
 ai_surge_date  <- as.Date("2023-05-24")
 rate_peak_date <- as.Date("2023-10-26")
 
+# Theme composition as named object — idiomatic ggplot2 pattern
+anyplot_theme <- theme_minimal(base_size = 8) +
+    theme(
+        plot.background       = element_rect(fill = PAGE_BG, color = PAGE_BG),
+        panel.background      = element_rect(fill = PAGE_BG, color = NA),
+        panel.grid.major      = element_line(color = GRID_COLOR, linewidth = 0.18),
+        panel.grid.minor      = element_blank(),
+        panel.border          = element_blank(),
+        axis.line             = element_line(color = INK_SOFT, linewidth = 0.35),
+        axis.title            = element_text(color = INK, size = 10),
+        axis.text             = element_text(color = INK_SOFT, size = 8),
+        axis.text.x           = element_text(angle = 30, hjust = 1),
+        plot.title            = element_text(color = INK, size = 12, margin = margin(b = 2)),
+        plot.subtitle         = element_text(color = INK_SOFT, size = 8.5,
+                                              margin = margin(b = 8)),
+        legend.background     = element_rect(fill = ELEVATED_BG, color = NA),
+        legend.box.background = element_blank(),
+        legend.text           = element_text(color = INK_SOFT, size = 8),
+        legend.title          = element_text(color = INK, size = 10),
+        legend.position       = "right",
+        plot.margin           = margin(12, 70, 12, 12)
+    )
+
 # Plot
 p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
     # SVB collapse period — shaded rect
@@ -86,44 +109,31 @@ p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
         hjust = -0.2, size = 3.2, fontface = "bold",
         show.legend = FALSE
     ) +
-    # Rotated event labels — increased to size=3.2 for mobile readability
-    annotate("text", x = as.Date("2023-03-11"), y = 145,
-             label = "SVB Collapse", color = INK_SOFT, size = 3.2,
-             angle = 90, hjust = 0, vjust = -0.4, fontface = "italic") +
-    annotate("text", x = ai_surge_date, y = 102,
-             label = "NVDA AI Surge", color = INK_SOFT, size = 3.2,
-             angle = 90, hjust = 0, vjust = -0.4, fontface = "italic") +
-    annotate("text", x = rate_peak_date, y = 102,
-             label = "Rates Peak", color = INK_SOFT, size = 3.2,
-             angle = 90, hjust = 0, vjust = -0.4, fontface = "italic") +
-    # clip="off" allows end-of-line labels and annotations to render outside panel
+    # Styled callout boxes using annotate(geom="label") — distinctively ggplot2
+    # SVB label at y=145 clears the stock cluster; color-coded to match the shaded region
+    annotate("label", x = as.Date("2023-03-11"), y = 145,
+             label = "SVB Collapse", color = "#B71D27",
+             fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
+             angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
+    annotate("label", x = ai_surge_date, y = 102,
+             label = "NVDA AI Surge", color = ANYPLOT_PALETTE[1],
+             fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
+             angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
+    annotate("label", x = rate_peak_date, y = 102,
+             label = "Rates Peak", color = INK_SOFT,
+             fill = ELEVATED_BG, label.size = 0.15, size = 3.0,
+             angle = 90, hjust = 0, vjust = 0.4, fontface = "italic") +
+    # clip="off" enables end-of-line labels and off-axis annotations outside the panel
     coord_cartesian(clip = "off") +
     scale_color_manual(values = setNames(ANYPLOT_PALETTE, tickers), name = NULL) +
     scale_x_date(date_labels = "%b '%y", date_breaks = "2 months") +
     labs(
-        title = "line-stock-comparison · r · ggplot2 · anyplot.ai",
-        x     = "Date",
-        y     = "Rebased Price (Start = 100)"
+        title    = "line-stock-comparison · r · ggplot2 · anyplot.ai",
+        subtitle = "Rebased to 100 at start of 2023  ·  shaded region: SVB bank collapse (Mar)",
+        x        = "Date",
+        y        = "Rebased Price (Start = 100)"
     ) +
-    theme_minimal(base_size = 8) +
-    theme(
-        plot.background   = element_rect(fill = PAGE_BG, color = PAGE_BG),
-        panel.background  = element_rect(fill = PAGE_BG, color = NA),
-        panel.grid.major  = element_line(color = GRID_COLOR, linewidth = 0.2),
-        panel.grid.minor  = element_blank(),
-        panel.border      = element_blank(),
-        axis.line         = element_line(color = INK_SOFT, linewidth = 0.4),
-        axis.title        = element_text(color = INK, size = 10),
-        axis.text         = element_text(color = INK_SOFT, size = 8),
-        axis.text.x       = element_text(angle = 30, hjust = 1),
-        plot.title        = element_text(color = INK, size = 12,
-                                          margin = margin(b = 8)),
-        legend.background = element_rect(fill = ELEVATED_BG, color = NA),
-        legend.text       = element_text(color = INK_SOFT, size = 8),
-        legend.title      = element_text(color = INK, size = 10),
-        legend.position   = "right",
-        plot.margin       = margin(12, 60, 12, 12)
-    )
+    anyplot_theme
 
 # Save
 ggsave(
