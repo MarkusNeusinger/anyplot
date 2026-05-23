@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: dashboard-synchronized-crosshair
 created: '2026-05-23T12:57:24Z'
-updated: '2026-05-23T13:05:34Z'
+updated: '2026-05-23T20:28:13Z'
 generated_by: claude-sonnet
 workflow_run: 26333070350
 issue: 3784
@@ -12,94 +12,102 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 87
+quality_score: 86
 review:
   strengths:
-  - Correct multi-panel dashboard with linkxaxes! delivering genuine axis synchronization
-  - Theme tokens applied throughout all three axes — both renders pass legibility
-    checks with no dark-on-dark issues
-  - RSI computed with proper 14-period rolling formula
-  - hidexdecorations! cleanly removes x-axis labels from upper panels while keeping
-    tick marks
-  - Proportional panel sizing (42/30/28%) correctly weights the primary price panel
-  - Crosshair dot markers use strokecolor = PAGE_BG for a polished inset appearance
+  - Excellent use of linkxaxes! and stacked Axis layout to correctly implement the
+    synchronized dashboard pattern for a static library
+  - RSI overbought/oversold zone fills via band! with very low alpha (0.10) add meaningful
+    context without obscuring data
+  - 'Comprehensive theme adaptation: all chrome elements (title, labels, ticks, spines,
+    grid, zone fills) properly respond to ANYPLOT_THEME'
+  - Custom ytickformat callback for K-notation volume labels is a clean Makie-idiomatic
+    detail
+  - Row proportions (42/30/28%) and markers with white strokes show genuine attention
+    to visual polish
   weaknesses:
-  - 'Palette positions non-canonical: Volume uses palette position 4 (#16B8F3), RSI
-    uses position 2 (#9418DB). Fix: swap to canonical order 1→2→3 for price→volume→RSI'
-  - 'Crosshair anchored at arbitrary day 120 (RSI≈51.7, price near baseline) with
-    no narrative. Fix: move crosshair to RSI overbought peak (>70) around day 30–35
-    and add a small annotation to give the viewer a meaningful snapshot'
-  - Title fontsize=16 is slightly small for a 3200×1800 canvas; increase titlesize
-    to 18–20 for better mobile readability
-  - No compact panel titles — add text! labels in each Axis corner to improve scanability
-    alongside or replacing the y-axis labels
+  - Tick label sizes (xticklabelsize, yticklabelsize) not explicitly set on any of
+    the three Axis objects — add xticklabelsize = 12, yticklabelsize = 12 to each
+    Axis to match style-guide defaults
+  - 'Palette ordering concern: volume bars render as bright sky blue and RSI line
+    as purple in both renders, but ANYPLOT_PALETTE[2]=#9418DB (purple) and ANYPLOT_PALETTE[3]=#B71D27
+    (red) are assigned respectively — rendered colors do not match code assignments;
+    consider using ANYPLOT_PALETTE[4]=#16B8F3 for volume and ANYPLOT_PALETTE[2]=#9418DB
+    for RSI to match what is actually rendered, and avoid red RSI line clashing with
+    red overbought zone fill'
+  - Crosshair RSI value is 51.7 (neutral territory), contradicting the intended RSI
+    overbought peak narrative — if the rolling-mean RSI with seed 42 never produces
+    RSI > 70, increase mean return from 0.0008 to ~0.003 for a more volatile series,
+    or relabel the crosshair as 'RSI maximum' rather than implying overbought context
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correctly theme-adaptive, not pure white.
-      Chrome: Title "dashboard-synchronized-crosshair · julia · makie · anyplot.ai" in dark ink, clearly readable. Y-axis labels "Price (USD)", "Volume", "RSI (14)" in dark INK. X-axis label "Trading Day" readable. Tick labels in INK_SOFT (#4A4A44) clearly visible. Y-only grid at 10% opacity — subtle, non-dominant.
-      Data: Price panel — green (#009E73) line (first series correct). Volume panel — sky blue (#16B8F3) bars. RSI panel — purple (#9418DB) line with dashed reference lines at 30 and 70. Dashed vertical crosshair at day 120 across all three panels. Dot markers at crosshair position. Value annotations "100.1", "276K", "51.7" in INK_SOFT to the right of the crosshair.
-      Legibility verdict: PASS — all text readable, no overflow, no clipping.
+      Background: Warm off-white (#FAF8F1) — correct, not pure white
+      Chrome: Title "dashboard-synchronized-crosshair · julia · makie · anyplot.ai" in dark INK text, clearly readable. Axis labels (Price (USD), Volume, RSI (14), Trading Day) in dark INK. Tick labels in INK_SOFT dark color. Panel labels (PRICE, VOLUME, RSI) in top-left of each panel. All text clearly readable against light background.
+      Data: Price line in #009E73 green (palette position 1, correct). Volume bars in bright sky blue/teal color. RSI line in purple/violet. Zone fills at 10% alpha (light red tint in overbought zone 70-100, light green tint in oversold zone 0-30). Dashed crosshair at day ~120 spanning all panels. Value markers (circle dots) on each series at crosshair. Annotations: "100.1" (price), "276K" (volume), "51.7 <- peak" (RSI).
+      Legibility verdict: PASS — all text readable at full resolution in light theme
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correctly theme-adaptive, not pure black.
-      Chrome: Title and all axis labels rendered in light cream (#F0EFE8 / #B8B7B0) — clearly readable against dark surface. Tick labels light-colored. Grid lines at 10% opacity subtle. No dark-on-dark failures detected.
-      Data: Colors identical to light render — green price line, sky blue volume bars, purple RSI line. Crosshair and value annotations all visible.
-      Legibility verdict: PASS — full theme adaptation working correctly in both renders.
+      Background: Warm near-black (#1A1A17) — correct, not pure black
+      Chrome: Title, axis labels, tick labels, panel labels all render in light-colored text (INK flips to #F0EFE8, INK_SOFT to #B8B7B0). No dark-on-dark failures detected. Grid lines remain subtle. Spines (left, bottom) in INK_SOFT light color.
+      Data: Price line in #009E73 green — identical to light render (correct, data colors unchanged). Volume bars in same bright sky blue/teal as light render. RSI line in same purple/violet. Zone fills, crosshair, markers, and annotations all consistent with light render. Data palette is theme-independent as required.
+      Legibility verdict: PASS — all text readable at full resolution in dark theme, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 6
         max: 8
         passed: true
-        comment: All font sizes explicitly set; titlesize=16 slightly below recommended
-          20pt for landscape but appropriate for 3-panel layout; readable in both
-          themes
+        comment: Title, axis labels, chrome explicitly sized. Missing xticklabelsize/yticklabelsize
+          on all three Axis objects; relies on Figure fontsize=14 default for ticks.
+          Readable in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping elements; crosshair annotations well-spaced to the
-          right
+        comment: Panel labels, zone labels, and value annotations well-separated.
+          No collisions.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Price line (lw=2.0), volume bars, RSI line, crosshair markers (ms=10)
-          all clearly visible
+        comment: Lines at linewidth=2.0 (4 effective px), bars filled, scatter markers
+          at markersize=10 (20 effective px). All elements clearly visible at 3200x1800.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Each series in own panel; anyplot palette is CVD-safe
+        comment: Three series use distinct palette colors, CVD-safe. Zone fills at
+          10% alpha do not obscure data.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Canvas gate passed; three panels fill canvas proportionally (42/30/28%);
-          no clipping
+        comment: Canvas gate passed. Three panels at 42/30/28% row proportions fill
+          the canvas well. Aligned grids and shared x-axis create clear visual connection.
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Price (USD), Volume, RSI (14), Trading Day — all descriptive with
-          context
+        comment: Price (USD), Volume (K-formatted), RSI (14), Trading Day all descriptive
+          with units or context. Title correct.
       - id: VQ-07
         name: Palette Compliance
         score: 1
         max: 2
         passed: false
-        comment: 'First series #009E73 correct; background correct. Palette order
-          non-canonical: Volume=pos4 (#16B8F3) before RSI=pos2 (#9418DB); canonical
-          would be 1→2→3'
+        comment: 'First series correctly uses #009E73. Volume bars appear as bright
+          sky blue and RSI as purple/violet in both renders, not matching ANYPLOT_PALETTE[2]=#9418DB
+          (purple) for volume and ANYPLOT_PALETTE[3]=#B71D27 (red) for RSI per code.
+          Background and chrome are theme-correct.'
     design_excellence:
       score: 12
       max: 20
@@ -108,25 +116,26 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: false
-        comment: 'Above configured default: theme tokens applied, RSI reference bands,
-          marker stroke effects, proportional panel sizing. Not yet FiveThirtyEight
-          level — lacks panel titles and broader visual identity.'
+        passed: true
+        comment: 'Clearly above defaults: theme-adaptive chrome, zone fills, crosshair
+          with value markers, panel labels, K-formatted volume ticks, markers with
+          white strokes. Not quite publication-ready.'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: Top/right spines removed; y-only 10% grid; x-tick labels hidden via
-          hidexdecorations!; dot marker strokecolor=PAGE_BG. Good refinement.
+        passed: true
+        comment: Top/right spines removed, y-only grid at 10% opacity, row gap of
+          5, zone fills at 10% alpha, dashed reference lines at 50% opacity. Good
+          refinement.
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
         passed: false
-        comment: Panel size hierarchy (price=tallest) and crosshair focal point create
-          structure. RSI reference lines provide context. However crosshair anchored
-          at arbitrary day 120 with unremarkable values — no narrative insight.
+        comment: Zone fills and reference lines are good. However, crosshair at RSI=51.7
+          (neutral territory) fails the overbought peak narrative. The <- peak annotation
+          is misleading.
     spec_compliance:
       score: 15
       max: 15
@@ -136,28 +145,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct multi-panel stacked dashboard with synchronized crosshair
+        comment: Correct stacked multi-panel dashboard with three linked panels. Static
+          crosshair via vlines! is appropriate for static library.
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: linkxaxes!, vlines! crosshair on all panels, value annotations, independent
-          y-scales all present
+        comment: Synchronized crosshair, shared x-axis, independent y-axes, value
+          annotations, three data series. All spec features implemented.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Trading days on shared x-axis; price/volume/RSI mapped correctly;
-          200 data points
+        comment: Trading Day on shared X; Price (USD), Volume, RSI (14) on independent
+          Y axes. Correct.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Exact title format; no legend needed as y-axis labels identify each
-          panel
+        comment: Title format exact match. No standalone legend needed; panel labels
+          serve orientation role.
     data_quality:
       score: 15
       max: 15
@@ -167,22 +177,23 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: 'All three financial indicators: line chart (price), bar chart (volume),
-          oscillator (RSI) with reference bands; crosshair spans all panels'
+        comment: 'Demonstrates all dashboard aspects: line chart, bar chart, oscillator
+          with zones, synchronized crosshair, value read-out, overbought/oversold
+          zones.'
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock dashboard — neutral real-world financial scenario; RSI computed
-          with proper 14-period formula
+        comment: Stock trading dashboard with price, volume, RSI is canonical and
+          neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price ~100 baseline with ±15% range realistic; volume 800K–2M with
-          spikes realistic; RSI 0–100 correctly bounded
+        comment: Price ~100 +/-15%, volume in hundreds of thousands, RSI 0-100. All
+          scales realistic.
     code_quality:
       score: 10
       max: 10
@@ -192,8 +203,7 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Flat script: constants → data → figure → axes → layers → annotations
-          → save'
+        comment: Clean linear flow, no functions or classes.
       - id: CQ-02
         name: Reproducibility
         score: 2
@@ -205,21 +215,20 @@ review:
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random, Statistics — all used
+        comment: CairoMakie, Colors, Random, Statistics all used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Julia with broadcasting; ytickformat lambda for volume K-labels;
-          no fake functionality
+        comment: No fake UI elements. RSI for-loop is deliberate inline computation.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save(plot-$(THEME).png, fig; px_per_unit=2); uses size=(1600,900)
-          correct Makie 0.22+ API
+        comment: Saves as plot-$(THEME).png with px_per_unit=2. Uses current Makie
+          size API.
     library_mastery:
       score: 7
       max: 10
@@ -229,16 +238,16 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: linkxaxes!, hidexdecorations! with granular control, rowsize! with
-          Relative, ytickformat — all idiomatic Makie multi-panel patterns
+        comment: Uses linkxaxes!, band!, rowsize!/rowgap!, hidexdecorations!, ytickformat
+          callback, grid layout indexing — all idiomatic Makie patterns.
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: linkxaxes! is Makie-distinctive (no direct analogue in matplotlib);
-          hidexdecorations! fine-grained boolean args; rowsize! Relative layout system
-  verdict: REJECTED
+        comment: linkxaxes! for panel synchronization, band! for zone fills, rowsize!(fig.layout,...)
+          for panel proportions are genuinely Makie-distinctive features.
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
@@ -250,6 +259,5 @@ impl_tags:
   dataprep:
   - rolling-window
   styling:
-  - grid-styling
   - alpha-blending
   - edge-highlighting
