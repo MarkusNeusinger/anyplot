@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: highcharts unknown | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-23
@@ -120,7 +120,7 @@ for cat in categories:
                     return '';
                 }},
                 style: {{
-                    fontSize: '28px',
+                    fontSize: '34px',
                     fontWeight: 'bold',
                     color: '#ffffff',
                     textOutline: '2px rgba(0,0,0,0.6)'
@@ -133,7 +133,7 @@ for cat in categories:
                 animation: {{ duration: 450 }},
                 layoutAlgorithm: {{ type: 'grid', gridSize: 70 }},
                 zones: [
-                    {{ from: 1,  to: 4,   marker: {{ radius: 24 }} }},
+                    {{ from: 1,  to: 4,   marker: {{ radius: 28 }} }},
                     {{ from: 5,  to: 9,   marker: {{ radius: 30 }} }},
                     {{ from: 10, to: 19,  marker: {{ radius: 38 }} }},
                     {{ from: 20, to: 49,  marker: {{ radius: 48 }} }},
@@ -173,7 +173,7 @@ html_content = f"""<!DOCTYPE html>
             title: {{
                 text: 'map-marker-clustered \\u00b7 python \\u00b7 highcharts \\u00b7 anyplot.ai',
                 style: {{
-                    fontSize: '54px',
+                    fontSize: '66px',
                     fontWeight: 'bold',
                     color: '{INK}'
                 }}
