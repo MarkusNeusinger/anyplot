@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 map-projections: World Map with Different Projections
 Library: letsplot 4.10.1 | Python 3.13.13
-Quality: 78/100 | Updated: 2026-05-23
+Quality: 83/100 | Updated: 2026-05-23
 """
 
 import os
