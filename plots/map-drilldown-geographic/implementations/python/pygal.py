@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-23
@@ -36,9 +36,6 @@ SEQ_COLORS = (
     "#00867B",
     "#009E73",  # highest — brand green
 )
-
-# anyplot categorical palette (first series always #009E73)
-ANYPLOT_PALETTE = ("#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E")
 
 # Hierarchical sales data: World → Country → State → City (values in $M USD)
 hierarchy = {
@@ -123,15 +120,15 @@ png_map = World(
     width=3200,
     height=1800,
     title="map-drilldown-geographic · python · pygal · anyplot.ai",
-    x_title="World Sales Overview ($M) — Open HTML for Interactive Drill-Down",
+    x_title="Sales by Country ($M USD) · Top Market: United States ($2,100M)",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=5,
+    legend_at_bottom_columns=4,
     legend_box_size=40,
     print_values=False,
     print_labels=False,
     margin=60,
-    margin_bottom=140,
+    margin_bottom=180,
     explicit_size=True,
 )
 
@@ -140,7 +137,7 @@ png_map.add("Australia ($380M)", {"au": hierarchy["au"]["value"]})
 png_map.add("Brazil ($520M)", {"br": hierarchy["br"]["value"]})
 png_map.add("Germany ($580M)", {"de": hierarchy["de"]["value"]})
 png_map.add("Japan ($850M)", {"jp": hierarchy["jp"]["value"]})
-png_map.add("United States ($2,100M)", {"us": hierarchy["us"]["value"]})
+png_map.add("USA ($2,100M)", {"us": hierarchy["us"]["value"]})
 
 png_map.render_to_png(f"plot-{THEME}.png")
 
@@ -165,7 +162,7 @@ world_map = World(
     height=500,
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=5,
+    legend_at_bottom_columns=3,
     legend_box_size=16,
     print_values=False,
     print_labels=False,
@@ -175,31 +172,43 @@ world_map.add("Australia ($380M)", {"au": hierarchy["au"]["value"]})
 world_map.add("Brazil ($520M)", {"br": hierarchy["br"]["value"]})
 world_map.add("Germany ($580M)", {"de": hierarchy["de"]["value"]})
 world_map.add("Japan ($850M)", {"jp": hierarchy["jp"]["value"]})
-world_map.add("United States ($2,100M)", {"us": hierarchy["us"]["value"]})
+world_map.add("USA ($2,100M)", {"us": hierarchy["us"]["value"]})
 world_svg = world_map.render(is_unicode=True)
 
-# Bar charts for each drillable node (sub-country levels)
-html_bar_style = Style(
-    background="transparent",
-    plot_background="transparent",
-    foreground=INK,
-    foreground_strong=INK,
-    foreground_subtle=INK_MUTED,
-    colors=ANYPLOT_PALETTE,
-    title_font_size=18,
-    label_font_size=13,
-    major_label_font_size=12,
-    value_font_size=12,
-    legend_font_size=13,
-)
 
+def _lerp_seq_color(v, vmin, vmax):
+    """Interpolate anyplot_seq from dark azure (#003D94) to brand green (#009E73)."""
+    t = (v - vmin) / (vmax - vmin) if vmax > vmin else 1.0
+    g = int(0x3D + (0x9E - 0x3D) * t)
+    b = int(0x94 + (0x73 - 0x94) * t)
+    return f"#00{g:02X}{b:02X}"
+
+
+# Bar charts for each drillable node — per-bar sequential coloring consistent with world map
 svg_data = {"world": world_svg}
 for node_id, node_data in hierarchy.items():
     if node_id != "world" and node_data.get("children"):
         children_ids = node_data["children"]
         if children_ids:
+            n = len(children_ids)
+            child_vals = [hierarchy[cid]["value"] for cid in children_ids]
+            vmin, vmax = min(child_vals), max(child_vals)
+            bar_colors = tuple(_lerp_seq_color(v, vmin, vmax) for v in child_vals)
+            bar_style = Style(
+                background="transparent",
+                plot_background="transparent",
+                foreground=INK,
+                foreground_strong=INK,
+                foreground_subtle=INK_MUTED,
+                colors=bar_colors,
+                title_font_size=18,
+                label_font_size=13,
+                major_label_font_size=12,
+                value_font_size=12,
+                legend_font_size=13,
+            )
             chart = pygal.Bar(
-                style=html_bar_style,
+                style=bar_style,
                 width=820,
                 height=440,
                 show_legend=False,
@@ -211,7 +220,10 @@ for node_id, node_data in hierarchy.items():
                 human_readable=True,
                 explicit_size=True,
             )
-            chart.add("Sales", [hierarchy[cid]["value"] for cid in children_ids])
+            for i, cid in enumerate(children_ids):
+                vals = [None] * n
+                vals[i] = hierarchy[cid]["value"]
+                chart.add(hierarchy[cid]["name"], vals)
             chart.x_labels = [hierarchy[cid]["name"] for cid in children_ids]
             svg_data[node_id] = chart.render(is_unicode=True)
 
@@ -301,9 +313,26 @@ html_content = f"""<!DOCTYPE html>
             text-align: center;
             color: {css_ink_soft};
             font-size: 14px;
-            margin-bottom: 12px;
+            margin-bottom: 10px;
             font-weight: 500;
         }}
+        .callout {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 158, 115, 0.10);
+            border-left: 3px solid {css_brand};
+            border-radius: 0 6px 6px 0;
+            padding: 8px 14px;
+            margin-bottom: 12px;
+            font-size: 13px;
+            color: {css_ink};
+        }}
+        .callout strong {{ color: {css_brand}; }}
+        .callout .sub {{ color: {css_ink_soft}; font-size: 12px; }}
+        .callout.hidden {{ display: none; }}
+        @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
+        .fade-in {{ animation: fadeIn 0.3s ease-in-out; }}
         #chart-container {{
             width: 100%;
             min-height: 440px;
@@ -334,6 +363,10 @@ html_content = f"""<!DOCTYPE html>
             <div id="breadcrumb-path"><span class="current">World</span></div>
         </div>
         <div class="level-info" id="level-info">World View — Sales by Country</div>
+        <div class="callout" id="top-callout">
+            <span>★</span>
+            <div>Top Market: <strong>United States</strong> — $2,100M <span class="sub">· 47% of total sales ($4,430M)</span></div>
+        </div>
         <div id="chart-container"></div>
         <p class="hint" id="hint">Click a highlighted country to drill down to states/provinces</p>
     </div>
@@ -389,13 +422,19 @@ html_content += """        };
         function renderChart(levelId) {
             const container = document.getElementById('chart-container');
             const hint = document.getElementById('hint');
+            const callout = document.getElementById('top-callout');
             const levelData = hierarchy[levelId];
             if (!svgCharts[levelId]) {
                 container.innerHTML = '<p style="text-align:center;padding:50px;opacity:0.5;">No detail available</p>';
                 hint.textContent = '';
+                if (callout) callout.classList.add('hidden');
                 return;
             }
+            container.classList.remove('fade-in');
+            void container.offsetWidth;
             container.innerHTML = svgCharts[levelId];
+            container.classList.add('fade-in');
+            if (callout) callout.classList.toggle('hidden', levelId !== 'world');
             if (levelId === 'world') {
                 container.querySelectorAll('.country').forEach(el => {
                     const cls = Array.from(el.classList).find(c => c !== 'country' && c !== 'reactive');
