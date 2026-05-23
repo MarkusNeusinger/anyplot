@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-marker-clustered: Clustered Marker Map
 Library: seaborn 0.13.2 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-23
@@ -49,7 +49,7 @@ df = pd.DataFrame({"lat": lats, "lon": lons, "category": categories})
 
 # Apply hierarchical clustering to group nearby markers
 coords = df[["lat", "lon"]].values
-clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=0.05, linkage="ward")
+clustering = AgglomerativeClustering(n_clusters=None, distance_threshold=0.18, linkage="ward")
 df["cluster"] = clustering.fit_predict(coords)
 
 # Cluster centers, sizes and dominant category
@@ -111,9 +111,12 @@ land_patch = mpatches.Polygon(
 )
 ax.add_patch(land_patch)
 
-# Background layer — individual points at low alpha
+# KDE density contours — seaborn-distinctive statistical overlay showing point density
+sns.kdeplot(data=df, x="lon", y="lat", levels=6, color=INK_MUTED, alpha=0.35, linewidths=0.9, ax=ax, zorder=1)
+
+# Background layer — individual points at minimal alpha
 sns.scatterplot(
-    data=df, x="lon", y="lat", hue="category", palette=category_palette, s=18, alpha=0.25, ax=ax, legend=False
+    data=df, x="lon", y="lat", hue="category", palette=category_palette, s=6, alpha=0.08, ax=ax, legend=False
 )
 
 # Foreground layer — cluster markers sized by count
@@ -132,15 +135,15 @@ sns.scatterplot(
     legend=False,
 )
 
-# Count labels on larger clusters
+# Count labels on clusters
 for _, row in cluster_stats.iterrows():
-    if row["count"] > 4:
+    if row["count"] > 1:
         ax.annotate(
             str(int(row["count"])),
             (row["lon_center"], row["lat_center"]),
             ha="center",
             va="center",
-            fontsize=5,
+            fontsize=8,
             fontweight="bold",
             color="white",
             zorder=10,
