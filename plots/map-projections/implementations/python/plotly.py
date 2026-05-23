@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-projections: World Map with Different Projections
 Library: plotly 6.7.0 | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-23
@@ -89,7 +89,7 @@ fig.update_layout(
     showlegend=False,
     paper_bgcolor=PAGE_BG,
     plot_bgcolor=PAGE_BG,
-    margin={"l": 20, "r": 20, "t": 60, "b": 20},
+    margin={"l": 80, "r": 40, "t": 80, "b": 60},
 )
 
 # Subplot title styling
