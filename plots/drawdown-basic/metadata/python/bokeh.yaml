@@ -1,154 +1,189 @@
 library: bokeh
+language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:56:46Z'
-updated: '2026-01-20T11:59:25Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21170482718
+updated: '2026-05-23T11:15:07Z'
+generated_by: claude-sonnet
+workflow_run: 26330605633
 issue: 3752
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/bokeh/plot-dark.html
+quality_score: 87
 review:
   strengths:
-  - 'Excellent use of Bokeh-specific features: ColumnDataSource, Span, Label, varea'
-  - Clean data generation with realistic market stress periods
-  - Proper calculation of running maximum and drawdown percentage
-  - Good visual hierarchy with filled area, line, and marker
-  - Correct title format and professional styling
-  - Generates both PNG and HTML outputs
+  - 'Semantic anyplot palette usage: red for financial loss, green for recovery —
+    meaningful color storytelling within palette rules'
+  - Complete spec compliance with all required features implemented and working
+  - 'Perfect code quality: clean, reproducible, idiomatic bokeh with proper output
+    artifacts'
+  - 'Excellent data quality: realistic 3-year portfolio simulation with multiple stress
+    periods'
+  - Expert bokeh idiomatic usage (varea, Span, ColumnDataSource, HoverTool with datetime
+    formatter)
   weaknesses:
-  - Missing explicit recovery point markers where drawdown returns to zero (new highs)
-  - Could benefit from HoverTool for interactivity (Bokeh strength)
-  - Font sizes could be slightly larger for optimal readability at 4800x2700
-  image_description: 'The plot displays a drawdown chart showing percentage decline
-    from peak value over approximately 3 years (Jan 2022 - Jan 2025). The chart uses
-    a red/salmon colored filled area (#DC3545 with alpha) extending from a zero baseline
-    down to the drawdown values. The zero line at the top represents peak performance.
-    Multiple drawdown periods are visible: initial drawdowns in early 2022 reaching
-    around -20%, a recovery period mid-2023 where the asset briefly returns to near
-    zero (new highs), followed by a severe drawdown period starting late 2023 that
-    reaches the maximum drawdown of -44.2%. The maximum drawdown point is marked with
-    a blue circle marker and labeled "Max DD: -44.2%" in blue text. The title "drawdown-basic
-    · bokeh · pyplots.ai" appears at the top left. Axis labels show "Date" on x-axis
-    and "Drawdown (%)" on y-axis. A legend in the bottom left shows "Drawdown" and
-    "Max Drawdown: -44.2%". The background is a light gray (#FAFAFA). The plot uses
-    the full canvas well with balanced margins.'
+  - 'Dark render: 35% alpha red fill over #1A1A17 produces very dark brownish-red
+    with minimal contrast from background — the drawdown filled area barely registers
+    visually; increase fill_alpha to ~0.55-0.60 for dark theme to restore visual impact'
+  - Stats block (Max DD, Duration, Recovery) floats as raw text directly in the red-filled
+    data area without a background box — readability and visual separation suffer;
+    wrapping in a small callout box with ELEVATED_BG fill and INK_SOFT border would
+    improve clarity and polish
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "drawdown-basic · python · bokeh · anyplot.ai" fully visible in dark ink; Y-axis label "Drawdown (%)" and X-axis label "Date" in dark ink; tick labels in INK_SOFT — all readable against light background
+      Data: Red (#B71D27) semi-transparent fill + red line for drawdown; green (#009E73) triangles for recovery/new highs at zero line; sky-blue (#16B8F3) circle at max drawdown point; stats block (Max DD, Duration, Recovery) floats over red fill in center-right
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title, axis labels, tick labels all render in light cream/off-white (#F0EFE8 / #B8B7B0) — readable against dark background; no dark-on-dark text failures detected
+      Data: Red, green, sky-blue data colors are identical to light render. Red fill at 35% alpha over #1A1A17 creates very dark brownish-red with low contrast — fill area is barely distinguishable from background; red line on top remains the primary visible data element
+      Legibility verdict: PASS (with note: filled area has low contrast in dark mode — alpha too low for dark surface)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 25
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and axis labels are readable, tick labels slightly small but
-          acceptable
+        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          ticks); readable in both themes; 30pt annotation label slightly generous
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text-on-text overlap; stats block floats in red-filled data area
+          without background boxes, reducing separation from data layer
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: Filled area clearly visible, line appropriately weighted, marker
-          size good
+        comment: 'Light render clear. Dark render: 35% alpha red fill over #1A1A17
+          produces very dark brownish-red with low contrast; line visible but fill
+          area lacks impact'
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Red fill is distinct, blue marker provides contrast, but red-only
-          scheme not ideal for colorblind
+        comment: CVD-safe palette; red/green/blue used for distinct semantic roles,
+          not as sole distinguishing signals in direct comparison
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 3
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Good proportions, min_border properly set; stats block floating in
+          data area without background boxes slightly clutters layout
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Labels are descriptive but Date could include format hint
+        comment: Y-axis Drawdown (%) with units; X-axis Date adequate; title format
+          correct
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend well placed but overlaps very slightly with
-          plot area
+        comment: 'Semantic exceptions applied: #B71D27 (red pos3) for loss, #009E73
+          (green pos1) for recovery, #16B8F3 (sky blue pos4) for max DD; backgrounds
+          correct for both themes'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful semantic color assignments above defaults; stats annotations
+          add context; floating stats text without callout boxes reduces polish
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Grid at 10% alpha subtle; outline transparent removes box border;
+          legend has elevated-background styling; good refinement above defaults
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Clear focal point at max drawdown; stats block provides context;
+          visual hierarchy from fill to line to markers to annotations; coherent financial
+          risk narrative
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct drawdown chart with filled area
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on x-axis, drawdown percentage on y-axis
-      - id: SC-03
+        comment: 'Correct drawdown chart: filled area below zero baseline, time on
+          X, percentage on Y'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has filled area, zero baseline, max drawdown marker. Missing recovery
-          points annotation
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec requirements: running max drawdown calc, semi-transparent
+          fill, max DD marker+annotation, recovery markers, stats block (max DD%,
+          duration, recovery time), zero baseline Span'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full date range and drawdown values visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Dates on X, drawdown % on Y; all data visible across full 3-year
+          range
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly labels drawdown line and max drawdown point
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as drawdown-basic · bokeh · pyplots.ai
+        comment: Title format correct; legend labels Drawdown/Max DD/New High are
+          meaningful
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple drawdown periods, recovery to new highs, varying depths
+        comment: Multiple drawdown periods of varying depth and duration; clear max
+          DD; recovery transitions; key statistics shown
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock/portfolio behavior with market stress periods
+        comment: Realistic 3-year synthetic portfolio with seeded random returns and
+          deliberately stressed periods; plausible investment scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values (-44.2% max) are realistic for stocks but on the higher end
+        comment: Max drawdown -44.2% and duration 246 days realistic for volatile
+          portfolio; return magnitudes factually plausible
     code_quality:
       score: 10
       max: 10
@@ -158,48 +193,59 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports, data, plot, save'
+        comment: 'Linear: imports → data → plot → save; no functions/classes'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported modules are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh API
+        comment: Clean Pythonic code; loop for stats block appropriate; sys.path fix
+          documented
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html — correct for interactive
+          bokeh library
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses ColumnDataSource, Span, Label, varea. Could leverage HoverTool
-          for interactivity
+        comment: Expert use of ColumnDataSource, varea, Span, Label, HoverTool with
+          datetime formatter; follows bokeh recommended patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: varea, Span, Label models, HoverTool with @date{%F} datetime format
+          string, CDP screenshot for exact pixel dims — clearly bokeh-specific features
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
+  - hover-tooltips
   - html-export
+  - annotations
   patterns:
   - data-generation
   - columndatasource
@@ -208,4 +254,3 @@ impl_tags:
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
