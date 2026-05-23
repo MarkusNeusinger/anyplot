@@ -6,7 +6,7 @@ title: Synchronized Multi-Chart Dashboard
 
 # Specification tracking
 created: 2026-01-11T22:53:07Z
-updated: 2026-01-11T22:53:07Z
+updated: 2026-05-23T12:23:32Z
 issue: 3784
 suggested: MarkusNeusinger
 
@@ -15,7 +15,6 @@ suggested: MarkusNeusinger
 tags:
   plot_type:
     - line
-    - multi
   data_type:
     - timeseries
     - numeric

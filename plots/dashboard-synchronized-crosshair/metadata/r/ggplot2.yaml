@@ -1,0 +1,256 @@
+library: ggplot2
+language: r
+specification_id: dashboard-synchronized-crosshair
+created: '2026-05-23T12:51:23Z'
+updated: '2026-05-23T13:07:21Z'
+generated_by: claude-sonnet
+workflow_run: 26333027645
+issue: 3784
+language_version: 4.4.1
+library_version: 3.5.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/r/ggplot2/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/r/ggplot2/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 89
+review:
+  strengths:
+  - 'Perfect palette and theme compliance: anyplot palette positions 1-3 for the three
+    series, correct light/dark backgrounds (#FAF8F1/#1A1A17), all chrome adapts properly
+    between themes with no dark-on-dark or light-on-light failures'
+  - 'Full spec compliance for a static library: facet_wrap(ncol=1, scales=''free_y'')
+    correctly implements the stacked layout with independent y-axes and a shared x-axis,
+    with geom_vline spanning all panels as a static crosshair'
+  - RSI calculation from first principles using stats::filter demonstrates realistic
+    financial data with 14-period smoothing approximation
+  - Clean, reproducible code with set.seed(42), flat KISS structure, and idiomatic
+    ggplot2 patterns including strip.position='right' and strip.placement='outside'
+  - Both renders fully legible — title, subtitle, axis ticks, and strip labels all
+    readable in light and dark themes
+  weaknesses:
+  - RSI panel lacks standard overbought (70) and oversold (30) reference lines — adding
+    geom_hline(yintercept=c(30,70), linetype='dashed', color=INK_MUTED, linewidth=0.4)
+    would add meaningful domain context and improve DE-03 storytelling
+  - The 'Event' annotation on the crosshair is vague — labeling it with a descriptive
+    name (e.g., 'Earnings Release') would improve data storytelling without adding
+    complexity
+  - DE-01 could be elevated further with more intentional visual emphasis on key moments
+    — e.g., highlighting price extremes or marking where RSI crosses the overbought/oversold
+    thresholds
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white
+      Chrome: Bold title "dashboard-synchronized-crosshair · r · ggplot2 · anyplot.ai" in dark ink at top; subtitle "Tech stock 2024 — price, volume & RSI across 200 trading days" below in softer ink; x-axis date ticks (Feb '24 through Oct '24) clearly visible; strip labels "Price (USD)", "Volume (M)", "RSI (14)" on the right side in small elevated boxes
+      Data: Price panel uses #009E73 (brand green) for a smooth line ranging ~95-115 USD; Volume panel uses #9418DB (purple) for a noisy spike chart ranging ~5-25M; RSI panel uses #B71D27 (red) oscillating between ~20-80; a dashed vertical line at ~Jun '24 with "Event" label spans all three panels
+      Legibility verdict: PASS — all text readable against the warm off-white background; no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black
+      Chrome: Title and subtitle visible in light off-white text; date axis tick labels readable in lighter gray; strip labels in elevated dark boxes (#242420) with light text — all legible against the dark background; no dark-on-dark failures detected
+      Data: Data colors are identical to light render — Price line #009E73, Volume line #9418DB, RSI line #B71D27 — palette positions 1-3 unchanged between themes as required; dashed event marker and "Event" label also visible
+      Legibility verdict: PASS — all text readable against the warm near-black background; no dark-on-dark failures observed
+  criteria_checklist:
+    visual_quality:
+      score: 30
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 8
+        max: 8
+        passed: true
+        comment: All font sizes explicitly set (title=12, subtitle=9, axis.text=8,
+          axis.title=10, strip.text=9); both themes fully legible; no overflow
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data element collisions; faceted panels provide ample
+          separation
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: linewidth=1.1 appropriate for 200-point time series; all three lines
+          clearly distinguishable
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: CVD-safe anyplot palette; series separated by facet panels for shape-independent
+          identification
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 landscape canvas (8x4.5in @ dpi=400); three panels fill
+          canvas well; balanced margins
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Strip labels serve as y-axis labels with units: ''Price (USD)'',
+          ''Volume (M)'', ''RSI (14)''; informative subtitle'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73 (brand green); positions 1-3 in canonical order;
+          backgrounds #FAF8F1/#1A1A17; all chrome theme-adaptive'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: ELEVATED_BG strip backgrounds, clean
+          event marker, intentional hierarchy; not quite publication-ready'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: L-shaped spine frame (panel.border=blank + axis.line.x.bottom/y.left),
+          subtle grid with adjustcolor alpha=0.3, no minor grid, adequate panel spacing
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Event marker and subtitle provide context above default; but 'Event'
+          label is vague and RSI lacks conventional 30/70 reference lines
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: Multi-panel stacked dashboard implemented correctly with facet_wrap;
+          correct static adaptation per spec guidance
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Synchronized crosshair via geom_vline across panels; stacked layout
+          via facet_wrap(ncol=1); independent y-axes via scales='free_y'; shared x-axis
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Date on shared x-axis; three metrics on independent y-axes; 200 trading
+          days as specified
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title 'dashboard-synchronized-crosshair · r · ggplot2 · anyplot.ai';
+          strip labels serve as legend; subtitle adds context
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Three distinct financial metrics (price, volume, RSI) demonstrating
+          the multi-panel dashboard pattern fully
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Tech stock 2024 scenario; realistic price/volume/RSI values; neutral
+          financial data
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price ~95-115 USD plausible for mid-cap tech; volume ~5-25M; RSI
+          20-80 realistic oscillation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Flat script: theme tokens → data generation → plot → save'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: set.seed(42) at top
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: 'ggplot2, dplyr, scales, ragg — all used; tibble:: and stats:: via
+          namespace'
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; RSI calculation from first principles; no
+          fake UI
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: sprintf('plot-%s.png', THEME) → plot-light.png/plot-dark.png; ragg::agg_png
+          device
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: facet_wrap with free_y scales, scale_x_date with date_labels/date_breaks,
+          expansion(), label_number() — all idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: strip.position='right' + strip.placement='outside'; geom_text with
+          y=Inf for panel-relative coordinates; adjustcolor() for grid alpha
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - faceting
+  - annotations
+  - layer-composition
+  patterns:
+  - data-generation
+  dataprep:
+  - time-series
+  - rolling-window
+  styling:
+  - grid-styling
