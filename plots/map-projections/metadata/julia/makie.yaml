@@ -2,7 +2,7 @@ library: makie
 language: julia
 specification_id: map-projections
 created: '2026-05-23T08:31:47Z'
-updated: '2026-05-23T08:38:06Z'
+updated: '2026-05-23T09:08:24Z'
 generated_by: claude-sonnet
 workflow_run: 26327755230
 issue: 3771
@@ -12,42 +12,48 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-proje
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/julia/makie/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 76
+quality_score: 86
 review:
   strengths:
-  - Correct theme-adaptive chrome in both renders with proper background colors and
-    INK tokens
-  - 'Accurate projection mathematics from scratch: Mercator, Mollweide (Newton-Raphson),
-    Orthographic (hemisphere clipping), Equal Earth'
-  - NaN-aware graticule line splitter handles projection discontinuities correctly
-  - Tissot indicatrices with semi-transparent brand green clearly show projection
-    distortion patterns
-  - Canvas exactly 3200×1800 px; idiomatic CairoMakie layout system for 2×2 multi-panel
+  - All four map projections implemented from scratch in pure Julia math — no geo
+    library required
+  - Tissot indicatrices correctly computed per-projection with NaN culling for Orthographic
+    back-hemisphere
+  - 'Full spec compliance: all required projections, graticule, coastlines, and Tissot
+    all present'
+  - Projection boundary shapes match each projection geometry (rectangle, ellipse,
+    custom Equal Earth outline)
+  - Perfect code quality — clean helper functions, seed, correct save pattern, all
+    imports used
+  - Theme adaptation is complete and correct; no dark-on-dark failures in the dark
+    render
   weaknesses:
-  - 'Critical missing feature: no land masses, coastlines, or country borders — spec
-    explicitly requires these. Embed simplified continent outline polygons as hardcoded
-    Vector{Point2f} arrays; render with poly! in ELEVATED_BG fill + INK_SOFT stroke
-    after graticule but before Tissot ellipses. Even ~100-300 point approximations
-    of Africa, Eurasia, Americas, Australia, Antarctica are sufficient.'
-  - Graticule alpha=0.55 is slightly faint on dark background — make theme-adaptive
-    (0.55 light / 0.70 dark) or increase to 0.65 uniformly.
-  - Sub-panel titlesize=14 is slightly small for 4-panel layout at mobile widths —
-    increase to 15-16.
+  - 'Continent fill (ELEVATED_BG: #FFFDF6 light / #242420 dark) is nearly indistinguishable
+    from the map background (PAGE_BG: #FAF8F1 light / #1A1A17 dark) — land masses
+    are barely visible; a world map must have clear land/sea contrast. Fix: use a
+    visibly distinct fill, e.g., a warm neutral tint such as RGBAf(INK_SOFT with 0.12
+    alpha) or a dedicated land color constant'
+  - Tissot indicatrices have 0.20 alpha fill — too faint, especially in light theme.
+    Increase to 0.30-0.40 so the distortion circles are clearly legible without overwhelming
+    the map
+  - Graticule lines and Tissot circles both use the same BRAND green (#009E73), making
+    them compete visually. Consider using INK_SOFT with low alpha (0.30-0.35) for
+    graticule so Tissot circles read as the primary data layer
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface
-      Chrome: Main title "map-projections · julia · makie · anyplot.ai" in dark INK (#1A1A17), clearly readable. Sub-panel titles ("Mercator — Conformal", "Mollweide — Equal-Area", "Orthographic — Perspective", "Equal Earth — Equal-Area") in dark INK, readable. No axis tick labels (correctly hidden for map projections). Map boundary strokes in INK_SOFT.
-      Data: Graticule lines in semi-transparent brand green (#009E73 at alpha=0.55). Tissot indicatrices in #009E73 with 0.20 alpha fill and 0.85 alpha stroke. No land masses, coastlines, or country borders visible.
-      Legibility verdict: PASS — all text elements readable against light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Main title "map-projections · julia · makie · anyplot.ai" in dark #1A1A17-derived ink — clearly readable. Four subplot titles ("Mercator — Conformal", "Mollweide — Equal-Area", "Orthographic — Perspective", "Equal Earth — Equal-Area") in dark text — all readable at fontsize=16 (doubled). No axis tick labels (appropriate for map projections).
+      Data: Brand green #009E73 graticule lines at ~55% alpha and green Tissot indicatrix ellipses at 20% alpha fill / 85% alpha stroke. Continent fills use ELEVATED_BG (#FFFDF6) against PAGE_BG (#FAF8F1) — extremely low contrast, land masses barely distinguishable from ocean.
+      Legibility verdict: PASS (text), WEAK (land/sea contrast)
 
     Dark render (plot-dark.png):
       Background: Warm near-black #1A1A17 — correct dark theme surface
-      Chrome: Main title and sub-panel titles rendered in light/cream (INK = #F0EFE8 for dark theme), all readable. Map boundary strokes in light INK_SOFT (#B8B7B0). No dark-on-dark failures detected.
-      Data: Tissot indicatrices and graticule lines remain in #009E73 — identical to light render (data colors preserved, only chrome flips). Graticule alpha=0.55 is slightly muted on dark but still visible.
-      Legibility verdict: PASS — all text readable against dark background; no dark-on-dark issues.
+      Chrome: Main title and subplot titles in light #F0EFE8-derived text — clearly readable. No dark-on-dark text failures observed.
+      Data: Brand green #009E73 graticule and Tissot circles are identical to light render — data colors unchanged between themes. Continent fills use ELEVATED_BG (#242420) against PAGE_BG (#1A1A17) — still very low contrast (~5 lightness units), land masses nearly indistinguishable.
+      Legibility verdict: PASS (text), WEAK (land/sea contrast)
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 26
       max: 30
       items:
       - id: VQ-01
@@ -55,171 +61,166 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set (title=20, subtitles=14, base=14).
-          All text readable in both themes. Minor deduction: subplot titlesize=14
-          slightly small for 4-panel at mobile widths.'
+        comment: Title and subplot titles readable in both themes; main title fontsize=20
+          slightly understated for 3200px canvas
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or elements across all four panels.
+        comment: Clean 2x2 grid; no text or element collisions
       - id: VQ-03
         name: Element Visibility
-        score: 5
+        score: 3
         max: 6
-        passed: true
-        comment: Tissot indicatrices clearly visible. Graticule at alpha=0.55 slightly
-          muted on dark background.
+        passed: false
+        comment: Continent fills (ELEVATED_BG) nearly indistinguishable from background
+          (PAGE_BG); Tissot at 0.20 alpha very faint in light mode
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Brand green used consistently, good contrast in both themes, CVD-safe.
+        comment: Brand green passes CVD-safe checks; no red/green as sole signal
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Four projections fill 3200x1800 canvas well. Balanced 2x2 grid with
-          appropriate gaps.
+        comment: 3200x1800 confirmed; 2x2 grid well-proportioned; rowgap/colgap minimal
+          and correct
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Main title in correct spec-id format. Sub-panel titles descriptive
-          with projection type and mathematical property. Axis labels correctly hidden.
+        comment: No traditional axis labels (correct for maps); subplot titles describe
+          projection name and property
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for all data. Light bg #FAF8F1, dark bg #1A1A17.
-          Chrome tokens INK/INK_SOFT correctly applied. Data colors identical between
-          themes.'
+        comment: '#FAF8F1/#1A1A17 backgrounds correct; BRAND green #009E73 for data;
+          themes flip correctly'
     design_excellence:
-      score: 10
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
-        passed: false
-        comment: Clean minimal design with brand green Tissot ellipses and semi-transparent
-          fills. Absence of land masses leaves visualization abstract and less visually
-          compelling.
+        passed: true
+        comment: 'Above default: 4 projection algorithms from scratch, Tissot indicatrices;
+          held back by near-invisible land/sea contrast'
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
-        passed: false
-        comment: All axis spines removed, tick labels hidden, good whitespace. Map
-          boundaries styled cleanly with INK_SOFT stroke.
+        passed: true
+        comment: All spines removed; tick marks/labels hidden; custom graticule replaces
+          default grid; clean minimal panels
       - id: DE-03
         name: Data Storytelling
-        score: 2
+        score: 4
         max: 6
-        passed: false
-        comment: 4-panel comparison with named projection types shows intent. Without
-          land masses, the famous projection distortions are invisible to viewers.
+        passed: true
+        comment: Subtitle labels communicate each projection's key property; Tissot
+          demonstrates distortion; 4-way comparison effective
     spec_compliance:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 3
+        score: 5
         max: 5
-        passed: false
-        comment: Multiple projections shown with graticule and correct math. Missing
-          geographic content (no land masses, coastlines, country borders) makes these
-          abstract diagrams rather than world maps.
+        passed: true
+        comment: World map with multiple projections, exactly as specified
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 4
         max: 4
-        passed: false
-        comment: 'Multiple projections, graticule, Tissot indicatrices present. Missing
-          required: coastlines, country borders, land mass color scheme.'
+        passed: true
+        comment: Mercator + Mollweide + Orthographic + Equal Earth; graticule at 30
+          degrees; continent outlines; Tissot indicatrices
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Geographic coordinate ranges correctly mapped for all four projections.
+        comment: Same global dataset projected correctly; appropriate boundary shapes
+          per projection
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title 'map-projections · julia · makie · anyplot.ai' matches required
-          format exactly. No legend needed.
+        comment: map-projections · julia · makie · anyplot.ai correct; each subplot
+          labeled
     data_quality:
-      score: 11
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 3
+        score: 6
         max: 6
-        passed: false
-        comment: 4 projection types with different mathematical properties shown.
-          Tissot indicatrices demonstrate distortion. Missing actual geographic data
-          (land masses) that would show real projection effects.
+        passed: true
+        comment: Covers conformal, equal-area, and perspective projection families
+          with distortion visualization
       - id: DQ-02
         name: Realistic Context
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Cartographic projection comparison is a genuine educational use case.
-          Tissot indicatrix is a real cartographic tool. Neutral educational context.
+        comment: Geographically accurate continent polygons; Greenland illustrates
+          Mercator distortion; neutral world geography
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Tissot circle radius of 7deg is cartographically appropriate. 30deg
-          graticule interval is standard. Projection boundaries correctly computed.
+        comment: Correct global geographic scale; 30-degree graticule intervals is
+          standard cartographic practice
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: 11 helper functions defined (5 projection, 3 drawing, 3 boundary).
-          Mathematically justified but exceeds KISS ideal.
+        passed: true
+        comment: Helper functions appropriately extracted for reuse across 4 projections;
+          no over-engineering
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Random.seed!(42) set. Projection math fully deterministic.
+        comment: Random.seed!(42) present
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: CairoMakie, Colors, Random — all three used. No unused imports.
+        comment: CairoMakie, Colors, Random — all three actually used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: No fake UI elements. NaN-aware line-drawing handles projection discontinuities
-          elegantly.
+        comment: Projection math clean; NaN handling for Orthographic back-hemisphere
+          idiomatic
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: save('plot-$(THEME).png', fig; px_per_unit=2) — correct format, 3200x1800
-          confirmed.
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) correct; no HTML (correct
+          for CairoMakie)
     library_mastery:
       score: 7
       max: 10
@@ -229,24 +230,23 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct use of Makie layout system (fig[row,col], Label, rowgap!/colgap!).
-          Uses poly! for filled boundaries, lines! for graticule — idiomatic primitives.
+        comment: Correct Figure/Axis grid, poly!, lines!, Label, RGBAf, rowgap!/colgap!;
+          fig[0,1:2] spanning title is idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Custom map projection rendering from scratch. NaN-aware line splitter
-          handles discontinuities. poly! for Tissot circles and boundary shapes in
-          a library-native way.
-  verdict: REJECTED
+        comment: poly! for custom boundary shapes (ellipses, Equal Earth outline)
+          is distinctly Makie; does not leverage themes system or recipes
+  verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - colors
   techniques:
   - subplots
   - patches
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
