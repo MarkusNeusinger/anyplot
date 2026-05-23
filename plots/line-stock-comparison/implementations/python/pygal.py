@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 86/100 | Updated: 2026-05-23
@@ -29,6 +29,9 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 ANYPLOT_PALETTE = ("#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E")
+
+# Extended palette: data series use positions 1-4, INK_MUTED reserved for the reference line
+PALETTE_WITH_REF = ANYPLOT_PALETTE[:4] + (INK_MUTED,)
 
 # Data
 np.random.seed(42)
@@ -64,7 +67,7 @@ custom_style = Style(
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=ANYPLOT_PALETTE,
+    colors=PALETTE_WITH_REF,
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
@@ -90,7 +93,7 @@ chart = pygal.Line(
     show_y_guides=True,
     dots_size=2,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
+    legend_at_bottom_columns=5,
     x_label_rotation=45,
     show_minor_x_labels=False,
     x_labels_major=x_labels_major,
@@ -127,6 +130,9 @@ chart.add(
         for i, val in enumerate(rebased_spy.tolist())
     ],
 )
+
+# Horizontal reference line at y=100 anchors the starting baseline visually
+chart.add("Start = 100", [100.0] * n_days, show_dots=False, stroke_style={"width": 2, "dasharray": "6,4"})
 
 # Save
 chart.render_to_png(f"plot-{THEME}.png")
