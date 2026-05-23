@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>palette variants — anyplot #5817</title>
+<style>
+:root {
+    --bg-page:     #F5F3EC;
+    --bg-surface:  #FAF8F1;
+    --bg-elevated: #FFFDF6;
+    --ink:         #1A1A17;
+    --ink-soft:    #4A4A44;
+    --ink-muted:   #6B6A63;
+    --rule:        rgba(26, 26, 23, 0.10);
+    --ok-green:    #009E73;
+    --ok-amber:    #E69F00;
+    --ok-bad:      #D55E00;
+    --mono: 'MonoLisa', 'MonoLisa Fallback', 'JetBrains Mono', Consolas, Menlo, Monaco, monospace;
+}
+body.theme-dark {
+    --bg-page:     #121210;
+    --bg-surface:  #1A1A17;
+    --bg-elevated: #242420;
+    --ink:         #F0EFE8;
+    --ink-soft:    #B8B7B0;
+    --ink-muted:   #A8A79F;
+    --rule:        rgba(240, 239, 232, 0.10);
+}
+* { box-sizing: border-box; }
+body {
+    font-family: var(--mono);
+    background: var(--bg-page);
+    color: var(--ink);
+    margin: 0;
+    padding: 32px 48px 80px;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
+}
+header.masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 18px;
+    margin-bottom: 32px;
+}
+header.masthead h1 {
+    font-size: 18px;
+    margin: 0;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+header.masthead h1 .dot {
+    color: var(--ok-green);
+    font-size: 1.5em;
+    line-height: 0;
+    vertical-align: -0.05em;
+    margin: 0 2px;
+}
+header.masthead .meta {
+    color: var(--ink-muted);
+    font-size: 11px;
+}
+button.theme-toggle {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+}
+button.theme-toggle:hover { color: var(--ok-green); border-color: var(--ok-green); }
+
+section.domain {
+    background: var(--bg-surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 24px 28px 28px;
+    margin-bottom: 28px;
+}
+section.domain > h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 6px 0;
+    letter-spacing: -0.01em;
+}
+section.domain > h2::before {
+    content: "❯ ";
+    color: var(--ink-muted);
+    font-weight: 400;
+}
+section.domain > p.lede {
+    margin: 0 0 24px 0;
+    color: var(--ink-soft);
+    font-size: 12px;
+}
+
+/* sample charts */
+.sample-charts {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+.sample-charts svg { width: 100%; height: auto; display: block; }
+
+/* swatch row */
+.swatch-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.swatch-row .sw {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 60px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    font-size: 11px;
+}
+.swatch-row .sw code { font-size: 12px; font-weight: 600; letter-spacing: -0.01em; }
+.swatch-row .sw span { font-size: 10px; opacity: 0.85; }
+
+/* delta E matrix */
+.matrix {
+    margin: 0;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px 16px;
+}
+.matrix figcaption {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+    text-transform: lowercase;
+}
+.matrix table.delta {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 10px;
+}
+.matrix table.delta th {
+    font-weight: 400;
+    color: var(--ink-muted);
+    padding: 2px 4px;
+    text-align: center;
+    vertical-align: bottom;
+    font-size: 9.5px;
+}
+.matrix table.delta th.rowlab {
+    text-align: right;
+    padding-right: 6px;
+    color: var(--ink-soft);
+}
+.matrix table.delta th.rot { white-space: nowrap; }
+.matrix table.delta th.rot span {
+    display: inline-block;
+    transform: rotate(-45deg) translateX(6px);
+    transform-origin: bottom left;
+}
+.matrix table.delta td {
+    padding: 4px 6px;
+    text-align: center;
+    font-size: 10px;
+    border: 1px solid rgba(26,26,23,0.04);
+    font-variant-numeric: tabular-nums;
+    color: var(--ink);
+}
+body.theme-dark .matrix table.delta td {
+    border-color: rgba(240,239,232,0.06);
+}
+.cell-ok   { background: rgba(0,158,115,0.22); }
+.cell-meh  { background: rgba(240,228,66,0.30); }
+.cell-warn { background: rgba(230,159,0,0.26); }
+.cell-bad  { background: rgba(213,94,0,0.30); }
+.diag      { background: var(--rule); }
+.wcag table.delta td { font-size: 10px; }
+.wcag table.delta td small {
+    display: block;
+    font-size: 9px;
+    opacity: 0.65;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+}
+
+.matrix-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 8px;
+}
+@media (max-width: 1100px) { .matrix-pair { grid-template-columns: 1fr; } }
+
+/* first-n summary */
+.first-n {
+    margin: 0 0 22px;
+    max-width: 460px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 12px 16px 14px;
+}
+.first-n figcaption {
+    font-size: 11px;
+    color: var(--ink-muted);
+    margin-bottom: 8px;
+}
+.first-n table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 11px;
+    font-variant-numeric: tabular-nums;
+}
+.first-n th {
+    text-align: left;
+    color: var(--ink-muted);
+    font-weight: 400;
+    padding: 3px 8px;
+    font-size: 10.5px;
+}
+.first-n td {
+    padding: 4px 8px;
+    text-align: center;
+}
+.first-n td.add { text-align: left; color: var(--ink-soft); }
+
+/* legend */
+.legend {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    font-size: 10px;
+    color: var(--ink-muted);
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+.legend i {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 4px;
+    border-radius: 2px;
+    vertical-align: -2px;
+}
+
+/* compact colormap rows */
+.cmap-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 220px;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--rule);
+}
+.cmap-row:last-child { border-bottom: none; }
+
+/* 2D cmap demo: peaks function rendered with the variant's colormap */
+.cmap-demo {
+    margin: 14px 0 4px;
+    padding: 0;
+}
+.cmap-demo figcaption {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-style: italic;
+}
+.cmap-demo-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+.cmap-demo-frame {
+    overflow: hidden;
+}
+.cmap-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+}
+.badge {
+    font-size: 10.5px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 2px 8px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+}
+.badge em {
+    font-style: normal;
+    color: var(--ink-muted);
+    font-size: 9.5px;
+}
+.gradient {
+    display: flex;
+    height: 22px;
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+}
+.gradient span { flex: 1; display: block; }
+
+/* hero mockups */
+.hero-mockup-stack {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 22px;
+}
+.hero-mockup {
+    border-radius: 8px;
+    padding: 24px 26px 18px;
+    font-family: var(--mono);
+    line-height: 1.4;
+    position: relative;
+}
+.hero-meta {
+    position: absolute;
+    top: 8px;
+    right: 12px;
+    font-size: 9px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    opacity: 0.55;
+    color: var(--badge-color);
+}
+.hero-eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 14px;
+}
+.hero-eyebrow .rule-line {
+    display: inline-block;
+    width: 18px;
+    height: 1.5px;
+}
+.hero-h1 {
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 0.95;
+    margin: 6px 0 0;
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.hero-h1 .word { white-space: nowrap; }
+.hero-h1 .dot {
+    display: inline-block;
+    width: 0.28em;
+    height: 0.28em;
+    border-radius: 50%;
+    vertical-align: 0.15em;
+    margin: 0 1px;
+}
+.hero-accent {
+    font-size: 22px;
+    font-style: italic;
+    margin: 2px 0 18px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.hero-subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.hero-prose {
+    font-size: 12px;
+    margin: 0 0 16px;
+}
+.hero-tagline {
+    font-size: 16px;
+    font-style: italic;
+    margin-bottom: 18px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    flex-wrap: wrap;
+}
+.hero-tagline .cursor {
+    display: inline-block;
+    width: 7px;
+    height: 16px;
+    vertical-align: -3px;
+    margin: 0 4px 0 2px;
+}
+.hero-ctas {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+}
+.cta-primary, .cta-hover {
+    font-size: 12px;
+    font-family: inherit;
+    border-radius: 4px;
+    padding: 7px 13px;
+    display: inline-block;
+}
+.cta-hover em { font-style: italic; opacity: 0.7; font-size: 10px; margin-left: 4px; }
+.cta-secondary { font-size: 11px; }
+.hero-cta-badges {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 10px;
+    color: var(--badge-color);
+    margin-bottom: 14px;
+}
+.hero-cta-badges span { display: flex; gap: 6px; align-items: center; }
+.hero-surfaces {
+    display: flex;
+    gap: 6px;
+    padding-top: 12px;
+    margin-top: 4px;
+}
+.surface-chip {
+    flex: 1;
+    border: 1px solid;
+    border-color: var(--badge-color);
+    border-radius: 3px;
+    padding: 6px 8px;
+    font-size: 9.5px;
+    letter-spacing: 0.02em;
+    opacity: 0.7;
+}
+
+.cbadge {
+    display: inline-block;
+    padding: 1px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    font-style: normal;
+    color: var(--badge-color);
+    font-variant-numeric: tabular-nums;
+    vertical-align: 1px;
+}
+.cb-ok   { background: rgba(0, 158, 115, 0.28); }
+.cb-warn { background: rgba(230, 159, 0, 0.34); }
+.cb-bad  { background: rgba(213, 94, 0, 0.42); }
+
+/* surface section layout */
+section.surface {
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+}
+section.surface h3 {
+    margin: 0 0 14px;
+    font-size: 13px;
+    font-weight: 600;
+}
+.surface-grid {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 24px;
+    margin-bottom: 18px;
+}
+
+/* notes footer */
+.notes {
+    color: var(--ink-muted);
+    font-size: 11px;
+    line-height: 1.7;
+    border-top: 1px solid var(--rule);
+    padding-top: 20px;
+}
+.notes code { color: var(--ink-soft); }
+
+/* Shared top nav used on baseline, grid, compare, and every variant page */
+.variant-nav {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 4px 0 24px;
+}
+.variant-nav a {
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    background: var(--bg-elevated);
+    color: var(--ink-soft);
+    text-decoration: none;
+    transition: color 60ms, border-color 60ms;
+}
+.variant-nav a.current {
+    background: var(--ok-green);
+    color: #ffffff;
+    border-color: var(--ok-green);
+    font-weight: 600;
+}
+.variant-nav a:hover:not(.current) {
+    color: var(--ok-green);
+    border-color: var(--ok-green);
+}
+
+.intro {
+    max-width: 720px;
+    margin-bottom: 32px;
+}
+.intro p { color: var(--ink-soft); font-size: 13px; line-height: 1.7; }
+.intro code { color: var(--ink-soft); }
+.variants-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 18px;
+}
+.variant-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 22px 24px 18px;
+    color: var(--ink);
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color 0.2s, transform 0.2s;
+}
+.variant-card:hover {
+    border-color: var(--ok-green);
+    transform: translateY(-2px);
+}
+.card-head { display: flex; align-items: baseline; gap: 12px; }
+.card-head .key {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--ok-green);
+    font-variant-numeric: tabular-nums;
+}
+.baseline-card {
+    background: var(--bg-elevated);
+    border-style: dashed;
+    border-color: var(--ink-muted);
+    grid-column: 1 / -1;
+}
+.baseline-card .card-head h3 em {
+    font-style: normal;
+    font-size: 11px;
+    color: var(--ink-muted);
+    font-weight: 400;
+    margin-left: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.baseline-card .card-head .key { color: var(--ink-muted); }
+.card-head h3 { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+.one-liner { margin: 0; font-size: 12px; color: var(--ink-soft); line-height: 1.55; }
+.strip { display: flex; gap: 6px; align-items: stretch; }
+.chips-big { display: flex; gap: 4px; flex: 1; }
+.chips-big .big { flex: 1; height: 56px; border-radius: 4px; }
+.chips-tail { display: flex; gap: 3px; align-items: stretch; }
+.chips-tail .small { width: 18px; height: 56px; border-radius: 3px; opacity: 0.85; }
+.metrics { display: flex; gap: 8px; flex-wrap: wrap; }
+.metric {
+    font-size: 10.5px;
+    background: var(--bg-elevated);
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    padding: 3px 8px;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+}
+.metric em { font-style: normal; color: var(--ink-muted); margin-right: 6px; }
+.metric.cell-ok   { background: rgba(0,158,115,0.22); color: var(--ink); }
+.metric.cell-meh  { background: rgba(240,228,66,0.30); color: var(--ink); }
+.metric.cell-warn { background: rgba(230,159,0,0.26); color: var(--ink); }
+.metric.cell-bad  { background: rgba(213,94,0,0.30); color: var(--ink); }
+.open {
+    margin-top: auto;
+    font-size: 11px;
+    color: var(--ok-green);
+    text-align: right;
+    letter-spacing: 0.04em;
+}
+</style>
+</head>
+<body>
+<header class="masthead">
+    <h1>any<span class="dot">.</span>plot() — palette variants (#5817)</h1>
+    <div class="meta">CAM02-UCS · Petroff target ≥ 15</div>
+    <button class="theme-toggle">◐ dark</button>
+</header>
+<nav class="variant-nav">
+    <a href="index.html" class="current">grid</a>
+    <a href="compare.html">compare</a>
+    <a href="../palette-analysis.html">★ baseline</a>
+    <a href="A-analogous.html">A · analogous</a>
+    <a href="B-triadic.html">B · triadic</a>
+    <a href="C-split-complementary.html">C · split-complementary</a>
+    <a href="D-balanced.html">D · balanced</a>
+    <a href="E-harmonic.html">E · harmonic</a>
+    <a href="F-okabe-anchored.html">F · okabe-anchored</a>
+</nav>
+
+<section class="intro">
+    <p>five candidate palettes inspired by Anselmoo's <code>dracula-palette</code> generator —
+    all anchored at brand green <code>#009E73</code>, generated by greedy max-min ΔE
+    selection in CAM02-UCS under normal vision + 3 CVD conditions (deuteranopia, protanopia,
+    tritanopia at 100% severity). all colours sit inside a paper-ink corridor
+    (J' ∈ [45, 72], C ∈ [22, 50]) — that's the lever that
+    keeps the palette away from caligo-style neon while staying perceptually uniform.</p>
+    <p>positions 1–4 in each variant are the "first-4 most beautiful" subset: the 3 colours
+    out of 6 that, together with brand green, maximise their internal min worst-CVD ΔE.
+    most plots use 2–3 series so this subset is in 95% of the visual surface.</p>
+</section>
+
+<div class="variants-grid">
+
+<a class="variant-card baseline-card" href="../palette-analysis.html">
+    <div class="card-head">
+        <span class="key">★</span>
+        <h3>baseline — okabe-ito <em>(current)</em></h3>
+    </div>
+    <p class="one-liner">today's plot palette. every variant below tries to clear this bar — the bar is the green×blue tritanopia collapse at ΔE 11.73.</p>
+    <div class="strip">
+        <div class="chips-big"><span class="big" style="background:#009E73" title="#009E73"></span><span class="big" style="background:#D55E00" title="#D55E00"></span><span class="big" style="background:#0072B2" title="#0072B2"></span><span class="big" style="background:#CC79A7" title="#CC79A7"></span></div>
+        <div class="chips-tail"><span class="small" style="background:#E69F00" title="#E69F00"></span><span class="small" style="background:#56B4E9" title="#56B4E9"></span><span class="small" style="background:#F0E442" title="#F0E442"></span></div>
+    </div>
+    <div class="metrics">
+        <span class="metric cell-meh"><em>first-4 worst-CVD</em>11.73</span>
+        <span class="metric"><em>all-pairs normal</em>20.76</span>
+    </div>
+    <div class="open">open diagnostic →</div>
+</a>
+
+
+<a class="variant-card" href="A-analogous.html">
+    <div class="card-head">
+        <span class="key">A</span>
+        <h3>analogous</h3>
+    </div>
+    <p class="one-liner">harmony over distinctness — hues cluster within ±90° of brand green.</p>
+    <div class="strip">
+        <div class="chips-big"><span class="big" style="background:#009E73" title="#009E73"></span><span class="big" style="background:#99B314" title="#99B314"></span><span class="big" style="background:#336B9F" title="#336B9F"></span><span class="big" style="background:#AB622B" title="#AB622B"></span></div>
+        <div class="chips-tail"><span class="small" style="background:#8D8BFC" title="#8D8BFC"></span><span class="small" style="background:#2ABCCD" title="#2ABCCD"></span><span class="small" style="background:#AF8B2E" title="#AF8B2E"></span></div>
+    </div>
+    <div class="metrics">
+        <span class="metric cell-ok"><em>first-4 worst-CVD</em>15.03</span>
+        <span class="metric"><em>all-pairs normal</em>16.11</span>
+    </div>
+    <div class="open">open →</div>
+</a>
+
+<a class="variant-card" href="B-triadic.html">
+    <div class="card-head">
+        <span class="key">B</span>
+        <h3>triadic</h3>
+    </div>
+    <p class="one-liner">three primaries 120° apart (green · purple · amber-red), plus four harmonic fillers (azure, magenta, lime, cyan).</p>
+    <div class="strip">
+        <div class="chips-big"><span class="big" style="background:#009E73" title="#009E73"></span><span class="big" style="background:#8518FD" title="#8518FD"></span><span class="big" style="background:#D2530F" title="#D2530F"></span><span class="big" style="background:#16B8F3" title="#16B8F3"></span></div>
+        <div class="chips-tail"><span class="small" style="background:#983F80" title="#983F80"></span><span class="small" style="background:#9CB146" title="#9CB146"></span><span class="small" style="background:#C18A10" title="#C18A10"></span></div>
+    </div>
+    <div class="metrics">
+        <span class="metric cell-ok"><em>first-4 worst-CVD</em>15.61</span>
+        <span class="metric"><em>all-pairs normal</em>17.61</span>
+    </div>
+    <div class="open">open →</div>
+</a>
+
+<a class="variant-card" href="C-split-complementary.html">
+    <div class="card-head">
+        <span class="key">C</span>
+        <h3>split-complementary</h3>
+    </div>
+    <p class="one-liner">green + the two flanking complements at +150° (magenta) and +210° (red), then four-quadrant fillers.</p>
+    <div class="strip">
+        <div class="chips-big"><span class="big" style="background:#009E73" title="#009E73"></span><span class="big" style="background:#9F04CA" title="#9F04CA"></span><span class="big" style="background:#BC012F" title="#BC012F"></span><span class="big" style="background:#CC9E21" title="#CC9E21"></span></div>
+        <div class="chips-tail"><span class="small" style="background:#90A4F5" title="#90A4F5"></span><span class="small" style="background:#689032" title="#689032"></span><span class="small" style="background:#22AFC8" title="#22AFC8"></span></div>
+    </div>
+    <div class="metrics">
+        <span class="metric cell-ok"><em>first-4 worst-CVD</em>17.84</span>
+        <span class="metric"><em>all-pairs normal</em>18.17</span>
+    </div>
+    <div class="open">open →</div>
+</a>
+
+<a class="variant-card" href="D-balanced.html">
+    <div class="card-head">
+        <span class="key">D</span>
+        <h3>balanced</h3>
+    </div>
+    <p class="one-liner">Petroff-style max-min ΔE optimisation under the paper-ink corridor — no hue rule.</p>
+    <div class="strip">
+        <div class="chips-big"><span class="big" style="background:#009E73" title="#009E73"></span><span class="big" style="background:#9418DB" title="#9418DB"></span><span class="big" style="background:#B71D27" title="#B71D27"></span><span class="big" style="background:#16B8F3" title="#16B8F3"></span></div>
+        <div class="chips-tail"><span class="small" style="background:#99B314" title="#99B314"></span><span class="small" style="background:#D359A7" title="#D359A7"></span><span class="small" style="background:#BA843E" title="#BA843E"></span></div>
+    </div>
+    <div class="metrics">
+        <span class="metric cell-ok"><em>first-4 worst-CVD</em>15.61</span>
+        <span class="metric"><em>all-pairs normal</em>24.00</span>
+    </div>
+    <div class="open">open →</div>
+</a>
+
+<a class="variant-card" href="E-harmonic.html">
+    <div class="card-head">
+        <span class="key">E</span>
+        <h3>harmonic</h3>
+    </div>
+    <p class="one-liner">same max-min ΔE selection as balanced, but with the paper-ink chroma corridor widened (C∈[22,60]) for more harmonic headroom.</p>
+    <div class="strip">
+        <div class="chips-big"><span class="big" style="background:#009E73" title="#009E73"></span><span class="big" style="background:#A40BF3" title="#A40BF3"></span><span class="big" style="background:#F81118" title="#F81118"></span><span class="big" style="background:#16B8F3" title="#16B8F3"></span></div>
+        <div class="chips-tail"><span class="small" style="background:#A3307E" title="#A3307E"></span><span class="small" style="background:#9EAF5B" title="#9EAF5B"></span><span class="small" style="background:#E29017" title="#E29017"></span></div>
+    </div>
+    <div class="metrics">
+        <span class="metric cell-ok"><em>first-4 worst-CVD</em>15.61</span>
+        <span class="metric"><em>all-pairs normal</em>21.35</span>
+    </div>
+    <div class="open">open →</div>
+</a>
+
+<a class="variant-card" href="F-okabe-anchored.html">
+    <div class="card-head">
+        <span class="key">F</span>
+        <h3>okabe-anchored</h3>
+    </div>
+    <p class="one-liner">Okabe-Ito's vermillion (#D55E00) seeded into the 7-hue pool alongside brand-green — both already paper-ink-compliant. reorder_first_4 then chooses top-4 freely; vermillion stays in if it earns the spot..</p>
+    <div class="strip">
+        <div class="chips-big"><span class="big" style="background:#009E73" title="#009E73"></span><span class="big" style="background:#D55E00" title="#D55E00"></span><span class="big" style="background:#8E20E2" title="#8E20E2"></span><span class="big" style="background:#16B8F3" title="#16B8F3"></span></div>
+        <div class="chips-tail"><span class="small" style="background:#954477" title="#954477"></span><span class="small" style="background:#9EAF5B" title="#9EAF5B"></span><span class="small" style="background:#6372AC" title="#6372AC"></span></div>
+    </div>
+    <div class="metrics">
+        <span class="metric cell-ok"><em>first-4 worst-CVD</em>15.61</span>
+        <span class="metric"><em>all-pairs normal</em>22.93</span>
+    </div>
+    <div class="open">open →</div>
+</a>
+
+</div>
+
+<footer class="notes">
+    <p>baseline (Okabe-Ito) first-4 worst-CVD min ΔE = 11.73
+    — the bar these variants try to clear. references: petroff (2021) arXiv:2107.02270,
+    okabe &amp; ito (2008), wong (2011), machado et al. (2009), dracula-palette generator
+    (anselmoo.github.io/dracula-palette).</p>
+</footer>
+
+<script>
+(function () {
+    var t = document.querySelector('button.theme-toggle');
+    if (!t) return;
+    t.addEventListener('click', function () {
+        document.body.classList.toggle('theme-dark');
+        t.textContent = document.body.classList.contains('theme-dark')
+            ? '☀ light'
+            : '◐ dark';
+    });
+})();
+</script>
+</body>
+</html>
