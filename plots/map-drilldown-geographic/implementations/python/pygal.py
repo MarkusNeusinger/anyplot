@@ -1,18 +1,46 @@
-""" pyplots.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
-Library: pygal 3.1.0 | Python 3.13.11
-Quality: 82/100 | Created: 2026-01-20
+Library: pygal | Python 3.13
+Quality: pending | Created: 2026-05-23
 """
 
 import json
+import os
+import sys
+
+
+# Remove this script's own directory from sys.path so 'pygal.py' doesn't shadow
+# the installed pygal package when the filename matches the package name.
+_here = os.path.dirname(os.path.abspath(__file__))
+sys.path = [p for p in sys.path if os.path.abspath(p or ".") != _here]
 
 import pygal
 from pygal.style import Style
 from pygal_maps_world.maps import World
 
 
-# Hierarchical sales data: World -> Country -> State -> City
-# Values represent regional sales in millions USD
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
+
+# anyplot_seq: #003D94 (low) → #009E73 (high), 5 equally-spaced stops
+# lerp("#003D94", "#009E73", i/4) for i in 0..4
+SEQ_COLORS = (
+    "#003D94",  # lowest — dark azure
+    "#00558C",
+    "#006D83",
+    "#00867B",
+    "#009E73",  # highest — brand green
+)
+
+# anyplot categorical palette (first series always #009E73)
+ANYPLOT_PALETTE = ("#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E")
+
+# Hierarchical sales data: World → Country → State → City (values in $M USD)
 hierarchy = {
     "world": {"name": "World", "parent": None, "children": ["us", "de", "jp", "br", "au"], "value": None},
     "us": {"name": "United States", "parent": "world", "value": 2100, "children": ["us_ca", "us_tx", "us_ny", "us_fl"]},
@@ -74,116 +102,106 @@ hierarchy = {
     "au_qld_gol": {"name": "Gold Coast", "parent": "au_qld", "value": 15, "children": []},
 }
 
-# Colorblind-friendly palette
-COLORS = ("#1B4F72", "#E67E22", "#148F77", "#6C3483", "#922B21", "#1E8449")
-
-# Custom style for large canvas with larger legend
-custom_style = Style(
-    background="white",
-    plot_background="white",
-    foreground="#333333",
-    foreground_strong="#111111",
-    foreground_subtle="#666666",
-    colors=COLORS,
-    title_font_size=72,
-    label_font_size=48,
-    legend_font_size=48,
+# PNG: static world choropleth (anyplot_seq palette, low→high = dark azure→brand green)
+png_style = Style(
+    background=PAGE_BG,
+    plot_background=PAGE_BG,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=SEQ_COLORS,
+    title_font_size=66,
+    label_font_size=56,
     major_label_font_size=44,
-    value_font_size=40,
-    tooltip_font_size=40,
-    no_data_font_size=36,
+    legend_font_size=44,
+    value_font_size=36,
+    stroke_width=2.5,
 )
 
-# PNG map - world level view showing sales tiers by region
 png_map = World(
-    style=custom_style,
-    width=4800,
-    height=2700,
-    title="map-drilldown-geographic · pygal · pyplots.ai",
+    style=png_style,
+    width=3200,
+    height=1800,
+    title="map-drilldown-geographic · python · pygal · anyplot.ai",
+    x_title="World Sales Overview ($M) — Open HTML for Interactive Drill-Down",
     show_legend=True,
     legend_at_bottom=True,
-    legend_at_bottom_columns=4,
-    legend_box_size=50,
+    legend_at_bottom_columns=5,
+    legend_box_size=40,
     print_values=False,
     print_labels=False,
     margin=60,
-    margin_bottom=220,
+    margin_bottom=140,
     explicit_size=True,
 )
 
-# Group countries by sales tier for visual hierarchy
-tier1 = {"us": hierarchy["us"]["value"]}
-tier2 = {"jp": hierarchy["jp"]["value"]}
-tier3 = {"de": hierarchy["de"]["value"], "br": hierarchy["br"]["value"]}
-tier4 = {"au": hierarchy["au"]["value"]}
+# Add countries ordered lowest→highest so SEQ_COLORS[0..4] map correctly
+png_map.add("Australia ($380M)", {"au": hierarchy["au"]["value"]})
+png_map.add("Brazil ($520M)", {"br": hierarchy["br"]["value"]})
+png_map.add("Germany ($580M)", {"de": hierarchy["de"]["value"]})
+png_map.add("Japan ($850M)", {"jp": hierarchy["jp"]["value"]})
+png_map.add("United States ($2,100M)", {"us": hierarchy["us"]["value"]})
 
-png_map.add(">$1B", tier1)
-png_map.add("$500M-1B", tier2)
-png_map.add("$300-500M", tier3)
-png_map.add("<$300M", tier4)
+png_map.render_to_png(f"plot-{THEME}.png")
 
-# Breadcrumb showing current level (static PNG overview)
-png_map.x_title = "Static World Overview · Open HTML for Interactive Drill-Down"
-
-png_map.render_to_png("plot.png")
-
-# HTML interactive version - world map SVG
-html_style = Style(
+# HTML: interactive drill-down with theme-adaptive colours
+html_map_style = Style(
     background="transparent",
     plot_background="transparent",
-    foreground="#333333",
-    foreground_strong="#111111",
-    foreground_subtle="#666666",
-    colors=COLORS,
-    title_font_size=24,
-    label_font_size=16,
-    legend_font_size=16,
-    major_label_font_size=14,
-    value_font_size=14,
-    tooltip_font_size=14,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=SEQ_COLORS,
+    title_font_size=20,
+    label_font_size=14,
+    major_label_font_size=12,
+    legend_font_size=14,
+    value_font_size=12,
 )
 
 world_map = World(
-    style=html_style,
-    width=800,
+    style=html_map_style,
+    width=820,
     height=500,
     show_legend=True,
     legend_at_bottom=True,
     legend_at_bottom_columns=5,
-    legend_box_size=20,
+    legend_box_size=16,
     print_values=False,
     print_labels=False,
     explicit_size=True,
 )
-countries_data = {c: hierarchy[c]["value"] for c in hierarchy["world"]["children"]}
-world_map.add("Sales ($M)", countries_data)
+world_map.add("Australia ($380M)", {"au": hierarchy["au"]["value"]})
+world_map.add("Brazil ($520M)", {"br": hierarchy["br"]["value"]})
+world_map.add("Germany ($580M)", {"de": hierarchy["de"]["value"]})
+world_map.add("Japan ($850M)", {"jp": hierarchy["jp"]["value"]})
+world_map.add("United States ($2,100M)", {"us": hierarchy["us"]["value"]})
 world_svg = world_map.render(is_unicode=True)
 
-# Generate bar charts for each drillable node
-svg_data = {"world": world_svg}
-bar_style = Style(
+# Bar charts for each drillable node (sub-country levels)
+html_bar_style = Style(
     background="transparent",
     plot_background="transparent",
-    foreground="#333333",
-    foreground_strong="#333333",
-    foreground_subtle="#666666",
-    colors=COLORS,
-    title_font_size=20,
-    label_font_size=14,
-    legend_font_size=14,
+    foreground=INK,
+    foreground_strong=INK,
+    foreground_subtle=INK_MUTED,
+    colors=ANYPLOT_PALETTE,
+    title_font_size=18,
+    label_font_size=13,
+    major_label_font_size=12,
     value_font_size=12,
-    tooltip_font_size=14,
+    legend_font_size=13,
 )
 
+svg_data = {"world": world_svg}
 for node_id, node_data in hierarchy.items():
     if node_id != "world" and node_data.get("children"):
         children_ids = node_data["children"]
         if children_ids:
             chart = pygal.Bar(
-                style=bar_style,
-                width=800,
-                height=450,
-                legend_at_bottom=False,
+                style=html_bar_style,
+                width=820,
+                height=440,
                 show_legend=False,
                 show_y_guides=True,
                 y_title="Sales ($M)",
@@ -193,156 +211,170 @@ for node_id, node_data in hierarchy.items():
                 human_readable=True,
                 explicit_size=True,
             )
-            names = [hierarchy[cid]["name"] for cid in children_ids]
-            values = [hierarchy[cid]["value"] for cid in children_ids]
-            chart.add("Sales", values)
-            chart.x_labels = names
+            chart.add("Sales", [hierarchy[cid]["value"] for cid in children_ids])
+            chart.x_labels = [hierarchy[cid]["name"] for cid in children_ids]
             svg_data[node_id] = chart.render(is_unicode=True)
 
-# Build JSON for JavaScript using json module
 hierarchy_json = json.dumps(hierarchy)
 
-# Build HTML content
-html_content = """<!DOCTYPE html>
+# Theme-adaptive CSS tokens for HTML
+css_bg = PAGE_BG
+css_elevated = ELEVATED_BG
+css_ink = INK
+css_ink_soft = INK_SOFT
+css_brand = "#009E73"
+css_brand_dark = "#007A59"
+
+html_content = f"""<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
-    <title>map-drilldown-geographic · pygal · pyplots.ai</title>
+    <title>map-drilldown-geographic · python · pygal · anyplot.ai</title>
     <style>
-        body {
+        body {{
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 20px;
-            background: #f5f5f5;
+            background: {css_bg};
+            color: {css_ink};
             display: flex;
             flex-direction: column;
             align-items: center;
-        }
-        .container {
-            background: white;
+        }}
+        .container {{
+            background: {css_elevated};
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.12);
             padding: 30px;
-            max-width: 950px;
+            max-width: 980px;
             width: 100%;
-        }
-        h1 {
-            color: #333;
+        }}
+        h1 {{
+            color: {css_ink};
             text-align: center;
-            margin: 0 0 10px 0;
-            font-size: 24px;
-        }
-        .breadcrumb {
-            background: #1B4F72;
-            color: white;
-            padding: 14px 20px;
+            margin: 0 0 16px 0;
+            font-size: 22px;
+            font-weight: 600;
+        }}
+        .breadcrumb {{
+            background: {css_brand};
+            color: #fff;
+            padding: 12px 18px;
             border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 18px;
+            margin-bottom: 16px;
+            font-size: 16px;
             display: flex;
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
-        }
-        .breadcrumb span {
+        }}
+        .breadcrumb span {{
             cursor: pointer;
-            padding: 2px 6px;
+            padding: 2px 5px;
             border-radius: 4px;
-        }
-        .breadcrumb span:hover:not(.current):not(.separator) {
-            background: rgba(255,255,255,0.2);
+        }}
+        .breadcrumb span:hover:not(.current):not(.sep) {{
+            background: rgba(255,255,255,0.25);
             text-decoration: underline;
-        }
-        .breadcrumb .separator { opacity: 0.7; cursor: default; }
-        .breadcrumb .current { font-weight: bold; cursor: default; background: rgba(255,255,255,0.15); }
-        .back-btn {
-            background: #E67E22;
-            color: white;
+        }}
+        .breadcrumb .sep {{ opacity: 0.7; cursor: default; }}
+        .breadcrumb .current {{
+            font-weight: 700;
+            cursor: default;
+            background: rgba(255,255,255,0.2);
+        }}
+        .back-btn {{
+            background: {css_brand_dark};
+            color: #fff;
             border: none;
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
-            font-weight: bold;
+            font-weight: 600;
             transition: background 0.2s;
-        }
-        .back-btn:hover:not(:disabled) { background: #D35400; }
-        .back-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        #chart-container {
+            white-space: nowrap;
+        }}
+        .back-btn:hover:not(:disabled) {{ background: #005c42; }}
+        .back-btn:disabled {{ opacity: 0.4; cursor: not-allowed; }}
+        .level-info {{
+            text-align: center;
+            color: {css_ink_soft};
+            font-size: 14px;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }}
+        #chart-container {{
             width: 100%;
-            min-height: 450px;
+            min-height: 440px;
             display: flex;
             justify-content: center;
             align-items: center;
-        }
-        #chart-container svg { max-width: 100%; height: auto; }
-        .hint {
+        }}
+        #chart-container svg {{ max-width: 100%; height: auto; }}
+        .hint {{
             text-align: center;
-            color: #666;
-            margin-top: 15px;
-            font-size: 14px;
-            padding: 10px;
-            background: #f8f9fa;
+            color: {css_ink_soft};
+            margin-top: 12px;
+            font-size: 13px;
+            padding: 8px 12px;
+            background: {css_bg};
             border-radius: 6px;
-        }
-        .level-info {
-            text-align: center;
-            color: #1B4F72;
-            font-size: 16px;
-            margin-bottom: 15px;
-            font-weight: 500;
-        }
-        .country, .bar, rect.rect { cursor: pointer; transition: opacity 0.2s; }
-        .country:hover, .bar:hover, rect.rect:hover { opacity: 0.7; }
+            border: 1px solid rgba(128,128,128,0.15);
+        }}
+        .country, .bar, rect.rect {{ cursor: pointer; transition: opacity 0.2s; }}
+        .country:hover, .bar:hover, rect.rect:hover {{ opacity: 0.72; }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>map-drilldown-geographic · pygal · pyplots.ai</h1>
+        <h1>map-drilldown-geographic · python · pygal · anyplot.ai</h1>
         <div class="breadcrumb">
             <button class="back-btn" id="backBtn" disabled>← Back</button>
             <div id="breadcrumb-path"><span class="current">World</span></div>
         </div>
-        <div class="level-info" id="level-info">World View - Sales by Country</div>
+        <div class="level-info" id="level-info">World View — Sales by Country</div>
         <div id="chart-container"></div>
-        <p class="hint" id="hint">Click on a country to drill down to states/provinces</p>
+        <p class="hint" id="hint">Click a highlighted country to drill down to states/provinces</p>
     </div>
     <script>
-        const hierarchy = """
-html_content += hierarchy_json
-html_content += """;
-        const svgCharts = {
+        const hierarchy = {hierarchy_json};
+        const svgCharts = {{
 """
+
 for level_id, svg_content in svg_data.items():
-    escaped_svg = svg_content.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
-    html_content += f'            "{level_id}": `{escaped_svg}`,\n'
+    escaped = svg_content.replace("\\", "\\\\").replace("`", "\\`").replace("${", "\\${")
+    html_content += f'            "{level_id}": `{escaped}`,\n'
+
 html_content += """        };
         let currentLevel = 'world';
         let historyStack = [];
+
         function getBreadcrumbPath() {
             const path = [];
-            let current = currentLevel;
-            while (current && hierarchy[current]) {
-                path.unshift({ id: current, name: hierarchy[current].name });
-                current = hierarchy[current].parent;
+            let cur = currentLevel;
+            while (cur && hierarchy[cur]) {
+                path.unshift({ id: cur, name: hierarchy[cur].name });
+                cur = hierarchy[cur].parent;
             }
             return path;
         }
-        function getLevelType(id) {
+
+        function getLevelLabel(id) {
             const depth = getBreadcrumbPath().length;
-            if (id === 'world') return 'World View - Sales by Country';
-            if (depth === 2) return 'Country Level - Sales by State/Province';
-            if (depth === 3) return 'State Level - Sales by City';
-            return 'City Level - Detailed Sales';
+            if (id === 'world') return 'World View — Sales by Country';
+            if (depth === 2) return 'Country Level — Sales by State/Province';
+            if (depth === 3) return 'State Level — Sales by City';
+            return 'City Level — Detailed Sales';
         }
+
         function updateBreadcrumb() {
             const pathDiv = document.getElementById('breadcrumb-path');
             const backBtn = document.getElementById('backBtn');
-            const levelInfo = document.getElementById('level-info');
             const path = getBreadcrumbPath();
             let html = '';
-            path.forEach((item, index) => {
-                if (index > 0) html += '<span class="separator"> > </span>';
+            path.forEach((item, i) => {
+                if (i > 0) html += '<span class="sep"> › </span>';
                 if (item.id === currentLevel) {
                     html += `<span class="current">${item.name}</span>`;
                 } else {
@@ -351,51 +383,52 @@ html_content += """        };
             });
             pathDiv.innerHTML = html;
             backBtn.disabled = currentLevel === 'world';
-            levelInfo.textContent = getLevelType(currentLevel);
+            document.getElementById('level-info').textContent = getLevelLabel(currentLevel);
         }
+
         function renderChart(levelId) {
             const container = document.getElementById('chart-container');
             const hint = document.getElementById('hint');
             const levelData = hierarchy[levelId];
-            if (svgCharts[levelId]) {
-                container.innerHTML = svgCharts[levelId];
-                if (levelId === 'world') {
-                    const countries = container.querySelectorAll('.country');
-                    countries.forEach(country => {
-                        const countryClass = Array.from(country.classList).find(c => c !== 'country' && c !== 'reactive');
-                        if (countryClass && hierarchy[countryClass] && hierarchy[countryClass].children.length > 0) {
-                            country.style.cursor = 'pointer';
-                            country.onclick = () => drillDown(countryClass);
-                        }
-                    });
-                    hint.textContent = 'Click on a highlighted country to drill down to states/provinces';
-                } else {
-                    const children = levelData.children || [];
-                    const bars = container.querySelectorAll('.bar, rect.rect');
-                    let barIndex = 0;
-                    bars.forEach((bar) => {
-                        if (barIndex < children.length) {
-                            const childId = children[barIndex];
-                            const childData = hierarchy[childId];
-                            if (childData && childData.children && childData.children.length > 0) {
-                                bar.style.cursor = 'pointer';
-                                bar.onclick = () => drillDown(childId);
-                            }
-                            barIndex++;
-                        }
-                    });
-                    const hasDrillable = children.some(cid =>
-                        hierarchy[cid] && hierarchy[cid].children && hierarchy[cid].children.length > 0
-                    );
-                    hint.textContent = hasDrillable
-                        ? 'Click on a bar to drill down further'
-                        : 'Leaf level reached - no further drill-down available';
-                }
-            } else {
-                container.innerHTML = '<p style="text-align:center;color:#666;padding:50px;">No detailed view</p>';
+            if (!svgCharts[levelId]) {
+                container.innerHTML = '<p style="text-align:center;padding:50px;opacity:0.5;">No detail available</p>';
                 hint.textContent = '';
+                return;
+            }
+            container.innerHTML = svgCharts[levelId];
+            if (levelId === 'world') {
+                container.querySelectorAll('.country').forEach(el => {
+                    const cls = Array.from(el.classList).find(c => c !== 'country' && c !== 'reactive');
+                    if (cls && hierarchy[cls] && hierarchy[cls].children.length > 0) {
+                        el.style.cursor = 'pointer';
+                        el.onclick = () => drillDown(cls);
+                    }
+                });
+                hint.textContent = 'Click a highlighted country to drill down to states/provinces';
+            } else {
+                const children = levelData.children || [];
+                const bars = container.querySelectorAll('.bar, rect.rect');
+                let idx = 0;
+                bars.forEach(bar => {
+                    if (idx < children.length) {
+                        const childId = children[idx];
+                        const childData = hierarchy[childId];
+                        if (childData && childData.children && childData.children.length > 0) {
+                            bar.style.cursor = 'pointer';
+                            bar.onclick = () => drillDown(childId);
+                        }
+                        idx++;
+                    }
+                });
+                const hasDrillable = children.some(cid =>
+                    hierarchy[cid] && hierarchy[cid].children && hierarchy[cid].children.length > 0
+                );
+                hint.textContent = hasDrillable
+                    ? 'Click a bar to drill down further'
+                    : 'Leaf level — no further drill-down available';
             }
         }
+
         function drillDown(id) {
             if (!hierarchy[id] || !svgCharts[id]) return;
             historyStack.push(currentLevel);
@@ -403,6 +436,7 @@ html_content += """        };
             updateBreadcrumb();
             renderChart(currentLevel);
         }
+
         function goBack() {
             if (historyStack.length > 0) {
                 currentLevel = historyStack.pop();
@@ -410,18 +444,20 @@ html_content += """        };
                 renderChart(currentLevel);
             }
         }
+
         function navigateTo(id) {
             const newStack = [];
-            let current = id;
-            while (current && hierarchy[current] && hierarchy[current].parent) {
-                newStack.unshift(hierarchy[current].parent);
-                current = hierarchy[current].parent;
+            let cur = id;
+            while (cur && hierarchy[cur] && hierarchy[cur].parent) {
+                newStack.unshift(hierarchy[cur].parent);
+                cur = hierarchy[cur].parent;
             }
             historyStack = newStack.slice(0, -1);
             currentLevel = id;
             updateBreadcrumb();
             renderChart(currentLevel);
         }
+
         document.getElementById('backBtn').addEventListener('click', goBack);
         updateBreadcrumb();
         renderChart('world');
@@ -429,5 +465,5 @@ html_content += """        };
 </body>
 </html>"""
 
-with open("plot.html", "w") as f:
+with open(f"plot-{THEME}.html", "w") as f:
     f.write(html_content)
