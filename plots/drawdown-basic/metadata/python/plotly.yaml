@@ -1,157 +1,204 @@
 library: plotly
+language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:56:06Z'
-updated: '2026-01-20T11:58:43Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21170482389
+updated: '2026-05-23T11:01:00Z'
+generated_by: claude-sonnet
+workflow_run: 26330568324
 issue: 3752
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/plotly/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotly/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of all spec requirements including max drawdown annotation,
-    recovery points, and statistics box
-  - Clean, readable code following KISS principles
-  - Good use of Plotly features like hover templates and annotation boxes
-  - Appropriate color scheme with red for losses and green for recovery
-  - Statistics panel provides useful context
+  - 'Semantic color exception correctly applied: LOSS_RED (#B71D27) for drawdown,
+    RECOVERY_GREEN (#009E73) for recovery markers — both from the anyplot palette'
+  - 'All five required spec features present: drawdown calculation, semi-transparent
+    fill, max drawdown marker+annotation, recovery point markers, and statistics callout
+    box'
+  - 'Idiomatic Plotly patterns: fill=''tozeroy'' for area chart, hovertemplate for
+    interactive hover, HTML export alongside PNG'
+  - 'Perfect theme-adaptive chrome: all text and chrome elements use INK/INK_SOFT/ELEVATED_BG/GRID
+    tokens; both renders are clearly readable'
+  - Clean KISS code structure with np.random.seed(42) for reproducibility; correct
+    canvas (3200×1800) with autosize=False
   weaknesses:
-  - Statistics box on the right edge appears slightly cut off (days truncated)
-  - Recovery point markers (green triangles) could be slightly larger for better visibility
-  - Could leverage more Plotly-specific interactive features like rangeslider for
-    time series navigation
-  image_description: 'The plot displays a drawdown chart showing percentage decline
-    from peak value over time (approximately 2 years from Jan 2022 to late 2023).
-    The drawdown area is filled with a semi-transparent red/pink color (rgba). A clear
-    zero baseline is shown as a dark horizontal line at 0%. The title "drawdown-basic
-    · plotly · pyplots.ai" is centered at the top. The Y-axis shows "Drawdown (%)"
-    with percentage ticks from 0% to -60%. The X-axis shows "Date" with quarterly
-    time labels. A red diamond marker annotates the maximum drawdown point at -63.4%
-    around April 2023. Green triangle markers at the zero line indicate recovery points
-    (new highs). A statistics box on the right displays: Max Drawdown: -63.44%, Max
-    Duration: 490 days, Recovery Points: 3. The legend at the top shows "Drawdown"
-    (red line) and "Recovery (New High)" (green triangle).'
+  - Max DD annotation text uses hardcoded LOSS_RED (#B71D27) in both themes — in the
+    dark render, dark red on near-black (#1A1A17) produces insufficient contrast (estimated
+    ~2.5:1); the label is visible but borderline. Use INK_SOFT for the textfont.color
+    in dark mode instead, or lighten the label to a brighter red variant that remains
+    readable on dark surfaces.
+  - 'DE-01: Aesthetic sophistication is above defaults (semantic colors, stats box)
+    but does not yet reach ''strong design'' — consider removing top/right spines
+    explicitly via fig.update_xaxes(showline=True, mirror=False) / fig.update_yaxes(showline=True,
+    mirror=False), and adding a subtle visual accent (e.g., faint shaded band for
+    the max-drawdown period) to elevate visual polish toward publication-ready.'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white.
+      Chrome: Title "drawdown-basic · python · plotly · anyplot.ai" centered in dark ink, readable. Y-axis "Drawdown (%)" and X-axis "Date" labels in dark ink. Tick labels (0%, -10% ... -60%; Jan 2022 ... Oct 2023) in INK_SOFT, fully readable. Horizontal legend above plot (Drawdown red line + Recovery green triangle) with ELEVATED_BG box, readable. Stats annotation box (bottom-left) with "Drawdown Statistics / Max Drawdown: -63.44% / Max Duration: 490 days / Recovery Points: 3" in INK_SOFT on ELEVATED_BG — readable.
+      Data: Drawdown fill area in semi-transparent red (rgba(183,29,39,0.30)) from zero line downward, with LOSS_RED (#B71D27) line on top — clearly visible and prominent. Max drawdown diamond marker at ~Apr 2023 (-63.4%) labeled "Max DD: -63.4%" in LOSS_RED text. Recovery green triangles (#009E73) clustered at Jan 2022 near y=0. Zero reference line at 0% prominently drawn in INK_SOFT (zerolinewidth=2). Grid lines subtle (~10% opacity).
+      Legibility verdict: PASS — all text clearly readable against the light background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black.
+      Chrome: Title in light cream (#F0EFE8, INK in dark mode) — readable. Axis labels and tick labels in #B8B7B0 (INK_SOFT in dark) — readable against dark background. Legend box with ELEVATED_BG (#242420) fill and light border — visible. Stats annotation box with light text on dark elevated background — readable. Zero line in INK_SOFT (light) — clearly visible at y=0.
+      Data: Fill area in same semi-transparent red over dark background — becomes a dark reddish area, visible though less vibrant than light render. LOSS_RED line on top clearly visible. RECOVERY_GREEN (#009E73) markers identical to light render. Max DD diamond and "Max DD: -63.4%" annotation in LOSS_RED (#B71D27) — text is borderline contrast on near-black background (estimated ~2.5:1), marginally readable. Data colors identical to light render (palette positions unchanged between themes).
+      Legibility verdict: PASS with minor concern — all chrome text clearly readable; the "Max DD: -63.4%" annotation label in LOSS_RED has reduced contrast on the dark background. Not unreadable, but below ideal contrast ratio.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and annotations all clearly readable
-          at full resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels well-spaced
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Drawdown line and fill clearly visible; recovery markers could be
-          slightly larger
+        comment: 'All font sizes explicitly set (title 16px, axis labels 12px, ticks
+          10px, legend 10px). All chrome text readable in both renders. Minor: Max
+          DD annotation uses hardcoded LOSS_RED (#B71D27) in dark mode giving ~2.5:1
+          contrast on near-black — visible but borderline.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping text elements in either render. Stats box and Max
+          DD annotation placed in non-overlapping positions.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: Drawdown line (width=2), fill area, recovery triangles (size=16),
+          and max DD diamond (size=14) all clearly visible in both renders.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Red/pink for drawdown, green for recovery, good contrast
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Good overall layout but statistics box is slightly cut off on the
-          right edge
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Drawdown (%) and Date'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Anyplot palette used (colorblind-safe). Red/green distinction reinforced
+          by shape (line/fill vs triangles vs diamond marker), not hue alone.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 canvas (width=800, height=450, scale=4, autosize=False).
+          Margins l=80,r=40,t=80,b=60 — balanced. No content clipped. Plot fills canvas
+          well.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend well-placed; grid could be slightly more subtle
+        comment: 'Y-axis: ''Drawdown (%)'' with units and ticksuffix=''%''. X-axis:
+          ''Date''. Title: correct spec format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied: loss→red (#B71D27, palette
+          pos 3), recovery→green (#009E73, palette pos 1). Backgrounds #FAF8F1/#1A1A17.
+          All chrome theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above well-configured defaults: semantic color assignment with purpose,
+          stats annotation callout, prominent zeroline as reference, themed backgrounds.
+          Not yet ''strong design'' (no custom fonts, no exceptional visual hierarchy
+          beyond spec requirements).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Some refinement: grid at 10% opacity (subtle), zerolinewidth=2 as
+          prominent reference baseline, no top/right spines (plotly default with linecolor
+          only on axis sides), generous margins. Not polished to full 6 (e.g., no
+          explicit spine removal code, standard grid).'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good hierarchy: fill area emphasizes loss depth/duration, max DD
+          diamond+annotation creates focal point, recovery markers provide contrast,
+          stats box gives quantitative context. Viewer immediately sees the key insight.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct drawdown chart with filled area below zero
+        comment: 'Correct drawdown chart: filled area below zero line, line trace
+          on top, zero baseline reference.'
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, drawdown percentage on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: filled area, zero baseline, max drawdown
-          annotation, recovery points, statistics display'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features: drawdown calculation from running_max, semi-transparent
+          fill, max DD marker+annotation, recovery point markers, statistics annotation
+          box, visible zeroline.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible, appropriate axis scaling
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=date (500 business days), Y=drawdown percentage. All data visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend accurately describes Drawdown and Recovery series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: drawdown-basic · plotly · pyplots.ai'
+        comment: 'Title: ''drawdown-basic · python · plotly · anyplot.ai'' — exact
+          required format. Legend: ''Drawdown'' and ''Recovery (New High)'' — descriptive
+          and accurate.'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows drawdown periods, recovery points, max drawdown; demonstrates
-          multiple market corrections
+        comment: 'Shows all drawdown features: extended loss period, multiple drawdown
+          phases, recovery points, peak identification, running maximum.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock price simulation with market corrections - plausible
-          financial scenario
+        comment: Simulated stock price with daily returns (mean=0.03%, std=1.5%) over
+          500 business days (2022-2023). Realistic for a volatile equity. Neutral
+          financial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Good scale for drawdown percentages, though -63% drawdown is quite
-          severe but not unrealistic
+        comment: Starting price 100 (indexed). Daily returns distribution realistic.
+          Max drawdown -63.44% over 490 days plausible for volatile equity in bear
+          market.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,42 +206,56 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear flow: imports → data → plot → save'
+        comment: 'Linear: imports → sys.path fix → data generation → drawdown calc
+          → plot → save. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only numpy, pandas, plotly used
+        comment: os, sys, numpy, pandas, plotly.graph_objects — all used. No unused
+          imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean Plotly patterns. np.roll() for recovery point detection is
+          elegant. No fake functionality.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotly API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but also plot.html (minor inconsistency)
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png (write_image, width=800, height=450, scale=4)
+          and plot-{THEME}.html (write_html). Correct for interactive library.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: 'Expertly uses Plotly patterns: fill=''tozeroy'' for area chart,
+          hovertemplate for interactive hover, add_annotation with paper coordinates
+          for callout, update_layout with all standard keys.'
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses go.Scatter with fill, add_hline, annotations box, hover templates;
-          could leverage more Plotly-specific features like rangeslider
+        comment: 'Uses Plotly-distinctive features: fill=''tozeroy'' (native area
+          fill abstraction), hovertemplate for interactive hover (real interactivity,
+          not fake), HTML export alongside PNG. Not exceptional (e.g., no range slider,
+          no custom modebar).'
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -205,8 +266,6 @@ impl_tags:
   patterns:
   - data-generation
   dataprep:
-  - cumulative-sum
   - time-series
   styling:
   - alpha-blending
-  - grid-styling
