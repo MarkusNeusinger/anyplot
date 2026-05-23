@@ -292,9 +292,14 @@ jobs:
           # Create labels if they don't exist
           gh label create "impl:${LIBRARY}:done" --color "0e8a16" --description "${LIBRARY} implementation merged" 2>/dev/null || true
 
-          # Remove trigger and pending, add done
+          # Remove trigger, pending, and any stale failed label from earlier attempts,
+          # then add done. The :failed label is added by impl-generate.yml when an
+          # attempt errors out (e.g. environment setup failure); a later successful
+          # retry merges via this workflow but historically didn't clean up :failed,
+          # leaving the issue with both :done and :failed for the same library.
           gh issue edit "$ISSUE" --remove-label "generate:${LIBRARY}" 2>/dev/null || true
           gh issue edit "$ISSUE" --remove-label "impl:${LIBRARY}:pending" 2>/dev/null || true
+          gh issue edit "$ISSUE" --remove-label "impl:${LIBRARY}:failed" 2>/dev/null || true
           gh issue edit "$ISSUE" --add-label "impl:${LIBRARY}:done"
 
       - name: Post success to issue
