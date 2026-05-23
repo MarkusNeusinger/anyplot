@@ -1,9 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 drawdown-basic: Drawdown Chart
-Library: highcharts unknown | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: highcharts unknown | Python 3.13.13
+Quality: 91/100 | Updated: 2026-05-23
 """
 
+import os
 import tempfile
 import time
 import urllib.request
@@ -13,29 +14,41 @@ import numpy as np
 import pandas as pd
 from highcharts_core.chart import Chart
 from highcharts_core.options import HighchartsOptions
+from PIL import Image
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
-# Data - Generate simulated stock price data
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# Drawdown uses red — semantic exception (loss/down) → anyplot palette position 3
+DRAWDOWN_COLOR = "#B71D27"
+
+# Data — simulated portfolio (geometric Brownian motion)
 np.random.seed(42)
 n_days = 500
 dates = pd.date_range("2022-01-01", periods=n_days, freq="B")
 
-# Simulate price with drift and volatility (geometric Brownian motion-like)
 returns = np.random.normal(0.0003, 0.015, n_days)
 prices = 100 * np.cumprod(1 + returns)
 
 # Calculate drawdown
 running_max = np.maximum.accumulate(prices)
-drawdown = (prices - running_max) / running_max * 100  # Percentage drawdown (negative values)
+drawdown = (prices - running_max) / running_max * 100
 
 # Find maximum drawdown
 max_dd_idx = np.argmin(drawdown)
 max_dd_value = drawdown[max_dd_idx]
 max_dd_date = dates[max_dd_idx]
+max_dd_timestamp = int(max_dd_date.timestamp() * 1000)
 
-# Find recovery point (if any)
+# Find recovery point after maximum drawdown
 recovery_indices = np.where(drawdown[max_dd_idx:] == 0)[0]
 if len(recovery_indices) > 0:
     recovery_idx = max_dd_idx + recovery_indices[0]
@@ -44,67 +57,80 @@ if len(recovery_indices) > 0:
 else:
     recovery_days = None
 
-# Prepare data for Highcharts (timestamp in ms, value)
+# Prepare Highcharts data (timestamp in ms, value)
 data_points = [[int(d.timestamp() * 1000), round(float(dd), 2)] for d, dd in zip(dates, drawdown, strict=True)]
 
-# Create chart
+# Chart
 chart = Chart(container="container")
 chart.options = HighchartsOptions()
 
-# Chart configuration
 chart.options.chart = {
     "type": "area",
-    "width": 4800,
-    "height": 2700,
-    "backgroundColor": "#ffffff",
+    "width": 3200,
+    "height": 1800,
+    "backgroundColor": PAGE_BG,
+    "style": {"color": INK},
     "spacingTop": 60,
     "spacingBottom": 100,
     "spacingLeft": 80,
     "spacingRight": 80,
 }
 
-# Title with stats
 max_dd_str = f"Max Drawdown: {max_dd_value:.1f}%"
-if recovery_days:
-    stats_str = f"{max_dd_str} | Recovery: {recovery_days} days"
-else:
-    stats_str = f"{max_dd_str} | Not Recovered"
+stats_str = f"{max_dd_str} | Recovery: {recovery_days} days" if recovery_days else f"{max_dd_str} | Not Recovered"
 
 chart.options.title = {
-    "text": "drawdown-basic \u00b7 highcharts \u00b7 pyplots.ai",
-    "style": {"fontSize": "56px", "fontWeight": "bold"},
+    "text": "drawdown-basic · python · highcharts · anyplot.ai",
+    "style": {"fontSize": "66px", "fontWeight": "bold", "color": INK},
     "margin": 40,
 }
 
-chart.options.subtitle = {"text": stats_str, "style": {"fontSize": "36px", "color": "#666666"}}
+chart.options.subtitle = {"text": stats_str, "style": {"fontSize": "44px", "color": INK_SOFT}}
 
-# X-axis (datetime)
 chart.options.x_axis = {
     "type": "datetime",
-    "title": {"text": "Date", "style": {"fontSize": "36px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "28px"}},
+    "title": {"text": "Date", "style": {"fontSize": "56px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
-    "tickInterval": 90 * 24 * 3600 * 1000,  # Quarterly ticks
+    "gridLineColor": GRID,
+    "tickInterval": 90 * 24 * 3600 * 1000,
     "dateTimeLabelFormats": {"month": "%b %Y"},
+    "plotLines": [
+        {
+            "value": max_dd_timestamp,
+            "color": DRAWDOWN_COLOR,
+            "dashStyle": "ShortDash",
+            "width": 3,
+            "zIndex": 5,
+            "label": {
+                "text": f"Max DD: {max_dd_value:.1f}%",
+                "style": {"fontSize": "40px", "color": DRAWDOWN_COLOR, "fontWeight": "bold"},
+                "rotation": 0,
+                "y": 220,
+            },
+        }
+    ],
 }
 
-# Y-axis (percentage)
 chart.options.y_axis = {
-    "title": {"text": "Drawdown (%)", "style": {"fontSize": "36px"}, "margin": 25},
-    "labels": {"style": {"fontSize": "28px"}, "format": "{value}%"},
+    "title": {"text": "Drawdown (%)", "style": {"fontSize": "56px", "color": INK}, "margin": 25},
+    "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}, "format": "{value}%"},
+    "lineColor": INK_SOFT,
+    "tickColor": INK_SOFT,
     "gridLineWidth": 1,
-    "gridLineColor": "rgba(0, 0, 0, 0.1)",
+    "gridLineColor": GRID,
     "max": 5,
     "plotLines": [
         {
             "value": 0,
-            "color": "#306998",
-            "width": 4,
+            "color": INK_SOFT,
+            "width": 3,
             "zIndex": 5,
             "label": {
                 "text": "Peak (0%)",
-                "style": {"fontSize": "24px", "color": "#306998", "fontWeight": "bold"},
+                "style": {"fontSize": "40px", "color": INK_SOFT, "fontWeight": "bold"},
                 "align": "right",
                 "x": -10,
             },
@@ -112,41 +138,45 @@ chart.options.y_axis = {
     ],
 }
 
-# Legend
-chart.options.legend = {"enabled": True, "itemStyle": {"fontSize": "32px"}, "margin": 30}
+chart.options.legend = {
+    "enabled": True,
+    "itemStyle": {"color": INK_SOFT, "fontSize": "44px"},
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "borderWidth": 1,
+    "margin": 30,
+}
 
-# Tooltip
-chart.options.tooltip = {"xDateFormat": "%A, %b %d, %Y", "valueSuffix": "%", "style": {"fontSize": "28px"}}
+chart.options.tooltip = {
+    "xDateFormat": "%A, %b %d, %Y",
+    "valueSuffix": "%",
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "style": {"color": INK, "fontSize": "40px"},
+}
 
-# Plot options - area fills from line to threshold (0)
 chart.options.plot_options = {"area": {"lineWidth": 4, "marker": {"enabled": False}, "threshold": 0}}
 
-# Credits
 chart.options.credits = {"enabled": False}
 
-# Build series data directly with fill configuration
 chart.options.series = [
     {
         "name": "Drawdown",
         "type": "area",
         "data": data_points,
-        "color": "#DC2626",
+        "color": DRAWDOWN_COLOR,
         "fillColor": {
             "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-            "stops": [[0, "rgba(220, 38, 38, 0.1)"], [1, "rgba(220, 38, 38, 0.5)"]],
+            "stops": [[0, "rgba(183, 29, 39, 0.05)"], [1, "rgba(183, 29, 39, 0.55)"]],
         },
-        "lineColor": "#DC2626",
+        "lineColor": DRAWDOWN_COLOR,
         "lineWidth": 4,
         "threshold": 0,
-        "negativeFillColor": {
-            "linearGradient": {"x1": 0, "y1": 0, "x2": 0, "y2": 1},
-            "stops": [[0, "rgba(220, 38, 38, 0.1)"], [1, "rgba(220, 38, 38, 0.5)"]],
-        },
     }
 ]
 
-# Export to PNG via Selenium
-highcharts_url = "https://code.highcharts.com/highcharts.js"
+# Export
+highcharts_url = "https://cdnjs.cloudflare.com/ajax/libs/highcharts/11.4.8/highcharts.js"
 with urllib.request.urlopen(highcharts_url, timeout=30) as response:
     highcharts_js = response.read().decode("utf-8")
 
@@ -157,46 +187,41 @@ html_content = f"""<!DOCTYPE html>
     <meta charset="utf-8">
     <script>{highcharts_js}</script>
 </head>
-<body style="margin:0;">
-    <div id="container" style="width: 4800px; height: 2700px;"></div>
+<body style="margin:0; background:{PAGE_BG};">
+    <div id="container" style="width: 3200px; height: 1800px;"></div>
     <script>{html_str}</script>
 </body>
 </html>"""
 
-# Save HTML version with CDN for interactive use
-with open("plot.html", "w", encoding="utf-8") as f:
-    cdn_html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-</head>
-<body style="margin:0;">
-    <div id="container" style="width: 100%; height: 600px;"></div>
-    <script>{html_str}</script>
-</body>
-</html>"""
-    f.write(cdn_html)
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
 
-# Take screenshot with headless Chrome
 with tempfile.NamedTemporaryFile(mode="w", suffix=".html", delete=False, encoding="utf-8") as f:
     f.write(html_content)
     temp_path = f.name
 
 chrome_options = Options()
-chrome_options.add_argument("--headless")
+chrome_options.add_argument("--headless=new")
 chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
 chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--window-size=5000,3000")
+chrome_options.add_argument("--hide-scrollbars")
+chrome_options.add_argument("--window-size=3200,1800")
 
 driver = webdriver.Chrome(options=chrome_options)
+driver.execute_cdp_cmd(
+    "Emulation.setDeviceMetricsOverride", {"width": 3200, "height": 1800, "deviceScaleFactor": 1, "mobile": False}
+)
 driver.get(f"file://{temp_path}")
 time.sleep(5)
-
-# Screenshot the chart container element for exact dimensions
-container = driver.find_element("id", "container")
-container.screenshot("plot.png")
+driver.save_screenshot(f"plot-{THEME}.png")
 driver.quit()
 
 Path(temp_path).unlink()
+
+# PIL safety net: pin to exact 3200×1800
+_img = Image.open(f"plot-{THEME}.png").convert("RGB")
+if _img.size != (3200, 1800):
+    _norm = Image.new("RGB", (3200, 1800), PAGE_BG)
+    _norm.paste(_img, ((3200 - _img.size[0]) // 2, (1800 - _img.size[1]) // 2))
+    _norm.save(f"plot-{THEME}.png")
