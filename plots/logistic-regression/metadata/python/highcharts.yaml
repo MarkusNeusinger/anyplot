@@ -1,213 +1,270 @@
 library: highcharts
+language: python
 specification_id: logistic-regression
 created: '2026-01-09T21:58:34Z'
-updated: '2026-01-09T22:02:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20866601331
+updated: '2026-05-23T22:07:57Z'
+generated_by: claude-sonnet
+workflow_run: 26344385221
 issue: 3550
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/logistic-regression/python/highcharts/plot-dark.html
+quality_score: 90
 review:
   strengths:
-  - Excellent implementation of all specification requirements including jittered
-    points, confidence intervals, and decision threshold
-  - Good use of Highcharts-specific features like AreaRangeSeries for CI and plotLines
-    for threshold
-  - Bootstrap method for confidence intervals shows statistical rigor
-  - Colorblind-safe blue/yellow palette
-  - Clear labeling with model accuracy annotation
+  - 'Excellent semantic color mapping: Pass=green (#009E73), Fail=red (#B71D27) provides
+    immediately interpretable categorical distinction — valid semantic exception,
+    correctly applied'
+  - 'All spec-required features implemented: y-axis jitter, alpha-transparent scatter
+    points (0.6), smooth logistic curve (lineWidth:6), bootstrap 95% CI band, dashed
+    decision threshold at p=0.5, and accuracy annotation box'
+  - 'Full theme adaptation: correct backgrounds (#FAF8F1 light / #1A1A17 dark), all
+    text/grid/legend tokens are theme-adaptive — both renders are perfectly legible
+    with no dark-on-dark or light-on-light failures'
+  - 'Highcharts-idiomatic multi-layer design: SplineSeries for the curve, AreaRangeSeries
+    for CI band, plotLines for the threshold, and the Annotations module for the accuracy
+    callout — uses three separate Highcharts modules'
+  - 'Good data storytelling: semantic colors create immediate narrative comprehension;
+    the S-curve is the clear focal element; decision threshold and accuracy annotation
+    add practical context'
   weaknesses:
-  - Class 0 points (blue) have same color family as the logistic curve making them
-    less distinct - could use a different hue
-  - The for loop for bootstrap adds complexity to an otherwise linear structure
-  image_description: 'The plot displays a logistic regression visualization with the
-    characteristic S-shaped (sigmoid) probability curve in blue. The X-axis shows
-    "Study Hours" (ranging 0-10) and Y-axis shows "Probability" (ranging -0.05 to
-    1.05). Blue circular scatter points representing the "Fail (0)" class are clustered
-    near y=0 with slight jitter, while yellow/gold circular scatter points for "Pass
-    (1)" class are clustered near y=1. A light blue semi-transparent confidence interval
-    band surrounds the logistic curve. A gray dashed horizontal line at y=0.5 indicates
-    the decision threshold with a label "Decision Threshold (0.5)" on the right side.
-    An annotation box in the lower right shows "Accuracy: 92.7%". The legend at the
-    bottom displays: 95% CI, Logistic Curve, Fail (0), Pass (1). The title correctly
-    follows the format "logistic-regression · highcharts · pyplots.ai" with a subtitle
-    "Exam Pass Probability vs Study Hours".'
+  - 'Top and right chart borders/spines are visible (Highcharts all-4-sides default
+    not overridden) — add ''lineWidth'': 0 to the top pseudo-axis and remove the right-side
+    plot border for cleaner L-frame styling'
+  - 'Grid lines rendered on both X and Y axes; for a scatter/line chart, Y-axis-only
+    grid is cleaner — suppress x-axis grid with ''gridLineWidth'': 0 in x_axis options'
+  - Legend has an explicit border box (borderWidth:1) — consider removing the border
+    for minimal, editorial styling consistent with the style guide recommendation
+    to remove legend box frames
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct theme surface, not pure white
+      Chrome: Title "logistic-regression · python · highcharts · anyplot.ai" bold at top, fully readable; subtitle "Exam Pass Probability vs Study Hours" in INK_SOFT below; Y-axis label "Probability" and X-axis label "Study Hours" both in dark INK; tick labels in INK_SOFT — all clearly visible against the light background; decision threshold label "Decision Threshold (p = 0.5)" right-aligned and readable; accuracy annotation "Accuracy: 92.7%" in a boxed callout in the lower-right
+      Data: S-shaped logistic curve in purple (#9418DB), prominent lineWidth; CI band in semi-transparent purple (fill_opacity 0.2); Fail (0) scatter points in red (#B71D27, alpha 0.6) clustered at y≈0; Pass (1) scatter points in green (#009E73, alpha 0.6) clustered at y≈1 with slight y-jitter; dashed horizontal threshold line at probability=0.5; legend at bottom shows 95% CI, Logistic Curve, Fail (0), Pass (1)
+      Legibility verdict: PASS — all text readable, no light-on-light issues, all data elements clearly visible
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct theme surface, not pure black
+      Chrome: Title, subtitle, axis labels, and tick labels all render in light-colored text (INK token = #F0EFE8 in dark mode); decision threshold label and accuracy annotation visible in light text — no dark-on-dark failures detected; legend text readable in INK_SOFT (#B8B7B0)
+      Data: Data colors are identical to light render — green pass points (#009E73), red fail points (#B71D27), purple curve/CI (#9418DB) — only chrome flipped; CI band appears more visually prominent against the dark background (expected) but not overwhelming; brand green #009E73 clearly visible
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable, title and labels clear, though axis tick labels
-          could be slightly larger
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements
+        comment: 'All font sizes explicitly set: title 66px, axis labels 56px, tick
+          labels 44px, annotation/threshold labels 36px. Readable in both themes.
+          Proportions balanced.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data element overlaps. Accuracy box placed in data-sparse
+          lower-right area. Legend below plot area.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Markers are visible with appropriate jitter, though class 0 blue
-          points blend slightly with the curve color
+        comment: 150 points with radius 8 and alpha 0.6 — appropriate for medium density.
+          Curve lineWidth 6 ensures prominence. CI band fill_opacity 0.2 is visible
+          but subordinate to the curve.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blue and yellow are colorblind-safe, good contrast
+        comment: Anyplot CVD-safe palette used. Green/red distinction backed by positional
+          differentiation (y=0 vs y=1) so hue is not the sole signal.
       - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Plot fills canvas well with balanced margins
+        comment: Canvas gate passed (3200x1800). Generous spacing (spacingBottom:80,
+          spacingLeft:50). Plot fills canvas well. Nothing cut off.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Descriptive labels but no units
+        comment: 'X: ''Study Hours'', Y: ''Probability'' — descriptive and appropriate.
+          Title in correct spec-id · python · highcharts · anyplot.ai format.'
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle, legend well placed, though legend text is small
+        comment: 'Valid semantic exception: Pass=green (#009E73), Fail=red (#B71D27).
+          Curve/CI=purple (#9418DB, palette position 2). Backgrounds #FAF8F1/#1A1A17.
+          Both renders theme-correct.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): intentional semantic palette, multi-layer informational
+          design, styled accuracy annotation. Not yet at FiveThirtyEight publication
+          level — chart border/spine styling is still Highcharts default.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Subtle grid lines (GRID color with opacity) and generous spacing
+          show refinement above defaults. However: top/right chart borders not removed,
+          legend has border box, x-axis grid lines present.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good storytelling: semantic colors create immediate narrative, S-curve
+          is the clear focal element, decision threshold shows practical application,
+          accuracy annotation contextualizes model performance.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct logistic regression curve with sigmoid shape
+        comment: Correct logistic regression curve plot with S-shaped sigmoid, scatter
+          points, CI band, and threshold.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: X is continuous predictor, Y shows binary outcomes and probability
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'Has all: jittered points, two class colors, logistic curve, 95%
-          CI band, decision threshold line, accuracy annotation'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: binary class coloring, y-axis jitter, smooth
+          curve, 95% CI band, decision threshold at 0.5, accuracy annotation, alpha
+          transparency.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Axes show full data range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=Study Hours (predictor), Y=Probability (0-1). Correct logistic
+          model fit and visualization.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all series
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: logistic-regression · highcharts · pyplots.ai'
+        comment: 'Title: ''logistic-regression · python · highcharts · anyplot.ai''
+          — exact format. Legend labels: 95% CI, Logistic Curve, Fail (0), Pass (1).'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows both classes clearly, demonstrates sigmoid transition, CI widens
-          appropriately at edges
+        comment: 'Shows all aspects: both binary classes, the S-curve transition,
+          uncertainty via CI, decision boundary, model performance metric.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Exam pass probability vs study hours is a relatable educational scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Study hours 0-10 is reasonable, though transition point at 5 hours
-          is somewhat idealized
+        comment: Exam pass/fail vs study hours — realistic, neutral, educational domain.
+          No controversial content.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Study hours 0-10, probability 0-1, n=150, accuracy 92.7% — all realistic
+          and plausible.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Has a for loop for bootstrap, but structure is mostly linear
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: 'Linear structure: imports → tokens → data → model → chart → export.
+          No functions or classes.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imported modules are used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity for the visualization. No fake UI elements.
+          Bootstrap CI loop is a legitimate data processing step.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current APIs used
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly but also creates plot.html (expected
-          for highcharts)
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API used.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Uses Highcharts-specific features: SplineSeries, AreaRangeSeries,
-          plotLines, annotations module, selenium export pattern'
+        comment: Correct use of SplineSeries, ScatterSeries, AreaRangeSeries. Proper
+          inline JS loading, CDP override for dimensions, PIL safety net. Above default
+          idiomatic usage.
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: AreaRangeSeries for CI band, plotLines for threshold, Annotations
+          module for accuracy callout, custom JS tooltip formatter — four distinctly
+          Highcharts-specific features leveraged.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
   - selenium
+  - pillow
   techniques:
-  - annotations
   - html-export
+  - annotations
+  - hover-tooltips
   patterns:
   - data-generation
+  - matrix-construction
   - iteration-over-groups
   dataprep:
   - regression
   styling:
   - alpha-blending
-  - grid-styling
