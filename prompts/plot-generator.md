@@ -167,6 +167,8 @@ Examples:
 
 Only add the descriptive prefix when it adds value - most basic plots don't need it.
 
+**Title fontsize when using the prefix**: The style-guide default fontsize (see `prompts/default-style-guide.md` "Visual Sizing Defaults") is tuned for the ~67-char mandated title (`{spec-id} · {language} · {library} · anyplot.ai`). Adding a `{Descriptive Title} · ` prefix makes the title noticeably longer, and longer `{spec-id}` values (e.g. `network-bipartite-weighted`) eat into the budget even without a prefix. Reduce the title fontsize so the rendered title stays within ~90% of plot width — never let it overflow. Rough rule: scale fontsize down proportionally to total character count vs. the ~67-char baseline (e.g. ~90 chars → drop matplotlib title to 10pt; ~110 chars → 9pt; apply the same proportional reduction for the other library families per the sizing table).
+
 The middot (·) separator is required. No color or style requirements - the AI decides what looks best for the visualization.
 
 ### Structure
