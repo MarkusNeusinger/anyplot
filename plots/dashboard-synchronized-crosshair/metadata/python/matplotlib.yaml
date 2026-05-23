@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: dashboard-synchronized-crosshair
 created: '2026-01-20T19:38:43Z'
-updated: '2026-05-23T12:46:34Z'
+updated: '2026-05-23T12:54:35Z'
 generated_by: claude-sonnet
 workflow_run: 26332619833
 issue: 3784
@@ -15,42 +15,35 @@ preview_html_dark: null
 quality_score: 88
 review:
   strengths:
-  - 'Perfect spec compliance for a static library: synchronized vertical crosshair
-    and value annotations across all three panels demonstrates the dashboard pattern
-    clearly.'
-  - Semantic volume coloring (green=up, red=down) using anyplot palette positions
-    1 and 3 is a deliberate and appropriate finance semantic exception.
-  - 'Full theme-adaptive chrome: both light and dark renders are correct, all chrome
-    tokens applied consistently across three panels.'
-  - Clean, reproducible code with linear structure and no over-engineering; correct
-    savefig call (no bbox_inches='tight').
-  - Area fill under price line adds depth without obscuring data; tight panel spacing
-    (hspace=0.08) creates the impression of a unified dashboard.
+  - 'Perfect spec compliance: stacked panels with sharex=True, synchronized crosshair
+    axvlines, and per-panel annotation boxes nail the spec requirements for a static
+    library'
+  - Semantic volume coloring (green up / red down) adds real narrative value beyond
+    plain data display
+  - 'Theme adaptation is complete and correct: all chrome tokens applied to every
+    text element, legend frame, and annotation box in both renders'
+  - 'Data well-constructed: price trend reversal, RSI moving through overbought/neutral/oversold
+    zones, crosshair at a meaningful inflection point'
   weaknesses:
-  - Tick label font size (7pt) is below the 8pt style-guide recommendation; increase
-    tick labels from 7pt to 8pt in all tick_params calls across all panels.
-  - Tick marks are still visible across all panels; add ax.tick_params(length=0) in
-    the panel-styling loop to suppress them for a cleaner look.
-  - RSI data never clearly breaches the overbought (70) or oversold (30) reference
-    zones — force at least one excursion above 70 and one below 30 so the zone annotations
-    are actually exercised.
-  - DE-01 could be lifted with bolder typography differentiation between panels (e.g.,
-    slightly larger y-label for the primary price panel).
+  - 'VQ-04: Volume bars use green/red as the only directional signal — add alpha or
+    border-width difference to create a secondary visual cue for CVD users'
+  - 'VQ-01: Overbought/Oversold threshold labels at fontsize=6 are borderline small
+    at mobile widths — increase to fontsize=7-8'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface.
-      Chrome: Title "dashboard-synchronized-crosshair · python · matplotlib · anyplot.ai" in dark #1A1A17 text, readable. Y-axis labels ("Price ($)", "Volume (M)", "RSI") and x-axis label ("Date") in dark INK. Tick labels in INK_SOFT (#4A4A44), small (7pt) but readable. Grid lines subtle at alpha=0.12 on y-axis. Legend boxes use ELEVATED_BG (#FFFDF6) with INK_SOFT border.
-      Data: Price line in #009E73 (brand green) with light teal area fill. Volume bars semantically colored #009E73 (up days) and #B71D27 (down days). RSI line in #9418DB (purple). Synchronized vertical crosshair in INK_MUTED spanning all three panels at ~Jul '24. Annotation boxes show "$88.6", "3.2M", "RSI 53.6" at crosshair position.
-      Legibility verdict: PASS — all text readable against light background; no light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "dashboard-synchronized-crosshair · python · matplotlib · anyplot.ai" in dark ink, clearly readable. Axis labels Price ($), Volume (M), RSI, Date all in dark INK. Tick labels in INK_SOFT — all readable. Legend frames in ELEVATED_BG (#FFFDF6) with styled borders.
+      Data: Price line #009E73 (position 1) with subtle fill-between. Volume bars #009E73 (up) / #B71D27 (down) semantic. RSI line #9418DB (position 2). Synchronized crosshair vertical line in INK_MUTED across all 3 panels. Annotation boxes with rounded corners showing $88.6, 3.2M, RSI 55.5.
+      Legibility verdict: PASS — all main text readable; Overbought/Oversold at 6pt are small but visible
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface.
-      Chrome: Title in near-white #F0EFE8, clearly readable. Axis labels and tick labels in light secondary text (#B8B7B0). Legend frames use dark elevated background (#242420). Annotation boxes use dark elevated background with light text — readable. Grid lines subtle but visible on dark surface.
-      Data: Price line remains #009E73 (identical to light render). Volume bars retain green/red semantic colors (identical). RSI line remains #9418DB (identical). Data colors are identical between themes — only chrome flipped.
-      Legibility verdict: PASS — no dark-on-dark text failures; all chrome tokens correctly adapted for dark theme.
+      Background: Warm near-black #1A1A17 — correct
+      Chrome: Title and axis labels in light cream #F0EFE8. Tick labels in #B8B7B0. Legend frames in #242420 (ELEVATED_BG dark). Annotation box backgrounds in #242420 with light text — no dark-on-dark issues anywhere.
+      Data: Colors identical to light render — #009E73 price, green/red volume, #9418DB RSI. Crosshair annotation boxes clearly visible with proper contrast.
+      Legibility verdict: PASS — all chrome flips correctly, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 28
       max: 30
       items:
       - id: VQ-01
@@ -58,52 +51,46 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: All font sizes explicitly set; tick labels at 7pt are slightly below
-          the 8pt style-guide recommendation for 2400x2400 canvas; readable at full
-          resolution in both themes.
+        comment: All font sizes explicitly set; Overbought/Oversold at fontsize=6
+          borderline small at mobile widths
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No overlapping text or data elements; annotation boxes offset cleanly
-          from crosshair scatter markers.
+        comment: No text collisions across panels or annotation boxes
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Lines at linewidth=2.0 are clear; bars prominent; area fills at alpha=0.10
-          add depth without obscuring data.
+        comment: Lines, bars clearly visible; fill-between intentionally subtle
       - id: VQ-04
         name: Color Accessibility
-        score: 2
+        score: 1
         max: 2
         passed: true
-        comment: Green/red semantic volume bars use anyplot palette positions 1 and
-          3; teal-vs-red luminance difference sufficient; CVD-safe per palette design.
+        comment: Volume bars use green/red as sole directional signal — CVD concern
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Three panels fill 2400x2400 canvas well; subplots_adjust margin control;
-          nothing cut off; tight but clean hspace=0.08.
+        comment: 2400x2400 square canvas; 3 panels fill it well with tight synchronized
+          spacing
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Y-axis labels include units: Price ($), Volume (M); RSI is standard
-          abbreviation; x-axis Date is appropriate.'
+        comment: Price ($), Volume (M), RSI, Date — descriptive with units
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series #009E73 correct; RSI uses position 2 #9418DB; semantic
-          red/green for up/down volume is documented finance exception; backgrounds
-          #FAF8F1/#1A1A17 correct; all chrome adapts between themes.'
+        comment: 'Price #009E73 position 1, RSI #9418DB position 2, volume semantic
+          #B71D27; backgrounds correct; chrome flips cleanly'
     design_excellence:
       score: 13
       max: 20
@@ -113,26 +100,22 @@ review:
         score: 5
         max: 8
         passed: true
-        comment: 'Above configured default: semantic volume coloring, area fill under
-          price, consistent elevated-background legend styling, and clean anyplot
-          chrome show deliberate design intent. Not yet FiveThirtyEight-level.'
+        comment: Strong design with semantic coloring, fill-between depth, styled
+          annotation boxes, cross-panel focal point
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Top/right spines removed; bottom spines between connected panels
-          hidden; set_axisbelow(True); subtle y-grid at alpha=0.12; tight hspace;
-          consistent annotation styling. Tick marks still visible; not every detail
-          polished.
+        comment: Spines removed, y-only subtle grid, styled legend frames, tight panel
+          spacing
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Static crosshair snapshot at Jul '24 creates coherent narrative across
-          all three panels. Semantic volume coloring guides interpretation. Overbought/oversold
-          reference zones provide analytical context. Above bare data display.
+        comment: Synchronized crosshair creates clear focal point; semantic volume
+          coloring adds narrative
     spec_compliance:
       score: 15
       max: 15
@@ -142,57 +125,49 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: 'Correct: 3-panel stacked dashboard with synchronized crosshair,
-          per spec''s static-library guidance.'
+        comment: Correct multi-chart stacked dashboard with synchronized crosshair
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Synchronized vertical crosshair spanning all panels; value annotations
-          at crosshair; stacked vertical layout with sharex=True; independent y-axis
-          scales; clear visual connection via aligned grids.
+        comment: axvline crosshairs, annotation boxes, sharex=True, independent y-axes
+          — all present
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: date on x-axis; price/volume/RSI on independent y-axes; all 200 data
-          points displayed.
+        comment: Date on shared x-axis; price, volume, RSI on independent y-axes
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'dashboard-synchronized-crosshair · python · matplotlib
-          · anyplot.ai'; legends correctly labeled Price, Volume, RSI.
+        comment: Title format correct; panel legends Price, Volume, RSI
     data_quality:
-      score: 14
+      score: 15
       max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 5
+        score: 6
         max: 6
         passed: true
-        comment: Shows price (trending with recovery), semantically colored volume
-          (up/down days), and RSI with reference zones. RSI peaks ~65-67 and never
-          clearly crosses the 70 overbought line; zone annotations present but not
-          exercised by data.
+        comment: All three panel types with realistic variation; RSI traverses multiple
+          zones
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Stock price/volume/RSI over 200 business days is a well-understood,
-          neutral financial scenario with sensible narrative.
+        comment: Stock market data over 200 trading days; neutral financial scenario
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Price ~75-112 (plausible mid-cap stock), volume 0.5-6.5M shares/day
-          (realistic), RSI constrained to 30-70 range. Date range Jan-Oct 2024 coherent.
+        comment: Price ~80-110, volume in millions, RSI 0-90 — all realistic
     code_quality:
       score: 10
       max: 10
@@ -202,35 +177,31 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports -> theme tokens -> data -> canvas -> panel styling
-          -> panel plots -> crosshair -> save. No functions or classes.'
+        comment: Flat Imports -> Data -> Plot -> Save; no functions or classes
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set.
+        comment: np.random.seed(42)
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys/os used for path sanitization and theme env
-          var.
+        comment: All imports actively used
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean and idiomatic; list comprehension for vol_colors; no over-engineering;
-          crosshair labeled as static snapshot not simulated interactivity.
+        comment: ann_kw dict avoids repetition; annotations legitimate per spec
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) with
-          no bbox_inches='tight'.
+        comment: Saves plot-{THEME}.png; no bbox_inches=tight; no deprecated APIs
     library_mastery:
       score: 7
       max: 10
@@ -240,24 +211,21 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: plt.subplots(3, 1, sharex=True) is correct idiomatic pattern; axes-level
-          methods throughout; DateFormatter/MonthLocator for date axis control; subplots_adjust
-          for margins; set_axisbelow(True) for grid ordering.
+        comment: sharex=True, DateFormatter, MonthLocator, fill_between, axhline/axvline
+          — all idiomatic
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: sharex=True synchronized axis, fill_between for area fill, DateFormatter/MonthLocator
-          for fine date control, axvline for reference lines are solid matplotlib-idiomatic
-          features but not uniquely distinctive vs other libraries.
-  verdict: REJECTED
+        comment: sharex=True synchronized multi-panel and date axis formatting are
+          distinctively matplotlib
+  verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   - explicit-figure
@@ -269,4 +237,3 @@ impl_tags:
   styling:
   - alpha-blending
   - grid-styling
-  - edge-highlighting
