@@ -1,162 +1,211 @@
 library: bokeh
+language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:50:28Z'
-updated: '2026-01-20T19:04:32Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21183368742
+updated: '2026-05-23T20:09:10Z'
+generated_by: claude-sonnet
+workflow_run: 26331707616
 issue: 3766
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/bokeh/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/bokeh/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of grid-based clustering algorithm with proper Web Mercator
-    projection
-  - Clear visualization with well-sized cluster markers and legible count labels
-  - 'Good use of Bokeh features: tile basemap, ColumnDataSource, LabelSet, custom
-    Legend'
-  - Realistic coffee shop scenario with 10 NYC neighborhoods
-  - Both PNG and HTML outputs generated for static and interactive viewing
+  - 'Correct anyplot palette (Coffee→green #009E73, Express→purple, Roastery→red,
+    Reserve→sky-blue) with full theme-adaptive chrome in both renders'
+  - 'Excellent use of Bokeh geo-spatial features: WMTSTileSource with theme-matched
+    CartoDB tiles (Positron light / Dark Matter dark), mercator projection'
+  - 'Multi-layer visualization design: faint individual store markers (alpha=0.20)
+    provide background density context while sized cluster circles encode count via
+    square-root normalization'
+  - All font sizes explicitly set following style-guide hierarchy (50pt title, 42pt
+    axis labels, 34pt tick labels)
+  - Custom legend via LegendItem with phantom off-screen point technique to ensure
+    all 4 categories appear even if absent in clusters
+  - 'Perfect code quality: KISS structure, seed set, clean imports, elegant grid-based
+    clustering with dominant-category assignment'
   weaknesses:
-  - Title includes extra Store Locations prefix instead of pure spec-id format
-  - Legend only shows categories that appear as dominant in clusters, may not show
-    all 4 store types
-  - Static clustering cannot demonstrate zoom-based expansion (spec mentions smooth
-    zoom transitions)
-  image_description: 'The plot displays a clustered marker map of coffee shop store
-    locations across the New York City metropolitan area. The background is a CartoDB
-    Positron basemap showing street-level detail including neighborhoods like Downtown,
-    Midtown, Brooklyn Heights, and Williamsburg. Cluster markers are rendered as circles
-    with white count labels indicating the number of stores in each cluster (ranging
-    from 4 to 45). Markers are color-coded by dominant store type: blue (#306998)
-    for Coffee-dominant clusters and yellow (#FFD43B) for Express-dominant clusters.
-    A legend on the right side shows "Store Type" with three categories visible. Faint
-    individual store markers (small blue dots with low opacity) are visible underneath
-    the cluster markers. An italicized annotation at the bottom reads "Clustered markers
-    show aggregated store counts." The title "Store Locations · map-marker-clustered
-    · bokeh · pyplots.ai" appears at the top left. Axis labels show "Easting (m)"
-    and "Northing (m)" for the Web Mercator projection.'
+  - 'SC-02: Missing key interactive spec features — dynamic cluster recomputation
+    on zoom, click-to-expand behavior, and convex hull / spider lines on hover are
+    not implemented; grid-based static clustering is a reasonable approximation but
+    leaves the spec underserved'
+  - 'VQ-02: Dense cluster overlap in midtown Manhattan area — the 43, 29, 39, 18,
+    and 16-store clusters visually crowd and partially overlap each other; consider
+    tighter grid_size (e.g., 2500 m) to spread clusters more, or reduce cluster_sizes
+    max to avoid overlap in dense regions'
+  - 'SC-01 / Interactivity: As an interactive library, Bokeh could support dynamic
+    cluster updates via CustomJS callbacks; a pure Python static cluster with HTML
+    tooltip is a minimal implementation for this interactive spec'
+  - Neighborhood labels at 20pt are quite small relative to the 3200×1800 canvas —
+    they become nearly illegible when the image is scaled to mobile width (~400 px);
+    increase to 26-28pt
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) border surrounding CartoDB Positron light-grey street map tiles
+      Chrome: Title "map-marker-clustered · python · bokeh · anyplot.ai" visible in dark (#1A1A17) text at top-left; "Longitude" and "Latitude" axis labels in dark ink, clearly readable; tick labels (lat 40.65–40.9, lon −74.2 to −73.6) in INK_SOFT dark grey, all readable
+      Data: 20 cluster circles in 4 anyplot colors — green #009E73 (Coffee, dominant), purple #9418DB (Express), red #B71D27 (Roastery), sky-blue #16B8F3 (Reserve); circles sized 45–110px by square-root of count; white count numbers inside circles readable; faint green individual store markers (alpha 0.20) visible as background density; neighborhood name labels (SoHo, Chelsea, Nomad, etc.) in INK_MUTED at 20pt, small but present; legend at right showing Store Type with 4 color swatches
+      Legibility verdict: PASS — all primary text readable; neighborhood labels at 20pt are small but not unreadable; dense midtown cluster area shows some visual crowding of circles
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) border surrounding CartoDB Dark Matter dark basemap tiles
+      Chrome: Title in light cream (#F0EFE8) text, clearly visible against dark background; "Longitude" and "Latitude" labels in light ink; tick labels in INK_SOFT (#B8B7B0 light grey) — all readable against dark background; legend box uses ELEVATED_BG (#242420) with INK_SOFT (#B8B7B0) label text, readable; no dark-on-dark failures detected
+      Data: Same 4 anyplot data colors (#009E73, #9418DB, #B71D27, #16B8F3) — identical to light render as required; white count numbers in circles remain readable; faint individual points visible against dark tiles
+      Legibility verdict: PASS — all text is readable against the dark background; chrome correctly flips from dark-on-light to light-on-dark; data colors unchanged between themes
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and legend text are readable; count labels on clusters are
-          clear with bold white text; axis labels appropriately sized at 24pt
+        comment: All font sizes explicitly set (50pt title, 42pt axis labels, 34pt
+          tick labels, 24pt count labels, 20pt hood labels). Hierarchy is well-structured;
+          neighborhood labels at 20pt are intentionally de-emphasized but are slightly
+          small for mobile scaling.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: Cluster markers are well-separated with no overlapping text or elements
+        comment: Dense midtown cluster area (43, 29, 39, 18, 16-store clusters) shows
+          significant circle overlap inherent to the clustering approach at this zoom
+          level; count labels inside circles are individually readable.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Cluster markers are well-sized (45-110px based on count), clearly
-          visible against the basemap with good contrast
+        comment: Cluster circles well-visible with vivid anyplot colors, white outlines,
+          and size variation (45–110px). Count numbers in white are readable against
+          colored backgrounds. Individual faint markers provide density context.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Blue/yellow palette is colorblind-safe; good contrast between marker
-          colors and basemap
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas appropriately; legend positioned on right side without
-          obscuring data; good use of space
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with units: Easting (m) and Northing (m)'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Anyplot palette is CVD-safe. White count labels on colored markers
+          have sufficient luminance contrast. All four category colors are clearly
+          distinguishable.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills canvas well with appropriate min_border reservations. Legend
+          placed at right panel. NYC area well-centered. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend shows only 3 categories but code defines 4; not all categories
-          represented in legend
+        passed: true
+        comment: Title in correct format. X-axis 'Longitude' and Y-axis 'Latitude'
+          are descriptive; geographic coordinates are implied to be in degrees.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series Coffee = #009E73, canonical palette order for remaining
+          categories. Backgrounds #FAF8F1 (light) / #1A1A17 (dark). All chrome is
+          theme-adaptive. Data colors identical between both renders.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: theme-matched CartoDB tiles (Positron/Dark Matter),
+          size-encoded cluster circles with white outlines, multi-layer visualization
+          (individual points + clusters + neighborhood labels). Clearly above defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Very subtle grid (alpha=0.08), elevated legend background with border,
+          theme-adaptive tile sources. Good refinement but not fully polished.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Multi-level hierarchy: faint individual markers show underlying
+          density, sized cluster circles highlight hotspots, color encodes dominant
+          category, counts provide exact values. Viewer immediately grasps distribution
+          and cluster sizes.'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 12
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct clustered marker map implementation with geographic basemap
-      - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Lat/lon correctly converted to Web Mercator; cluster positions accurately
-          calculated
-      - id: SC-03
-        name: Required Features
         score: 4
         max: 5
         passed: true
-        comment: Has clustering, count display, color-coding by category, basemap;
-          missing interactive zoom behavior
-      - id: SC-04
-        name: Data Range
+        comment: Geographic map with clustered markers showing counts and category
+          colors on basemap tiles. Static grid-based clustering approximates dynamic
+          zoom-based clustering but does not recompute on zoom.
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: false
+        comment: 'Present: count display, category coloring, basemap, hover tooltips
+          via HTML. Missing: dynamic cluster recomputation on zoom, click-to-expand
+          behavior, convex hull / spider lines on hover.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All NYC area data visible within the defined view range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Lon/Lat correctly mapped to X/Y via Web Mercator projection. Size
+          encodes cluster count. Color encodes dominant category.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows store types with dominant clarification
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Title has extra Store Locations prefix instead of pure spec-id format
+        comment: Title 'map-marker-clustered · python · bokeh · anyplot.ai' matches
+          required format. Legend shows Store Type with all 4 categories and correct
+          color swatches.
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows clustering with varying counts, multiple categories, geographic
-          distribution across neighborhoods
+        comment: 'Shows clusters of varying sizes (2–43 stores), multiple categories,
+          geographic spread across NYC boroughs, individual markers for density context.
+          Missing: zoom-level variation to demonstrate progressive cluster expansion.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Coffee shop chain in NYC is a realistic, neutral scenario with plausible
-          neighborhood distribution
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: 270 total stores across 10 neighborhoods with realistic lat/lon coordinates
-          for NYC
+        comment: Coffee shop chain (Coffee, Express, Roastery, Reserve) locations
+          across named NYC neighborhoods (Downtown, Midtown, SoHo, Williamsburg, etc.).
+          Real-world, neutral, and comprehensible.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: NYC coordinates factually accurate (-74 to -73.6 lon, 40.65–40.9
+          lat). Store counts per neighborhood (15–45) plausible for urban franchise
+          density. Category weights (50/30/15/5%) realistic.
     code_quality:
       score: 10
       max: 10
@@ -166,55 +215,72 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data generation, clustering, plotting, save'
+        comment: 'Linear structure: sys.path fix → imports → data generation → clustering
+          → plot build → save HTML → Selenium screenshot. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set before data generation.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (numpy, bokeh components)
+        comment: 'All imports used: os, sys, time, Path, numpy, bokeh.io, bokeh.models,
+          bokeh.plotting, selenium.webdriver, By.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Bokeh 3.x API
+        comment: Clean and idiomatic. Grid-based clustering is well-implemented. Phantom
+          off-screen point for consistent legend is clever. Element screenshot fallback
+          is well-guarded.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses bokeh 3.9.0 current
+          API.
+    library_mastery:
+      score: 9
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
         max: 5
         passed: true
-        comment: Uses tile providers, ColumnDataSource, LabelSet, Legend customization,
-          hover tooltips, HTML export; could better leverage Bokeh callbacks
+        comment: 'Expert Bokeh geo usage: WMTSTileSource, mercator axis types, ColumnDataSource
+          throughout, LabelSet for annotations, Legend/LegendItem for custom legend,
+          tooltips parameter, add_layout for right-panel legend.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: WMTSTileSource with CartoDB tiles (Bokeh-specific geo feature), x_axis_type='mercator'/y_axis_type='mercator',
+          built-in tooltips system, LabelSet for count labels. Bokeh's geo-spatial
+          stack is prominently showcased. Clustering itself is manual (no Bokeh-native
+          clustering API).
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - annotations
   - hover-tooltips
-  - custom-legend
   - html-export
+  - custom-legend
+  - annotations
   patterns:
   - data-generation
   - iteration-over-groups
   - columndatasource
-  dataprep: []
+  dataprep:
+  - normalization
   styling:
   - alpha-blending
   - edge-highlighting

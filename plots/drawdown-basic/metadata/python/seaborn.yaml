@@ -1,156 +1,195 @@
 library: seaborn
+language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:56:28Z'
-updated: '2026-01-20T11:58:55Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21170482380
+updated: '2026-05-23T11:16:41Z'
+generated_by: claude-sonnet
+workflow_run: 26330530798
 issue: 3752
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Excellent implementation of all core drawdown chart features including filled
-    area, max drawdown marker, and recovery points
-  - Clean, readable code following KISS principles with proper random seed
-  - Comprehensive statistics annotation showing max drawdown and days to reach it
-  - Proper title format and good color choices for accessibility
-  - Well-calculated drawdown formula and appropriate data generation with realistic
-    market patterns
+  - Perfect spec compliance — drawdown calculation, filled area, max DD marker, recovery
+    markers, key statistics all implemented correctly
+  - KDE marginal panel on the right is a genuinely seaborn-distinctive feature adding
+    analytical depth to the chart
+  - 'Semantic color assignment is intentional and correct: red (#B71D27) for losses,
+    green (#009E73) for recoveries/new highs, purple (#9418DB) for max drawdown emphasis'
+  - Both light and dark themes render correctly with full theme-token propagation
+    — no dark-on-dark or light-on-light failures
+  - Annotation shows both recovery time and drawdown duration as required by spec
+  - Canvas dimensions correct at 3200×1800 px (landscape), no drift
   weaknesses:
-  - The legend with 3 items is somewhat large for the lower right corner placement
-  - Could leverage more distinctive seaborn features (e.g., seaborn themes or palettes)
-  - Generic Date axis label could be more descriptive
-  image_description: 'The plot displays a drawdown chart showing percentage decline
-    from peak value over approximately 2 years (2022-01 to 2024-01). The drawdown
-    is visualized as a filled area in semi-transparent red/salmon color (#c44e52 with
-    alpha) extending from the zero baseline downward. A solid red line traces the
-    drawdown boundary. The chart shows multiple drawdown periods with varying depths
-    - the deepest reaching approximately -38.8% around late 2022/early 2023. A dark
-    red downward triangle marker indicates the maximum drawdown point at -38.8%. Blue
-    upward triangle markers at the zero line indicate recovery points (new highs)
-    - visible at the start of the time series. The x-axis shows "Date" with quarterly
-    tick marks, and the y-axis shows "Drawdown (%)" ranging from about -40% to 0.
-    A statistics box in the lower left displays "Max Drawdown: -38.8%" and "Days to
-    Max DD: 311". The legend in the lower right identifies the drawdown fill, max
-    drawdown marker, and recovery markers. The title follows the required format:
-    "drawdown-basic · seaborn · pyplots.ai".'
+  - 'Overlapping New High markers in 2022–2023 area: the synthetic data produces many
+    small distinct drawdown periods, each generating a recovery marker, resulting
+    in 15–20 tightly clustered green triangles that visually merge — consider capping
+    at 5–8 markers by selecting only the deepest or most significant recovery events'
+  - Legend fontsize=7 is slightly below the recommended 8pt minimum — increase to
+    8pt for better mobile legibility
+  - 'Missing underlying price/value series: spec notes ''consider using a secondary
+    y-axis or annotation to show the underlying price/value series'' — the KDE marginal
+    is an interesting alternative but does not fulfill this optional spec note; adding
+    a subtle twin-axis price line would improve completeness'
+  - 'DQ-01: feature coverage is strong but not exhaustive — the KDE panel does not
+    show recovery time distribution which would add more analytical depth'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light surface
+      Chrome: Title "drawdown-basic · python · seaborn · anyplot.ai" in dark ink, clearly readable. X-axis label "Trading Date" and Y-axis label "Drawdown (%)" in dark ink at 10pt — both visible. Tick labels in INK_SOFT (#4A4A44) at 8pt — all readable. Legend in lower-right shows "Drawdown", "Max DD: -45.4%", "New High" at 7pt — slightly small but readable.
+      Data: Red (#B71D27) filled area and line for drawdown, green (#009E73) upward triangles for New High recovery markers at zero line, purple (#9418DB) downward triangle for max DD at ~-45.4%. Annotation "Recovery: 92d / Duration: Xd" in INK_SOFT with arrow — both lines visible. KDE marginal panel on right shows drawdown density distribution in red fill. Notable visual clutter: ~15-20 closely packed green New High triangles in the 2022-2023 area where many small drawdown periods occur.
+      Legibility verdict: PASS — all text is readable against the warm off-white background.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark surface
+      Chrome: Title in light off-white (#F0EFE8) — clearly readable against dark background. Axis labels and tick labels in light INK_SOFT (#B8B7B0) — readable. Legend background is #242420 (ELEVATED_BG dark) with INK_SOFT border — clear. No dark-on-dark failures detected; all text uses theme-appropriate light tokens.
+      Data: Data colors identical to light render — red filled drawdown area, green New High markers, purple max DD marker. The same annotation is present and readable in light text color. KDE panel present on right. The same dense cluster of green triangles in 2022-2023 is visible.
+      Legibility verdict: PASS — all text is readable against the dark background; no dark-on-dark failures.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis labels at 20pt, tick labels at 16pt - all perfectly
-          readable
+        comment: All title/axis/tick labels readable in both themes; legend at 7pt
+          is slightly below 8pt recommended minimum
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, all labels clearly separated
+        score: 4
+        max: 6
+        passed: false
+        comment: Dense cluster of 15-20 green New High triangles in 2022-2023 area
+          visually merge; the logic is correct (one per distinct drawdown period)
+          but synthetic data creates too many periods
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line width of 2.5 is appropriate, fill area clearly visible with
-          good alpha
+        comment: Drawdown line, filled area, max DD marker, and recovery markers all
+          clearly visible; dense markers in later period reduce per-element clarity
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Red/salmon palette with blue recovery markers provides good contrast
+        comment: Semantic red/green/purple usage; red and green are not paired as
+          sole signal — red is the drawdown, green is recovery markers (different
+          shapes also used)
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good use of canvas space, statistics box placement could be optimized
+        comment: Canvas 3200x1800 confirmed; no text overflow; title ~55% width; KDE
+          marginal panel adds informational value without crowding
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Drawdown (%) has units, Date is generic
+        comment: Title correct format; x-axis 'Trading Date' and y-axis 'Drawdown
+          (%)' with units — both descriptive
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with alpha=0.3, legend has 3 items making it somewhat
-          large
+        comment: 'Semantic color use: #009E73 as recovery/new-high (primary positive),
+          #B71D27 as loss (anyplot pos 3 semantic), #9418DB for emphasis. Backgrounds
+          #FAF8F1/#1A1A17 correct. Both themes render properly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): KDE marginal panel adds analytical depth; semantic
+          color hierarchy is intentional; annotation styling with arrow is polished'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): top/right spines removed on both panels; subtle
+          y-grid (alpha=0.13) and very subtle x-grid (alpha=0.08); consistent typography
+          sizes across panels'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): max DD annotated with both recovery time and
+          duration statistics; recovery markers provide narrative timeline; zero baseline
+          reference; KDE shows distribution context'
     spec_compliance:
-      score: 24
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct drawdown chart showing percentage decline from peak
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X-axis, drawdown percentage on Y-axis, correctly implemented
-      - id: SC-03
+        comment: Correct drawdown chart with filled area below zero baseline
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has filled area, max drawdown marker, recovery points, statistics,
-          zero baseline. Missing optional secondary y-axis for price
-      - id: SC-04
-        name: Data Range
+        comment: 'All required: drawdown formula correct, filled area, max DD marker,
+          recovery markers, key stats (max DD%, duration, recovery time), zero baseline.
+          Optional price series not shown but spec says ''consider''.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis properly scaled showing all data including max drawdown
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=dates, Y=drawdown %, 750 business days shown correctly
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly describes all visual elements
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Exactly drawdown-basic · seaborn · pyplots.ai
+        comment: Title 'drawdown-basic · python · seaborn · anyplot.ai' exactly correct.
+          Legend shows all three series with descriptive labels.
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows multiple drawdown periods, varying depths, recovery points,
-          and max drawdown
+        comment: 'Strong coverage: drawdown calculation, filled area, markers, annotation,
+          KDE distribution. Missing price/value series (optional per spec).'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Portfolio/stock drawdown over 2 years is a realistic financial scenario
+        comment: Energy commodity index with demand shock crash and recovery is realistic
+          and neutral. 2020-2023 timeframe plausible.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Drawdown values (-38.8% max) are realistic for equity investments
+        comment: Max drawdown -45.4% is realistic for energy commodities. 750 business
+          days within specified 250-1500 range.
     code_quality:
       score: 10
       max: 10
@@ -160,52 +199,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear structure: imports → data generation → calculation → plotting
-          → save'
+        comment: Flat script, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(99) ensures deterministic data
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports (os, matplotlib.pyplot, numpy, pandas, seaborn, GridSpec)
+          are used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current seaborn and matplotlib APIs
+        comment: Appropriate complexity for a multi-panel chart; no fake interactivity;
+          GridSpec used properly
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct facecolor; no bbox_inches='tight'
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 3
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses sns.lineplot and sns.set_context, but fill_between is from matplotlib
+        comment: Uses sns.lineplot with ax parameter (axes-level API), sns.set_theme
+          with rc dict, sns.kdeplot with fill=True — all idiomatic seaborn patterns
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: KDE marginal panel via sns.kdeplot is genuinely seaborn-distinctive;
+          sharey on GridSpec panels demonstrates advanced layout understanding
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - annotations
+  - subplots
   patterns:
   - data-generation
+  - explicit-figure
   dataprep:
   - time-series
-  - cumulative-sum
+  - kde
   styling:
   - alpha-blending
   - grid-styling
