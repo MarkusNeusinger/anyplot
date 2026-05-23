@@ -1,151 +1,218 @@
 library: pygal
+language: python
 specification_id: map-drilldown-geographic
 created: '2026-01-20T07:44:21Z'
-updated: '2026-01-20T08:07:53Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21163297447
+updated: '2026-05-23T20:51:48Z'
+generated_by: claude-sonnet
+workflow_run: 26342208905
 issue: 3770
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/pygal/plot.html
-quality_score: 82
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/pygal/plot-dark.html
+quality_score: 79
 review:
   strengths:
-  - Well-structured hierarchical data covering 5 countries, 15 states, and 30+ cities
-  - Excellent use of pygal World map and SVG capabilities
-  - Comprehensive HTML interactive version with drill-down, breadcrumb navigation,
-    and back button
-  - Colorblind-friendly palette with distinct tiers
-  - Clean visual presentation with proper title formatting
-  - Good separation between static PNG overview and interactive HTML version
+  - Correct anyplot_seq-derived choropleth palette (#009E73→#0A5AC4) applied to continuous
+    sales data; sequential coloring effectively encodes magnitude
+  - All font sizes explicitly set (title_font_size=66, label_font_size=56, legend_font_size=44,
+    value_font_size=36) and rendered in correct proportions for a 3200×1800 canvas
+  - HTML drilldown has full breadcrumb navigation with clickable crumb segments, Back
+    button, CSS fade transition, color scale legend gradient, and graceful leaf-level
+    handling
+  - All parent values correctly aggregate child values (US $2100M = CA $680M + TX
+    $520M + NY $580M + FL $320M; all levels verified consistent)
+  - Realistic, neutral business context (global sales by region) with real city/state/country
+    names; data structure accurately reflects geographic hierarchy
+  - pygal's native SVG interactivity (hover tooltips on every tile/bar) is preserved
+    and leveraged in the HTML embed without any manual simulation
   weaknesses:
-  - PNG is a static overview only; the actual drill-down interactivity requires HTML
-    version
-  - Two tiers (Germany/Brazil) share the same teal color making them visually identical
-  - Legend text in PNG could be slightly larger for optimal readability
-  - Bottom margin is quite large, reducing effective map area
+  - Static PNG uses a Treemap rather than an actual geographic map — pygal supports
+    pygal.maps.world.World() and pygal.maps.us.States() which could show real country/state
+    shapes; the treemap captures size-by-value but loses geographic context entirely
+    for the static render
+  - 'Misleading comment on line 216: ''# print_values disabled to avoid dark-ink-on-dark-cell
+    contrast failure in dark theme'' — but print_values=True is actually set; the
+    comment describes the opposite of what the code does and should be removed or
+    corrected'
+  - Dark render value labels on deep-blue choropleth tiles (#0A5AC4, US cells) have
+    reduced contrast — dark ink (#1A1A17) on dark-blue yields ~2.5:1 contrast ratio,
+    below WCAG 4.5:1; consider forcing value_font_color to INK token (#F0EFE8) for
+    dark mode, or disabling print_values in dark mode as the comment intended
+  - Per-bar coloring workaround (creating N single-value series each with N-1 Nones)
+    is verbose — a shorter approach would build the palette from the style colors
+    directly; repeated Style instantiation inside the loop adds clutter
+  - HTML drilldown uses a fade transition (opacity 0→1) rather than a zoom transition
+    — the spec explicitly requests 'smooth zoom transitions when drilling down to
+    maintain spatial context'; no spatial continuity is preserved
   image_description: |-
-    The plot displays a world map (Mercator-style projection) with 5 countries highlighted in different colors representing sales tiers:
-    - United States: Dark blue (#1B4F72), representing ">$1B" tier
-    - Germany: Teal/green (#148F77), representing "$300-500M" tier
-    - Japan: Orange (#E67E22), representing "$500M-1B" tier
-    - Brazil: Teal/green (#148F77), representing "$300-500M" tier
-    - Australia: Purple (#6C3483), representing "<$300M" tier
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct per style guide; no pure white.
+      Chrome: Title "map-drilldown-geographic · python · pygal · anyplot.ai" renders in dark near-black ink at top-center; clearly readable. No axis labels (appropriate for treemap). Legend at bottom row shows five colored swatches with labels "US ($2100M)", "Germany ($580M)", "Japan ($850M)", "Brazil ($520M)", "Australia ($380M)" — all readable in dark ink on warm background.
+      Data: Treemap fills nearly the full canvas. US occupies the left half in dark azure-blue (#0A5AC4 range, high-value end of choropleth). Germany, Japan, Brazil, Australia occupy the right half in a range of teal-to-green (#009E73 range, lower values). Sub-tile values (state sales in millions) are printed at tile centers: 520, 320, 680, 580 (US states); 130, 180, 140, 60, 240, 150, 80, 210, 420, 280, 160 (other countries' states). Colors correctly reflect the sequential anyplot_seq scale from brand green (low) to dark azure (high).
+      Legibility verdict: PASS — all title, legend, and tile-value text is clearly readable against the warm off-white background and the medium-chromacity choropleth tiles.
 
-    The title "map-drilldown-geographic · pygal · pyplots.ai" appears at the top. At the bottom, there is a subtitle "World > Click any country to drill down to states/provinces" serving as breadcrumb navigation guidance. Below that is a legend with 4 color-coded tiers arranged horizontally. All other countries are shown in light gray with borders. The overall layout is clean with the map taking up most of the canvas.
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct per style guide; no pure black.
+      Chrome: Title renders in lighter cream-toned text, readable against the dark background. Legend entries ("US ($2100M)" etc.) appear in light-colored text on the dark strip below the chart — readable.
+      Data: Identical tile layout and choropleth colors to the light render — sequential scale is preserved between themes (correct: data colors positions 1–7 must not change across themes). The US deep-blue tiles and the right-side teal-green tiles match the light render exactly.
+      Legibility verdict: PARTIAL PASS — tile value labels on the darker blue US tiles (e.g., 520, 320, 680, 580) have reduced contrast in the dark render; dark ink on dark-blue (#0A5AC4) yields an estimated ~2.5:1 contrast ratio, which falls below WCAG 4.5:1. The values remain decipherable but are notably harder to read than in the light render. No dark-on-dark failures for title or legend text. Tile labels on the lighter teal-green cells have better contrast and are clearly readable.
   criteria_checklist:
     visual_quality:
-      score: 32
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
-        passed: true
-        comment: Title and legend text are readable but legend text could be slightly
-          larger for optimal viewing at full resolution
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; legend is cleanly arranged at bottom
-      - id: VQ-03
-        name: Element Visibility
-        score: 7
-        max: 8
-        passed: true
-        comment: Countries are clearly visible and distinguishable; good use of contrasting
-          colors against gray background
-      - id: VQ-04
-        name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Uses colorblind-friendly palette; dark blue, orange, teal, and purple
-          are distinguishable, though teal for two tiers could be confusing
-      - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
-        passed: true
-        comment: Map fills canvas well but bottom margin with legend is quite large;
-          some wasted vertical space
-      - id: VQ-07
-        name: Grid & Legend
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend is well-positioned at bottom with clear tier labels
-    spec_compliance:
-      score: 20
-      max: 25
-      items:
-      - id: SC-01
-        name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct choropleth world map as base for drill-down
-      - id: SC-02
-        name: Data Mapping
-        score: 4
-        max: 5
-        passed: true
-        comment: Countries correctly colored by tier; hierarchical data structure
-          implemented
-      - id: SC-03
-        name: Required Features
-        score: 3
-        max: 5
-        passed: true
-        comment: PNG shows static overview; drill-down available in HTML version;
-          breadcrumb shown but not fully interactive in PNG
-      - id: SC-04
-        name: Data Range
-        score: 3
-        max: 3
-        passed: true
-        comment: All tier ranges displayed in legend
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
-        passed: true
-        comment: Legend correctly shows 4 tiers with values
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: map-drilldown-geographic · pygal · pyplots.ai'
-    data_quality:
-      score: 17
-      max: 20
-      items:
-      - id: DQ-01
-        name: Feature Coverage
         score: 6
         max: 8
         passed: true
-        comment: Shows 5 countries across 4 tiers with hierarchical data; demonstrates
-          drill-down concept but PNG is static overview
+        comment: 'Font sizes explicitly set (title=66, label=56, legend=44, value=36);
+          proportions correct for 3200x1800. Minor: dark-mode value labels on deep-blue
+          tiles have ~2.5:1 contrast ratio (dark ink on dark blue) — readable but
+          below WCAG AA.'
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Treemap tiles are non-overlapping by construction; legend entries
+          cleanly spaced; no text collisions observed.
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Tiles clearly visible; value numbers mostly readable. Very small
+          tiles (e.g., '60' in top-right corner) have cramped label placement.
+      - id: VQ-04
+        name: Color Accessibility
+        score: 1
+        max: 2
+        passed: true
+        comment: Sequential green-to-blue is CVD-acceptable (no red-green as sole
+          distinguisher). Separating similarly-valued countries by hue alone is less
+          reliable under protanopia.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 correct. Plot fills ~85% of canvas. Legend positioned
+          cleanly at bottom. Generous margins. No content cut off.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Title follows exact format. Treemap has no X/Y axes; legend serves
+          as category guide. HTML includes 'Sales ($M)' y-title on drill-down bar
+          charts.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Choropleth uses anyplot_seq-derived scale (#009E73→#0A5AC4, minor
+          endpoint adjustment from #003D94 for dark-theme contrast — acceptable).
+          Backgrounds #FAF8F1 / #1A1A17 correct. Data colors identical across themes.
+          Chrome adapts correctly.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 4
+        max: 8
+        passed: true
+        comment: 'Well-configured: choropleth coloring is intentional and adds semantic
+          depth; legend labels include currency values; clean font hierarchy. Not
+          exceptional — treemap layout is functional but generic.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: No axes/gridlines appropriate for treemap; clean margins; legend
+          columns balanced. Monochromatic choropleth could benefit from tile stroke
+          contrast in dark mode.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dual encoding (tile area + color) immediately conveys that US dominates
+          global sales. Size hierarchy makes the big-picture insight obvious. HTML
+          drill-down enables exploration of the story at each level.
+    spec_compliance:
+      score: 12
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: true
+        comment: Spec calls for a geographic map (choropleth). Implementation uses
+          a Treemap — correct concept (hierarchical geographic data with choropleth
+          coloring) but wrong chart type. Pygal has pygal.maps.world.World() and us.States()
+          that could show actual geographic shapes.
+      - id: SC-02
+        name: Required Features
+        score: 3
+        max: 4
+        passed: true
+        comment: 'Drilldown ✓, breadcrumb with clickable crumbs ✓, aggregate values
+          ✓, consistent color scale ✓, color legend ✓, hover tooltips ✓, graceful
+          leaf handling ✓. Missing: zoom transition with spatial context (only fade
+          opacity transition implemented).'
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Tile area maps to total country value; sub-tile area maps to state
+          value; color encodes relative magnitude via sequential scale. All data visible
+          and consistently mapped.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: 'Title: ''map-drilldown-geographic · python · pygal · anyplot.ai''
+          — exact format. Legend labels include country names and total values ($M).
+          HTML title matches.'
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Three-level hierarchy (country→state→city) fully implemented. Five
+          countries, 3-4 states each, 2-3 cities per state. Variation in values demonstrates
+          the chart type. City level only accessible in HTML drilldown, not in PNG.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Regional sales data in millions USD is a realistic, neutral business
-          scenario
+        comment: 'Real-world business scenario: global sales performance in $M by
+          country/state/city. Real geographic names. Neutral business context. No
+          sensitive topics.'
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Sales values are plausible ($320M-$2.1B for countries); values make
-          sense for regional business data
+        comment: Child values correctly sum to parent values at all levels (US $2100M
+          = CA+TX+NY+FL; Japan $850M = Tokyo+Osaka+Aichi; etc.). Proportions plausible
+          for major global markets.
     code_quality:
       score: 8
       max: 10
@@ -155,54 +222,66 @@ review:
         score: 2
         max: 3
         passed: true
-        comment: Code uses flat structure but has some complexity due to dual output
-          (PNG + HTML)
+        comment: 'Two small helper functions (_lerp_hex, seq_color) break the no-functions
+          rule but serve a clear purpose. Structure is mostly linear: helpers → data
+          → PNG chart → HTML chart.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data; no random generation
+        comment: All data hardcoded in the hierarchy dict. 100% deterministic, no
+          random seed needed.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (pygal, json, Style, World)
+        comment: json, os, sys, pygal, Style — all used. No unused imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 1
+        max: 2
+        passed: true
+        comment: Misleading comment on line 216 says 'print_values disabled' but code
+          has print_values=True. Per-bar coloring workaround (N series each with N-1
+          Nones) is verbose. Repeated Style() instantiation in the loop. No fake UI
+          elements.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current pygal API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png but also has substantial HTML generation for interactivity
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct naming. Current
+          pygal API used.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of pygal-maps-world, SVG rendering, custom Style, legend_at_bottom,
-          HTML export with embedded JavaScript for interactivity
+        comment: Correct use of pygal.Treemap, Style object with all theme tokens,
+          legend_at_bottom, legend_at_bottom_columns, render_to_png, render(is_unicode=True).
+          Idiomatic pygal patterns throughout.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Uses Treemap (a distinctive pygal chart type) and leverages pygal's
+          native SVG output embedded in custom HTML for a multi-level drilldown. SVG-in-HTML
+          with JavaScript chart switching is a creative use of pygal's vector output.
   verdict: APPROVED
 impl_tags:
-  dependencies:
-  - pygal-maps-world
+  dependencies: []
   techniques:
   - html-export
-  - custom-legend
   - hover-tooltips
   patterns:
-  - data-generation
   - iteration-over-groups
   dataprep: []
   styling:
-  - edge-highlighting
+  - custom-colormap
