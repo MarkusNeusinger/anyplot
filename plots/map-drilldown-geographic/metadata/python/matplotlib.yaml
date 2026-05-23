@@ -1,157 +1,200 @@
 library: matplotlib
+language: python
 specification_id: map-drilldown-geographic
 created: '2026-01-20T07:43:08Z'
-updated: '2026-01-20T07:51:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21163297408
+updated: '2026-05-23T09:20:33Z'
+generated_by: claude-sonnet
+workflow_run: 26328465333
 issue: 3770
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/matplotlib/plot.png
-preview_html: null
-quality_score: 90
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent visual representation of hierarchical drill-down concept with 3 clear
-    panels
-  - Clean and professional color scheme using Blues colormap
-  - Yellow highlight borders effectively show drill-down targets
-  - Breadcrumb navigation clearly shows hierarchical path at each level
-  - Good use of matplotlib patches and collections for custom shapes
+  - Three-level drill-down hierarchy clearly communicated via side-by-side panels
+    with directional arrows
+  - Consistent anyplot_seq colormap across all hierarchy levels enables cross-level
+    comparison
+  - FancyBboxPatch with rounded corners and HIGHLIGHT color (#9418DB) for selected
+    regions creates stylistic cohesion
+  - Breadcrumb navigation shown as static text at bottom of each panel - accurate
+    static adaptation of the interactive spec
+  - PatchCollection and FancyArrowPatch with fig.transFigure transform demonstrate
+    idiomatic matplotlib usage
+  - 'Perfect theme adaptation: warm off-white/near-black backgrounds, all chrome tokens
+    correctly applied in both renders'
+  - Colorbar with global normalization allows meaningful comparison across all three
+    administrative levels
   weaknesses:
-  - Colorbar uses generic Low/Medium/High labels instead of showing actual value ranges
-    with units
-  - Abstract rectangles do not convey geographic shapes (specification mentions choropleth-style
-    maps)
-  image_description: 'The plot displays a 3-panel hierarchical drill-down visualization
-    showing sales data. Panel 1 ("Level 1: Regions") shows 6 world regions (N.AM,
-    EUR, ASIA, AFR, S.AM, OCE) as rounded rectangles in a Blues colormap, with N.AM
-    highlighted in yellow border. Panel 2 ("Level 2: States") shows 10 US states (CA,
-    WA, TX, FL, IL, NY, PA, OH, GA, MI) with CA highlighted in yellow. Panel 3 ("Level
-    3: Cities") shows 10 California cities (LA, SF, SD, SJ, SAC, OAK, FRE, LB, SM,
-    IRV). Yellow arrows connect the panels indicating drill-down flow. Each panel
-    has breadcrumb navigation below ("World", "World > United States", "World > United
-    States > California"). A colorbar on the right shows "Sales Value (relative)"
-    from Low to High. The main title follows the required format: "map-drilldown-geographic
-    · matplotlib · pyplots.ai".'
+  - Box text fontsize=6 for value labels may be challenging to read at mobile widths
+    (~400px scaled PNG)
+  - 'SC-01 deduction: geographic boxes instead of actual geographic shapes loses the
+    map character of the spec'
+  - Colorbar tick labels mix units inconsistently ($1.2M at bottom, $157B and $312B
+    at top) which may confuse readers
+  - 'DQ-03 minor: scale ratio of ~260,000x between Santa Monica ($1.2M) and Asia ($312B)
+    is extremely wide and somewhat unrealistic for a single company dataset'
+  - 'DE-01 not exceptional: design is polished but not reaching publication-ready
+    territory (no geographic visual metaphor)'
+  - Panel 1 layout slightly dense - 6 regions spread across 3 columns with some visual
+    gaps vs. panels 2-3 which are more compact
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct light theme surface, no pure white.
+      Chrome: Title "map-drilldown-geographic · python · matplotlib · anyplot.ai" at fontsize=12 reads clearly in dark ink (#1A1A17). Subtitle in INK_SOFT is legible. Panel sub-titles ("Level 1: World Regions", "Level 2: US States", "Level 3: CA Cities") in bold dark ink are prominent and well-readable. Breadcrumb texts at bottom of each panel ("World", "World ▶ United States", "World ▶ United States ▶ California") in INK_MUTED italic are visible. Colorbar label "Annual Sales" and tick labels ($1.2M, $157B, $312B) readable in INK_SOFT.
+      Data: Colored boxes using anyplot_seq (green #009E73 at low values → dark azure #003D94 at high values). Box labels (region abbreviations) and values in BOX_TEXT (#F0EFE8) provide good contrast against both green and blue box backgrounds. Purple (#9418DB) highlight borders mark selected regions (N.AM in panel 1, CA in panel 2). Purple arrows connect panels indicating drill-down direction. No axes, all panels use axes-off style appropriate for this layout.
+      Legibility verdict: PASS — all text clearly readable against light background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct dark theme surface, no pure black.
+      Chrome: Title, panel titles, breadcrumbs, colorbar labels all render in light tones (INK = #F0EFE8 / INK_SOFT = #B8B7B0). No dark-on-dark failures detected. All text elements flip correctly to light on the dark surface.
+      Data: Colored boxes identical to light render — anyplot_seq colormap (green → azure) unchanged between themes. BOX_TEXT (#F0EFE8) on colored boxes maintains good readability. Purple highlights and arrows unchanged. Data colors are identical between themes — only chrome flips.
+      Legibility verdict: PASS — all text readable against dark background. No dark-on-dark failures observed.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: All text is readable; title is 24pt, labels are appropriately sized,
-          but panel titles could be slightly larger
+        comment: All font sizes explicitly set (6-12pt). Readable at full resolution.
+          fontsize=6 for box values is a bit small for mobile scaling but acceptable
+          at 3200px.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping elements; all region/state/city labels fit within
-          their boxes
+        comment: No overlapping text or elements detected in either render. Grid layout
+          prevents collisions.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Rounded rectangles are well-sized and clearly visible with good contrast
+        comment: Colored boxes clearly visible with good contrast. anyplot_seq provides
+          clear differentiation from green to dark azure.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Blues colormap is colorblind-safe with sequential progression
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good 3-panel layout but left margin slightly tighter than right
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: N/A for this plot type, but breadcrumbs and colorbar labels are descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: anyplot_seq is CVD-safe. Purple highlights contrast well. No red-green
+          sole signaling.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Three-panel layout uses canvas area well. Colorbar
+          properly positioned. Good proportions.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Colorbar uses generic Low/Medium/High labels instead of actual value
-          ranges
+        passed: true
+        comment: 'Axes off — panel titles are descriptive (''Level 1: World Regions'',
+          etc.). Colorbar labeled ''Annual Sales''.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: anyplot_seq used for continuous data. PAGE_BG correct for both themes.
+          All chrome tokens correctly applied. Data colors identical between light
+          and dark renders.
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Strong design: cohesive HIGHLIGHT color for selections and arrows,
+          consistent anyplot_seq scale, rounded corners add polish. Above defaults
+          but not publication-ready.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Axes completely off (minimal chrome), no grid, rounded FancyBboxPatch,
+          subtle colorbar outline. Good refinement.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Drill-down narrative clearly communicated through panel progression,
+          arrows, highlights, and breadcrumbs. Clear focal points.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 12
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 3
+        max: 5
         passed: true
-        comment: Correctly shows hierarchical drill-down geographic concept with 3
-          levels
+        comment: Correct hierarchical concept with choropleth coloring, but geographic
+          boxes instead of actual map shapes lose the geographic character of the
+          spec.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Values correctly mapped to colors across all three hierarchy levels
-      - id: SC-03
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has breadcrumb navigation, color scale, hierarchy levels, and drill-down
-          indicators; interactive click behavior not possible in static matplotlib
-      - id: SC-04
-        name: Data Range
+        comment: 'Breadcrumbs present, consistent color scale, colorbar shown. Inherently
+          missing: zoom transitions, hover tooltips (static library), and graceful
+          handling of leaf-node regions.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data values represented within color scale
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Three-level hierarchy correctly shown. Color mapping consistently
+          encodes annual sales.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Colorbar correctly indicates relative sales values
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Format is correct but subtitle added below it
+        comment: Title matches required format exactly. Colorbar labeled 'Annual Sales'.
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows all 3 hierarchy levels with varying data values; demonstrates
-          drill-down concept well but abstract rectangles do not show actual geographic
-          shapes
+        comment: 'Shows all three hierarchy levels with good regional/state/city coverage.
+          Missing: leaf-node regions with no sub-level data.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Sales data by geographic region is a plausible, neutral business
-          scenario
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Values are sensible (billions for regions, millions for states/cities)
-          but exact numbers not shown on plot
+        comment: Annual sales drill-down (World → North America → California) is a
+          standard and realistic business intelligence scenario.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 3
+        max: 4
+        passed: true
+        comment: Regional proportions broadly plausible. Scale ratio of ~260,000x
+          between Santa Monica ($1.2M) and Asia ($312B) is very extreme for a single
+          dataset.
     code_quality:
       score: 10
       max: 10
@@ -161,55 +204,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports, data, plot, save (no functions/classes)'
+        comment: Clean Imports → Data → Plot → Save. No functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Deterministic data (no random values)
+        comment: All data hardcoded — fully deterministic, no random elements.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only matplotlib imports used
+        comment: 'All imports used: os, mpatches, plt, PatchCollection, LinearSegmentedColormap,
+          Normalize.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current matplotlib API
+        comment: Three parallel panel-building blocks are repetitive but appropriate
+          for the visualization structure. No fake interactive elements.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png, dpi=400, no bbox_inches='tight'. Correct.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Uses add_gridspec, PatchCollection, FancyBboxPatch, FancyArrowPatch,
+          ScalarMappable, Normalize — strong mid-to-high-level matplotlib idioms.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses FancyBboxPatch, PatchCollection, FancyArrowPatch, gridspec for
-          layout; good matplotlib usage but could leverage more advanced features
+        comment: FancyArrowPatch with transform=fig.transFigure for cross-panel arrows,
+          fig.patches.append() for figure-level elements, and PatchCollection for
+          batch patch rendering are distinctively matplotlib.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - subplots
-  - patches
   - colorbar
+  - patches
+  - subplots
   - annotations
-  - custom-legend
   patterns:
   - iteration-over-groups
-  dataprep: []
+  - explicit-figure
+  dataprep:
+  - normalization
   styling:
-  - minimal-chrome
   - custom-colormap
+  - minimal-chrome
   - edge-highlighting
