@@ -1,157 +1,189 @@
 library: letsplot
+language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:22:38Z'
-updated: '2026-01-20T10:25:30Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21167798591
+updated: '2026-05-23T10:20:11Z'
+generated_by: claude-sonnet
+workflow_run: 26329752297
 issue: 3748
-python_version: 3.13.11
-library_version: 4.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/letsplot/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/letsplot/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 4.10.1
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/letsplot/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/letsplot/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/letsplot/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/letsplot/plot-dark.html
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of rebasing normalization with clear baseline reference
-    line at 100
-  - Good use of lets-plot ggplot2-style grammar with proper theme customization
-  - Realistic data generation using geometric Brownian motion with appropriate drift/volatility
-    parameters
-  - Clean, well-structured code following KISS principles
-  - Proper export with scale=3 for high-resolution output
+  - 'Perfect spec compliance: normalization to 100, reference baseline, correct colors,
+    all required features present'
+  - Full palette compliance and proper theme-adaptive chrome in both renders
+  - layer_tooltips() with custom format is good use of lets-plot distinctive interactive
+    capability
+  - Realistic stock tickers with per-symbol drift/volatility parameters; plausible
+    data context
+  - 'Perfect code quality: seed, clean imports, flat structure, HTML + PNG output'
   weaknesses:
-  - X-axis uses Trading Day integers instead of actual dates which reduces real-world
-    context
-  - Color palette includes red-green combination that may be challenging for colorblind
-    viewers
-  - Star import with noqa comments is less clean than explicit imports
-  image_description: 'The plot displays a multi-line stock price comparison chart
-    with four lines representing AAPL (blue), GOOGL (yellow), MSFT (red), and SPY
-    (green). All series start at the 100 baseline (indicated by a gray dashed horizontal
-    reference line). The x-axis shows "Trading Day" from 0 to approximately 260, and
-    the y-axis shows "Rebased Price (Start = 100)" ranging from about 80 to 170. The
-    lines show varying performance trajectories: MSFT (green) shows the strongest
-    overall performance peaking around 165, GOOGL (yellow) fluctuates but trends upward
-    to about 130, AAPL (blue) shows modest gains ending around 117, and SPY (red)
-    ends slightly below 100. The legend is positioned on the right side with clear
-    symbol labels. Grid lines are subtle gray providing good readability.'
+  - 'End-of-line geom_text labels for GOOGL and AAPL overlap significantly where the
+    two lines converge at the charts right edge (both ~115-120 at December). Fix:
+    either remove the end-of-line labels (the legend already identifies symbols) or
+    use smart label placement at an earlier date where lines are clearly separated,
+    or nudge labels with vjust based on vertical ordering.'
+  - VQ-01/VQ-02 penalty from label crowding is the main score drag — resolving the
+    overlap would push the score to ~88-90.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — PASS (not pure white, not dark)
+      Chrome: Title "line-stock-comparison · python · letsplot · anyplot.ai" in dark ink, clearly readable. Y-axis label "Performance (rebased to 100)" and X-axis label "Date" readable. Tick labels in INK_SOFT (#4A4A44) readable. Legend panel lists AAPL/GOOGL/MSFT/SPY with colored swatches.
+      Data: AAPL green (#009E73) first series ✓; GOOGL purple (#9418DB); MSFT red (#B71D27); SPY sky blue (#16B8F3). Dashed reference line at 100 visible. Lines size=1.5 clearly visible. End-of-line geom_text labels present — GOOGL and AAPL labels overlap where lines converge near 115–120 at December.
+      Legibility verdict: PASS (all primary chrome readable; label overlap area is a layout flaw, not a legibility failure of chrome)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — PASS (not pure black, not light)
+      Chrome: Title, axis labels, tick labels all render in light tones (#F0EFE8 / #B8B7B0 tokens). All clearly readable against dark background. No dark-on-dark failures observed. Legend background elevated (#242420). Grid lines subtle via RULE token.
+      Data: All four data colors identical to light render — palette does not shift between themes, only chrome flips. Reference dashed line at 100 visible. Same end-of-line label overlap present.
+      Legibility verdict: PASS (no dark-on-dark failures; brand green #009E73 clearly visible on dark surface)
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 23
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 6
+        max: 8
         passed: true
-        comment: Title, axis labels, legend text all clearly readable with appropriate
-          font sizes
+        comment: Title, axis labels, tick labels, legend all readable in both themes.
+          Deduction for crowded overlapping end-of-line labels (GOOGL/AAPL) that reduce
+          per-label readability.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements, lines distinguishable
+        score: 3
+        max: 6
+        passed: false
+        comment: GOOGL and AAPL end-of-line geom_text labels overlap where the two
+          lines converge near 115-120 at December in both renders.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line thickness of 1.5 with 0.9 alpha appropriate for 4 series
+        comment: Lines at size=1.5 well-visible, all four series distinguishable,
+          dashed reference line at 100 visible. Minor deduction for slightly thin
+          lines at this density.
       - id: VQ-04
         name: Color Accessibility
-        score: 3
-        max: 5
-        passed: false
-        comment: Red-green combination (MSFT/SPY) could be problematic for colorblind
-          viewers
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Good proportions, plot fills canvas well with balanced margins
+        comment: Anyplot palette used — colorblind-safe by design.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Canvas correct (3200x1800). Legend placement sensible. Minor deduction
+          for right-side crowding from stacked end-of-line labels.
       - id: VQ-06
-        name: Axis Labels
-        score: 1
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Descriptive labels but y-axis could clarify units better
+        passed: true
+        comment: Y-axis 'Performance (rebased to 100)' descriptive and contextual.
+          X-axis 'Date' concise. Title format correct.
       - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        name: Palette Compliance
+        score: 2
         max: 2
-        passed: false
-        comment: Grid subtle and legend placed well, but minor grid lines slightly
-          visible
+        passed: true
+        comment: 'AAPL (first series) = #009E73. Full anyplot palette canonical order.
+          Light bg #FAF8F1, dark bg #1A1A17. Both renders theme-correct.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive chrome, elevated legend background, reference dashed
+          line, interactive tooltips via layer_tooltips(). End-of-line label concept
+          shows intent. Deduction for cluttered terminal overlap and limited further
+          polish.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal() removes top/right spines. Minor grid disabled. Grid
+          opacity subtle via RULE token. Legend frame uses elevated background.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Reference line at 100 meaningfully anchors relative performance.
+          End-of-line label concept aids identification. Storytelling is good but
+          overlap undermines the payoff.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-line chart for stock comparison
+        comment: Multi-line chart comparing normalized stock performance. Correct
+          chart type.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Trading Day on X, rebased price on Y
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: rebased to 100, distinct colors, legend,
-          horizontal reference line, grid'
-      - id: SC-04
-        name: Data Range
+        comment: Normalization to 100, distinct colors per symbol, clear legend, horizontal
+          reference line at 100, multiple series (4).
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Shows full year of trading days, all values visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=date, Y=rebased price. All four series span full date range.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 4 symbols
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Uses correct format: line-stock-comparison · letsplot · pyplots.ai'
+        comment: Title 'line-stock-comparison · python · letsplot · anyplot.ai' matches
+          required format. Legend labels AAPL, GOOGL, MSFT, SPY.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows outperformers and underperformers, varying volatility, but
-          could show more dramatic divergence
+        comment: All 4 series, 252 business days (~1 year), rebasing logic, realistic
+          drift/volatility per symbol, reference baseline.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Realistic stock scenario with AAPL, GOOGL, MSFT and SPY benchmark
+        comment: Real tickers (AAPL, GOOGL, MSFT, SPY) with realistic annualized drifts
+          and volatilities. Plausible and neutral.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Geometric Brownian motion produces realistic returns, though SPY
-          ending below 100 is slightly pessimistic
+        comment: Range ~80-170 is credible for one year of stock performance relative
+          to a 100 baseline.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,55 +191,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data → plot → save structure
+        comment: No functions or classes; flat, readable script.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Some noqa comments due to star import, could be cleaner
+        passed: true
+        comment: All imported names are used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Using current lets-plot API
+        comment: Appropriate complexity; no fake UI elements.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png with scale=3
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Grammar of graphics used correctly: aes(), geom_line(), scale_color_manual(),
+          theme() layers. layer_tooltips() is idiomatic lets-plot. Minor deduction
+          for no scale_x_datetime to control date axis formatting.'
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses ggplot grammar, theme_minimal, and proper ggsave with scale
-          parameter, but could leverage more lets-plot specific features
+        comment: layer_tooltips() with .format() and .line() is a distinctive lets-plot
+          interactive feature. HTML export via ggsave(...html). Could further leverage
+          built-in tooltip theming or geom_ribbon.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - layer-composition
+  - hover-tooltips
+  - annotations
   - html-export
   patterns:
   - data-generation
+  - groupby-aggregation
   - iteration-over-groups
   dataprep:
-  - normalization
   - time-series
+  - normalization
   - cumulative-sum
   styling:
   - alpha-blending
-  - grid-styling
