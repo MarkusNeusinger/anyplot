@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 85/100 | Updated: 2026-05-23
@@ -16,7 +16,7 @@ from pygal.style import Style
 THEME = os.getenv("ANYPLOT_THEME", "light")
 PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
-INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
 # Data — 2 years of synthetic daily portfolio returns
 np.random.seed(42)
@@ -33,24 +33,38 @@ max_dd_idx = int(np.argmin(drawdown))
 max_dd_value = drawdown[max_dd_idx]
 max_dd_date = dates[max_dd_idx].strftime("%Y-%m-%d")
 
+# Duration: days from peak to trough
+peak_slice = price[: max_dd_idx + 1]
+peak_idx = int(np.where(peak_slice == peak_slice.max())[0][-1])
+duration_days = (dates[max_dd_idx] - dates[peak_idx]).days
+
+# Recovery time: days from trough to next new high
+recovery_after = [i for i in range(max_dd_idx, len(drawdown)) if drawdown[i] >= -0.1]
+if recovery_after:
+    recovery_days = (dates[recovery_after[0]] - dates[max_dd_idx]).days
+    recovery_str = f"{recovery_days}d"
+else:
+    recovery_str = "Not recovered"
+
 # Recovery indices: where drawdown crosses back to ~zero (new highs)
 recovery_indices = [i for i in range(1, len(drawdown)) if drawdown[i - 1] < -0.5 and drawdown[i] >= -0.1]
 
-# Style — INK_SOFT for foreground_subtle gives more visible grid lines (was too subtle)
-# Semantic colors: red = loss/drawdown, purple = peak loss marker, green = recovery
+# Style — semantic colors: red = loss/drawdown, purple = peak loss marker, green = recovery
 custom_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
-    foreground_subtle=INK_SOFT,
-    colors=("#B71D27", "#9418DB", "#009E73"),
+    foreground_subtle=INK_MUTED,
+    colors=("#B71D27", "#9418DB", "#009E73", INK_MUTED),
     title_font_size=66,
     label_font_size=56,
     major_label_font_size=44,
     legend_font_size=44,
     value_font_size=36,
     stroke_width=3,
+    opacity=".65",
+    opacity_hover=".85",
 )
 
 chart = pygal.Line(
@@ -81,7 +95,12 @@ chart.add(f"Drawdown (Max: {max_dd_value:.1f}% on {max_dd_date})", list(drawdown
 # Max drawdown marker — prominent dot at the trough (no fill, just the dot)
 max_marker = [None] * len(drawdown)
 max_marker[max_dd_idx] = drawdown[max_dd_idx]
-chart.add(f"Max Drawdown: {max_dd_value:.1f}%", max_marker, show_dots=True, dots_size=18)
+chart.add(
+    f"Max Drawdown: {max_dd_value:.1f}% | Duration: {duration_days}d | Recovery: {recovery_str}",
+    max_marker,
+    show_dots=True,
+    dots_size=18,
+)
 
 # Recovery point markers — green dots at zero-crossings (no fill since values ≈ 0)
 if recovery_indices:
