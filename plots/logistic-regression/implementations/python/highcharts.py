@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 logistic-regression: Logistic Regression Curve Plot
 Library: highcharts unknown | Python 3.13.13
 Quality: 87/100 | Updated: 2026-05-23
@@ -97,6 +97,7 @@ chart.options.x_axis = {
     "labels": {"style": {"fontSize": "44px", "color": INK_SOFT}},
     "min": 0,
     "max": 10,
+    "tickInterval": 1,
     "gridLineWidth": 1,
     "gridLineColor": GRID,
     "lineColor": INK_SOFT,
@@ -145,6 +146,24 @@ chart.options.plot_options = {
     "scatter": {"marker": {"radius": 8, "symbol": "circle"}},
     "spline": {"lineWidth": 6, "marker": {"enabled": False}},
     "arearange": {"fillOpacity": 0.2, "lineWidth": 0, "marker": {"enabled": False}},
+}
+
+chart.options.tooltip = {
+    "useHTML": True,
+    "backgroundColor": ELEVATED_BG,
+    "borderColor": INK_SOFT,
+    "style": {"color": INK, "fontSize": "28px"},
+    "formatter": """function() {
+        var s = this.series.name;
+        if (s === 'Logistic Curve') {
+            return '<b>Logistic Curve</b><br/>Study Hours: <b>' + Highcharts.numberFormat(this.x, 2) + '</b><br/>P(Pass): <b>' + Highcharts.numberFormat(this.y * 100, 1) + '%</b>';
+        } else if (s === '95% CI') {
+            return '<b>95% CI Band</b><br/>Study Hours: <b>' + Highcharts.numberFormat(this.x, 2) + '</b><br/>Lower: <b>' + Highcharts.numberFormat(this.point.low * 100, 1) + '%</b><br/>Upper: <b>' + Highcharts.numberFormat(this.point.high * 100, 1) + '%</b>';
+        } else {
+            var outcome = s === 'Pass (1)' ? 'Pass' : 'Fail';
+            return '<b>' + outcome + '</b><br/>Study Hours: <b>' + Highcharts.numberFormat(this.x, 2) + '</b>';
+        }
+    }""",
 }
 
 # Confidence interval band
