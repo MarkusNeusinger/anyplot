@@ -17,7 +17,7 @@ sys.path = [p for p in sys.path if p not in ("", ".", os.getcwd(), os.path.dirna
 import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 from bokeh.io import output_file, save  # noqa: E402
-from bokeh.models import HoverTool, Label, Legend, Range1d, Span  # noqa: E402
+from bokeh.models import Band, ColumnDataSource, HoverTool, Label, Legend, Range1d, Span  # noqa: E402
 from bokeh.plotting import figure  # noqa: E402
 from selenium import webdriver  # noqa: E402
 from selenium.webdriver.chrome.options import Options  # noqa: E402
@@ -36,11 +36,10 @@ ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
 n_days = 252
 dates = pd.date_range("2024-01-02", periods=n_days, freq="B")
 
-# Per-stock seeds ensure reproducibility without cross-stock correlation artifacts
 stocks = {
-    "AAPL": {"drift": 0.0008, "volatility": 0.018, "seed": 42},
-    "GOOGL": {"drift": 0.0006, "volatility": 0.020, "seed": 43},
-    "MSFT": {"drift": 0.0007, "volatility": 0.016, "seed": 44},
+    "AAPL": {"drift": 0.0006, "volatility": 0.018, "seed": 42},
+    "GOOGL": {"drift": 0.0005, "volatility": 0.020, "seed": 43},
+    "MSFT": {"drift": 0.0002, "volatility": 0.016, "seed": 44},
     "SPY": {"drift": 0.0003, "volatility": 0.009, "seed": 45},
 }
 
@@ -62,7 +61,7 @@ best, worst = ranked[-1], ranked[0]
 # Extend x-axis range to accommodate end-of-series labels
 DAY_MS = 24 * 60 * 60 * 1000
 start_ms = int((dates[0] - pd.Timedelta(days=5)).timestamp() * 1000)
-end_ms = int((dates[-1] + pd.Timedelta(days=55)).timestamp() * 1000)
+end_ms = int((dates[-1] + pd.Timedelta(days=60)).timestamp() * 1000)
 
 # Figure — 3200×1800 with toolbar disabled for correct PNG dimensions
 p = figure(
@@ -82,40 +81,58 @@ p = figure(
 
 # Font sizes — bokeh CSS pt sizing (~1.333 source-px per pt)
 p.title.text_font_size = "50pt"
+p.title.text_font_style = "bold"
 p.xaxis.axis_label_text_font_size = "42pt"
 p.yaxis.axis_label_text_font_size = "42pt"
 p.xaxis.major_label_text_font_size = "34pt"
 p.yaxis.major_label_text_font_size = "34pt"
 
+# Subtle ±15% performance band — visually anchors the "normal" return envelope
+band_source = ColumnDataSource(data={"x": df["date"], "lower": np.full(n_days, 85.0), "upper": np.full(n_days, 115.0)})
+perf_band = Band(
+    base="x", lower="lower", upper="upper", source=band_source, fill_color=INK, fill_alpha=0.04, line_color=None
+)
+p.add_layout(perf_band)
+
 # Reference line at 100 (starting point indicator)
 hline = Span(location=100, dimension="width", line_color=INK_SOFT, line_dash="dashed", line_width=3)
 p.add_layout(hline)
 
+# Smart label y-position assignment — spread overlapping end-of-series labels
+sorted_syms = sorted(stocks.keys(), key=lambda s: final_vals[s])
+min_gap = 8  # minimum vertical gap in data units
+label_ys: dict[str, float] = {}
+prev_y = -999.0
+for sym in sorted_syms:
+    y = max(final_vals[sym], prev_y + min_gap)
+    label_ys[sym] = y
+    prev_y = y
+
 # Plot each stock series with performance-based line widths for visual hierarchy
 legend_items = []
-label_ms_offset = 7 * DAY_MS  # position label ~7 trading days past the last date
+label_ms_offset = 8 * DAY_MS
 for i, symbol in enumerate(stocks):
-    lw = 7 if symbol in (best, worst) else 4  # emphasize top and bottom performers
+    lw = 7 if symbol in (best, worst) else 4
     line = p.line(x=df["date"], y=df[symbol], line_width=lw, line_color=ANYPLOT_PALETTE[i], alpha=0.9)
     legend_items.append((symbol, [line]))
 
-    # End-of-series label showing symbol and final value
+    # End-of-series label showing symbol and final value with vertical alignment fix
     final_date_ms = int(df["date"].iloc[-1].timestamp() * 1000)
-    final_val = final_vals[symbol]
     p.add_layout(
         Label(
             x=final_date_ms + label_ms_offset,
-            y=final_val,
-            text=f"{symbol} {final_val:.0f}",
+            y=label_ys[symbol],
+            text=f"{symbol} {final_vals[symbol]:.0f}",
             text_color=ANYPLOT_PALETTE[i],
-            text_font_size="26pt",
+            text_font_size="28pt",
+            text_font_style="bold",
             text_baseline="middle",
             text_align="left",
         )
     )
 
 # Hover tool — active in HTML artifact
-hover = HoverTool(tooltips=[("Date", "@x{%F}"), ("Value", "@y{0.2f}")], formatters={"@x": "datetime"}, mode="vline")
+hover = HoverTool(tooltips=[("Date", "@x{%F}"), ("Value", "@y{0.1f}")], formatters={"@x": "datetime"}, mode="vline")
 p.add_tools(hover)
 
 # Legend
