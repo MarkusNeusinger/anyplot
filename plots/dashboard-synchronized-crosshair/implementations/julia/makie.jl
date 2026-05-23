@@ -69,6 +69,10 @@ vol_hi = maximum(volume)
 # Shared grid color (10% opacity INK)
 grid_col = RGBAf(INK.r, INK.g, INK.b, 0.10)
 
+# Zone fill colors — very low alpha so data is not obscured
+overbought_fill = RGBAf(ANYPLOT_PALETTE[3].r, ANYPLOT_PALETTE[3].g, ANYPLOT_PALETTE[3].b, 0.10)
+oversold_fill   = RGBAf(ANYPLOT_PALETTE[1].r, ANYPLOT_PALETTE[1].g, ANYPLOT_PALETTE[1].b, 0.10)
+
 # Figure
 fig = Figure(
     size            = (1600, 900),
@@ -157,6 +161,10 @@ lines!(ax1, days, price; color = ANYPLOT_PALETTE[1], linewidth = 2.0)
 # Volume bars — palette position 2 (canonical order)
 barplot!(ax2, days, volume; color = ANYPLOT_PALETTE[2], strokewidth = 0, width = 0.9)
 
+# RSI overbought/oversold zone fills using band! — highlights the threshold regions
+band!(ax3, days, fill(70.0, n), fill(100.0, n); color = overbought_fill)
+band!(ax3, days, fill(0.0, n), fill(30.0, n);  color = oversold_fill)
+
 # RSI line — palette position 3 (canonical order)
 lines!(ax3, rsi_days, rsi_vals; color = ANYPLOT_PALETTE[3], linewidth = 2.0)
 
@@ -167,19 +175,19 @@ hlines!(ax3, [30.0, 70.0];
     linestyle = :dash,
 )
 
+# RSI zone labels — anchored inside the zone, left side
+text!(ax3, 5.0, 85.0;
+    text = "Overbought", color = INK_MUTED, fontsize = 10, align = (:left, :center))
+text!(ax3, 5.0, 15.0;
+    text = "Oversold", color = INK_MUTED, fontsize = 10, align = (:left, :center))
+
 # Panel labels in top-left corner of each axis for quick scannability
 text!(ax1, 5.0, price_lo + 0.93 * (price_hi - price_lo);
-    text = "PRICE", color = INK_MUTED, fontsize = 12, font = :bold, align = (:left, :top))
+    text = "PRICE", color = INK_SOFT, fontsize = 12, font = :bold, align = (:left, :top))
 text!(ax2, 5.0, 0.93 * vol_hi;
-    text = "VOLUME", color = INK_MUTED, fontsize = 12, font = :bold, align = (:left, :top))
+    text = "VOLUME", color = INK_SOFT, fontsize = 12, font = :bold, align = (:left, :top))
 text!(ax3, 5.0, 95.0;
-    text = "RSI", color = INK_MUTED, fontsize = 12, font = :bold, align = (:left, :top))
-
-# RSI zone labels near reference lines
-text!(ax3, 195.0, 72.0;
-    text = "Overbought", color = INK_MUTED, fontsize = 10, align = (:right, :bottom))
-text!(ax3, 195.0, 28.0;
-    text = "Oversold", color = INK_MUTED, fontsize = 10, align = (:right, :top))
+    text = "RSI", color = INK_SOFT, fontsize = 12, font = :bold, align = (:left, :top))
 
 # Synchronized crosshair at RSI overbought peak — vertical line spans all three panels
 cx_line_col = RGBAf(INK.r, INK.g, INK.b, 0.45)
@@ -198,16 +206,20 @@ scatter!(ax3, [Float64(cx)], [cx_rsi];
     color = ANYPLOT_PALETTE[3], markersize = 10,
     strokewidth = 1.5, strokecolor = PAGE_BG)
 
-# Value annotations at the crosshair
+# Value annotations at crosshair — offset right; for RSI clamp downward when near ceiling
 text!(ax1, cx + 4.0, cx_price;
     text = "$(round(cx_price, digits=1))",
     color = INK_SOFT, fontsize = 12, align = (:left, :center))
 text!(ax2, cx + 4.0, cx_volume;
     text = "$(round(Int, cx_volume / 1000))K",
     color = INK_SOFT, fontsize = 12, align = (:left, :center))
-text!(ax3, cx + 4.0, cx_rsi;
-    text = "$(round(cx_rsi, digits=1))",
-    color = INK_SOFT, fontsize = 12, align = (:left, :center))
+
+# RSI annotation: position below dot when near ceiling, label the peak clearly
+rsi_ann_y  = cx_rsi > 82.0 ? cx_rsi - 10.0 : cx_rsi + 3.0
+rsi_ann_va = cx_rsi > 82.0 ? :top : :bottom
+text!(ax3, cx + 4.0, rsi_ann_y;
+    text = "$(round(cx_rsi, digits=1)) ← peak",
+    color = INK_SOFT, fontsize = 11, align = (:left, rsi_ann_va))
 
 # Row proportions: price panel tallest, volume and RSI smaller
 rowsize!(fig.layout, 1, Relative(0.42))
