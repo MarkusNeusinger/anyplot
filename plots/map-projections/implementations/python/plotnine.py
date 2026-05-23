@@ -1,4 +1,4 @@
-"""anyplot.ai
+""" anyplot.ai
 map-projections: World Map with Different Projections
 Library: plotnine 0.15.4 | Python 3.13.13
 Quality: 89/100 | Updated: 2026-05-23
