@@ -1,161 +1,196 @@
 library: highcharts
+language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:59:33Z'
-updated: '2026-01-20T12:02:47Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21170482893
+updated: '2026-05-23T20:03:16Z'
+generated_by: claude-sonnet
+workflow_run: 26330757141
 issue: 3752
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/highcharts/plot.html
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/highcharts/plot-dark.html
 quality_score: 91
 review:
   strengths:
-  - Excellent gradient fill creates visual depth showing drawdown severity
-  - Zero baseline with Peak (0%) label clearly marks reference point
-  - 'Statistics displayed in subtitle (Max Drawdown: -22.2%, Recovery: 164 days)'
-  - Clean datetime axis with quarterly tick intervals
-  - Both PNG and interactive HTML versions generated
-  - Professional typography with appropriately scaled fonts
+  - Semantic color exception correctly applied and documented — red (#B71D27, palette
+    position 3) for drawdown loss is exactly right per the finance semantic rule
+  - Gradient fill (light to dark red) creates elegant visual depth emphasizing deepest
+    drawdown periods
+  - Both themes render correctly with full theme-adaptive chrome — all text readable
+    in light and dark
+  - plotLine annotations on both axes (vertical max-DD marker, horizontal zero-baseline)
+    are idiomatic Highcharts usage and enhance storytelling
+  - Subtitle with computed statistics (max drawdown %, recovery days) adds useful
+    financial context
+  - Font sizes explicitly set throughout — proper hierarchy (66px title, 44px sub,
+    56px axis labels, 44px ticks)
+  - 'Perfect code quality: KISS structure, seed set, clean imports, correct output
+    file naming'
   weaknesses:
-  - Missing explicit marker or annotation at the maximum drawdown point (spec requests
-    highlighting max drawdown period)
-  - Red color choice noted in library rules as potentially problematic for colorblind
-    accessibility (though single-series mitigates impact)
-  - Legend could use larger text size relative to chart dimensions
-  image_description: 'The plot displays a drawdown chart spanning from January 2022
-    to late 2023 (approximately 2 years of data). The chart shows percentage decline
-    from peak value on the Y-axis (ranging from +5% to -24%) and dates on the X-axis.
-    The drawdown values are represented by a red area chart (#DC2626 red color) with
-    a gradient fill that becomes more opaque toward the bottom. A blue horizontal
-    line at 0% marks the peak reference baseline with a "Peak (0%)" label on the right
-    side. The title "drawdown-basic · highcharts · pyplots.ai" appears at the top
-    in bold, with a subtitle showing "Max Drawdown: -22.2% | Recovery: 164 days".
-    The chart shows multiple drawdown periods with the maximum drawdown reaching approximately
-    -22% around June 2022. Multiple recovery points (where the line touches 0%) are
-    visible throughout the time series. The legend at the bottom shows "Drawdown"
-    with a red indicator.'
+  - Recovery points where drawdown returns to zero (new highs) are not visually marked
+    on the chart — the spec explicitly requires this; only the subtitle mentions recovery
+    days but does not place a marker at the recovery date on the x-axis
+  - Single-series legend is present despite there being only one data series — a redundant
+    legend box adds visual noise; per the style guide this should be removed
+  - 'LM-02: Highcharts distinctive features are used (plotLines, linearGradient stops,
+    threshold parameter, dateTimeLabelFormats) but the gradient fill stops and color
+    customization could lean further into Highcharts-exclusive capabilities such as
+    responsive rules or custom renderer shapes'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct anyplot light surface, not pure white.
+      Chrome: Title "drawdown-basic · python · highcharts · anyplot.ai" in bold dark ink (#1A1A17), spans ~65% of plot width — well proportioned. Subtitle "Max Drawdown: -22.2% | Recovery: 164 days" in secondary ink (#4A4A44), clearly readable. X-axis label "Date" and Y-axis label "Drawdown (%)" in primary ink at 56px — balanced and proportionate. Tick labels in secondary ink (#4A4A44) at 44px. "Peak (0%)" label on zero line (right side) and "Max DD: -22.2%" plotline label (red) both clearly readable.
+      Data: Area chart with red (#B71D27, palette pos 3) line and gradient fill from rgba(183,29,39,0.05) at zero to rgba(183,29,39,0.55) at bottom — elegant visual depth emphasizing worst drawdowns. Vertical dashed red plotline at June 2022 marks max drawdown. Horizontal plotline at 0% with "Peak (0%)" label.
+      Legibility verdict: PASS — all text clearly readable against the warm off-white background. No light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct anyplot dark surface, not pure black.
+      Chrome: Title in light ink (#F0EFE8), clearly readable. Subtitle in secondary light ink (#B8B7B0), readable. Axis labels and tick labels in matching light secondary ink. "Peak (0%)" label and "Max DD: -22.2%" label both visible. Grid lines subtle (rgba(240,239,232,0.10)). Legend box uses elevated dark background (#242420) with light border.
+      Data: Drawdown line and gradient fill in identical red (#B71D27) as light render — data colors unchanged, only chrome flipped. The gradient fill now goes dark-red at bottom creating strong contrast against the near-black background.
+      Legibility verdict: PASS — all text clearly readable against the dark background. No dark-on-dark text failures detected. Brand red #B71D27 reads well on both surfaces.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
+        score: 8
+        max: 8
         passed: true
-        comment: Title and labels are clearly readable at full size; subtitle and
-          axis labels have good font sizes for the 4800x2700 resolution
+        comment: All font sizes explicitly set (66px title, 44px subtitle, 56px axis
+          labels, 44px tick labels). Proper hierarchy. Readable at full resolution
+          in both themes. Title ~65% of plot width — expected for mandated format.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements; all labels are clearly separated
+        comment: No overlapping text elements. Max DD plotline label, Peak (0%) label,
+          tick labels, and legend all clear.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Area fill and line are perfectly visible; gradient creates good visual
-          depth
+        comment: 500-point area chart with markers disabled — appropriate for this
+          density. Line and gradient fill clearly visible in both themes.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Red color is distinctive but may have slight accessibility concerns
-          for some colorblind users; single-color plot mitigates impact
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent use of canvas space; plot fills good portion of the area
-          with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis shows Drawdown (%) with clear percentage formatting; X-axis
-          shows Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 1
+        comment: Single red series with good luminance contrast against both light
+          and dark backgrounds. No red-green confusion.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Plot fills canvas well. Generous spacing (spacingTop:60, spacingBottom:100).
+          Legend near data at bottom center. 3200x1800 verified.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
         passed: true
-        comment: Grid is subtle with good alpha; legend is placed below chart but
-          slightly small relative to chart size
+        comment: 'Y-axis: ''Drawdown (%)'' with percentage unit. X-axis: ''Date''
+          descriptive. Title correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Red #B71D27 (palette pos 3) is a valid semantic exception for financial
+          loss/drawdown. Both backgrounds correct (#FAF8F1 light, #1A1A17 dark). All
+          chrome theme-adaptive.'
+    design_excellence:
+      score: 14
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 6
+        max: 8
+        passed: true
+        comment: 'Strong design: gradient fill with elegant opacity progression, semantic
+          color documented, plotLine annotations, informative subtitle with computed
+          stats. Clearly above library defaults.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtle grid (10% opacity), generous whitespace, styled legend box.
+          Single-series legend could be removed. Highcharts spine removal not applied.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Good visual hierarchy: vertical dashed plotline marks max drawdown,
+          horizontal baseline with ''Peak (0%)'' label, gradient fill emphasizes depth.
+          Subtitle provides key financial statistics.'
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct area chart type for drawdown visualization
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X-axis, drawdown percentage on Y-axis correctly mapped
-      - id: SC-03
+        comment: Correct area chart type with fill from drawdown line to zero baseline.
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Has filled area, zero baseline with label, statistics in subtitle;
-          missing distinct marker/annotation at maximum drawdown point
-      - id: SC-04
-        name: Data Range
+        comment: 'Missing: visual markers at recovery points (where drawdown returns
+          to 0%). Spec explicitly requires ''indicate recovery points''. Only subtitle
+          mentions recovery days; no chart marker placed at recovery date.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible with appropriate Y-axis range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: X=datetime, Y=drawdown percentage. Correct mapping, full date range
+          visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows Drawdown
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: true
-        comment: Correct format drawdown-basic · highcharts · pyplots.ai with middle
-          dot
+        comment: Title 'drawdown-basic · python · highcharts · anyplot.ai' — exact
+          required format. Legend label 'Drawdown' matches series.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple drawdown periods, recovery points, varying depths;
-          could show more dramatic peak-to-trough cycles
+        comment: Shows multiple drawdown periods of varying depths, max drawdown highlighted,
+          recovery to zero visible multiple times, extended late drawdown.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Simulated stock price data is realistic and neutral; financial/investment
-          context is appropriate
+        comment: Geometric Brownian motion portfolio simulation — realistic financial
+          context. 2022-2023 date range. Neutral scenario.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: -22% max drawdown is realistic for stocks; 500 data points (2 years
-          business days) is appropriate
+        comment: Max drawdown of -22.2% with 164-day recovery is realistic for a moderately
+          volatile equity portfolio.
     code_quality:
       score: 10
       max: 10
@@ -165,56 +200,64 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports -> data -> plot -> save structure without functions/classes
+        comment: 'Clean linear structure: imports → data generation → chart construction
+          → export. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42) for reproducibility
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: 'All imports used: os, tempfile, time, urllib.request, pathlib.Path,
+          numpy, pandas, highcharts_core, PIL, selenium.'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current highcharts-core API
+        comment: Clean, appropriately complex. No over-engineering or fake UI elements.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Correct naming convention.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Chart(container='container'), HighchartsOptions, to_js_literal(),
+          plotLines on both axes, dateTimeLabelFormats, threshold parameter — all
+          idiomatic Highcharts patterns.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses Highcharts area chart with gradient fill, datetime axis, plotLines
-          for zero baseline, and interactive HTML export; could leverage more Highcharts-specific
-          features like zones or data labels
+        comment: plotLines with labels on both axes, linearGradient fill stops in
+          Highcharts SVG format, threshold:0 for area fill behavior, dateTimeLabelFormats
+          — distinctively Highcharts features used effectively.
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
-  - annotations
   - html-export
-  - gradient-fill
+  - annotations
   patterns:
   - data-generation
-  - time-series
   dataprep:
-  - cumulative-sum
+  - time-series
   styling:
   - gradient-fill
-  - grid-styling

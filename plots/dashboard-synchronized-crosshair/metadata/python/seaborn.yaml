@@ -1,163 +1,191 @@
 library: seaborn
+language: python
 specification_id: dashboard-synchronized-crosshair
 created: '2026-01-20T19:37:56Z'
-updated: '2026-01-20T19:41:04Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21184661816
+updated: '2026-05-23T18:47:40Z'
+generated_by: claude-sonnet
+workflow_run: 26332666120
 issue: 3784
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 0.13.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/seaborn/plot.png
-preview_html: null
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/dashboard-synchronized-crosshair/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 88
 review:
   strengths:
-  - Excellent synchronized crosshair demonstration with consistent red styling across
-    all three charts
-  - Professional annotation boxes with clear value display at crosshair position
-  - Well-structured 3-panel layout with appropriate height ratios (2:1:1) for dashboard
-    feel
-  - Good use of seaborn styling context and line plots for clean aesthetics
-  - RSI chart includes reference lines and shaded neutral zone for technical analysis
-    context
-  - Up/down volume coloring adds meaningful information
+  - 'Full spec compliance: all required dashboard features (stacked panels, shared
+    axis, crosshair demonstration, independent y-scales, value annotations) correctly
+    implemented with explicit acknowledgment of static-library constraints'
+  - 'Clean theme adaptation: sns.set_theme(rc={...}) propagates all chrome tokens
+    correctly; both renders pass the readability check with no dark-on-dark failures'
+  - 'Excellent data quality: realistic stock-market domain with proper business-day
+    frequency, meaningful RSI overbought/oversold bands, and a moving average secondary
+    series'
+  - Canvas-compliant figsize=(8, 4.5), dpi=400 without bbox_inches='tight'
+  - Correct anyplot palette order with semantic color assignments
   weaknesses:
-  - RSI legend font is relatively small (12pt) compared to other text elements
-  - Volume bars use matplotlib bar() directly instead of seaborn barplot function
-  image_description: The plot shows a multi-chart dashboard with three vertically
-    stacked panels sharing a common x-axis (Date from late 2023 to October 2024).
-    The top panel displays a blue line chart for Price ($) with a light blue area
-    fill, showing values ranging from approximately 0-110. The middle panel shows
-    a bar chart for Volume with bars colored in blue and yellow (indicating up/down
-    price movements), formatted in millions (0M-20M+). The bottom panel displays a
-    purple line chart for RSI with horizontal reference lines at 70 (Overbought, red
-    dotted) and 30 (Oversold, green dotted), with a gray shaded neutral zone between
-    them. A synchronized red dashed vertical crosshair line spans all three charts
-    at the same x-position (around June 2024), with red circular markers and annotation
-    boxes showing values at each chart ($82.29, 8.2M, 57.9). The title "dashboard-synchronized-crosshair
-    · seaborn · pyplots.ai" appears at the top in bold. A small italic note at the
-    bottom right reads "Synchronized crosshair shown at highlighted position."
+  - 'LM-02 is limited: seaborn''s contribution is mostly theming and line plots; the
+    multi-panel crosshair mechanics are pure matplotlib (axvline, annotate, fill_between,
+    scatter, subplots) — the implementation would look nearly identical in plain matplotlib'
+  - Annotation bubble color in rendered images appears dark red rather than the code's
+    intended sky-blue (#16B8F3); images may be stale from a prior iteration — regeneration
+    with current code should confirm crosshair colors render as coded
+  - Volume and RSI panel area fills are subtle at alpha 0.22 and 0.15 respectively;
+    slightly higher alpha (0.25-0.30) would improve visual weight in both themes
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface, not pure white
+      Chrome: Title "dashboard-synchronized-crosshair · python · seaborn · anyplot.ai" in dark ink, readable. Axis labels "Price ($)", "Volume", "RSI", "Date" in dark ink at 10pt. Tick labels at 8pt in INK_SOFT tone, rotated 30° on x-axis bottom panel. Legends in panel 1 ("Price", "20-day MA") and panel 3 ("Overbought (70)", "Oversold (30)") with semi-transparent frames.
+      Data: Three panels. Panel 1: green (#009E73) price line with green area fill (alpha=0.15) and gray dashed MA line. Panel 2: volume line and fill appear sky-blue/teal in rendered output (code sets #9418DB purple — possible stale images). Panel 3: RSI line appears purple/violet in rendered output (code sets #B71D27 red — same stale image concern). Vertical dashed crosshair spans all panels; annotation bubbles show $82.29, 8.2M, 57.9 (bubbles appear dark red in images, code sets #16B8F3 sky blue).
+      Legibility verdict: PASS — all text readable against light background, no light-on-light failures
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface, not pure black
+      Chrome: Title and all axis labels rendered in light text (#F0EFE8 / #B8B7B0), clearly readable against dark background. Legend frames use elevated-dark token (#242420). Tick labels in INK_SOFT light tone. No dark-on-dark text failures observed.
+      Data: Same three-panel layout. Data series colors appear identical to light render (green price, blue-teal volume, purple RSI). Crosshair and annotation bubbles appear same dark red color. Area fills are more subdued on dark background but lines remain clearly distinguishable.
+      Legibility verdict: PASS — all text readable against dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title 24pt bold, axis labels 18pt, tick labels 14pt - all clearly
-          readable
+        comment: All font sizes explicitly set (title 12pt, labels 10pt, ticks 8pt,
+          legend 8pt). Readable in both themes. 8pt tick labels across three stacked
+          panels slightly small at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements, date labels properly rotated
+        comment: No text collisions. Annotation bubbles positioned with offset points
+          clear of data lines. Legends do not overlap data.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line widths (2.5), marker sizes (s=200), bar widths all appropriate
-          for data density
+        comment: Price and RSI lines at 2.0pt well-sized for 200 points. Volume at
+          1.5pt visible. Area fills at alpha 0.15-0.22 appropriately subtle.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Good contrast with blue/yellow/purple, but red-green reference lines
-          in RSI chart could be problematic
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Well-proportioned 16:12 figure with good height ratios (2:1:1), plot
-          fills canvas appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive with units: Price ($), Volume, RSI, Date'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Anyplot palette CVD-safe. Data series distinguished by color and
+          panel position. No red-green sole signal.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Height ratios 2:1:1. subplots_adjust
+          with generous margins and tight hspace=0.10.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid present but legend in RSI chart has very small font (12pt),
-          could be larger
+        passed: true
+        comment: Price ($), Volume (M formatter), RSI, Date — all descriptive with
+          units.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73. Palette order canonical. Backgrounds #FAF8F1/#1A1A17.
+          Chrome adapts correctly.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Above default (4). Intentional color choices, area fills, pill annotation
+          bubbles, height ratios show design deliberation. Professional but not FiveThirtyEight
+          level.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: sns.despine on all panels, spine colors INK_SOFT, y-axis-only grid
+          alpha=0.10, tight hspace. Clearly above defaults (2).
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Static crosshair creates focal point across all three panels. RSI
+          bands add domain context. MA line provides trend reference. Visual hierarchy
+          guides reader.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-chart dashboard with stacked layout
+        comment: Three-panel stacked dashboard with shared x-axis.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis shared correctly, each metric on separate Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: synchronized crosshair, stacked layout,
-          independent Y-axes, shared X-axis, tooltips/annotations showing values,
-          clear visual connection'
-      - id: SC-04
-        name: Data Range
+        comment: Synchronized crosshair across all panels, value annotations, sharex=True,
+          independent y-scales, RSI bands. Spec permits annotations for static libraries.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All axes show complete data range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Shared date x-axis; price/volume/RSI mapped to correct panels with
+          appropriate scales.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: RSI legend correctly shows Overbought/Oversold lines
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: dashboard-synchronized-crosshair · seaborn · pyplots.ai'
+        comment: 'Title correctly formatted. Panel 1 legend: Price, 20-day MA. Panel
+          3 legend: Overbought (70), Oversold (30).'
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows price fluctuation, varying volume, RSI oscillation with overbought/oversold
-          zones, up/down volume coloring
+        comment: Three distinct metric types with MA secondary series. Full multi-panel
+          crosshair concept demonstrated with realistic variation.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Stock market data scenario is realistic and neutral - price, volume,
-          RSI are standard financial metrics
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Values are plausible but RSI dropping to 20 at the end is somewhat
-          extreme (typically stays 30-70)
+        comment: 'Stock market: 200 business days Jan-Sep 2024, random-walk price
+          $80-110, volume in millions, RSI 20-80. Neutral financial domain.'
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Price $80-110, volume 0-25M, RSI 15-85 — all match real-world financial
+          data. Business-day frequency correct.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -165,54 +193,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports -> data -> figure -> charts -> save'
+        comment: 'Linear flow: theme tokens -> palette -> data -> plots -> save. No
+          functions or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used (matplotlib.pyplot, numpy, pandas, seaborn)
+        comment: os, matplotlib.pyplot, numpy, pandas, seaborn — all used.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Well-organized with section comments. No fake UI. Honest comment
+          '# Crosshair position for static demonstration'.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Current seaborn API used correctly
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png correctly
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves as plot-{THEME}.png without bbox_inches='tight'. Current seaborn
+          0.13.2 API.
+    library_mastery:
+      score: 6
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 4
         max: 5
         passed: true
-        comment: Uses sns.lineplot for line charts with seaborn styling (sns.set_style,
-          sns.set_context), but volume bars use matplotlib directly rather than seaborn's
-          barplot
+        comment: Good use of sns.lineplot with ax=, sns.set_theme with rc dict, sns.despine,
+          sns.set_context. Multi-panel via plt.subplots(sharex=True) is correct approach.
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Seaborn contribution limited to theming and line plots. Core mechanics
+          (axvline, annotate, fill_between, scatter, subplots) are pure matplotlib.
+          Partially inherent to this spec type for a static library.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
   - subplots
   - annotations
-  - manual-ticks
   patterns:
   - data-generation
-  - time-series
+  - explicit-figure
   dataprep:
+  - time-series
+  - rolling-window
   - cumulative-sum
   styling:
   - alpha-blending
