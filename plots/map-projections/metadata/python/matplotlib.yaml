@@ -2,7 +2,7 @@ library: matplotlib
 language: python
 specification_id: map-projections
 created: '2026-01-20T02:49:42Z'
-updated: '2026-05-23T08:10:55Z'
+updated: '2026-05-23T12:38:40Z'
 generated_by: claude-sonnet
 workflow_run: 26327357655
 issue: 3771
@@ -15,120 +15,116 @@ preview_html_dark: null
 quality_score: 84
 review:
   strengths:
-  - Four-projection side-by-side layout (Mercator, Robinson, Mollweide, Orthographic)
-    effectively demonstrates projection diversity
-  - Tissot indicatrices implemented correctly to visualize projection distortion —
-    excellent cartographic storytelling
-  - Theme-adaptive map colors (land, ocean) for both light and dark renders
-  - Correct canvas size (3200×1800) with no bbox_inches manipulation
-  - 'Full spec compliance: graticule at 30° intervals, country borders, coastlines,
-    all required map features'
-  - Clean iteration pattern over projections list — concise and readable
-  - 'cartopy-idiomatic usage: tissot(), gridlines(), add_feature(), set_global()'
-  - Correct title format and correct output file naming
+  - All four canonical projection families represented (cylindrical, pseudo-cylindrical,
+    equal-area, azimuthal) providing genuine educational value
+  - Tissot indicatrices correctly placed and styled, effectively demonstrating projection
+    distortion patterns
+  - 'Perfect spec compliance: graticule at 30° intervals, coastlines, country borders,
+    multiple projections all present'
+  - Flawless theme adaptation with semantically appropriate chrome colors for land/ocean
+    in both light and dark renders
+  - 'Clean idiomatic cartopy+matplotlib code: loop over projections, exception guards
+    for projection-specific API quirks, no bbox_inches=tight canvas drift'
   weaknesses:
-  - Subplot titles ("Mollweide", "Orthographic") overlap with graticule labels from
-    the row above — hspace=0.12 is insufficient; increase to ~0.25–0.30 or use fig.subplots_adjust(hspace=0.30)
-    to separate the rows
-  - Graticule label font size 5.5pt is below the recommended 8pt tick label size;
-    while readable at full resolution it is marginal at mobile widths — increase to
-    6.5–7pt
-  - Tissot indicatrices appear less filled in dark render due to alpha=0.35 over dark
-    ocean (#1A3348); consider raising alpha slightly (0.45) or brightening the fill
-    color for dark theme to keep visual parity
+  - Graticule tick labels at fontsize=7 are small — increase to 8pt to improve mobile
+    readability (update xlabel_style and ylabel_style in gl)
+  - Mild label crowding along Mollweide oval perimeter where longitude labels converge
+    at the ellipse boundary
+  - No per-panel annotations labeling each projection's key property (e.g., 'Conformal'
+    on Mercator, 'Equal-area' on Mollweide) — small ax.text() annotations would significantly
+    lift storytelling score
+  - Design excellence limited by absence of visual hierarchy; all 4 panels carry equal
+    visual weight with no focal point or guided narrative
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) figure background — correct, not pure white.
-      Chrome: Title "map-projections · python · matplotlib · anyplot.ai" at 12pt is clearly readable in dark ink. Subplot titles "Mercator", "Robinson", "Mollweide", "Orthographic" at 10pt bold are readable. Graticule lat/lon labels at 5.5pt are small but legible at full resolution; marginal at mobile widths.
-      Data: Land rendered in warm beige (#E8E4D9), ocean in light blue (#A8D5E5). Tissot indicatrices in red (#B71D27, anyplot palette pos 3) are clearly visible as semi-transparent filled ellipses/circles, demonstrating projection distortion correctly. Country borders and coastlines visible.
-      Layout: 2×2 grid of projections. "Mollweide" and "Orthographic" titles visibly overlap with longitude/latitude tick labels from the Mercator and Robinson subplots above them — hspace=0.12 is too tight.
-      Legibility verdict: PASS for main text; MINOR ISSUE for subplot title / graticule label overlap.
+      Background: Warm off-white #FAF8F1 — correct anyplot light theme surface.
+      Chrome: Main suptitle "map-projections · python · matplotlib · anyplot.ai" in dark ink (#1A1A17), clearly readable. Subplot titles (Mercator, Robinson, Mollweide, Orthographic) in bold dark text at 10pt, readable. Graticule tick labels (60°N, 30°N, 0°, 30°S, 60°S; 150°W…) in muted tone at 7pt — legible at full resolution but borderline small for mobile.
+      Data: Tissot indicatrices in red (#B71D27) — palette position 3, semantically appropriate for distortion markers. Land in light beige (#E8E4D9), ocean in sky blue (#A8D5E5). Dashed graticule at 30° intervals, coastlines and borders in INK_SOFT with alpha.
+      Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct, not pure black.
-      Chrome: Title in light cream text — readable against dark background. Subplot titles in light INK (#F0EFE8) — readable. Graticule labels in INK_MUTED (#A8A79F) — visible and readable against dark backgrounds (both dark ocean and dark land). No dark-on-dark text failures.
-      Data: Land rendered in dark brown (#3A3830), ocean in dark navy (#1A3348). Tissot indicatrices still visible in the same red (#B71D27) but appear slightly less filled/solid due to the semi-transparent fill (alpha=0.35) over the darker ocean. The ellipse outlines remain identifiable. Data colors identical to light render — only chrome flipped.
-      Layout: Same 2×2 grid. The "Orthographic" title overlap with Robinson's graticule labels is slightly more visible in dark render due to light-on-dark contrast.
-      Legibility verdict: PASS — no dark-on-dark failures; all primary and secondary text readable.
+      Background: Near-black #1A1A17 — correct anyplot dark theme surface.
+      Chrome: Title and subplot titles in light cream (#F0EFE8), clearly readable. Graticule labels in lighter muted tone (#A8A79F), visible against dark background. No dark-on-dark text failures observed.
+      Data: Tissot indicatrices remain same red (#B71D27) — data colors identical to light render. Land shifts to dark warm brown (#3A3830), ocean to deep navy (#1A3348). Only chrome flips.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 23
+      score: 25
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 5
         max: 8
         passed: true
         comment: Title and subplot titles readable in both themes; graticule labels
-          at 5.5pt are below recommended 8pt — marginal on mobile
+          at 7pt are small — borderline mobile readability
       - id: VQ-02
         name: No Overlap
-        score: 3
+        score: 5
         max: 6
-        passed: false
-        comment: Subplot titles Mollweide and Orthographic overlap with graticule
-          labels from the row above; hspace=0.12 is insufficient
+        passed: true
+        comment: Minor label crowding along Mollweide oval perimeter where longitude
+          labels converge
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Land/ocean clearly visible; Tissot indicatrices visible in both themes
-          but slightly less filled in dark render
+        comment: Land, ocean, coastlines, Tissot indicatrices all clearly visible
+          and well-proportioned
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Good contrast in both themes; Tissot red distinguishable from land
-          and ocean
+        comment: Adequate contrast; no red-green as sole signal; CVD-safe palette
       - id: VQ-05
         name: Layout & Canvas
-        score: 3
+        score: 4
         max: 4
         passed: true
-        comment: Correct 3200x1800 canvas; no edge clipping; slight crowding from
-          overlap
+        comment: Canvas gate passed (3200x1800); 2x2 grid well-managed with subplots_adjust;
+          no clipping
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct mandated title format; descriptive projection names; graticule
-          shows lat/lon
+        comment: Required title format correct; projection names as panel titles;
+          graticule provides axis context
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Backgrounds #FAF8F1/#1A1A17 correct; Tissot uses #B71D27 (palette
-          pos 3); land/ocean are semantic map colors not data series'
+        comment: 'Land/ocean are semantic chrome. Tissot in #B71D27 (palette pos 3,
+          red) valid semantic exception. Backgrounds correct.'
     design_excellence:
-      score: 13
+      score: 11
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 6
+        score: 5
         max: 8
         passed: true
-        comment: Sophisticated cartographic implementation with theme-adaptive map
-          colors; professional multi-projection layout
+        comment: Tasteful cartographic colors with theme-adaptive land/ocean tones;
+          Tissot adds meaningful visual element; no projection-property annotations
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
         passed: true
-        comment: Dashed graticule at alpha=0.4 is appropriately subtle; clean feature
-          styling
+        comment: Appropriate for cartographic context; graticule alpha and border
+          alpha show care; spine removal N/A for Cartopy axes
       - id: DE-03
         name: Data Storytelling
-        score: 4
+        score: 3
         max: 6
         passed: true
-        comment: Tissot indicatrices directly tell the distortion story; four complementary
-          projections chosen for educational value
+        comment: Side-by-side comparison conveys distortion differences but lacks
+          annotations guiding viewer to specific insight per projection
     spec_compliance:
       score: 15
       max: 15
@@ -138,26 +134,28 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct world map with multiple projections
+        comment: 'Correct: multiple world map projections side-by-side'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Multiple projections, graticule at 30 degrees, Tissot indicatrices,
-          coastlines, country borders
+        comment: Mercator, Robinson, Mollweide, Orthographic; graticule at 30°; coastlines;
+          borders; Tissot indicatrices
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Geographic data correctly mapped to each CRS projection
+        comment: Real geographic data via cartopy.feature; projections correctly transform
+          coordinates
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Correct mandated title; each subplot labeled with projection name
+        comment: map-projections · python · matplotlib · anyplot.ai — exact required
+          format
     data_quality:
       score: 15
       max: 15
@@ -167,21 +165,21 @@ review:
         score: 6
         max: 6
         passed: true
-        comment: Four distinct projections covering cylindrical, pseudo-cylindrical,
-          equal-area, and azimuthal types; Tissot indicatrices present
+        comment: 4 distinct projection families; Tissot indicatrices demonstrate distortion;
+          comprehensive
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Real Natural Earth geographic data via cartopy; neutral educational
-          context
+        comment: Natural Earth data via cartopy.feature; historically accurate projections
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: World-scale maps at appropriate global extent
+        comment: Global scale appropriate; rad_km=500 Tissot standard; 30° graticule
+          canonical
     code_quality:
       score: 10
       max: 10
@@ -191,31 +189,34 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes; clean iteration over projections list
+        comment: Simple loop over projections list; no unnecessary abstractions
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: Fully deterministic — geographic data, no random elements
+        comment: Deterministic; no random data generation
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sys used for path fix
+        comment: 'All imports used: cartopy.crs, cartopy.feature, matplotlib.pyplot,
+          numpy'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean iteration pattern; appropriate try/except for cartopy compatibility
+        comment: sys.path manipulation documented; exception handling appropriate
+          for cartopy API quirks
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; correct API
+        comment: plt.savefig(f'plot-{THEME}.png', dpi=400, facecolor=PAGE_BG) without
+          bbox_inches=tight
     library_mastery:
       score: 8
       max: 10
@@ -225,21 +226,22 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: 'Correct cartopy patterns: add_subplot with projection, set_global,
-          add_feature, gridlines, tissot'
+        comment: 'Correct cartopy+matplotlib idiom: add_subplot(projection=proj),
+          set_global(), cfeature.*, gridlines(draw_labels=True), FixedLocator'
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Multiple CRS projections, tissot() for distortion visualization,
-          cartopy feature layers (OCEAN/LAND/COASTLINE/BORDERS)
+        comment: ax.tissot() (distinctly cartopy), multiple CRS projection classes,
+          NaturalEarthFeature-backed map layers
   verdict: APPROVED
 impl_tags:
   dependencies:
   - cartopy
   techniques:
   - subplots
+  - manual-ticks
   patterns:
   - iteration-over-groups
   - explicit-figure
