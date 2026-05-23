@@ -1,210 +1,271 @@
 library: bokeh
+language: python
 specification_id: map-drilldown-geographic
 created: '2026-01-20T07:42:35Z'
-updated: '2026-01-20T08:01:48Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21163297430
+updated: '2026-05-23T10:17:27Z'
+generated_by: claude-sonnet
+workflow_run: 26329149186
 issue: 3770
-python_version: 3.13.11
-library_version: 3.8.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/bokeh/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/bokeh/plot.html
-quality_score: 87
+language_version: 3.13.13
+library_version: 3.9.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/bokeh/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/bokeh/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/bokeh/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/bokeh/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of Bokeh interactive features (TapTool, CustomJS, HoverTool)
-  - Well-implemented choropleth coloring with Blues9 palette
-  - Proper breadcrumb navigation structure with HTML formatting
-  - Clear data hierarchy (countries → states → cities) with visibility toggling
-  - Good text legibility with white background behind labels
-  - Correct title format and descriptive axis labels
+  - Full 3-level drill-down hierarchy (World → Country → State → City) implemented
+    via TapTool + CustomJS with dynamic x_range/y_range zoom transitions
+  - Correct use of anyplot_seq continuous colormap with LinearColorMapper for choropleth
+    encoding
+  - Differentiated drillable vs leaf-country rendering (solid border + full alpha
+    vs dashed + 45% alpha) provides clear UX affordance
+  - 'Narrative annotation ★ United States leads — $850M in brand #009E73 creates a
+    clear focal point and visual hierarchy'
+  - Breadcrumb navigation Title element updates dynamically, and the Back button label
+    encodes navigation level for clean state management
+  - 'Theme-adaptive chrome fully wired: INK/INK_SOFT/ELEVATED_BG/PAGE_BG tokens applied
+    to all text renderers, backgrounds, and borders in both renders'
+  - OCEAN_BG background for the map area provides geographic context (ocean vs land)
+    as a distinctive design choice
   weaknesses:
-  - Color bar range (0-900) does not match actual data range (95-850)
-  - Only one complete drill-down path implemented (US → California) - other countries
-    and states are non-functional endpoints
-  - Simplified rectangular polygons do not represent actual geographic boundaries
-  image_description: 'The plot displays a choropleth-style map of the Americas showing
-    5 countries (Canada, United States, Mexico, Brazil, Argentina) as simplified rectangular
-    polygons. Each country is colored using a blue color scale (Blues9 palette) based
-    on sales values in millions USD. Country names and their sales values (e.g., "$850M"
-    for United States, "$320M" for Canada) are displayed as text labels with white
-    semi-transparent backgrounds centered on each region. The title "map-drilldown-geographic
-    · bokeh · pyplots.ai" appears at the top center. A breadcrumb navigation shows
-    "📍 World" in the top-left corner. The axes show Longitude (-140 to -25) and Latitude
-    (-60 to 75). A color bar legend labeled "Sales ($M)" appears on the right side
-    showing the scale from 0 to 800. An instruction text at the bottom reads "Click
-    on a region to drill down into its subdivisions. Currently showing: Countries
-    → States (US) → Cities (California)". The background is a light blue (#f0f8ff)
-    suggesting water/ocean.'
+  - 'CQ-04 slight repetition: each country level repeats the same ColumnDataSource
+    + patches + text renderer pattern 5 times with minor variation — a small shared
+    helper or loop would reduce about 120 lines while keeping the code flat'
+  - 'VQ-02 minor: overlapping rectangular country patches (Canada/US top boundary,
+    US/Mexico bottom boundary) create slight visual noise — consider adding a thin
+    INK_SOFT outline with higher z-order or a subtle separation at overlap zones'
+  - 'VQ-01 minor: instruction subtitle at 24pt (below) appears noticeably smaller
+    relative to the 50pt title and 42pt axis labels; increasing to ~28–30pt would
+    improve proportional balance'
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) border/margin area; light ocean blue (#D6EAF8) for the geographic map region — a deliberate design choice to represent ocean vs land.
+      Chrome: Title "map-drilldown-geographic · python · bokeh · anyplot.ai" in dark INK (#1A1A17) at 50pt, centered — fully visible, ~70% of plot width as expected for the mandated title. Breadcrumb "📍 World" in dark text at top-left. Axis labels "Longitude" and "Latitude" in INK at 42pt, clearly readable. Tick labels in INK_SOFT at 34pt. Instruction subtitle at bottom in INK_SOFT at 24pt, readable. ColorBar on right with "Sales ($M)" label in dark text, clearly legible.
+      Data: Five rectangular country patches using anyplot_seq colormap (brand green #009E73 at low values through to dark azure for high values). United States (darkest, $850M), Canada (medium-light, $320M), Brazil (medium, $420M), Mexico (light green, $180M), Argentina (light green/teal, $95M). Country name labels and value labels visible with ELEVATED_BG (#FFFDF6) fill. "United States leads — $850M" annotation in #009E73 with green border. Leaf countries (Mexico, Brazil, Argentina) rendered with dashed borders and 45% opacity, signaling no drill-down. Drillable countries (US, Canada) at 85% opacity with solid borders.
+      Legibility verdict: PASS — all text elements are clearly readable against the light background, no light-on-light issues, text labels protected by ELEVATED_BG backgrounds.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) border/margin area; dark ocean (#1C2833) for the geographic map region.
+      Chrome: Title in light INK (#F0EFE8), clearly visible against dark background. Breadcrumb "📍 World" in light text. Axis labels and tick labels in INK_SOFT (#B8B7B0), legible on dark surface. Instruction subtitle at bottom in INK_SOFT, readable. ColorBar labels in INK_SOFT, legible.
+      Data: Choropleth colors identical to light render — same anyplot_seq green-to-azure progression. Country labels visible with ELEVATED_BG (#242420) dark fill. Annotation "United States leads — $850M" remains in #009E73 (brand green holds on dark surface). Data colors are identical between both renders.
+      Legibility verdict: PASS — all text readable against the dark background; no dark-on-dark failures detected; INK/INK_SOFT tokens correctly applied throughout all text renderers.
   criteria_checklist:
     visual_quality:
-      score: 35
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: All text readable at full size; title 28pt, labels 28pt/24pt, axis
-          labels 22pt/18pt
-      - id: VQ-02
-        name: No Overlap
-        score: 8
+        score: 7
         max: 8
         passed: true
-        comment: No overlapping text elements; labels and values properly separated
-          with offset positioning
+        comment: 'All font sizes explicitly set per style guide (50pt title, 42pt
+          axis labels, 34pt ticks). Readable in both themes. Minor: instruction subtitle
+          at 24pt is somewhat smaller relative to overall scale.'
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: Text labels protected by ELEVATED_BG fills, no text-on-text overlap.
+          Minor visual noise from overlapping rectangular country patches (US-Canada,
+          US-Mexico boundaries).
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Country polygons clearly visible with good contrast; simplified rectangular
-          shapes not optimal
+        comment: Choropleth regions clearly visible. Country name and value labels
+          prominent with background fills. ColorBar fully legible.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
+        score: 2
+        max: 2
         passed: true
-        comment: Blues9 palette is colorblind-safe with good contrast
+        comment: anyplot_seq (green-to-azure) is colorblind-safe. No red-green as
+          sole signal.
       - id: VQ-05
-        name: Layout Balance
-        score: 3
-        max: 5
+        name: Layout & Canvas
+        score: 4
+        max: 4
         passed: true
-        comment: Good canvas use but empty space on left portion; color bar properly
-          positioned
+        comment: Canvas gate passed. min_border_* reservations properly accommodate
+          large fonts. Layout fills canvas well. ColorBar at right properly contained
+          within min_border_right=280.
       - id: VQ-06
-        name: Axis Labels
+        name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels: Longitude and Latitude'
+        comment: 'Descriptive axis labels: Longitude, Latitude. Title correctly formatted.'
       - id: VQ-07
-        name: Grid & Legend
+        name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid (alpha 0.3), well-placed color bar legend
+        comment: 'anyplot_seq continuous colormap used (green #009E73 to dark azure
+          #003D94). Background #FAF8F1 light / #1A1A17 dark. Theme-adaptive chrome
+          fully wired. Data colors identical across both renders.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default (4): custom anyplot_seq colormap, ocean background
+          for geographic context, narrative annotation in brand green, differentiated
+          drillable vs leaf rendering. Strong but not at publication-ready level.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Above default (2): ocean background differentiates land/sea, subtle
+          10% alpha grid, elevated backgrounds for text labels, custom border styling.
+          Map frame (all spines) appropriate for geographic plot.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Above default (2): clear focal point via annotation, color scale
+          creates natural hierarchy (darkest=highest value), breadcrumb+drill-down
+          provides UX narrative, leaf vs drillable distinction guides viewer.'
     spec_compliance:
-      score: 22
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct hierarchical choropleth map with drill-down capability
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Geographic regions correctly mapped to value-based colors
-      - id: SC-03
+        comment: 'Correct: hierarchical drillable geographic choropleth with 3 levels
+          (world, country, state/province, city)'
+      - id: SC-02
         name: Required Features
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Has drill-down, breadcrumb, color legend, tooltips. Missing smooth
-          zoom transitions
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: click drill-down (TapTool+CustomJS), breadcrumb
+          navigation (dynamic Title), zoom transitions (x/y range updates), color
+          legend (ColorBar), tooltips (HoverTool), leaf node indication (dashed+low
+          alpha)'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data properly displayed within visible range
-      - id: SC-05
-        name: Legend Accuracy
-        score: 0
-        max: 2
-        passed: false
-        comment: Color bar range (0-900) doesn't match actual data range (95-850)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: Geographic coordinates correct (longitude/latitude). Values mapped
+          to color scale. All hierarchical levels accessible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: map-drilldown-geographic · bokeh · pyplots.ai'
+        comment: 'Title: ''map-drilldown-geographic · python · bokeh · anyplot.ai''
+          — correct format. ColorBar labeled ''Sales ($M)''.'
     data_quality:
-      score: 17
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows country, state, and city levels but only one drill-down path
-          fully implemented
+        comment: Full 3-level hierarchy shown (World→Country, US→State, Canada→Province,
+          CA→City, BC→City). Both drillable and leaf nodes present. Value aggregation
+          from children to parents implicit in data.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Sales data in millions USD is realistic business scenario
+        comment: Americas annual sales ($M) — real, neutral, comprehensible business
+          context. Real country/state/city names with plausible values.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Values are realistic (95M to 850M) with correct aggregation
+        comment: US highest at $850M, Canada $320M, Brazil $420M, Mexico $180M, Argentina
+          $95M — plausible proportions for Americas region sales. State/city values
+          appropriately sum to parent values.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 2
-        max: 3
-        passed: true
-        comment: Follows pattern but code is quite long (500+ lines)
-      - id: CQ-02
-        name: Reproducibility
         score: 3
         max: 3
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: 'No functions or classes. Flat: imports → theme tokens → data → figure
+          → renderers → callbacks → save.'
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: np.random.seed(42) set, though data is fully deterministic (no random
+          calls).
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used. base64, os, time, pathlib, numpy, bokeh modules,
+          selenium — all required.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Real interactivity via CustomJS. Some repetition across country levels
+          is inherent to the hierarchical data structure and acceptable.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Bokeh 3.x API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Exports layout including Div elements
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. CDP screenshot for
+          exact canvas clipping.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of ColumnDataSource, TapTool, CustomJS, HoverTool,
-          patches, ColorBar, Div
+        comment: 'Excellent idiomatic bokeh: ColumnDataSource, CDSView/BooleanFilter,
+          TapTool+CustomJS, HoverTool, ColorBar, Title layout element, dynamic Range
+          updates. Above default (3).'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: 'Very distinctive: interactive drill-down via CustomJS callbacks,
+          CDSView/BooleanFilter for hierarchical layer management, TapTool for click
+          navigation, dynamic x_range/y_range zoom, Button widget integration — features
+          distinctly bokeh.'
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - selenium
   techniques:
-  - patches
   - colorbar
   - hover-tooltips
+  - html-export
   - annotations
-  - custom-legend
   patterns:
   - data-generation
   - columndatasource
@@ -212,4 +273,3 @@ impl_tags:
   styling:
   - custom-colormap
   - alpha-blending
-  - grid-styling

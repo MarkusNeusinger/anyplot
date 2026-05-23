@@ -1,159 +1,217 @@
 library: matplotlib
+language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:57:03Z'
-updated: '2026-01-20T11:59:38Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21170482342
+updated: '2026-05-23T10:48:27Z'
+generated_by: claude-sonnet
+workflow_run: 26330494995
 issue: 3752
-python_version: 3.13.11
-library_version: 3.10.8
-preview_url: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/matplotlib/plot.png
-preview_html: null
-quality_score: 93
+language_version: 3.13.13
+library_version: 3.10.9
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/matplotlib/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/matplotlib/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 91
 review:
   strengths:
-  - Excellent implementation of all spec requirements including max drawdown annotation,
-    recovery markers, and statistics box
-  - Clean visual design with appropriate color scheme (red for drawdowns, blue for
-    baseline/recovery)
-  - Well-structured code that generates realistic drawdown patterns with multiple
-    cycles
-  - Good use of matplotlib-specific features like fill_between, annotate with arrows,
-    and custom legend handles
-  - Statistics box provides valuable context (max DD, dates, duration, recovery time)
+  - 'Perfect spec compliance: all required features implemented (fill_between with
+    semi-transparent red, max DD annotation with arrow, recovery markers, statistics
+    box, secondary portfolio value axis)'
+  - 'Semantic color mapping follows financial conventions and anyplot semantic exception:
+    red (#B71D27) for drawdown/losses and green (#009E73) for recovery correctly applies
+    the finance semantic exception rule'
+  - 'Excellent code quality: clean KISS linear structure with no functions/classes,
+    np.random.seed(42) for reproducibility, all imports used, no over-engineering'
+  - 'Full theme-adaptive chrome: all token assignments (PAGE_BG, ELEVATED_BG, INK,
+    INK_SOFT, INK_MUTED) applied consistently to facecolor, legend frame, stats box,
+    tick params, spines, and annotation in both light and dark renders'
+  - 'Effective data storytelling: max drawdown annotated with arrow and labeled, quantitative
+    stats box (peak-to-trough days, recovery days), recovery triangle markers all
+    guide the viewer through the narrative'
   weaknesses:
-  - Recovery markers placed at y=0 but detection threshold is -0.01%, causing slight
-    visual inconsistency
-  - Missing secondary y-axis showing underlying price/value series as suggested in
-    spec Notes
-  image_description: 'The plot displays a drawdown chart showing percentage decline
-    from peak over a 2-year period (2022-01 to 2024-01). The drawdown line and filled
-    area use a semi-transparent red/salmon color (#D9534F with alpha 0.4). A solid
-    blue horizontal line at 0% marks the baseline. The maximum drawdown point (-24.3%)
-    is highlighted with a dark red marker and annotated with an arrow pointing to
-    "Max DD: -24.3%". Blue triangle markers indicate recovery points where new highs
-    were reached. A statistics box in the lower-left displays key metrics: Max Drawdown
-    (-24.3%), Max DD Date (2022-11-18), Peak to Trough (305 days), and Recovery (122
-    days). The Y-axis shows "Drawdown (%)" with percentage formatting, X-axis shows
-    "Date". Title follows the required format. Legend in upper-right explains the
-    drawdown fill and recovery markers. Grid is subtle with dashed lines.'
+  - 'DE-01 moderate: design is above defaults but uses the standard matplotlib font
+    and has no custom typography hierarchy — a more refined font choice or subtle
+    letter-spacing adjustment would elevate toward publication quality'
+  - 'LM-02 partial: fill_between with where= condition and FuncFormatter are solid
+    matplotlib-specific features, but the combination stays within common usage patterns
+    — more distinctive usage (e.g. gradient alpha fill, PathEffect for annotation
+    arrows, or ax.fill_betweenx for additional emphasis) would push LM-02 to full
+    marks'
+  - Secondary portfolio value line (alpha=0.5, linewidth=1.0) is quite faint on the
+    light render — slightly increasing linewidth to 1.2-1.5 while keeping alpha=0.4
+    would maintain the secondary role while improving legibility at mobile-scaled
+    widths
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white matching #FAF8F1 — not pure white, passes chrome check.
+      Chrome: Title "drawdown-basic · python · matplotlib · anyplot.ai" in dark ink at 12pt, spans ~75-80% of width as expected for this mandated long format. X-axis label "Date" and Y-axis label "Drawdown (%)" at 10pt in dark INK — readable and proportional. Secondary Y-axis label "Portfolio Value (base 100)" at 10pt in muted gray. Tick labels at 8pt in INK_SOFT — clearly visible. Y-axis ticks formatted as percentages (0%, -5%, etc.). Legend in upper-right with styled ELEVATED_BG frame. Stats box in lower-left at ELEVATED_BG with rounded corners.
+      Data: Red (#B71D27) semi-transparent filled area below the 0% baseline for drawdown periods — clearly visible. Red line follows the drawdown curve. Two green (#009E73) upward triangles mark recovery points near 2023-04. Red dot at max drawdown (~2022-11) with arrow annotation "Max DD: -24.3%". Muted gray portfolio value line (alpha=0.5) on secondary axis.
+      Legibility verdict: PASS — all title, axis labels, tick labels, legend text, annotation, and stats box text are clearly readable against the warm off-white surface. No light-on-light failures.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black matching #1A1A17 — not pure black, passes chrome check.
+      Chrome: Title in light cream text (#F0EFE8 equivalent), clearly readable on dark surface. Axis labels and tick labels in light secondary ink — all visible. Secondary Y-axis label in muted light gray. Legend frame has dark ELEVATED_BG (#242420) fill with light text. Stats box has dark elevated background with muted light text.
+      Data: Data colors are identical to light render — red (#B71D27) drawdown fill and line, green (#009E73) recovery triangles, muted gray portfolio value line. Only chrome elements have flipped (background, text, legend frame). No dark-on-dark failures observed.
+      Legibility verdict: PASS — no black-on-black text failures; all text elements (title, labels, ticks, legend, annotation "Max DD: -24.3%", stats box) are clearly distinguishable on the near-black surface. The red annotation text on dark background remains readable.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 30
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title 24pt, axis labels 20pt, tick labels 16pt, all perfectly readable
-      - id: VQ-02
-        name: No Overlap
         score: 8
         max: 8
         passed: true
-        comment: No overlapping text elements anywhere
+        comment: All font sizes explicitly set (title=12pt, labels=10pt, ticks=8pt,
+          legend/annotation=8pt). Well-proportioned in both themes. Title spans ~75-80%
+          width as expected for mandated format.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text overlaps with data or other text. Legend in upper-right does
+          not conflict with recovery markers at 0% baseline. Stats box in lower-left
+          is well-clear of dense drawdown data.
       - id: VQ-03
         name: Element Visibility
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Drawdown line clearly visible at 2.5 linewidth, markers appropriately
-          sized
+        comment: Drawdown fill and line clearly visible. Recovery triangles (s=80)
+          and max DD marker (s=100) prominent. Portfolio value line intentionally
+          muted as secondary indicator — appropriate for its role.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Red/salmon for drawdown, blue for baseline/markers - distinct and
-          colorblind-safe
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well with balanced margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Drawdown (%) with units, Date is appropriate for time axis
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Red/green distinction supported by different marker types (filled
+          area vs triangle), not hue alone. CVD-safe palette members used. Adequate
+          contrast in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas is 3200x1800px (figsize=8x4.5, dpi=400). subplots_adjust(left=0.08,
+          right=0.85, top=0.92, bottom=0.12) provides clean margins. No content clipped.
+          Canvas gate passed.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend shows Recovery (New High) but actual markers appear at ~-1%
-          not exactly 0%
+        passed: true
+        comment: 'Y-axis: ''Drawdown (%)'' with unit. Secondary Y: ''Portfolio Value
+          (base 100)'' descriptive with context. X: ''Date'' appropriate for time
+          axis. Title in correct mandated format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception correctly applied: #B71D27 (red, palette pos
+          3) for drawdown/loss, #009E73 (green, palette pos 1) for recovery/gain —
+          finance semantic convention. Backgrounds #FAF8F1/#1A1A17 correct. Chrome
+          fully theme-adaptive.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above defaults: semantic color choices, custom legend handles, annotation
+          with arrow, stats box with rounded corners, twin axes. Missing: custom typography,
+          no font family deviation from matplotlib default. Sits between ''well-configured
+          default'' (4) and ''strong design'' (6).'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Y-axis grid only at alpha=0.10 (very subtle). Top/right spines removed
+          from primary axis. Styled legend frame with ELEVATED_BG. Rounded stats box.
+          Margins controlled via subplots_adjust. Good refinement visible — not quite
+          'every detail polished'.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: 'Clear focal point: max drawdown annotated with arrow and labeled.
+          Stats box quantifies key risk metrics. Recovery markers provide the recovery
+          narrative. Semantic colors guide interpretation. Good visual hierarchy —
+          above the ''data displayed but not interpreted'' default.'
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct drawdown chart with filled area below zero line
+        comment: Correct drawdown chart with filled area below zero baseline.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, drawdown percentage on Y-axis
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Has fill area, zero baseline, max DD annotation, recovery markers,
-          statistics box
-      - id: SC-04
-        name: Data Range
+        comment: 'All spec features: running-max drawdown calculation, semi-transparent
+          red fill, max DD annotation, recovery markers at new highs, stats box (max
+          DD%, date, peak-to-trough days, recovery days), zero baseline, secondary
+          portfolio value axis.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range from -25% to 5% with appropriate padding
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: dates (business-day time axis). Primary Y: drawdown percentage.
+          Secondary Y: rebased portfolio value. All data visible within appropriate
+          axis ranges.'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies drawdown fill and recovery markers
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: drawdown-basic · matplotlib · pyplots.ai
+        comment: 'Title: ''drawdown-basic · python · matplotlib · anyplot.ai'' exactly.
+          Legend: ''Drawdown'', ''New High (Recovery)'', ''Portfolio Value'' — all
+          clear and match data series.'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows multiple drawdown cycles of varying depth, recovery periods,
-          max drawdown highlight
+        comment: Multiple drawdown cycles with varying depth. Shows both deep prolonged
+          drawdowns and quick recoveries. True recovery points (drawdown=0) marked.
+          Max drawdown period clearly identifiable.
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Portfolio drawdown scenario is plausible but not explicitly labeled
-          as such
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: -24.3% max drawdown is realistic for volatile asset over 2 years
+        comment: Portfolio simulation over 2 years of business days (500 points).
+          Starting value $10,000. Multiple realistic drift regimes. Neutral financial
+          context, no controversial elements.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Max drawdown -24.3% is realistic for a diversified portfolio. 305-day
+          peak-to-trough and 122-day recovery are plausible for a bear market period.
+          Portfolio rebased to 80-120 range is factually appropriate.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -161,56 +219,68 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → calculations → plot → save'
+        comment: 'Clean linear flow: tokens → data → plot → save. No functions or
+          classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) set before any random operations.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (matplotlib, numpy, pandas, Line2D)
+        comment: 'All imports used: os, matplotlib.pyplot, numpy, pandas, Line2D,
+          Patch.'
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, Pythonic. No fake interactive elements. Appropriate complexity
+          for the visualization.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current matplotlib API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: saves as plot.png correctly but CQ-05 score adjusted for
-          overall code quality balance'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with dpi=400. No bbox_inches='tight'. No
+          deprecated API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 5
+        max: 5
+        passed: true
+        comment: Uses Axes methods throughout (ax1.fill_between, ax1.plot, ax1.scatter,
+          ax1.annotate). FuncFormatter for percentage ticks. twinx() for dual axes.
+          Custom legend with handles=[] pattern. All idiomatic matplotlib.
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Good use of fill_between, annotate, FuncFormatter, custom legend
-          handles; could use more advanced features like span selectors or secondary
-          axis
+        comment: fill_between with where=(drawdown<0) condition, FuncFormatter for
+          custom tick formatting, mixed legend handles (Patch + Line2D), twinx() dual-axis
+          — solid matplotlib-specific features. Could be more distinctive with gradient
+          alpha fill, PathEffect annotations, or fill_betweenx.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - annotations
+  - twin-axes
   - custom-legend
+  - annotations
   patterns:
   - data-generation
-  - iteration-over-groups
+  - explicit-figure
   dataprep:
   - time-series
-  - cumulative-sum
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
