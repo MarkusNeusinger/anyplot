@@ -2,7 +2,7 @@ library: plotnine
 language: python
 specification_id: linked-views-selection
 created: '2026-05-23T21:57:05Z'
-updated: '2026-05-23T22:04:50Z'
+updated: '2026-05-23T22:15:16Z'
 generated_by: claude-sonnet
 workflow_run: 26344347590
 issue: 3344
@@ -12,35 +12,43 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/linked-vi
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/plotnine/plot-dark.png
 preview_html_light: null
 preview_html_dark: null
-quality_score: 86
+quality_score: 84
 review:
   strengths:
-  - 'Brand green #009E73 selection highlight against muted neutral creates immediate
-    clear visual hierarchy across all three panels'
-  - facet_wrap with free scales elegantly handles different variable ranges — idiomatic
-    ggplot2 that other libraries cannot easily replicate
-  - Dual aesthetic encoding (color + alpha via aes()) is clean and correct; guides(alpha=False)
-    cleanly hides the redundant legend
-  - 'Full anyplot theme-adaptive chrome in both renders: warm backgrounds, INK tokens,
-    subtle grid'
-  - sys.path manipulation correctly prevents name collision with the file itself named
-    plotnine.py
-  weaknesses: []
+  - Three coordinated scatter views with consistent selection encoding via facet_wrap
+    — best possible static approximation of linked views for a static library
+  - 'Dual encoding (color + alpha) clearly communicates selection state: selected
+    Setosa visually pops, unselected recedes without disappearing'
+  - Selection count displayed in subtitle satisfies the 'summary statistics' requirement
+    from the spec
+  - Perfect canvas dimensions (8x4.5 @ dpi=400 = 3200x1800 px); both themes render
+    with correct backgrounds and readable chrome
+  - 'Clean idiomatic plotnine code: scale_alpha_manual + guides(alpha=False) combo
+    is idiomatic; pd.Categorical for ordered facets is correct'
+  weaknesses:
+  - Axes both labeled 'Measurement (cm)' — generic labels due to data reshaping; per-panel
+    specific labels (e.g. 'Sepal Length (cm)' / 'Sepal Width (cm)') are not achievable
+    with facet_wrap on reshaped x/y data
+  - All three coordinated views are scatter plots; the spec suggests including a histogram
+    or bar chart view for categorical distribution — adding geom_histogram with fill='selection'
+    would broaden feature coverage
+  - Panel borders use 4-sided box frames per facet rather than L-shaped spines — acceptable
+    for faceted layout but slightly heavier than the minimal style guide default
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct anyplot light surface
-      Chrome: Title "linked-views-selection · python · plotnine · anyplot.ai" at 12pt readable; axis tick labels at 7pt readable; facet strip labels ("Sepal Length vs Width", "Petal Length vs Width", "Sepal vs Petal Length") readable; legend text readable. Axis title fields empty (no x/y labels).
-      Data: Selected Setosa series in brand green #009E73 at alpha=0.85, clearly visible across all 3 panels. Unselected "Other species" in #4A4A44 dark neutral at alpha=0.25 — intentionally de-emphasized. 3 scatter plot panels in facet grid.
+      Background: Warm off-white (#FAF8F1) — correct light surface
+      Chrome: Title "linked-views-selection · python · plotnine · anyplot.ai" in dark ink, clearly readable; subtitle in muted gray (#6B6A63) readable; axis labels "Measurement (cm)" on both axes at 9pt readable; tick labels at 7pt small but legible; facet strip labels ("Sepal Length vs Width", "Petal Length vs Width", "Sepal vs Petal Length") in dark ink on elevated background; legend text readable
+      Data: Selected Setosa points in brand green (#009E73) at alpha=0.85 — prominent; unselected Other species in muted gray (#4A4A44) at alpha=0.25 — intentionally de-emphasized; both categories clearly distinguishable; three panels show different variable pairs; ~50 points per panel with size=2.5 appropriate for density
       Legibility verdict: PASS
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct anyplot dark surface
-      Chrome: Title readable in light #F0EFE8 text; tick labels readable in light #B8B7B0; facet strip text readable; legend text readable. No dark-on-dark failures — all chrome text adapts to light-on-dark. Facet strip backgrounds use elevated dark #242420.
-      Data: Colors identical to light render — Setosa still #009E73 green (unchanged); unselected now #B8B7B0 (INK_SOFT dark) at alpha=0.25. Brand green clearly visible and bright on dark surface.
+      Background: Warm near-black (#1A1A17) — correct dark surface
+      Chrome: Title in light ink (#F0EFE8) clearly visible; subtitle in tertiary dark ink token readable; axis labels, tick labels, strip labels all in light tokens and readable; legend text in #B8B7B0 readable; no dark-on-dark failures; panel borders in INK_SOFT; legend and strip backgrounds use elevated dark (#242420)
+      Data: Brand green (#009E73) for Setosa — identical to light render, clearly visible on dark background; unselected gray (#B8B7B0 at alpha=0.25) visible as subtle de-emphasized dots — same colors as light render, only chrome flips
       Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 28
+      score: 27
       max: 30
       items:
       - id: VQ-01
@@ -48,104 +56,106 @@ review:
         score: 7
         max: 8
         passed: true
-        comment: Font sizes explicitly set throughout; all readable in both renders;
-          axis_text=7pt slightly below 8pt default
+        comment: All elements explicitly sized; 7pt tick labels proportional to dense
+          3-panel layout; readable in both themes
       - id: VQ-02
         name: No Overlap
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: No text or label collisions in any panel or legend
+        comment: No text collisions; point overlap in first panel is expected scatter
+          behavior handled by alpha encoding
       - id: VQ-03
         name: Element Visibility
-        score: 6
+        score: 5
         max: 6
         passed: true
-        comment: size=2.5 appropriate for ~50 points per panel; alpha=0.85/0.25 selection
-          encoding well-calibrated
+        comment: size=2.5 appropriate for ~50 points/panel; green selected prominent;
+          gray unselected intentionally de-emphasized but visible
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Green vs neutral gray is colorblind-safe; strong luminance contrast
+        comment: Green vs muted gray is CVD-safe; no red-green-only encoding
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Three panels fill 3200x1800 canvas efficiently; legend well-positioned
+        comment: 3200x1800 canvas confirmed; 3-panel landscape layout well-proportioned;
+          no overflow or clipping
       - id: VQ-06
         name: Axis Labels & Title
-        score: 1
+        score: 2
         max: 2
-        passed: false
-        comment: Title correct; axis labels empty (x='', y=''); facet strips partially
-          compensate but no units shown
+        passed: true
+        comment: Units included; correct title format; informative subtitle with selection
+          count
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Brand green #009E73 for selected; adaptive INK_SOFT neutral for
-          unselected; backgrounds #FAF8F1/#1A1A17 correct'
+        comment: 'First/selected series = #009E73; unselected = INK_SOFT neutral;
+          backgrounds #FAF8F1/#1A1A17 correct'
     design_excellence:
-      score: 12
+      score: 13
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 4
+        score: 5
         max: 8
         passed: true
-        comment: Warm anyplot chrome, subtle grid, elegant selection encoding — well-configured
-          but not exceptional
+        comment: Intentional dual encoding color+alpha; custom theme; subtitle integrates
+          data context; above generic but no exceptional hierarchy
       - id: DE-02
         name: Visual Refinement
         score: 4
         max: 6
         passed: true
-        comment: Grid subtle (alpha=0.10), minor grid removed, axis lines removed;
-          panel borders kept (appropriate for facets)
+        comment: Subtle grid alpha=0.10; minor grid removed; axis_line blanked; 4-sided
+          panel borders acceptable for faceted layout
       - id: DE-03
         name: Data Storytelling
         score: 4
         max: 6
         passed: true
-        comment: Selection encoding creates clear visual hierarchy; iris setosa separation
-          across views tells genuine story
+        comment: 'Clear visual narrative: Setosa consistently stands out across three
+          dimensional perspectives; subtitle reinforces count; coherent focal point'
     spec_compliance:
-      score: 14
+      score: 13
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: Three coordinated scatter views with consistent selection propagation;
-          correct static interpretation for plotnine
+        comment: Three coordinated scatter plots with consistent selection encoding;
+          best static approximation for plotnine; interactive linking not possible
       - id: SC-02
         name: Required Features
         score: 3
         max: 4
-        passed: false
-        comment: Three views, consistent color, unselected de-emphasized; all scatter
-          (no histogram/bar); no selection count
+        passed: true
+        comment: 3 views, consistent encoding, unselected de-emphasized, selection
+          count shown; interactive mechanism and reset button not possible in static
+          library
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Three distinct variable pairs correctly mapped; free scales show
-          all data per panel
+        comment: Different variable pairs per panel; all 150 points displayed; species
+          used for selection grouping
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title matches exact format; legend labels Setosa (selected) and Other
-          species are informative
+        comment: Correct title format; legend shows both selection states clearly
     data_quality:
       score: 14
       max: 15
@@ -155,22 +165,20 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Selection propagation shown across all views; demonstrates concept
-          well; only scatter plots limits viz-type diversity
+        comment: Three variable-pair views with dual encoding; all scatter plots —
+          adding histogram would improve coverage per spec suggestion
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: 'Iris dataset: classic, neutral, scientific — ideal for linked-views
-          demonstration'
+        comment: Real iris dataset; biologically plausible; neutral scientific context
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Iris measurements factually correct (sepal 4.3-7.9 cm, petal 1.0-6.9
-          cm)
+        comment: Sepal/petal measurements in cm with correct biological ranges
     code_quality:
       score: 10
       max: 10
@@ -180,52 +188,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear: imports → data → reshape → theme → plot → save'
+        comment: No functions or classes; linear script; clean pandas reshaping
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: load_iris() is deterministic; no random operations
+        comment: Real deterministic dataset; no random seed needed
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used; sklearn, pandas, os, sys all necessary
+        comment: All imports used; sklearn only for iris dataset loading
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean Pythonic code; sys.path manipulation justified for name collision
-          avoidance
+        comment: Clear data pipeline; pd.Categorical for ordered facets; no fake UI
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png; current plotnine API throughout
+        comment: Saves as plot-{THEME}.png correctly
     library_mastery:
-      score: 8
+      score: 7
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 5
+        score: 4
         max: 5
         passed: true
-        comment: 'Grammar of graphics used expertly: dual aes() aesthetics, scale_color_manual
-          + scale_alpha_manual, facet_wrap with free scales, guides(alpha=False)'
+        comment: Full ggplot grammar; scale_alpha_manual + scale_color_manual dual
+          encoding; guides(alpha=False) to suppress redundant guide; facet_wrap with
+          free scales
       - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: facet_wrap with scales=free is distinctively ggplot2/plotnine; dual
-          aesthetic encoding idiomatic; doesn't extend further into advanced plotnine
-          territory
-  verdict: REJECTED
+        comment: facet_wrap(scales='free') is distinctive plotnine/ggplot2 feature;
+          pd.Categorical for panel ordering; scale_alpha_manual for simultaneous alpha+color
+          control
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - sklearn
@@ -233,6 +241,7 @@ impl_tags:
   - faceting
   patterns:
   - dataset-loading
+  - wide-to-long
   dataprep: []
   styling:
   - alpha-blending
