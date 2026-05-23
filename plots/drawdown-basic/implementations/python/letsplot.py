@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 drawdown-basic: Drawdown Chart
 Library: letsplot 4.10.1 | Python 3.13.13
 Quality: 84/100 | Updated: 2026-05-23
@@ -25,6 +25,8 @@ from lets_plot import (
     labs,
     layer_tooltips,
     scale_color_manual,
+    scale_shape_manual,
+    scale_x_datetime,
     theme,
     theme_minimal,
 )
@@ -62,10 +64,11 @@ price = 100 * np.cumprod(1 + returns)
 running_max = np.maximum.accumulate(price)
 drawdown = (price - running_max) / running_max * 100
 
-df = pd.DataFrame({"date": dates, "price": price, "drawdown": drawdown, "day_num": np.arange(n_days)})
+df = pd.DataFrame({"date": dates, "price": price, "drawdown": drawdown})
 
 max_dd_idx = int(np.argmin(drawdown))
 max_dd_value = drawdown[max_dd_idx]
+max_dd_date = dates[max_dd_idx].strftime("%Y-%m-%d")
 
 recovery_mask = (drawdown == 0) & (np.roll(drawdown, 1) < 0)
 recovery_points = df[recovery_mask].copy()
@@ -78,41 +81,44 @@ markers_df = pd.concat([max_dd_df, recovery_points], ignore_index=True)
 
 # Plot
 marker_tooltips = (
-    layer_tooltips().format("@drawdown", ".1f").line("@marker_type").line("Day|@day_num").line("Drawdown (%)|@drawdown")
+    layer_tooltips().format("@drawdown", ".1f").line("@marker_type").line("Date|@date").line("Drawdown (%)|@drawdown")
 )
 
 plot = (
-    ggplot(df, aes(x="day_num", y="drawdown"))
+    ggplot(df, aes(x="date", y="drawdown"))
     + geom_area(fill=DRAWDOWN_COLOR, alpha=0.30)
     + geom_line(color=DRAWDOWN_COLOR, size=1.2)
     + geom_hline(yintercept=0, color=INK_SOFT, size=0.8, linetype="dashed")
     + geom_point(
         data=markers_df,
-        mapping=aes(x="day_num", y="drawdown", color="marker_type"),
-        size=7,
+        mapping=aes(x="date", y="drawdown", color="marker_type", shape="marker_type"),
+        size=5,
         stroke=2.0,
-        shape=21,
         fill=PAGE_BG,
+        alpha=0.8,
         tooltips=marker_tooltips,
     )
     + scale_color_manual(name="", values={"Max Drawdown": DRAWDOWN_COLOR, "Recovery Point": RECOVERY_COLOR})
+    + scale_shape_manual(name="", values={"Max Drawdown": 16, "Recovery Point": 21})
+    + scale_x_datetime()
     + labs(
-        x="Trading Days",
+        x="Date",
         y="Drawdown (%)",
         title="drawdown-basic · python · letsplot · anyplot.ai",
-        caption=f"Max Drawdown: {max_dd_value:.1f}% on Day {max_dd_idx}",
+        caption=f"Max Drawdown: {max_dd_value:.1f}% on {max_dd_date}",
     )
     + theme_minimal()
     + theme(
         plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
         panel_background=element_rect(fill=PAGE_BG),
         panel_grid_major=element_line(color=GRID_COLOR, size=0.5),
+        panel_grid_major_x=element_blank(),
         panel_grid_minor=element_blank(),
         axis_title=element_text(size=12, color=INK),
         axis_text=element_text(size=10, color=INK_SOFT),
         plot_title=element_text(size=16, color=INK),
         plot_caption=element_text(size=10, color=INK_MUTED),
-        legend_background=element_rect(fill=ELEVATED_BG, color=INK_SOFT),
+        legend_background=element_rect(fill=ELEVATED_BG),
         legend_text=element_text(size=10, color=INK_SOFT),
         legend_title=element_text(size=10, color=INK),
         legend_position="top",
