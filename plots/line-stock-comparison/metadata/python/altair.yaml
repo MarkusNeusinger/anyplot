@@ -1,154 +1,204 @@
 library: altair
+language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:21:58Z'
-updated: '2026-01-20T10:24:31Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21167798162
+updated: '2026-05-23T10:11:52Z'
+generated_by: claude-sonnet
+workflow_run: 26329608182
 issue: 3748
-python_version: 3.13.11
-library_version: 6.0.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/altair/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/altair/plot.html
-quality_score: 91
+language_version: 3.13.13
+library_version: 6.1.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/altair/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/altair/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/altair/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/altair/plot-dark.html
+quality_score: 89
 review:
   strengths:
-  - Excellent use of Altair declarative grammar with layer composition for reference
-    line
-  - Clean, readable code following KISS principles
-  - Good color palette with distinct colors for each stock
-  - Appropriate line thickness for multi-series comparison
-  - Proper rebasing implementation (starts all series at 100)
-  - Well-formatted title following spec-id · library · pyplots.ai convention
-  - Good legend placement and sizing
+  - Full anyplot palette applied correctly — AAPL=#009E73 first, then purple, red,
+    sky blue in canonical order
+  - 'Complete theme-adaptive chrome: background, axis colors, grid, legend box all
+    flip properly between light and dark'
+  - Reference line at y=100 with dashed styling and proper INK_SOFT color tells the
+    story clearly
+  - SPY line uses thicker strokeWidth (3.0 vs 2.0) via alt.condition — creates meaningful
+    visual hierarchy emphasizing the benchmark
+  - Canvas padding approach correctly pads vl-convert output to exact 3200×1800 target
+  - Interactive HTML saved alongside PNG — leverages altair's interactive nature
+  - All font sizes explicitly set (titleFontSize=12, labelFontSize=10, legend 10px)
+  - 'Realistic data: AAPL, GOOGL, MSFT, SPY over 252 business days with plausible
+    volatility parameters'
+  - Idiomatic layer composition using alt.layer(reference_line, lines) — clean altair
+    pattern
+  - 'No overlap: legend placed to the right, no text collisions detected in either
+    render'
   weaknesses:
-  - Y-axis starts at 0 which wastes significant plot space; the data ranges from ~80
-    to ~175 but the axis shows 0-180, making the actual variations appear smaller
-    than they are
-  - Red (MSFT) and green (SPY) color combination is not ideal for colorblind accessibility
-  image_description: 'The plot displays a multi-line chart comparing 4 stock price
-    series (AAPL, GOOGL, MSFT, SPY) over approximately one year of trading data (January
-    to December 2024). All series are rebased to start at 100. The chart uses distinct
-    colors: blue for AAPL, yellow/gold for GOOGL, red/orange for MSFT, and dark green
-    for SPY. A horizontal dashed gray reference line at y=100 indicates the starting
-    point. The y-axis shows "Rebased Price (Start = 100)" ranging from 0 to 180, and
-    the x-axis shows "Date" with monthly labels. The legend is positioned in the upper
-    right corner with clear symbol labels. Grid lines are subtle gray. The title "line-stock-comparison
-    · altair · pyplots.ai" appears at the top center.'
+  - 'Design Excellence is the main gap: DE-01=5/8 — the chart is well-configured but
+    relies on clean defaults rather than truly publication-ready custom styling (e.g.,
+    annotations on peak performers, subtle area fill under the SPY line for emphasis)'
+  - DE-02=4/6 — visual refinement is good but not excellent; spines are removed via
+    stroke=None on the view, but ticker density creates a slightly cluttered mid-section
+    where 4 lines cross repeatedly
+  - DE-03=3/6 — the reference line at 100 provides some storytelling, but the viewer
+    must work to find insights; consider adding a thin annotation or end-of-series
+    label for the top performer (SPY) to make the takeaway explicit
+  - LM-02=3/5 — alt.condition for conditional strokeWidth is a nice touch, but the
+    implementation could go further with Altair-specific features like selection-based
+    interactivity (highlight on hover), which is a distinctive Altair capability in
+    the HTML output
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct, not pure white.
+      Chrome: Title "line-stock-comparison · python · altair · anyplot.ai" in dark ink at top center, clearly readable. Y-axis label "Rebased Price (Start = 100)" in dark ink, readable. X-axis label "Date" visible. Tick labels (monthly dates on X, numeric on Y) in INK_SOFT secondary color, all readable. Legend box on right with elevated background (#FFFDF6) showing "Symbol" title and AAPL, GOOGL, MSFT, SPY entries, all clearly readable.
+      Data: Four distinct lines — AAPL in #009E73 (green, first series), GOOGL in #9418DB (purple), MSFT in #B71D27 (red), SPY in #16B8F3 (sky blue). A dashed horizontal reference line at y=100 in INK_SOFT color is clearly visible. SPY (sky blue) is the outperformer reaching ~130+. MSFT (red) is the worst performer staying below 100. Grid lines at 10% opacity are subtle. All four lines clearly distinguishable.
+      Legibility verdict: PASS — all text readable against the warm off-white background, no light-on-light issues.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct, not pure black.
+      Chrome: Title "line-stock-comparison · python · altair · anyplot.ai" in light ink (#F0EFE8), clearly readable against dark background. Y-axis label and X-axis "Date" in light text, readable. Tick labels in secondary light (#B8B7B0), readable. Legend box with darker elevated background (#242420) and light text labels — all entries readable. No dark-on-dark failures detected.
+      Data: Data colors are identical to light render — AAPL #009E73 (green), GOOGL #9418DB (purple), MSFT #B71D27 (red), SPY #16B8F3 (sky blue). Colors are vivid and clearly distinguishable on the dark surface. Dashed reference line at 100 visible in secondary ink color. Brand green #009E73 remains clearly visible on the dark background.
+      Legibility verdict: PASS — all text readable against the dark background, no dark-on-dark issues observed.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 29
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title, axis labels, tick labels, and legend all clearly readable
-          at full size
+        comment: 'All font sizes explicitly set (title=16, axis=12, labels=10). Well-proportioned,
+          readable in both themes. Minor: chart area slightly compact with 4 dense
+          lines.'
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: No overlapping text elements
+        comment: No text overlaps. Legend positioned to right, no collision with data.
+          Date ticks well-spaced.
       - id: VQ-03
         name: Element Visibility
-        score: 8
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Line thickness (strokeWidth=3) is appropriate for the data density
+        comment: Lines clearly visible at 2.0/3.0px width for 252 data points. No
+          markers needed for line chart. All series distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 4
-        max: 5
-        passed: true
-        comment: Colors are distinguishable but red-green combination could be challenging
-          for colorblind users
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Good proportions, plot fills canvas well, legend well-placed
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: 'Descriptive labels with context: Rebased Price (Start = 100) and
-          Date'
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: anyplot palette is CVD-safe. Green, purple, red, sky blue are well-distinguished
+          for all vision types.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed. Proper padding to 3200x1800. Chart fills good
+          proportion. Legend well-positioned. No clipping.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Y-axis starts at 0 which wastes space; data ranges from ~80-175 but
-          axis shows 0-180
+        passed: true
+        comment: 'Y-axis: ''Rebased Price (Start = 100)'' with units. X-axis: ''Date''.
+          Title format correct.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: First series AAPL=#009E73. Canonical palette order. Light bg=#FAF8F1,
+          dark bg=#1A1A17. All chrome theme-adaptive. Both renders correct.
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Custom anyplot palette, theme-adaptive chrome throughout, SPY emphasized
+          with thicker stroke via alt.condition, dashed reference line with proper
+          styling. Above defaults but not publication-ready.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: View stroke=None removes border. Subtle grid at 0.10 opacity. Legend
+          has styled elevated background. Good whitespace from canvas padding. Some
+          refinement visible.
+      - id: DE-03
+        name: Data Storytelling
+        score: 3
+        max: 6
+        passed: true
+        comment: Reference line at 100 tells the 'above/below baseline' story. SPY
+          thickness variation adds hierarchy. No annotations to guide viewer to key
+          insights.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-line chart
+        comment: Correct multi-line chart for stock comparison.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, rebased price on Y-axis, color encoding for symbols
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All spec features present: normalization, distinct colors, legend,
-          reference line at 100, grid lines'
-      - id: SC-04
-        name: Data Range
+        comment: 'All features present: normalization to 100, distinct colors, clear
+          legend, Y-axis shows rebased values, horizontal reference line at 100, grid
+          lines.'
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X (temporal), rebased_price on Y (quantitative), symbol as
+          color encoding.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies all 4 stock symbols
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: line-stock-comparison · altair · pyplots.ai'
+        comment: 'Title: ''line-stock-comparison · python · altair · anyplot.ai''.
+          Legend: ''Symbol'' with AAPL/GOOGL/MSFT/SPY labels.'
     data_quality:
-      score: 19
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows different performance trajectories (outperformers vs underperformers),
-          but could show more volatility variation
+        comment: 'Shows 4 stocks with varying performance: outperformers (SPY ~130),
+          underperformers (MSFT <100), different volatility profiles. Demonstrates
+          all aspects of the comparison chart type.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Real stock ticker symbols, plausible 1-year performance patterns
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Realistic return ranges (+70% to -20% over a year)
+        comment: Real tickers AAPL, GOOGL, MSFT, SPY in a portfolio comparison scenario.
+          Common, neutral financial analysis use case.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 252 business days (one trading year), rebased to 100, range ~85-135
+          is realistic for tech stocks over a year.
     code_quality:
       score: 10
       max: 10
@@ -158,54 +208,66 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Clean linear structure: imports → data → plot → save'
+        comment: 'Clean linear flow: imports → tokens → data → plot → save. No functions
+          or classes.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: Only necessary imports (altair, numpy, pandas)
+        comment: 'All imports used: os (env), sys (path fix), altair, numpy, pandas,
+          PIL.Image (canvas padding).'
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current Altair API
+        comment: Clean Altair idioms, appropriate complexity. Layer composition is
+          well-structured.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Current altair 6.1.0
+          API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
+      - id: LM-01
+        name: Idiomatic Usage
         score: 5
         max: 5
         passed: true
-        comment: 'Good use of Altair declarative syntax: layered composition with
-          alt.layer(), encoding types, configure_axis for grid styling, alt.Title
-          and alt.Legend'
+        comment: Proper encoding types (T, Q, N), mark_line/mark_rule, configure_*
+          chain, alt.layer composition, alt.Title — all idiomatic Altair patterns.
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: alt.condition for conditional strokeWidth is distinctively Altair.
+          Layer composition for reference line is idiomatic. Tooltip encoding + HTML
+          export leverage interactivity. Could go further with selection-based highlighting
+          in HTML output.
   verdict: APPROVED
 impl_tags:
-  dependencies: []
+  dependencies:
+  - pillow
   techniques:
   - layer-composition
+  - hover-tooltips
   - html-export
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
-  - normalization
   - time-series
   styling:
   - grid-styling
