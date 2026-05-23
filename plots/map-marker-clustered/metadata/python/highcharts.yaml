@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:49:31Z'
-updated: '2026-05-23T12:01:23Z'
+updated: '2026-05-23T20:05:01Z'
 generated_by: claude-sonnet
 workflow_run: 26331867625
 issue: 3766
@@ -12,92 +12,107 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marke
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/highcharts/plot-dark.html
-quality_score: 84
+quality_score: 85
 review:
   strengths:
-  - 'Perfect spec compliance: all required clustering features implemented (count
-    display, animation, zoom, category colors, basemap)'
-  - Complete theme-adaptive chrome with all six tokens (PAGE_BG, ELEVATED_BG, INK,
-    INK_SOFT, MAP_FILL, MAP_BORDER) tied to ANYPLOT_THEME
-  - Correct anyplot palette in canonical order (Grocery green, Electronics purple,
-    Clothing red, Home Goods sky blue)
-  - 'Proper Highcharts Maps pattern: inline CDN download, CDP viewport override, PIL
-    canvas pin — no canvas-gate failure'
-  - Clean flat code with seed, clean imports, and both HTML + PNG artifacts
+  - Correct use of Highcharts marker-clusters module with per-category series clustering
+  - Cluster zone-based sizing (5 zones from radius 28 to 60) creates a clear visual
+    hierarchy of density
+  - Full theme-adaptive chrome — PAGE_BG, ELEVATED_BG, INK, INK_SOFT, MAP_FILL, MAP_BORDER
+    all switch correctly between light and dark
+  - 'anyplot palette applied in canonical order: Grocery=#009E73 (position 1), Electronics=#9418DB
+    (2), Clothing=#B71D27 (3), Home Goods=#16B8F3 (4)'
+  - Saves both plot-{THEME}.html and plot-{THEME}.png artifacts as required for interactive
+    libraries
+  - PIL safety-net pinning ensures exact 3200×1800 canvas dimensions
+  - Reproducible synthetic data with np.random.seed(42) and realistic 15-city US retail
+    context
+  - Subtitle text explains interactivity ('zoom to expand clusters') — good data storytelling
   weaknesses:
-  - Title font size is 54px (should be 66px per style guide for highcharts at 3200x1800)
-    — increase to 66px for better visual weight
-  - Cluster data-label font size 28px is slightly small on a 3200px-wide canvas; consider
-    32-36px for the count labels inside cluster circles
-  - Smallest cluster zone (radius 24 for 1-4 points) may be hard to read at full resolution;
-    consider minimum radius 28
-  - Design storytelling is minimal — a brief annotation or color-coded legend header
-    could better guide viewers through the density narrative
+  - Cluster data label fontSize is '34px' — below the style-guide recommended '44px'
+    for labels; on large cluster circles (radius 48-60) there is room for larger text,
+    making counts easier to read at thumbnail sizes
+  - Per-category clustering creates 4 overlapping cluster circles per city rather
+    than a single merged cluster, producing visual clutter in dense metros (NYC, LA,
+    SF) — a single combined series with category-colored individual markers on zoom-in
+    would reduce overlap
+  - 'Legend symbol uses large symbolRadius: 50 with symbolHeight: 36 / symbolWidth:
+    36, creating disproportionate oversized legend swatches relative to the map scale
+    — reducing to symbolRadius: 12, symbolHeight: 20, symbolWidth: 20 would look more
+    refined'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white (#FAF8F1) — correct light theme surface
-      Chrome: Title "map-marker-clustered · python · highcharts · anyplot.ai" in dark ink (#1A1A17) at 54px bold; subtitle "402 store locations across 15 US cities — zoom to expand clusters" in INK_SOFT (#4A4A44); legend on right with elevated (#FFFDF6) background showing Grocery/Electronics/Clothing/Home Goods labels in INK_SOFT — all readable
-      Data: Four category colors: Grocery #009E73 (green), Electronics #9418DB (purple), Clothing #B71D27 (red), Home Goods #16B8F3 (sky blue); cluster circles of varying radius (24–60) with white count labels; US map states in beige-gray (#E8E4DB) with #B0AC9F borders
-      Legibility verdict: PASS — all title, subtitle, legend, and cluster count text readable against light background
+      Background: Warm off-white #FAF8F1 — PASS (correct anyplot light surface)
+      Map fill: Light beige-gray #E8E4DB for US state polygons; state borders in #B0AC9F — theme-correct
+      Chrome: Title "map-marker-clustered · python · highcharts · anyplot.ai" in bold dark #1A1A17 at 66px — fully readable; subtitle "402 store locations across 15 US cities — zoom to expand clusters" in #4A4A44 at 36px — readable; legend on right side with four category labels (Grocery, Electronics, Clothing, Home Goods) in #4A4A44 — all readable
+      Data: Four per-category cluster series: Grocery=#009E73 (green), Electronics=#9418DB (purple), Clothing=#B71D27 (red), Home Goods=#16B8F3 (sky blue) — correct anyplot palette positions 1-4; clusters sized by count (radius 28-60); white count labels with dark outline on each cluster
+      Legibility verdict: PASS — all text clearly visible against warm off-white background
 
     Dark render (plot-dark.png):
-      Background: Warm near-black (#1A1A17) — correct dark theme surface
-      Chrome: Title in light ink (#F0EFE8); subtitle in #B8B7B0; legend with elevated dark (#242420) background and same muted text — all readable; no dark-on-dark failures observed
-      Data: Colors are identical to light render — green, purple, red, sky blue markers match exactly; cluster count labels remain white with dark text-outline, fully visible
-      Legibility verdict: PASS — all text readable against dark background; data colors consistent across themes
+      Background: Warm near-black #1A1A17 — PASS (correct anyplot dark surface)
+      Map fill: Dark charcoal #2A2A25 for state polygons; borders in #4A4A44 — theme-correct
+      Chrome: Title in light #F0EFE8 — readable; subtitle in #B8B7B0 — readable; legend labels in #B8B7B0 on #242420 elevated box — readable
+      Data: Cluster marker colors IDENTICAL to light render — Grocery=#009E73, Electronics=#9418DB, Clothing=#B71D27, Home Goods=#16B8F3 — PASS (only chrome flips, data colors stay constant); cluster count labels remain white-on-colored-circle — readable
+      Legibility verdict: PASS — no dark-on-dark failures; all chrome elements correctly adapt to dark theme; brand green #009E73 clearly visible on dark background
   criteria_checklist:
     visual_quality:
-      score: 26
+      score: 27
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 6
+        score: 7
         max: 8
         passed: true
-        comment: 'Title at 54px (guideline: 66px) and cluster data-labels at 28px
-          slightly undersized; subtitle/legend/tick text readable in both themes'
+        comment: Title (66px), subtitle (36px) readable in both themes. Cluster data
+          labels at 34px are slightly small per style-guide recommendation of 44px
+          for labels; readable but less comfortable at thumbnail sizes.
       - id: VQ-02
         name: No Overlap
         score: 5
         max: 6
         passed: true
-        comment: Cluster circles overlap in dense Northeast/California areas (expected
-          for static clustered map); no text-on-text collisions
+        comment: Per-category clustering creates 4 overlapping cluster circles per
+          dense metro area (NYC, LA, SF) — inherent to the per-series approach. No
+          text overlaps with other text.
       - id: VQ-03
         name: Element Visibility
         score: 5
         max: 6
         passed: true
-        comment: Cluster markers clearly visible with size variation; smallest clusters
-          (radius 24) slightly small at full resolution
+        comment: Clusters well-visible with size-scaled zones. 402 points across 15
+          cities provides good coverage. Minor deduction for the per-category overlap
+          making individual cluster circles slightly harder to distinguish in dense
+          cities.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette positions 1-4 used; colorblind-safe
+        comment: anyplot palette is colorblind-safe; 4 colors with sufficient pairwise
+          ΔE.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: 3200x1800 canvas confirmed; all elements within bounds; proportions
-          good
+        comment: 'Canvas 3200×1800 confirmed (no gate failure, PIL safety net active).
+          Map occupies most of canvas with legend on right; good whitespace. marginBottom:
+          60 provides breathing room.'
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Correct title format; subtitle informative; no axis labels needed
-          for map type
+        comment: Title correctly formatted as 'map-marker-clustered · python · highcharts
+          · anyplot.ai'. No axis labels required for a geographic map.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'First series Grocery=#009E73; canonical order 1-4; light bg #FAF8F1,
-          dark bg #1A1A17; data colors identical across themes'
+        comment: 'First series Grocery uses #009E73 (position 1). Positions 2-4 in
+          canonical order. Light BG #FAF8F1, dark BG #1A1A17. Both renders theme-correct.'
     design_excellence:
       score: 11
       max: 20
@@ -106,23 +121,26 @@ review:
         name: Aesthetic Sophistication
         score: 5
         max: 8
-        passed: true
-        comment: Theme-adaptive map styling, cluster zones with size variation, properly
-          branded palette; above defaults
+        passed: false
+        comment: 'Default 4 raised to 5: zone-based cluster sizing (5 zones) is a
+          sophisticated design choice that creates visual hierarchy; theme-adaptive
+          implementation is thorough. Map still has a fairly utilitarian appearance.'
       - id: DE-02
         name: Visual Refinement
         score: 3
         max: 6
-        passed: true
-        comment: Elevated legend background with border, subtle map state styling,
-          smooth cluster animation; mostly Highcharts Maps defaults otherwise
+        passed: false
+        comment: 'Default 2 raised to 3: clean map with appropriate state borders,
+          elevated legend box with border and padding, subtitle adds context. Maps
+          don''t have spines to remove. Legend swatch sizing is slightly too large.'
       - id: DE-03
         name: Data Storytelling
         score: 3
         max: 6
-        passed: true
-        comment: Subtitle communicates interactive intent; cluster size variation
-          conveys density; no focal annotation added
+        passed: false
+        comment: 'Default 2 raised to 3: cluster counts guide viewers to retail density
+          hotspots; color-coding reveals category distribution geographically; subtitle
+          prompts interactive exploration.'
     spec_compliance:
       score: 15
       max: 15
@@ -132,29 +150,29 @@ review:
         score: 5
         max: 5
         passed: true
-        comment: Correct Highcharts mapChart with mappoint series + marker-clusters
-          module
+        comment: 'Correct: Highcharts mapChart with marker-clusters module.'
       - id: SC-02
         name: Required Features
         score: 4
         max: 4
         passed: true
-        comment: Count display, zoom animation, category colors, mapNavigation, US
-          basemap, cluster size zones, cluster tooltip all implemented
+        comment: Cluster count display ✓, smooth zoom animation (450ms) ✓, category
+          color-coding ✓, click-to-zoom via mapNavigation ✓, basemap with state boundaries
+          ✓.
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: lat/lon correctly mapped, store name as label, category drives series
-          color
+        comment: 402 points with lat/lon correctly mapped; 15 US cities; 4 categories
+          shown.
       - id: SC-04
         name: Title & Legend
         score: 3
         max: 3
         passed: true
-        comment: Title is exactly 'map-marker-clustered · python · highcharts · anyplot.ai';
-          legend labels match all 4 categories
+        comment: 'Title: ''map-marker-clustered · python · highcharts · anyplot.ai''
+          — exact required format. Legend: 4 categories with correct labels.'
     data_quality:
       score: 14
       max: 15
@@ -164,21 +182,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: Shows clustering, size variation, category coloring, zoom hints;
-          no convex hull/spider lines (optional per spec)
+        comment: 402 points across 15 cities, 4 categories, 5 cluster size zones,
+          mapNavigation, tooltip with clusterFormat. Spider lines/convex hull (spec
+          'consider') not implemented — minor omission.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: Retail store locations across 15 major US cities; plausible category
-          mix; neutral
+        comment: Realistic US retail store distribution across major cities. Neutral
+          commercial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: 402 points; within spec's 100-5000 range; accurate US city coordinates
+        comment: 402 stores across 15 cities is well within the spec's 100-5000 range.
+          Geographic spread across US is realistic.
     code_quality:
       score: 10
       max: 10
@@ -188,32 +208,33 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Flat script, no functions or classes
+        comment: Flat script with no functions or classes. Clear linear flow.
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: np.random.seed(42) set
+        comment: np.random.seed(42) ensures deterministic output.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports actively used
+        comment: All imports (json, os, tempfile, time, urllib.request, pathlib, numpy,
+          PIL, selenium) are actually used.
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Clean f-string HTML generation, PIL safety-net, proper CDN download
-          pattern
+        comment: Appropriate complexity; raw JS approach necessary for map/clustering
+          modules not in highcharts_core Python API. No fake UI.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html correctly.
     library_mastery:
       score: 8
       max: 10
@@ -223,15 +244,17 @@ review:
         score: 4
         max: 5
         passed: true
-        comment: Correct mapChart, mappoint series, inline CDN embedding, CDP override
-          for authoritative canvas, PIL safety net
+        comment: mapChart API, correct inline JS for headless Chrome, CDP override
+          for viewport, PIL safety net. Bypasses highcharts_core Python library in
+          favor of raw JS, which is justified for map+clustering modules.
       - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses marker-clusters module with size zones, per-category series
-          clustering, clusterFormat tooltip, dataLabels formatter
+        comment: 'Uses marker-clusters module, cluster.zones for density-based radius,
+          clusterFormat in tooltip, layoutAlgorithm: grid, mapNavigation, per-series
+          clustering — all Highcharts-specific features.'
   verdict: APPROVED
 impl_tags:
   dependencies:
