@@ -1,7 +1,7 @@
-""" anyplot.ai
+"""anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
-Library: plotly 6.7.0 | Python 3.13.13
-Quality: 89/100 | Updated: 2026-05-20
+Library: plotly | Python 3.13
+Quality: 89/100 | Updated: 2026-05-23
 """
 
 import importlib
@@ -18,85 +18,81 @@ PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
 ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
 INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
-GRID = "rgba(26,26,23,0.15)" if THEME == "light" else "rgba(240,239,232,0.15)"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
 
-OKABE_ITO = ["#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9"]
+# anyplot palette — positions 1–4 for 4 quarters
+PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
 
-# Data: 2024 Retail Sales — year → quarter → month hierarchy
-# Level 1: Quarterly totals (values in $K)
-quarter_names = ["Q1 (Jan–Mar)", "Q2 (Apr–Jun)", "Q3 (Jul–Sep)", "Q4 (Oct–Dec)"]
-quarter_values = [1240, 1680, 2140, 2380]
-quarter_labels = ["$1.24M", "$1.68M", "$2.14M", "$2.38M"]
-quarter_colors = OKABE_ITO[:4]
+# Data: 2024 Retail Sales — quarter → month two-level hierarchy
+QUARTERS = [
+    {"name": "Q1 (Jan–Mar)", "value": 1240, "label": "$1.24M", "key": "q1"},
+    {"name": "Q2 (Apr–Jun)", "value": 1680, "label": "$1.68M", "key": "q2"},
+    {"name": "Q3 (Jul–Sep)", "value": 2140, "label": "$2.14M", "key": "q3"},
+    {"name": "Q4 (Oct–Dec)", "value": 2380, "label": "$2.38M", "key": "q4"},
+]
+MONTHLY = {
+    "q1": {
+        "names": ["January", "February", "March"],
+        "values": [390, 420, 430],
+        "labels": ["$390K", "$420K", "$430K"],
+        "path": "2024 > Q1",
+        "prefix": "Q1 Jan–Mar Detail",
+    },
+    "q2": {
+        "names": ["April", "May", "June"],
+        "values": [520, 570, 590],
+        "labels": ["$520K", "$570K", "$590K"],
+        "path": "2024 > Q2",
+        "prefix": "Q2 Apr–Jun Detail",
+    },
+    "q3": {
+        "names": ["July", "August", "September"],
+        "values": [680, 750, 710],
+        "labels": ["$680K", "$750K", "$710K"],
+        "path": "2024 > Q3",
+        "prefix": "Q3 Jul–Sep Detail",
+    },
+    "q4": {
+        "names": ["October", "November", "December"],
+        "values": [740, 940, 700],
+        "labels": ["$740K", "$940K", "$700K"],
+        "path": "2024 > Q4",
+        "prefix": "Q4 Oct–Dec Detail",
+    },
+}
 
-# Level 2: Monthly breakdowns per quarter
-q1_month_names = ["January", "February", "March"]
-q1_month_values = [390, 420, 430]
-q1_month_labels = ["$390K", "$420K", "$430K"]
-
-q2_month_names = ["April", "May", "June"]
-q2_month_values = [520, 570, 590]
-q2_month_labels = ["$520K", "$570K", "$590K"]
-
-q3_month_names = ["July", "August", "September"]
-q3_month_values = [680, 750, 710]
-q3_month_labels = ["$680K", "$750K", "$710K"]
-
-q4_month_names = ["October", "November", "December"]
-q4_month_values = [740, 940, 700]
-q4_month_labels = ["$740K", "$940K", "$700K"]
-
-month_colors = OKABE_ITO[:3]
-
-# Shared chrome for bar traces — per-level data/color overridden via merge
-_bar_chrome = {
+_edge = {"color": PAGE_BG, "width": 2}
+_chrome = {
     "textposition": "outside",
     "textfont": {"size": 12, "color": INK},
     "hovertemplate": "<b>%{x}</b><br>Revenue: %{text}<extra></extra>",
     "cliponaxis": False,
 }
-_bar_edge = {"color": PAGE_BG, "width": 2}
 
-# Q1–Q3 are muted (0.75) to draw the eye to Q4 as the holiday peak
-bar_kwargs_annual = {
-    **_bar_chrome,
-    "x": quarter_names,
-    "y": quarter_values,
-    "text": quarter_labels,
-    "marker": {"color": quarter_colors, "line": _bar_edge, "opacity": [0.75, 0.75, 0.75, 1.0]},
-}
-bar_kwargs_q1 = {
-    **_bar_chrome,
-    "x": q1_month_names,
-    "y": q1_month_values,
-    "text": q1_month_labels,
-    "marker": {"color": month_colors, "line": _bar_edge},
-}
-bar_kwargs_q2 = {
-    **_bar_chrome,
-    "x": q2_month_names,
-    "y": q2_month_values,
-    "text": q2_month_labels,
-    "marker": {"color": month_colors, "line": _bar_edge},
-}
-bar_kwargs_q3 = {
-    **_bar_chrome,
-    "x": q3_month_names,
-    "y": q3_month_values,
-    "text": q3_month_labels,
-    "marker": {"color": month_colors, "line": _bar_edge},
-}
-bar_kwargs_q4 = {
-    **_bar_chrome,
-    "x": q4_month_names,
-    "y": q4_month_values,
-    "text": q4_month_labels,
-    "marker": {"color": month_colors, "line": _bar_edge},
-}
+# Annual trace — Q4 at full opacity (holiday peak focal point), Q1–Q3 muted
+annual_trace = go.Bar(
+    **_chrome,
+    x=[q["name"] for q in QUARTERS],
+    y=[q["value"] for q in QUARTERS],
+    text=[q["label"] for q in QUARTERS],
+    marker={"color": PALETTE, "line": _edge, "opacity": [0.7, 0.7, 0.7, 1.0]},
+)
 
-# Annotations shared across all views
-_footer_ann = {
-    "text": "Select a level from the dropdown to drill into monthly detail",
+# Monthly traces — bars inherit parent quarter's palette color (cross-level color identity)
+monthly_traces = [
+    go.Bar(
+        **_chrome,
+        x=MONTHLY[q["key"]]["names"],
+        y=MONTHLY[q["key"]]["values"],
+        text=MONTHLY[q["key"]]["labels"],
+        marker={"color": PALETTE[i], "line": _edge},
+    )
+    for i, q in enumerate(QUARTERS)
+]
+
+# Annotations
+_footer = {
+    "text": "Click a quarter bar to drill into monthly detail  ·  use the dropdown to navigate back",
     "xref": "paper",
     "yref": "paper",
     "x": 0.5,
@@ -105,100 +101,79 @@ _footer_ann = {
     "font": {"size": 10, "color": INK_SOFT},
     "xanchor": "center",
 }
-
-# Q4 holiday-season callout — annual view only
-_peak_ann = {
+Q_RANGE = [0, max(q["value"] for q in QUARTERS) * 1.38]
+_peak = {
     "text": "★ Holiday Peak",
     "x": "Q4 (Oct–Dec)",
     "xref": "x",
-    "y": max(quarter_values) * 1.25,
+    "y": max(q["value"] for q in QUARTERS) * 1.25,
     "yref": "y",
     "showarrow": False,
-    "font": {"size": 9, "color": OKABE_ITO[3]},
+    "font": {"size": 10, "color": PALETTE[3]},
     "xanchor": "center",
-    "yanchor": "bottom",
 }
 
-# y-axis range for annual view — extra headroom for the peak callout
-Q_RANGE = [0, max(quarter_values) * 1.38]
+# Frames — annual overview + one per quarter
+ANNUAL_TITLE = "2024 Retail Sales · bar-drilldown · python · plotly · anyplot.ai"
 
-# Figure — root level (annual overview: all quarters)
-fig = go.Figure(go.Bar(**bar_kwargs_annual))
-
-# Animation frames for drill-level navigation
-fig.frames = [
-    go.Frame(
-        name="annual",
-        data=[go.Bar(**bar_kwargs_annual)],
-        layout=go.Layout(
-            title_text="2024 Retail Sales · bar-drilldown · python · plotly · anyplot.ai",
-            xaxis={"title": {"text": "Quarter", "font": {"size": 12, "color": INK}}},
-            yaxis={"title": {"text": "Revenue ($K)", "font": {"size": 12, "color": INK}}, "range": Q_RANGE},
-            annotations=[_footer_ann, _peak_ann],
-        ),
+annual_frame = go.Frame(
+    name="annual",
+    data=[annual_trace],
+    layout=go.Layout(
+        title_text=ANNUAL_TITLE,
+        xaxis={"title": {"text": "Quarter", "font": {"size": 12, "color": INK}}},
+        yaxis={"title": {"text": "Revenue ($K)", "font": {"size": 12, "color": INK}}, "range": Q_RANGE},
+        annotations=[_footer, _peak],
     ),
+)
+quarterly_frames = [
     go.Frame(
-        name="q1",
-        data=[go.Bar(**bar_kwargs_q1)],
+        name=q["key"],
+        data=[monthly_traces[i]],
         layout=go.Layout(
-            title_text="Q1 Jan–Mar Detail · bar-drilldown · python · plotly · anyplot.ai",
-            xaxis={"title": {"text": "Month  ·  Path: 2024 > Q1", "font": {"size": 12, "color": INK}}},
+            title_text=(f"{MONTHLY[q['key']]['prefix']} · bar-drilldown · python · plotly · anyplot.ai"),
+            xaxis={
+                "title": {"text": f"Month  ·  Path: {MONTHLY[q['key']]['path']}", "font": {"size": 12, "color": INK}}
+            },
             yaxis={
                 "title": {"text": "Revenue ($K)", "font": {"size": 12, "color": INK}},
-                "range": [0, max(q1_month_values) * 1.3],
+                "range": [0, max(MONTHLY[q["key"]]["values"]) * 1.3],
             },
-            annotations=[_footer_ann],
+            annotations=[_footer],
         ),
-    ),
-    go.Frame(
-        name="q2",
-        data=[go.Bar(**bar_kwargs_q2)],
-        layout=go.Layout(
-            title_text="Q2 Apr–Jun Detail · bar-drilldown · python · plotly · anyplot.ai",
-            xaxis={"title": {"text": "Month  ·  Path: 2024 > Q2", "font": {"size": 12, "color": INK}}},
-            yaxis={
-                "title": {"text": "Revenue ($K)", "font": {"size": 12, "color": INK}},
-                "range": [0, max(q2_month_values) * 1.3],
-            },
-            annotations=[_footer_ann],
-        ),
-    ),
-    go.Frame(
-        name="q3",
-        data=[go.Bar(**bar_kwargs_q3)],
-        layout=go.Layout(
-            title_text="Q3 Jul–Sep Detail · bar-drilldown · python · plotly · anyplot.ai",
-            xaxis={"title": {"text": "Month  ·  Path: 2024 > Q3", "font": {"size": 12, "color": INK}}},
-            yaxis={
-                "title": {"text": "Revenue ($K)", "font": {"size": 12, "color": INK}},
-                "range": [0, max(q3_month_values) * 1.3],
-            },
-            annotations=[_footer_ann],
-        ),
-    ),
-    go.Frame(
-        name="q4",
-        data=[go.Bar(**bar_kwargs_q4)],
-        layout=go.Layout(
-            title_text="Q4 Oct–Dec Detail · bar-drilldown · python · plotly · anyplot.ai",
-            xaxis={"title": {"text": "Month  ·  Path: 2024 > Q4", "font": {"size": 12, "color": INK}}},
-            yaxis={
-                "title": {"text": "Revenue ($K)", "font": {"size": 12, "color": INK}},
-                "range": [0, max(q4_month_values) * 1.3],
-            },
-            annotations=[_footer_ann],
-        ),
-    ),
+    )
+    for i, q in enumerate(QUARTERS)
 ]
 
-# Layout with theme-adaptive chrome
+# Dropdown navigation buttons
+dropdown_buttons = [
+    {
+        "label": "▶  2024 Annual — All Quarters",
+        "method": "animate",
+        "args": [
+            ["annual"],
+            {"mode": "immediate", "frame": {"duration": 400, "redraw": True}, "transition": {"duration": 250}},
+        ],
+    }
+] + [
+    {
+        "label": f"▸  {q['name']} — Monthly Detail",
+        "method": "animate",
+        "args": [
+            [q["key"]],
+            {"mode": "immediate", "frame": {"duration": 400, "redraw": True}, "transition": {"duration": 250}},
+        ],
+    }
+    for q in QUARTERS
+]
+
+# Figure
+fig = go.Figure(annual_trace)
+fig.frames = [annual_frame] + quarterly_frames
+
 fig.update_layout(
-    title={
-        "text": "2024 Retail Sales · bar-drilldown · python · plotly · anyplot.ai",
-        "font": {"size": 16, "color": INK},
-        "x": 0.5,
-        "xanchor": "center",
-    },
+    autosize=False,
+    title={"text": ANNUAL_TITLE, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
     xaxis={
         "title": {"text": "Quarter", "font": {"size": 12, "color": INK}},
         "tickfont": {"size": 10, "color": INK_SOFT},
@@ -211,6 +186,7 @@ fig.update_layout(
         "tickfont": {"size": 10, "color": INK_SOFT},
         "gridcolor": GRID,
         "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
         "tickformat": ",d",
         "range": Q_RANGE,
         "showgrid": True,
@@ -220,7 +196,7 @@ fig.update_layout(
     font={"color": INK},
     showlegend=False,
     margin={"t": 80, "b": 80, "l": 80, "r": 40},
-    annotations=[_footer_ann, _peak_ann],
+    annotations=[_footer, _peak],
     updatemenus=[
         {
             "type": "dropdown",
@@ -235,72 +211,36 @@ fig.update_layout(
             "bordercolor": INK_SOFT,
             "font": {"size": 11, "color": INK},
             "pad": {"r": 10, "t": 5},
-            "buttons": [
-                {
-                    "label": "▶  2024 Annual — All Quarters",
-                    "method": "animate",
-                    "args": [
-                        ["annual"],
-                        {
-                            "mode": "immediate",
-                            "frame": {"duration": 400, "redraw": True},
-                            "transition": {"duration": 250},
-                        },
-                    ],
-                },
-                {
-                    "label": "▸  Q1 Jan–Mar — Monthly Detail",
-                    "method": "animate",
-                    "args": [
-                        ["q1"],
-                        {
-                            "mode": "immediate",
-                            "frame": {"duration": 400, "redraw": True},
-                            "transition": {"duration": 250},
-                        },
-                    ],
-                },
-                {
-                    "label": "▸  Q2 Apr–Jun — Monthly Detail",
-                    "method": "animate",
-                    "args": [
-                        ["q2"],
-                        {
-                            "mode": "immediate",
-                            "frame": {"duration": 400, "redraw": True},
-                            "transition": {"duration": 250},
-                        },
-                    ],
-                },
-                {
-                    "label": "▸  Q3 Jul–Sep — Monthly Detail",
-                    "method": "animate",
-                    "args": [
-                        ["q3"],
-                        {
-                            "mode": "immediate",
-                            "frame": {"duration": 400, "redraw": True},
-                            "transition": {"duration": 250},
-                        },
-                    ],
-                },
-                {
-                    "label": "▸  Q4 Oct–Dec — Monthly Detail",
-                    "method": "animate",
-                    "args": [
-                        ["q4"],
-                        {
-                            "mode": "immediate",
-                            "frame": {"duration": 400, "redraw": True},
-                            "transition": {"duration": 250},
-                        },
-                    ],
-                },
-            ],
+            "buttons": dropdown_buttons,
         }
     ],
 )
 
-# Save outputs (theme-suffixed)
+# Save PNG — 3200×1800 landscape
 fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
-fig.write_html(f"plot-{THEME}.html", include_plotlyjs="cdn", config={"displayModeBar": True, "displaylogo": False})
+
+# Click-on-bar JavaScript: clicking a quarter bar drills into it; clicking a month bar returns to annual
+_click_js = (
+    "var el = document.querySelectorAll('.js-plotly-plot')[0];"
+    "var drillMap = {"
+    "'Q1 (Jan–Mar)': 'q1',"
+    "'Q2 (Apr–Jun)': 'q2',"
+    "'Q3 (Jul–Sep)': 'q3',"
+    "'Q4 (Oct–Dec)': 'q4'"
+    "};"
+    "el.on('plotly_click', function(data) {"
+    "  var label = data.points[0].x;"
+    "  var target = drillMap[label] !== undefined ? drillMap[label] : 'annual';"
+    "  Plotly.animate(el, [target], {"
+    "    mode: 'immediate',"
+    "    frame: {duration: 400, redraw: true},"
+    "    transition: {duration: 250}"
+    "  });"
+    "});"
+)
+fig.write_html(
+    f"plot-{THEME}.html",
+    include_plotlyjs="cdn",
+    config={"displayModeBar": True, "displaylogo": False},
+    post_script=_click_js,
+)
