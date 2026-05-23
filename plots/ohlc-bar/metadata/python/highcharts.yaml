@@ -1,161 +1,184 @@
 library: highcharts
+language: python
 specification_id: ohlc-bar
 created: '2026-01-09T08:18:41Z'
-updated: '2026-01-09T08:21:19Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 20845567100
+updated: '2026-05-23T22:09:50Z'
+generated_by: claude-sonnet
+workflow_run: 26344376368
 issue: 3293
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: unknown
-preview_url: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/highcharts/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/highcharts/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/highcharts/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/highcharts/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/highcharts/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/ohlc-bar/python/highcharts/plot-dark.html
+quality_score: 88
 review:
   strengths:
-  - Excellent use of colorblind-safe Python Blue/Yellow palette for up/down differentiation
-  - Proper Highstock OHLC chart type implementation with correct bar structure
-  - Realistic 50-day stock data with weekend skipping and proper OHLC relationships
-  - Clean title format following specification
-  - Well-configured tooltips with all OHLC values formatted nicely
-  - Appropriate grid styling with subtle dashed lines
+  - 'Finance semantic exception correctly applied: green (#009E73) for up-bars, red
+    (#B71D27) for down-bars with explicit rationale in code comment.'
+  - Informative subtitle with computed net-change statistics adds real data storytelling
+    value.
+  - 5-day SMA overlay provides trend context without cluttering the OHLC display.
+  - Both themes render cleanly with no dark-on-dark or light-on-light failures.
+  - Perfect spec compliance and data quality; all 50 OHLC bars and SMA visible.
+  - Canvas pinning via CDP + PIL fallback prevents dimension drift.
   weaknesses:
-  - Bar line width could be slightly thicker for optimal visibility at 4800x2700 resolution
-  - Could leverage more Highstock features like zoom controls (though disabled is
-    acceptable for static export)
-  image_description: 'The plot displays an OHLC (Open-High-Low-Close) bar chart showing
-    50 trading days of simulated stock price data from June 3rd to August 8th. Each
-    trading day is represented by a vertical bar with horizontal tick marks: the vertical
-    line shows the high-low range, while left and right ticks indicate opening and
-    closing prices respectively. The chart uses a colorblind-safe palette with Python
-    Blue (#306998) for down bars (close < open) and Python Yellow (#FFD43B) for up
-    bars (close > open). The Y-axis shows "Price (USD)" ranging from $141 to $158
-    with dollar formatting. The X-axis shows dates formatted as "Mon DD" with labels
-    appearing every few days to prevent overlap. Dashed grid lines are visible in
-    both directions. The title "ohlc-bar · highcharts · pyplots.ai" appears at the
-    top. The data shows an overall upward trend with the price starting around $150,
-    dipping to a low around $142 in early July, then rallying to highs around $157
-    by early August.'
+  - Both horizontal and vertical gridlines enabled; for an OHLC financial chart, y-axis-only
+    gridlines are conventional and reduce visual noise — remove gridLineWidth from
+    xAxis.
+  - Red/green up/down coloring is the sole visual discriminator for CVD users; bar
+    direction provides secondary signal but a shape/pattern difference would improve
+    accessibility.
+  - Subtitle at 36px is smaller than tick labels at 44px, creating a hierarchy anomaly
+    — consider 40px for subtitle.
+  - Legend marker for ohlc series renders as a filled circle rather than an OHLC bar
+    symbol, which can mislead readers.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct theme surface, not pure white
+      Chrome: Title "ohlc-bar · python · highcharts · anyplot.ai" in dark ink (#1A1A17) — clearly readable. Subtitle "Jun–Aug 2024 · Net change: +$5.40 / +3.6%" in muted ink (#4A4A44). Y-axis label "Price (USD)" and X-axis label "Date" in dark ink. Tick labels ($141–$158 on Y, Jun 04–Aug 09 on X) in muted ink.
+      Data: Up-bars in #009E73 (anyplot position 1), down-bars in #B71D27 (anyplot position 3). Dashed SMA line in muted gray. Legend in upper right with filled circle markers.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct theme surface, not pure black
+      Chrome: Title in near-white (#F0EFE8) — clearly readable against dark background. Subtitle and tick labels in muted light gray (#B8B7B0). Axis labels in near-white. No dark-on-dark failures detected.
+      Data: Colors identical to light render — #009E73 up-bars and #B71D27 down-bars. Dashed SMA line in lighter muted gray. Data identity confirmed.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 28
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 9
-        max: 10
-        passed: true
-        comment: Title, axis labels, and tick labels are all clearly readable at full
-          size. Font sizes appropriate for 4800x2700 canvas.
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements. Date labels spaced appropriately with
-          step=3.
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: OHLC bars clearly visible with lineWidth=5. Bars could be slightly
-          thicker for optimal visibility.
+        comment: All font sizes explicitly set; readable in both themes. Subtitle
+          at 36px slightly small vs tick labels at 44px.
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No overlapping elements; date labels spaced with step=3.
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: OHLC bars at lineWidth=4 well-proportioned for 50 data points; SMA
+          clearly distinguishable.
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Excellent colorblind-safe Python Blue/Yellow palette. Avoids red-green
-          conflicts.
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good layout with appropriate margins. Plot area fills good portion
-          of canvas.
-      - id: VQ-06
-        name: Axis Labels
-        score: 2
-        max: 2
-        passed: true
-        comment: Date for X-axis and Price (USD) with unit for Y-axis.
-      - id: VQ-07
-        name: Grid & Legend
         score: 1
         max: 2
         passed: true
-        comment: Grid subtle with dashed style and 0.15 alpha. Legend disabled appropriate
-          for single series.
+        comment: Finance semantic exception valid; bar direction provides secondary
+          signal; red-green as primary CVD concern.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas 3200x1800 confirmed. Good plot area utilization, balanced
+          margins.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Price (USD) with units; Date; correct mandated title format.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#009E73 up-bars, #B71D27 down-bars via finance semantic exception.
+          Correct backgrounds both themes. Theme-adaptive chrome.'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Thoughtful financial color coding with semantic exception; subtitle
+          with computed stats adds polish. Above configured-default but not exceptional.
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: 'Clean layout; Highcharts default chrome is clean. Deduction: both
+          x+y gridlines present — OHLC charts conventionally use y-only horizontal
+          grid.'
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle with net-change stats, SMA overlay for trend context, directional
+          color coding — good visual hierarchy.
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct OHLC bar chart type with proper vertical lines and horizontal
-          ticks.
+        comment: Highstock native ohlc type with vertical bars and open/close tick
+          marks.
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Date on X-axis, price on Y-axis. OHLC values correctly mapped.
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: 'All features present: vertical lines, horizontal ticks, color differentiation,
-          grid lines.'
-      - id: SC-04
-        name: Data Range
+        comment: High-low bars, open/close ticks, directional color, time axis, grid
+          lines all present.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All data visible within axis range.
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X, Price (USD) on Y, all 50 days visible.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend appropriately disabled; tooltip provides detailed OHLC info.
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: ohlc-bar · highcharts · pyplots.ai'
+        comment: Exact title format; Stock Price and 5-day SMA legend labels appropriate.
     data_quality:
-      score: 18
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 6
+        max: 6
         passed: true
-        comment: Shows bullish and bearish bars, variety of bar sizes, overall trend.
-          Missing extreme outliers.
+        comment: 50 trading days with both bullish and bearish bars; dip then rally
+          shows full OHLC behavior range.
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: Plausible stock price scenario with 50 trading days, skips weekends.
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Price values $141-$157 sensible for stock data. Daily volatility
-          realistic.
+        comment: Realistic stock price scenario Jun-Aug 2024; neutral financial domain.
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Starting price $150, +3.6% gain over 50 days; realistic daily ranges.
     code_quality:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -163,52 +186,63 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear script: imports → data → config → HTML → screenshot.'
+        comment: 'Flat: imports → data → chart options → export.'
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
-        passed: true
-        comment: np.random.seed(42) set for reproducible data.
-      - id: CQ-03
-        name: Clean Imports
-        score: 1
+        score: 2
         max: 2
         passed: true
-        comment: All imports used, json could be replaced by direct string formatting.
+        comment: np.random.seed(42) set.
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports used; no stale imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, readable; appropriate complexity.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current Highstock API.
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves plot.png (correct) but also plot.html which wasn't required.
-    library_features:
-      score: 4
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; current Highstock API.
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Highstock ohlc type; CDP viewport + PIL canvas pinning follow
+          library guide. Bypasses highcharts_core Python bindings, appropriate for
+          Highstock.
+      - id: LM-02
         name: Distinctive Features
         score: 4
         max: 5
         passed: true
-        comment: Uses Highstock's native OHLC type, datetime handling, upColor/color
-          for bar coloring.
+        comment: 'Highstock-specific: ohlc series type, upColor/color directional
+          coloring, rangeSelector/navigator/scrollbar disabled, stockChart constructor.'
   verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
+  - pillow
   techniques:
   - html-export
+  - hover-tooltips
   patterns:
   - data-generation
   - iteration-over-groups
   dataprep:
+  - rolling-window
   - time-series
   styling:
   - grid-styling
