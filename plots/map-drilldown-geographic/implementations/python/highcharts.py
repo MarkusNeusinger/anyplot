@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 map-drilldown-geographic: Drillable Geographic Map
 Library: highcharts unknown | Python 3.13.13
 Quality: 83/100 | Updated: 2026-05-23
@@ -144,16 +144,18 @@ chart_config = f"""
         'us-az': {{ name: 'Arizona', data: [['Phoenix', 32], ['Tucson', 15], ['Scottsdale', 8], ['Other', 3]] }}
     }};
 
-    // Level 1: all 50 states colored by their region (4-color categorical choropleth)
-    var level1Data = Object.keys(stateRegions).map(function(key) {{
-        var region = stateRegions[key];
-        return {{
-            'hc-key': key,
-            color: REGION_COLORS[region],
-            value: regionSales[region],
-            drilldown: region,
-            regionName: regionNames[region]
-        }};
+    // Level 1: 4 separate map series (one per region) so Highcharts generates 4 legend entries
+    var regions = ['west', 'south', 'midwest', 'northeast'];
+    var regionSeriesData = {{}};
+    regions.forEach(function(region) {{
+        regionSeriesData[region] = regionStateList[region].map(function(key) {{
+            return {{
+                'hc-key': key,
+                value: regionSales[region],
+                drilldown: region,
+                regionName: regionNames[region]
+            }};
+        }});
     }});
 
     var chart = Highcharts.mapChart('container', {{
@@ -233,7 +235,7 @@ chart_config = f"""
         title: {{
             text: 'map-drilldown-geographic · python · highcharts · anyplot.ai',
             style: {{
-                fontSize: '56px',
+                fontSize: '66px',
                 fontWeight: 'bold',
                 color: '{INK}'
             }},
@@ -242,10 +244,10 @@ chart_config = f"""
         subtitle: {{
             text: 'US Regional Sales ($M) — Click a region to drill into states, then cities',
             style: {{
-                fontSize: '36px',
+                fontSize: '44px',
                 color: '{INK_SOFT}'
             }},
-            y: 110
+            y: 120
         }},
         mapNavigation: {{
             enabled: false
@@ -261,7 +263,7 @@ chart_config = f"""
             borderColor: '{INK_SOFT}',
             padding: 24,
             itemStyle: {{
-                fontSize: '36px',
+                fontSize: '44px',
                 color: '{INK_SOFT}',
                 fontWeight: 'normal'
             }},
@@ -292,7 +294,7 @@ chart_config = f"""
                 }},
                 borderColor: '{PAGE_BG}',
                 borderWidth: 1.5,
-                nullColor: '{INK_SOFT}'
+                nullColor: 'rgba(0,0,0,0)'
             }},
             column: {{
                 borderRadius: 4,
@@ -375,14 +377,48 @@ chart_config = f"""
                 color: '{INK}'
             }}
         }},
-        series: [{{
-            type: 'map',
-            mapData: topology,
-            name: 'US Regions',
-            data: level1Data,
-            joinBy: 'hc-key',
-            allowPointSelect: true
-        }}]
+        series: [
+            {{
+                type: 'map',
+                mapData: topology,
+                name: 'West',
+                color: REGION_COLORS['west'],
+                nullColor: 'rgba(0,0,0,0)',
+                data: regionSeriesData['west'],
+                joinBy: 'hc-key',
+                allowPointSelect: true
+            }},
+            {{
+                type: 'map',
+                mapData: topology,
+                name: 'South',
+                color: REGION_COLORS['south'],
+                nullColor: 'rgba(0,0,0,0)',
+                data: regionSeriesData['south'],
+                joinBy: 'hc-key',
+                allowPointSelect: true
+            }},
+            {{
+                type: 'map',
+                mapData: topology,
+                name: 'Midwest',
+                color: REGION_COLORS['midwest'],
+                nullColor: 'rgba(0,0,0,0)',
+                data: regionSeriesData['midwest'],
+                joinBy: 'hc-key',
+                allowPointSelect: true
+            }},
+            {{
+                type: 'map',
+                mapData: topology,
+                name: 'Northeast',
+                color: REGION_COLORS['northeast'],
+                nullColor: 'rgba(0,0,0,0)',
+                data: regionSeriesData['northeast'],
+                joinBy: 'hc-key',
+                allowPointSelect: true
+            }}
+        ]
     }});
 }})();
 """
