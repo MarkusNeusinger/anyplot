@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 drawdown-basic: Drawdown Chart
-Library: pygal | Python 3.13
-Quality: pending | Created: 2026-05-23
+Library: pygal 3.1.0 | Python 3.13.13
+Quality: 85/100 | Updated: 2026-05-23
 """
 
 import os
