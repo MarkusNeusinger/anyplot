@@ -1,157 +1,180 @@
 library: plotnine
+language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:52:40Z'
-updated: '2026-01-20T19:54:22Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21183361240
+updated: '2026-05-23T12:31:44Z'
+generated_by: claude-sonnet
+workflow_run: 26331787825
 issue: 3766
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/plotnine/plot.png
-preview_html: null
-quality_score: 78
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
 review:
   strengths:
-  - Colorblind-friendly palette with good visual distinction between categories
-  - Proper title format following spec-id · library · pyplots.ai convention
-  - Realistic geographic data scenario (US West Coast retail locations)
-  - Good use of hierarchical clustering via scipy to create meaningful groupings
-  - Clean code structure with clear variable naming
+  - 'Elegant multi-layer ggplot composition: convex hull polygons + state boundaries
+    + cluster circles + count labels + city labels in a single pipeline'
+  - Per-city category weighting ensures each geographic cluster has a visually distinct
+    dominant color
+  - coord_fixed with correct geographic aspect ratio and full anyplot palette compliance
+  - Both light and dark renders fully theme-adaptive with no dark-on-dark failures
+  - 'Perfect spec compliance: all feasible static features implemented, interactive
+    ones correctly omitted'
   weaknesses:
-  - Significant marker overlap in dense regions makes cluster counts hard to read
-  - Missing geographic basemap/context as specified (just plain coordinate grid)
-  - Redundant legends (Category showing only Retail, plus Cluster Category showing
-    all four)
-  - Axis labels lack units (should be °W, °N)
-  image_description: 'The plot displays a clustered marker map of US West Coast store
-    locations on a 16:9 canvas. Three main geographic regions are visible: Seattle/Portland
-    area (lat ~45-48), San Francisco area (lat ~38), and Los Angeles/San Diego area
-    (lat ~32-35). Markers are circular with sizes varying based on cluster count and
-    colored by dominant category: blue (#4477AA for Retail), yellow/gold (#CCBB44
-    for Entertainment), coral/pink (#EE6677 for Restaurant), and green (#228833 for
-    Service). White numbers appear inside markers showing point counts. The title
-    reads "map-marker-clustered · plotnine · pyplots.ai" in bold at the top. Axes
-    are labeled "Longitude" and "Latitude". Three separate legends appear on the right:
-    "Category" (showing only Retail), "Cluster Category" (showing all four categories),
-    and "Points in Cluster" (showing size scale with values 5, 10, 15, 20). The background
-    is light gray with subtle grid lines.'
+  - Los Angeles and San Diego city labels are visually crowded in the lower right;
+    increasing the north offset from 0.65 to ~1.0-1.2 degrees for these two cities
+    would reduce overlap with cluster markers
+  - Minor canvas under-utilization at the top (latitude 50 to canvas top edge); adjusting
+    ylim to (31.5, 49.5) would use vertical space more efficiently
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct
+      Chrome: Title "map-marker-clustered · python · plotnine · anyplot.ai" in dark ink, readable. Axis labels "Longitude (°)" and "Latitude (°N)" in dark ink, readable. Tick labels in secondary ink (#4A4A44), readable. City labels (Seattle, Portland, San Francisco, Los Angeles, San Diego) in muted ink, readable.
+      Data: 5 cluster circles — green (Seattle/67, San Diego/57), purple (Portland/66), red (San Francisco/68), sky blue (Los Angeles/42). White bold count labels inside circles. Transparent convex hull polygons at alpha=0.13. State boundary paths in soft ink. First series (Retail) correctly #009E73.
+      Legibility verdict: PASS — all text readable, minor crowding of LA/San Diego labels in lower right but not unreadable.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct
+      Chrome: Title in light ink (#F0EFE8), readable. Axis labels light-colored, readable. Tick labels in secondary dark ink (#B8B7B0), readable. City labels in tertiary dark ink, readable. Legend box uses elevated dark background (#242420). No dark-on-dark text failures detected.
+      Data: Identical data colors to light render — same green, purple, red, sky blue cluster markers. White count labels still readable against colored circles in dark mode.
+      Legibility verdict: PASS — full theme adaptation, all text readable on dark surface.
   criteria_checklist:
     visual_quality:
-      score: 30
-      max: 40
+      score: 26
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 8
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title and axis labels readable, but cluster count labels overlap
-          heavily in dense regions
+        comment: All font sizes explicitly set; readable in both themes; minor deduction
+          for crowded city labels near LA/San Diego
       - id: VQ-02
         name: No Overlap
         score: 4
-        max: 8
-        passed: false
-        comment: Significant marker overlap in Seattle/Portland and LA/San Diego regions;
-          cluster labels difficult to read
+        max: 6
+        passed: true
+        comment: Los Angeles and San Diego city labels crowd each other and nearby
+          cluster markers in lower right
       - id: VQ-03
         name: Element Visibility
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Markers visible but overlapping reduces clarity; size scaling works
+        comment: All cluster circles prominent and well-sized; count labels readable;
+          convex hulls visible
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Colorblind-friendly palette used (blue, yellow, coral, green)
-      - id: VQ-05
-        name: Layout Balance
-        score: 4
-        max: 5
-        passed: true
-        comment: Good use of canvas, legends properly placed, minor whitespace on
-          left
-      - id: VQ-06
-        name: Axis Labels
-        score: 1
-        max: 2
-        passed: false
-        comment: Labels say Longitude and Latitude without units
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Subtle grid, legends well-organized
+        comment: CVD-safe anyplot palette; white text on colored circles provides
+          good contrast
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Good layout; minor wasted space above latitude 50
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Longitude (°) and Latitude (°N) with units; correct title format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: Canonical anyplot palette positions 1-4 assigned in order; both renders
+          theme-correct
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Strong design: convex hull polygons, sized markers, city labels,
+          state boundaries — clearly above defaults'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: panel_border blank, axis ticks removed, subtle grid, clean legend
+          integration
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Size + color encoding creates clear hierarchy; geographic business-type
+          story immediately readable
     spec_compliance:
-      score: 20
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 6
-        max: 8
-        passed: true
-        comment: Shows clustered markers but missing basemap/geographic context as
-          specified
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/lon correctly mapped to axes
-      - id: SC-03
+        comment: Correct clustered marker map; interactive features correctly omitted
+          per static-library rules
+      - id: SC-02
         name: Required Features
-        score: 3
-        max: 5
-        passed: false
-        comment: 'Missing: basemap with geographic context, interactive clustering
-          not feasible in plotnine'
-      - id: SC-04
-        name: Data Range
+        score: 4
+        max: 4
+        passed: true
+        comment: Count labels, category colors, convex hulls, basemap all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Full US West Coast range shown correctly
-      - id: SC-05
-        name: Legend Accuracy
-        score: 1
-        max: 2
-        passed: false
-        comment: Multiple redundant legends, confusing
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
+        comment: Longitude/Latitude correctly mapped; size=count, color=category
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: 'Correct format: map-marker-clustered · plotnine · pyplots.ai'
+        comment: Correct title format; category and size legends present with correct
+          labels
     data_quality:
-      score: 16
-      max: 20
+      score: 15
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
         score: 6
-        max: 8
+        max: 6
         passed: true
-        comment: Shows clustering by location, category coloring, size by count; but
-          overlap obscures detail
+        comment: 'All clustering aspects shown: varied sizes, 4 categories, extent
+          polygons, reference labels'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
-        passed: true
-        comment: Realistic store location scenario with plausible US West Coast coordinates
-      - id: DQ-03
-        name: Appropriate Scale
-        score: 3
+        score: 5
         max: 5
         passed: true
-        comment: Coordinates realistic; cluster counts seem off based on legend values
+        comment: US West Coast business locations in real cities; neutral business
+          geography
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Accurate geographic coordinates; cluster counts (42-68) sum correctly
+          to 300 points
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -159,11 +182,11 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data → clustering → plot → save'
+        comment: Linear structure, no functions or classes
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
         comment: np.random.seed(42) set
       - id: CQ-03
@@ -173,42 +196,47 @@ review:
         passed: true
         comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Appropriate complexity; no over-engineering or fake UI
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Modern plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: 'Minor: saves correctly but width/height redundant with figure_size'
-    library_features:
-      score: 3
-      max: 5
+        comment: Saves as plot-{THEME}.png with correct dimensions
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct grammar-of-graphics approach; multiple geom layers, coord_fixed,
+          guides with override_aes
+      - id: LM-02
         name: Distinctive Features
         score: 3
         max: 5
         passed: true
-        comment: Uses plotnine grammar of graphics (ggplot + geom_point + geom_text
-          + scale_*), but no distinctive advanced features
+        comment: Uses coord_fixed for geographic maps, scale_fill_identity, guide_legend
+          override_aes — ggplot2/plotnine-specific features
   verdict: APPROVED
 impl_tags:
   dependencies:
   - scipy
   techniques:
-  - annotations
   - layer-composition
   - custom-legend
   patterns:
   - data-generation
   - groupby-aggregation
-  - iteration-over-groups
   dataprep:
   - hierarchical-clustering
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting

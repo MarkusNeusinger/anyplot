@@ -1,153 +1,211 @@
 library: plotnine
+language: python
 specification_id: drawdown-basic
 created: '2026-01-20T11:58:00Z'
-updated: '2026-01-20T12:00:35Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21170482676
+updated: '2026-05-23T11:22:32Z'
+generated_by: claude-sonnet
+workflow_run: 26330823022
 issue: 3752
-python_version: 3.13.11
-library_version: 0.15.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/plotnine/plot.png
-preview_html: null
-quality_score: 91
+language_version: 3.13.13
+library_version: 0.15.4
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotnine/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/drawdown-basic/python/plotnine/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 83
 review:
   strengths:
-  - Excellent implementation of ggplot2 grammar of graphics with proper layer composition
-    (ribbon + line + point + annotation)
-  - Clean, readable code following plotnine conventions
-  - Good use of theme customization for publication-quality output
-  - Statistics displayed in caption provide useful context
-  - Date formatting with proper scale_x_datetime usage
+  - Clean semantic color use (red for losses, green for recovery) with correct anyplot
+    palette positions and semantic exception for finance domain
+  - 'Well-implemented theme adaptation: correct backgrounds (#FAF8F1 light / #1A1A17
+    dark), adaptive ribbon alpha (0.30 light / 0.55 dark), and proper INK token threading
+    throughout'
+  - Informative max drawdown annotation with white-filled circle marker draws the
+    eye clearly to the worst moment in both renders
+  - 'Excellent code quality: deterministic (seed=42), KISS structure, all imports
+    used, correct plot-{THEME}.png output'
+  - 'Good use of plotnine grammar: geom_ribbon + geom_line + geom_hline + geom_point
+    + annotate compose cleanly; scale_x_datetime with date_breaks/date_labels is idiomatic'
   weaknesses:
-  - Recovery points (where drawdown returns to zero/new highs) are not explicitly
-    marked as suggested in spec
-  - The max drawdown marker point could be slightly more prominent
+  - 'Recovery point markers (green diamonds at y=0) are absent from both renders —
+    the data with seed=42 never produces a clear transition from drawdown < -1.0%
+    to drawdown >= -0.01% in a single day (gradual approach to new ATH is not captured
+    by the filter). The recovery_df is effectively empty. Fix: broaden the recovery
+    detection to capture any transition from drawdown < -2% in the prior N days back
+    to >= -0.01%, or use a state-machine approach.'
+  - 'Caption shows only 2 of 3 required statistics (max drawdown, max duration) because
+    recovery_time is None — recovery time stat is absent. Fix: either ensure the data
+    produces a real recovery, or mark recovery_time as N/A in the caption.'
+  - 'Annotation text color uses INK (#1A1A17 in light, #F0EFE8 in dark) which is correct,
+    but at the annotated position the label slightly overlaps the deep-red ribbon
+    fill area — in dark mode the contrast is fine, but in light mode the pinkish ribbon
+    behind the dark text reduces contrast marginally. Fix: add a small background
+    box or offset the annotation further from the ribbon.'
   image_description: |-
-    The plot displays a drawdown chart showing percentage decline from peak value over approximately 500 days (Jan 2022 to May 2023). The chart features a red filled area (semi-transparent, ~40% opacity) extending from the drawdown line down to the zero baseline. A darker red line (#d62728) traces the drawdown values over time. A dashed black horizontal line at y=0 represents the zero baseline (peak reference).
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) throughout — correct theme surface, no pure white.
+      Chrome: Title "drawdown-basic · python · plotnine · anyplot.ai" in dark ink, ~65% of plot width, fully readable. Y-axis label "Drawdown (%)" and X-axis label "Date" in dark ink, well-sized (10pt). Tick labels in INK_SOFT (#4A4A44), rotated 45° on X-axis (Jan 2022 through Apr 2023), all readable. Caption "Max Drawdown: -47.3% | Max Duration: 489 days" at bottom right in small tertiary text, legible. Grid lines very subtle (alpha=0.10). Dashed zero reference line in mid-gray.
+      Data: Large red filled ribbon (alpha=0.30, #B71D27) from the drawdown line up to y=0. Red line traces the drawdown curve. White-filled circle with red stroke at max drawdown (~Sep 2022, -47.3%). Dark text annotation "Max Drawdown: -47.3%" to the right of the marker. No green recovery diamonds visible at y=0.
+      Legibility verdict: PASS — all text elements are dark and clearly readable against the warm off-white background. No light-on-light issues.
 
-    The maximum drawdown point (~-47%) is marked with a dark red dot around August 2022, with an annotation "Max Drawdown: -47.0%" labeling this point. The X-axis shows dates formatted as "Mon YYYY" at 3-month intervals with labels rotated 45 degrees for readability. The Y-axis shows "Drawdown (%)" ranging from approximately -47 to 0 with breaks at 5% intervals.
-
-    The title follows the correct format: "drawdown-basic · plotnine · pyplots.ai". A caption at the bottom right displays key statistics: "Max Drawdown: -47.0% | Max Duration: 489 days". The plot uses a clean minimal theme with subtle gray grid lines, providing a professional appearance suitable for financial analysis.
-
-    The data shows realistic portfolio behavior with an initial drawdown from January 2022, partial recovery around July 2022, followed by a deeper drawdown reaching the maximum around August 2022, and then gradual partial recovery through 2023 while remaining in drawdown territory.
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) throughout — correct dark theme surface, no pure black.
+      Chrome: Title, axis labels, tick labels all rendered in light cream/off-white tones (INK = #F0EFE8 in dark theme). All text clearly readable against the dark background. Caption in lighter tertiary tone still legible. Dashed zero line in light gray.
+      Data: Same red ribbon but darker and more opaque (alpha=0.55 for dark mode), giving a deep crimson fill that remains clearly visible against the near-black background. Red drawdown line visible. White-outlined circle marker at max drawdown still identifiable. Annotation "Max Drawdown: -47.3%" in light cream text — readable against the dark background even over the ribbon area. Data colors (red ribbon/line) are identical to the light render; only chrome flips.
+      Legibility verdict: PASS — no dark-on-dark failures observed. All text is light-colored and readable. The adaptive higher ribbon alpha in dark mode is an effective design choice.
   criteria_checklist:
     visual_quality:
-      score: 36
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
+        score: 7
+        max: 8
         passed: true
-        comment: Title at 24pt, axis titles at 20pt, tick labels at 16pt, all perfectly
-          readable
+        comment: All font sizes explicitly set (title 12pt, axis labels 10pt, tick
+          8pt, caption 7pt). All text clear in both themes. At 400px mobile the caption
+          text is small but present. Minor deduction for caption being at the lower
+          edge of readability at mobile scale.
       - id: VQ-02
         name: No Overlap
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: No overlapping text elements, x-axis labels properly rotated to avoid
-          collision
+        comment: 'No significant overlap. The max drawdown annotation sits above the
+          ribbon fill area and is readable in both themes. Minor concern: annotation
+          in light render has reduced contrast against the pink ribbon backdrop.'
       - id: VQ-03
         name: Element Visibility
-        score: 6
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Line and filled area clearly visible, max drawdown marker visible
-          but could be slightly larger
+        comment: 500-point line at size=1.0 is appropriate for the density. Ribbon
+          clearly visible. Max drawdown marker (size=6) prominent. Recovery diamond
+          markers absent from output (empty recovery_df).
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Red color scheme is distinct, no red-green confusion issues since
-          single-color scheme
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, balanced margins, caption positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Drawdown (%) includes units, Date is descriptive
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: Only red (#B71D27) is effectively used for data; green (#009E73)
+          recovery markers are absent. Single-color data avoids CVD pairing concern.
+          High contrast in both themes.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed (3200x1800). Good margins, balanced layout. Nothing
+          cut off. Title ~65% of plot width (expected for long mandated title). Proportions
+          clean.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Grid is subtle with appropriate alpha, no legend needed - scored
-          0 as there is nothing to evaluate for legend portion
+        passed: true
+        comment: 'Y-axis: ''Drawdown (%)'' with units. X-axis: ''Date''. Title in
+          correct format.'
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'Semantic exception applied correctly for finance domain (red=loss,
+          green=recovery). Both colors from anyplot palette. Backgrounds #FAF8F1 /
+          #1A1A17 correct. Chrome tokens correctly threaded.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: semantic color choices, white-filled marker with
+          stroke, adaptive ribbon alpha for dark mode, clean caption statistics. Not
+          yet publication-level but clearly thoughtful.'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: theme_minimal() removes top/right spines. Grid at alpha=0.10 is subtle.
+          Axis lines in INK_SOFT. Rotated x-axis labels. Panel background matches
+          plot background. Good refinement above library defaults.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Red fill effectively communicates 'below water' state. Max drawdown
+          marker creates a clear focal point. Annotation + caption statistics contextualize
+          the risk. Missing recovery story (no green diamonds) limits the narrative
+          arc.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 13
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correct drawdown chart with filled area from line to zero baseline
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Date on X-axis, drawdown percentage on Y-axis, correctly implemented
-      - id: SC-03
+        comment: 'Correct drawdown chart: ribbon fill + line + zero reference + annotation
+          + statistics.'
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
-        passed: true
-        comment: 'Has filled area, zero baseline, max drawdown marker with annotation,
-          key statistics. Missing: recovery points not explicitly marked'
-      - id: SC-04
-        name: Data Range
+        score: 2
+        max: 4
+        passed: false
+        comment: Recovery point markers absent from both renders (recovery_df effectively
+          empty with seed=42 and current filter logic). Recovery time stat missing
+          from caption. Spec requires 'indicate recovery points where drawdown returns
+          to zero' and 'display recovery time' — neither is shown.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis shows full range of drawdown values
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: Date on X, Drawdown (%) on Y. 500 daily points (within 250-1500 range).
+          Running maximum calculated correctly.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: No legend needed for single series, caption provides context
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: 'Correct format: drawdown-basic · plotnine · pyplots.ai'
+        comment: Title 'drawdown-basic · python · plotnine · anyplot.ai' exactly correct.
+          No legend needed (annotation serves the purpose for single semantic series).
     data_quality:
-      score: 18
-      max: 20
+      score: 13
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 4
+        max: 6
         passed: true
-        comment: Shows multiple drawdown periods, recovery phases, and deepening patterns
+        comment: Multiple drawdown periods visible (initial moderate ~-25%, major
+          ~-47%), varying depth and duration, running maximum tracking visible. No
+          complete recovery cycle shown in output.
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Portfolio/stock drawdown scenario is realistic and neutral
+        comment: Synthetic portfolio data with realistic drawdown patterns. Max drawdown
+          of -47.3% and 489-day duration are realistic for a volatile portfolio. Neutral
+          financial context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: Drawdown values (-47% max) realistic for volatile assets, somewhat
-          severe for typical portfolios
+        comment: 500 days from 2022-01-01, price normalized at 100. Dynamic y-axis
+          range based on max drawdown. Values and proportions realistic for the domain.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -155,43 +213,52 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: 'Linear flow: imports → data generation → calculations → plot → save'
+        comment: Linear Imports→Tokens→Data→Plot→Save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: Uses np.random.seed(42)
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports are used
+        comment: All imports used. No unused imports.
       - id: CQ-04
-        name: No Deprecated API
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean plotnine grammar composition. No over-engineering. No fake
+          UI elements.
+      - id: CQ-05
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Uses current plotnine API
-      - id: CQ-05
-        name: Output Correct
-        score: 0
-        max: 1
-        passed: false
-        comment: Saves as plot.png but width/height in save() redundant with figure_size
-          in theme()
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves as plot-{THEME}.png. Current plotnine 0.15.4 API.
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: 'Excellent use of grammar of graphics: geom_ribbon, geom_line, geom_hline,
-          geom_point, annotate, theme customization, scale_x_datetime'
+        comment: 'Correct ggplot grammar: ggplot + geom_* + labs + scale_* + theme.
+          aes() mappings, data parameter for subset layers, theme overrides with element_*
+          functions — all idiomatic.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: geom_ribbon() for filled area (distinctive ggplot/plotnine feature),
+          scale_x_datetime(date_breaks, date_labels) for formatted date axis, annotate(geom='text')
+          for positioned text — plotnine-specific patterns used well.
   verdict: APPROVED
 impl_tags:
   dependencies: []
@@ -200,10 +267,9 @@ impl_tags:
   - layer-composition
   patterns:
   - data-generation
-  - cumulative-calculation
   dataprep:
   - time-series
   - cumulative-sum
   styling:
   - alpha-blending
-  - grid-styling
+  - edge-highlighting
