@@ -1,7 +1,6 @@
 #' anyplot.ai
 #' line-stock-comparison: Stock Price Comparison Chart
 #' Library: ggplot2 3.5.1 | R 4.4.1
-#' Quality: 87/100 | Created: 2026-05-23
 
 library(ggplot2)
 library(ragg)
@@ -14,13 +13,12 @@ PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
 ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
-# Reduce grid opacity in dark mode — ggplot2 lacks alpha on element_line,
-# so embed alpha into the hex color via adjustcolor()
+# embed alpha into hex — ggplot2 element_line lacks alpha parameter
 GRID_COLOR  <- adjustcolor(INK_SOFT, alpha.f = if (THEME == "dark") 0.35 else 0.55)
 
 ANYPLOT_PALETTE <- c("#009E73", "#9418DB", "#B71D27", "#16B8F3")
 
-# Data - approximately 1 year of trading days starting Jan 2023
+# Data — approximately 1 year of trading days starting Jan 2023
 all_dates     <- seq(as.Date("2023-01-03"), by = "day", length.out = 400)
 trading_dates <- all_dates[!weekdays(all_dates) %in% c("Saturday", "Sunday")]
 trading_dates <- trading_dates[1:252]
@@ -41,6 +39,15 @@ prices_list <- lapply(seq_along(tickers), function(i) {
 df        <- do.call(rbind, prices_list)
 df$symbol <- factor(df$symbol, levels = tickers)
 
+# End-of-line label positions — last observation per symbol
+last_pts <- do.call(rbind, lapply(tickers, function(s) {
+    sub_df <- df[df$symbol == s, ]
+    sub_df[nrow(sub_df), ]
+}))
+
+# NVDA subset for outperformance ribbon
+nvda_df <- df[df$symbol == "NVDA", ]
+
 # Key 2023 market events
 svb_region <- data.frame(
     xmin = as.Date("2023-03-06"), xmax = as.Date("2023-03-17"),
@@ -58,6 +65,12 @@ p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
         fill = "#B71D27", alpha = 0.07,
         inherit.aes = FALSE
     ) +
+    # Subtle fill ribbon under NVDA to emphasize outperformance
+    geom_ribbon(
+        data = nvda_df,
+        aes(x = date, ymin = 100, ymax = rebased),
+        fill = ANYPLOT_PALETTE[1], alpha = 0.12, inherit.aes = FALSE
+    ) +
     # Reference line at 100
     geom_hline(yintercept = 100, color = INK_SOFT, linewidth = 0.5,
                linetype = "dashed") +
@@ -66,16 +79,25 @@ p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
                color = INK_SOFT, linewidth = 0.35, linetype = "dotted") +
     # Stock lines
     geom_line(linewidth = 1.1, alpha = 0.92) +
-    # Rotated event labels alongside vertical markers
-    annotate("text", x = as.Date("2023-03-11"), y = 102,
-             label = "SVB Collapse", color = INK_SOFT, size = 2.1,
+    # End-of-line ticker labels — coord_cartesian(clip="off") lets them render outside panel
+    geom_text(
+        data = last_pts,
+        aes(x = date, y = rebased, label = symbol, color = symbol),
+        hjust = -0.2, size = 3.2, fontface = "bold",
+        show.legend = FALSE
+    ) +
+    # Rotated event labels — increased to size=3.2 for mobile readability
+    annotate("text", x = as.Date("2023-03-11"), y = 145,
+             label = "SVB Collapse", color = INK_SOFT, size = 3.2,
              angle = 90, hjust = 0, vjust = -0.4, fontface = "italic") +
     annotate("text", x = ai_surge_date, y = 102,
-             label = "NVDA AI Surge", color = INK_SOFT, size = 2.1,
+             label = "NVDA AI Surge", color = INK_SOFT, size = 3.2,
              angle = 90, hjust = 0, vjust = -0.4, fontface = "italic") +
     annotate("text", x = rate_peak_date, y = 102,
-             label = "Rates Peak", color = INK_SOFT, size = 2.1,
+             label = "Rates Peak", color = INK_SOFT, size = 3.2,
              angle = 90, hjust = 0, vjust = -0.4, fontface = "italic") +
+    # clip="off" allows end-of-line labels and annotations to render outside panel
+    coord_cartesian(clip = "off") +
     scale_color_manual(values = setNames(ANYPLOT_PALETTE, tickers), name = NULL) +
     scale_x_date(date_labels = "%b '%y", date_breaks = "2 months") +
     labs(
@@ -96,12 +118,11 @@ p <- ggplot(df, aes(x = date, y = rebased, color = symbol)) +
         axis.text.x       = element_text(angle = 30, hjust = 1),
         plot.title        = element_text(color = INK, size = 12,
                                           margin = margin(b = 8)),
-        legend.background = element_rect(fill = ELEVATED_BG,
-                                          color = INK_SOFT, linewidth = 0.3),
+        legend.background = element_rect(fill = ELEVATED_BG, color = NA),
         legend.text       = element_text(color = INK_SOFT, size = 8),
         legend.title      = element_text(color = INK, size = 10),
         legend.position   = "right",
-        plot.margin       = margin(12, 12, 12, 12)
+        plot.margin       = margin(12, 60, 12, 12)
     )
 
 # Save
