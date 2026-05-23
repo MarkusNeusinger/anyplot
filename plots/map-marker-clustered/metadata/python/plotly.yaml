@@ -1,164 +1,196 @@
 library: plotly
+language: python
 specification_id: map-marker-clustered
 created: '2026-01-20T18:51:07Z'
-updated: '2026-01-20T18:53:46Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21183360323
+updated: '2026-05-23T12:06:53Z'
+generated_by: claude-sonnet
+workflow_run: 26331668118
 issue: 3766
-python_version: 3.13.11
-library_version: 6.5.2
-preview_url: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/plotly/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/plotly/plot.html
-quality_score: 92
+language_version: 3.13.13
+library_version: 6.7.0
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/plotly/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/plotly/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/plotly/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-marker-clustered/python/plotly/plot-dark.html
+quality_score: 86
 review:
   strengths:
-  - Excellent use of Plotly native clustering feature with pie-chart style category
-    breakdown
-  - Clean, professional appearance with light basemap providing good context
-  - Well-structured code following KISS principles
-  - Realistic retail store locator scenario with appropriate data volume (440 points)
-  - Good color palette with four distinguishable categories
+  - Theme-adaptive map styles (carto-positron light / carto-darkmatter dark) give
+    the visualization a polished, professional look in both renders
+  - 'Native Plotly clustering (`cluster={"enabled": True, ...}`) correctly displays
+    count labels on cluster circles and enables interactive zoom-to-expand in the
+    HTML output'
+  - Full anyplot palette in canonical order with all theme chrome tokens (INK, INK_SOFT,
+    ELEVATED_BG) wired up to title, legend, and annotation
+  - Data context annotation (total stores, densest city, interaction hint) guides
+    the viewer without cluttering the map
+  - go.Scattermap (modern API, not deprecated Scattermapbox) used idiomatically; HTML
+    output saved alongside PNG
   weaknesses:
-  - Title format includes (440 stores) which deviates slightly from the standard spec-id
-    · library · pyplots.ai format
-  - Cluster markers show category composition well, but the pie chart visualization
-    is dominated by Hardware (yellow) in most clusters
-  image_description: 'The plot displays a clustered marker map of North America showing
-    440 retail store locations. The basemap uses the "carto-positron" light gray style,
-    providing good geographic context including state/country boundaries and labels
-    for "UNITED STATES", "MEXICO", "CUBA", "DOMINICAN REPUBLIC", and "JAMAICA". Cluster
-    markers are displayed as pie-chart style circles showing the category composition,
-    with counts displayed in the center (e.g., 36, 17, 13, 11, 10, 9, 7, 4). The cluster
-    markers use a visually appealing multi-color scheme representing four store categories:
-    blue (Electronics), green (Grocery), red/orange (Clothing), and yellow (Hardware).
-    A legend in the upper-left corner clearly identifies the "Store Category" with
-    all four categories and their corresponding colors. The title at the top reads
-    "Retail Store Locations (440 stores) · map-marker-clustered · plotly · pyplots.ai"
-    in a large, readable font. The map is centered on the continental US with zoom
-    level showing clusters for major city regions (Seattle area=9, Denver area=7,
-    Phoenix/LA=13+4, Houston=10, Atlanta=9, Miami=11, Chicago=17, New York/Boston=36).'
+  - 'Cluster color dominance: per-trace clustering causes the last trace (Hardware
+    / #16B8F3) to visually dominate all cluster circles regardless of the actual dominant
+    category at that location — clusters appear uniformly sky-blue rather than reflecting
+    the mixed or dominant category as the spec requires. Fix: either use a single
+    trace with a colorscale or post-process cluster marker colors to reflect the dominant
+    category per cluster group.'
+  - 'Bottom-right annotation box overlaps with the basemap''s CARTO attribution text
+    (''© CARTO; © OpenStreetmap contributors''), partially obscuring the attribution.
+    Fix: lower the annotation y-position (e.g. y=0.07) or reduce its width so it clears
+    the attribution row.'
+  - Cluster number label font size is not explicitly set (uses Plotly defaults) —
+    minor inconsistency with the rest of the explicitly-sized typography.
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) paper background framing a carto-positron basemap (light gray/beige geographic tiles). Correct theme surface.
+      Chrome: Title "Retail Store Locations · map-marker-clustered · python · plotly · anyplot.ai" in dark ink, centered at top — fully readable. Legend top-left with white elevated box, dark-ink title "Store Category (n=440)", four category swatches with INK_SOFT labels. Bottom-right annotation box with INK_SOFT text on elevated background, showing total store count, densest city, and interaction hint.
+      Data: Five visible cluster circles in mostly sky-blue (#16B8F3 / Hardware), with thin rings of other palette colors on some clusters. Count numbers (7, 17, 13, 4) in white text inside circles. The clustering works correctly but Hardware trace dominates the visual color of all clusters. Individual markers not visible at zoom 3.5 as expected.
+      Legibility verdict: PASS — all text readable. Minor: annotation box overlaps the CARTO copyright text at bottom of map tile.
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) paper background framing a carto-darkmatter basemap (dark geographic tiles). Correct theme surface.
+      Chrome: Title rendered in light (#F0EFE8) ink, clearly readable against dark background. Legend box uses ELEVATED_BG (#242420) fill with INK_SOFT (#B8B7B0) label text — readable. Annotation box similarly styled with light text on elevated dark background — readable.
+      Data: Cluster circles and count numbers identical to light render — same palette colors (#009E73 green, #9418DB purple, #B71D27 red, #16B8F3 sky-blue) with sky-blue Hardware still dominating. Data colors are identical to the light render as required.
+      Legibility verdict: PASS — no dark-on-dark failures. All chrome elements correctly flip to light values. No issues with text readability in dark theme.
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title is large and readable, cluster counts are clearly visible,
-          legend text is appropriately sized
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text or elements; clusters are well-spaced at this
-          zoom level
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: Cluster markers are well-sized with clear counts; colors are distinguishable
-          in the pie segments
+        comment: Title (16px), legend (10/12px), annotation (10px) all explicitly
+          set and readable in both themes. Cluster number label font size not explicitly
+          set.
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Minor overlap: bottom-right annotation box partially covers the
+          basemap CARTO attribution text.'
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: 'Cluster circles clearly visible and well-sized. Minor: all clusters
+          appear uniformly sky-blue due to per-trace layering, masking categorical
+          distribution.'
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: Four distinct colors (blue, green, red, yellow) with good contrast;
-          colorblind-friendly palette
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Map fills canvas well, good margins, legend positioned appropriately
-      - id: VQ-06
-        name: Axis Labels
-        score: 0
-        max: 2
-        passed: true
-        comment: N/A for maps; no axis labels needed
-      - id: VQ-07
-        name: Grid & Legend
         score: 2
         max: 2
         passed: true
-        comment: Legend well-placed in upper-left, does not obstruct data; basemap
-          provides geographic context
+        comment: anyplot palette is CVD-safe. Good contrast between cluster circles
+          and basemap.
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Map fills the canvas well. Margins appropriate. No content clipped
+          at canvas edges.
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: Geographic map has no traditional axis labels; title is fully descriptive.
+          Annotation provides data context.
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'anyplot palette canonical order. Light bg #FAF8F1, dark bg #1A1A17.
+          All theme chrome tokens correctly applied in both renders.'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Theme-adaptive map styles, custom annotation, well-styled legend
+          — clearly above defaults. Not exceptional due to uniform cluster color issue.
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Clean map layout, styled legend/annotation with proper borders, matching
+          map tile themes. Good refinement for a geographic map.
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Data context annotation guides the viewer; clustering conveys geographic
+          distribution story. Could be stronger if categorical cluster colors were
+          more visible.
     spec_compliance:
-      score: 23
-      max: 25
+      score: 14
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
-        passed: true
-        comment: Correctly implements a clustered marker map with Plotly Scattermap
-          and cluster feature
-      - id: SC-02
-        name: Data Mapping
         score: 5
         max: 5
         passed: true
-        comment: Lat/lon correctly mapped; categories correctly color-coded
-      - id: SC-03
+        comment: Correct clustered marker map using go.Scattermap with cluster parameter.
+      - id: SC-02
         name: Required Features
-        score: 4
-        max: 5
+        score: 3
+        max: 4
         passed: true
-        comment: Clustering enabled with count display, category colors, basemap included;
-          missing optional convex hull/spider lines on hover
-      - id: SC-04
-        name: Data Range
+        comment: Cluster count display, basemap, interactive zoom, category colors
+          all present. Cluster markers don't effectively reflect mixed/dominant category
+          color — all appear sky-blue due to per-trace rendering.
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: All US locations visible; appropriate zoom level
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: lat/lon correctly mapped to map coordinates across US cities.
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly shows all four categories with matching colors
-      - id: SC-06
-        name: Title Format
-        score: 1
-        max: 2
-        passed: false
-        comment: Contains spec-id and library and pyplots.ai, but includes extra info
-          (440 stores)
+        comment: 'Title: ''Retail Store Locations · map-marker-clustered · python
+          · plotly · anyplot.ai'' — correct format. Legend labels match category names.'
     data_quality:
-      score: 18
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 7
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows clustering behavior, multiple categories, varied cluster sizes;
-          could benefit from wider geographic spread
+        comment: 'Demonstrates clustering, count display, multiple categories, geographic
+          spread. Minor: categorical distribution within clusters visually obscured.'
       - id: DQ-02
         name: Realistic Context
-        score: 7
-        max: 7
+        score: 5
+        max: 5
         passed: true
-        comment: Retail store locator is a perfect real-world application; neutral
-          business context
+        comment: Retail store locations across US cities — realistic, neutral, clearly
+          business context.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
-        max: 5
+        max: 4
         passed: true
-        comment: 440 stores is appropriate; city-based distribution is realistic;
-          jitter values produce plausible spread
+        comment: 440 stores across 10 cities with realistic per-city counts (25-80).
+          Coordinates accurate for named cities. Jitter radius realistic.
     code_quality:
-      score: 9
+      score: 10
       max: 10
       items:
       - id: CQ-01
@@ -166,46 +198,55 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: Clean imports → data generation → plot → save structure
+        comment: Clean imports → data → plot → save structure. No functions or classes.
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) is set
+        comment: np.random.seed(42) set.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: numpy, pandas, plotly.graph_objects all used
+        comment: os, numpy, pandas, plotly.graph_objects — all used.
       - id: CQ-04
-        name: No Deprecated API
-        score: 0
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses Scattermap (correct modern API)
+        comment: Clean, Pythonic, appropriate complexity. No over-engineering.
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Uses go.Scattermap
+          (current API, not deprecated Scattermapbox).
+    library_mastery:
+      score: 8
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Excellent use of Plotly native clustering feature with cluster={}
-          parameter, Scattermap for modern MapLibre integration, HTML export for interactivity
+        comment: 'Idiomatic go.Scattermap with cluster dict, map layout configuration,
+          proper theme switching. Minor: could leverage update_traces more.'
+      - id: LM-02
+        name: Distinctive Features
+        score: 4
+        max: 5
+        passed: true
+        comment: Native Plotly clustering feature, theme-adaptive map tile styles,
+          interactive HTML + static PNG dual output — all distinctive Plotly capabilities.
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
+  - annotations
   - hover-tooltips
   - html-export
   patterns:
