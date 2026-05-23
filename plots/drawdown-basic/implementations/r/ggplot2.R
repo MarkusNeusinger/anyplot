@@ -16,6 +16,7 @@ INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 INK_MUTED   <- if (THEME == "light") "#6B6A63" else "#A8A79F"
 DD_COLOR    <- "#B71D27"  # red — semantic: loss / drawdown
+DD_ALPHA    <- if (THEME == "light") 0.25 else 0.45  # more visible in dark mode
 
 # Data: synthetic portfolio NAV, Jan 2021 – Dec 2023
 # bull → correction → full recovery (new highs) → deeper bear → partial recovery
@@ -47,6 +48,14 @@ post_peaks     <- which(at_peak & seq_len(n_days) > max_dd_idx)
 recovery_days  <- if (length(post_peaks) > 0) post_peaks[1] - max_dd_idx else NA_integer_
 recovery_label <- if (!is.na(recovery_days)) sprintf("%d days", recovery_days) else "Not recovered"
 
+# Recovery points: transitions from drawdown back to new high (zero-cross)
+prev_not_peak <- c(FALSE, !at_peak[-n_days])
+recovery_idx  <- which(at_peak & prev_not_peak)
+recovery_df   <- data.frame(
+  date     = dates[recovery_idx],
+  drawdown = drawdown_pct[recovery_idx]
+)
+
 df        <- data.frame(date = dates, drawdown = drawdown_pct)
 max_dd_df <- df[max_dd_idx, ]
 
@@ -57,9 +66,29 @@ subtitle_text <- sprintf(
 
 # Plot
 p <- ggplot(df, aes(x = date, y = drawdown)) +
-  geom_area(fill = DD_COLOR, alpha = 0.25) +
+  # Highlight max drawdown period: last peak before trough → trough date
+  annotate(
+    "rect",
+    xmin  = dates[pre_peak_idx],
+    xmax  = max_dd_date,
+    ymin  = -Inf,
+    ymax  = Inf,
+    fill  = DD_COLOR,
+    alpha = 0.07
+  ) +
+  geom_area(fill = DD_COLOR, alpha = DD_ALPHA) +
   geom_line(color = DD_COLOR, linewidth = 0.7) +
   geom_hline(yintercept = 0, color = INK_SOFT, linewidth = 0.5) +
+  # Recovery point markers: where drawdown returns to zero (new highs)
+  geom_point(
+    data   = recovery_df,
+    aes(x = date, y = drawdown),
+    shape  = 21,
+    size   = 2.5,
+    color  = DD_COLOR,
+    fill   = ELEVATED_BG,
+    stroke = 1.2
+  ) +
   geom_point(
     data   = max_dd_df,
     aes(x = date, y = drawdown),
