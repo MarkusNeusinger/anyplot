@@ -4,16 +4,16 @@
 #' Quality: 83/100 | Created: 2026-05-23
 
 library(ggplot2)
-library(dplyr)
+library(maps)
 library(ragg)
 
 # Theme tokens
 THEME       <- Sys.getenv("ANYPLOT_THEME", "light")
 PAGE_BG     <- if (THEME == "light") "#FAF8F1" else "#1A1A17"
-ELEVATED_BG <- if (THEME == "light") "#FFFDF6" else "#242420"
 INK         <- if (THEME == "light") "#1A1A17" else "#F0EFE8"
 INK_SOFT    <- if (THEME == "light") "#4A4A44" else "#B8B7B0"
 OCEAN_BG    <- if (THEME == "light") "#C4DCF0" else "#152030"
+LAND_BG     <- if (THEME == "light") "#D4C9A8" else "#2A3020"
 
 ANYPLOT_PALETTE <- c(
     "#009E73", "#9418DB", "#B71D27", "#16B8F3",
@@ -24,6 +24,7 @@ ANYPLOT_PALETTE <- c(
 # Solve 2*theta + sin(2*theta) = pi*sin(lat) via Newton-Raphson
 solve_theta <- function(phi_vec) {
     sapply(phi_vec, function(p) {
+        if (is.na(p)) return(NA_real_)
         if (abs(p) >= pi / 2 - 1e-9) return(sign(p) * pi / 2)
         t <- p
         for (i in seq_len(60)) {
@@ -44,6 +45,12 @@ mollweide <- function(lon_deg, lat_deg) {
         y = sqrt(2) * sin(theta)
     )
 }
+
+# --- World country boundaries (projected) ------------------------------------
+world      <- map_data("world")
+world_proj <- mollweide(world$long, world$lat)
+world$x    <- world_proj$x
+world$y    <- world_proj$y
 
 # --- Projection boundary (Mollweide ellipse: a=2√2, b=√2) -------------------
 t_ell    <- seq(0, 2 * pi, length.out = 721)
@@ -104,6 +111,16 @@ p <- ggplot() +
         data = boundary, aes(x = x, y = y),
         fill = OCEAN_BG, color = NA
     ) +
+    # Land masses (country polygons)
+    geom_polygon(
+        data = world, aes(x = x, y = y, group = group),
+        fill = LAND_BG, color = NA
+    ) +
+    # Country borders / coastlines
+    geom_path(
+        data = world, aes(x = x, y = y, group = group),
+        color = INK_SOFT, linewidth = 0.10, alpha = 0.55
+    ) +
     # Standard graticule (30° grid)
     geom_path(
         data = graticule, aes(x = x, y = y, group = group),
@@ -132,11 +149,7 @@ p <- ggplot() +
     coord_fixed() +
     labs(
         title    = "map-projections · r · ggplot2 · anyplot.ai",
-        subtitle = paste0(
-            "Mollweide equal-area projection  ·  ",
-            "Tissot’s indicatrices (green) confirm uniform area: ",
-            "all circles span identical surface area"
-        )
+        subtitle = "Mollweide equal-area projection  ·  Tissot indicatrices (green) confirm equal-area: every circle covers identical surface"
     ) +
     theme_void(base_size = 8) +
     theme(
@@ -146,7 +159,7 @@ p <- ggplot() +
             margin = margin(t = 14, b = 6)
         ),
         plot.subtitle   = element_text(
-            color  = INK_SOFT, size = 8.5, hjust = 0.5,
+            color  = INK_SOFT, size = 9.5, hjust = 0.5,
             margin = margin(b = 12)
         ),
         plot.margin     = margin(8, 50, 12, 50)
