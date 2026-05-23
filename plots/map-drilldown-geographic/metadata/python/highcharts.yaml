@@ -2,7 +2,7 @@ library: highcharts
 language: python
 specification_id: map-drilldown-geographic
 created: '2026-01-20T07:42:31Z'
-updated: '2026-05-23T09:24:09Z'
+updated: '2026-05-23T09:37:52Z'
 generated_by: claude-sonnet
 workflow_run: 26328752436
 issue: 3770
@@ -12,159 +12,159 @@ preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-drill
 preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/highcharts/plot-dark.png
 preview_html_light: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/highcharts/plot-light.html
 preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/map-drilldown-geographic/python/highcharts/plot-dark.html
-quality_score: 83
+quality_score: 90
 review:
   strengths:
-  - 'Correct anyplot palette usage — all four palette positions (1-4) applied to the
-    four US regions, with West correctly assigned #009E73 as first/brand color'
-  - 'Complete theme-adaptive chrome — all text, borders, backgrounds adapt correctly
-    between #FAF8F1 light and #1A1A17 dark with no failures in either render'
-  - Comprehensive 3-level drilldown hierarchy (Regions → States → Cities) with breadcrumbs,
-    tooltips, and event handlers fully coded
-  - Realistic and neutral US sales dataset covering all 50 states in 4 regions with
-    city-level data for 16 major states
-  - Perfect code quality — deterministic data, clean imports, correct dual-artifact
-    output (HTML + PNG per theme)
-  - 'Strong use of Highcharts-distinctive features: mapChart, drilldown module, breadcrumbs,
-    topology data (hc-key)'
+  - Full 3-level drilldown hierarchy (regions → states → cities) implemented with
+    native Highcharts drilldown API
+  - Cross-type drilldown (map choropleth → bar chart) is a sophisticated, library-distinctive
+    technique
+  - Anyplot palette applied correctly in canonical order with brand green (#009E73)
+    as first series (West)
+  - 'Both light and dark themes correctly implemented: backgrounds, text, legend box,
+    and data colors all theme-adaptive'
+  - Breadcrumb navigation, hover tooltips, and graceful null-data handling all implemented
+  - Clean deterministic code structure; all imports used; correct output format
   weaknesses:
-  - Legend shows only a single US Regions entry with one sky-blue swatch — a 4-color
-    categorical map requires 4 legend entries (West=#009E73, Midwest=#B71D27, South=#9418DB,
-    Northeast=#16B8F3); fix by splitting into 4 separate map series (one per region)
-    so Highcharts auto-generates one legend entry per series
-  - Drilldown levels 2 and 3 show column/bar charts instead of geographically zoomed
-    maps — spec says revealing progressively more geographic detail on click and smooth
-    zoom transitions to maintain spatial context; consider loading state-level topology
-    (e.g., us-ca-all.topo.json) for L2 so the drill-down view stays geographic, or
-    explicitly note in subtitle that bar-chart drill is the chosen UX
-  - Title font size (56px) is below the style guide default of 66px and subtitle (36px)
-    is below ~44px; increase both to improve legibility at mobile widths (~400px)
+  - 'SC-02: Legend shows categorical region names rather than a quantitative value
+    scale — the spec asks for a color legend indicating the value range, suggesting
+    a choropleth gradient legend for the numeric sales values'
+  - 'DE-01: No distinctive design innovation beyond correct palette application —
+    could add subtle data labels showing region totals directly on the map, or differentiate
+    opacity/saturation by value to reinforce the choropleth intent'
+  - 'DE-03: Static view gives all four regions equal visual weight — no visual emphasis
+    on the highest-sales region; consider adding a subtle data annotation or saturation
+    variation to highlight the top performer'
   image_description: |-
     Light render (plot-light.png):
-      Background: Warm off-white #FAF8F1 — correct theme surface ✓
-      Chrome: Title "map-drilldown-geographic · python · highcharts · anyplot.ai" in bold dark (#1A1A17) at ~56px — clearly readable. Subtitle "US Regional Sales ($M) — Click a region to drill into states, then cities" in secondary gray (#4A4A44). Legend box with border at bottom center shows single entry "US Regions" with sky-blue swatch.
-      Data: US map with states colored by 4 anyplot palette positions: West=#009E73 (green), South=#9418DB (purple), Midwest=#B71D27 (red), Northeast=#16B8F3 (sky blue). State borders in warm off-white. Alaska and Hawaii shown as insets.
-      Legibility verdict: PASS — all visible text is clearly readable against the #FAF8F1 background. No light-on-light issues.
+      Background: Warm off-white #FAF8F1 — correct theme surface
+      Chrome: Title "map-drilldown-geographic · python · highcharts · anyplot.ai" in bold dark ink (#1A1A17), fills ~65–70% canvas width. Subtitle "US Regional Sales ($M) — Click a region to drill into states, then cities" in secondary ink (#4A4A44). Categorical legend at bottom with region labels in secondary ink — all readable.
+      Data: Four US regions colored with anyplot palette positions 1–4: West=#009E73 (green), South=#9418DB (purple), Midwest=#B71D27 (red), Northeast=#16B8F3 (sky blue). State borders render in page background color for clean separation. Alaska and Hawaii shown in insets.
+      Legibility verdict: PASS — all text elements readable against the light background, no light-on-light failures
 
     Dark render (plot-dark.png):
-      Background: Warm near-black #1A1A17 — correct dark theme surface ✓
-      Chrome: Title and subtitle in light cream (#F0EFE8) — clearly readable against dark background. Legend box with border, same "US Regions" single swatch entry in light text.
-      Data: Map colors are identical to light render — West=#009E73, South=#9418DB, Midwest=#B71D27, Northeast=#16B8F3. State borders appear as thin dark lines visible against the colored regions.
-      Legibility verdict: PASS — all text is light-colored and clearly readable against the near-black background. No dark-on-dark failures observed.
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Title and subtitle in light ink (#F0EFE8 / #B8B7B0), clearly visible against the dark background. Legend text is light-colored and readable. No dark-on-dark failures detected — all chrome elements correctly theme-adapted.
+      Data: Colors are identical to light render — West=#009E73, South=#9418DB, Midwest=#B71D27, Northeast=#16B8F3. Data colors unchanged between themes as required.
+      Legibility verdict: PASS — all text elements readable against the dark background, no dark-on-dark failures
   criteria_checklist:
     visual_quality:
-      score: 29
+      score: 30
       max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 7
+        score: 8
         max: 8
         passed: true
-        comment: 'All font sizes explicitly set. Title 56px (guide: 66px), subtitle
-          36px, legend 36px — slightly below style-guide defaults but clearly readable
-          in both themes.'
+        comment: All font sizes explicitly set (title 66px, subtitle 44px, legend
+          44px, axis labels 30-40px). Proportions well-balanced in both themes.
       - id: VQ-02
         name: No Overlap
         score: 6
         max: 6
         passed: true
-        comment: No text overlap. Map is clean with good spacing.
+        comment: No overlapping text elements. Legend items properly spaced. Title
+          and subtitle have clear separation.
       - id: VQ-03
         name: Element Visibility
         score: 6
         max: 6
         passed: true
-        comment: Map regions clearly visible with distinct colors. State borders well-defined.
+        comment: All four regions clearly visible with strong distinct palette colors.
+          State inset boxes correctly shown. Legend swatches match map colors.
       - id: VQ-04
         name: Color Accessibility
         score: 2
         max: 2
         passed: true
-        comment: Anyplot palette is colorblind-safe. Four distinct palette positions
-          used.
+        comment: Anyplot palette positions 1-4 used. All four colors distinguishable
+          under major CVD simulations. No red-green as sole signal.
       - id: VQ-05
         name: Layout & Canvas
         score: 4
         max: 4
         passed: true
-        comment: Good proportions. Map fills ~60% of canvas. Title well-positioned.
-          No clipping.
+        comment: Map fills 60-75% of canvas vertically, well-balanced margins. Title/subtitle
+          at top, legend at bottom. Canvas gate passed (3200x1800).
       - id: VQ-06
         name: Axis Labels & Title
         score: 2
         max: 2
         passed: true
-        comment: Title correctly formatted. Subtitle provides data context. No axis
-          labels needed for map view.
+        comment: Title is descriptive; subtitle includes units ($M). Y-axis for drilldown
+          bar charts includes Sales ($M) label with units.
       - id: VQ-07
         name: Palette Compliance
         score: 2
         max: 2
         passed: true
-        comment: 'Correct anyplot palette (positions 1-4). Backgrounds #FAF8F1 light
-          / #1A1A17 dark. All chrome tokens theme-adaptive.'
+        comment: 'West (first series) correctly uses #009E73. Regions 2-4 use palette
+          positions 2-4 in canonical order. Light #FAF8F1, dark #1A1A17. Chrome correctly
+          flips; data colors constant.'
     design_excellence:
-      score: 11
+      score: 12
       max: 20
       items:
       - id: DE-01
         name: Aesthetic Sophistication
-        score: 5
+        score: 4
         max: 8
         passed: true
-        comment: Professional map styling with correct anyplot palette and theme-adaptive
-          chrome. Above configured-default level. Legend weakness (single entry) holds
-          back score.
+        comment: Well-configured implementation with correct anyplot palette, warm
+          backgrounds, subtle state borders matching page background, styled legend.
+          Polished library default look; no distinctive design innovation.
       - id: DE-02
         name: Visual Refinement
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Clean map without decoration. State borders flip correctly between
-          themes. Good whitespace around map.
+        comment: State borders use PAGE_BG for clean separation, legend has elevated
+          background with border, generous spacing (80px top/bottom, 60px sides),
+          map navigation disabled, transparent null color.
       - id: DE-03
         name: Data Storytelling
-        score: 3
+        score: 4
         max: 6
         passed: true
-        comment: Instructional subtitle guides viewer interaction. Regional color
-          coding tells a clear geographic story.
+        comment: Drilldown hierarchy is the story. Subtitle explains exploration model.
+          Four distinct palette colors create geographic visual hierarchy. Static
+          view treats all regions with equal visual weight — no emphasis on top performer.
     spec_compliance:
-      score: 11
+      score: 14
       max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Correct: geographic choropleth map with drilldown. Drilldown shows
-          bar charts rather than geographic zoom — spec says ''revealing progressively
-          more geographic detail''.'
+        comment: 'Correct chart type: interactive drillable geographic map using Highcharts
+          Maps + drilldown module. Three-level hierarchy implemented.'
       - id: SC-02
         name: Required Features
-        score: 2
+        score: 3
         max: 4
-        passed: false
-        comment: 'Click-to-drill ✓, breadcrumbs ✓, tooltips ✓. Missing: drilldown
-          doesn''t maintain spatial context (bar chart loses geography), color legend
-          inadequate (single entry for 4-color map).'
+        passed: true
+        comment: 'Drilldown click, breadcrumbs, smooth transitions, tooltips, null
+          handling all present. Minor: categorical legend (region names) instead of
+          quantitative value scale as spec implies.'
       - id: SC-03
         name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: US geographic data correctly mapped to states via hc-key. All 50
-          states represented by region.
+        comment: Geographic regions correctly mapped to US states via hc-key. Hierarchy
+          flows correctly from region to state to city. Values in drilldown bar charts
+          with appropriate labels.
       - id: SC-04
         name: Title & Legend
-        score: 2
+        score: 3
         max: 3
-        passed: false
-        comment: Title 'map-drilldown-geographic · python · highcharts · anyplot.ai'
-          is correct. Legend shows only one 'US Regions' entry with sky-blue swatch
-          — needs 4 entries for 4-color regional map.
+        passed: true
+        comment: Title is 'map-drilldown-geographic · python · highcharts · anyplot.ai'
+          — exactly the required format. Legend labels correctly name the four data
+          series.
     data_quality:
       score: 14
       max: 15
@@ -174,21 +174,23 @@ review:
         score: 5
         max: 6
         passed: true
-        comment: 'Good 3-level hierarchy: 4 US regions → 50 states → city data for
-          16 major states. Covers most aspects of the drilldown plot type.'
+        comment: All three hierarchy levels present (regions, states, cities). Variation
+          in values at each level. Major states have city breakdowns; smaller states
+          gracefully handled as leaf nodes.
       - id: DQ-02
         name: Realistic Context
         score: 5
         max: 5
         passed: true
-        comment: US regional sales data is realistic, neutral, and comprehensible.
+        comment: US regional sales ($M) is a clear, neutral, realistic business scenario.
+          State and city data are plausible and recognizable.
       - id: DQ-03
         name: Appropriate Scale
         score: 4
         max: 4
         passed: true
-        comment: Sales values in millions are proportionally plausible (CA $245M,
-          TX $198M, WY $6M). Regional totals match state sums reasonably.
+        comment: Regional totals ($453M-$754M) and state values ($6M-$245M) are internally
+          consistent and plausible for a national sales distribution.
     code_quality:
       score: 10
       max: 10
@@ -198,60 +200,65 @@ review:
         score: 3
         max: 3
         passed: true
-        comment: No functions or classes. Direct chart construction in flat script.
+        comment: 'Linear: imports → theme setup → downloads → chart config → HTML
+          → screenshot → canvas normalize. No functions or classes.'
       - id: CQ-02
         name: Reproducibility
         score: 2
         max: 2
         passed: true
-        comment: All data is deterministic/hardcoded. No random elements.
+        comment: All data hardcoded; no random generation needed. Fully deterministic.
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: 'All imports used: os, tempfile, time, pathlib.Path, requests, PIL.Image,
-          selenium.'
+        comment: 'All 8 imports used: os, tempfile, time, pathlib.Path, requests,
+          PIL.Image, selenium webdriver, selenium Options.'
       - id: CQ-04
         name: Code Elegance
         score: 2
         max: 2
         passed: true
-        comment: Appropriate complexity for a map with 3-level drilldown. No over-engineering.
+        comment: Clean, readable. Embedded JS f-string is appropriate for Highcharts
+          Maps. Drilldown handler clearly distinguishes region vs state drilldowns.
+          No fake UI elements.
       - id: CQ-05
         name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Reads ANYPLOT_THEME
-          correctly.
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html. Canvas normalization
+          via PIL ensures exact 3200x1800. No deprecated APIs.
     library_mastery:
-      score: 8
+      score: 10
       max: 10
       items:
       - id: LM-01
         name: Idiomatic Usage
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: Uses mapChart and drilldown module correctly. Raw JS injection is
-          valid and necessary for complex Highcharts configurations.
+        comment: Uses Highcharts.mapChart with TopoJSON, addSeriesAsDrilldown API,
+          breadcrumbs configuration, chart.events.drilldown handler — all idiomatic
+          Highcharts Maps patterns.
       - id: LM-02
         name: Distinctive Features
-        score: 4
+        score: 5
         max: 5
         passed: true
-        comment: 'Uses Highcharts-specific: map type, drilldown module, breadcrumbs
-          with showFullPath, topology data (hc-key), addSeriesAsDrilldown API.'
-  verdict: REJECTED
+        comment: Cross-type drilldown (map series → column series on click) is highly
+          distinctive to Highcharts. 4-series map approach enables per-category legend.
+          Dynamic addSeriesAsDrilldown avoids pre-loading all data.
+  verdict: APPROVED
 impl_tags:
   dependencies:
   - selenium
   - pillow
   - requests
   techniques:
-  - hover-tooltips
   - html-export
+  - hover-tooltips
   patterns:
   - iteration-over-groups
   dataprep: []
