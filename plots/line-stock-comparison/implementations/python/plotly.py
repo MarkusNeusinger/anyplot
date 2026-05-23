@@ -78,10 +78,12 @@ fig.add_hline(
 # Add end-point value labels for each series to show final performance
 for i, symbol in enumerate(stocks.keys()):
     final_value = df_rebased[symbol].iloc[-1]
+    pct = final_value - 100
+    sign = "+" if pct >= 0 else ""
     fig.add_annotation(
         x=dates[-1],
         y=final_value,
-        text=f"  {final_value:.0f}",
+        text=f"  {sign}{pct:.0f}%",
         showarrow=False,
         xanchor="left",
         yanchor="middle",
