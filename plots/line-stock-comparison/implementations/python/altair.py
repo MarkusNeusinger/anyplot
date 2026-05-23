@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 line-stock-comparison: Stock Price Comparison Chart
 Library: altair 6.1.0 | Python 3.13.13
-Quality: 84/100 | Updated: 2026-05-23
+Quality: 89/100 | Updated: 2026-05-23
 """
 
 import os
