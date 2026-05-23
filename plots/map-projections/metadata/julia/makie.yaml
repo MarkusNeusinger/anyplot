@@ -1,0 +1,254 @@
+library: makie
+language: julia
+specification_id: map-projections
+created: '2026-05-23T08:31:47Z'
+updated: '2026-05-23T09:08:24Z'
+generated_by: claude-sonnet
+workflow_run: 26327755230
+issue: 3771
+language_version: 1.11.9
+library_version: 0.22.10
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/map-projections/julia/makie/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/map-projections/julia/makie/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 86
+review:
+  strengths:
+  - All four map projections implemented from scratch in pure Julia math — no geo
+    library required
+  - Tissot indicatrices correctly computed per-projection with NaN culling for Orthographic
+    back-hemisphere
+  - 'Full spec compliance: all required projections, graticule, coastlines, and Tissot
+    all present'
+  - Projection boundary shapes match each projection geometry (rectangle, ellipse,
+    custom Equal Earth outline)
+  - Perfect code quality — clean helper functions, seed, correct save pattern, all
+    imports used
+  - Theme adaptation is complete and correct; no dark-on-dark failures in the dark
+    render
+  weaknesses:
+  - 'Continent fill (ELEVATED_BG: #FFFDF6 light / #242420 dark) is nearly indistinguishable
+    from the map background (PAGE_BG: #FAF8F1 light / #1A1A17 dark) — land masses
+    are barely visible; a world map must have clear land/sea contrast. Fix: use a
+    visibly distinct fill, e.g., a warm neutral tint such as RGBAf(INK_SOFT with 0.12
+    alpha) or a dedicated land color constant'
+  - Tissot indicatrices have 0.20 alpha fill — too faint, especially in light theme.
+    Increase to 0.30-0.40 so the distortion circles are clearly legible without overwhelming
+    the map
+  - Graticule lines and Tissot circles both use the same BRAND green (#009E73), making
+    them compete visually. Consider using INK_SOFT with low alpha (0.30-0.35) for
+    graticule so Tissot circles read as the primary data layer
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct light theme surface
+      Chrome: Main title "map-projections · julia · makie · anyplot.ai" in dark #1A1A17-derived ink — clearly readable. Four subplot titles ("Mercator — Conformal", "Mollweide — Equal-Area", "Orthographic — Perspective", "Equal Earth — Equal-Area") in dark text — all readable at fontsize=16 (doubled). No axis tick labels (appropriate for map projections).
+      Data: Brand green #009E73 graticule lines at ~55% alpha and green Tissot indicatrix ellipses at 20% alpha fill / 85% alpha stroke. Continent fills use ELEVATED_BG (#FFFDF6) against PAGE_BG (#FAF8F1) — extremely low contrast, land masses barely distinguishable from ocean.
+      Legibility verdict: PASS (text), WEAK (land/sea contrast)
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black #1A1A17 — correct dark theme surface
+      Chrome: Main title and subplot titles in light #F0EFE8-derived text — clearly readable. No dark-on-dark text failures observed.
+      Data: Brand green #009E73 graticule and Tissot circles are identical to light render — data colors unchanged between themes. Continent fills use ELEVATED_BG (#242420) against PAGE_BG (#1A1A17) — still very low contrast (~5 lightness units), land masses nearly indistinguishable.
+      Legibility verdict: PASS (text), WEAK (land/sea contrast)
+  criteria_checklist:
+    visual_quality:
+      score: 26
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: Title and subplot titles readable in both themes; main title fontsize=20
+          slightly understated for 3200px canvas
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: Clean 2x2 grid; no text or element collisions
+      - id: VQ-03
+        name: Element Visibility
+        score: 3
+        max: 6
+        passed: false
+        comment: Continent fills (ELEVATED_BG) nearly indistinguishable from background
+          (PAGE_BG); Tissot at 0.20 alpha very faint in light mode
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Brand green passes CVD-safe checks; no red/green as sole signal
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: 3200x1800 confirmed; 2x2 grid well-proportioned; rowgap/colgap minimal
+          and correct
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: No traditional axis labels (correct for maps); subplot titles describe
+          projection name and property
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: '#FAF8F1/#1A1A17 backgrounds correct; BRAND green #009E73 for data;
+          themes flip correctly'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: 'Above default: 4 projection algorithms from scratch, Tissot indicatrices;
+          held back by near-invisible land/sea contrast'
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: All spines removed; tick marks/labels hidden; custom graticule replaces
+          default grid; clean minimal panels
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Subtitle labels communicate each projection's key property; Tissot
+          demonstrates distortion; 4-way comparison effective
+    spec_compliance:
+      score: 15
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 5
+        max: 5
+        passed: true
+        comment: World map with multiple projections, exactly as specified
+      - id: SC-02
+        name: Required Features
+        score: 4
+        max: 4
+        passed: true
+        comment: Mercator + Mollweide + Orthographic + Equal Earth; graticule at 30
+          degrees; continent outlines; Tissot indicatrices
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: Same global dataset projected correctly; appropriate boundary shapes
+          per projection
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: map-projections · julia · makie · anyplot.ai correct; each subplot
+          labeled
+    data_quality:
+      score: 15
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 6
+        max: 6
+        passed: true
+        comment: Covers conformal, equal-area, and perspective projection families
+          with distortion visualization
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Geographically accurate continent polygons; Greenland illustrates
+          Mercator distortion; neutral world geography
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Correct global geographic scale; 30-degree graticule intervals is
+          standard cartographic practice
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Helper functions appropriately extracted for reuse across 4 projections;
+          no over-engineering
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Random.seed!(42) present
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: CairoMakie, Colors, Random — all three actually used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Projection math clean; NaN handling for Orthographic back-hemisphere
+          idiomatic
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: save(plot-$(THEME).png, fig; px_per_unit=2) correct; no HTML (correct
+          for CairoMakie)
+    library_mastery:
+      score: 7
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Correct Figure/Axis grid, poly!, lines!, Label, RGBAf, rowgap!/colgap!;
+          fig[0,1:2] spanning title is idiomatic
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: poly! for custom boundary shapes (ellipses, Equal Earth outline)
+          is distinctly Makie; does not leverage themes system or recipes
+  verdict: APPROVED
+impl_tags:
+  dependencies:
+  - colors
+  techniques:
+  - subplots
+  - patches
+  patterns:
+  - iteration-over-groups
+  dataprep: []
+  styling:
+  - minimal-chrome
+  - alpha-blending

@@ -1,213 +1,240 @@
 library: pygal
+language: python
 specification_id: line-stock-comparison
 created: '2026-01-20T10:21:52Z'
-updated: '2026-01-20T10:44:44Z'
-generated_by: claude-opus-4-5-20251101
-workflow_run: 21167798458
+updated: '2026-05-23T18:36:32Z'
+generated_by: claude-sonnet
+workflow_run: 26329679061
 issue: 3748
-python_version: 3.13.11
+language_version: 3.13.13
 library_version: 3.1.0
-preview_url: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/pygal/plot.png
-preview_html: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/pygal/plot.html
-quality_score: 91
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/pygal/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/pygal/plot-dark.png
+preview_html_light: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/pygal/plot-light.html
+preview_html_dark: https://storage.googleapis.com/anyplot-images/plots/line-stock-comparison/python/pygal/plot-dark.html
+quality_score: 84
 review:
   strengths:
-  - Excellent use of colorblind-friendly color palette from pygal Style
-  - Custom tooltips with formatted date and value enhance interactivity
-  - Clean x-axis with monthly major labels avoiding clutter of 252 daily labels
-  - Proper rebasing calculation demonstrating stock comparison technique
-  - Good code organization with clear data simulation section
+  - Perfect spec compliance — all required features (normalization, baseline, grid,
+    legend, multi-series) implemented correctly
+  - 'Excellent data storytelling: best-performer emphasis via stroke width, year-end
+    returns in legend labels, dashed baseline at 100'
+  - Correct anyplot palette in canonical order with theme-adaptive chrome across both
+    renders
+  - Idiomatic pygal usage with advanced label management (x_labels_major, monthly-only
+    ticks)
+  - Interactive HTML export alongside PNG — leverages pygal unique capability
+  - Fully reproducible with np.random.seed(42)
   weaknesses:
-  - The legend shows Reference (100) as a 5th item but the code only adds 4 series
-    - this may be a pygal rendering artifact
-  - Grid line at y=100 serves as reference but could be more explicitly styled
-  image_description: The plot shows a multi-line stock price comparison chart with
-    4 stock series (AAPL, GOOGL, MSFT, SPY) plus a Reference (100) line. The chart
-    spans from January 2024 to December 2024. All series are rebased to 100 at the
-    start. AAPL (blue) shows moderate growth ending around 113. GOOGL (yellow/orange)
-    shows the strongest performance, rising to ~175 peak before settling around 118.
-    MSFT (pink) underperforms, ending around 82. SPY Benchmark (green/teal) shows
-    strong growth reaching ~170 and ending around 160. A horizontal gray reference
-    line at 100 marks the starting point. The title "line-stock-comparison · pygal
-    · pyplots.ai" is displayed at the top. X-axis shows monthly date labels at 45-degree
-    rotation, Y-axis shows "Rebased Price (Start = 100)" with range 70-180. Legend
-    is positioned at bottom with 5 series in a row.
+  - dots_size=2 with 252 data points per series creates minor visual noise on lines;
+    consider show_dots=False on main series or reduce to dots_size=1
+  - Bottom legend margin could be slightly more generous — consider margin_bottom=150
+    for more breathing room
+  - sys.path manipulation (remove/re-insert script dir) is functional but unusual
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white #FAF8F1 — correct
+      Chrome: Title "line-stock-comparison · python · pygal · anyplot.ai" in dark ink, clearly readable. Y-axis label "Rebased Price (Start = 100)" and X-axis label "Date" legible in dark text. Monthly tick labels rotated 45° and fully readable. Legend at bottom in dark text.
+      Data: AAPL green (#009E73), GOOGL purple (#9418DB), MSFT red (#B71D27), SPY sky blue (#16B8F3), Baseline dashed grey (INK_MUTED). GOOGL has thicker stroke (best performer). Legend shows year-end returns.
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Near-black #1A1A17 — correct
+      Chrome: Title and axis labels in light cream text, clearly legible. Tick labels and legend in muted-light tones. No dark-on-dark failures observed.
+      Data: All four stock line colors identical to light render (AAPL green, GOOGL purple, MSFT red, SPY blue). Baseline is lighter grey. Only chrome flips between themes.
+      Legibility verdict: PASS
   criteria_checklist:
     visual_quality:
-      score: 37
-      max: 40
+      score: 27
+      max: 30
       items:
       - id: VQ-01
         name: Text Legibility
-        score: 10
-        max: 10
-        passed: true
-        comment: Title, axis labels, tick marks, and legend are all clearly readable
-          at full size with appropriate font sizes
-      - id: VQ-02
-        name: No Overlap
-        score: 8
-        max: 8
-        passed: true
-        comment: No overlapping text elements; x-axis labels are rotated to avoid
-          collision
-      - id: VQ-03
-        name: Element Visibility
         score: 7
         max: 8
         passed: true
-        comment: 'Lines are well-sized with stroke_width=5, dots_size=3 appropriate
-          for 252 data points. Minor deduction: lines occasionally visually merge
-          during flat periods'
+        comment: All text legible in both themes at mandated font sizes
+      - id: VQ-02
+        name: No Overlap
+        score: 6
+        max: 6
+        passed: true
+        comment: No text or data overlaps in either render
+      - id: VQ-03
+        name: Element Visibility
+        score: 5
+        max: 6
+        passed: true
+        comment: Lines clearly visible; dots_size=2 for 252 points creates minor visual
+          noise but all series distinguishable
       - id: VQ-04
         name: Color Accessibility
-        score: 5
-        max: 5
-        passed: true
-        comment: 'Colorblind-safe palette (#0072B2, #E69F00, #CC79A7, #009E73) used
-          correctly'
-      - id: VQ-05
-        name: Layout Balance
-        score: 5
-        max: 5
-        passed: true
-        comment: Plot fills canvas well, legend at bottom is clean, good margins
-      - id: VQ-06
-        name: Axis Labels
         score: 2
         max: 2
         passed: true
-        comment: Y-axis has descriptive label with context, X-axis labeled Date
-      - id: VQ-07
-        name: Grid & Legend
-        score: 0
+        comment: anyplot palette used; colorblind-safe
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 3
+        max: 4
+        passed: true
+        comment: Correct 3200x1800 landscape canvas; bottom legend slightly tight
+          but functional
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
         max: 2
-        passed: false
-        comment: Legend shows Reference (100) as 5th item not present in code - rendering
-          artifact
+        passed: true
+        comment: Y-axis descriptive with units; title matches required format
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series AAPL=#009E73; positions 2-4 canonical order; backgrounds
+          #FAF8F1/#1A1A17 correct'
+    design_excellence:
+      score: 12
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Stroke-width hierarchy for best performer; performance returns in
+          legend; proper theming
+      - id: DE-02
+        name: Visual Refinement
+        score: 3
+        max: 6
+        passed: true
+        comment: Y-axis guides only; monthly-only tick labels; pygal spine control
+          is limited
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Dashed baseline at 100; best-performer focal point via stroke width;
+          year-end returns in legend
     spec_compliance:
-      score: 25
-      max: 25
+      score: 15
+      max: 15
       items:
       - id: SC-01
         name: Plot Type
-        score: 8
-        max: 8
+        score: 5
+        max: 5
         passed: true
-        comment: Correct multi-line chart for stock comparison
+        comment: Multi-line chart, correct
       - id: SC-02
-        name: Data Mapping
-        score: 5
-        max: 5
-        passed: true
-        comment: Dates on X-axis, rebased prices on Y-axis correctly mapped
-      - id: SC-03
         name: Required Features
-        score: 5
-        max: 5
+        score: 4
+        max: 4
         passed: true
-        comment: Normalization to 100, distinct colors, legend, reference line at
-          100 via grid
-      - id: SC-04
-        name: Data Range
+        comment: Normalization to 100, 4 series, distinct colors, legend, horizontal
+          reference line, grid lines all present
+      - id: SC-03
+        name: Data Mapping
         score: 3
         max: 3
         passed: true
-        comment: Y-axis range (70-180) shows all data without clipping
-      - id: SC-05
-        name: Legend Accuracy
-        score: 2
-        max: 2
+        comment: 'X: trading dates Jan-Dec 2024; Y: rebased values 70-170; all series
+          correctly plotted'
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
         passed: true
-        comment: Legend correctly identifies AAPL, GOOGL, MSFT, SPY (Benchmark)
-      - id: SC-06
-        name: Title Format
-        score: 2
-        max: 2
-        passed: true
-        comment: Correctly formatted as line-stock-comparison · pygal · pyplots.ai
+        comment: Title matches required format; legend identifies all symbols with
+          performance data
     data_quality:
-      score: 19
-      max: 20
+      score: 14
+      max: 15
       items:
       - id: DQ-01
         name: Feature Coverage
-        score: 8
-        max: 8
+        score: 5
+        max: 6
         passed: true
-        comment: Shows outperformers, underperformer, moderate performer, volatile
-          vs stable behavior
+        comment: Multi-series comparison, rebasing, divergence over time, reference
+          baseline; optional annotations not included
       - id: DQ-02
         name: Realistic Context
-        score: 6
-        max: 7
-        passed: true
-        comment: 'Stock comparison scenario is realistic; minor: benchmark outperforming
-          individuals is atypical'
-      - id: DQ-03
-        name: Appropriate Scale
         score: 5
         max: 5
         passed: true
-        comment: Rebased values (70-180) are realistic for 1-year stock performance
+        comment: AAPL/GOOGL/MSFT/SPY tickers; 252 trading days 2024; plausible return
+          magnitudes
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: Y-axis 70-170 rebased range sensible; realistic daily return parameters;
+          seed(42) for reproducibility
     code_quality:
-      score: 10
+      score: 9
       max: 10
       items:
       - id: CQ-01
         name: KISS Structure
-        score: 3
+        score: 2
         max: 3
         passed: true
-        comment: No functions/classes, follows imports → data → plot → save pattern
+        comment: Two small helpers (fmt_ret, series_stroke) simple and purposeful;
+          sys.path manipulation functional but unusual
       - id: CQ-02
         name: Reproducibility
-        score: 3
-        max: 3
+        score: 2
+        max: 2
         passed: true
-        comment: np.random.seed(42) set for reproducibility
+        comment: np.random.seed(42) set explicitly
       - id: CQ-03
         name: Clean Imports
         score: 2
         max: 2
         passed: true
-        comment: All imports used (datetime, numpy, pygal, Style)
+        comment: All imports used
       - id: CQ-04
-        name: No Deprecated API
-        score: 1
-        max: 1
+        name: Code Elegance
+        score: 2
+        max: 2
         passed: true
-        comment: Uses current pygal API
+        comment: Clean and readable; no fake UI elements
       - id: CQ-05
-        name: Output Correct
+        name: Output & API
         score: 1
         max: 1
         passed: true
-        comment: Saves as plot.png and plot.html
-    library_features:
-      score: 5
-      max: 5
+        comment: Saves plot-{THEME}.png and plot-{THEME}.html; THEME from env
+    library_mastery:
+      score: 7
+      max: 10
       items:
-      - id: LF-01
-        name: Distinctive Features
-        score: 5
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
         max: 5
         passed: true
-        comment: Uses pygal's custom Style class, custom tooltips, interactive HTML
-          export, x_labels_major, legend_at_bottom_columns
+        comment: x_labels_major with show_minor_x_labels=False; legend_at_bottom_columns;
+          Style object for full theme control
+      - id: LM-02
+        name: Distinctive Features
+        score: 3
+        max: 5
+        passed: true
+        comment: Per-point tooltip dicts leverage pygal interactive hover; HTML export
+          uses JS rendering; stroke_style per series
   verdict: APPROVED
 impl_tags:
   dependencies: []
   techniques:
-  - hover-tooltips
   - html-export
-  - manual-ticks
+  - hover-tooltips
   patterns:
   - data-generation
-  - iteration-over-groups
   dataprep:
   - normalization
-  - cumulative-sum
-  - time-series
-  styling:
-  - grid-styling
+  styling: []

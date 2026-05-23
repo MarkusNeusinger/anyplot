@@ -1,8 +1,10 @@
-""" pyplots.ai
+""" anyplot.ai
 map-projections: World Map with Different Projections
-Library: letsplot 4.8.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-20
+Library: letsplot 4.10.1 | Python 3.13.13
+Quality: 83/100 | Updated: 2026-05-23
 """
+
+import os
 
 import numpy as np
 import pandas as pd
@@ -24,10 +26,20 @@ from lets_plot import (
     theme,
     theme_minimal,
 )
-from lets_plot.export import ggsave as export_ggsave
+from lets_plot.export import ggsave
+from PIL import Image as PILImage
 
 
 LetsPlot.setup_html()
+
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+
+ANYPLOT_PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E"]
+LAND_COLOR = ANYPLOT_PALETTE[0]  # brand green — first categorical series
+TISSOT_COLOR = ANYPLOT_PALETTE[1]  # purple — canonical second series
 
 np.random.seed(42)
 
@@ -35,14 +47,12 @@ np.random.seed(42)
 graticule_rows = []
 line_id = 0
 
-# Latitude lines every 30 degrees (extended to show Antarctica)
 for lat in range(-90, 91, 30):
     lons = np.linspace(-180, 180, 180)
     for lon in lons:
         graticule_rows.append({"lon": lon, "lat": lat, "line_id": line_id})
     line_id += 1
 
-# Longitude lines every 60 degrees (extended range)
 for lon in range(-180, 181, 60):
     lats = np.linspace(-90, 90, 180)
     for lat in lats:
@@ -51,10 +61,9 @@ for lon in range(-180, 181, 60):
 
 graticule = pd.DataFrame(graticule_rows)
 
-# Data: More detailed continent outlines
+# Data: Continent outlines
 continent_rows = []
 
-# Africa - more detailed shape
 africa_coords = [
     (-17, 15),
     (-5, 5),
@@ -81,9 +90,8 @@ africa_coords = [
     (-17, 15),
 ]
 for lon, lat in africa_coords:
-    continent_rows.append({"lon": lon, "lat": lat, "continent": "Africa", "type": "Land"})
+    continent_rows.append({"lon": lon, "lat": lat, "continent": "Africa"})
 
-# Europe - more detailed
 europe_coords = [
     (-10, 36),
     (-8, 43),
@@ -111,9 +119,8 @@ europe_coords = [
     (-10, 36),
 ]
 for lon, lat in europe_coords:
-    continent_rows.append({"lon": lon, "lat": lat, "continent": "Europe", "type": "Land"})
+    continent_rows.append({"lon": lon, "lat": lat, "continent": "Europe"})
 
-# Asia - more detailed
 asia_coords = [
     (60, 35),
     (70, 25),
@@ -145,9 +152,8 @@ asia_coords = [
     (60, 35),
 ]
 for lon, lat in asia_coords:
-    continent_rows.append({"lon": lon, "lat": lat, "continent": "Asia", "type": "Land"})
+    continent_rows.append({"lon": lon, "lat": lat, "continent": "Asia"})
 
-# North America - more detailed
 na_coords = [
     (-170, 66),
     (-165, 62),
@@ -204,9 +210,8 @@ na_coords = [
     (-170, 66),
 ]
 for lon, lat in na_coords:
-    continent_rows.append({"lon": lon, "lat": lat, "continent": "North America", "type": "Land"})
+    continent_rows.append({"lon": lon, "lat": lat, "continent": "North America"})
 
-# South America - more detailed
 sa_coords = [
     (-80, 10),
     (-75, 10),
@@ -245,9 +250,8 @@ sa_coords = [
     (-80, 10),
 ]
 for lon, lat in sa_coords:
-    continent_rows.append({"lon": lon, "lat": lat, "continent": "South America", "type": "Land"})
+    continent_rows.append({"lon": lon, "lat": lat, "continent": "South America"})
 
-# Australia - more detailed
 aus_coords = [
     (115, -20),
     (120, -18),
@@ -273,9 +277,8 @@ aus_coords = [
     (115, -20),
 ]
 for lon, lat in aus_coords:
-    continent_rows.append({"lon": lon, "lat": lat, "continent": "Australia", "type": "Land"})
+    continent_rows.append({"lon": lon, "lat": lat, "continent": "Australia"})
 
-# Antarctica
 antarctica_coords = [
     (-60, -62),
     (-45, -68),
@@ -308,103 +311,94 @@ antarctica_coords = [
     (-60, -62),
 ]
 for lon, lat in antarctica_coords:
-    continent_rows.append({"lon": lon, "lat": lat, "continent": "Antarctica", "type": "Land"})
+    continent_rows.append({"lon": lon, "lat": lat, "continent": "Antarctica"})
 
 continents = pd.DataFrame(continent_rows)
 
-# Data: Tissot indicatrices showing equal-area circles that appear distorted in projection
-# In the Mercator projection, areas are stretched increasingly toward the poles
-# We draw circles of equal true area, which appear as ellipses in the projected view
+# Data: Tissot indicatrices — equal-area circles reveal Mercator distortion
 tissot_rows = []
 circle_id = 0
-base_radius = 8  # Larger radius for better visibility
+base_radius = 8
 
-# Use latitudes that show clear distortion progression
 for lat in [-60, -30, 0, 30, 60]:
     for lon in range(-150, 151, 50):
-        # Create circles with equal angular size (appear distorted in Mercator)
-        # In Mercator, the east-west scale factor equals the north-south scale factor
-        # Both equal sec(latitude), so circles remain circles but grow larger toward poles
-        # The key distortion is SIZE increase, not shape change
         angles = np.linspace(0, 2 * np.pi, 72)
-
-        # Circles appear larger at higher latitudes due to Mercator projection
         for angle in angles:
             dlat = base_radius * np.cos(angle)
             dlon = base_radius * np.sin(angle) / max(np.cos(np.radians(lat)), 0.5)
-            tissot_rows.append({"lon": lon + dlon, "lat": lat + dlat, "circle_id": circle_id, "lat_band": abs(lat)})
+            tissot_rows.append({"lon": lon + dlon, "lat": lat + dlat, "circle_id": circle_id})
         circle_id += 1
 
 tissot = pd.DataFrame(tissot_rows)
 
-# Data for manual legend (positioned in bottom-left corner)
+# Manual legend in South Atlantic gap between lat=-30 and lat=-60 Tissot rows
 legend_data = pd.DataFrame(
     {
         "x": [-170, -170],
-        "y": [-60, -75],
+        "y": [-43, -51],
         "label": ["Land Masses", "Tissot Indicatrices"],
-        "color": ["#306998", "#FFD43B"],
+        "color": [LAND_COLOR, TISSOT_COLOR],
     }
 )
 
-# Plot: World map with Mercator projection showing distortion
+# Plot
 plot = (
     ggplot()
-    # Graticule lines (lat/lon grid)
     + geom_path(
-        data=graticule, mapping=aes(x="lon", y="lat", group="line_id"), color="#888888", size=0.5, linetype="dashed"
+        data=graticule,
+        mapping=aes(x="lon", y="lat", group="line_id"),
+        color=INK_SOFT,
+        size=0.3,
+        linetype="dashed",
+        alpha=0.4,
     )
-    # Continent outlines (using fixed fill color)
     + geom_polygon(
         data=continents,
         mapping=aes(x="lon", y="lat", group="continent"),
-        fill="#306998",
-        color="#1a3d5c",
+        fill=LAND_COLOR,
+        color=INK,
         alpha=0.85,
-        size=0.6,
+        size=0.5,
     )
-    # Tissot indicatrices (using fixed fill color)
     + geom_polygon(
         data=tissot,
         mapping=aes(x="lon", y="lat", group="circle_id"),
-        fill="#FFD43B",
-        color="#8b6914",
-        alpha=0.7,
-        size=0.5,
+        fill=TISSOT_COLOR,
+        color=INK,
+        alpha=0.65,
+        size=0.3,
     )
-    # Manual legend - colored markers
-    + geom_point(data=legend_data, mapping=aes(x="x", y="y", color="color"), size=12, shape=15)
+    + geom_point(data=legend_data, mapping=aes(x="x", y="y", color="color"), size=5, shape=15)
     + scale_color_identity()
-    # Manual legend - text labels
-    + geom_text(
-        data=legend_data, mapping=aes(x="x", y="y", label="label"), hjust=0, nudge_x=8, size=12, color="#333333"
-    )
-    # Apply Mercator projection with ylim extended to show Antarctica
+    + geom_text(data=legend_data, mapping=aes(x="x", y="y", label="label"), hjust=0, nudge_x=8, size=8, color=INK_SOFT)
     + coord_map(xlim=[-180, 180], ylim=[-85, 85])
-    # Labels and theme
     + labs(
-        title="map-projections · letsplot · pyplots.ai",
+        title="map-projections · python · letsplot · anyplot.ai",
         x="Longitude (°)",
         y="Latitude (°)",
-        caption="Tissot indicatrices: equal-area circles appear stretched in Mercator projection at high latitudes",
+        caption="Tissot indicatrices: equal-area circles grow toward the poles in Mercator projection",
     )
     + theme_minimal()
     + theme(
-        plot_title=element_text(size=28, face="bold", hjust=0.5),
-        axis_title=element_text(size=20),
-        axis_text=element_text(size=16),
-        plot_caption=element_text(size=14, hjust=0.5, color="#555555"),
+        plot_title=element_text(size=16, face="bold", hjust=0.5, color=INK),
+        axis_title=element_text(size=12, color=INK),
+        axis_text=element_text(size=10, color=INK_SOFT),
+        plot_caption=element_text(size=9, hjust=0.5, color=INK_SOFT),
         legend_position="none",
         panel_grid_major=element_blank(),
         panel_grid_minor=element_blank(),
-        plot_background=element_rect(fill="#f8f8f8"),
-        panel_background=element_rect(fill="#e6f0f5"),
+        plot_background=element_rect(fill=PAGE_BG, color=PAGE_BG),
+        panel_background=element_rect(fill=PAGE_BG),
     )
-    + ggsize(1600, 900)
+    + ggsize(800, 450)
 )
 
-# Save PNG (scale 3x to get 4800 x 2700 px)
-export_ggsave(plot, filename="plot.png", path=".", scale=3)
+# Save
+ggsave(plot, filename=f"plot-{THEME}.png", path=".", scale=4)
+ggsave(plot, filename=f"plot-{THEME}.html", path=".")
 
-# Save HTML for interactive version
-export_ggsave(plot, filename="plot.html", path=".")
+# Flatten transparent margins to solid PAGE_BG (lets-plot leaves outer margins transparent)
+img = PILImage.open(f"plot-{THEME}.png").convert("RGBA")
+bg = PILImage.new("RGBA", img.size, PAGE_BG)
+bg.paste(img, mask=img.split()[3])
+bg.convert("RGB").save(f"plot-{THEME}.png")
