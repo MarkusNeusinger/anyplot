@@ -36,11 +36,7 @@ async def _compute_stats(db: AsyncSession) -> StatsResponse:
 
     languages = distinct_languages or len(LANGUAGES_METADATA)
     return StatsResponse(
-        specs=specs_with_impls,
-        plots=total_impls,
-        libraries=library_count,
-        languages=languages,
-        lines_of_code=total_loc,
+        specs=specs_with_impls, plots=total_impls, libraries=library_count, languages=languages, lines_of_code=total_loc
     )
 
 

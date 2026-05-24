@@ -192,9 +192,7 @@ class SpecRepository(BaseRepository[Spec]):
         Lightweight aggregate — avoids loading every spec + impl row just to
         compute the homepage `specifications` number (used by /stats).
         """
-        result = await self.session.execute(
-            select(func.count(func.distinct(Impl.spec_id))).select_from(Impl)
-        )
+        result = await self.session.execute(select(func.count(func.distinct(Impl.spec_id))).select_from(Impl))
         return result.scalar_one() or 0
 
     async def search_by_tags(self, tags: list[str]) -> list[Spec]:
