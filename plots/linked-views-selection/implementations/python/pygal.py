@@ -1,20 +1,20 @@
-""" anyplot.ai
+"""anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
-Library: pygal 3.1.0 | Python 3.13.13
-Quality: 81/100 | Created: 2026-05-17
+Library: pygal | Python 3.13
+Quality: pending | Updated: 2026-05-24
 """
 
 import os
 import sys
 
 
-# Ensure proper module loading by prioritizing venv packages
+# Prioritize venv packages over the current directory (script is named pygal.py)
 venv_path = [p for p in sys.path if ".venv" in p]
 sys.path = venv_path + [p for p in sys.path if ".venv" not in p and p != ""]
 
-import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import pygal  # noqa: E402
+from PIL import Image  # noqa: E402
 from pygal.style import Style  # noqa: E402
 from sklearn.datasets import load_iris  # noqa: E402
 
@@ -27,401 +27,206 @@ INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
 INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
 INK_MUTED = "#6B6A63" if THEME == "light" else "#A8A79F"
 
-OKABE_ITO = ("#009E73", "#D55E00", "#0072B2", "#CC79A7", "#E69F00", "#56B4E9", "#F0E442")
+ANYPLOT_PALETTE = ("#009E73", "#9418DB", "#B71D27", "#16B8F3", "#99B314", "#D359A7", "#BA843E")
 
-# Create custom style
-custom_style = Style(
+# Canvas layout (3200 × 1800 exact)
+CANVAS_W, CANVAS_H = 3200, 1800
+MARGIN, GAP = 40, 20
+TOP_H = 860
+BOT_H = CANVAS_H - 2 * MARGIN - TOP_H - GAP  # 840
+HALF_W = (CANVAS_W - 2 * MARGIN - GAP) // 2  # 1550
+FULL_W = CANVAS_W - 2 * MARGIN  # 3120
+
+# Sub-chart style (sized for partial-canvas charts)
+sub_style = Style(
     background=PAGE_BG,
     plot_background=PAGE_BG,
     foreground=INK,
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
-    colors=OKABE_ITO,
-    title_font_size=24,
-    label_font_size=18,
-    major_label_font_size=16,
-    legend_font_size=14,
-    value_font_size=12,
-    stroke_width=2,
+    colors=ANYPLOT_PALETTE,
+    title_font_size=44,
+    label_font_size=32,
+    major_label_font_size=26,
+    legend_font_size=26,
+    value_font_size=20,
+    stroke_width=2.5,
 )
 
 # Data: Iris dataset
 iris = load_iris()
-X = iris.data
-y = iris.target
-target_names = iris.target_names
-feature_names = ["Sepal Length", "Sepal Width", "Petal Length", "Petal Width"]
+df = pd.DataFrame(iris.data, columns=["Sepal Length", "Sepal Width", "Petal Length", "Petal Width"])
+df["species"] = [iris.target_names[i] for i in iris.target]
+means = df.groupby("species")[["Petal Length", "Sepal Length"]].mean()
 
-df = pd.DataFrame(X, columns=feature_names)
-df["species"] = [target_names[i] for i in y]
-df["index"] = range(len(df))
-
-# Prepare data for linked views
-species_colors = {target_names[0]: OKABE_ITO[0], target_names[1]: OKABE_ITO[1], target_names[2]: OKABE_ITO[2]}
-
-# View 1: Scatter plot (Petal Width vs Petal Length, colored by species)
+# View 1 (top-left): Scatter — Petal Length vs Petal Width (clearest cluster separation)
 scatter = pygal.XY(
-    width=1500,
-    height=900,
-    title="Petal Dimensions · linked-views-selection · pygal · anyplot.ai",
+    width=HALF_W,
+    height=TOP_H,
+    title="Petal Length vs Petal Width",
     x_title="Petal Length (cm)",
     y_title="Petal Width (cm)",
-    style=custom_style,
+    style=sub_style,
     show_legend=True,
+    dots_size=5,
+    stroke=False,
+    show_x_guides=True,
+    show_y_guides=True,
 )
-
-for sp in target_names:
-    species_data = df[df["species"] == sp]
-    data_points = [(row["Petal Length"], row["Petal Width"]) for _, row in species_data.iterrows()]
-    scatter.add(sp, data_points, dots_size=5)
-
+for sp in iris.target_names:
+    sub = df[df["species"] == sp]
+    scatter.add(sp, list(zip(sub["Petal Length"].round(2), sub["Petal Width"].round(2), strict=True)))
 scatter_svg = scatter.render()
-
-# View 2: Bar chart (species counts)
-bar_chart = pygal.Bar(
-    width=1500,
-    height=900,
-    title="Species Distribution · linked-views-selection · pygal · anyplot.ai",
-    y_title="Count",
-    style=custom_style,
-    show_legend=False,
-)
-
-species_counts = df["species"].value_counts().sort_index()
-for sp in target_names:
-    if sp in species_counts.index:
-        bar_chart.add(sp, [species_counts[sp]])
-
-bar_chart.x_labels = ["Count"]
-bar_svg = bar_chart.render()
-
-# View 3: Histogram-like plot (Sepal Length distribution by species)
-histogram = pygal.Line(
-    width=1500,
-    height=900,
-    title="Sepal Length Distribution · linked-views-selection · pygal · anyplot.ai",
-    x_title="Sepal Length (cm)",
-    y_title="Frequency",
-    style=custom_style,
-    show_legend=True,
-    dots_size=4,
-)
-
-# Create histogram data
-bins = np.linspace(df["Sepal Length"].min(), df["Sepal Length"].max(), 12)
-
-for sp in target_names:
-    species_data = df[df["species"] == sp]["Sepal Length"]
-    hist, bin_edges = np.histogram(species_data, bins=bins)
-    histogram.add(sp, list(hist.astype(int)))
-
-histogram.x_labels = [f"{b:.1f}" for b in bins[:-1]]
-histogram_svg = histogram.render()
-
-# Create combined HTML with linked selection JavaScript
-html_content = (
-    """<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>linked-views-selection · pygal · anyplot.ai</title>
-    <script src="https://kozea.github.io/pygal.js/2.0.x/pygal-tooltips.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background-color: """
-    + PAGE_BG
-    + """;
-            color: """
-    + INK
-    + """;
-            padding: 40px;
-        }
-
-        .container {
-            max-width: 100%;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-size: 32px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: """
-    + INK
-    + """;
-        }
-
-        .info-panel {
-            background-color: """
-    + ELEVATED_BG
-    + """;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 40px;
-            color: """
-    + INK_SOFT
-    + """;
-            font-size: 16px;
-        }
-
-        .info-panel p {
-            margin-bottom: 8px;
-        }
-
-        .selection-info {
-            font-weight: 600;
-            color: """
-    + INK
-    + """;
-        }
-
-        .charts-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .chart-container {
-            background-color: """
-    + PAGE_BG
-    + """;
-            border: 1px solid """
-    + INK_MUTED
-    + """;
-            border-radius: 4px;
-            padding: 20px;
-        }
-
-        .chart-full {
-            grid-column: 1 / -1;
-        }
-
-        svg {
-            max-width: 100%;
-            height: auto;
-        }
-
-        .reset-button {
-            background-color: #009E73;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            font-size: 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-bottom: 30px;
-            font-weight: 600;
-        }
-
-        .reset-button:hover {
-            opacity: 0.9;
-        }
-
-        .selected {
-            stroke-width: 3 !important;
-            opacity: 1 !important;
-        }
-
-        .deselected {
-            opacity: 0.2 !important;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Multiple Linked Views with Selection Sync</h1>
-
-        <div class="info-panel">
-            <p><strong>Explore linked data:</strong> Click on bars or lines to highlight corresponding species across all views.</p>
-            <p class="selection-info">Selected: <span id="selection">All species</span></p>
-            <button class="reset-button" onclick="resetSelection()">Reset Selection</button>
-        </div>
-
-        <div class="charts-grid">
-            <div class="chart-container">
-                <div id="scatter"></div>
-            </div>
-            <div class="chart-container">
-                <div id="histogram"></div>
-            </div>
-            <div class="chart-container chart-full">
-                <div id="bar"></div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // SVG data embedded directly
-        const scatterSvg = `"""
-    + scatter_svg.decode("utf-8")
-    + """`;
-        const barSvg = `"""
-    + bar_svg.decode("utf-8")
-    + """`;
-        const histogramSvg = `"""
-    + histogram_svg.decode("utf-8")
-    + """`;
-
-        // Insert SVGs
-        document.getElementById('scatter').innerHTML = scatterSvg;
-        document.getElementById('bar').innerHTML = barSvg;
-        document.getElementById('histogram').innerHTML = histogramSvg;
-
-        // Available species
-        const species = ['setosa', 'versicolor', 'virginica'];
-        let selectedSpecies = new Set(species);
-
-        // Update selection UI
-        function updateSelectionUI() {
-            if (selectedSpecies.size === 0) {
-                selectedSpecies = new Set(species);
-            }
-
-            const selected = Array.from(selectedSpecies).join(', ');
-            document.getElementById('selection').textContent =
-                selectedSpecies.size === 3 ? 'All species' : selected;
-
-            applySelection();
-        }
-
-        // Apply selection to all charts
-        function applySelection() {
-            const circles = document.querySelectorAll('circle[class*="reactive"]');
-            const rects = document.querySelectorAll('rect[class*="reactive"]');
-
-            circles.forEach(circle => {
-                const parent = circle.closest('[class*="series"]');
-                if (parent) {
-                    const seriesClass = parent.getAttribute('class');
-                    let isSelected = false;
-
-                    for (const sp of selectedSpecies) {
-                        if (seriesClass.includes(sp)) {
-                            isSelected = true;
-                            break;
-                        }
-                    }
-
-                    if (isSelected) {
-                        circle.classList.remove('deselected');
-                        circle.classList.add('selected');
-                    } else {
-                        circle.classList.add('deselected');
-                        circle.classList.remove('selected');
-                    }
-                }
-            });
-
-            rects.forEach(rect => {
-                const parent = rect.closest('[class*="series"]');
-                if (parent) {
-                    const seriesClass = parent.getAttribute('class');
-                    let isSelected = false;
-
-                    for (const sp of selectedSpecies) {
-                        if (seriesClass.includes(sp)) {
-                            isSelected = true;
-                            break;
-                        }
-                    }
-
-                    if (isSelected) {
-                        rect.classList.remove('deselected');
-                        rect.classList.add('selected');
-                    } else {
-                        rect.classList.add('deselected');
-                        rect.classList.remove('selected');
-                    }
-                }
-            });
-        }
-
-        // Reset selection
-        function resetSelection() {
-            selectedSpecies = new Set(species);
-            updateSelectionUI();
-        }
-
-        // Add click handlers to chart elements
-        document.addEventListener('click', function(e) {
-            const rect = e.target.closest('rect[class*="reactive"]');
-            const circle = e.target.closest('circle[class*="reactive"]');
-
-            if (rect || circle) {
-                const parent = (rect || circle).closest('[class*="series"]');
-                if (parent) {
-                    const seriesClass = parent.getAttribute('class');
-
-                    let clickedSpecies = null;
-                    for (const sp of species) {
-                        if (seriesClass.includes(sp)) {
-                            clickedSpecies = sp;
-                            break;
-                        }
-                    }
-
-                    if (clickedSpecies) {
-                        if (selectedSpecies.has(clickedSpecies)) {
-                            selectedSpecies.delete(clickedSpecies);
-                        } else {
-                            selectedSpecies.add(clickedSpecies);
-                        }
-                        updateSelectionUI();
-                    }
-                }
-            }
-        });
-
-        // Initialize
-        updateSelectionUI();
-    </script>
-</body>
-</html>"""
-)
-
-# Save HTML file
-with open(f"plot-{THEME}.html", "w") as f:
-    f.write(html_content)
-
-# For PNG output, create a composite image with all three views
-# First, render each chart as PNG
 scatter.render_to_png(f"scatter-{THEME}.png")
-bar_chart.render_to_png(f"bar-{THEME}.png")
-histogram.render_to_png(f"histogram-{THEME}.png")
 
-# Load the PNG images and combine them using PIL
-try:
-    from PIL import Image
+# View 2 (top-right): Bar — mean Petal Length per species (confirms 1-D separation)
+bar = pygal.Bar(
+    width=HALF_W,
+    height=TOP_H,
+    title="Mean Petal Length by Species",
+    y_title="Petal Length (cm)",
+    style=sub_style,
+    show_legend=True,
+)
+bar.x_labels = ["Mean Petal Length"]
+for sp in iris.target_names:
+    bar.add(sp, [round(means.loc[sp, "Petal Length"], 2)])
+bar_svg = bar.render()
+bar.render_to_png(f"bar-{THEME}.png")
 
-    # Open images
-    img_scatter = Image.open(f"scatter-{THEME}.png")
-    img_bar = Image.open(f"bar-{THEME}.png")
-    img_histogram = Image.open(f"histogram-{THEME}.png")
+# View 3 (bottom, full width): Box — Sepal Length distribution (species overlap visible)
+title_main = "linked-views-selection · python · pygal · anyplot.ai"
+box = pygal.Box(
+    width=FULL_W,
+    height=BOT_H,
+    title=title_main,
+    y_title="Sepal Length (cm)",
+    style=sub_style,
+    show_legend=True,
+    box_mode="tukey",
+)
+for sp in iris.target_names:
+    box.add(sp, df[df["species"] == sp]["Sepal Length"].tolist())
+box_svg = box.render()
+box.render_to_png(f"box-{THEME}.png")
 
-    # Create a new image for the composite (2x2 grid)
-    width = img_scatter.width + img_bar.width + 60
-    height = img_scatter.height + img_histogram.height + 60
+# Composite PNG: exactly 3200 × 1800 px
+page_bg_rgb = tuple(int(PAGE_BG.lstrip("#")[i : i + 2], 16) for i in (0, 2, 4))
+canvas = Image.new("RGB", (CANVAS_W, CANVAS_H), page_bg_rgb)
 
-    composite = Image.new("RGB", (width, height), PAGE_BG.replace("#", "0x"))
+img_scatter = Image.open(f"scatter-{THEME}.png").resize((HALF_W, TOP_H), Image.LANCZOS)
+img_bar = Image.open(f"bar-{THEME}.png").resize((HALF_W, TOP_H), Image.LANCZOS)
+img_box = Image.open(f"box-{THEME}.png").resize((FULL_W, BOT_H), Image.LANCZOS)
 
-    # Paste images
-    composite.paste(img_scatter, (10, 10))
-    composite.paste(img_bar, (img_scatter.width + 20, 10))
-    composite.paste(img_histogram, (10, img_scatter.height + 20))
+canvas.paste(img_scatter, (MARGIN, MARGIN))
+canvas.paste(img_bar, (MARGIN + HALF_W + GAP, MARGIN))
+canvas.paste(img_box, (MARGIN, MARGIN + TOP_H + GAP))
+canvas.save(f"plot-{THEME}.png")
 
-    # Save composite
-    composite.save(f"plot-{THEME}.png")
+# Interactive HTML with linked species selection
+scatter_svg_str = scatter_svg.decode("utf-8")
+bar_svg_str = bar_svg.decode("utf-8")
+box_svg_str = box_svg.decode("utf-8")
 
-except Exception:
-    # If PIL is not available, just use the scatter plot as fallback
-    import shutil
+html_open = (
+    "<!DOCTYPE html>\n<html>\n<head>\n"
+    '  <meta charset="utf-8">\n'
+    "  <title>linked-views-selection · pygal · anyplot.ai</title>\n"
+    "  <style>\n"
+    "    * { margin: 0; padding: 0; box-sizing: border-box; }\n"
+    "    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;\n"
+    "           background: " + PAGE_BG + "; color: " + INK + "; padding: 40px; }\n"
+    "    h1 { font-size: 28px; font-weight: 600; margin-bottom: 6px; }\n"
+    "    .subtitle { font-size: 14px; color: " + INK_MUTED + "; margin-bottom: 24px; }\n"
+    "    .controls { display: flex; align-items: center; gap: 16px; margin-bottom: 28px;\n"
+    "                background: " + ELEVATED_BG + "; padding: 16px 20px; border-radius: 8px; }\n"
+    "    .controls label { font-size: 14px; color: " + INK_SOFT + "; font-weight: 600;\n"
+    "                      margin-right: 4px; }\n"
+    "    .sp-btn { border: 2px solid transparent; border-radius: 20px; padding: 6px 18px;\n"
+    "              font-size: 14px; font-weight: 600; cursor: pointer; color: #fff;\n"
+    "              transition: opacity 0.2s; }\n"
+    "    .sp-btn.dim { opacity: 0.35; }\n"
+    "    .sp-btn[data-idx='0'] { background: #009E73; }\n"
+    "    .sp-btn[data-idx='1'] { background: #9418DB; }\n"
+    "    .sp-btn[data-idx='2'] { background: #B71D27; }\n"
+    "    .reset-btn { background: none; border: 1px solid " + INK_MUTED + ";\n"
+    "                 color: " + INK + "; border-radius: 20px; padding: 6px 18px;\n"
+    "                 font-size: 14px; cursor: pointer; margin-left: auto; }\n"
+    "    .sel-info { font-size: 14px; color: " + INK_SOFT + "; }\n"
+    "    .charts-top { display: grid; grid-template-columns: 1fr 1fr; gap: 20px;\n"
+    "                  margin-bottom: 20px; }\n"
+    "    .chart-wrap { background: " + PAGE_BG + "; border: 1px solid " + INK_MUTED + "20;\n"
+    "                  border-radius: 6px; overflow: hidden; }\n"
+    "    .chart-wrap svg { width: 100%; height: auto; display: block; }\n"
+    "    .serie-dim .serie-0, .serie-dim .serie-1, .serie-dim .serie-2\n"
+    "      { transition: opacity 0.25s; }\n"
+    "  </style>\n</head>\n<body>\n"
+    "  <h1>Multiple Linked Views with Selection Sync</h1>\n"
+    '  <p class="subtitle">linked-views-selection · python · pygal · anyplot.ai</p>\n'
+    '  <div class="controls">\n'
+    "    <label>Filter by species:</label>\n"
+    '    <button class="sp-btn" data-idx="0">setosa</button>\n'
+    '    <button class="sp-btn" data-idx="1">versicolor</button>\n'
+    '    <button class="sp-btn" data-idx="2">virginica</button>\n'
+    '    <button class="reset-btn" onclick="resetAll()">Show all</button>\n'
+    '    <span class="sel-info">Selected: <strong id="sel-label">All species</strong></span>\n'
+    "  </div>\n"
+    '  <div class="charts-top">\n'
+    '    <div class="chart-wrap" id="scatter">\n'
+)
 
-    shutil.copy(f"scatter-{THEME}.png", f"plot-{THEME}.png")
+html_mid1 = '\n    </div>\n    <div class="chart-wrap" id="bar">\n'
+
+html_mid2 = '\n    </div>\n  </div>\n  <div class="chart-wrap" id="box">\n'
+
+html_close = (
+    "\n  </div>\n\n"
+    "  <script>\n"
+    "    const SPECIES = ['setosa', 'versicolor', 'virginica'];\n"
+    "    let active = new Set([0, 1, 2]);\n\n"
+    "    function applySelection() {\n"
+    "      ['scatter', 'bar', 'box'].forEach(function(id) {\n"
+    "        var wrap = document.getElementById(id);\n"
+    "        if (!wrap) return;\n"
+    "        for (var i = 0; i < 3; i++) {\n"
+    "          var els = wrap.querySelectorAll('.serie-' + i);\n"
+    "          var show = active.has(i);\n"
+    "          els.forEach(function(el) {\n"
+    "            el.style.opacity = show ? '1' : '0.08';\n"
+    "            el.style.transition = 'opacity 0.25s';\n"
+    "          });\n"
+    "        }\n"
+    "      });\n"
+    "      var btns = document.querySelectorAll('.sp-btn');\n"
+    "      btns.forEach(function(b) {\n"
+    "        var idx = parseInt(b.getAttribute('data-idx'));\n"
+    "        b.classList.toggle('dim', !active.has(idx));\n"
+    "      });\n"
+    "      var label = active.size === 3 ? 'All species'\n"
+    "        : Array.from(active).map(function(i) { return SPECIES[i]; }).join(', ');\n"
+    "      document.getElementById('sel-label').textContent = label;\n"
+    "    }\n\n"
+    "    function resetAll() {\n"
+    "      active = new Set([0, 1, 2]);\n"
+    "      applySelection();\n"
+    "    }\n\n"
+    "    document.querySelectorAll('.sp-btn').forEach(function(btn) {\n"
+    "      btn.addEventListener('click', function() {\n"
+    "        var idx = parseInt(this.getAttribute('data-idx'));\n"
+    "        if (active.has(idx)) {\n"
+    "          if (active.size > 1) active.delete(idx);\n"
+    "        } else {\n"
+    "          active.add(idx);\n"
+    "        }\n"
+    "        applySelection();\n"
+    "      });\n"
+    "    });\n\n"
+    "    applySelection();\n"
+    "  </script>\n"
+    "</body>\n</html>"
+)
+
+html_content = html_open + scatter_svg_str + html_mid1 + bar_svg_str + html_mid2 + box_svg_str + html_close
+
+with open(f"plot-{THEME}.html", "w", encoding="utf-8") as f:
+    f.write(html_content)
