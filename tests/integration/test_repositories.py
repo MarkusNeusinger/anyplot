@@ -74,6 +74,18 @@ class TestSpecRepository:
         assert len(ids) == 2
         assert ids == ["bar-grouped", "scatter-basic"]
 
+    async def test_count_with_impls(self, test_db_with_data):
+        """Aggregate count of specs that have at least one impl — used by /stats."""
+        repo = SpecRepository(test_db_with_data)
+        count = await repo.count_with_impls()
+        # Both fixture specs (scatter-basic, bar-grouped) have impls.
+        assert count == 2
+
+    async def test_count_with_impls_empty(self, test_session):
+        """Empty database returns 0, not None — caller adds to other counts."""
+        repo = SpecRepository(test_session)
+        assert await repo.count_with_impls() == 0
+
     async def test_search_by_tags(self, test_db_with_data):
         """Should search specs by tags."""
         repo = SpecRepository(test_db_with_data)
@@ -187,6 +199,19 @@ class TestLibraryRepository:
         assert libraries[0].id == "matplotlib"
         assert libraries[1].id == "seaborn"
 
+    async def test_count_with_languages(self, test_db_with_data):
+        """Return (library_count, distinct_language_count) — used by /stats."""
+        repo = LibraryRepository(test_db_with_data)
+        library_count, language_count = await repo.count_with_languages()
+        # Both fixture libraries default to language_id="python", so 2 libs / 1 lang.
+        assert library_count == 2
+        assert language_count == 1
+
+    async def test_count_with_languages_empty(self, test_session):
+        """Empty database returns (0, 0)."""
+        repo = LibraryRepository(test_session)
+        assert await repo.count_with_languages() == (0, 0)
+
     async def test_get_by_id(self, test_db_with_data):
         """Should fetch library by ID."""
         repo = LibraryRepository(test_db_with_data)
@@ -272,6 +297,17 @@ class TestImplRepository:
 
         assert len(impls) == 2
         assert impls[0].library.name in ["Matplotlib", "Seaborn"]
+
+    async def test_count_all(self, test_db_with_data):
+        """Aggregate count of all impls — used by /stats."""
+        repo = ImplRepository(test_db_with_data)
+        # Fixture creates 3 impls (scatter+matplotlib, scatter+seaborn, bar+matplotlib).
+        assert await repo.count_all() == 3
+
+    async def test_count_all_empty(self, test_session):
+        """Empty database returns 0."""
+        repo = ImplRepository(test_session)
+        assert await repo.count_all() == 0
 
     async def test_get_by_library(self, test_db_with_data):
         """Should fetch implementations for a library."""
