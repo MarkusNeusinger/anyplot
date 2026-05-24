@@ -361,3 +361,53 @@ class TestGZipMiddleware:
         # Large responses should be compressed
         content_encoding = response.headers.get("content-encoding")
         assert content_encoding == "gzip", "Large response should be gzip compressed"
+
+
+class TestPrewarmCache:
+    """Tests for the lifespan startup cache-prewarm hook (api.main._prewarm_cache).
+
+    Each Cloud Run instance has its own in-memory cache; without prewarm,
+    the first request to a fresh instance pays the full DB roundtrip and
+    the user-visible NumbersStrip + /specs page sit on placeholders. The
+    hook populates the four metadata caches before the app starts serving.
+    """
+
+    async def test_prewarm_populates_all_four_caches(self) -> None:
+        from api.main import _prewarm_cache
+
+        with (
+            patch("api.main._refresh_stats", new=AsyncMock(return_value="STATS")) as m_stats,
+            patch("api.main._refresh_libraries", new=AsyncMock(return_value="LIBS")) as m_libs,
+            patch("api.main._refresh_languages", new=AsyncMock(return_value="LANGS")) as m_langs,
+            patch("api.main._refresh_specs_list", new=AsyncMock(return_value="SPECS")) as m_specs,
+            patch("api.main.set_cache") as m_set,
+        ):
+            await _prewarm_cache()
+
+        m_stats.assert_awaited_once()
+        m_libs.assert_awaited_once()
+        m_langs.assert_awaited_once()
+        m_specs.assert_awaited_once()
+
+        cached_keys = {call.args[0] for call in m_set.call_args_list}
+        assert cached_keys == {"stats", "libraries", "languages", "specs_list"}
+
+    async def test_prewarm_swallows_one_failure_and_continues(self) -> None:
+        """A failing factory must not abort the remaining prewarms — those
+        endpoints just fall back to lazy load on the first user request."""
+        from api.main import _prewarm_cache
+
+        with (
+            patch("api.main._refresh_stats", new=AsyncMock(side_effect=RuntimeError("db down"))),
+            patch("api.main._refresh_libraries", new=AsyncMock(return_value="LIBS")) as m_libs,
+            patch("api.main._refresh_languages", new=AsyncMock(return_value="LANGS")) as m_langs,
+            patch("api.main._refresh_specs_list", new=AsyncMock(return_value="SPECS")) as m_specs,
+            patch("api.main.set_cache") as m_set,
+        ):
+            await _prewarm_cache()  # must not raise
+
+        m_libs.assert_awaited_once()
+        m_langs.assert_awaited_once()
+        m_specs.assert_awaited_once()
+        cached_keys = {call.args[0] for call in m_set.call_args_list}
+        assert cached_keys == {"libraries", "languages", "specs_list"}

@@ -16,6 +16,7 @@ from fastapi import FastAPI, HTTPException, Request, Response  # noqa: E402
 from fastapi.middleware.cors import CORSMiddleware  # noqa: E402
 from starlette.middleware.gzip import GZipMiddleware  # noqa: E402
 
+from api.cache import cache_key, set_cache  # noqa: E402
 from api.exceptions import (  # noqa: E402
     AnyplotException,
     anyplot_exception_handler,
@@ -38,6 +39,10 @@ from api.routers import (  # noqa: E402
     specs_router,
     stats_router,
 )
+from api.routers.languages import _refresh_languages  # noqa: E402
+from api.routers.libraries import _refresh_libraries  # noqa: E402
+from api.routers.specs import _refresh_specs_list  # noqa: E402
+from api.routers.stats import _refresh_stats  # noqa: E402
 from core.database import close_db, init_db, is_db_configured  # noqa: E402
 
 
@@ -50,6 +55,36 @@ logger = logging.getLogger(__name__)
 mcp_http_app = mcp_server.http_app(path="/")
 
 
+async def _prewarm_cache() -> None:
+    """Populate the in-memory cache for the four metadata endpoints that the
+    frontend's AppDataProvider fires on every page load (/stats, /libraries,
+    /languages, /specs).
+
+    The cache lives per Cloud Run instance, so every new instance that comes
+    up from autoscale or a cold start would otherwise force its first user
+    to wait on the full DB roundtrip — which is exactly the user-reported
+    "manchmal echt lange" on the NumbersStrip and the /specs page. Prewarming
+    runs once per process startup so the first request hits a warm cache.
+
+    Failures here are non-fatal: log and continue. A failed prewarm just
+    means the first user request takes the cold-cache path it would have
+    taken without this hook.
+    """
+    refreshers = (
+        ("stats", _refresh_stats),
+        ("libraries", _refresh_libraries),
+        ("languages", _refresh_languages),
+        ("specs_list", _refresh_specs_list),
+    )
+    for key, factory in refreshers:
+        try:
+            result = await factory()
+            set_cache(cache_key(key), result)
+            logger.info("Cache prewarm: %s OK", key)
+        except Exception:
+            logger.warning("Cache prewarm failed for %s — falling back to lazy load", key, exc_info=True)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage application lifecycle."""
@@ -60,6 +95,7 @@ async def lifespan(app: FastAPI):
         try:
             await init_db()
             logger.info("Database connection initialized")
+            await _prewarm_cache()
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
 
