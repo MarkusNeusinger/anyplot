@@ -1,4 +1,4 @@
-""" anyplot.ai
+"""anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
 Library: pygal 3.1.0 | Python 3.13.13
 Quality: 80/100 | Updated: 2026-05-24
@@ -45,11 +45,11 @@ sub_style = Style(
     foreground_strong=INK,
     foreground_subtle=INK_MUTED,
     colors=ANYPLOT_PALETTE,
-    title_font_size=44,
-    label_font_size=32,
-    major_label_font_size=26,
-    legend_font_size=26,
-    value_font_size=20,
+    title_font_size=54,
+    label_font_size=44,
+    major_label_font_size=36,
+    legend_font_size=36,
+    value_font_size=28,
     stroke_width=2.5,
 )
 
@@ -87,6 +87,8 @@ bar = pygal.Bar(
     y_title="Petal Length (cm)",
     style=sub_style,
     show_legend=True,
+    show_x_guides=False,
+    show_y_guides=False,
 )
 bar.x_labels = ["Mean Petal Length"]
 for sp in iris.target_names:
@@ -104,9 +106,13 @@ box = pygal.Box(
     style=sub_style,
     show_legend=True,
     box_mode="tukey",
+    show_x_guides=False,
+    show_y_guides=False,
 )
 for sp in iris.target_names:
     box.add(sp, df[df["species"] == sp]["Sepal Length"].tolist())
+# Force y-axis ticks from 4–8 so data fills chart (sepal length 4.3–7.9; avoids wasted 0-4 blank)
+box.y_labels = [4, 5, 6, 7, 8]
 box_svg = box.render()
 box.render_to_png(f"box-{THEME}.png")
 
@@ -164,7 +170,7 @@ html_open = (
     "  <h1>Multiple Linked Views with Selection Sync</h1>\n"
     '  <p class="subtitle">linked-views-selection · python · pygal · anyplot.ai</p>\n'
     '  <div class="controls">\n'
-    "    <label>Filter by species:</label>\n"
+    "    <label>Filter species (click buttons or chart elements):</label>\n"
     '    <button class="sp-btn" data-idx="0">setosa</button>\n'
     '    <button class="sp-btn" data-idx="1">versicolor</button>\n'
     '    <button class="sp-btn" data-idx="2">virginica</button>\n'
@@ -221,7 +227,31 @@ html_close = (
     "        applySelection();\n"
     "      });\n"
     "    });\n\n"
-    "    applySelection();\n"
+    "    applySelection();\n\n"
+    "    function addSeriesClickHandlers() {\n"
+    "      ['scatter', 'bar', 'box'].forEach(function(chartId) {\n"
+    "        var wrap = document.getElementById(chartId);\n"
+    "        if (!wrap) return;\n"
+    "        for (var i = 0; i < 3; i++) {\n"
+    "          (function(serIdx) {\n"
+    "            var seriesEls = wrap.querySelectorAll('.serie-' + serIdx);\n"
+    "            seriesEls.forEach(function(el) {\n"
+    "              el.style.cursor = 'pointer';\n"
+    "              el.addEventListener('click', function(e) {\n"
+    "                e.stopPropagation();\n"
+    "                if (active.has(serIdx)) {\n"
+    "                  if (active.size > 1) active.delete(serIdx);\n"
+    "                } else {\n"
+    "                  active.add(serIdx);\n"
+    "                }\n"
+    "                applySelection();\n"
+    "              });\n"
+    "            });\n"
+    "          })(i);\n"
+    "        }\n"
+    "      });\n"
+    "    }\n\n"
+    "    addSeriesClickHandlers();\n"
     "  </script>\n"
     "</body>\n</html>"
 )
