@@ -1,7 +1,7 @@
-"""anyplot.ai
+""" anyplot.ai
 linked-views-selection: Multiple Linked Views with Selection Sync
 Library: seaborn 0.13.2 | Python 3.13.13
-Quality: 79/100 | Created: 2026-05-24
+Quality: 82/100 | Created: 2026-05-24
 """
 
 import os
