@@ -1,0 +1,252 @@
+library: seaborn
+language: python
+specification_id: linked-views-selection
+created: '2026-05-24T07:23:00Z'
+updated: '2026-05-24T07:41:10Z'
+generated_by: claude-sonnet
+workflow_run: 26354883422
+issue: 3344
+language_version: 3.13.13
+library_version: 0.13.2
+preview_url_light: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/seaborn/plot-light.png
+preview_url_dark: https://storage.googleapis.com/anyplot-images/plots/linked-views-selection/python/seaborn/plot-dark.png
+preview_html_light: null
+preview_html_dark: null
+quality_score: 82
+review:
+  strengths:
+  - Full theme adaptation in both light and dark renders with all chrome tokens correctly
+    applied
+  - Consistent anyplot palette across all three coordinated panels creates immediate
+    visual coherence
+  - Correct canvas dimensions (3200x1800) with no bbox_inches drift; subplots_adjust
+    used properly
+  - frameon=False shared legend avoids box clutter across three panels
+  - Bar chart with standard deviation error bars adds genuine statistical depth
+  weaknesses:
+  - Interactive selection/brushing (the primary spec feature) is entirely absent —
+    seaborn is static so this is a fundamental constraint, leaving the implementation
+    as a multi-panel display rather than a true linked-views system
+  - histplot multiple="layer" creates overlapping bars that are harder to read than
+    stack for three-species distributions — switch to multiple="stack" for unambiguous
+    species contributions
+  - FacetGrid or PairGrid would be more idiomatic seaborn pattern for coordinated
+    multi-panel plots
+  - Panel subtitles at 9pt are slightly small for a 3200x1800 canvas; 10-11pt would
+    improve glanceability
+  image_description: |-
+    Light render (plot-light.png):
+      Background: Warm off-white (#FAF8F1) — correct anyplot light surface
+      Chrome: Title "linked-views-selection · python · seaborn · anyplot.ai" in dark ink (#1A1A17); axis labels in INK (#1A1A17) at 10pt; tick labels in INK_SOFT (#4A4A44) at 8pt; panel subtitles ("Scatter", "Distribution", "Summary") in INK_SOFT at 9pt — all readable
+      Data: Three panels — scatter (Setosa=#009E73, Versicolor=#9418DB, Virginica=#B71D27), layered histogram, bar chart with error bars — correct anyplot palette order
+      Legibility verdict: PASS
+
+    Dark render (plot-dark.png):
+      Background: Warm near-black (#1A1A17) — correct anyplot dark surface
+      Chrome: Title in light ink (#F0EFE8); axis labels in INK (#F0EFE8); tick labels in INK_SOFT (#B8B7B0); panel subtitles in INK_SOFT — all readable against dark background; no dark-on-dark failures
+      Data: Colors identical to light render (Setosa=#009E73, Versicolor=#9418DB, Virginica=#B71D27) — only chrome flips
+      Legibility verdict: PASS
+  criteria_checklist:
+    visual_quality:
+      score: 28
+      max: 30
+      items:
+      - id: VQ-01
+        name: Text Legibility
+        score: 7
+        max: 8
+        passed: true
+        comment: All text readable in both themes; panel subtitles at 9pt slightly
+          small for 3200x1800
+      - id: VQ-02
+        name: No Overlap
+        score: 5
+        max: 6
+        passed: true
+        comment: No text-to-text or text-to-data collisions; histogram bar overlap
+          is by design (multiple=layer)
+      - id: VQ-03
+        name: Element Visibility
+        score: 6
+        max: 6
+        passed: true
+        comment: s=100 markers appropriate for 150 Iris points; alpha=0.80/0.60 correct
+          for density
+      - id: VQ-04
+        name: Color Accessibility
+        score: 2
+        max: 2
+        passed: true
+        comment: anyplot palette is colorblind-safe; three-species encoding is unambiguous
+      - id: VQ-05
+        name: Layout & Canvas
+        score: 4
+        max: 4
+        passed: true
+        comment: Canvas gate passed; 3200x1800 px; no bbox_inches=tight; subplots_adjust
+          well-balanced; no clipping
+      - id: VQ-06
+        name: Axis Labels & Title
+        score: 2
+        max: 2
+        passed: true
+        comment: All panels have descriptive labels with units (cm); mandated title
+          format correct
+      - id: VQ-07
+        name: Palette Compliance
+        score: 2
+        max: 2
+        passed: true
+        comment: 'First series #009E73; canonical palette order; correct bg colors;
+          full chrome adaptation'
+    design_excellence:
+      score: 13
+      max: 20
+      items:
+      - id: DE-01
+        name: Aesthetic Sophistication
+        score: 5
+        max: 8
+        passed: true
+        comment: Clean professional multi-panel layout with custom palette; slightly
+          above default
+      - id: DE-02
+        name: Visual Refinement
+        score: 4
+        max: 6
+        passed: true
+        comment: Top/right spines removed; y-only grid at alpha=0.10; frameon=False
+          legend; good whitespace
+      - id: DE-03
+        name: Data Storytelling
+        score: 4
+        max: 6
+        passed: true
+        comment: Three complementary panels tell coherent story; consistent color
+          makes cross-panel tracking easy
+    spec_compliance:
+      score: 11
+      max: 15
+      items:
+      - id: SC-01
+        name: Plot Type
+        score: 3
+        max: 5
+        passed: true
+        comment: Correctly implements 3 coordinated panel views; interactive selection
+          absent (seaborn static constraint)
+      - id: SC-02
+        name: Required Features
+        score: 2
+        max: 4
+        passed: true
+        comment: Consistent color encoding and summary stats present; selection, de-emphasis,
+          reset all absent (interactivity required)
+      - id: SC-03
+        name: Data Mapping
+        score: 3
+        max: 3
+        passed: true
+        comment: All 150 Iris points mapped correctly; species encoding consistent
+          across all three panels
+      - id: SC-04
+        name: Title & Legend
+        score: 3
+        max: 3
+        passed: true
+        comment: Title matches mandated format exactly; shared legend shows capitalized
+          species names
+    data_quality:
+      score: 14
+      max: 15
+      items:
+      - id: DQ-01
+        name: Feature Coverage
+        score: 5
+        max: 6
+        passed: true
+        comment: Three panel types (scatter, histogram, bar+errorbar) cover complementary
+          aspects; one more type would be ideal
+      - id: DQ-02
+        name: Realistic Context
+        score: 5
+        max: 5
+        passed: true
+        comment: Iris dataset is a real-world botanical dataset; neutral and non-controversial
+      - id: DQ-03
+        name: Appropriate Scale
+        score: 4
+        max: 4
+        passed: true
+        comment: 150 data points at realistic measurement scale (1-8 cm); error bars
+          reflect true standard deviation
+    code_quality:
+      score: 10
+      max: 10
+      items:
+      - id: CQ-01
+        name: KISS Structure
+        score: 3
+        max: 3
+        passed: true
+        comment: Flat linear structure; no functions or classes; clear panel-by-panel
+          organization
+      - id: CQ-02
+        name: Reproducibility
+        score: 2
+        max: 2
+        passed: true
+        comment: Iris dataset is deterministic; no stochastic generation requiring
+          seed
+      - id: CQ-03
+        name: Clean Imports
+        score: 2
+        max: 2
+        passed: true
+        comment: All imports actively used
+      - id: CQ-04
+        name: Code Elegance
+        score: 2
+        max: 2
+        passed: true
+        comment: Clean, well-organized; no fake UI elements
+      - id: CQ-05
+        name: Output & API
+        score: 1
+        max: 1
+        passed: true
+        comment: Saves as plot-{THEME}.png; no bbox_inches=tight; current seaborn
+          0.13 API
+    library_mastery:
+      score: 6
+      max: 10
+      items:
+      - id: LM-01
+        name: Idiomatic Usage
+        score: 4
+        max: 5
+        passed: true
+        comment: Consistent axes-level API; hue+palette+legend=False pattern; sns.set_theme()
+          with rc params
+      - id: LM-02
+        name: Distinctive Features
+        score: 2
+        max: 5
+        passed: false
+        comment: Uses histplot multiple=layer, barplot errorbar=sd with capsize; misses
+          FacetGrid/PairGrid opportunity
+  verdict: APPROVED
+impl_tags:
+  dependencies: []
+  techniques:
+  - subplots
+  - custom-legend
+  - manual-ticks
+  patterns:
+  - dataset-loading
+  - explicit-figure
+  dataprep: []
+  styling:
+  - alpha-blending
+  - edge-highlighting
+  - grid-styling
