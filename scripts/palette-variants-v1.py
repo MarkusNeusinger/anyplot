@@ -140,6 +140,7 @@ PER_VARIANT_C_RANGE: dict[str, tuple[float, float]] = {
     "okabe-anchored": (22.0, 42.0),
     # v1 strategies
     "d-tight-chroma": (24.0, 32.0),  # D1 — narrowest paper-ink corridor; cleanest co-existence prediction
+    "d-tight-chroma-8": (24.0, 32.0),  # D1-8 — same tight corridor as D1, expanded to 8 slots so the 75° purple→red back-gap gets a matte rosé
     "d-expand-8":     (22.0, 36.0),  # D3 — same C as live D; an 8th slot is greedy-picked in the largest remaining hue gap
     "tetradic":       (24.0, 38.0),  # T  — slight C bump so the 4 forced anchors don't all land at the muted floor
     "warm-pole":      (22.0, 36.0),  # W  — same C as live D; the warm-bonus does the work
@@ -161,6 +162,7 @@ PER_VARIANT_HUE_SPREAD: dict[str, float] = {
     "okabe-anchored": 45.0,
     # v1 strategies
     "d-tight-chroma": 50.0,  # same as live D — only chroma differs
+    "d-tight-chroma-8": 50.0,  # same as D1; the 8th pick fills the back-gap naturally
     "d-expand-8":     50.0,  # same as live D; the 8th pick fills naturally where the wheel gap is biggest
     "tetradic":       50.0,
     "warm-pole":      50.0,  # warm bonus is additive at scoring; spacing target unchanged
@@ -556,11 +558,13 @@ def _strategy_bands(
         # or in select_palette's extra_seeds / warm_bonus knobs.
         return [None for _ in range(n_hues)]
 
-    if strategy == "d-tight-chroma":
-        # D1 — pin position 1 to the pure-red band [15°, 35°] so the palette
-        # gets a true red inside the tight chroma corridor (C ∈ [24, 32]) —
-        # no hard #B71D27 seed needed. Band kept narrow (±10°) so max-min ΔE
-        # doesn't drift to the orange edge (which happened at ±20°).
+    if strategy in ("d-tight-chroma", "d-tight-chroma-8"):
+        # D1 / D1-8 — pin position 1 to the pure-red band [15°, 35°] so the
+        # palette gets a true red inside the tight chroma corridor (C ∈ [24, 32])
+        # — no hard #B71D27 seed needed. Band kept narrow (±10°) so max-min ΔE
+        # doesn't drift to the orange edge (which happened at ±20°). D1-8 just
+        # extends n_hues to 8; the 8th slot stays unconstrained because greedy
+        # max-min naturally lands in the 75° purple→red back-gap (≈ H340° rosé).
         bands: list[list[tuple[float, float]] | None] = [None, [(25.0, 10.0)]]
         bands.extend([None] * (n_hues - 2))
         return bands[:n_hues]
@@ -662,6 +666,46 @@ def reorder_first_4(
 
     final_order = chosen + [i for _, i in rest_scores]
     return [hexes[i] for i in final_order]
+
+
+
+def reorder_pure_cvd_greedy(
+    hexes: list[str], pinned: tuple[int, ...] = ()
+) -> list[str]:
+    """Pure CVD max-min greedy reorder — no hue-gap heuristic.
+
+    Position 0 (brand green) stays, and any ``pinned`` positions stay in their
+    original slots in the order they were passed. The remaining positions are
+    appended one at a time by picking the not-yet-placed hue whose minimum
+    worst-CVD ΔE to the already-placed set is the highest.
+
+    Guarantees the worst pairwise ΔE-under-CVD curve degrades as slowly as
+    possible as `n` grows from 2 upward — at the cost of giving up the
+    "first-4 spans the wheel" property that ``reorder_first_4`` enforces.
+    Used by D1-8, where the wheel-gap-first heuristic was picking a 60°-valid
+    but CVD-weak first-4 like {green, blue, tan, mauve} whenever the 8th hue
+    opened new gap-valid quadruples.
+    """
+    n = len(hexes)
+    rgb_all = np.array([hex_to_rgb1(hx) for hx in hexes])
+    M_worst, _ = worst_cvd_pairwise_delta_e(rgb_all)
+
+    pinned_set = set(pinned)
+    chosen: list[int] = [0, *pinned]
+    remaining = [i for i in range(1, n) if i not in pinned_set]
+
+    while remaining:
+        best_idx = remaining[0]
+        best_score = float(M_worst[best_idx, chosen].min())
+        for i in remaining[1:]:
+            score = float(M_worst[i, chosen].min())
+            if score > best_score:
+                best_score = score
+                best_idx = i
+        chosen.append(best_idx)
+        remaining.remove(best_idx)
+
+    return [hexes[i] for i in chosen]
 
 
 def measure_first_4(hexes: list[str]) -> float:
@@ -1139,6 +1183,12 @@ VARIANTS = [
         "D1", "tight-chroma", "d-tight-chroma",
         "d-tight-chroma",
         "live D's max-min ΔE selection but with the paper-ink chroma corridor narrowed to C ∈ [24, 32] — predicts cleaner co-existence in dense charts at the cost of some headroom. live D's semantic red #B71D27 is pinned at position 1 so loss/error/bad can map to the expected colour rather than a tight-corridor brown",
+    ),
+    Variant(
+        "D1-8", "tight-chroma-8", "d-tight-chroma-8",
+        "d-tight-chroma-8",
+        "D1's tight chroma corridor (C ∈ [24, 32]) expanded to 8 hues — D1's 7 picks leave a 75° purple→red back-gap, the 8th slot is greedy-picked there for a matte rosé that bridges purple and red while staying inside the corridor. direct 8↔8 counterpart to D3",
+        n_hues=8,
     ),
     Variant(
         "D3", "expand-8", "expand-8",
@@ -1989,9 +2039,19 @@ def main() -> int:
 
     # Pinning: v1 D-family + warm-pole are "no anchors past brand-green"; only
     # tetradic has explicit pos 1-3 anchors that should not be reshuffled.
+    # D1-8 pins pos 1 (= the hue-band red #AE3030 from _strategy_bands) AND
+    # opts out of reorder_first_4's wheel-gap-first heuristic (see
+    # USE_PURE_CVD_REORDER below) — the 60°-gap-first rule was picking a
+    # CVD-weak first-4 like {green, blue, tan, mauve} whenever the 8th hue
+    # opened new gap-valid quadruples.
     PINNED: dict[str, tuple[int, ...]] = {
         "tetradic": (1, 2, 3),
+        "d-tight-chroma-8": (1,),
     }
+    # Strategies that should skip reorder_first_4 (wheel-gap-first) and use
+    # reorder_pure_cvd_greedy instead — strictly CVD max-min ordering, slowest
+    # possible degradation of the worst-pair curve as n grows.
+    USE_PURE_CVD_REORDER = {"d-tight-chroma-8"}
 
     # Per-strategy select_palette kwargs unique to v1.
     FORBIDDEN_BANDS: dict[str, tuple[tuple[float, float], ...]] = {
@@ -2032,7 +2092,10 @@ def main() -> int:
             forbidden_hue_bands=FORBIDDEN_BANDS.get(variant.strategy, ()),
             warm_bonus=WARM_BONUS.get(variant.strategy),
         )
-        hues = reorder_first_4(hues, pinned=PINNED.get(variant.strategy, ()))
+        if variant.strategy in USE_PURE_CVD_REORDER:
+            hues = reorder_pure_cvd_greedy(hues, pinned=PINNED.get(variant.strategy, ()))
+        else:
+            hues = reorder_first_4(hues, pinned=PINNED.get(variant.strategy, ()))
 
         first_4 = measure_first_4(hues)
         normal_min = measure_all_normal_min(hues)
