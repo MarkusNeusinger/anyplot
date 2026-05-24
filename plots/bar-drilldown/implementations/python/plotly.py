@@ -1,272 +1,246 @@
-""" pyplots.ai
+""" anyplot.ai
 bar-drilldown: Column Chart with Hierarchical Drilling
-Library: plotly 6.5.2 | Python 3.13.11
-Quality: 91/100 | Created: 2026-01-16
+Library: plotly 6.7.0 | Python 3.13.13
+Quality: 93/100 | Updated: 2026-05-23
 """
 
-import plotly.graph_objects as go
+import importlib
+import os
+import sys
 
 
-# Hierarchical data: Company Revenue by Region -> Country -> City
-# Root level: Regions
-data = {
-    "all": {"name": "All Regions", "value": 0, "parent": None},
-    # Level 1: Regions
-    "north_america": {"name": "North America", "value": 450, "parent": "all"},
-    "europe": {"name": "Europe", "value": 380, "parent": "all"},
-    "asia_pacific": {"name": "Asia Pacific", "value": 320, "parent": "all"},
-    "latin_america": {"name": "Latin America", "value": 150, "parent": "all"},
-    # Level 2: Countries under North America
-    "usa": {"name": "USA", "value": 280, "parent": "north_america"},
-    "canada": {"name": "Canada", "value": 120, "parent": "north_america"},
-    "mexico": {"name": "Mexico", "value": 50, "parent": "north_america"},
-    # Level 2: Countries under Europe
-    "uk": {"name": "UK", "value": 140, "parent": "europe"},
-    "germany": {"name": "Germany", "value": 130, "parent": "europe"},
-    "france": {"name": "France", "value": 110, "parent": "europe"},
-    # Level 2: Countries under Asia Pacific
-    "japan": {"name": "Japan", "value": 150, "parent": "asia_pacific"},
-    "australia": {"name": "Australia", "value": 100, "parent": "asia_pacific"},
-    "singapore": {"name": "Singapore", "value": 70, "parent": "asia_pacific"},
-    # Level 2: Countries under Latin America
-    "brazil": {"name": "Brazil", "value": 90, "parent": "latin_america"},
-    "argentina": {"name": "Argentina", "value": 60, "parent": "latin_america"},
-    # Level 3: Cities under USA
-    "new_york": {"name": "New York", "value": 120, "parent": "usa"},
-    "los_angeles": {"name": "Los Angeles", "value": 90, "parent": "usa"},
-    "chicago": {"name": "Chicago", "value": 70, "parent": "usa"},
-    # Level 3: Cities under UK
-    "london": {"name": "London", "value": 80, "parent": "uk"},
-    "manchester": {"name": "Manchester", "value": 35, "parent": "uk"},
-    "birmingham": {"name": "Birmingham", "value": 25, "parent": "uk"},
-    # Level 3: Cities under Japan
-    "tokyo": {"name": "Tokyo", "value": 85, "parent": "japan"},
-    "osaka": {"name": "Osaka", "value": 40, "parent": "japan"},
-    "nagoya": {"name": "Nagoya", "value": 25, "parent": "japan"},
+sys.path = [p for p in sys.path if p not in ("", ".", os.path.dirname(__file__))]
+go = importlib.import_module("plotly.graph_objects")
+
+# Theme tokens
+THEME = os.getenv("ANYPLOT_THEME", "light")
+PAGE_BG = "#FAF8F1" if THEME == "light" else "#1A1A17"
+ELEVATED_BG = "#FFFDF6" if THEME == "light" else "#242420"
+INK = "#1A1A17" if THEME == "light" else "#F0EFE8"
+INK_SOFT = "#4A4A44" if THEME == "light" else "#B8B7B0"
+GRID = "rgba(26,26,23,0.10)" if THEME == "light" else "rgba(240,239,232,0.10)"
+
+# anyplot palette — positions 1–4 for 4 quarters
+PALETTE = ["#009E73", "#9418DB", "#B71D27", "#16B8F3"]
+
+# Data: 2024 Retail Sales — quarter → month two-level hierarchy
+QUARTERS = [
+    {"name": "Q1 (Jan–Mar)", "value": 1240, "label": "$1.24M", "key": "q1"},
+    {"name": "Q2 (Apr–Jun)", "value": 1680, "label": "$1.68M", "key": "q2"},
+    {"name": "Q3 (Jul–Sep)", "value": 2140, "label": "$2.14M", "key": "q3"},
+    {"name": "Q4 (Oct–Dec)", "value": 2380, "label": "$2.38M", "key": "q4"},
+]
+MONTHLY = {
+    "q1": {
+        "names": ["January", "February", "March"],
+        "values": [390, 420, 430],
+        "labels": ["$390K", "$420K", "$430K"],
+        "path": "2024 > Q1",
+        "prefix": "Q1 Jan–Mar Detail",
+    },
+    "q2": {
+        "names": ["April", "May", "June"],
+        "values": [520, 570, 590],
+        "labels": ["$520K", "$570K", "$590K"],
+        "path": "2024 > Q2",
+        "prefix": "Q2 Apr–Jun Detail",
+    },
+    "q3": {
+        "names": ["July", "August", "September"],
+        "values": [680, 750, 710],
+        "labels": ["$680K", "$750K", "$710K"],
+        "path": "2024 > Q3",
+        "prefix": "Q3 Jul–Sep Detail",
+    },
+    "q4": {
+        "names": ["October", "November", "December"],
+        "values": [740, 940, 700],
+        "labels": ["$740K", "$940K", "$700K"],
+        "path": "2024 > Q4",
+        "prefix": "Q4 Oct–Dec Detail",
+    },
 }
 
+_edge = {"color": PAGE_BG, "width": 2}
+_chrome = {
+    "textposition": "outside",
+    "textfont": {"size": 12, "color": INK},
+    "hovertemplate": "<b>%{x}</b><br>Revenue: %{text}<extra></extra>",
+    "cliponaxis": False,
+}
 
-def get_children(parent_id):
-    """Get all children of a given parent."""
-    return {k: v for k, v in data.items() if v["parent"] == parent_id}
+# Annual trace — Q4 at full opacity (holiday peak focal point), Q1–Q3 muted
+annual_trace = go.Bar(
+    **_chrome,
+    x=[q["name"] for q in QUARTERS],
+    y=[q["value"] for q in QUARTERS],
+    text=[q["label"] for q in QUARTERS],
+    marker={"color": PALETTE, "line": _edge, "opacity": [0.7, 0.7, 0.7, 1.0]},
+)
 
-
-def get_breadcrumb_path(node_id):
-    """Build breadcrumb path from root to current node."""
-    path = []
-    current = node_id
-    while current is not None and current in data:
-        path.append({"id": current, "name": data[current]["name"]})
-        current = data[current]["parent"]
-    return list(reversed(path))
-
-
-# Get root level children (regions)
-children = get_children("all")
-sorted_items = sorted(children.items(), key=lambda x: x[1]["value"], reverse=True)
-ids = [item[0] for item in sorted_items]
-names = [item[1]["name"] for item in sorted_items]
-values = [item[1]["value"] for item in sorted_items]
-
-# Check which items have children (are drillable)
-drillable = [len(get_children(id_)) > 0 for id_ in ids]
-
-# Color scheme - Python blue palette (darker for drillable)
-colors = ["#306998" if d else "#4B8BBE" for d in drillable]
-
-# Create custom data for click handling
-customdata = [[id_, "drillable" if d else "leaf"] for id_, d in zip(ids, drillable, strict=True)]
-
-# Build breadcrumb text
-breadcrumb_path = get_breadcrumb_path("all")
-breadcrumb_text = " > ".join([p["name"] for p in breadcrumb_path])
-
-# Create bar chart
-fig = go.Figure()
-
-fig.add_trace(
+# Monthly traces — bars inherit parent quarter's palette color (cross-level color identity)
+monthly_traces = [
     go.Bar(
-        x=names,
-        y=values,
-        marker={"color": colors, "line": {"color": "#1E4A6D", "width": 2}},
-        text=[f"${v}M" for v in values],
-        textposition="outside",
-        textfont={"size": 18, "color": "#333333"},
-        customdata=customdata,
-        hovertemplate="<b>%{x}</b><br>Revenue: $%{y}M<br><i>%{customdata[1]}</i><extra></extra>",
+        **_chrome,
+        x=MONTHLY[q["key"]]["names"],
+        y=MONTHLY[q["key"]]["values"],
+        text=MONTHLY[q["key"]]["labels"],
+        marker={"color": PALETTE[i], "line": _edge},
     )
-)
+    for i, q in enumerate(QUARTERS)
+]
 
-# Update layout
+# Annotations
+_footer = {
+    "text": "Click a quarter bar to drill into monthly detail  ·  use the dropdown to navigate back",
+    "xref": "paper",
+    "yref": "paper",
+    "x": 0.5,
+    "y": -0.18,
+    "showarrow": False,
+    "font": {"size": 10, "color": INK_SOFT},
+    "xanchor": "center",
+}
+Q_RANGE = [0, max(q["value"] for q in QUARTERS) * 1.38]
+_peak = {
+    "text": "★ Holiday Peak",
+    "x": "Q4 (Oct–Dec)",
+    "xref": "x",
+    "y": max(q["value"] for q in QUARTERS) * 1.25,
+    "yref": "y",
+    "showarrow": False,
+    "font": {"size": 10, "color": PALETTE[3]},
+    "xanchor": "center",
+}
+
+# Frames — annual overview + one per quarter
+ANNUAL_TITLE = "2024 Retail Sales · bar-drilldown · python · plotly · anyplot.ai"
+
+annual_frame = go.Frame(
+    name="annual",
+    data=[annual_trace],
+    layout=go.Layout(
+        title_text=ANNUAL_TITLE,
+        xaxis={"title": {"text": "Quarter", "font": {"size": 12, "color": INK}}},
+        yaxis={"title": {"text": "Revenue ($K)", "font": {"size": 12, "color": INK}}, "range": Q_RANGE},
+        annotations=[_footer, _peak],
+    ),
+)
+quarterly_frames = [
+    go.Frame(
+        name=q["key"],
+        data=[monthly_traces[i]],
+        layout=go.Layout(
+            title_text=(f"{MONTHLY[q['key']]['prefix']} · bar-drilldown · python · plotly · anyplot.ai"),
+            xaxis={
+                "title": {"text": f"Month  ·  Path: {MONTHLY[q['key']]['path']}", "font": {"size": 12, "color": INK}}
+            },
+            yaxis={
+                "title": {"text": "Revenue ($K)", "font": {"size": 12, "color": INK}},
+                "range": [0, max(MONTHLY[q["key"]]["values"]) * 1.3],
+            },
+            annotations=[_footer],
+        ),
+    )
+    for i, q in enumerate(QUARTERS)
+]
+
+# Dropdown navigation buttons
+dropdown_buttons = [
+    {
+        "label": "▶  2024 Annual — All Quarters",
+        "method": "animate",
+        "args": [
+            ["annual"],
+            {"mode": "immediate", "frame": {"duration": 400, "redraw": True}, "transition": {"duration": 250}},
+        ],
+    }
+] + [
+    {
+        "label": f"▸  {q['name']} — Monthly Detail",
+        "method": "animate",
+        "args": [
+            [q["key"]],
+            {"mode": "immediate", "frame": {"duration": 400, "redraw": True}, "transition": {"duration": 250}},
+        ],
+    }
+    for q in QUARTERS
+]
+
+# Figure
+fig = go.Figure(annual_trace)
+fig.frames = [annual_frame] + quarterly_frames
+
 fig.update_layout(
-    title={
-        "text": "bar-drilldown · plotly · pyplots.ai<br>"
-        "<sup style='font-size:18px; color:#666'>Revenue by Regions | Path: All Regions</sup>",
-        "font": {"size": 28, "color": "#333333"},
-        "x": 0.5,
-        "xanchor": "center",
+    autosize=False,
+    title={"text": ANNUAL_TITLE, "font": {"size": 16, "color": INK}, "x": 0.5, "xanchor": "center"},
+    xaxis={
+        "title": {"text": "Quarter", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "showgrid": False,
     },
-    xaxis={"title": {"text": "Regions", "font": {"size": 22}}, "tickfont": {"size": 18}},
     yaxis={
-        "title": {"text": "Revenue ($ Millions)", "font": {"size": 22}},
-        "tickfont": {"size": 18},
-        "gridcolor": "rgba(0,0,0,0.1)",
-        "gridwidth": 1,
+        "title": {"text": "Revenue ($K)", "font": {"size": 12, "color": INK}},
+        "tickfont": {"size": 10, "color": INK_SOFT},
+        "gridcolor": GRID,
+        "linecolor": INK_SOFT,
+        "zerolinecolor": INK_SOFT,
+        "tickformat": ",d",
+        "range": Q_RANGE,
+        "showgrid": True,
     },
-    template="plotly_white",
-    plot_bgcolor="white",
-    paper_bgcolor="white",
+    paper_bgcolor=PAGE_BG,
+    plot_bgcolor=PAGE_BG,
+    font={"color": INK},
     showlegend=False,
-    margin={"t": 120, "b": 100, "l": 100, "r": 50},
-    annotations=[
-        {
-            "text": "🖱 Click a bar to drill down | Click breadcrumb to go back",
-            "xref": "paper",
-            "yref": "paper",
-            "x": 0.5,
-            "y": -0.15,
-            "showarrow": False,
-            "font": {"size": 16, "color": "#666666"},
-            "xanchor": "center",
-        }
-    ],
-)
-
-# Create frames for drill levels to demonstrate the drilldown concept
-frames = []
-button_labels = []
-
-# Frame 1: Root level (Regions) - current view
-frames.append(
-    go.Frame(
-        data=[
-            go.Bar(
-                x=names,
-                y=values,
-                marker={"color": "#306998", "line": {"color": "#1E4A6D", "width": 2}},
-                text=[f"${v}M" for v in values],
-                textposition="outside",
-                textfont={"size": 18, "color": "#333333"},
-            )
-        ],
-        name="all",
-        layout=go.Layout(
-            title={
-                "text": "bar-drilldown · plotly · pyplots.ai<br>"
-                "<sup style='font-size:18px; color:#666'>Revenue by Regions | Path: All Regions</sup>"
-            },
-            xaxis={"title": {"text": "Regions", "font": {"size": 22}}},
-        ),
-    )
-)
-button_labels.append("All Regions")
-
-# Frame 2: North America (Countries)
-children_na = get_children("north_america")
-sorted_na = sorted(children_na.items(), key=lambda x: x[1]["value"], reverse=True)
-names_na = [item[1]["name"] for item in sorted_na]
-values_na = [item[1]["value"] for item in sorted_na]
-
-frames.append(
-    go.Frame(
-        data=[
-            go.Bar(
-                x=names_na,
-                y=values_na,
-                marker={"color": "#306998", "line": {"color": "#1E4A6D", "width": 2}},
-                text=[f"${v}M" for v in values_na],
-                textposition="outside",
-                textfont={"size": 18, "color": "#333333"},
-            )
-        ],
-        name="north_america",
-        layout=go.Layout(
-            title={
-                "text": "bar-drilldown · plotly · pyplots.ai<br>"
-                "<sup style='font-size:18px; color:#666'>Revenue by Countries | "
-                "Path: All Regions > North America</sup>"
-            },
-            xaxis={"title": {"text": "Countries", "font": {"size": 22}}},
-        ),
-    )
-)
-button_labels.append("North America")
-
-# Frame 3: USA (Cities)
-children_usa = get_children("usa")
-sorted_usa = sorted(children_usa.items(), key=lambda x: x[1]["value"], reverse=True)
-names_usa = [item[1]["name"] for item in sorted_usa]
-values_usa = [item[1]["value"] for item in sorted_usa]
-
-frames.append(
-    go.Frame(
-        data=[
-            go.Bar(
-                x=names_usa,
-                y=values_usa,
-                marker={"color": "#4B8BBE", "line": {"color": "#1E4A6D", "width": 2}},
-                text=[f"${v}M" for v in values_usa],
-                textposition="outside",
-                textfont={"size": 18, "color": "#333333"},
-            )
-        ],
-        name="usa",
-        layout=go.Layout(
-            title={
-                "text": "bar-drilldown · plotly · pyplots.ai<br>"
-                "<sup style='font-size:18px; color:#666'>Revenue by Cities | "
-                "Path: All Regions > North America > USA</sup>"
-            },
-            xaxis={"title": {"text": "Cities", "font": {"size": 22}}},
-        ),
-    )
-)
-button_labels.append("USA")
-
-fig.frames = frames
-
-# Add dropdown menu for level navigation
-fig.update_layout(
+    margin={"t": 80, "b": 80, "l": 80, "r": 40},
+    annotations=[_footer, _peak],
     updatemenus=[
         {
             "type": "dropdown",
             "direction": "down",
-            "x": 0.02,
-            "y": 0.98,
+            "x": 0.0,
+            "y": 1.14,
             "xanchor": "left",
             "yanchor": "top",
             "showactive": True,
             "active": 0,
-            "buttons": [
-                {
-                    "label": label,
-                    "method": "animate",
-                    "args": [
-                        [frame.name],
-                        {
-                            "mode": "immediate",
-                            "frame": {"duration": 500, "redraw": True},
-                            "transition": {"duration": 300},
-                        },
-                    ],
-                }
-                for label, frame in zip(button_labels, frames, strict=True)
-            ],
-            "bgcolor": "white",
-            "bordercolor": "#306998",
-            "font": {"size": 14},
-            "pad": {"r": 10, "t": 10},
+            "bgcolor": ELEVATED_BG,
+            "bordercolor": INK_SOFT,
+            "font": {"size": 11, "color": INK},
+            "pad": {"r": 10, "t": 5},
+            "buttons": dropdown_buttons,
         }
-    ]
+    ],
 )
 
-# Save PNG (static image of root level)
-fig.write_image("plot.png", width=1600, height=900, scale=3)
+# Save PNG — 3200×1800 landscape
+fig.write_image(f"plot-{THEME}.png", width=800, height=450, scale=4)
 
-# Save interactive HTML
+# Click-on-bar JavaScript: clicking a quarter bar drills into it; clicking a month bar returns to annual
+_click_js = (
+    "var el = document.querySelectorAll('.js-plotly-plot')[0];"
+    "var drillMap = {"
+    "'Q1 (Jan–Mar)': 'q1',"
+    "'Q2 (Apr–Jun)': 'q2',"
+    "'Q3 (Jul–Sep)': 'q3',"
+    "'Q4 (Oct–Dec)': 'q4'"
+    "};"
+    "el.on('plotly_click', function(data) {"
+    "  var label = data.points[0].x;"
+    "  var target = drillMap[label] !== undefined ? drillMap[label] : 'annual';"
+    "  Plotly.animate(el, [target], {"
+    "    mode: 'immediate',"
+    "    frame: {duration: 400, redraw: true},"
+    "    transition: {duration: 250}"
+    "  });"
+    "});"
+)
 fig.write_html(
-    "plot.html",
-    include_plotlyjs=True,
-    full_html=True,
-    config={"displayModeBar": True, "displaylogo": False, "modeBarButtonsToRemove": ["lasso2d", "select2d"]},
+    f"plot-{THEME}.html",
+    include_plotlyjs="cdn",
+    config={"displayModeBar": True, "displaylogo": False},
+    post_script=_click_js,
 )
